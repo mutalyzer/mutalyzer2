@@ -3,6 +3,22 @@
 from pyparsing import *
 
 class Nomenclatureparser(object) :
+    """
+        Parse an input string.
+
+        Public variables:
+            All variables defined below, they are all context-free grammar 
+            rules.
+        
+        Special methods:
+            __init__() ; Initialise the class and enable packrat parsing.
+
+        Public methods:
+            parse(input) ; Parse the input string and return a parse tree.
+    """
+    
+    # New:
+    # Nest -> `{' SimpleAlleleVarSet `}'
     SimpleAlleleVarSet = Forward()
     Nest = Suppress('{') + Group(SimpleAlleleVarSet)("Nest") + \
            Suppress('}')
@@ -76,6 +92,7 @@ class Nomenclatureparser(object) :
     # Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
     RefType = Word("cgmnr", exact = 1)("RefType") + Suppress('.')
     Ref = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Optional(RefType)
+    RefOne = RefSeqAcc + Suppress(':') + Optional(RefType)
 
     # Extent -> PtLoc `_' (`o'? (RefSeqAcc | GeneSymbol) `:')? PtLoc
     # Changed to:
@@ -166,7 +183,7 @@ class Nomenclatureparser(object) :
                Suppress(')')
     RawVar = Group(Subst ^ Del ^ Dup ^ VarSSR ^ \
                    Ins ^ Indel ^ Inv ^ Conv)("RawVar")
-    SingleVar = Ref + Group(RawVar)("VarSet") ^ TransLoc
+    SingleVar = RefOne + RawVar ^ TransLoc
     ExtendedRawVar = RawVar ^ '=' ^ '?'
 
     # New:
@@ -174,7 +191,7 @@ class Nomenclatureparser(object) :
     #                       ExtendedRawVar
     SimpleAlleleVarSet << (Group(Suppress('[') + ExtendedRawVar + \
                           ZeroOrMore(Suppress(';') + ExtendedRawVar) + \
-                          Suppress(']'))("SimpleAlleleVarSet") ^ ExtendedRawVar)
+                          Suppress(']') ^ ExtendedRawVar)("SimpleAlleleVarSet"))
 
     # New:
     # MosaicSet -> (`[' SimpleAlleleVarSet (`/' SimpleAlleleVarSet)* `]') |
@@ -183,18 +200,6 @@ class Nomenclatureparser(object) :
     MosaicSet = Group(Suppress('[') + SimpleAlleleVarSet + \
                 ZeroOrMore(Suppress('/') + SimpleAlleleVarSet) + \
                 Suppress(']'))("MosaicSet") ^ SimpleAlleleVarSet
-    #MosaicSet = Forward()
-    #MosaicSet << ((Suppress('[') + \
-    #                  Group(MosaicSet)("MosaicSet") + \
-    #                Suppress(']') + Suppress('/') + Suppress('[') + \
-    #                  Group(MosaicSet)("MosaicSet") + \
-    #              Suppress(']')) ^ \
-    #              Group(Suppress('[') + SimpleAlleleVarSet + \
-    #              ZeroOrMore(Suppress('/') + SimpleAlleleVarSet) + \
-    #              Suppress(']'))("MosaicSet") ^ \
-    #              Group(SimpleAlleleVarSet + ZeroOrMore(Suppress('/') + \
-    #              SimpleAlleleVarSet))("MosaicSet") ^ \
-    #              SimpleAlleleVarSet)
     ChimeronSet = Group(Suppress('[') + MosaicSet + \
                 ZeroOrMore(Suppress("//") + MosaicSet) + \
                 Suppress(']'))("ChimeronSet") ^ MosaicSet
@@ -253,110 +258,44 @@ class Nomenclatureparser(object) :
     #        UnkEffectVar | NoRNAVar | SplicingVar
     Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
           UnkEffectVar ^ NoRNAVar ^ SplicingVar
-    #Var = StringStart() + (SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
-    #      UnkEffectVar ^ NoRNAVar ^ SplicingVar) + StringEnd()
 
     def __init__(self) :
-        ParserElement.enablePackrat() # Speed up parsing considerably.
-        self._state = dict()
+        """
+            Initialise the class and enable packrat parsing.
+        """
 
-    def _parse_command(self, cmd) :
+        ParserElement.enablePackrat() # Speed up parsing considerably.
+    #__init__
+
+    def parse(self, input) :
+        """
+            Parse the input string and return a parse tree if the parsing was
+            successful. Otherwise print the parse error and the position in 
+            the input where the error occurred.
+            
+            Arguments:
+                input ; The input string that needs to be parsed.
+
+            Public variables:
+                Var ; The top-level rule of our parser.
+
+            Returns:
+                Object ; The parse tree containing the parse results.
+        """
+
         try :
-            return self.Var.parseString(cmd, parseAll = True)
-            #return self.Var.parseString(cmd)
+            return self.Var.parseString(input, parseAll = True)
         except ParseException, err :
             print "Error: " + str(err)
+
+            # Print the input.
+            print input
+
+            # And print the position where the parsing error occurred.
             pos = int(str(err).split(':')[-1][:-1]) - 1
-            print cmd
             print pos * ' ' + '^'
+
             exit()
         #except
-    #_parse_command
+    #parse
 #Nomenclatureparser
-
-#def printp(string, depth) :
-#    print (depth * "  ") + string
-#
-#def ppp(parts, depth) :
-#    printp("+++ recurse +++", depth)
-#    #printp(str(repr(parts)), depth)
-#    printp(str(parts), depth)
-#    printp("RefSeqAcc: " + str(parts.RefSeqAcc), depth)
-#    printp("RefType: " + str(parts.RefType), depth)
-#    printp("Version: " + str(parts.Version), depth)
-#    if parts.Gene :
-#        printp("Gene Symbol: " + str(parts.Gene.GeneSymbol), depth)
-#        printp("Transcript variant: " + str(parts.Gene.TransVar), depth)
-#        printp("Protein isoform: " + str(parts.Gene.ProtIso), depth)
-#    if parts.ChimeronSet :
-#        #printp(str(parts.ChimeronSet), depth)
-#        for i in parts.ChimeronSet :
-#            printp("ChimeronSet", depth)
-#            ppp(i, depth + 1)
-#    if parts.MosaicSet :
-#        #printp(str(parts.MosaicSet), depth)
-#        for i in parts.MosaicSet :
-#            printp("MosaicSet", depth)
-#            ppp(i, depth + 1)
-#    if parts.SimpleAlleleVarSet :
-#        #printp(str(parts.SimpleAlleleVarSet), depth)
-#        for i in parts.SimpleAlleleVarSet :
-#            printp("SimpleAlleleVarSet", depth)
-#            printp(str(i), depth)
-#            #ppp(i, depth + 1)
-#    if parts.SingleAlleleVarSet :
-#        #printp(str(parts.SingleAlleleVarSet), depth)
-#        for i in parts.SingleAlleleVarSet :
-#            printp("SingleAlleleVarSet", depth)
-#            ppp(i, depth + 1)
-#    if parts.MultiAlleleVars :
-#        #printp(str(parts.MultiAlleleVars), depth)
-#        for i in parts.MultiAlleleVars :
-#            printp("MultiAlleleVars", depth)
-#            ppp(i, depth + 1)
-#            #for j in i :
-#            #    printp("Test", depth)
-#            #    ppp(j, depth + 1)
-#    if parts.RawVar :
-#        printp("RawVar", depth)
-#        printp(str(parts.RawVar), depth + 1)
-#        #for i in parts.RawVar :
-#        #    printp(str(i), depth + 1)
-#        #    ppp(i, depth + 1)
-#    #if
-#    """
-#    for i in parts.VarSet :
-#        printp(i, depth)
-#        if i.Nest :
-#            ppp(i.Nest, depth + 1)
-#        #if
-#        if i.StartLoc :
-#            if i.StartLoc.OptRef :
-#                printp(str(i.StartLoc.OptRef), depth)
-#            printp("StartLoc: " + str(i.StartLoc.PtLoc.MainSgn) + \
-#            str(i.StartLoc.PtLoc.Main) + \
-#            str(i.StartLoc.PtLoc.OffSgn) + str(i.StartLoc.PtLoc.OffOpt) + \
-#            str(i.StartLoc.PtLoc.Offset), depth)
-#        #if
-#        if i.EndLoc :
-#            printp(i.EndLoc, depth)
-#            if i.EndLoc.OptRef :
-#                printp(i.EndLoc.OptRef, depth)
-#            printp("EndLoc: " + str(i.EndLoc.PtLoc.MainSgn) + \
-#                  str(i.EndLoc.PtLoc.Main) + \
-#                  str(i.EndLoc.PtLoc.OffSgn) + str(i.EndLoc.PtLoc.OffOpt) + \
-#                  str(i.EndLoc.PtLoc.Offset), depth)
-#        #if
-#        printp("Mutation type: " + str(i.MutationType), depth)
-#    #for
-#    """
-#    printp("--- recurse ---", depth)
-##ppp
-#
-#import sys
-#
-#parser = Nomenclatureparser()
-#cmd = sys.argv[1]
-#print cmd
-#ParseObj = parser._parse_command(cmd)
-#ppp(ParseObj, 0)

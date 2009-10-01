@@ -100,7 +100,8 @@ class Retriever() :
             If a file is retrieved from the NCBI, a hard link is made to its
             alternative name (GI when an accession number is given and vice
             versa).
-            After downloading a file, the cache is 
+            After downloading a file, the cache is checked for overflows by
+            calling the __cleancache() function.
             The files are stored in compressed format in the cache.
 
             Variables: 

@@ -33,14 +33,16 @@ class Crossmap() :
             __crossmap_splice_sites() ; Calculate the __crossmapping list.
             g2x(a)    ; Translate from g. notation to c. or n. notation.
             x2g(a, b) ; Translate c. or n. notation to g. notation.
-
-        Public methods:
-            test(a)
     """
 
     def __init__(self, RNA, CDS, orientation) :
         """
             Initialise the class and do the cross mapping of the splice sites.
+
+            Arguments:
+                RNA         ; The list of RNA splice sites.
+                CDS         ; The CDS list (may be empty).
+                orientation ; The orientation of the transcript.
 
             Private variables (altered):
                 __STAR         ; A large number to indicate positions after CDS
@@ -82,6 +84,7 @@ class Crossmap() :
 
         if a <= 0 and r >= 0 :
             return r + 1
+
         return r
     #__plus
 
@@ -102,6 +105,7 @@ class Crossmap() :
 
         if a >= 0 and r <= 0 :
             return r - 1
+
         return r
     #__minus
 
@@ -122,6 +126,7 @@ class Crossmap() :
 
         if a > 0 and b < 0 :
             return r - 1
+
         return r
     #__minusr
 
@@ -137,6 +142,7 @@ class Crossmap() :
         """
         if a > self.__STAR :
             return '*' + str(a - self.__STAR)
+
         return str(a)
     #star
 
@@ -152,6 +158,7 @@ class Crossmap() :
         """
         if s[0] == '*' :
             return self.__STAR + int(s[1:])
+
         return int(s)
     #rstar
 
@@ -373,16 +380,17 @@ class Crossmap() :
                 break
             #if
         ret += d * b # Add the intron count.
+
         return ret
     #x2g
 
-    def test(self, string) :
-        import re
+    #def test(self, string) :
+    #    import re
 
-        groups = re.search("(\*?-?[0-9]*)\+?(\-?)[ud]?([0-9]*)", string)
-        main = int(self.__rstar(groups.group(1)))
-        aux = int(groups.group(2) + groups.group(3))
+    #    groups = re.search("(\*?-?[0-9]*)\+?(\-?)[ud]?([0-9]*)", string)
+    #    main = int(self.__rstar(groups.group(1)))
+    #    aux = int(groups.group(2) + groups.group(3))
 
-        return self.x2g(main, aux)
-    #test
+    #    return self.x2g(main, aux)
+    ##test
 #Crossmap
