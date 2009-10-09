@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import time
-
 class batchJob(object) :
     """
         A batchJob object, to store a list of jobs and callback information for
@@ -183,6 +181,8 @@ class Scheduler() :
                 __sleeptime   ; Seconds to sleep.
         """
 
+        import time
+
         self.__switch() # Select the next job in line.
         if self.__turn == "interactive" :
             ret =  self.__getfifo(self.__interactive)
@@ -202,43 +202,39 @@ class Scheduler() :
 
         return ret
     #getjob
-
-    #def deb(self) : # Remove this function.
-    #    print "I: " + str(self.__interactive)
-    #    print "B: " + str(self.__batch)
-    ##deb
 #Scheduler
+"""
+#!/usr/bin/python
 
-#import threading
-#
-#S = Scheduler()
-#S.deb()
-#
-#def run() :
-#    while True :
-#        print S.getjob()
-##run
-#
-#threading.Thread(target=run).start()
-#
-#S.queue("I1")
-#S.queue("I2")
-#S.queue("I3")
-#S.queue("I4")
-#S.deb()
-#B1 = batchJob(["B11", "B12", "B13", "B14"], "Batch 1")
-#B2 = batchJob(["B21", "B22", "B23", "B24"], "Batch 2")
-#B3 = batchJob(["B31", "B32", "B33", "B34", "B35", "B36"], "Batch 3")
-#S.batchqueue(B1)
-#S.batchqueue(B2)
-#S.batchqueue(B3)
-#S.deb()
-#
-#time.sleep(5)
-#S.deb()
-#S.batchqueue(B3)
-#S.deb()
-#print "end"
-#time.sleep(2)
-#S.deb()
-#S.batchqueue(batchJob(["B31", "B32", "B33", "B34", "B35", "B36"], "Batch 3 again"))
+import os
+import time
+import threading
+
+shell_command = "grep -c \"^processor\" /proc/cpuinfo"
+
+cpus = int(os.popen(shell_command).read())
+inuse = 0
+
+class hmmm(threading.Thread) :
+    def __init__(self, i) :
+        self.i = i
+        threading.Thread.__init__(self)
+    #__init__
+
+    def run(self) :
+        global inuse
+    
+        print time.strftime("%H:%M:%S") + ' ' + str(self.i) + " starting"
+        time.sleep(i + 1)
+        print time.strftime("%H:%M:%S") + ' ' + str(self.i) + " ends"
+        inuse -= 1
+    #__run__
+
+for i in range(10) :
+    while inuse >= cpus :
+        time.sleep(0.01)
+    inuse += 1
+    bla = hmmm(i)
+    bla.start()
+#for
+"""

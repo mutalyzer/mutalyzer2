@@ -10,35 +10,35 @@ class Retriever() :
             __cachesize ; Maximum size of the cache.
 
         Special methods:
-            __init__()             ; Read the configuration file and 
-                                     initialise the class global 
-                                     variables.
+            __init__(config) ; Read the configuration file and 
+                               initialise the class global 
+                               variables.
 
         Private methods:
-            __foldersize(folder)     ; Return the size of a folder.
-            __cleancache()           ; Keep the cache at a maximum size.
+            __foldersize(folder) ; Return the size of a folder.
+            __cleancache()       ; Keep the cache at a maximum size.
 
-       Public methods:
+        Public methods:
             loadrecord(identifier) ; Load a record, store it in the 
                                      cache, manage the cache and return 
                                      the record.
     """
 
-    def __init__(self) :
+    def __init__(self, config) :
         """
             Read the configuration file for some simple settings.
+
+            Arguments:
+                config ; The configuration object.
 
             Private variables (altered):
                 __email     ; The email address which we give to the NCBI.
                 __cache     ; The directory where the records are stored.
                 __cachesize ; Maximum size of the cache.
         """
-        from configobj import ConfigObj # ConfigObj()
-
-        config = ConfigObj("./mutalyzer.conf")
-        self.__email = config["email"]
-        self.__cache = config["cache"]
-        self.__cachesize = int(config["cachesize"])
+        self.__email = config.email
+        self.__cache = config.cache
+        self.__cachesize = config.cachesize
     #__init__
     
     def __foldersize(self, folder) :

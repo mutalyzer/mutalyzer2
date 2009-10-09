@@ -1,0 +1,29 @@
+This program depends on the following packages:
+- python
+- python-biopython
+- python-mysqldb
+- python-pyparsing
+- mysql-server
+Install and configure these packages before continuing.
+
+After installing MySQL, create a database named ``hg19'', owned by the
+user ``mutalyzer'':
+---
+cat << EOF | mysql -u root -p
+  CREATE USER mutalyzer;
+  CREATE DATABASE hg19;
+  GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
+  FLUSH PRIVILEGES;
+EOF
+---
+Then retrieve the refLink table from the UCSC website:
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.sql
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.txt.gz
+
+And import the table:
+---
+mysql -u mutalyzer -D hg19 < refLink.sql
+zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
+---
+
+Edit the file mutalyzer.conf to finish the installation.

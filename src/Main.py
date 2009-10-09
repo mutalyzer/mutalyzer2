@@ -329,7 +329,8 @@ ppp(ParseObj, 0)
 RetrieveRecord = ParseObj.RefSeqAcc + '.' + ParseObj.Version
 
 print "Retrieving..."
-retriever = Retriever.Retriever()
+C = Config.Config()
+retriever = Retriever.Retriever(C)
 record = retriever.loadrecord(RetrieveRecord)
 print "Dicting..."
 d = record2dict(record)

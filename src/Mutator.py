@@ -20,8 +20,9 @@ class Mutator() :
         Private methods:
             __sortins(tuple)      ; Insert a tuple in a sorted list, after 
                                     insertion the list stays sorted.
-            __shiftsize(position) ; Calculate the size of the shift relative to
-                                    the original string for a given position.
+            __shiftpos(position)  ; Calculate the position in the mutated 
+                                    string given the position in the original 
+                                    string.
             __mutate(pos1, pos2, ins) ; A general mutation function that does a
                                         delins on interbase coordinates of the 
                                         original string.
@@ -95,11 +96,10 @@ class Mutator() :
                                    # entry will be the last one in the list.
     #__sortins
     
-    def __shiftsize(self, position) :
+    def __shiftpos(self, position) :
         """
-            Calculate the size of the shift relative to the original string for
-            a given position. This shift is used to map the coordinate of the 
-            original string to the mutated string.
+            Calculate the position in the mutated string, given a position in
+            the original string. 
 
             Arguments:
                 position ; The position in the original string for which we 
@@ -109,9 +109,9 @@ class Mutator() :
                 __shift ; Used to calculate the shift.
             
             Returns:
-                integer ; The shift at this position in the original string.
+                integer ; The position in the mutated string.
         """
-        ret = 0
+        ret = position
     
         for i in range(len(self.__shift)) :
             if self.__shift[i][0] > position :
@@ -121,7 +121,7 @@ class Mutator() :
         #for
     
         return ret
-    #__shiftsize
+    #__shiftpos
     
     def __mutate(self, pos1, pos2, ins) :
         """
@@ -141,10 +141,19 @@ class Mutator() :
                 mutated ; This string will reflect the result of the given 
                           delins.
         """
-        self.mutated = self.mutated[:pos1 + self.__shiftsize(pos1)] + ins + \
-                       self.mutated[pos2 + self.__shiftsize(pos2):]
+        self.mutated = self.mutated[:self.__shiftpos(pos1)] + ins + \
+                       self.mutated[self.__shiftpos(pos2):]
         self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
     #__mutate
+
+    def newSplice(self, sites) :
+        ret = []
+
+        for i in sites :
+            ret.append(self.__shiftpos(i))
+
+        return ret
+    #newSplice
     
     def delM(self, pos1, pos2) :
         """
@@ -211,6 +220,7 @@ class Mutator() :
     #invM
 #Mutator
 
+"""
 import sys
 
 def ladder() :
@@ -224,7 +234,6 @@ def ladder() :
     sys.stdout.write("\n")
 #ladder
 
-"""
 M = Mutator("AAAGCCACCAGTTTCTTCCATGTGTTTTCACTCGCTTCGAAAAATTTAGGTAGGCTCTAGATATC")
 
 M.invM(44, 50)
@@ -289,4 +298,6 @@ print "Inv 24 30"
 ladder()
 print M.orig
 print M.mutated
+
+print M.newSplice([1, 10, 20, 30, 40])
 """
