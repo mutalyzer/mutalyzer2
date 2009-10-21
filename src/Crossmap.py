@@ -227,7 +227,7 @@ class Crossmap() :
 
         i = y - c
         while d * i < d * (y - c) + RNAlen :
-            self.__crossmapping[i + c] = cPos;
+            self.__crossmapping[i + c] = cPos - d;
             if i % 2 :                      # We are skipping an intron.
                 cPos = self.__plus(cPos, 1) # Only add 1 (mind the 0).
             else : # We are skipping an exon, so add the length.

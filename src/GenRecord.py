@@ -135,7 +135,7 @@ class GenRecord() :
 
         ret = []
     
-        ret.append(location.start.position)
+        ret.append(location.start.position + 1)
         ret.append(location.end.position)
     
         return ret
