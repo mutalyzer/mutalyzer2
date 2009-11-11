@@ -1,9 +1,10 @@
 This program depends on the following packages:
-- python
-- python-biopython
-- python-mysqldb
-- python-pyparsing
-- mysql-server
+- python           >= 2.5.2
+- python-biopython >= 1.43
+- python-mysqldb   >= 1.2.2
+- python-pyparsing >= 1.5.0
+- python-configobj >= 4.4.0
+- mysql-server     >= 5.0.0
 Install and configure these packages before continuing.
 
 After installing MySQL, create a database named ``hg19'', owned by the
@@ -20,10 +21,25 @@ Then retrieve the refLink table from the UCSC website:
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.sql
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.txt.gz
 
+For c2g to work, you need the following files too:
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.sql
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.sql
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.txt.gz
+
+
 And import the table:
 ---
 mysql -u mutalyzer -D hg19 < refLink.sql
 zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
+
+---
+For c2g:
+---
+mysql -u mutalyzer -D hg19 < gbStatus.sql
+zgrep mRNA gbStatus.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE gbStatus;'
+mysql -u mutalyzer -D hg19 < refGene.sql
+cat refGene.txt | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
 ---
 
 Edit the file mutalyzer.conf to finish the installation.

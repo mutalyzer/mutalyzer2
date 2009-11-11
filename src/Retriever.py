@@ -26,7 +26,8 @@ class Retriever() :
 
     def __init__(self, config) :
         """
-            Read the configuration file for some simple settings.
+            Read the configuration file for some simple settings. Make the
+            cache directory if it does not exist yet.
 
             Arguments:
                 config ; The configuration object.
@@ -36,9 +37,14 @@ class Retriever() :
                 __cache     ; The directory where the records are stored.
                 __cachesize ; Maximum size of the cache.
         """
+        import os # os.path.isdir(), os.path.mkdir()
+
         self.__email = config.email
         self.__cache = config.cache
         self.__cachesize = config.cachesize
+
+        if not os.path.isdir(self.__cache) :
+            os.mkdir(self.__cache)
     #__init__
     
     def __foldersize(self, folder) :

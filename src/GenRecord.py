@@ -76,10 +76,12 @@ class Locus(object) :
             Public variables (altered):
                 mRNA ; A position list object.
                 CDS  ; A position list object.
+                CM   ; A Crossmap object.
         """
 
         self.mRNA = None
         self.CDS = None
+        self.CM = None
     #__init__
 #locus
 
@@ -176,9 +178,9 @@ class GenRecord() :
     
                 # Look if there is a locus tag present, if not, give it the
                 # default tag `0'.
-                locus_tag = 0
+                locus_tag = 001
                 if i.qualifiers.has_key("locus_tag") :
-                    locus_tag = i.qualifiers["locus_tag"][0]
+                    locus_tag = i.qualifiers["locus_tag"][0][-3:]
                 if not recordDict[gene].list.has_key(locus_tag) :
                     recordDict[gene].list[locus_tag] = Locus()
     

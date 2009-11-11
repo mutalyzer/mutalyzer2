@@ -384,6 +384,22 @@ class Crossmap() :
         return ret
     #x2g
 
+    def c2str(self, mainsgn, main, offsgn, offset) :
+        return str(mainsgn) + str(main) + str(offsgn) + str(offset)
+    #printc
+
+    def c2g(self, mainsgn, main, offsgn, offset) :
+        m = mainsgn + main
+        o = 0
+        if offset :
+            o = int(offset)
+            if offsgn == '-' :
+                o = -o
+    
+        return self.x2g(self.__rstar(m), o)
+    #c2g
+
+
     #def test(self, string) :
     #    import re
 

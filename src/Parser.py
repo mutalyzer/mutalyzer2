@@ -20,8 +20,7 @@ class Nomenclatureparser(object) :
     # New:
     # Nest -> `{' SimpleAlleleVarSet `}'
     SimpleAlleleVarSet = Forward()
-    Nest = Suppress('{') + Group(SimpleAlleleVarSet)("Nest") + \
-           Suppress('}')
+    Nest = Suppress('{') + Group(SimpleAlleleVarSet)("Nest") + Suppress('}')
 
     # New:
     # Name -> ([a-z][a-Z][0-9])*
@@ -55,10 +54,8 @@ class Nomenclatureparser(object) :
     TransVar = Suppress("_v") + Number("TransVar")
     ProtIso = Suppress("_i") + Number("ProtIso")
     GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
-                 Optional(TransVar ^ ProtIso))("Gene") + \
-                 Suppress(')')
-    GI = Suppress(Optional("GI") ^ Optional("GI:")) + \
-         Number("RefSeqAcc")
+                 Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
+    GI = Suppress(Optional("GI") ^ Optional("GI:")) + Number("RefSeqAcc")
     Version = Suppress('.') + Number("Version")
     AccNo = Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \
             Optional(Version)
@@ -83,8 +80,7 @@ class Nomenclatureparser(object) :
     # Changed to:
     # PtLoc -> ((`-' | `*')? Number Offset?) | `?'
     PtLoc = Group((Optional(Word("-*", exact = 1))("MainSgn") + \
-            Number("Main") + \
-            Optional(Offset)) ^ '?')
+            Number("Main") + Optional(Offset)) ^ '?')
 
     # Ref -> ((RefSeqAcc | GeneSymbol) `:')? (`c.' | `g.' | `m.')
     # Changed to:
@@ -117,11 +113,11 @@ class Nomenclatureparser(object) :
 
     # Subst -> PtLoc Nt `>' Nt
     Subst = Group(PtLoc("PtLoc"))("StartLoc") + \
-            Nt + Literal('>')("MutationType") + Nt
+            Nt("Arg1") + Literal('>')("MutationType") + Nt("Arg2")
 
     # Del -> Loc `del' (Nt+ | Number)?
     Del = Loc + Literal("del")("MutationType") + \
-          Optional(NtString ^ Number)
+          Optional(NtString ^ Number)("Arg1")
 
     # Dup -> Loc `dup' (Nt+ | Number | RangeLoc | FarLoc)?
     # Changed to:
@@ -136,14 +132,14 @@ class Nomenclatureparser(object) :
     AbrSSR = PtLoc + NtString + Suppress('(') + Number + \
              Suppress('_') + Number + Suppress(')')
     VarSSR = (PtLoc + NtString + Suppress('[') + Number + \
-              Suppress(']')) ^ (RangeLoc + Suppress('[') + Number + \
-              Suppress(']')) ^ AbrSSR
+             Suppress(']')) ^ (RangeLoc + Suppress('[') + Number + \
+             Suppress(']')) ^ AbrSSR
 
     # Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc)
     # Changed to:
     # Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
     Ins = RangeLoc + Literal("ins")("MutationType") + \
-          (NtString ^ Number ^ RangeLoc ^ \
+          (NtString("Arg1") ^ Number ^ RangeLoc ^ \
           FarLoc("OptRef")) + Optional(Nest)
 
     # Indel -> RangeLoc `del' (Nt+ | Number)? 
@@ -286,7 +282,7 @@ class Nomenclatureparser(object) :
         try :
             return self.Var.parseString(input, parseAll = True)
         except ParseException, err :
-            print "Error: " + str(err)
+            print "Error: %s" % err
 
             # Print the input.
             print input

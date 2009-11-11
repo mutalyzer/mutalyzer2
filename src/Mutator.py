@@ -38,6 +38,8 @@ class Mutator() :
                                        position pos for nuc.
             invM(pos1, pos2)         ; Invert a range from non-interbase 
                                        position pos1 to pos2.
+            dupM(pos1, pos2)         ; Duplicate a range from non-interbase 
+                                       position pos1 to pos2.
     """
 
     def __init__(self, orig) :
@@ -163,6 +165,7 @@ class Mutator() :
                 pos1 ; The first nucleotide of the range to be deleted.
                 pos2 ; The last nucleotide of the range to be deleted.
         """
+
         self.__mutate(pos1 - 1, pos2, '')
     #delM
     
@@ -175,6 +178,7 @@ class Mutator() :
                       place.
                 ins ; The insertion, a string.
         """
+
         self.__mutate(pos, pos, ins)
     #insM
     
@@ -188,6 +192,7 @@ class Mutator() :
                 pos2 ; The last nucleotide of the range to be deleted.
                 ins  ; The insertion, a string.
         """
+
         self.__mutate(pos1 - 1, pos2, ins)
     #delinsM
     
@@ -199,6 +204,7 @@ class Mutator() :
                 pos ; The position where the substitution should take place.
                 nuc ; The new nucleotide.
         """
+
         self.__mutate(pos - 1, pos, nuc)
     #subM
     
@@ -213,11 +219,27 @@ class Mutator() :
             Public variables:
                 orig ; The original string.
         """
+
         from Bio.Seq import reverse_complement # reverse_complement()
 
         self.__mutate(pos1 - 1, pos2, \
                       reverse_complement(self.orig[pos1 - 1:pos2]))
     #invM
+
+    def dupM(self, pos1, pos2) :
+        """
+            Duplicate a range from non-interbase position pos1 to pos2.
+
+            Arguments:
+                pos1 ; The first nucleotide of the range to be duplicated.
+                pos2 ; The last nucleotide of the range to be duplicated.
+
+            Public variables:
+                orig ; The original string.
+        """
+
+        self.__mutate(pos2, pos2, self.orig[pos1 - 1:pos2])
+    #dupM
 #Mutator
 
 """
