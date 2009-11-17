@@ -48,3 +48,10 @@ class Config() :
         self.dbName = config["dbName"]
     #__init__
 #Config
+
+#
+# Unit test.
+#
+if __name__ == "__main__" :
+    C = Config() # Will crach if the config file is not found.
+#if

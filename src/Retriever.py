@@ -175,3 +175,17 @@ class Retriever() :
         return record
     #loadrecord
 #Retriever
+
+#
+# Unit test.
+#
+if __name__ == "__main__" :
+    import Config # Config()
+
+    # Get the location of the cache, the cachesize and the email address from 
+    #   the config file.
+    C = Config.Config()
+    R = Retriever(C)
+
+    R.loadrecord("AB026906.1") # Retrieve a GenBank record.
+#if

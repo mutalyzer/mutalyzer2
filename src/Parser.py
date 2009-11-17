@@ -295,3 +295,11 @@ class Nomenclatureparser(object) :
         #except
     #parse
 #Nomenclatureparser
+
+#
+# Unit test.
+#
+if __name__ == "__main__" :
+    P = Nomenclatureparser()
+    P.parse("AB026906.1:c.[274G>T;120del;124_125insATG]")
+#if

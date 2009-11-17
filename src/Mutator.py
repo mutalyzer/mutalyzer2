@@ -242,6 +242,12 @@ class Mutator() :
     #dupM
 #Mutator
 
+#
+# Unit test.
+#
+if __name__ == "__main__" :
+    pass
+#if
 """
 import sys
 

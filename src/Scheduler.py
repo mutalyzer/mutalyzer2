@@ -238,3 +238,10 @@ for i in range(10) :
     bla.start()
 #for
 """
+
+#
+# Unit test.
+#
+if __name__ == "__main__" :
+    pass
+#if

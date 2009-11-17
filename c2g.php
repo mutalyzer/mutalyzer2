@@ -1,7 +1,11 @@
 <?php
+  header('Content-type: text/plain; charset=UTF-8');
+
   $execstr = "python src/c2g.py " . 
-             $_GET['LOVD_ver'] . ' ' . $_GET['build'] . ' ' . 
-             $_GET['acc'] . ' ' . $_GET['var'];
+             escapeshellarg($_GET['LOVD_ver']) . ' ' . 
+             escapeshellarg($_GET['build']) . ' ' . 
+             escapeshellarg($_GET['acc']) . ' ' . 
+             escapeshellarg($_GET['var']);
 
   @exec($execstr, $aRes, $nRes);
   $sRes = implode("\n", $aRes);

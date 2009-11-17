@@ -122,6 +122,25 @@ class Db() :
             WHERE acc = "%s";
         """ % mrnaAcc
 
-        return self.__query(statement)[0][0]
+        ret = self.__query(statement)
+        if ret :
+            return int(ret[0][0])
+        return 0
     #get_NM_version
 #Db
+
+#
+# Unit test.
+#
+if __name__ == "__main__" :
+    import Config
+
+    # Get the username / db from the config file.
+    C = Config.Config()
+    D = Db(C)
+
+    # Do some basic testing (will crash if MySQL is not set up properly.
+    D.get_protAcc("NM_002001")
+    D.get_NM_info("NM_002001")
+    D.get_NM_version("NM_002001")
+#if
