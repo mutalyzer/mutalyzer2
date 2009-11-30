@@ -33,7 +33,7 @@ class Nomenclatureparser(object) :
     # Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' | 
     #       `m' | `s' | `w' | `b' | `d' | `h' | `v' | `i' | 
     #       `n' | `A' | `C' | `G' | `T' | `U' 
-    Nt = Word("acgturykmswbdhvinACGTU", exact = 1)
+    Nt = Word("acgturykmswbdhvnACGTU", exact = 1)
 
     # New:
     NtString = Combine(OneOrMore(Nt));
@@ -112,8 +112,9 @@ class Nomenclatureparser(object) :
              Optional(RefType) + Extent)
 
     # Subst -> PtLoc Nt `>' Nt
-    Subst = Group(PtLoc("PtLoc"))("StartLoc") + \
-            Nt("Arg1") + Literal('>')("MutationType") + Nt("Arg2")
+    Subst = Group(PtLoc("PtLoc"))("StartLoc") + Nt("Arg1") + \
+        Literal('>').setParseAction(replaceWith("subst"))("MutationType") + \
+        Nt("Arg2")
 
     # Del -> Loc `del' (Nt+ | Number)?
     Del = Loc + Literal("del")("MutationType") + \
@@ -145,12 +146,12 @@ class Nomenclatureparser(object) :
     # Indel -> RangeLoc `del' (Nt+ | Number)? 
     #          `ins' (Nt+ | Number | RangeLoc | FarLoc)
     # Changed to:
-    # Indel -> RangeLoc `del' (Nt+ | Number)? 
+    # Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)? 
     #          `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
-    Indel = RangeLoc + Literal("del") + Optional(NtString ^ Number) + \
-            Literal("ins")("MutationType") + \
-            (NtString ^ Number ^ RangeLoc ^ FarLoc) + \
-            Optional(Nest)
+    Indel = (RangeLoc ^ Group(PtLoc("PtLoc"))("StartLoc")) + Literal("del") + \
+        Optional(NtString ^ Number) + \
+        Literal("ins").setParseAction(replaceWith("delins"))("MutationType") + \
+        (NtString ^ Number ^ RangeLoc ^ FarLoc) + Optional(Nest)
 
     # Inv -> RangeLoc `inv' (Nt+ | Number)?
     # Changed to:
@@ -167,9 +168,6 @@ class Nomenclatureparser(object) :
     # ChromBand -> (`p' | `q') Number `.' Number
     # ChromCoords -> `(' Chrom `;' Chrom `)' `(' ChromBand `;' ChromBand `)'
     # TransLoc -> `t' ChromCoords `(' FarLoc `)'
-    # RawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
-    # SingleVar -> Ref RawVar | TransLoc
-    # ExtendedRawVar -> RawVar | `=' | `?'
     ChromBand = Suppress(Word("pq", exact = 1)) + Number + Suppress('.') + \
                 Number
     ChromCoords = \
@@ -177,16 +175,31 @@ class Nomenclatureparser(object) :
         Suppress('(') + ChromBand + Suppress(';') + ChromBand + Suppress(')')
     TransLoc = Suppress('t') + ChromCoords + Suppress('(') + FarLoc + \
                Suppress(')')
-    RawVar = Group(Subst ^ Del ^ Dup ^ VarSSR ^ \
+
+    # RawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
+    # Changed to:
+    # CRawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
+    # RawVar -> (CRawVar | (`(' CRawVar `)')) `?'?
+    CRawVar = Group(Subst ^ Del ^ Dup ^ VarSSR ^ \
                    Ins ^ Indel ^ Inv ^ Conv)("RawVar")
+    RawVar = (CRawVar ^ (Suppress('(') + CRawVar + Suppress(')'))) + \
+             Suppress(Optional('?'))
+
+    # SingleVar -> Ref RawVar | TransLoc
+    # ExtendedRawVar -> RawVar | `=' | `?'
     SingleVar = RefOne + RawVar ^ TransLoc
     ExtendedRawVar = RawVar ^ '=' ^ '?'
 
     # New:
-    # SimpleAlleleVarSet -> (`[' ExtendedRawVar (`;' ExtendedRawVar)* `]') |
+    # CAlleleVarSet -> ExtendedRawVar (`;' ExtendedRawVar)*
+    # UAlleleVarSet -> (CAlleleVarSet | (`(' CAlleleVarSet `)')) `?'?
+    # SimpleAlleleVarSet -> (`[' UAlleleVarSet `]') |
     #                       ExtendedRawVar
-    SimpleAlleleVarSet << (Group(Suppress('[') + ExtendedRawVar + \
-                          ZeroOrMore(Suppress(';') + ExtendedRawVar) + \
+    CAlleleVarSet = ExtendedRawVar + ZeroOrMore(Suppress(';') + ExtendedRawVar)
+    UAlleleVarSet = (CAlleleVarSet ^ \
+                    (Suppress('(') + CAlleleVarSet + Suppress(')'))) + \
+                    Suppress(Optional('?'))
+    SimpleAlleleVarSet << (Group(Suppress('[') + UAlleleVarSet + \
                           Suppress(']') ^ ExtendedRawVar)("SimpleAlleleVarSet"))
 
     # New:
@@ -301,5 +314,14 @@ class Nomenclatureparser(object) :
 #
 if __name__ == "__main__" :
     P = Nomenclatureparser()
-    P.parse("AB026906.1:c.[274G>T;120del;124_125insATG]")
+    #parsetree = P.parse("AB026906.1:c.[274G>T;120del;124_125insATG]")
+    #parsetree = P.parse("AB026906.1:c.274G>T")
+    #print repr(parsetree)
+    #print parsetree.RefType
+    parsetree = P.parse("NM_002001.2:c.[12del]")
+    parsetree = P.parse("NM_002001.2:c.[(12del)]")
+    parsetree = P.parse("NM_002001.2:c.[(12del)?]")
+    parsetree = P.parse("NM_002001.2:c.[(12del);(12del)]")
+    parsetree = P.parse("NM_002001.2:c.[(12del;12del)]")
+    parsetree = P.parse("NM_002001.2:c.[((12del)?;12del)?]")
 #if

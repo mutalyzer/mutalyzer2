@@ -1,7 +1,7 @@
 <?php
   header('Content-type: text/plain; charset=UTF-8');
 
-  $execstr = "python src/c2g.py " . 
+  $execstr = "python src/Variant_info.py " . 
              escapeshellarg($_GET['LOVD_ver']) . ' ' . 
              escapeshellarg($_GET['build']) . ' ' . 
              escapeshellarg($_GET['acc']) . ' ' . 

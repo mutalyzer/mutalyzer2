@@ -183,14 +183,14 @@ def ppp(parts, recordDict, refseq, depth) :
         print str(record.seq[start_g - 20:start_g + 20])
 
         # Substitution.
-        if parts.RawVar.MutationType == '>' :
+        if parts.RawVar.MutationType == "subst" :
             if record.seq[start_g - 1] != parts.RawVar.Arg1 :
                 ErrorMsg("No nucleotide %c at position c.%s (g.%i), found a " \
-                    "%c instead." % (parts.RawVar.Arg1, M.g2x(start_g), 
+                    "%c instead." % (parts.RawVar.Arg1, M.g2c(start_g), 
                     start_g, record.seq[start_g - 1]))
             if parts.RawVar.Arg1 == parts.RawVar.Arg2 :
                 ErrorMsg("No mutation given (%c>%c) at position c.%s (g.%i)." % 
-                    (parts.RawVar.Arg1, parts.RawVar.Arg1, M.g2x(start_g), 
+                    (parts.RawVar.Arg1, parts.RawVar.Arg1, M.g2c(start_g), 
                     start_g))
             MUU.subM(start_g, parts.RawVar.Arg2)
         #if
@@ -203,14 +203,14 @@ def ppp(parts, recordDict, refseq, depth) :
                 if not IsInt(parts.RawVar.Arg1) :
                     ErrorMsg("String %s not found at position c.%s (g.%i), " \
                         "found %s instead." % (parts.RawVar.Arg1, 
-                        M.g2x(start_g), start_g, 
+                        M.g2c(start_g), start_g, 
                         str(record.seq[start_g - 1:end_g])))
                 else :
                     if end_g - start_g + 1 != int(parts.RawVar.Arg1) :
                         ErrorMsg("The length of the deletion (%i) at " \
                             "position c.%s (g.%i) differed from that of the " \
                             "range (%i)." % (int(parts.RawVar.Arg1), 
-                            M.g2x(start_g), start_g, end_g - start_g + 1))
+                            M.g2c(start_g), start_g, end_g - start_g + 1))
             #if
             rollposstart = roll(record.seq, start_g - 1, end_g,
                            recordDict[parts.Gene.GeneSymbol].orientation)
@@ -219,9 +219,9 @@ def ppp(parts, recordDict, refseq, depth) :
                 WarningMsg("String %s at position c.%s (g.%i) was given, " \
                     "however, the HGVS notation prescribes that it should be " \
                     "%s at position c.%s (g.%i)." % (
-                    str(record.seq[start_g - 1:end_g]), M.g2x(start_g), start_g,
+                    str(record.seq[start_g - 1:end_g]), M.g2c(start_g), start_g,
                     str(record.seq[rollposstart - 1:rollposend]), 
-                    M.g2x(rollposstart), rollposstart))
+                    M.g2c(rollposstart), rollposstart))
             #if
             if parts.RawVar.MutationType == "del" :
                 MUU.delM(start_g, end_g)
@@ -239,7 +239,7 @@ def ppp(parts, recordDict, refseq, depth) :
                     WarningMsg("String %s at position c.%s (g.%i) is a " \
                         "palindrome (its own reverse complement)." % (
                         str(record.seq[start_g - 1:end_g]), 
-                        M.g2x(start_g), start_g))
+                        M.g2c(start_g), start_g))
                 else :
                     WarningMsg("String %s at position c.%s (g.%i) is a " \
                         "partial palindrome (the first %i " \
@@ -247,10 +247,10 @@ def ppp(parts, recordDict, refseq, depth) :
                         "the last one(s)), the HGVS notation " \
                         "prescribes that it should be %s at position " \
                         "c.%s (g.%i)." % (
-                        str(record.seq[start_g - 1:end_g]), M.g2x(start_g),
+                        str(record.seq[start_g - 1:end_g]), M.g2c(start_g),
                         start_g, snoop, 
                         str(record.seq[start_g + snoop - 1: end_g - snoop]),
-                        M.g2x(start_g + snoop), start_g + snoop))
+                        M.g2c(start_g + snoop), start_g + snoop))
             #if
             MUU.invM(start_g, end_g)
         #if
@@ -259,7 +259,7 @@ def ppp(parts, recordDict, refseq, depth) :
         if parts.RawVar.MutationType == "ins" :
             if start_g + 1 != end_g :
                 ErrorMsg("c.%s (g.%i) and c.%s (g.%i) are not consecutive " \
-                    "positions." % (M.g2x(start_g), start_g, M.g2x(end_g),
+                    "positions." % (M.g2c(start_g), start_g, M.g2c(end_g),
                     end_g))
 
             MUU.insM(start_g, parts.RawVar.Arg1)
@@ -273,9 +273,9 @@ def ppp(parts, recordDict, refseq, depth) :
                 WarningMsg("Insertion of %s at position c.%s (g.%i) was " \
                     "given, however, the HGVS notation prescribes that it " \
                     "should be a duplication of %s at position c.%s (g.%i)." % (
-                    parts.RawVar.Arg1, M.g2x(start_g), start_g, 
+                    parts.RawVar.Arg1, M.g2c(start_g), start_g, 
                     str(record.seq[rollposstart - 1:rollposend]), 
-                    M.g2x(rollposstart), rollposstart))
+                    M.g2c(rollposstart), rollposstart))
             #if
         #if
 

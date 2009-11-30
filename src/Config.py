@@ -53,5 +53,5 @@ class Config() :
 # Unit test.
 #
 if __name__ == "__main__" :
-    C = Config() # Will crach if the config file is not found.
+    C = Config() # Will crash if the config file is not found.
 #if

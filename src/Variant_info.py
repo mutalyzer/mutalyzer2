@@ -3,13 +3,15 @@
 """
     Search for an NM number in the MySQL database, if the version number 
     matches, get the start and end positions in a variant and translate these
-    positions to g. notation.
+    positions to g. notation if the variant is in c. notation and vice versa.
 
     - If no end position is present, the start position is assumed to be the
       end position. 
     - If the version number is not found in the database, an error message is
       generated and a suggestion for an other version is given.
     - If the reference sequence is not found at all, an error is returned.
+    - If no variant is present, the transcription start and end and CDS end
+      in c. notation is returned.
     - If the variant is not accepted by the nomenclature parser, a parse error
       will be printed.
 
@@ -17,7 +19,7 @@
         $1 ; The LOVD version (ignored for now).
         $2 ; The human genome build (ignored for now, hg19 assumed).
         $3 ; The NM accession number and version.
-        $4 ; The variant.
+        $4 ; The variant, or empty.
 
     Returns:
         start_main   ; The main coordinate of the start position in c. 
@@ -31,12 +33,17 @@
         start_g      ; The g. notation of the start position.
         end_g        ; The g. notation of the end position.
         type         ; The mutation type.
+
+    Returns (alternative):
+        trans_start  ; Transcription start in c. notation.
+        trans_stop   ; Transcription stop in c. notation.
+        CDS_stop     ; CDS stop in c. notation.
 """
 
 import sys      # argv
 import Config   # Config()
 import Db       # Db(), get_NM_version(), get_NM_info()
-import Crossmap # Crossmap(), star2abs() off2int(), c2g()
+import Crossmap # Crossmap(), g2x(), x2g(), main2int(), offset2int(), info()
 import Parser   # Nomenclatureparser(), parse()
 
 def sl2il(l) :
@@ -53,6 +60,34 @@ def sl2il(l) :
     return l
 #sl2il
 
+def getcoords(C, Loc, Type) :
+    """
+        Return main, offset and g positions given either a position in
+        c. or in g. notation.
+
+        Arguments:
+            C    ; A crossmapper.
+            Loc  ; Either a location in g. or c. notation.
+            Type ; The reference type.
+        Returns:
+            triple:
+                0 ; Main coordinate in c. notation.
+                1 ; Offset coordinate in c. notation.
+                2 ; Position in g. notation.
+    """
+
+    if Type == 'c' :
+        main = C.main2int(Loc.MainSgn +  Loc.Main)
+        offset = C.offset2int(Loc.OffSgn +  Loc.Offset)
+        g = C.x2g(main, offset)
+    #if
+    else :
+        g = int(Loc.Main)
+        main, offset = C.g2x(g)
+    #else
+    return (main, offset, g)
+#getcoords
+
 # Make a connection to the MySQL database with the username / db information
 #   from the configuration file.
 Conf = Config.Config() # Read the configuration file.
@@ -63,7 +98,10 @@ LOVD_ver = sys.argv[1]                 # The LOVD version (not used).
 build = sys.argv[2]                    # The human genome build (hg 19 assumed).
 accno = sys.argv[3].split('.')[0]        # The NM accession number.
 version = int(sys.argv[3].split('.')[1]) # The version of the accession number.
-variant = sys.argv[4]                    # The variant in HGVS notation.
+if len(sys.argv) == 5 :
+    variant = sys.argv[4]                # The variant in HGVS notation.
+else :
+    variant = "info"
 
 # Check whether the NM version number is in the database.
 db_version = Database.get_NM_version(accno)
@@ -105,48 +143,36 @@ orientation = 1
 if strand == '-' :
     orientation = -1
 
-# Now we can build the crossmapper.
+# Build the crossmapper.
 Cross = Crossmap.Crossmap(mRNA, CDS, orientation)
+
+# If no variant is given, return transcription start, transcription end and
+#   CDS stop in c. notation.
+if variant == "info" :
+    info = Cross.info()
+    print "%i\n%i\n%i" % info
+    exit()
+#if
 
 # Make a parsetree for the given variation.
 P = Parser.Nomenclatureparser()
 parsetree = P.parse("NM_0000:" + variant) # This NM number is bogus.
 
-# Get the main and offset coordinates of the start position in non-star 
-#   notation.
-startmain = Cross.star2abs(parsetree.RawVar.StartLoc.PtLoc.MainSgn,
-                           parsetree.RawVar.StartLoc.PtLoc.Main)
-startoffset =  Cross.off2int(parsetree.RawVar.StartLoc.PtLoc.OffSgn,
-                             parsetree.RawVar.StartLoc.PtLoc.Offset)
-print "%i\n%i" % (startmain, startoffset)
+# Get the coordinates in both c. and g. notation.
+startmain, startoffset, start_g = \
+    getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, parsetree.RefType)
 
-# Do the same for the end position if it is present, otherwise repeat the
-#   start position.
+# Assume there is no end position given.
+end_g = start_g
+endmain = startmain
+endoffset = startoffset
+
+# If there is an end position, calculate the coordinates.
 if parsetree.RawVar.EndLoc :
-    print Cross.star2abs(parsetree.RawVar.EndLoc.PtLoc.MainSgn,
-                         parsetree.RawVar.EndLoc.PtLoc.Main)
-    print Cross.off2int(parsetree.RawVar.EndLoc.PtLoc.OffSgn,
-                        parsetree.RawVar.EndLoc.PtLoc.Offset)
-#if                        
-else :
-    print "%i\n%i" % (startmain, startoffset)
+    endmain, endoffset, end_g = \
+        getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, parsetree.RefType)
 
-# Calculate the g. notation of the start position.
-start_g = Cross.c2g(parsetree.RawVar.StartLoc.PtLoc.MainSgn,
-                    parsetree.RawVar.StartLoc.PtLoc.Main,
-                    parsetree.RawVar.StartLoc.PtLoc.OffSgn,
-                    parsetree.RawVar.StartLoc.PtLoc.Offset)
-print start_g
-
-# Do the same for the end position if it is present, otherwise repeat the
-#   start position.
-if parsetree.RawVar.EndLoc :
-    print Cross.c2g(parsetree.RawVar.EndLoc.PtLoc.MainSgn,
-                    parsetree.RawVar.EndLoc.PtLoc.Main,
-                    parsetree.RawVar.EndLoc.PtLoc.OffSgn,
-                    parsetree.RawVar.EndLoc.PtLoc.Offset)
-else :
-    print start_g
-
-# Print the variant type.
-print parsetree.RawVar.MutationType
+# And return the output.
+print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (startmain, startoffset, 
+                                      endmain, endoffset, start_g, end_g, 
+                                      parsetree.RawVar.MutationType)

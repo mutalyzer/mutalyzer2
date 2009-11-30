@@ -27,8 +27,8 @@ class Crossmap() :
                              a >= 0 and a - b <= 0.
             __minusr(a, b) ; A protected '-' that skips 0 if
                              a > 0 and b < 0.
-            __star(a)      ; Translate from __STOP to '*' notation.
-            __rstar(s)     ; Translate from '*' to __STOP notation.
+            int2main(a)    ; Translate from __STOP to '*' notation.
+            main2int(s)    ; Translate from '*' to __STOP notation.
             __crossmap_splice_sites() ; Calculate the __crossmapping list.
             g2x(a)    ; Translate from g. notation to c. or n. notation.
             x2g(a, b) ; Translate c. or n. notation to g. notation.
@@ -48,6 +48,8 @@ class Crossmap() :
                 __crossmapping ; A list that contains either c. or n. positions
                                  corresponding to the g. positions in the RNA 
                                  list.
+                __trans_start  ; Transcription start site in c. notation.
+                __trans_end    ; Transcription end side in c. notation.
 
             Public variables (altered):
                 RNA         ; The list of RNA splice sites.
@@ -62,6 +64,10 @@ class Crossmap() :
         self.orientation = orientation
 
         self.__crossmap_splice_sites()
+
+        start = (orientation - 1) / 2
+        self.__trans_start = self.__crossmapping[start] 
+        self.__trans_end = self.__crossmapping[start - self.orientation]
     #__init__
 
     def __plus(self, a, b) :
@@ -127,38 +133,6 @@ class Crossmap() :
 
         return r
     #__minusr
-
-    def __star(self, a) :
-        """
-            This method converts the __STOP notation to the '*' notation.
-
-            Arguments:
-                a ; An integer in __STOP notation.
-
-            Returns:
-                string ; The converted notation (may be unaltered).
-        """
-        if a > self.__STOP :
-            return '*' + str(a - self.__STOP)
-
-        return str(a)
-    #__star
-
-    def __rstar(self, s) :
-        """
-            This method converts the '*' notation to the __STOP notation.
-
-            Arguments:
-                s ; A string in '*' notation.
-
-            Returns:
-                integer ; The converted notation (may be unaltered).
-        """
-        if s[0] == '*' :
-            return self.__STOP + int(s[1:])
-
-        return int(s)
-    #__rstar
 
     def __crossmap_splice_sites(self) :
         """
@@ -294,34 +268,26 @@ class Crossmap() :
         y = c * (RNAlen - 1)
 
         if d * a < d * self.RNA[y] : # A position before the first exon.
-            return str(self.__crossmapping[y]) + "-u" + \
-                   str(d * (self.RNA[y] - a))
+            return ((self.__crossmapping[y]), -d * (self.RNA[y] - a))
         if d * a > d * self.RNA[RNAlen - y - 1] : # After the last exon.
-            return self.__star(self.__crossmapping[RNAlen - y - 1]) + "+d" + \
-                               str(d * (a - self.RNA[RNAlen - y - 1]))
+            return (self.__crossmapping[RNAlen - y - 1], 
+                    d * (a - self.RNA[RNAlen - y - 1]))
 
         for i in xrange(RNAlen) : # A "normal" position.
             if i % 2 :            # We're checking the intron positions.
                 if self.RNA[i] < a and a < self.RNA[i + 1] : # Intron.
                     if d * (a - self.RNA[i]) > d * (self.RNA[i + 1] - a) :
                         # The position was closer to the next exon.
-                        return self.__star(self.__crossmapping[i + 1 - c]) + \
-                                           '-' + \
-                                           str(d * (self.RNA[i + 1 - c] - a))
+                        return (self.__crossmapping[i + 1 - c], 
+                                -d * (self.RNA[i + 1 - c] - a))
                     # The position was closer to the previous exon.
-                    return self.__star(self.__crossmapping[i + c]) + '+' + \
-                                       str(d * (a - self.RNA[i + c]))
+                    return (self.__crossmapping[i + c], 
+                            d * (a - self.RNA[i + c]))
                 #if
             else :                # We're checking the exon positions.
                 if self.RNA[i] <= a and a <= self.RNA[i + 1] :
-                    if CDSlen and d * a > d * self.CDS[CDSlen - x - 1] :
-                        # Use the next splice site after CDS STOP.
-                        return self.__star(self.__minus( \
-                                           self.__crossmapping[i + 1 - c], \
-                                           d * (self.RNA[i + 1 - c] - a)))
-                    # Use the previous splice site in other cases.
-                    return self.__star(self.__plus(self.__crossmapping[i + c], \
-                                                   d * (a - self.RNA[i + c])))
+                    return (self.__plus(self.__crossmapping[i + c], 
+                                        d * (a - self.RNA[i + c])), 0)
                 #if
         #for
     #g2x
@@ -382,33 +348,125 @@ class Crossmap() :
         return ret
     #x2g
 
-    def c2str(self, mainsgn, main, offsgn, offset) :
-        return str(mainsgn) + str(main) + str(offsgn) + str(offset)
-    #printc
+    def int2main(self, a) :
+        """
+            This method converts the __STOP notation to the '*' notation.
 
-    def star2abs(self, mainsgn, main) :
-        return self.__rstar(mainsgn + str(main))
-    #star2abs
+            Arguments:
+                a ; An integer in __STOP notation.
 
-    def off2int(self, offsgn, offset) :
-        if not offset :
+            Private variables:
+                __STOP ; CDS stop in c. notation.
+
+            Returns:
+                string ; The converted notation (may be unaltered).
+        """
+        if a > self.__STOP :
+            return '*' + str(a - self.__STOP)
+
+        return str(a)
+    #int2main
+
+    def main2int(self, s) :
+        """
+            This method converts the '*' notation to the __STOP notation.
+
+            Arguments:
+                s ; A string in '*' notation.
+
+            Private variables:
+                __STOP ; CDS stop in c. notation.
+
+            Returns:
+                integer ; The converted notation (may be unaltered).
+        """
+        if s[0] == '*' :
+            return self.__STOP + int(s[1:])
+
+        return int(s)
+    #main2int
+
+    def int2offset(self, t) :
+        """
+            Convert a tuple of integers to offset-notation. This adds a `+', 
+            and `u' or `d' to the offset when appropriate. The main value is 
+            not returned.
+
+            Arguments:
+                t ; A tuple of integers: (main, offset) in __STOP notation.
+
+            Returns:
+                string ; The offset in HGVS notation.
+        """
+
+        if t[1] > 0 :                      # The exon boundary is downstream.
+            if t[0] >= self.__trans_end :  # It is downstream of the last exon.
+                return "+d" + str(t[1])
+            return '+' + str(t[1])
+        #if
+        if t[1] < 0 :                       # The exon boundary is uptream.
+            if t[0] <= self.__trans_start : # It is upstream of the first exon.
+                return "-u" + str(-t[1])
+            return str(t[1])
+        #if
+        return ''                           # No offset was given.
+    #int2offset
+
+    def offset2int(self, s) :
+        """
+            Convert an offset in HGVS notation to an integer. This removes
+            `+', `u' and `d' when present. It also converts a `?' to something
+            sensible.
+
+            Arguments:
+                s ; An offset in HGVS notation.
+
+            Returns:
+                int ; The offset as an integer.
+        """
+
+        if not s :    # No offset given.
             return 0
-        ret = int(offset)
-        if offsgn == '-' :
-            return -ret
-        return ret
-    #off2int
+        if s == '?' : # Here we ignore an uncertainty.
+            return 0  # FIXME, this may have to be different.
+        if s[1] == 'u' or s[1] == 'd' : # Remove `u' or `d'.
+            if s[0] == '-' :            # But save the `-'.
+                return -int(s[2:])
+            return int(s[2:])
+        #if
+        if s[0] == '-' :
+            return -int(s[1:])          # Save the `-' here too.
+        return int(s[1:])
+    #offset2int
 
-    def c2g(self, mainsgn, main, offsgn, offset) :
-        m = mainsgn + main
-        o = 0
-        if offset :
-            o = int(offset)
-            if offsgn == '-' :
-                o = -o
-    
-        return self.x2g(self.__rstar(m), o)
-    #c2g
+    def tuple2string(self, t) :
+        """
+            Convert a tuple (main, offset) in __STOP notation to c. notation.
+
+            Arguments:
+                t ; A tuple (main, offset) in __STOP notation.
+                    
+            Returns:
+                string ; The position in HGVS notation.
+        """
+
+        return str(self.int2main(t[0])) + str(self.int2offset(t))
+    #tuple2string
+
+    def g2c(self, a) :
+        return self.tuple2string(self.g2x(a))
+    #g2c
+
+    def info(self) :
+        """
+            Return transcription start, transcription end and CDS stop.
+
+            Returns:
+                triple ; (trans_start, trans_stop, CDS_stop)
+        """
+
+        return (self.__trans_start, self.__trans_end, self.__STOP)
+    #info
 #Crossmap
 
 #
@@ -439,31 +497,31 @@ if __name__ == "__main__" :
         print "Forward/reverse discrepancy (c. notation)."
 
     # Do some g. to c. conversion checking for the gene on the forward strand.
-    if Cf.g2x(5001) != "-304-u1" or\
-       Cf.g2x(5124) != "-182" or \
-       Cf.g2x(5126) != "-181+1" or \
-       Cf.g2x(27924) != "-1" or \
-       Cf.g2x(27925) != "1" or \
-       Cf.g2x(58660) != "16-1" or \
-       Cf.g2x(74736) != "174" or \
-       Cf.g2x(74737) != "*1" or \
-       Cf.g2x(103408) != "*32-1" or \
-       Cf.g2x(103410) != "*33" or \
-       Cf.g2x(149216) != "*1146+d1" :
+    if Cf.tuple2string(Cf.g2x(5001)) != "-304-u1" or\
+       Cf.tuple2string(Cf.g2x(5124)) != "-182" or \
+       Cf.tuple2string(Cf.g2x(5126)) != "-181+1" or \
+       Cf.tuple2string(Cf.g2x(27924)) != "-1" or \
+       Cf.tuple2string(Cf.g2x(27925)) != "1" or \
+       Cf.tuple2string(Cf.g2x(58660)) != "16-1" or \
+       Cf.tuple2string(Cf.g2x(74736)) != "174" or \
+       Cf.tuple2string(Cf.g2x(74737)) != "*1" or \
+       Cf.tuple2string(Cf.g2x(103408)) != "*32-1" or \
+       Cf.tuple2string(Cf.g2x(103410)) != "*33" or \
+       Cf.tuple2string(Cf.g2x(149216)) != "*1146+d1" :
         print "Forward g. to c. conversion incorrect."
 
     # Do some g. to c. conversion checking for the gene on the reverse strand.
-    if Cr.g2x(146214) != "-304-u1" or \
-       Cr.g2x(146091) != "-182" or \
-       Cr.g2x(146089) != "-181+1" or \
-       Cr.g2x(123291) != "-1" or \
-       Cr.g2x(123290) != "1" or \
-       Cr.g2x(92555) != "16-1" or \
-       Cr.g2x(76479) != "174" or \
-       Cr.g2x(76478) != "*1" or \
-       Cr.g2x(47807) != "*32-1" or \
-       Cr.g2x(47805) != "*33" or \
-       Cr.g2x(1999) != "*1146+d1" :
+    if Cr.tuple2string(Cr.g2x(146214)) != "-304-u1" or \
+       Cr.tuple2string(Cr.g2x(146091)) != "-182" or \
+       Cr.tuple2string(Cr.g2x(146089)) != "-181+1" or \
+       Cr.tuple2string(Cr.g2x(123291)) != "-1" or \
+       Cr.tuple2string(Cr.g2x(123290)) != "1" or \
+       Cr.tuple2string(Cr.g2x(92555)) != "16-1" or \
+       Cr.tuple2string(Cr.g2x(76479)) != "174" or \
+       Cr.tuple2string(Cr.g2x(76478)) != "*1" or \
+       Cr.tuple2string(Cr.g2x(47807)) != "*32-1" or \
+       Cr.tuple2string(Cr.g2x(47805)) != "*33" or \
+       Cr.tuple2string(Cr.g2x(1999)) != "*1146+d1" :
         print "Reverse g. to c. conversion incorrect."
 
     # Do some c. to g. conversion checking for the gene on the forward strand.
@@ -474,10 +532,10 @@ if __name__ == "__main__" :
        Cf.x2g(1, 0) != 27925 or \
        Cf.x2g(16, -1) != 58660 or \
        Cf.x2g(174, 0) != 74736 or \
-       Cf.x2g(Cf._Crossmap__rstar("*1"), 0) != 74737 or \
-       Cf.x2g(Cf._Crossmap__rstar("*32"), -1) != 103408 or \
-       Cf.x2g(Cf._Crossmap__rstar("*33"), 0) != 103410 or \
-       Cf.x2g(Cf._Crossmap__rstar("*1146"), 1) != 149216 :
+       Cf.x2g(Cf.main2int("*1"), 0) != 74737 or \
+       Cf.x2g(Cf.main2int("*32"), -1) != 103408 or \
+       Cf.x2g(Cf.main2int("*33"), 0) != 103410 or \
+       Cf.x2g(Cf.main2int("*1146"), 1) != 149216 :
         print "Forward c. to g. conversion incorrect."
 
     # Do some c. to g. conversion checking for the gene on the reverse strand.
@@ -488,10 +546,10 @@ if __name__ == "__main__" :
        Cr.x2g(1, 0) != 123290 or \
        Cr.x2g(16, -1) != 92555 or \
        Cr.x2g(174, 0) != 76479 or \
-       Cr.x2g(Cf._Crossmap__rstar("*1"), 0) != 76478 or \
-       Cr.x2g(Cf._Crossmap__rstar("*32"), -1) != 47807 or \
-       Cr.x2g(Cf._Crossmap__rstar("*33"), 0) != 47805 or \
-       Cr.x2g(Cf._Crossmap__rstar("*1146"), 1) != 1999 :
+       Cr.x2g(Cf.main2int("*1"), 0) != 76478 or \
+       Cr.x2g(Cf.main2int("*32"), -1) != 47807 or \
+       Cr.x2g(Cf.main2int("*33"), 0) != 47805 or \
+       Cr.x2g(Cf.main2int("*1146"), 1) != 1999 :
         print "Reverse c. to g. conversion incorrect."
 
     # Build a crossmapper for the hypothetical gene, missing the first exon and
@@ -532,18 +590,18 @@ if __name__ == "__main__" :
         print "Forward/reverse discrepancy (n. notation)."
 
     # Do some g. to n. conversion checking for the gene on the forward strand.
-    if Cf3.g2x(5001) != "1-u1" or \
-       Cf3.g2x(5002) != "1" or \
-       Cf3.g2x(5126) != "124+1" or \
-       Cf3.g2x(149216) != "1624+d1" :
+    if Cf3.tuple2string(Cf3.g2x(5001)) != "1-u1" or \
+       Cf3.tuple2string(Cf3.g2x(5002)) != "1" or \
+       Cf3.tuple2string(Cf3.g2x(5126)) != "124+1" or \
+       Cf3.tuple2string(Cf3.g2x(149216)) != "1624+d1" :
         print "Forward g. to n. conversion incorrect."
 
     # Do some g. to n. conversion checking for the gene on the reverse strand.
-    if Cr3.g2x(146214) != "1-u1" or \
-       Cr3.g2x(146213) != "1" or \
-       Cr3.g2x(146089) != "124+1" or \
-       Cr3.g2x(1999) != "1624+d1" :
-        print "Forward g. to n. conversion incorrect."
+    if Cr3.tuple2string(Cr3.g2x(146214)) != "1-u1" or \
+       Cr3.tuple2string(Cr3.g2x(146213)) != "1" or \
+       Cr3.tuple2string(Cr3.g2x(146089)) != "124+1" or \
+       Cr3.tuple2string(Cr3.g2x(1999)) != "1624+d1" :
+        print "Reverse g. to n. conversion incorrect."
 
     # Do some n. to g. conversion checking for the gene on the forward strand.
     if Cf3.x2g(1, -1) != 5001 or \
