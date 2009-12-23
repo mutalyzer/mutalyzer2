@@ -143,9 +143,19 @@ class Mutator() :
                 mutated ; This string will reflect the result of the given 
                           delins.
         """
+
+        from Bio import pairwise2
+
         self.mutated = self.mutated[:self.__shiftpos(pos1)] + ins + \
                        self.mutated[self.__shiftpos(pos2):]
         self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
+
+        alignments = pairwise2.align.globalms(self.orig[pos1 - 25: pos2 + 25],
+            self.mutated[self.__shiftpos(pos1) - 25:self.__shiftpos(pos2) + 25],
+            1, -1, -2, -1)
+        print
+        print alignments[0][0]
+        print alignments[0][1]
     #__mutate
 
     def newSplice(self, sites) :

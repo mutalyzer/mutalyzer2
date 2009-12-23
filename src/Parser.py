@@ -268,10 +268,12 @@ class Nomenclatureparser(object) :
     Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
           UnkEffectVar ^ NoRNAVar ^ SplicingVar
 
-    def __init__(self) :
+    def __init__(self, output) :
         """
             Initialise the class and enable packrat parsing.
         """
+
+        self.__output = output
 
         ParserElement.enablePackrat() # Speed up parsing considerably.
     #__init__
@@ -295,7 +297,10 @@ class Nomenclatureparser(object) :
         try :
             return self.Var.parseString(input, parseAll = True)
         except ParseException, err :
-            print "Error: %s" % err
+            #import Output
+
+            #O = Output.Output()
+            self.__output.ErrorMsg(__file__, str(err))
 
             # Print the input.
             print input
@@ -304,7 +309,7 @@ class Nomenclatureparser(object) :
             pos = int(str(err).split(':')[-1][:-1]) - 1
             print pos * ' ' + '^'
 
-            exit()
+            return None
         #except
     #parse
 #Nomenclatureparser

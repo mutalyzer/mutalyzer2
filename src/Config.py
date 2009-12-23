@@ -46,6 +46,7 @@ class Config() :
         # Set the variables needed by the Db module.
         self.MySQLuser = config["MySQLuser"]
         self.dbName = config["dbName"]
+        self.log = config["log"]
     #__init__
 #Config
 

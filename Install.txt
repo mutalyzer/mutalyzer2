@@ -5,7 +5,24 @@ This program depends on the following packages:
 - python-pyparsing >= 1.5.0
 - python-configobj >= 4.4.0
 - mysql-server     >= 5.0.0
+
+The web interface depends on the following packages:
+- apache                >= 2.2.11
+- libapache2-mod-python >= 3.3.1
+
 Install and configure these packages before continuing.
+
+Edit /etc/apache2/mods-available/python.load (change the path 
+/var/www/mutalyzer2 when appropriate):
+---
+LoadModule python_module /usr/lib/apache2/modules/mod_python.so
+
+<Directory /var/www/mutalyzer2> 
+  SetHandler mod_python
+  PythonHandler mod_python.publisher
+  PythonDebug On
+</Directory>
+---
 
 After installing MySQL, create a database named ``hg19'', owned by the
 user ``mutalyzer'':

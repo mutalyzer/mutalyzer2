@@ -1,28 +1,5 @@
 #!/usr/bin/python
 
-
-def splice(record, splice_sites) :
-    """
-        Construct the transcript or the coding sequence from a record and
-        a list of splice sites.
-
-        Arguments:
-            record       ; A GenBank record (see the BioPython documentation).
-            splice_sites ; A list of even length of integers.
-
-        Returns:
-            String ; The concatenation of slices from the sequence that is 
-                     present in the GenBank record.
-    """
-
-    transcript = ''
-
-    for i in range(0, len(splice_sites), 2) :
-        transcript += record.seq[splice_sites[i]:splice_sites[i + 1]] 
-
-    return transcript
-#splice
-
 class Plist(object) :
     """
         A position list object, to store a general location and a list of 
@@ -67,6 +44,7 @@ class Locus(object) :
         Public variables:
             mRNA ; A position list object.
             CDS  ; A position list object.
+            exon ; A position list object.
     """
 
     def __init__(self) :
@@ -76,12 +54,15 @@ class Locus(object) :
             Public variables (altered):
                 mRNA ; A position list object.
                 CDS  ; A position list object.
+                exon ; A position list object.
                 CM   ; A Crossmap object.
         """
 
         self.mRNA = None
         self.CDS = None
+        self.exon = None
         self.CM = None
+
     #__init__
 #locus
 
@@ -165,6 +146,21 @@ class GenRecord() :
         
         return ret
     #__locationList2posList
+
+    """
+    def __sortins(self, position, posList) :
+        last = 0
+
+        for i in range(0, len(posList), 2) :
+            if position[0] == posList[i] :
+                return posList
+            if position[0] > last and position[0] < posList[i] :
+                return posList[:i] + position + posList[i:]
+            last = posList[i]
+        #for        
+        return posList + position
+    #__sortins
+    """
     
     def record2dict(self, record) :
         recordDict = {}
@@ -177,8 +173,8 @@ class GenRecord() :
                     recordDict[gene].orientation = i.strand
     
                 # Look if there is a locus tag present, if not, give it the
-                # default tag `0'.
-                locus_tag = 001
+                # default tag `001'.
+                locus_tag = "001"
                 if i.qualifiers.has_key("locus_tag") :
                     locus_tag = i.qualifiers["locus_tag"][0][-3:]
                 if not recordDict[gene].list.has_key(locus_tag) :
@@ -198,6 +194,11 @@ class GenRecord() :
                     recordDict[gene].list[locus_tag].CDS.list = \
                         self.__locationList2posList(i)
                 #if
+                if i.type == "exon" :
+                    if not recordDict[gene].list[locus_tag].exon :
+                        recordDict[gene].list[locus_tag].exon = Plist()
+                    recordDict[gene].list[locus_tag].exon.list.extend(
+                        self.__location2pos(i.location))
             #if
         #for
 
@@ -234,3 +235,10 @@ class GenRecord() :
         #for
     #printRecordDict
 #GenRecord
+
+if __name__ == "__main__" :
+    R = GenRecord()
+    bla = R._GenRecord__sortins([10, 20], [4, 5])
+    print R._GenRecord__sortins([1, 2], bla)
+    print R._GenRecord__sortins([8, 9], bla)
+#if

@@ -45,6 +45,7 @@ import Config   # Config()
 import Db       # Db(), get_NM_version(), get_NM_info()
 import Crossmap # Crossmap(), g2x(), x2g(), main2int(), offset2int(), info()
 import Parser   # Nomenclatureparser(), parse()
+import Output
 
 def sl2il(l) :
     """
@@ -80,6 +81,7 @@ def getcoords(C, Loc, Type) :
         main = C.main2int(Loc.MainSgn +  Loc.Main)
         offset = C.offset2int(Loc.OffSgn +  Loc.Offset)
         g = C.x2g(main, offset)
+        main, offset = C.g2x(g)
     #if
     else :
         g = int(Loc.Main)
@@ -131,9 +133,9 @@ CDS = [cdsStart + 1]                  # The counting from 0 conversion.
 for i in range(len(exonStarts)) :
     mRNA.append(exonStarts[i] + 1)    # This is an interbase conversion.
     mRNA.append(exonEnds[i])
-    if exonStarts[i] >= cdsStart and exonStarts[i] <= cdsEnd :
+    if exonStarts[i] > cdsStart and exonStarts[i] <= cdsEnd :
         CDS.append(exonStarts[i] + 1) # Also an interbase conversion.
-    if exonEnds[i] >= cdsStart and exonEnds[i] <= cdsEnd :
+    if exonEnds[i] >= cdsStart and exonEnds[i] < cdsEnd :
         CDS.append(exonEnds[i])
 #for
 CDS.append(cdsEnd)
@@ -155,7 +157,8 @@ if variant == "info" :
 #if
 
 # Make a parsetree for the given variation.
-P = Parser.Nomenclatureparser()
+O = Output.Output(Conf)
+P = Parser.Nomenclatureparser(O)
 parsetree = P.parse("NM_0000:" + variant) # This NM number is bogus.
 
 # Get the coordinates in both c. and g. notation.

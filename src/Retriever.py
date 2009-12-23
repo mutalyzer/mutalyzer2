@@ -24,7 +24,7 @@ class Retriever() :
                                      the record.
     """
 
-    def __init__(self, config) :
+    def __init__(self, config, output) :
         """
             Read the configuration file for some simple settings. Make the
             cache directory if it does not exist yet.
@@ -38,10 +38,12 @@ class Retriever() :
                 __cachesize ; Maximum size of the cache.
         """
         import os # os.path.isdir(), os.path.mkdir()
+        #import Output
 
         self.__email = config.email
         self.__cache = config.cache
         self.__cachesize = config.cachesize
+        self.__output = output
 
         if not os.path.isdir(self.__cache) :
             os.mkdir(self.__cache)
@@ -105,7 +107,8 @@ class Retriever() :
             Return a record from either the cache or the NCBI. 
             If a file is retrieved from the NCBI, a hard link is made to its
             alternative name (GI when an accession number is given and vice
-            versa).
+            versa). If no version is given, it will be retrieved and the
+            record will be renamed.
             After downloading a file, the cache is checked for overflows by
             calling the __cleancache() function.
             The files are stored in compressed format in the cache.
@@ -161,16 +164,33 @@ class Retriever() :
         record = SeqIO.read(file_handle, "genbank")
         file_handle.close()
 
-        # If a GI is supplied, find out the accession number and vice versa.
-        if name == record.annotations["gi"] :
-            altfilename = self.__cache + '/' + record.id + ".gb.bz2"
-        else :
+        # If a GI is supplied, find out the accession number (plus version)
+        #   and vice versa.
+        if name != record.annotations["gi"] :
             altfilename = \
                 self.__cache + '/' + record.annotations["gi"] + ".gb.bz2"
+            altfilename2 = \
+                self.__cache + '/' + record.id + ".gb.bz2"
+        #if
+        else :
+            altfilename = self.__cache + '/' + record.id + ".gb.bz2"
     
         # If the alternative filename is not present yet, make a hard link.
         if not os.path.isfile(altfilename) :
             os.link(filename, altfilename)
+
+        # If the other alternative filename is not present (no version was 
+        #   given), rename the file. If it already exists, remove the file.
+        if filename != altfilename2 :
+            if not os.path.isfile(altfilename2) :
+                os.rename(filename, altfilename2)
+            else :
+                os.remove(filename)
+
+            self.__output.WarningMsg(__file__, "No version number is given, using %s. " \
+                  "Please use version numbers to reduce downloading " \
+                  "overhead." % record.id)
+        #if
 
         return record
     #loadrecord

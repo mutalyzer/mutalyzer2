@@ -189,7 +189,7 @@ class Crossmap() :
             i = y - c
             while d * self.RNA[i] < d * self.CDS[x] :  # Find CDS start.
                 i += d
-            cPos = d * (self.CDS[x] - self.CDS[x - d] + 
+            cPos = d * (self.RNA[i] - self.CDS[x - d] + 
                         (d * 2)) # Get the right boundary.
 
             while d * i > d * y :                      # Go back to exon 1.
@@ -434,6 +434,8 @@ class Crossmap() :
                 return -int(s[2:])
             return int(s[2:])
         #if
+        if s[1:] == '?' : # Here we ignore an unvertainty in the intron.
+            return 0      # FIXME, this may have to be different.
         if s[0] == '-' :
             return -int(s[1:])          # Save the `-' here too.
         return int(s[1:])
@@ -473,6 +475,28 @@ class Crossmap() :
 # Unit test.
 #
 if __name__ == "__main__" :
+    """
+    tm = [1, 80, 81, 3719]
+    tc = [162, 2123]
+    T = Crossmap(tm, tc, 1)
+    print T._Crossmap__crossmapping
+    print T.RNA
+    print T.CDS
+    print T.x2g(1, 0)
+    print T.tuple2string(T.g2x(2123))
+    print T.tuple2string(T.g2x(2124))
+    tm = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768, 23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899, 23898506, 23899304]
+    tc = [23777833, 23778028, 23808749, 23808851, 23824768, 23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899, 23898506, 23898680]
+    T = Crossmap(tm, tc, 1)
+    print T._Crossmap__crossmapping
+    print T.RNA
+    print T.CDS
+    print T.x2g(1, 0)
+    print T._Crossmap__STOP
+    print T.tuple2string(T.g2x(2123))
+    print T.tuple2string(T.g2x(2124))
+    """
+
     # Build a crossmapper for a hypothetical gene.
     mRNAf = [5002, 5125, 27745, 27939, 58661, 58762, 74680, 74767, 103409, 
              103528, 119465, 119537, 144687, 144810, 148418, 149215]
