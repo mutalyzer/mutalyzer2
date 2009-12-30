@@ -30,7 +30,16 @@ class Output() :
     #LogMsg
 
     def Summary(self) :
-        print "%i Errors, %i Warnings." % (self.__errors, self.__warnings)
+        e_s = 's'
+        w_s = 's'
+        if self.__errors == 1 :
+            e_s = ''
+        if self.__warnings == 1 :
+            w_s = ''
+            
+        print "%i Error%s, %i Warning%s." % (self.__errors, e_s, 
+                                             self.__warnings, w_s)
+    #Summary
 #Output
 
 if __name__ == "__main__" :

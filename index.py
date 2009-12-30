@@ -7,6 +7,7 @@ from cStringIO import StringIO
 
 directory = os.path.dirname(__file__)
 Main = apache.import_module('Main', path=[directory + "/src"])
+VI = apache.import_module('Variant_info', path=[directory + "/src"])
 os.chdir(directory)
 
 s = """
@@ -48,8 +49,8 @@ def index(req) :
     if req.form :
         name = req.form['mutationName']
 
-        fsock = open('panic.log', 'a')
-        sys.stderr = fsock
+        #fsock = open('panic.log', 'a')
+        #sys.stderr = fsock
 
         old_stdout = sys.stdout
         sys.stdout = StringIO()
@@ -59,6 +60,19 @@ def index(req) :
     #if
 
     return s % (name, reply)
+#index
 
-#def Variant_info(req) :
-#    return "HOI"
+def Variant_info(req) :
+    LOVD_ver = req.form['LOVD_ver']
+    build = req.form['build']
+    acc = req.form['acc']
+    var = req.form['var']
+
+    old_stdout = sys.stdout
+    sys.stdout = StringIO()
+    VI.main(LOVD_ver, build, acc, var)
+    reply = sys.stdout.getvalue() #.replace('\n', "<br>")
+    sys.stdout = old_stdout
+
+    return reply
+#Variant_info

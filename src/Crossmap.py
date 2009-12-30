@@ -11,7 +11,7 @@ class Crossmap() :
 
         Public variables:
             RNA         ; The list of RNA splice sites.
-            CDS         ; The CDS list (if present).
+            CDS         ; CDS start and stop (if present).
             orientation ; The orientation of the transcript:  1 = forward
                                                              -1 = reverse.
 
@@ -40,7 +40,7 @@ class Crossmap() :
 
             Arguments:
                 RNA         ; The list of RNA splice sites.
-                CDS         ; The CDS list (may be empty).
+                CDS         ; CDS start and stop (may be empty).
                 orientation ; The orientation of the transcript.
 
             Private variables (altered):
@@ -53,10 +53,11 @@ class Crossmap() :
 
             Public variables (altered):
                 RNA         ; The list of RNA splice sites.
-                CDS         ; The CDS list (if present).
+                CDS         ; CDS start and stop (if present).
                 orientation ; The orientation of the transcript:  1 = forward
                                                                  -1 = reverse.
         """
+
         self.__STOP = 10000000000
         self.__crossmapping = len(RNA) * [None]
         self.RNA = list(RNA)
@@ -84,6 +85,7 @@ class Crossmap() :
                 integer ; a + b or a + b + 1.
 
         """
+        
         r = a + b
 
         if a <= 0 and r >= 0 :
@@ -105,6 +107,7 @@ class Crossmap() :
             Returns:
                 integer ; a - b or (a - b) - 1.
         """
+
         r = a - b
 
         if a >= 0 and r <= 0 :
@@ -126,6 +129,7 @@ class Crossmap() :
             Returns:
                 integer ; a - b or (a - b) - 1.
         """
+
         r = a - b
 
         if a > 0 and b < 0 :
@@ -143,8 +147,8 @@ class Crossmap() :
               3: The n. notation of the RNA splice sites.
             
             For option 1 only provide an list with CDS splice sites.
-            For option 2 provide an list with RNA and one with CDS splice
-              sites.
+            For option 2 provide an list with RNA splice sites and one with
+              the CDS start and stop.
             For option 3 only provide an list with RNA splice sites.
             
             Examples:
@@ -173,24 +177,26 @@ class Crossmap() :
 
             Public variables:
                 RNA         ; The list of RNA splice sites.
-                CDS         ; The CDS list (if present).
+                CDS         ; CDS start and stop (if present).
                 orientation ; The orientation of the transcript:  1 = forward
                                                                  -1 = reverse.
         """
-        CDSlen = len(self.CDS)
+
         RNAlen = len(self.RNA)
         cPos = 1 # This value stays one unless we both have mRNA and CDS.
         d = self.orientation
-        c = (d - 1) / -2         # c, x and z are used to unify forward and
-        x = c * (CDSlen - 3) + 1 # reverse complement
+        c = (d - 1) / -2   # c, x and z are used to unify forward and
+        x = (-d - 1) / -2  # reverse complement.
         y = c * (RNAlen - 1)
 
-        if CDSlen : # If we both have mRNA and CDS, we have to search for start.
+        if self.CDS : # If we both have mRNA and CDS, we have to search for 
+                      # CDS start.
             i = y - c
-            while d * self.RNA[i] < d * self.CDS[x] :  # Find CDS start.
+            # Find CDS start.
+            while d * (self.RNA[i] - ((i + 1) % 2)) < d * self.CDS[c] : 
                 i += d
-            cPos = d * (self.RNA[i] - self.CDS[x - d] + 
-                        (d * 2)) # Get the right boundary.
+            cPos = d * (self.RNA[i] - self.CDS[c] + (d * 2)) # Get the right 
+                                                             # boundary.
 
             while d * i > d * y :                      # Go back to exon 1.
                 cPos = self.__minus(cPos, d * 
@@ -208,10 +214,9 @@ class Crossmap() :
                 cPos = self.__plus(cPos, self.RNA[i + 1] - self.RNA[i])
 
             # Set __STOP when we find CDS stop.
-            if CDSlen and cPos < self.__STOP and \
-               d * self.RNA[i - c + 1] >= d * self.CDS[d * (CDSlen - 2) + x] :
-                self.__STOP = cPos - (d * (self.RNA[i - c + 1] - 
-                                      self.CDS[d * (CDSlen - 2) + x]))
+            if self.CDS and cPos < self.__STOP and \
+               d * self.RNA[i - c + 1] >= d * self.CDS[x] :
+                self.__STOP = cPos - (d * (self.RNA[i - c + 1] - self.CDS[x]))
             i += d
         #while
     #__crossmap_splice_sites
@@ -225,8 +230,8 @@ class Crossmap() :
             For option 1 only provide an array with mRNA splice sites and one
             with the c. notation of the splice sites.
             For option 2 provide an array with mRNA splice sites, one with the
-            c. notation of the splice sites and an array with the CDS splice
-            sites.
+            c. notation of the splice sites and an array with the CDS start and
+            stop.
             
             Examples:
             - Get the n. notation of a g. position i. The input is in forward
@@ -253,19 +258,18 @@ class Crossmap() :
 
             Public variables:
                 RNA         ; The list of RNA splice sites.
-                CDS         ; The CDS list (if present).
+                CDS         ; CDS start and stop (if present).
                 orientation ; The orientation of the transcript:  1 = forward
                                                                  -1 = reverse.
 
             Returns:
                 string ; The c. or n. notation of position a.
         """
-        CDSlen = len(self.CDS)
+
         RNAlen = len(self.RNA)
         d = self.orientation
-        c = (d - 1) / -2     # c, x and z are used to unify forward and
-        x = c * (CDSlen - 1) # reverse complement.
-        y = c * (RNAlen - 1)
+        c = (d - 1) / -2     # c and z are used to unify forward and reverse
+        y = c * (RNAlen - 1) # complement.
 
         if d * a < d * self.RNA[y] : # A position before the first exon.
             return ((self.__crossmapping[y]), -d * (self.RNA[y] - a))
@@ -328,6 +332,7 @@ class Crossmap() :
             Returns:
                 integer ; A g. position.
         """
+
         d = self.orientation
         c = (-d - 1) / -2 # Used to unify forward and reverse complement.
         RNAlen = len(self.RNA)
@@ -361,6 +366,7 @@ class Crossmap() :
             Returns:
                 string ; The converted notation (may be unaltered).
         """
+
         if a > self.__STOP :
             return '*' + str(a - self.__STOP)
 
@@ -380,6 +386,7 @@ class Crossmap() :
             Returns:
                 integer ; The converted notation (may be unaltered).
         """
+
         if s[0] == '*' :
             return self.__STOP + int(s[1:])
 
@@ -475,38 +482,16 @@ class Crossmap() :
 # Unit test.
 #
 if __name__ == "__main__" :
-    """
-    tm = [1, 80, 81, 3719]
-    tc = [162, 2123]
-    T = Crossmap(tm, tc, 1)
-    print T._Crossmap__crossmapping
-    print T.RNA
-    print T.CDS
-    print T.x2g(1, 0)
-    print T.tuple2string(T.g2x(2123))
-    print T.tuple2string(T.g2x(2124))
-    tm = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768, 23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899, 23898506, 23899304]
-    tc = [23777833, 23778028, 23808749, 23808851, 23824768, 23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899, 23898506, 23898680]
-    T = Crossmap(tm, tc, 1)
-    print T._Crossmap__crossmapping
-    print T.RNA
-    print T.CDS
-    print T.x2g(1, 0)
-    print T._Crossmap__STOP
-    print T.tuple2string(T.g2x(2123))
-    print T.tuple2string(T.g2x(2124))
-    """
-
     # Build a crossmapper for a hypothetical gene.
     mRNAf = [5002, 5125, 27745, 27939, 58661, 58762, 74680, 74767, 103409, 
              103528, 119465, 119537, 144687, 144810, 148418, 149215]
-    CDSf = [27925, 27939, 58661, 58762, 74680, 74736]
+    CDSf = [27925, 74736]
     Cf = Crossmap(mRNAf, CDSf, 1)
 
     # Build a crossmapper for a hypothetical gene on the reverse strand.
     mRNAr = [2000, 2797, 6405, 6528, 31678, 31750, 47687, 47806, 76448, 76535, 
              92453, 92554, 123276, 123470, 146090, 146213]
-    CDSr = [76479, 76535, 92453, 92554, 123276, 123290]
+    CDSr = [76479, 123290]
     Cr = Crossmap(mRNAr, CDSr, -1)
 
     # Check whether the gene on the forward strand has the right splice sites
@@ -580,14 +565,14 @@ if __name__ == "__main__" :
     #   the last two exons.
     mRNAf2 = [27745, 27939, 58661, 58762, 74680, 74767, 103409, 
              103528, 119465, 119537]
-    CDSf2 = [27925, 27939, 58661, 58762, 74680, 74736]
+    CDSf2 = [27925, 74736]
     Cf2 = Crossmap(mRNAf2, CDSf2, 1)
 
     # Build a crossmapper for the hypothetical gene on the reverse strand, 
     #   missing the first exon and the last two exons.
     mRNAr2 = [31678, 31750, 47687, 47806, 76448, 76535, 
               92453, 92554, 123276, 123470]
-    CDSr2 = [76479, 76535, 92453, 92554, 123276, 123290]
+    CDSr2 = [76479, 123290]
     Cr2 = Crossmap(mRNAr2, CDSr2, -1)
 
     if Cf.g2x(27925) != Cf2.g2x(27925) or \
@@ -640,4 +625,44 @@ if __name__ == "__main__" :
        Cr3.x2g(124, 1) !=  146089 or \
        Cr3.x2g(1624, 1) != 1999 :
         print "Reverse n. to g. conversion incorrect."
+
+    # This is a test for a gene that has a CDS that lies entirely in one exon.
+    tm = [1, 80, 81, 3719]
+    tc = [162, 2123]
+    T = Crossmap(tm, tc, 1)
+    if T._Crossmap__crossmapping != [-161, -82, -81, 3558] :
+        print "Crossmapping list not built correctly (c. notation) in " + \
+              "small CDS test."
+    if T.x2g(1, 0) != 162 :
+        print "c. to g. conversion failed in small CDS test."
+    if T.tuple2string(T.g2x(2123)) != "1962" or \
+       T.tuple2string(T.g2x(2124)) != "*1" :
+        print "g. to c. conversion failed in small CDS test."
+
+    # This is a test for a gene that has a CDS that starts on an exon splice 
+    # site.
+    tm2 = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
+           23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
+           23898506, 23899304]
+    tc2 = [23777833, 23898680]
+    T2 = Crossmap(tm2, tc2, 1)
+    if T2._Crossmap__crossmapping != [-156, -1, 1, 196, 197, 299, 300, 388, 389,
+                                     509, 510, 583, 584, 708, 709, 1507] :
+        print "Crossmapping list not built correctly (c. notation) in CDS " + \
+              "start on splice site test."
+        
+    if T2.x2g(1, 0) != 23777833 :
+        print "c. to g. conversion failed in CDS start on splice site test."
+    if T2.tuple2string(T2.g2x(2123)) != "-156-u23752936" or \
+       T2.tuple2string(T2.g2x(2124)) != "-156-u23752935" :
+        print "g. to c. conversion failed in CDS start on splice site test."
+    tm3 = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
+           23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
+           23898506, 23899304]
+    tc3 = [23755214, 23898680]
+    T3 = Crossmap(tm3, tc3, 1)
+    if T3._Crossmap__crossmapping != [-155, 1, 2, 197, 198, 300, 301, 389, 390,
+                                      510, 511, 584, 585, 709, 710, 1508]:
+        print "Crossmapping list not built correctly (c. notation) in CDS " + \
+              "start on splice site test (test 2)."
 #if

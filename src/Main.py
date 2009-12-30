@@ -50,14 +50,18 @@ def palinsnoop(string) :
 def bprint(s) :
     import math
 
+    block = 10
+    line = 6 * block
+
     m = int(math.floor(math.log(len(s), 10)) + 1)
     o = 1
     print "%s " % str(o).rjust(m),
-    for i in range(0, len(s), 10) :
-        print s[i:i + 10],
-        if not (i + 10) % 60 :
-            o += 60
+    for i in range(0, len(s), block) :
+        print s[i:i + block],
+        if not (i + block) % line :
+            o += line
             print "\n%s " % str(o).rjust(m),
+        #if
     #for
 #bprint
 
@@ -359,15 +363,15 @@ def ppp(MUU, record, parts, recordDict, refseq, depth, O) :
                 W.mRNA = W.exon
         #if
         #print W.mRNA.list
-        if W.CDS :
-            if not W.CDS.list :
-                W.CDS.list = constructCDS(W.mRNA.list, W.CDS.location)
-        else :
-            pass # Noncoding RNA?
+        #if W.CDS :
+        #    if not W.CDS.list :
+        #        W.CDS.list = constructCDS(W.mRNA.list, W.CDS.location)
+        #else :
+        #    pass # Noncoding RNA?
 
         M = Crossmap.Crossmap(
           W.mRNA.list,
-          W.CDS.list,
+          W.CDS.location,
           recordDict[GS].orientation)
         #print W.mRNA
 
