@@ -1,5 +1,6 @@
 class Output() :
-    def __init__(self, config) :
+    def __init__(self, config, instance) :
+        self.__instance = self.__NiceName(instance)
         self.__log = config.log
         self.__errors = 0
         self.__warnings = 0
@@ -24,8 +25,8 @@ class Output() :
         from time import strftime
 
         handle = open(self.__log, "a")
-        handle.write(strftime("%Y-%m-%d %H:%M:%S ") + \
-            self.__NiceName(filename) + ": " + message + "\n")
+        handle.write(strftime("%d-%m-%Y %H:%M:%S ") + "%s (%s): %s\n" % (
+            self.__instance, self.__NiceName(filename), message))
         handle.close()
     #LogMsg
 

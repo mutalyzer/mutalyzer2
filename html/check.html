@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>Mutalyzer 2.0</title>
+    <!--
+    <script type = "text/javascript" 
+        language = "javascript" 
+        src = "html/test.js">
+    </script>
+    -->
+  </head>
+  <body>
+    <center>
+      <big>Mutalyzer 2.0 nomenclature check.</big>
+    </center><br>
+    Please insert the mutation name using the format:<br>
+    <small>
+      &lt;Accession Number&gt;.&lt;version 
+      number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
+      type&gt;.&lt;mutation&gt;
+    </small><br>
+    <br>
+    Example: AB026906.1:c.274G&gt;T<br>
+    <br>
+    <form action = "" method = "post">
+      <input 
+        type = "text" 
+        name = "mutationName" 
+        value = "%s"
+        size = "100%%"
+      >
+    </form>
+    <pre>
+%s
+    </pre>
+  </body>
+</html>

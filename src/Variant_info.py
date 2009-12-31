@@ -45,7 +45,7 @@ import Config   # Config()
 import Db       # Db(), get_NM_version(), get_NM_info()
 import Crossmap # Crossmap(), g2x(), x2g(), main2int(), offset2int(), info()
 import Parser   # Nomenclatureparser(), parse()
-import Output
+import Output   # Output(), LogMsg()
 
 def sl2il(l) :
     """
@@ -91,9 +91,14 @@ def getcoords(C, Loc, Type) :
 #getcoords
 
 def main(LOVD_ver, build, acc, var) :
+    Conf = Config.Config() # Read the configuration file.
+    O = Output.Output(Conf, __file__)
+
+    O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
+        acc, var, LOVD_ver, build))
+
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
-    Conf = Config.Config() # Read the configuration file.
     Database = Db.Db(Conf) # Open the database.
     
     # Get all the input variables.
@@ -127,7 +132,8 @@ def main(LOVD_ver, build, acc, var) :
     # Retrieve info on the NM accession number.
     result = Database.get_NM_info(accno)
     
-    exonStarts = sl2il(result[0].split(',')[:-1]) # Get all the exon start sites.
+    exonStarts = sl2il(result[0].split(',')[:-1]) # Get all the exon start 
+                                                  # sites.
     exonEnds = sl2il(result[1].split(',')[:-1])   # Get all the exon end sites.
     cdsStart = int(result[2])                     # The CDS start.
     cdsEnd = int(result[3])                       # The CDS stop.
@@ -143,10 +149,6 @@ def main(LOVD_ver, build, acc, var) :
     for i in range(len(exonStarts)) :
         mRNA.append(exonStarts[i] + 1)    # This is an interbase conversion.
         mRNA.append(exonEnds[i])
-        #if exonStarts[i] > cdsStart and exonStarts[i] <= cdsEnd :
-        #    CDS.append(exonStarts[i] + 1) # Also an interbase conversion.
-        #if exonEnds[i] >= cdsStart and exonEnds[i] < cdsEnd :
-        #    CDS.append(exonEnds[i])
     #for
     
     # Convert the strand information to orientation.
@@ -166,28 +168,32 @@ def main(LOVD_ver, build, acc, var) :
     #if
     
     # Make a parsetree for the given variation.
-    O = Output.Output(Conf)
     P = Parser.Nomenclatureparser(O)
     parsetree = P.parse("NM_0000:" + variant) # This NM number is bogus.
-    
-    # Get the coordinates in both c. and g. notation.
-    startmain, startoffset, start_g = \
-        getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, parsetree.RefType)
-    
-    # Assume there is no end position given.
-    end_g = start_g
-    endmain = startmain
-    endoffset = startoffset
-    
-    # If there is an end position, calculate the coordinates.
-    if parsetree.RawVar.EndLoc :
-        endmain, endoffset, end_g = \
-            getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, parsetree.RefType)
-    
-    # And return the output.
-    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (startmain, startoffset, 
-                                          endmain, endoffset, start_g, end_g, 
-                                          parsetree.RawVar.MutationType)
+
+    if parsetree:
+        # Get the coordinates in both c. and g. notation.
+        startmain, startoffset, start_g = \
+            getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, parsetree.RefType)
+        
+        # Assume there is no end position given.
+        end_g = start_g
+        endmain = startmain
+        endoffset = startoffset
+        
+        # If there is an end position, calculate the coordinates.
+        if parsetree.RawVar.EndLoc :
+            endmain, endoffset, end_g = \
+                getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
+                          parsetree.RefType)
+        
+        # And return the output.
+        print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (startmain, startoffset, endmain, 
+                                              endoffset, start_g, end_g, 
+                                              parsetree.RawVar.MutationType)
+    #if
+    O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
+        acc, var, LOVD_ver, build))
 #main
 
 if __name__ == "__main__" :

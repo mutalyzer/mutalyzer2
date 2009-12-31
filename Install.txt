@@ -22,6 +22,10 @@ LoadModule python_module /usr/lib/apache2/modules/mod_python.so
   PythonHandler mod_python.publisher
   PythonDebug On
 </Directory>
+
+<Directory /var/www/mutalyzer2/html>
+  SetHandler None
+</Directory>
 ---
 
 After installing MySQL, create a database named ``hg19'', owned by the

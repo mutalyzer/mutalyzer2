@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import sys
-
 import Retriever
 import GenRecord
 import Crossmap
@@ -410,10 +408,10 @@ def ppp(MUU, record, parts, recordDict, refseq, depth, O) :
     #if                
 #ppp
 
-def rrr(cmd) :
+def main(cmd) :
     C = Config.Config()
 
-    O = Output.Output(C)
+    O = Output.Output(C, __file__)
 
     O.LogMsg(__file__, "Received variant " + cmd)
 
@@ -447,7 +445,9 @@ def rrr(cmd) :
     print "\n\n"
     O.Summary()
     O.LogMsg(__file__, "Finished processing variant " + cmd)
-#rrr
+#main
 
 if __name__ == "__main__" :
-    rrr(sys.argv[1])
+    import sys
+
+    main(sys.argv[1])
