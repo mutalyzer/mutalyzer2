@@ -8,11 +8,11 @@ class Retriever() :
             __email     ; The email address which we give to the NCBI.
             __cache     ; The directory where the records are stored.
             __cachesize ; Maximum size of the cache.
+            __output    ; The output object.
 
         Special methods:
-            __init__(config) ; Read the configuration file and 
-                               initialise the class global 
-                               variables.
+            __init__(config) ; Use variables from the configuration file to 
+                               initialise the class private variables.
 
         Private methods:
             __foldersize(folder) ; Return the size of a folder.
@@ -26,19 +26,21 @@ class Retriever() :
 
     def __init__(self, config, output) :
         """
-            Read the configuration file for some simple settings. Make the
-            cache directory if it does not exist yet.
+            Use variables from  the configuration file for some simple
+            settings. Make the cache directory if it does not exist yet.
 
             Arguments:
                 config ; The configuration object.
+                output ; The output object (for logging and error messages).
 
             Private variables (altered):
                 __email     ; The email address which we give to the NCBI.
                 __cache     ; The directory where the records are stored.
                 __cachesize ; Maximum size of the cache.
+                __output    ; The output object.
         """
+
         import os # os.path.isdir(), os.path.mkdir()
-        #import Output
 
         self.__email = config.email
         self.__cache = config.cache
@@ -59,6 +61,7 @@ class Retriever() :
             Returns: 
                 integer ; The size of the directory.
         """
+
         import os # walk(), path.getsize(), path.join()
 
         folder_size = 0
@@ -81,22 +84,24 @@ class Retriever() :
                 __cache     ; Directory under scrutiny.
                 __cachesize ; Maximum size of the cache.
         """
+
         import os # walk(), stat(), path.join(), remove()
 
         if self.__foldersize(self.__cache) < self.__cachesize :
             return
     
         # Build a list of files sorted by access time.
-        list = []
+        cachelist = []
         for (path, dirs, files) in os.walk(self.__cache) :
-            for file in files :
-                list.append((os.stat(os.path.join(path, file)).st_atime, file))
-        list.sort()
+            for filename in files :
+                cachelist.append(
+                    (os.stat(os.path.join(path, filename)).st_atime, filename))
+        cachelist.sort()
     
         # Now start removing pairs of files until the size of the folder is
         # small enough (or until the list is exhausted).
-        for i in range(0, len(list)) :
-            os.remove(os.path.join(path, list[i][1]))
+        for i in range(0, len(cachelist)) :
+            os.remove(os.path.join(path, cachelist[i][1]))
             if self.__foldersize(self.__cache) < self.__cachesize :
                 break;
         #for
@@ -119,10 +124,12 @@ class Retriever() :
             Private variables:
                 __cache      ; The directory where the record is stored.
                 __email      ; The email address which we give to the NCBI.
+                __output     ; The output object.
 
             Returns:
                 SeqRecord ; The record that was requested.
         """
+
         import os              # path.isfile(), link()
         import bz2             # BZ2Compressor(), BZ2File()
         from Bio import SeqIO  # read()
@@ -187,9 +194,9 @@ class Retriever() :
             else :
                 os.remove(filename)
 
-            self.__output.WarningMsg(__file__, "No version number is given, using %s. " \
-                  "Please use version numbers to reduce downloading " \
-                  "overhead." % record.id)
+            self.__output.WarningMsg(__file__, "No version number is given, " \
+                  "using %s. Please use version numbers to reduce " \
+                  "downloading overhead." % record.id)
         #if
 
         return record
@@ -206,6 +213,8 @@ if __name__ == "__main__" :
     #   the config file.
     C = Config.Config()
     R = Retriever(C)
+    del C
 
     R.loadrecord("AB026906.1") # Retrieve a GenBank record.
+    del R
 #if

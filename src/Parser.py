@@ -6,6 +6,9 @@ class Nomenclatureparser(object) :
     """
         Parse an input string.
 
+        Private variables:
+            __output ; The output object.
+
         Public variables:
             All variables defined below, they are all context-free grammar 
             rules.
@@ -271,6 +274,12 @@ class Nomenclatureparser(object) :
     def __init__(self, output) :
         """
             Initialise the class and enable packrat parsing.
+
+            Arguments:
+                output ; The output object.
+
+            Private variables (altered):
+                __output ; Set to the output object.
         """
 
         self.__output = output
@@ -287,6 +296,9 @@ class Nomenclatureparser(object) :
             Arguments:
                 input ; The input string that needs to be parsed.
 
+            Private variables:
+                __output ; The output object.
+
             Public variables:
                 Var ; The top-level rule of our parser.
 
@@ -297,9 +309,6 @@ class Nomenclatureparser(object) :
         try :
             return self.Var.parseString(input, parseAll = True)
         except ParseException, err :
-            #import Output
-
-            #O = Output.Output()
             self.__output.ErrorMsg(__file__, str(err))
 
             # Print the input.
@@ -319,14 +328,11 @@ class Nomenclatureparser(object) :
 #
 if __name__ == "__main__" :
     P = Nomenclatureparser()
-    #parsetree = P.parse("AB026906.1:c.[274G>T;120del;124_125insATG]")
-    #parsetree = P.parse("AB026906.1:c.274G>T")
-    #print repr(parsetree)
-    #print parsetree.RefType
     parsetree = P.parse("NM_002001.2:c.[12del]")
     parsetree = P.parse("NM_002001.2:c.[(12del)]")
     parsetree = P.parse("NM_002001.2:c.[(12del)?]")
     parsetree = P.parse("NM_002001.2:c.[(12del);(12del)]")
     parsetree = P.parse("NM_002001.2:c.[(12del;12del)]")
     parsetree = P.parse("NM_002001.2:c.[((12del)?;12del)?]")
+    del P
 #if

@@ -5,14 +5,19 @@ class Config() :
         Read the configuration file and store the data.
 
         Public variables:
-                      ; Used by the Retriever module:
-            email     ; Email address used for Entrez.
-            cache     ; Location of the cache directory.
-            cachesize ; Maximum size of the cache directory.
+                       ; Used by the Retriever module:
+            email      ; Email address used for Entrez.
+            cache      ; Location of the cache directory.
+            cachesize  ; Maximum size of the cache directory.
 
-                      ; Used by the Db module:
-            MySQLuser ; The user that has access to the database.
-            dbName    ; The name of the database.
+                       ; Used by the Db module:
+            MySQLuser  ; The user that has access to the database.
+            dbName     ; The name of the database.
+
+                       ; Used by the Output module:
+            log        ; The name and location of the log file.
+            datestring ; Format of the prefix for log messages.
+
 
         Special Methods:
             __init__ ; Read the configuration file.
@@ -46,7 +51,10 @@ class Config() :
         # Set the variables needed by the Db module.
         self.MySQLuser = config["MySQLuser"]
         self.dbName = config["dbName"]
+
+        # Set the variables needed by the Output module.
         self.log = config["log"]
+        self.datestring = config["datestring"]
     #__init__
 #Config
 
@@ -55,4 +63,5 @@ class Config() :
 #
 if __name__ == "__main__" :
     C = Config() # Will crash if the config file is not found.
+    del C
 #if

@@ -241,4 +241,5 @@ if __name__ == "__main__" :
     bla = R._GenRecord__sortins([10, 20], [4, 5])
     print R._GenRecord__sortins([1, 2], bla)
     print R._GenRecord__sortins([8, 9], bla)
+    del R
 #if

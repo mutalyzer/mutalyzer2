@@ -47,7 +47,7 @@ import Crossmap # Crossmap(), g2x(), x2g(), main2int(), offset2int(), info()
 import Parser   # Nomenclatureparser(), parse()
 import Output   # Output(), LogMsg()
 
-def sl2il(l) :
+def __sl2il(l) :
     """
         Convert a list of strings to a list of integers.
 
@@ -59,9 +59,9 @@ def sl2il(l) :
     for i in range(len(l)) :
         l[i] = int(l[i])
     return l
-#sl2il
+#__sl2il
 
-def getcoords(C, Loc, Type) :
+def __getcoords(C, Loc, Type) :
     """
         Return main, offset and g positions given either a position in
         c. or in g. notation.
@@ -88,53 +88,39 @@ def getcoords(C, Loc, Type) :
         main, offset = C.g2x(g)
     #else
     return (main, offset, g)
-#getcoords
+#__getcoords
 
-def main(LOVD_ver, build, acc, var) :
-    Conf = Config.Config() # Read the configuration file.
-    O = Output.Output(Conf, __file__)
 
-    O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
-        acc, var, LOVD_ver, build))
-
+def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
     Database = Db.Db(Conf) # Open the database.
     
-    # Get all the input variables.
-    #LOVD_ver = sys.argv[1]                   # The LOVD version (not used).
-    #build = sys.argv[2]                      # The human genome build (hg 19 
-                                             #   assumed).
+    # Get the rest of the input variables.
     accno = acc.split('.')[0]        # The NM accession number.
     version = int(acc.split('.')[1]) # The version of the accession 
-                                             #   number.
-    #if len(sys.argv) == 5 :
-    #    variant = sys.argv[4]                # The variant in HGVS notation.
-    #else :
-    #    variant = "info"
-    if var :
-        variant = var
-    else :
-        variant = "info"
+                                     #   number.
     
     # Check whether the NM version number is in the database.
     db_version = Database.get_NM_version(accno)
     if not db_version :
-        print "Error: Reference sequence not found."
-        exit()
+        O.ErrorMsg(__file__, "Reference sequence not found.")
+        return
     #if
     if db_version != version :
-        print "Error: Reference sequence version not found. Available: %s.%i" \
-              % (accno, db_version)
-        exit()
+        O.ErrorMsg(__file__, 
+            "Reference sequence version not found. Available: %s.%i" % (
+            accno, db_version))
+        return
     #if
     
     # Retrieve info on the NM accession number.
     result = Database.get_NM_info(accno)
+    del Database
     
-    exonStarts = sl2il(result[0].split(',')[:-1]) # Get all the exon start 
-                                                  # sites.
-    exonEnds = sl2il(result[1].split(',')[:-1])   # Get all the exon end sites.
+    exonStarts = __sl2il(result[0].split(',')[:-1]) # Get all the exon start 
+                                                    # sites.
+    exonEnds = __sl2il(result[1].split(',')[:-1])   # Get all the end sites.
     cdsStart = int(result[2])                     # The CDS start.
     cdsEnd = int(result[3])                       # The CDS stop.
     strand = result[4]                            # The orientation.
@@ -161,20 +147,22 @@ def main(LOVD_ver, build, acc, var) :
     
     # If no variant is given, return transcription start, transcription end and
     #   CDS stop in c. notation.
-    if variant == "info" :
+    if not var :
         info = Cross.info()
         print "%i\n%i\n%i" % info
-        exit()
+        return
     #if
     
     # Make a parsetree for the given variation.
     P = Parser.Nomenclatureparser(O)
-    parsetree = P.parse("NM_0000:" + variant) # This NM number is bogus.
+    parsetree = P.parse("NM_0000:" + var) # This NM number is bogus.
+    del P
 
-    if parsetree:
+    if parsetree :
         # Get the coordinates in both c. and g. notation.
         startmain, startoffset, start_g = \
-            getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, parsetree.RefType)
+            __getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, 
+                        parsetree.RefType)
         
         # Assume there is no end position given.
         end_g = start_g
@@ -184,17 +172,31 @@ def main(LOVD_ver, build, acc, var) :
         # If there is an end position, calculate the coordinates.
         if parsetree.RawVar.EndLoc :
             endmain, endoffset, end_g = \
-                getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
-                          parsetree.RefType)
+                __getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
+                            parsetree.RefType)
         
         # And return the output.
         print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (startmain, startoffset, endmain, 
                                               endoffset, start_g, end_g, 
                                               parsetree.RawVar.MutationType)
     #if
+    del Cross
+#__process
+
+def main(LOVD_ver, build, acc, var) :
+    Conf = Config.Config() # Read the configuration file.
+    O = Output.Output(Conf, __file__)
+
+    O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
+        acc, var, LOVD_ver, build))
+
+    __process(LOVD_ver, build, acc, var, Conf, O)
+
     O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
-#main
+    del O
+    del Conf
+#main        
 
 if __name__ == "__main__" :
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

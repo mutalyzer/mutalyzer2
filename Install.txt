@@ -4,6 +4,7 @@ This program depends on the following packages:
 - python-mysqldb   >= 1.2.2
 - python-pyparsing >= 1.5.0
 - python-configobj >= 4.4.0
+- pyton-simpletal  >= 4.1-6
 - mysql-server     >= 5.0.0
 
 The web interface depends on the following packages:
@@ -19,12 +20,8 @@ LoadModule python_module /usr/lib/apache2/modules/mod_python.so
 
 <Directory /var/www/mutalyzer2> 
   SetHandler mod_python
-  PythonHandler mod_python.publisher
-  PythonDebug On
-</Directory>
-
-<Directory /var/www/mutalyzer2/html>
-  SetHandler None
+  PythonHandler handler
+  #PythonDebug On
 </Directory>
 ---
 
@@ -42,7 +39,7 @@ Then retrieve the refLink table from the UCSC website:
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.sql
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.txt.gz
 
-For c2g to work, you need the following files too:
+For Variant_info to work, you need the following files too:
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.sql
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.sql
@@ -55,12 +52,15 @@ mysql -u mutalyzer -D hg19 < refLink.sql
 zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
 
 ---
-For c2g:
+For Variant_info:
 ---
 mysql -u mutalyzer -D hg19 < gbStatus.sql
 zgrep mRNA gbStatus.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE gbStatus;'
 mysql -u mutalyzer -D hg19 < refGene.sql
-cat refGene.txt | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
+zcat refGene.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
 ---
 
 Edit the file mutalyzer.conf to finish the installation.
+
+Take a look at Obsoleted.txt for information about backwards compatibility and
+removed features.

@@ -1,0 +1,9 @@
+On eu.liacs.nl: /etc/apache2/mods-enabled/rewrite.load
+- This file contains a rewrite rule that converts "Variant_info.php" to 
+  "Variant_info".
+- When all LOVD versions are above 2.0-23, this rule can be deleted and the
+  rewrite module can be disabled.
+
+index.py:
+- In the Variant_info() function a substitution on error messages is performed.
+- When all LOVD versions are above 2.0-23, this check can be deleted.

@@ -27,9 +27,11 @@ class Crossmap() :
                              a >= 0 and a - b <= 0.
             __minusr(a, b) ; A protected '-' that skips 0 if
                              a > 0 and b < 0.
+            __crossmap_splice_sites() ; Calculate the __crossmapping list.
+
+        Public methods:
             int2main(a)    ; Translate from __STOP to '*' notation.
             main2int(s)    ; Translate from '*' to __STOP notation.
-            __crossmap_splice_sites() ; Calculate the __crossmapping list.
             g2x(a)    ; Translate from g. notation to c. or n. notation.
             x2g(a, b) ; Translate c. or n. notation to g. notation.
     """
@@ -350,6 +352,9 @@ class Crossmap() :
                       self.__minusr(self.__crossmapping[i + c], a)
         ret += d * b # Add the intron count.
 
+        if a < 0 and self.__crossmapping[d - c] == 1 : # Patch for CDS start on
+            ret += d                               # first nucleotide of exon 1.
+
         return ret
     #x2g
 
@@ -578,6 +583,10 @@ if __name__ == "__main__" :
     if Cf.g2x(27925) != Cf2.g2x(27925) or \
        Cr.g2x(123290) != Cr2.g2x(123290) :
         print "Failed missing UTR exon test."
+    del Cr2
+    del Cf2
+    del Cr
+    del Cf
 
     # Build a crossmapper for the hypothetical gene, but now non-coding.
     Cf3 = Crossmap(mRNAf, [], 1)
@@ -625,6 +634,8 @@ if __name__ == "__main__" :
        Cr3.x2g(124, 1) !=  146089 or \
        Cr3.x2g(1624, 1) != 1999 :
         print "Reverse n. to g. conversion incorrect."
+    del Cr3
+    del Cf3
 
     # This is a test for a gene that has a CDS that lies entirely in one exon.
     tm = [1, 80, 81, 3719]
@@ -638,6 +649,7 @@ if __name__ == "__main__" :
     if T.tuple2string(T.g2x(2123)) != "1962" or \
        T.tuple2string(T.g2x(2124)) != "*1" :
         print "g. to c. conversion failed in small CDS test."
+    del T
 
     # This is a test for a gene that has a CDS that starts on an exon splice 
     # site.
@@ -656,6 +668,8 @@ if __name__ == "__main__" :
     if T2.tuple2string(T2.g2x(2123)) != "-156-u23752936" or \
        T2.tuple2string(T2.g2x(2124)) != "-156-u23752935" :
         print "g. to c. conversion failed in CDS start on splice site test."
+    del T2
+
     tm3 = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
            23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
            23898506, 23899304]
@@ -665,4 +679,20 @@ if __name__ == "__main__" :
                                       510, 511, 584, 585, 709, 710, 1508]:
         print "Crossmapping list not built correctly (c. notation) in CDS " + \
               "start on splice site test (test 2)."
+    del T3
+
+    tm2 = [23777833, 23778028, 23808749, 23808851, 23824768, 23824856, 23853497,
+           23853617, 23869553, 23869626, 23894775, 23894899, 23898506, 23899304]
+    tc2 = [23777833, 23899304]
+    T2 = Crossmap(tm2, tc2, 1)
+    if T2.x2g(-1, 0) != T2.x2g(1, -1) :
+        print "Upstream correction (forward) for CDS start at the start of " + \
+              "transcript failed."
+    del T2
+
+    T2 = Crossmap(tm2, tc2, -1)
+    if T2.x2g(-1, 0) != T2.x2g(1, -1) :
+        print "Upstream correction (reverse) for CDS start at the start of " + \
+              "transcript failed."
+    del T2
 #if

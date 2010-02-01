@@ -20,14 +20,15 @@ class Mutator() :
         Private methods:
             __sortins(tuple)      ; Insert a tuple in a sorted list, after 
                                     insertion the list stays sorted.
-            __shiftpos(position)  ; Calculate the position in the mutated 
-                                    string given the position in the original 
-                                    string.
             __mutate(pos1, pos2, ins) ; A general mutation function that does a
                                         delins on interbase coordinates of the 
                                         original string.
 
         Public methods:
+            shiftpos(position)       ; Calculate the position in the mutated 
+                                       string given the position in the 
+                                       original string.
+            newSplice(sites)         ; 
             delM(pos1, pos2)         ; Delete a range from non-interbase 
                                        position pos1 to pos2.
             insM(pos, ins)           ; Insert a string at interbase position 
@@ -98,7 +99,40 @@ class Mutator() :
                                    # entry will be the last one in the list.
     #__sortins
     
-    def __shiftpos(self, position) :
+    def __mutate(self, pos1, pos2, ins) :
+        """
+            A general mutation function that does a delins on interbase 
+            coordinates of the original string. The change in length (if any) 
+            is stored by calling the __sortins() function.
+            The coordinates are those of the original string, so we use the
+            __shifsize() function to map them to the mutated string, on which
+            we perform the alteration.
+            
+            Arguments:
+                pos1 ; The first interbase position of the deletion.
+                pos2 ; The second interbase position of the deletion.
+                ins  ; The insertion.
+
+            Public variables (altered):
+                mutated ; This string will reflect the result of the given 
+                          delins.
+        """
+
+        from Bio import pairwise2
+
+        self.mutated = self.mutated[:self.shiftpos(pos1)] + ins + \
+                       self.mutated[self.shiftpos(pos2):]
+        self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
+
+        alignments = pairwise2.align.globalms(self.orig[pos1 - 25: pos2 + 25],
+            self.mutated[self.shiftpos(pos1) - 25:self.shiftpos(pos2) + 25],
+            1, -1, -2, -1)
+        print
+        print alignments[0][0]
+        print alignments[0][1]
+    #__mutate
+
+    def shiftpos(self, position) :
         """
             Calculate the position in the mutated string, given a position in
             the original string. 
@@ -123,46 +157,13 @@ class Mutator() :
         #for
     
         return ret
-    #__shiftpos
+    #shiftpos
     
-    def __mutate(self, pos1, pos2, ins) :
-        """
-            A general mutation function that does a delins on interbase 
-            coordinates of the original string. The change in length (if any) 
-            is stored by calling the __sortins() function.
-            The coordinates are those of the original string, so we use the
-            __shifsize() function to map them to the mutated string, on which
-            we perform the alteration.
-            
-            Arguments:
-                pos1 ; The first interbase position of the deletion.
-                pos2 ; The second interbase position of the deletion.
-                ins  ; The insertion.
-
-            Public variables (altered):
-                mutated ; This string will reflect the result of the given 
-                          delins.
-        """
-
-        from Bio import pairwise2
-
-        self.mutated = self.mutated[:self.__shiftpos(pos1)] + ins + \
-                       self.mutated[self.__shiftpos(pos2):]
-        self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
-
-        alignments = pairwise2.align.globalms(self.orig[pos1 - 25: pos2 + 25],
-            self.mutated[self.__shiftpos(pos1) - 25:self.__shiftpos(pos2) + 25],
-            1, -1, -2, -1)
-        print
-        print alignments[0][0]
-        print alignments[0][1]
-    #__mutate
-
     def newSplice(self, sites) :
         ret = []
 
         for i in sites :
-            ret.append(self.__shiftpos(i))
+            ret.append(self.shiftpos(i))
 
         return ret
     #newSplice
