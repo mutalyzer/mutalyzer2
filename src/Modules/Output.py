@@ -57,7 +57,7 @@ class Output() :
         self.__warnings = 0
     #__init__
 
-    def __del__(config) :
+    def __del__(self) :
         """
             Close the log file.
             

@@ -20,7 +20,7 @@ LoadModule python_module /usr/lib/apache2/modules/mod_python.so
 
 <Directory /var/www/mutalyzer2> 
   SetHandler mod_python
-  PythonHandler handler
+  PythonHandler src/Interfaces/handler
   #PythonDebug On
 </Directory>
 ---

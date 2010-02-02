@@ -40,12 +40,13 @@
         CDS_stop     ; CDS stop in c. notation.
 """
 
-import sys      # argv
-import Config   # Config()
-import Db       # Db(), get_NM_version(), get_NM_info()
-import Crossmap # Crossmap(), g2x(), x2g(), main2int(), offset2int(), info()
-import Parser   # Nomenclatureparser(), parse()
-import Output   # Output(), LogMsg()
+import sys                   # argv
+from Modules import Config   # Config()
+from Modules import Db       # Db(), get_NM_version(), get_NM_info()
+from Modules import Crossmap # Crossmap(), g2x(), x2g(), main2int(), 
+                             # offset2int(), info()
+from Modules import Parser   # Nomenclatureparser(), parse()
+from Modules import Output   # Output(), LogMsg()
 
 def __sl2il(l) :
     """
@@ -97,9 +98,12 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     Database = Db.Db(Conf) # Open the database.
     
     # Get the rest of the input variables.
-    accno = acc.split('.')[0]        # The NM accession number.
-    version = int(acc.split('.')[1]) # The version of the accession 
-                                     #   number.
+    accno = acc
+    version = 0
+    if '.' in acc :
+        accno = acc.split('.')[0]        # The NM accession number.
+        version = int(acc.split('.')[1]) # The version of the accession 
+                                         #   number.
     
     # Check whether the NM version number is in the database.
     db_version = Database.get_NM_version(accno)

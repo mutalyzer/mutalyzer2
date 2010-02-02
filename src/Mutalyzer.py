@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
-import Retriever
-import GenRecord
-import Crossmap
-import Parser
+from Modules import Retriever
+from Modules import GenRecord
+from Modules import Crossmap
+from Modules import Parser
 
 import types
-import Config
-import Output
+from Modules import Config
+from Modules import Output
 
 def __roll(string, start, stop, orientation) :
     pattern = string[start:stop]
@@ -466,7 +466,7 @@ def main(cmd) :
         #print "Printing..."
         #D.printRecordDict(d, record)
         
-        import Mutator
+        from Modules import Mutator
         
         MUU = Mutator.Mutator(record.seq)
         __ppp(MUU, record, ParseObj, d, "",  0, O)

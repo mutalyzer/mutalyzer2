@@ -6,10 +6,8 @@ from mod_python import apache
 from cStringIO import StringIO
 from simpletal import simpleTAL, simpleTALES
 
-directory = os.path.dirname(__file__)
-Mutalyzer = apache.import_module('Mutalyzer', path=[directory + "/src"])
-VI = apache.import_module('Variant_info', path=[directory + "/src"])
-os.chdir(directory)
+import Mutalyzer
+import Variant_info as VI
 
 Mut_ver = "2.0&alpha;"
 
@@ -63,7 +61,7 @@ def index(req) :
         "mut_output" : reply
     }
 
-    return __tal("html/check.html", args)
+    return __tal("templates/check.html", args)
 #index
 
 def Variant_info(req) :
