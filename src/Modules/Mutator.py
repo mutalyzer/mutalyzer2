@@ -28,7 +28,7 @@ class Mutator() :
             shiftpos(position)       ; Calculate the position in the mutated 
                                        string given the position in the 
                                        original string.
-            newSplice(sites)         ; 
+            newSplice(sites)         ; Generate a list of new splice sites.
             delM(pos1, pos2)         ; Delete a range from non-interbase 
                                        position pos1 to pos2.
             insM(pos, ins)           ; Insert a string at interbase position 
@@ -160,6 +160,16 @@ class Mutator() :
     #shiftpos
     
     def newSplice(self, sites) :
+        """
+            Generate a list of new splice sites.
+
+            Arguments:
+                sites ; A list of old splice sites.
+
+            Returns:
+                list ; A list of new splice sites.
+        """
+
         ret = []
 
         for i in sites :

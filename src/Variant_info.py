@@ -15,29 +15,6 @@
     - If the variant is not accepted by the nomenclature parser, a parse error
       will be printed.
 
-    Arguments:
-        $1 ; The LOVD version (ignored for now).
-        $2 ; The human genome build (ignored for now, hg19 assumed).
-        $3 ; The NM accession number and version.
-        $4 ; The variant, or empty.
-
-    Returns:
-        start_main   ; The main coordinate of the start position in c. 
-                       (non-star) notation.
-        start_offset ; The offset coordinate of the start position in c. 
-                       notation (intronic position).
-        end_main     ; The main coordinate of the end position in c. (non-star)
-                       notation.
-        end_offset   ; The offset coordinate of the end position in c. 
-                       notation (intronic position).
-        start_g      ; The g. notation of the start position.
-        end_g        ; The g. notation of the end position.
-        type         ; The mutation type.
-
-    Returns (alternative):
-        trans_start  ; Transcription start in c. notation.
-        trans_stop   ; Transcription stop in c. notation.
-        CDS_stop     ; CDS stop in c. notation.
 """
 
 import sys                   # argv
@@ -95,7 +72,7 @@ def __getcoords(C, Loc, Type) :
 def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
-    Database = Db.Db(Conf) # Open the database.
+    Database = Db.Db(Conf, "local") # Open the database.
     
     # Get the rest of the input variables.
     accno = acc
@@ -188,6 +165,34 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
 #__process
 
 def main(LOVD_ver, build, acc, var) :
+    """
+        The entry point (called by the HTML publisher).
+            
+        Arguments:
+            LOVD_ver ; The LOVD version (ignored for now).
+            build    ; The human genome build (ignored for now, hg19 assumed).
+            acc      ; The NM accession number and version.
+            var      ; The variant, or empty.
+    
+        Returns:
+            start_main   ; The main coordinate of the start position in c. 
+                           (non-star) notation.
+            start_offset ; The offset coordinate of the start position in c. 
+                           notation (intronic position).
+            end_main     ; The main coordinate of the end position in c. 
+                           (non-star) notation.
+            end_offset   ; The offset coordinate of the end position in c. 
+                           notation (intronic position).
+            start_g      ; The g. notation of the start position.
+            end_g        ; The g. notation of the end position.
+            type         ; The mutation type.
+    
+        Returns (alternative):
+            trans_start  ; Transcription start in c. notation.
+            trans_stop   ; Transcription stop in c. notation.
+            CDS_stop     ; CDS stop in c. notation.
+    """
+
     Conf = Config.Config() # Read the configuration file.
     O = Output.Output(Conf, __file__)
 

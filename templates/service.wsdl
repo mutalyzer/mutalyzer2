@@ -14,6 +14,16 @@
     <part name = "return" type = "xsd:string"/>
   </message>
 
+  <message name = "getTranscriptsRangeRequest">
+    <part name = "" type = "xsd:string"/>
+    <part name = "" type = "xsd:string"/>
+    <part name = "" type = "xsd:string"/>
+    <part name = "" type = "xsd:string"/>
+  </message>
+  <message name = "getTranscriptsRangeResponse">
+    <part name = "return" type = "xsd:string"/>
+  </message>
+
   <message name = "getGeneNameRequest">
     <part name = "" type = "xsd:string"/>
   </message>
@@ -24,10 +34,18 @@
   <portType name = "ServicePortType">
     <operation name = "getTranscripts">
       <documentation>
-        Get a list of transcripts, given a genomic coordindate.
+        Get a list of transcripts, given a genomic coordinate.
       </documentation>
       <input message = "tns:getTranscriptsRequest"/>
       <output message = "tns:getTranscriptsResponse"/>
+    </operation>
+
+    <operation name = "getTranscriptsRange">
+      <documentation>
+        Get a list of transcripts, given a genomic range.
+      </documentation>
+      <input message = "tns:getTranscriptsRangeRequest"/>
+      <output message = "tns:getTranscriptsRangeResponse"/>
     </operation>
 
     <operation name = "getGeneName">
@@ -45,6 +63,19 @@
     <operation name = "getTranscripts">
       <soap:operation 
         tal:attributes = "soapAction string:http://${path}/getTranscripts"/>
+      <input>
+        <soap:body use = "literal" 
+          tal:attributes = "namespace string:http://${path}"/>
+      </input>
+      <output>
+        <soap:body use = "literal" 
+          tal:attributes = "namespace string:http://${path}"/>
+      </output>
+    </operation>
+
+    <operation name = "getTranscriptsRange">
+      <soap:operation tal:attributes = 
+          "soapAction string:http://${path}/getTranscriptsRange"/>
       <input>
         <soap:body use = "literal" 
           tal:attributes = "namespace string:http://${path}"/>

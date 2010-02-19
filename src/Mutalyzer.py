@@ -9,6 +9,13 @@ import types
 from Modules import Config
 from Modules import Output
 
+class newMut() :
+    def __init__(self) :
+        self.c = ""
+        self.g = ""
+    #__init__
+#newMut
+
 def __roll(string, start, stop, orientation) :
     pattern = string[start:stop]
     if orientation == 1 :
@@ -142,7 +149,7 @@ def __constructCDS(mRNA, CDSpos) :
 #__constructCDS
 
 
-def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O) :
+def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O, NM) :
     start_main = __PtLoc2main(RawVar.StartLoc.PtLoc)
     start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
     end_main = start_main
@@ -195,6 +202,11 @@ def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O) :
                 "c.%s (g.%i)." % (RawVar.Arg1, RawVar.Arg1, M.g2c(start_g), 
                 start_g))
         MUU.subM(start_g, RawVar.Arg2)
+
+        NM.c += str(M.g2c(start_g)) + record.seq[start_g - 1] + '>' + \
+                    RawVar.Arg2
+        NM.g += str(start_g) + record.seq[start_g - 1] + '>' + \
+                    RawVar.Arg2
     #if
     
     # Deletion / Duplication.
@@ -295,6 +307,7 @@ def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O) :
         print "delins NOT IMPLEMENTED YET"
     
     #print MUU.mutated[start_g - 20:start_g + 20]
+    return NM
 #__rv
 
 def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
@@ -397,12 +410,37 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
           recordDict[GS].orientation)
         #print W.mRNA
 
+        NM = newMut()
+        NM.c = parts.RefSeqAcc 
+        NM.g = parts.RefSeqAcc 
+        if parts.Version :
+            NM.c += '.' + parts.Version
+            NM.g += '.' + parts.Version
+        #if
+        NM.c += ":c."
+        NM.g += ":g."
+
         if parts.SingleAlleleVarSet :
+            NM.c += '['
+            NM.g += '['
             for i in parts.SingleAlleleVarSet :
-                __rv(MUU, record, recordDict, GS, i.RawVar, M, parts.RefType, O)
+                __rv(MUU, record, recordDict, GS, i.RawVar, M, parts.RefType, 
+                     O, NM)
+                NM.c += ';'
+                NM.g += ';'
+            #for
+            NM.c = NM.c[0:-1] + ']'
+            NM.g = NM.g[0:-1] + ']'
+        #if
         else :
-            __rv(MUU, record, recordDict, GS, parts.RawVar, M, parts.RefType, O)
+            NM = __rv(MUU, record, recordDict, GS, parts.RawVar, M, 
+                      parts.RefType, O, NM)
         del M
+
+        print
+        print NM.c
+        print NM.g
+        del NM
 
         import Bio
         from Bio.Seq import Seq

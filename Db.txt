@@ -1,0 +1,17 @@
+The initial mapping table was created using the following command:
+---
+CREATE TABLE map
+  SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, 
+                  exonEnds, name2 AS geneName, chrom, strand, protAcc
+    FROM gbStatus, refGene, refLink
+    WHERE type = "mRNA"
+    AND refGene.name = acc
+    AND acc = mrnaAcc;
+---
+
+We need an axillary table for updated entries where the version numbers are
+not increased.
+---
+CREATE TABLE map_cdsBackup
+  LIKE map;
+---
