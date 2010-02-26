@@ -16,6 +16,15 @@ class newMut() :
     #__init__
 #newMut
 
+"""
+class rangeSwap() :
+    def __init__(self) :
+        self.g_start = 0
+        self.g_end = 0
+    #__init__
+#range
+"""
+
 def __roll(string, start, stop, orientation) :
     pattern = string[start:stop]
     if orientation == 1 :
@@ -148,6 +157,93 @@ def __constructCDS(mRNA, CDSpos) :
     return ret
 #__constructCDS
 
+"""
+def __isStringThere(ref, p1, p2, string) :
+    if ref[p1 - 1:p2] == string :
+        return True
+    return False
+#__isStringThere
+
+def __checkStringLength(p1, p2, length) :
+    if p2 - p1 + 1 == int(length) :
+        return True
+    return False
+#__checkStringLength
+"""
+
+def __checkOptArg(ref, p1, p2, arg, M, O) :
+    if arg :
+        if arg.isdigit() :
+            length = int(arg)
+            interval = p2 - p1 + 1
+            if length != interval :
+                O.ErrorMsg(__file__, "The length (%i) differed from that of " \
+                    "the range (%i)." % (length, interval))
+                return False
+            #if
+        #if
+        else :
+            ref_slice = str(ref[p1 - 1:p2])
+            if ref_slice != str(arg) :
+                O.ErrorMsg(__file__, "%s not found at position c.%s (g.%i), " \
+                    "found %s instead." % (arg, M.g2c(p1), p1, ref_slice))
+                return False
+            #if
+        #else
+    #if
+    return True
+#__checkOptArg
+
+def __lcp(str1, str2) :
+    """
+        Calculate the length of the longest common prefix of two strings.
+
+        Arguments:
+            str1 ; The first string.
+            str2 ; The second string.
+
+        Returns:
+            integer ; The length of the longest common prefix of str1 and str2.
+    """
+
+    pos = 0
+    s1l = len(str1) # Use the lengths to make sure we don't exceed the length
+    s2l = len(str2) # of the strings.
+
+    while pos < s1l and pos < s2l and str1[pos] == str2[pos] :
+        pos += 1
+
+    return pos
+#__lcp
+
+def __lcs(str1, str2) :
+    """
+        Calculate the length of the longest common suffix of two strings.
+
+        Arguments:
+            str1 ; The first string.
+            str2 ; The second string.
+
+        Returns:
+            integer ; The length of the longest common suffix of str1 and str2.
+    """
+
+    t1 = str1[::-1] # Invert str1.
+    t2 = str2[::-1] # Invert str2.
+
+    # The lcp of the two inverted strings is the lcs of the original strings.
+    return __lcp(t1, t2) 
+#__lcs
+
+def __trim(string, lcp, lcs) :
+    if lcp and lcs :
+        return string[lcp:-lcs]
+    if lcp :
+        return string[lcp:]
+    if lcs :
+        return string[:-lcs]
+    return string
+#__trim
 
 def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O, NM) :
     start_main = __PtLoc2main(RawVar.StartLoc.PtLoc)
@@ -191,12 +287,16 @@ def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O, NM) :
     
     #print str(record.seq[start_g - 20:start_g + 20])
     
+    if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
+        __checkOptArg(record.seq, start_g, end_g, RawVar.Arg1, M, O)
+
     # Substitution.
     if RawVar.MutationType == "subst" :
-        if record.seq[start_g - 1] != RawVar.Arg1 :
-            O.ErrorMsg(__file__, "No nucleotide %c at position c.%s (g.%i), " \
-                "found a %c instead." % (RawVar.Arg1, M.g2c(start_g), 
-                start_g, record.seq[start_g - 1]))
+        #if record.seq[start_g - 1] != RawVar.Arg1 :
+        #if not __isStringThere(record.seq, start_g, start_g, RawVar.Arg1) :
+        #    O.ErrorMsg(__file__, "No nucleotide %c at position c.%s (g.%i), " \
+        #        "found a %c instead." % (RawVar.Arg1, M.g2c(start_g), 
+        #        start_g, record.seq[start_g - 1]))
         if RawVar.Arg1 == RawVar.Arg2 :
             O.ErrorMsg(__file__, "No mutation given (%c>%c) at position " \
                 "c.%s (g.%i)." % (RawVar.Arg1, RawVar.Arg1, M.g2c(start_g), 
@@ -212,20 +312,21 @@ def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O, NM) :
     # Deletion / Duplication.
     if RawVar.MutationType == "del" or \
        RawVar.MutationType == "dup" :
-        if RawVar.Arg1 and \
-            RawVar.Arg1 != str(record.seq[start_g - 1:end_g]) :
-            if not RawVar.Arg1.isdigit() :
-                O.ErrorMsg(__file__, "String %s not found at position c.%s " \
-                    "(g.%i), found %s instead." % (RawVar.Arg1, 
-                    M.g2c(start_g), start_g, 
-                    str(record.seq[start_g - 1:end_g])))
-            else :
-                if end_g - start_g + 1 != int(RawVar.Arg1) :
-                    O.ErrorMsg(__file__, "The length of the deletion (%i) at " \
-                        "position c.%s (g.%i) differed from that of the " \
-                        "range (%i)." % (int(RawVar.Arg1), 
-                        M.g2c(start_g), start_g, end_g - start_g + 1))
-        #if
+        #if RawVar.Arg1 and \
+        #    not __isStringThere(record.seq, start_g, end_g, RawVar.Arg1) :
+        #    #RawVar.Arg1 != str(record.seq[start_g - 1:end_g]) :
+        #    if not RawVar.Arg1.isdigit() :
+        #        O.ErrorMsg(__file__, "String %s not found at position c.%s " \
+        #            "(g.%i), found %s instead." % (RawVar.Arg1, 
+        #            M.g2c(start_g), start_g, 
+        #            str(record.seq[start_g - 1:end_g])))
+        #    else :
+        #        if end_g - start_g + 1 != int(RawVar.Arg1) :
+        #            O.ErrorMsg(__file__, "The length of the deletion (%i) at " \
+        #                "position c.%s (g.%i) differed from that of the " \
+        #                "range (%i)." % (int(RawVar.Arg1), 
+        #                M.g2c(start_g), start_g, end_g - start_g + 1))
+        ##if
         rollposstart = __roll(record.seq, start_g - 1, end_g,
                               recordDict[GeneSymbol].orientation)
         if rollposstart != start_g :
@@ -278,33 +379,42 @@ def __rv(MUU, record, recordDict, GeneSymbol, RawVar, M, RefType, O, NM) :
     
         MUU.insM(start_g, RawVar.Arg1)
     
-        # Niet record.seq, maar de gemuteerde seq!
-        print MUU.shiftpos(start_g)
-        print MUU.shiftpos(start_g + len(RawVar.Arg1))
-        print MUU.mutated[MUU.shiftpos(start_g):MUU.shiftpos(start_g) + len(RawVar.Arg1)]
+        way = recordDict[GeneSymbol].orientation
+        l = len(RawVar.Arg1)
+        rs1 = MUU.shiftpos(start_g)
+        re1 = MUU.shiftpos(start_g) + (l * way)
 
-#        rollposstart = __roll(record.seq, start_g - 1, # No, give the inserted.
-#                              start_g + len(RawVar.Arg1),
-#                              recordDict[GeneSymbol].orientation)
-#
-        rollposstart = __roll(MUU.mutated, MUU.shiftpos(start_g),
-                              MUU.shiftpos(start_g) + len(RawVar.Arg1),
-                              recordDict[GeneSymbol].orientation) - 1
+        rs2 = __roll(MUU.mutated, rs1, re1, way) - 1
 
-        if rollposstart != MUU.shiftpos(start_g) :
-            print rollposstart, MUU.shiftpos(start_g)
-            rollposend = rollposstart + len(RawVar.Arg1)
+        shiftlen = ((rs2 - rs1 - l + 1) * way)
+
+        c1 = rs2
+        c2 = rs2 + ((l - 1) * way)
+        if rs1 != rs2 or \
+           str(MUU.mutated[c1:c2 + 1]) == str(MUU.mutated[c1-l:(c2-l)+1]) :
+
             O.WarningMsg(__file__, "Insertion of %s at position c.%s (g.%i) " \
                 "was given, however, the HGVS notation prescribes that it " \
                 "should be a duplication of %s at position c.%s (g.%i)." % (
                 RawVar.Arg1, M.g2c(start_g), start_g, 
-                str(MUU.mutated[MUU.shiftpos(start_g) - len(RawVar.Arg1) + 1:MUU.shiftpos(start_g) + 1]),
-                M.g2c(MUU.shiftpos(start_g) - len(RawVar.Arg1) + 2), MUU.shiftpos(start_g) - len(RawVar.Arg1) + 2))
+                str(MUU.mutated[c1:c2 + 1]), M.g2c(start_g + shiftlen), 
+                start_g + shiftlen))
         #if
     #if
 
     if RawVar.MutationType == "delins" :
-        print "delins NOT IMPLEMENTED YET"
+        lcp =  __lcp(RawVar.Arg1, RawVar.Arg2)
+        lcs =  -__lcs(RawVar.Arg1, RawVar.Arg2)
+
+        if lcp or lcs :
+            del_part = __trim(RawVar.Arg1, lcp, lcs)
+            ins_part = __trim(RawVar.Arg2, lcp, lcs)
+            print start_g + lcp, end_g - lcs
+            print M.g2c(start_g + lcp), M.g2c(end_g - lcs)
+            print "del%sins%s" % (del_part, ins_part)
+
+        MUU.delinsM(start_g, end_g, RawVar.Arg2)
+    #if
     
     #print MUU.mutated[start_g - 20:start_g + 20]
     return NM

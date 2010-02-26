@@ -65,7 +65,7 @@ def handler(req):
     #if
 
     # Return raw content (for includes from an HTML file).
-    if ".js" in req.uri :
+    if ".js" in req.uri or "base" in req.uri :
         req.content_type = 'text/html'
         req.write(W.read("templates/", req))
         return apache.OK

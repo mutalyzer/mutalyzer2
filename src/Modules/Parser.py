@@ -143,7 +143,7 @@ class Nomenclatureparser(object) :
     # Changed to:
     # Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
     Ins = RangeLoc + Literal("ins")("MutationType") + \
-          (NtString("Arg1") ^ Number ^ RangeLoc ^ \
+          ((NtString ^ Number)("Arg1") ^ RangeLoc ^ \
           FarLoc("OptRef")) + Optional(Nest)
 
     # Indel -> RangeLoc `del' (Nt+ | Number)? 
@@ -152,15 +152,15 @@ class Nomenclatureparser(object) :
     # Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)? 
     #          `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
     Indel = (RangeLoc ^ Group(PtLoc("PtLoc"))("StartLoc")) + Literal("del") + \
-        Optional(NtString ^ Number) + \
+        Optional(NtString ^ Number)("Arg1") + \
         Literal("ins").setParseAction(replaceWith("delins"))("MutationType") + \
-        (NtString ^ Number ^ RangeLoc ^ FarLoc) + Optional(Nest)
+        ((NtString ^ Number)("Arg2") ^ RangeLoc ^ FarLoc) + Optional(Nest)
 
     # Inv -> RangeLoc `inv' (Nt+ | Number)?
     # Changed to:
     # Inv -> RangeLoc `inv' (Nt+ | Number)? Nest?
     Inv = RangeLoc + Literal("inv")("MutationType") + \
-          Optional(NtString ^ Number) + Optional(Nest)
+          Optional(NtString ^ Number)("Arg1") + Optional(Nest)
 
     # Conv -> RangeLoc `con' FarLoc
     # Changed to:

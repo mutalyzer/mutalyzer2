@@ -101,3 +101,32 @@ def download(req) :
     args = {"version" : W.version}
     return W.tal("HTML", "templates/download.html", args)
 #download
+
+def documentation(req) :
+    """
+        Generate documentation for the webservice.
+
+        Arguments:
+            req ; The request.
+
+        Returns:
+            string ; An HTML page.
+    """
+
+    import pydoc
+    from Interfaces import webservice
+
+    htmldoc = pydoc.HTMLDoc()
+    doc = "<html><body>"
+    doc += htmldoc.docmodule(webservice)
+    del htmldoc
+    doc += "</body></html>"
+
+    return doc
+#documentation
+
+def menu(req) :
+    W = Web.Web()
+
+    return W.tal2("", "")
+#menu

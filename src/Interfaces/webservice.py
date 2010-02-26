@@ -19,6 +19,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
                                                   chromosome.
             getGeneName(v1)                     ; Find the gene name associated 
                                                   with a transcript.
+            varInfo(v1, v2, v3, v4)             ; Convert g. to c. and vice 
+                                                  versa.
     """
     
     @soapmethod(String, Integer, _returns = Array(String))
@@ -125,6 +127,52 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
     @soapmethod(String, String, String, String, _returns = String)
     def varInfo(self, v1, v2, v3, v4) :
+        """
+            Search for an NM number in the MySQL database, if the version
+            number matches, get the start and end positions in a variant and
+            translate these positions to g. notation if the variant is in c.
+            notation and vice versa.
+
+            - If no end position is present, the start position is assumed to
+              be the end position. 
+            - If the version number is not found in the database, an error
+              message is generated and a suggestion for an other version is
+              given.
+            - If the reference sequence is not found at all, an error is
+              returned.
+            - If no variant is present, the transcription start and end and CDS
+              end in c. notation is returned.
+            - If the variant is not accepted by the nomenclature parser, a
+              parse error will be printed.
+
+            
+            Arguments:
+                v1 ; The LOVD version.
+                v2 ; The human genome build (ignored for now, hg19 assumed).
+                v3 ; The NM accession number and version.
+                v4 ; The variant, or empty.
+             
+            Returns:
+                string:
+                    start_main   ; The main coordinate of the start position 
+                                   in c. (non-star) notation.
+                    start_offset ; The offset coordinate of the start position
+                                   in c. notation (intronic position).
+                    end_main     ; The main coordinate of the end position in 
+                                   c. (non-star) notation.
+                    end_offset   ; The offset coordinate of the end position in
+                                   c. notation (intronic position).
+                    start_g      ; The g. notation of the start position.
+                    end_g        ; The g. notation of the end position.
+                    type         ; The mutation type.
+
+            Returns (alternative):
+                string:
+                    trans_start  ; Transcription start in c. notation.
+                    trans_stop   ; Transcription stop in c. notation.
+                    CDS_stop     ; CDS stop in c. notation.
+        """
+
         import Variant_info as VI
         from Modules import Web
         from Modules import Config
