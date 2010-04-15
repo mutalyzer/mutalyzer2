@@ -160,17 +160,25 @@ def __nsplice(string, splice_sites, CDS, orientation) :
 def __toProtDescr(orig, trans) :
     from Bio.SeqUtils import seq3
 
-    ext = abs(len(orig) - len(trans))
+    if str(trans) == str(orig) :
+        print "p.="
+        return
 
-    if ext :
+    if len(trans) > len(orig) :
+        ext = abs(len(orig) - len(trans))
         print "p.*%i%sext*%i" % (len(orig) + 1, seq3(trans[len(orig)]), ext)
+        return
+
+    if len(orig) > len(trans) :
+        print "p.%s%i*" % (seq3(orig[len(trans)]), len(trans) + 1)
+        #print "p.%s%i*" % (seq3(orig[len(trans) - 1]), i + 1)
         return
 
     i = 0
     while i < len(orig) - 1 and orig[i] == trans[i] :
         i += 1
 
-    print "p.%s%i%s" % (seq3(orig[i]), i, seq3(trans[i]))
+    print "p.%s%i%s" % (seq3(orig[i]), i + 1, seq3(trans[i]))
 #__toProtDescr
 
 def __constructCDS(mRNA, CDSpos) :
@@ -753,7 +761,9 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
 
         if protDescr :
             print
+            print
             __toProtDescr(orig, trans)
+        #if
     #if                
 #__ppp
 

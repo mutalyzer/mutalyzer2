@@ -28,7 +28,7 @@ class Web() :
                 version ; Here the displayed version is defined.
         """
 
-        self.version = "2.0&alpha;"
+        self.version = "2.0&alpha;-2"
     #__init__
 
     def run(self, func, *args) :
