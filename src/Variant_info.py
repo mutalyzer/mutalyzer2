@@ -18,7 +18,6 @@
 """
 
 import sys                   # argv
-from Modules import Config   # Config()
 from Modules import Db       # Db(), get_NM_version(), get_NM_info()
 from Modules import Crossmap # Crossmap(), g2x(), x2g(), main2int(), 
                              # offset2int(), info()
@@ -69,10 +68,14 @@ def __getcoords(C, Loc, Type) :
 #__getcoords
 
 
-def __process(LOVD_ver, build, acc, var, Conf, O) :
+def __process(LOVD_ver, build, acc, var, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
-    Database = Db.Db(Conf, "local") # Open the database.
+    Database = Db.Db("local", build) # Open the database.
+    if not Database.opened :
+        O.ErrorMsg(__file__, "Database %s not found." % build)
+        return
+    #if        
     
     # Get the rest of the input variables.
     accno = acc
@@ -110,8 +113,11 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     #   a CDS splice sites list.
     mRNA = []
     
-    CDS = [cdsStart + 1]                  # The counting from 0 conversion.
-    CDS.append(cdsEnd)
+    CDS = []
+    if cdsStart != cdsEnd :
+        CDS = [cdsStart + 1]              # The counting from 0 conversion.
+        CDS.append(cdsEnd)
+    #if
     
     for i in range(len(exonStarts)) :
         mRNA.append(exonStarts[i] + 1)    # This is an interbase conversion.
@@ -193,18 +199,16 @@ def main(LOVD_ver, build, acc, var) :
             CDS_stop     ; CDS stop in c. notation.
     """
 
-    Conf = Config.Config() # Read the configuration file.
-    O = Output.Output(Conf, __file__)
+    O = Output.Output(__file__)
 
     O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
 
-    __process(LOVD_ver, build, acc, var, Conf, O)
+    __process(LOVD_ver, build, acc, var, O)
 
     O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
     del O
-    del Conf
 #main        
 
 if __name__ == "__main__" :

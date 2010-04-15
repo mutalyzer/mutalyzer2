@@ -60,7 +60,7 @@ class Crossmap() :
                                                                  -1 = reverse.
         """
 
-        self.__STOP = 10000000000
+        self.__STOP = None
         self.__crossmapping = len(RNA) * [None]
         self.RNA = list(RNA)
         self.CDS = list(CDS)
@@ -71,6 +71,9 @@ class Crossmap() :
         start = (orientation - 1) / 2
         self.__trans_start = self.__crossmapping[start] 
         self.__trans_end = self.__crossmapping[start - self.orientation]
+
+        if not self.__STOP :
+            self.__STOP = self.__trans_end
     #__init__
 
     def __plus(self, a, b) :
@@ -216,7 +219,7 @@ class Crossmap() :
                 cPos = self.__plus(cPos, self.RNA[i + 1] - self.RNA[i])
 
             # Set __STOP when we find CDS stop.
-            if self.CDS and cPos < self.__STOP and \
+            if self.CDS and not self.__STOP and \
                d * self.RNA[i - c + 1] >= d * self.CDS[x] :
                 self.__STOP = cPos - (d * (self.RNA[i - c + 1] - self.CDS[x]))
             i += d

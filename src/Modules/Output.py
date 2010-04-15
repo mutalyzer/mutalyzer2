@@ -1,12 +1,14 @@
 #!/usr/bin/python
 
-class Output() :
+from Config import Config
+
+class Output(Config) :
     """
         Provide an output interface for errors, warnings and logging purposes.
 
         Private variables:
             __instance   ; The name of the module that made this object.
-            __log        ; The handle of the log file.
+            __loghandle  ; The handle of the log file.
             __datestring ; Format of the prefix for log messages.
             __errors     ; The number of errors that have been processed.
             __warnings   ; The number of warnings that have been processed.
@@ -31,7 +33,7 @@ class Output() :
                                             errors and warnings.
     """
 
-    def __init__(self, config, instance) :
+    def __init__(self, instance) :
         """ 
             Initialise the class private variables with variables from the 
             config file and the calling module.
@@ -43,16 +45,19 @@ class Output() :
             Private variables (altered):
                 __instance   ; Initialised with the name of the module that
                                created this object.
-                __log        ; Initialised as the handle of the log file 
+                __loghandle  ; Initialised as the handle of the log file 
                                defined in the configuration file.
                 __datestring ; Format of the prefix for log messages.
                 __errors     ; Initialised to 0.
                 __warnings   ; Initialised to 0.
+
+            Inherited variables from Config:
+                log ; Location of the log file.
         """
 
+        Config.__init__(self)
         self.__instance = self.__NiceName(instance)
-        self.__log = open(config.log, "a")
-        self.__datestring = config.datestring
+        self.__loghandle = open(self.log, "a")
         self.__errors = 0
         self.__warnings = 0
     #__init__
@@ -62,11 +67,11 @@ class Output() :
             Close the log file.
             
             Private variables(altered):
-                __log      ; The handle of the log file defined in the 
+                __loghandle ; The handle of the log file defined in the 
                              configuration file.
         """
 
-        self.__log.close()
+        self.__loghandle.close()
     #__del__
 
     def __NiceName(self, filename) :
@@ -125,18 +130,21 @@ class Output() :
                 message  ; The message to be logged.
 
             Private variables:
-                __log        ; The handle of the log file defined in the 
+                __loghandle  ; The handle of the log file defined in the 
                                configuration file.
-                __datestring ; Format of the prefix for log messages.
                 __instance   ; The name of the module that created this output
                                object.
+
+            Inherited variables from Config:
+                datestring ; Format of the prefix for log messages.
         """
 
         from time import strftime
 
-        self.__log.write(strftime(self.__datestring + ' ') + "%s (%s): %s\n" \
-            % (self.__instance, self.__NiceName(filename), message))
-        self.__log.flush()
+        self.__loghandle.write(strftime(self.datestring + ' ') + \
+            "%s (%s): %s\n" % (self.__instance, self.__NiceName(filename), 
+            message))
+        self.__loghandle.flush()
     #LogMsg
 
     def Summary(self) :
@@ -164,11 +172,7 @@ class Output() :
 # Unit test.
 #
 if __name__ == "__main__" :
-    import Config
-
-    C = Config.Config()
-    O = Output(C)
-    del C
+    O = Output(__file__)
 
     O.LogMsg(__file__, "hallo")
     O.ErrorMsg(__file__, "Ja, er ging wat mis.")

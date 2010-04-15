@@ -11,7 +11,7 @@ class Config() :
             cachesize  ; Maximum size of the cache directory.
 
                 ; Used by the Db module:
-            dbName          ; The name of the database.
+            dbNames         ; The names of the databases.
             LocalMySQLuser  ; The user that has read/write access to the local
                               database.
             RemoteMySQLuser ; A user that has read access to the remote UCSC 
@@ -44,7 +44,7 @@ class Config() :
 
                           ; Used by the Db module:
                 MySQLuser ; The user that has access to the database.
-                dbName    ; The name of the database.
+                dbNames    ; The name of the databases.
         """
         from configobj import ConfigObj # ConfigObj()
 
@@ -56,7 +56,7 @@ class Config() :
         self.cachesize = int(config["cachesize"])
 
         # Set the variables needed by the Db module.
-        self.dbName = config["dbName"]
+        self.dbNames = config["dbNames"]
         self.LocalMySQLuser = config["LocalMySQLuser"]
         self.RemoteMySQLuser = config["RemoteMySQLuser"]
         self.RemoteMySQLhost = config["RemoteMySQLhost"]
@@ -66,6 +66,11 @@ class Config() :
         # Set the variables needed by the Output module.
         self.log = config["log"]
         self.datestring = config["datestring"]
+
+        # Set the variables needed by the Mutator module.
+        self.flanksize = int(config["flanksize"])
+        self.maxvissize = int(config["maxvissize"])
+        self.flankclipsize = int(config["flankclipsize"])
     #__init__
 #Config
 

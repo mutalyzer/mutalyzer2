@@ -3,3 +3,5 @@
 - Transcription start/end are no splice sites.
 - Iterate over transcripts.
 - Iterate over genes.
+- Check ranges (outside the reference seq).
+- Check new version numbers in variant_info.

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-class Db() :
+from Config import Config
+
+class Db(Config) :
     """
         Log in to a database and keep it open for queries.
 
@@ -44,37 +46,45 @@ class Db() :
     # rewritten when this bug is fixed.
     #
 
-    def __init__(self, config, where) :
+    def __init__(self, where, dbName) :
         """
             Log in to the database. The username and the name of the 
             database are given in the configuration file.
 
             Arguments:
-                config ; The configuration object.
                 where  ; A switch to see which database to use:
                          local  ; Use the database on localhost.
                          remote ; Use the UCSC database.
+                dbName ; The name of the database to use (hg18 or hg19).
 
             Private variables (altered):
                 __db       ; The interface to the database.
-                __tempfile ; A temporary file used for data exchange between
-                             the remote and the local databases.
-                __interval ; The time window (in days) in which we retrieve
-                             updates from the UCSC.
+
+            Inherited variables from Config:
+                TempFile        ; A temporary file used for data exchange 
+                                  between the remote and the local databases.
+                UpdateInterval  ; The time window (in days) in which we retrieve
+                                  updates from the UCSC.
+                RemoteMySQLuser ; 
+                RemoteMySQLhost ;
+                LocalMySQLuser  ;
         """
 
         import MySQLdb
 
-        if where == "remote" :
-            self.__db = MySQLdb.connect(user = config.RemoteMySQLuser, 
-                                        db = config.dbName,
-                                        host = config.RemoteMySQLhost)
-        else :                                 
-            self.__db = MySQLdb.connect(user = config.LocalMySQLuser, 
-                                        db = config.dbName)
-                                 
-        self.__tempfile = config.TempFile
-        self.__interval = config.UpdateInterval
+        Config.__init__(self)
+
+        self.opened = False
+        if dbName in self.dbNames :
+            if where == "remote" :
+                self.__db = MySQLdb.connect(user = self.RemoteMySQLuser, 
+                                            db = dbName,
+                                            host = self.RemoteMySQLhost)
+            else :                                 
+                self.__db = MySQLdb.connect(user = self.LocalMySQLuser, 
+                                            db = dbName)
+            self.opened = True                                                
+        #if                                            
     #__init__
 
     def __query(self, statement) :
@@ -249,6 +259,18 @@ class Db() :
         return self.__query(statement)[0][0]
     #get_GeneName
 
+    def isChrom(self, name) :
+        statement = """
+            SELECT COUNT(*)
+              FROM map
+              WHERE chrom = "%s";
+        """ % name
+
+        if int(self.__query(statement)[0][0]) > 0 :
+            return True
+        return False
+    #isChrom
+
     def get_Update(self) :
         """
             Retrieve all mapping updates from the UCSC within a certain time
@@ -260,12 +282,12 @@ class Db() :
             the load_Update() function.
 
             
-            Private variables:
-                __interval ; The size of the time window (from the config file).
-                __tempfile ; The name and location of the temporary file (from
-                             the config file). This file is created if it
-                             doesn't exist and is overwritten if it does exist.
-                             The function load_Update() will remove this file.
+            Inherited variables from Config:
+                UpdateInterval ; The size of the time window.
+                TempFile       ; The name and location of the temporary file. 
+                                 This file is created if it doesn't exist and
+                                 is overwritten if it does exist. The function
+                                 load_Update() will remove this file.
 
             SQL tables:
                 gbStatus ; acc -> version mapping (NM to NM + version), 
@@ -285,9 +307,9 @@ class Db() :
               AND refGene.name = acc
               AND acc = mrnaAcc
               AND modDate >= DATE_SUB(CURDATE(), INTERVAL %i DAY);
-        """ % self.__interval
+        """ % self.UpdateInterval
 
-        handle = open(self.__tempfile, "w")
+        handle = open(self.TempFile, "w")
 
         # Convert the results to a tab delimited file.
         for i in self.__query(statement) :
@@ -305,14 +327,14 @@ class Db() :
             configuration file) created by the get_Update() function and import
             it in the local database.
 
-            Private variables:
-                __tempfile ; The name and location of the temporary file (from
-                             the config file). This file is created by the 
-                             get_Update() function. After the local import is 
-                             complete, this file will be removed.
+            Inherited variables from Config:
+                TempFile ; The name and location of the temporary file. This 
+                           file is created by the get_Update() function. After
+                           the local import is complete, this file will be
+                           removed.
             
             SQL tables (altered):
-                map_temp ; Created and loaded with data from __tempfile.
+                map_temp ; Created and loaded with data from TempFile.
 
             SQL tables:
                 map ; Accumulated mapping info.
@@ -330,11 +352,11 @@ class Db() :
         statement = """
             LOAD DATA LOCAL INFILE "%s" 
               INTO TABLE map_temp;
-        """ % self.__tempfile
+        """ % self.TempFile
 
         self.__query(statement)
 
-        os.remove(self.__tempfile)
+        os.remove(self.TempFile)
     #load_Update
 
     def count_Updates(self) :
@@ -497,18 +519,14 @@ class Db() :
 # Unit test.
 #
 if __name__ == "__main__" :
-    import Config
-
     # Get the username / db from the config file.
-    C = Config.Config()
-    D = Db(C)
-    del C
+    D = Db("local")
 
     # Do some basic testing (will crash if MySQL is not set up properly.
     D.get_protAcc("NM_002001")
     D.get_NM_info("NM_002001")
     D.get_NM_version("NM_002001")
-    D.get_Transcripts("chr1", 159272155)
+    D.get_Transcripts("chr1", 159272155, 159272155, 0)
     D.get_GeneName("NM_002001")
     del D
 #if

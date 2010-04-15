@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-class Mutator() :
+from Config import Config
+
+class Mutator(Config) :
     """
         Mutate a string and register all shift points.
 
@@ -57,6 +59,9 @@ class Mutator() :
                 orig    ; Initialised to the parameter orig.
                 mutated ; Initialised to the parameter orig.
         """
+
+        Config.__init__(self)
+
         self.__shift = []
         self.orig = orig
         self.mutated = orig
@@ -118,18 +123,57 @@ class Mutator() :
                           delins.
         """
 
-        from Bio import pairwise2
+        # This part is just a visualisation, needs more attention.
+        #
+
+        loflank = self.orig[max(pos1 - self.flanksize, 0):pos1]
+        roflank = self.orig[pos2:pos2 + self.flanksize]
+        odel = self.orig[pos1:pos2]
+        if len(odel) > self.maxvissize :
+            odel = "%s [%ibp] %s" % (odel[:self.flankclipsize], 
+                                     len(odel) - self.flankclipsize * 2,
+                                     odel[-self.flankclipsize:])
+
+        bp1 = self.shiftpos(pos1)
+        bp2 = self.shiftpos(pos2)
+        lmflank = self.mutated[max(bp1 - self.flanksize, 0):bp1]
+        rmflank = self.mutated[bp2:bp2 + self.flanksize]
+
+        print
+        insvis = ins
+        if len(ins) > self.maxvissize :
+            insvis = "%s [%ibp] %s" % (ins[:self.flankclipsize],
+                                       len(ins) - self.flankclipsize * 2,
+                                       ins[-self.flankclipsize:])
+        fill = abs(len(odel) - len(insvis))
+        if len(odel) > len(ins) :
+            print "%s %s %s" % (loflank, odel, roflank)
+            print "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)
+        #if
+        else :
+            print "%s %s%s %s" % (loflank, odel, '-' * fill, roflank)
+            print "%s %s %s" % (lmflank, insvis, rmflank)
+        #else
+
+        #
+        # End visualisation part.
 
         self.mutated = self.mutated[:self.shiftpos(pos1)] + ins + \
                        self.mutated[self.shiftpos(pos2):]
         self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
 
-        alignments = pairwise2.align.globalms(self.orig[pos1 - 25: pos2 + 25],
-            self.mutated[self.shiftpos(pos1) - 25:self.shiftpos(pos2) + 25],
+        """
+        from Bio import pairwise2
+        po1 = max(pos1 - 25, 0)                # Bug fix for mutations at the
+        pm1 = max(self.shiftpos(pos1) - 25, 0) # start of a sequence.
+
+        alignments = pairwise2.align.globalms(self.orig[po1:pos2 + 25],
+            self.mutated[pm1:self.shiftpos(pos2) + 25],
             1, -1, -2, -1)
         print
         print alignments[0][0]
         print alignments[0][1]
+        """
     #__mutate
 
     def shiftpos(self, position) :
@@ -172,8 +216,13 @@ class Mutator() :
 
         ret = []
 
+        j = 0
         for i in sites :
-            ret.append(self.shiftpos(i))
+            if (j % 2) :
+                ret.append(self.shiftpos(i + 1) - 1)
+            else :
+                ret.append(self.shiftpos(i - 1) + 1)
+            j += 1
 
         return ret
     #newSplice

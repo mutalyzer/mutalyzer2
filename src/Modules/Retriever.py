@@ -1,14 +1,18 @@
 #!/usr/bin/python
 
-class Retriever() :
+from Output import Output
+
+class Retriever(Output) :
     """
         Retrieve a record from either the cache or the NCBI.
 
-        Private variables:
-            __email     ; The email address which we give to the NCBI.
-            __cache     ; The directory where the records are stored.
-            __cachesize ; Maximum size of the cache.
-            __output    ; The output object.
+        Inherited variables from Output.Config:
+            email     ; The email address which we give to the NCBI.
+            cache     ; The directory where the records are stored.
+            cachesize ; Maximum size of the cache.
+
+        Inherited functions from Output:
+            output    ; The output object.
 
         Special methods:
             __init__(config) ; Use variables from the configuration file to 
@@ -24,7 +28,7 @@ class Retriever() :
                                      the record.
     """
 
-    def __init__(self, config, output) :
+    def __init__(self) :
         """
             Use variables from  the configuration file for some simple
             settings. Make the cache directory if it does not exist yet.
@@ -33,22 +37,18 @@ class Retriever() :
                 config ; The configuration object.
                 output ; The output object (for logging and error messages).
 
-            Private variables (altered):
-                __email     ; The email address which we give to the NCBI.
-                __cache     ; The directory where the records are stored.
-                __cachesize ; Maximum size of the cache.
-                __output    ; The output object.
+            Inherited variables from Config:
+                email     ; The email address which we give to the NCBI.
+                cache     ; The directory where the records are stored.
+                cachesize ; Maximum size of the cache.
         """
 
         import os # os.path.isdir(), os.path.mkdir()
 
-        self.__email = config.email
-        self.__cache = config.cache
-        self.__cachesize = config.cachesize
-        self.__output = output
+        Output.__init__(self, __file__)
 
-        if not os.path.isdir(self.__cache) :
-            os.mkdir(self.__cache)
+        if not os.path.isdir(self.cache) :
+            os.mkdir(self.cache)
     #__init__
     
     def __foldersize(self, folder) :
@@ -80,19 +80,19 @@ class Retriever() :
             size the ``oldest'' files are deleted. Note that accessing a file
             makes it ``new''.
             
-            Private variables: 
-                __cache     ; Directory under scrutiny.
-                __cachesize ; Maximum size of the cache.
+            Inherited variables from Config: 
+                cache     ; Directory under scrutiny.
+                cachesize ; Maximum size of the cache.
         """
 
         import os # walk(), stat(), path.join(), remove()
 
-        if self.__foldersize(self.__cache) < self.__cachesize :
+        if self.__foldersize(self.cache) < self.cachesize :
             return
     
         # Build a list of files sorted by access time.
         cachelist = []
-        for (path, dirs, files) in os.walk(self.__cache) :
+        for (path, dirs, files) in os.walk(self.cache) :
             for filename in files :
                 cachelist.append(
                     (os.stat(os.path.join(path, filename)).st_atime, filename))
@@ -102,7 +102,7 @@ class Retriever() :
         # small enough (or until the list is exhausted).
         for i in range(0, len(cachelist)) :
             os.remove(os.path.join(path, cachelist[i][1]))
-            if self.__foldersize(self.__cache) < self.__cachesize :
+            if self.foldersize(self.cache) < self.cachesize :
                 break;
         #for
     #__cleancache
@@ -121,10 +121,10 @@ class Retriever() :
             Variables: 
                 identifier ; Either an accession number or a GI number.
 
-            Private variables:
-                __cache      ; The directory where the record is stored.
-                __email      ; The email address which we give to the NCBI.
-                __output     ; The output object.
+            Inherited variables from Config:
+                cache      ; The directory where the record is stored.
+                email      ; The email address which we give to the NCBI.
+                output     ; The output object.
 
             Returns:
                 SeqRecord ; The record that was requested.
@@ -146,41 +146,58 @@ class Retriever() :
             name = identifier
     
         # Make a filename based upon the identifier.
-        filename = self.__cache + '/' + name + ".gb.bz2"
+        filename = self.cache + '/' + name + ".gb.bz2"
     
         # If the filename is not present, retrieve it from the NCBI.
         if not os.path.isfile(filename) :
-            Entrez.email = self.__email
+            Entrez.email = self.email
             net_handle = \
                 Entrez.efetch(db = "nucleotide", id = name, rettype = "gb")
-            # Compress it to save disk space.
-            comp = bz2.BZ2Compressor()
-            data = comp.compress(net_handle.read())
-            data += comp.flush()
-            out_handle = open(filename, "w")
-            out_handle.write(data)
-            out_handle.close()
+            raw_data = net_handle.read()
             net_handle.close()
+
+            # Check if the record is empty or not.
+            if raw_data != "\n" :
+                # Compress it to save disk space.
+                comp = bz2.BZ2Compressor()
+                data = comp.compress(raw_data)
+                data += comp.flush()
+                out_handle = open(filename, "w")
+                out_handle.write(data)
+                out_handle.close()
     
-            # Since we put something in the cache, check if it needs cleaning.
-            self.__cleancache()
+                # Since we put something in the cache, check if it needs 
+                # cleaning.
+                self.__cleancache()
+            #if
+            else :
+                self.ErrorMsg(__file__, "Could not retrieve %s." % name)
+                return None
         #if
         
         # Now we have the file, so we can parse it.
         file_handle = bz2.BZ2File(filename, "r")
-        record = SeqIO.read(file_handle, "genbank")
+        try :
+            record = SeqIO.read(file_handle, "genbank")
+        except ValueError :
+            self.ErrorMsg(__file__, "Could not parse %s, purging." % filename)
+            os.remove(filename)
+            file_handle.close()
+            return None
+        #except
+
         file_handle.close()
 
         # If a GI is supplied, find out the accession number (plus version)
         #   and vice versa.
         if name != record.annotations["gi"] :
             altfilename = \
-                self.__cache + '/' + record.annotations["gi"] + ".gb.bz2"
+                self.cache + '/' + record.annotations["gi"] + ".gb.bz2"
             altfilename2 = \
-                self.__cache + '/' + record.id + ".gb.bz2"
+                self.cache + '/' + record.id + ".gb.bz2"
         #if
         else :
-            altfilename = self.__cache + '/' + record.id + ".gb.bz2"
+            altfilename = self.cache + '/' + record.id + ".gb.bz2"
     
         # If the alternative filename is not present yet, make a hard link.
         if not os.path.isfile(altfilename) :
@@ -194,7 +211,7 @@ class Retriever() :
             else :
                 os.remove(filename)
 
-            self.__output.WarningMsg(__file__, "No version number is given, " \
+            self.WarningMsg(__file__, "No version number is given, " \
                   "using %s. Please use version numbers to reduce " \
                   "downloading overhead." % record.id)
         #if
@@ -207,13 +224,9 @@ class Retriever() :
 # Unit test.
 #
 if __name__ == "__main__" :
-    import Config # Config()
-
     # Get the location of the cache, the cachesize and the email address from 
     #   the config file.
-    C = Config.Config()
-    R = Retriever(C)
-    del C
+    R = Retriever()
 
     R.loadrecord("AB026906.1") # Retrieve a GenBank record.
     del R

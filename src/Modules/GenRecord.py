@@ -60,7 +60,9 @@ class Locus(object) :
 
         self.mRNA = None
         self.CDS = None
+        self.location = []
         self.exon = None
+        self.txTable = 1
         self.CM = None
 
     #__init__
@@ -93,6 +95,17 @@ class Gene(object) :
         self.list = {}
     #__init__
 #gene
+
+class RecordObj(object) :
+
+    def __init__(self) :
+
+        self.genelist = {}
+        self.mol_type = None
+        self.organelle = None
+        self.source = Gene()
+    #__init__
+#RecordObj
 
 class GenRecord() :
     """
@@ -163,42 +176,68 @@ class GenRecord() :
     """
     
     def record2dict(self, record) :
-        recordDict = {}
+        recordDict = RecordObj()
+        #recordDict.genelist = {}
         for i in  record.features :
-            if i.qualifiers and i.qualifiers.has_key("gene") :
-                gene = i.qualifiers["gene"][0]
-                if not recordDict.has_key(gene) :
-                    recordDict[gene] = Gene()
-                if i.type == "gene" :
-                    recordDict[gene].orientation = i.strand
-    
-                # Look if there is a locus tag present, if not, give it the
-                # default tag `001'.
-                locus_tag = "001"
-                if i.qualifiers.has_key("locus_tag") :
-                    locus_tag = i.qualifiers["locus_tag"][0][-3:]
-                if not recordDict[gene].list.has_key(locus_tag) :
-                    recordDict[gene].list[locus_tag] = Locus()
-    
-                if i.type == "mRNA" :
-                    recordDict[gene].list[locus_tag].mRNA = Plist()
-                    recordDict[gene].list[locus_tag].mRNA.location = \
+            if i.qualifiers :
+                if i.type == "source" :
+                    if i.qualifiers.has_key("organelle") :
+                        recordDict.organelle = i.qualifiers["organelle"][0]
+                    if i.qualifiers.has_key("mol_type") :
+                        recordDict.mol_type = i.qualifiers["mol_type"][0]
+
+                    #recordDict["null"] = Gene()
+                    recordDict.source.orientation = 1
+                    recordDict.source.list["001"] = Locus()
+                    recordDict.source.list["001"].CDS = Plist()
+                    recordDict.source.list["001"].CDS.location = \
                         self.__location2pos(i.location)
-                    recordDict[gene].list[locus_tag].mRNA.list = \
-                        self.__locationList2posList(i)
-                #if
-                if i.type == "CDS" :
-                    recordDict[gene].list[locus_tag].CDS = Plist()
-                    recordDict[gene].list[locus_tag].CDS.location = \
-                        self.__location2pos(i.location)
-                    recordDict[gene].list[locus_tag].CDS.list = \
-                        self.__locationList2posList(i)
-                #if
-                if i.type == "exon" :
-                    if not recordDict[gene].list[locus_tag].exon :
-                        recordDict[gene].list[locus_tag].exon = Plist()
-                    recordDict[gene].list[locus_tag].exon.list.extend(
-                        self.__location2pos(i.location))
+
+                if i.qualifiers.has_key("gene") :
+                    gene = i.qualifiers["gene"][0]
+                    if not recordDict.genelist.has_key(gene) :
+                        recordDict.genelist[gene] = Gene()
+                    if i.type == "gene" :
+                        if i.strand :
+                            recordDict.genelist[gene].orientation = i.strand
+                        else :
+                            recordDict.genelist[gene].orientation = 1
+
+                        recordDict.genelist[gene].location = \
+                            self.__location2pos(i.location)
+                    #if
+    
+                    # Look if there is a locus tag present, if not, give it the
+                    # default tag `001'.
+                    locus_tag = "001"
+                    if i.qualifiers.has_key("locus_tag") :
+                        locus_tag = i.qualifiers["locus_tag"][0][-3:]
+                    if not recordDict.genelist[gene].list.has_key(locus_tag) :
+                        recordDict.genelist[gene].list[locus_tag] = Locus()
+    
+                    if i.type == "mRNA" :
+                        recordDict.genelist[gene].list[locus_tag].mRNA = Plist()
+                        recordDict.genelist[gene].list[locus_tag].mRNA.location = \
+                            self.__location2pos(i.location)
+                        recordDict.genelist[gene].list[locus_tag].mRNA.list = \
+                            self.__locationList2posList(i)
+                    #if
+                    if i.type == "CDS" :
+                        recordDict.genelist[gene].list[locus_tag].CDS = Plist()
+                        recordDict.genelist[gene].list[locus_tag].CDS.location = \
+                            self.__location2pos(i.location)
+                        recordDict.genelist[gene].list[locus_tag].CDS.list = \
+                            self.__locationList2posList(i)
+                        if i.qualifiers.has_key("transl_table") :
+                            recordDict.genelist[gene].list[locus_tag].txTable = \
+                                int(i.qualifiers["transl_table"][0])
+                    #if
+                    if i.type == "exon" :
+                        if not recordDict.genelist[gene].list[locus_tag].exon :
+                            recordDict.genelist[gene].list[locus_tag].exon = Plist()
+                        recordDict.genelist[gene].list[locus_tag].exon.list.extend(
+                            self.__location2pos(i.location))
+                #if                            
             #if
         #for
 
