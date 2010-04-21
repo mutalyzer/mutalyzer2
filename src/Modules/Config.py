@@ -46,8 +46,21 @@ class Config() :
                 MySQLuser ; The user that has access to the database.
                 dbName    ; The name of the database.
         """
+#        import sys                   # argv
+#        sys.path.append("/home/gerard/Projects/web_dev/src/")
+#        sys.path.append("/home/gerard/Projects/web_dev/")
+#        import pdb
+#        print sys.path
+#        pdb.set_trace()    
         from configobj import ConfigObj # ConfigObj()
-
+        
+        # Figure out where this program is located and go two levels up.
+        import os
+        myPath = os.path.dirname(__file__) + "/../.."
+        os.chdir(myPath)
+#        print "De huidige directory is: %s" % os.path.dirname(__file__)
+#        config = ConfigObj("./mutalyzer.conf")
+        # Assumes the configuration file to be two levels up
         config = ConfigObj("./mutalyzer.conf")
 
         # Set the variables needed by the Retriever module.

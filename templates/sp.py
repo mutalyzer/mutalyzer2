@@ -2,7 +2,8 @@
 
 from SOAPpy import WSDL
 
-o = WSDL.Proxy("http://<tal tal:replace = "path"></tal>/service.wsdl")
+# o = WSDL.Proxy("http://<tal tal:replace = "path"></tal>/service.wsdl")
+o = WSDL.Proxy("http://localhost/mutalyzer2/download/service.wsdl")
 
 # Get all transcripts that are hit when we look at position 159272155 on 
 # chromosome 1.

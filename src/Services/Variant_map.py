@@ -30,39 +30,25 @@ from ZSI import TC             # Struct()
 from soaplib.serializers.primitive import String, Integer
 from soaplib.serializers.clazz import ClassSerializer
 
-class Complex(ClassSerializer) :
+
+class Complex2(ClassSerializer) :
     '''
         Extended ClassSerializer object with mixed types of attributes
         
         Attributes:
-            startmain ; Define the type of startmain.
-            startoffset ; Define the type of startoffset.
-            endmain ; Define the type of endmain value.
-            endoffset ; Define the type of endoffset value.
-            start_g ; Define the type of start_g value.
-            end_g ; Define the type of end_g value.
-            mutationType ; Define the type of mutation type
+            trans_start ; Define the type of trans_start
+            trans_stop  ; Define the type of trans_stop
+            CDS_stop    ; Define the type of CDS_stop
     '''
     class types :
-        startmain    = Integer
-        startoffset  = Integer
-        endmain      = Integer
-        endoffset    = Integer
-        start_g      = Integer
-        end_g        = Integer
-        mutationType = String
+        trans_start = Integer
+        trans_stop  = Integer
+        CDS_stop    = Integer
     #types
 #Complex
-
-# Any comments on the following statement??
-Complex.typecode = TC.Struct(Complex, [ TC.Integer('startmain'),
-                                        TC.Integer('startoffset'),
-                                        TC.Integer('endmain'),
-                                        TC.Integer('endoffset'),
-                                        TC.Integer('start_g'),
-                                        TC.Integer('end_g'),
-                                        TC.String('mutationType') ], 'Complex')
-
+Complex2.typecode = TC.Struct(Complex2, [ TC.Integer('trans_start'),
+                                        TC.Integer('trans_stop'),
+                                        TC.Integer('CDS_stop') ], 'Complex2')
 
 def __sl2il(l) :
     """
@@ -78,37 +64,7 @@ def __sl2il(l) :
     return l
 #__sl2il
 
-def __getcoords(C, Loc, Type) :
-    """
-        Return main, offset and g positions given either a position in
-        c. or in g. notation.
-
-        Arguments:
-            C    ; A crossmapper.
-            Loc  ; Either a location in g. or c. notation.
-            Type ; The reference type.
-        Returns:
-            triple:
-                0 ; Main coordinate in c. notation.
-                1 ; Offset coordinate in c. notation.
-                2 ; Position in g. notation.
-    """
-
-    if Type == 'c' :
-        main = C.main2int(Loc.MainSgn +  Loc.Main)
-        offset = C.offset2int(Loc.OffSgn +  Loc.Offset)
-        g = C.x2g(main, offset)
-        main, offset = C.g2x(g)
-    #if
-    else :
-        g = int(Loc.Main)
-        main, offset = C.g2x(g)
-    #else
-    return (main, offset, g)
-#__getcoords
-
-
-def __process(LOVD_ver, build, acc, var, Conf, O) :
+def __process(LOVD_ver, build, acc, Conf, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
     Database = Db.Db(Conf, "local") # Open the database.
@@ -171,60 +127,17 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Build the crossmapper.
     Cross = Crossmap.Crossmap(mRNA, CDS, orientation)
     
-    # If no variant is given, return an error
-    if not var :
-        O.ErrorMsg(__file__, "Variant was not provided. ")
-        raise Fault(Fault.Client, "EARG", detail = "Variant was not provided. ")
-        return
-    #if
-    
-    # Make a parsetree for the given variation.
-    P = Parser.Nomenclatureparser(O)
-    parsetree = P.parse("NM_0000:" + var) # This NM number is bogus.
-    del P
+    # Return transcription start, transcription end and
+    # CDS stop in c. notation.
+    T = Complex2()
+    info = Cross.info()
+    T.trans_start = info[0]
+    T.trans_stop  = info[1]
+    T.CDS_stop    = info[2]
+    print "%i\n%i\n%i" % info
+    return T
 
-    # 15-04-2010 by Gerard
-    V = Complex()
-
-    if parsetree :
-        # Get the coordinates in both c. and g. notation.
-        startmain, startoffset, start_g = \
-            __getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, 
-                        parsetree.RefType)
-        
-        # Assume there is no end position given.
-        end_g = start_g
-        endmain = startmain
-        endoffset = startoffset
-        
-        # If there is an end position, calculate the coordinates.
-        if parsetree.RawVar.EndLoc :
-            endmain, endoffset, end_g = \
-                __getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
-                            parsetree.RefType)
-        
-        # And assign these values to the Complex V types.
-        V.startmain = startmain
-        V.startoffset = startoffset
-        V.endmain = endmain
-        V.endoffset = endoffset
-        V.start_g = start_g
-        V.end_g = end_g
-        V.mutationType = parsetree.RawVar.MutationType
-        
-        
-    #if
-    del Cross
-    print V.startmain
-    print V.startoffset
-    print V.endmain
-    print V.endoffset
-    print V.start_g
-    print V.end_g
-    print V.mutationType
-    return V
-#__process
-
+#__map
 def main(LOVD_ver, build, acc, var) :
     """
         The entry point (called by the HTML publisher).
@@ -233,22 +146,8 @@ def main(LOVD_ver, build, acc, var) :
             LOVD_ver ; The LOVD version (ignored for now).
             build    ; The human genome build (ignored for now, hg19 assumed).
             acc      ; The NM accession number and version.
-            var      ; The variant, or empty.
     
         Returns:
-            start_main   ; The main coordinate of the start position in c. 
-                           (non-star) notation.
-            start_offset ; The offset coordinate of the start position in c. 
-                           notation (intronic position).
-            end_main     ; The main coordinate of the end position in c. 
-                           (non-star) notation.
-            end_offset   ; The offset coordinate of the end position in c. 
-                           notation (intronic position).
-            start_g      ; The g. notation of the start position.
-            end_g        ; The g. notation of the end position.
-            type         ; The mutation type.
-    
-        Returns (alternative):
             trans_start  ; Transcription start in c. notation.
             trans_stop   ; Transcription stop in c. notation.
             CDS_stop     ; CDS stop in c. notation.
@@ -266,7 +165,7 @@ def main(LOVD_ver, build, acc, var) :
     O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
 
-    result = __process(LOVD_ver, build, acc, var, Conf, O)
+    result = __process(LOVD_ver, build, acc, Conf, O)
 
     O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))

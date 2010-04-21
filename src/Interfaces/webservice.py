@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from Variant_info import Complex
+
 from soaplib.wsgi_soap import SimpleWSGISoapApp
 from soaplib.service import soapmethod
 from soaplib.serializers.primitive import String, Integer, Array
@@ -22,7 +24,6 @@ class MutalyzerService(SimpleWSGISoapApp) :
             varInfo(v1, v2, v3, v4)             ; Convert g. to c. and vice 
                                                   versa.
     """
-    
     @soapmethod(String, Integer, _returns = Array(String))
     def getTranscripts(self, v1, v2) :
         """
@@ -125,7 +126,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return ret
     #getGeneName
 
-    @soapmethod(String, String, String, String, _returns = String)
+#    @soapmethod(String, String, String, String, _returns = Array(Int, Int, Int, Int, Int, Int, String)
+    @soapmethod(String, String, String, String, _returns = Complex)
     def varInfo(self, v1, v2, v3, v4) :
         """
             Search for an NM number in the MySQL database, if the version
@@ -140,8 +142,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
               given.
             - If the reference sequence is not found at all, an error is
               returned.
-            - If no variant is present, the transcription start and end and CDS
-              end in c. notation is returned.
+            - If no variant is present, an error is returned.
             - If the variant is not accepted by the nomenclature parser, a
               parse error will be printed.
 
@@ -150,10 +151,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 v1 ; The LOVD version.
                 v2 ; The human genome build (ignored for now, hg19 assumed).
                 v3 ; The NM accession number and version.
-                v4 ; The variant, or empty.
+                v4 ; The variant.
              
             Returns:
-                string:
+                complex:
                     start_main   ; The main coordinate of the start position 
                                    in c. (non-star) notation.
                     start_offset ; The offset coordinate of the start position
@@ -166,14 +167,9 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     end_g        ; The g. notation of the end position.
                     type         ; The mutation type.
 
-            Returns (alternative):
-                string:
-                    trans_start  ; Transcription start in c. notation.
-                    trans_stop   ; Transcription stop in c. notation.
-                    CDS_stop     ; CDS stop in c. notation.
         """
 
-        import Variant_info as VI
+        import Variant_info
         from Modules import Web
         from Modules import Config
         from Modules import Db
@@ -187,7 +183,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                  v1, v2, v3, v4))
 
         W = Web.Web()
-        result = W.run(VI.main, v1, v2, v3, v4)
+        result = Variant_info.main(v1, v2, v3, v4)
         del W
 
         L.LogMsg(__file__, "Finished processing varInfo(%s %s %s %s)" % (
@@ -196,6 +192,55 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del L
         del D
         del C
-        return str(result.split("\n")[:-1])
+#        return str(result.split("\n")[:-1])
+        return result
     #varInfo
+
+    @soapmethod(String, String, String, String, _returns = Complex)
+    def mapInfo(self, v1, v2, v3, v4) :
+        """
+            Search for an NM number in the MySQL database, if the version
+            number matches, the transcription start and end and CDS end 
+            in c. notation is returned.
+
+            
+            Arguments:
+                v1 ; The LOVD version.
+                v2 ; The human genome build (ignored for now, hg19 assumed).
+                v3 ; The NM accession number and version.
+                v4 ; The variant, empty.
+             
+            Returns:
+                complex:
+                    trans_start  ; Transcription start in c. notation.
+                    trans_stop   ; Transcription stop in c. notation.
+                    CDS_stop     ; CDS stop in c. notation.
+        """
+
+        import Variant_map
+        from Modules import Web
+        from Modules import Config
+        from Modules import Db
+        from Modules import Output
+    
+        C = Config.Config()
+        D = Db.Db(C, "local")
+        L = Output.Output(C, __file__)
+    
+        L.LogMsg(__file__, "Reveived request mapInfo(%s %s %s %s)" % (
+                 v1, v2, v3, v4))
+
+        W = Web.Web()
+        result = Variant_map.main(v1, v2, v3, v4)
+        del W
+
+        L.LogMsg(__file__, "Finished processing mapInfo(%s %s %s %s)" % (
+                 v1, v2, v3, v4))
+
+        del L
+        del D
+        del C
+        return result
+    #mapInfo
+    
 #MutalyzerService

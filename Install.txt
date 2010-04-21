@@ -8,6 +8,8 @@ This program depends on the following packages:
 - python-zsi       >= 2.0-2
 - mysql-server     >= 5.0.0
 - python-soappy    >= 0.12.0-2
+- python-soaplib   >= 0.8.1
+
 
 The web interface depends on the following packages:
 - apache                >= 2.2.11
