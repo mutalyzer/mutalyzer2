@@ -16,53 +16,14 @@
       will be printed.
 
 """
-import sys                     # argv
-from Modules import Config     # Config()
-from Modules import Db         # Db(), get_NM_version(), get_NM_info()
-from Modules import Crossmap   # Crossmap(), g2x(), x2g(), main2int(), 
-                               # offset2int(), info()
-from Modules import Parser     # Nomenclatureparser(), parse()
-from Modules import Output     # Output(), LogMsg()
-from ZSI.fault import Fault    # Fault()
-from ZSI import TC             # Struct()
 
-# 19-04-2010 by gerard
-from soaplib.serializers.primitive import String, Integer
-from soaplib.serializers.clazz import ClassSerializer
-
-class Complex(ClassSerializer) :
-    '''
-        Extended ClassSerializer object with mixed types of attributes
-        
-        Attributes:
-            startmain ; Define the type of startmain.
-            startoffset ; Define the type of startoffset.
-            endmain ; Define the type of endmain value.
-            endoffset ; Define the type of endoffset value.
-            start_g ; Define the type of start_g value.
-            end_g ; Define the type of end_g value.
-            mutationType ; Define the type of mutation type
-    '''
-    class types :
-        startmain    = Integer
-        startoffset  = Integer
-        endmain      = Integer
-        endoffset    = Integer
-        start_g      = Integer
-        end_g        = Integer
-        mutationType = String
-    #types
-#Complex
-
-# Any comments on the following statement??
-Complex.typecode = TC.Struct(Complex, [ TC.Integer('startmain'),
-                                        TC.Integer('startoffset'),
-                                        TC.Integer('endmain'),
-                                        TC.Integer('endoffset'),
-                                        TC.Integer('start_g'),
-                                        TC.Integer('end_g'),
-                                        TC.String('mutationType') ], 'Complex')
-
+import sys                   # argv
+from Modules import Config   # Config()
+from Modules import Db       # Db(), get_NM_version(), get_NM_info()
+from Modules import Crossmap # Crossmap(), g2x(), x2g(), main2int(), 
+                             # offset2int(), info()
+from Modules import Parser   # Nomenclatureparser(), parse()
+from Modules import Output   # Output(), LogMsg()
 
 def __sl2il(l) :
     """
@@ -124,22 +85,16 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Check whether the NM version number is in the database.
     db_version = Database.get_NM_version(accno)
     if not db_version :
-        O.LogMsg(__file__, "EARG %s" % accno)
-        raise Fault(Fault.Client, "EARG",
-            detail = "The accno argument %s was not a valid "\
-                     "NM accession number." % accno)
+        O.ErrorMsg(__file__, "Reference sequence not found.")
         return
     #if
     if db_version != version :
         O.ErrorMsg(__file__, 
             "Reference sequence version not found. Available: %s.%i" % (
             accno, db_version))
-        raise Fault(Fault.Client, "EARG",
-            detail = "The Reference sequence version (%s.%i) was not found. "\
-                     "Available: %s.%i" % (accno, version, accno, db_version))
         return
     #if
-
+    
     # Retrieve info on the NM accession number.
     result = Database.get_NM_info(accno)
     del Database
@@ -155,8 +110,11 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     #   a CDS splice sites list.
     mRNA = []
     
-    CDS = [cdsStart + 1]                  # The counting from 0 conversion.
-    CDS.append(cdsEnd)
+    CDS = [] 
+    if cdsStart != cdsEnd :
+        CDS = [cdsStart + 1]              # The counting from 0 conversion.
+        CDS.append(cdsEnd)
+    #if
     
     for i in range(len(exonStarts)) :
         mRNA.append(exonStarts[i] + 1)    # This is an interbase conversion.
@@ -171,10 +129,11 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Build the crossmapper.
     Cross = Crossmap.Crossmap(mRNA, CDS, orientation)
     
-    # If no variant is given, return an error
+    # If no variant is given, return transcription start, transcription end and
+    #   CDS stop in c. notation.
     if not var :
-        O.ErrorMsg(__file__, "Variant was not provided. ")
-        raise Fault(Fault.Client, "EARG", detail = "Variant was not provided. ")
+        info = Cross.info()
+        print "%i\n%i\n%i" % info
         return
     #if
     
@@ -182,9 +141,6 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     P = Parser.Nomenclatureparser(O)
     parsetree = P.parse("NM_0000:" + var) # This NM number is bogus.
     del P
-
-    # 15-04-2010 by Gerard
-    V = Complex()
 
     if parsetree :
         # Get the coordinates in both c. and g. notation.
@@ -203,26 +159,12 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
                 __getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
                             parsetree.RefType)
         
-        # And assign these values to the Complex V types.
-        V.startmain = startmain
-        V.startoffset = startoffset
-        V.endmain = endmain
-        V.endoffset = endoffset
-        V.start_g = start_g
-        V.end_g = end_g
-        V.mutationType = parsetree.RawVar.MutationType
-        
-        
+        # And return the output.
+        print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (startmain, startoffset, endmain, 
+                                              endoffset, start_g, end_g, 
+                                              parsetree.RawVar.MutationType)
     #if
     del Cross
-    print V.startmain
-    print V.startoffset
-    print V.endmain
-    print V.endoffset
-    print V.start_g
-    print V.end_g
-    print V.mutationType
-    return V
 #__process
 
 def main(LOVD_ver, build, acc, var) :
@@ -252,12 +194,6 @@ def main(LOVD_ver, build, acc, var) :
             trans_start  ; Transcription start in c. notation.
             trans_stop   ; Transcription stop in c. notation.
             CDS_stop     ; CDS stop in c. notation.
-
-        On error an exception is raised:
-            detail       ; Human readable description of the error.
-            faultstring: ; A code to indicate the type of error.
-                EARG   ; The argument was not valid.
-                ERANGE ; An invalid range was given.
     """
 
     Conf = Config.Config() # Read the configuration file.
@@ -266,17 +202,13 @@ def main(LOVD_ver, build, acc, var) :
     O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
 
-    result = __process(LOVD_ver, build, acc, var, Conf, O)
+    __process(LOVD_ver, build, acc, var, Conf, O)
 
     O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
     del O
     del Conf
-    return result
 #main        
 
 if __name__ == "__main__" :
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-
-        
-

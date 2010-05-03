@@ -30,7 +30,7 @@ from ZSI import TC             # Struct()
 from soaplib.serializers.primitive import String, Integer
 from soaplib.serializers.clazz import ClassSerializer
 
-class Complex(ClassSerializer) :
+class mappingObj(ClassSerializer) :
     '''
         Extended ClassSerializer object with mixed types of attributes
         
@@ -52,19 +52,21 @@ class Complex(ClassSerializer) :
         end_g        = Integer
         mutationType = String
     #types
-#Complex
+#mappingObj
 
 # Any comments on the following statement??
-Complex.typecode = TC.Struct(Complex, [ TC.Integer('startmain'),
+mappingObj.typecode = TC.Struct(mappingObj, 
+                                        [ TC.Integer('startmain'),
                                         TC.Integer('startoffset'),
                                         TC.Integer('endmain'),
                                         TC.Integer('endoffset'),
                                         TC.Integer('start_g'),
                                         TC.Integer('end_g'),
-                                        TC.String('mutationType') ], 'Complex')
+                                        TC.String('mutationType') ], 
+                                                            'mappingObj')
 
 
-class Complex2(ClassSerializer) :
+class transcriptObj(ClassSerializer) :
     '''
         Extended ClassSerializer object with mixed types of attributes
         
@@ -78,10 +80,12 @@ class Complex2(ClassSerializer) :
         trans_stop  = Integer
         CDS_stop    = Integer
     #types
-#Complex
-Complex2.typecode = TC.Struct(Complex2, [ TC.Integer('trans_start'),
+#transcriptObj
+transcriptObj.typecode = TC.Struct(transcriptObj, 
+                                        [ TC.Integer('trans_start'),
                                         TC.Integer('trans_stop'),
-                                        TC.Integer('CDS_stop') ], 'Complex2')
+                                        TC.Integer('CDS_stop') ], 
+                                                        'transcriptObj')
 
 def __sl2il(l) :
     """
@@ -174,8 +178,11 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     #   a CDS splice sites list.
     mRNA = []
     
-    CDS = [cdsStart + 1]                  # The counting from 0 conversion.
-    CDS.append(cdsEnd)
+    CDS = [] 
+    if cdsStart != cdsEnd :
+        CDS = [cdsStart + 1]              # The counting from 0 conversion.
+        CDS.append(cdsEnd)
+    #if
     
     for i in range(len(exonStarts)) :
         mRNA.append(exonStarts[i] + 1)    # This is an interbase conversion.
@@ -192,7 +199,7 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     return Cross
 #__process
 
-def main_Info(LOVD_ver, build, acc, var) :
+def mainMapping(LOVD_ver, build, acc, var) :
     """
         One of the entry points (called by the HTML publisher).
             
@@ -243,7 +250,7 @@ def main_Info(LOVD_ver, build, acc, var) :
     del P
 
     # 15-04-2010 by Gerard
-    V = Complex()
+    V = mappingObj()
 
     if parsetree :
         # Get the coordinates in both c. and g. notation.
@@ -262,7 +269,7 @@ def main_Info(LOVD_ver, build, acc, var) :
                 __getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
                             parsetree.RefType)
         
-        # And assign these values to the Complex V types.
+        # And assign these values to the mappingInfo V types.
         V.startmain = startmain
         V.startoffset = startoffset
         V.endmain = endmain
@@ -280,18 +287,18 @@ def main_Info(LOVD_ver, build, acc, var) :
         acc, var, LOVD_ver, build))
     del O
     del Conf
-    print "En nu de resultaten: "
-    print V.startmain
-    print V.startoffset
-    print V.endmain
-    print V.endoffset
-    print V.start_g
-    print V.end_g
-    print V.mutationType
+#    print "En nu de resultaten: "
+#    print V.startmain
+#    print V.startoffset
+#    print V.endmain
+#    print V.endoffset
+#    print V.start_g
+#    print V.end_g
+#    print V.mutationType
     return V
-#main_Info       
+#main_Mapping       
 
-def main_Map(LOVD_ver, build, acc, var) :
+def mainTranscript(LOVD_ver, build, acc) :
     """
         One of the entry points (called by the HTML publisher).
             
@@ -318,31 +325,33 @@ def main_Map(LOVD_ver, build, acc, var) :
     O = Output.Output(Conf, __file__)
 
     O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
-        acc, var, LOVD_ver, build))
+        acc, '', LOVD_ver, build))
 
     # first get a result from __process
-    Cross = __process(LOVD_ver, build, acc, var, Conf, O)
+    Cross = __process(LOVD_ver, build, acc, '', Conf, O)
 
     # Return transcription start, transcription end and
     # CDS stop in c. notation.
-    T = Complex2()
+    T = transcriptObj()
     info = Cross.info()
     T.trans_start = info[0]
     T.trans_stop  = info[1]
     T.CDS_stop    = info[2]
     O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
-        acc, var, LOVD_ver, build))
+        acc, '', LOVD_ver, build))
     del O
     del Conf
-    print T.trans_start
-    print T.trans_stop
-    print T.CDS_stop
+#    print T.trans_start
+#    print T.trans_stop
+#    print T.CDS_stop
     return T
-#main_Map       
-if __name__ == "__main__" :
-    main_Info(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+#mainTranscript       
+
 #if __name__ == "__main__" :
-#    main_Map(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+#    main_Mapping(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+if __name__ == "__main__" :
+#    mainTranscript(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    mainTranscript(sys.argv[1], sys.argv[2], sys.argv[3])
 
         
 

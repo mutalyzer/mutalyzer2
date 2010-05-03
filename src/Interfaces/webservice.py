@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from Variant_info import Complex
+from Services.Mapper import mappingObj, transcriptObj
 
 from soaplib.wsgi_soap import SimpleWSGISoapApp
 from soaplib.service import soapmethod
@@ -31,7 +31,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
     
             Arguments:
                 string v1 ; A chromosome encoded as "chr1", ..., "chrY".
-                int    v2 ; A postion on the chromosome.
+                int    v2 ; A position on the chromosome.
     
             Returns:
                 string ; A list of transcripts.
@@ -126,9 +126,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return ret
     #getGeneName
 
-#    @soapmethod(String, String, String, String, _returns = Array(Int, Int, Int, Int, Int, Int, String)
-    @soapmethod(String, String, String, String, _returns = Complex)
-    def varInfo(self, v1, v2, v3, v4) :
+    @soapmethod(String, String, String, String, _returns = mappingObj)
+    def mappingInfo(self, v1, v2, v3, v4) :
         """
             Search for an NM number in the MySQL database, if the version
             number matches, get the start and end positions in a variant and
@@ -169,7 +168,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         """
 
-        import Variant_info
+        import Services.Mapper
         from Modules import Web
         from Modules import Config
         from Modules import Db
@@ -179,25 +178,24 @@ class MutalyzerService(SimpleWSGISoapApp) :
         D = Db.Db(C, "local")
         L = Output.Output(C, __file__)
     
-        L.LogMsg(__file__, "Reveived request varInfo(%s %s %s %s)" % (
+        L.LogMsg(__file__, "Reveived request mappingInfo(%s %s %s %s)" % (
                  v1, v2, v3, v4))
 
         W = Web.Web()
-        result = Variant_info.main(v1, v2, v3, v4)
+        result = Services.Mapper.mainMapping(v1, v2, v3, v4)
         del W
 
-        L.LogMsg(__file__, "Finished processing varInfo(%s %s %s %s)" % (
+        L.LogMsg(__file__, "Finished processing mappingInfo(%s %s %s %s)" % (
                  v1, v2, v3, v4))
 
         del L
         del D
         del C
-#        return str(result.split("\n")[:-1])
         return result
     #varInfo
 
-    @soapmethod(String, String, String, String, _returns = Complex)
-    def mapInfo(self, v1, v2, v3, v4) :
+    @soapmethod(String, String, String, _returns = transcriptObj)
+    def transcriptInfo(self, v1, v2, v3) :
         """
             Search for an NM number in the MySQL database, if the version
             number matches, the transcription start and end and CDS end 
@@ -208,7 +206,6 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 v1 ; The LOVD version.
                 v2 ; The human genome build (ignored for now, hg19 assumed).
                 v3 ; The NM accession number and version.
-                v4 ; The variant, empty.
              
             Returns:
                 complex:
@@ -217,7 +214,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     CDS_stop     ; CDS stop in c. notation.
         """
 
-        import Variant_map
+        import Services.Mapper
         from Modules import Web
         from Modules import Config
         from Modules import Db
@@ -227,15 +224,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
         D = Db.Db(C, "local")
         L = Output.Output(C, __file__)
     
-        L.LogMsg(__file__, "Reveived request mapInfo(%s %s %s %s)" % (
-                 v1, v2, v3, v4))
+        L.LogMsg(__file__, "Reveived request transcriptInfo(%s %s %s)" % (
+                 v1, v2, v3))
 
         W = Web.Web()
-        result = Variant_map.main(v1, v2, v3, v4)
+        result = Services.Mapper.mainTranscript(v1, v2, v3)
         del W
 
-        L.LogMsg(__file__, "Finished processing mapInfo(%s %s %s %s)" % (
-                 v1, v2, v3, v4))
+        L.LogMsg(__file__, "Finished processing transcriptInfo(%s %s %s)" % (
+                 v1, v2, v3))
 
         del L
         del D
