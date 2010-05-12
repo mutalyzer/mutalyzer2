@@ -21,7 +21,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
           mappingInfo(LOVD_ver, build, accNo, variant) ; 
           transcriptInfo(LOVD_ver, build, accNo) ; Find transcription start and
             end, and CDS end (in c. notation) for a given transcript 
-          extractChange(self, variant) : Extracts
+          extractChange(self, variant) : Extracts the part of a variant
+            description after the coordinates (positions)
           cTogConversion(self, LOVD_ver, build, variant) ; Convert c. to g.
           gTocConversion(self, LOVD_ver, build, variant) ; Convert g. to c.
             
