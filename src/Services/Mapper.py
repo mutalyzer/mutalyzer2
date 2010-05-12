@@ -130,6 +130,43 @@ def __getcoords(C, Loc, Type) :
     return (main, offset, g)
 #__getcoords
 
+def conversionToCoding(offset, main, trans_start, trans_stop, CDS_stop) :
+    '''
+    Converts c. (non-star) positions to c. numbered (star and +-) positions
+    
+    Arguments:
+        offset      ; The offset coordinate of a position in c. notation
+                      (intronic position)
+        main        ; The main coordinate of a position in c.
+                      (non-star) notation
+        trans_start ; Transcription start in c. notation.
+        trans_stop  ; Transcription stop in c. notation.
+        CDS_stop    ; CDS stop in c. notation.
+        
+    Returns:
+        cOffset ; The offset coordinate of a position in c. notation
+                      (intronic position, +- notation)
+        cMain   ; The main coordinate of a position in c. (star) notation.
+            
+    '''
+    cOffset = ""
+    cMain = main
+    if offset != "0" :
+        if offset[0] != '-' :
+            cOffset = '+' + offset
+        else :
+            cOffset = offset
+    if main == trans_start and offset :
+        cOffset = "-u" + offset[1:]
+    if main == trans_stop and offset :
+        cOffset = "+d" + offset
+    if int(main) > int(CDS_stop) :
+        cMain = '*' + str(int(main) - int(CDS_stop))
+        
+    return cOffset, cMain
+#conversionToCoding
+
+
 
 def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Make a connection to the MySQL database with the username / db
@@ -249,7 +286,7 @@ def mainMapping(LOVD_ver, build, acc, var) :
     parsetree = P.parse("NM_0000:" + var) # This NM number is bogus.
     del P
 
-    # 15-04-2010 by Gerard
+    # initiate ClassSerializer object
     V = mappingObj()
 
     if parsetree :
@@ -269,7 +306,7 @@ def mainMapping(LOVD_ver, build, acc, var) :
                 __getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
                             parsetree.RefType)
         
-        # And assign these values to the mappingInfo V types.
+        # Assign these values to the mappingObj V types.
         V.startmain = startmain
         V.startoffset = startoffset
         V.endmain = endmain
@@ -287,14 +324,6 @@ def mainMapping(LOVD_ver, build, acc, var) :
         acc, var, LOVD_ver, build))
     del O
     del Conf
-#    print "En nu de resultaten: "
-#    print V.startmain
-#    print V.startoffset
-#    print V.endmain
-#    print V.endoffset
-#    print V.start_g
-#    print V.end_g
-#    print V.mutationType
     return V
 #main_Mapping       
 
@@ -309,9 +338,9 @@ def mainTranscript(LOVD_ver, build, acc) :
             var      ; The (empty) variant.
     
         Returns:
-            trans_start  ; Transcription start in c. notation.
-            trans_stop   ; Transcription stop in c. notation.
-            CDS_stop     ; CDS stop in c. notation.
+            trans_start  ; Transcription start in c. notation (number only).
+            trans_stop   ; Transcription stop in c. notation (number only).
+            CDS_stop     ; CDS stop in c. notation (number only).
 
         On error an exception is raised:
             detail       ; Human readable description of the error.
@@ -330,10 +359,12 @@ def mainTranscript(LOVD_ver, build, acc) :
     # first get a result from __process
     Cross = __process(LOVD_ver, build, acc, '', Conf, O)
 
+    # Initiate ClassSerializer object
+    T = transcriptObj()
     # Return transcription start, transcription end and
     # CDS stop in c. notation.
-    T = transcriptObj()
     info = Cross.info()
+    # Assign these values to the transcriptObj T types.
     T.trans_start = info[0]
     T.trans_stop  = info[1]
     T.CDS_stop    = info[2]
@@ -341,17 +372,13 @@ def mainTranscript(LOVD_ver, build, acc) :
         acc, '', LOVD_ver, build))
     del O
     del Conf
-#    print T.trans_start
-#    print T.trans_stop
-#    print T.CDS_stop
     return T
 #mainTranscript       
 
 #if __name__ == "__main__" :
 #    main_Mapping(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-if __name__ == "__main__" :
-#    mainTranscript(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-    mainTranscript(sys.argv[1], sys.argv[2], sys.argv[3])
+#if __name__ == "__main__" :
+#    mainTranscript(sys.argv[1], sys.argv[2], sys.argv[3])
 
         
 
