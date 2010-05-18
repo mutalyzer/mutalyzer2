@@ -16,6 +16,10 @@ import sys
 import Mutalyzer
 import Variant_info as VI
 from Modules import Web
+from mod_python import apache
+from Modules import Config
+import pydoc
+from Interfaces import webservice
 
 def index(req) :
     """
@@ -48,7 +52,9 @@ def index(req) :
         "mut_output" : reply
     }
 
-    return W.tal("HTML", "templates/check.html", args)
+    ret = W.tal("HTML", "templates/check.html", args)
+    del W
+    return ret
 #index
 
 def Variant_info(req) :
@@ -99,8 +105,36 @@ def download(req) :
     W = Web.Web()
 
     args = {"version" : W.version}
-    return W.tal("HTML", "templates/download.html", args)
+    ret = W.tal("HTML", "templates/download.html", args)
+    del W
+    return ret
 #download
+
+def upload(req) :
+    C = Config.Config()
+    maxUploadSize = C.Retriever.maxDldSize
+    del C
+
+    if req.method == 'POST' :
+        length = req.headers_in.get('Content-Length')
+        if not length :
+            req.status = apache.HTTP_LENGTH_REQUIRED
+            req.write("Content length required.")
+            return None
+        #if
+        if int(length) > maxUploadSize :
+            req.status = apache.HTTP_REQUEST_ENTITY_TOO_LARGE
+            req.write("Upload limit exceeded.")
+            return None
+        #if
+    #if
+
+    W = Web.Web()
+    args = {"version" : W.version}
+    ret = W.tal("HTML", "templates/gbupload.html", args)
+    del W
+    return ret
+#upload
 
 def documentation(req) :
     """
@@ -112,9 +146,6 @@ def documentation(req) :
         Returns:
             string ; An HTML page.
     """
-
-    import pydoc
-    from Interfaces import webservice
 
     htmldoc = pydoc.HTMLDoc()
     doc = "<html><body>"

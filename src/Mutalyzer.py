@@ -4,9 +4,11 @@ from Modules import Retriever
 from Modules import GenRecord
 from Modules import Crossmap
 from Modules import Parser
+from Modules import Db
 
 import types
 from Modules import Output
+from Modules import Config
 
 import Bio.Seq
 
@@ -60,6 +62,9 @@ def __palinsnoop(string) :
 
 def __bprint(s) :
     import math
+
+    if not s :
+        return
 
     block = 10
     line = 6 * block
@@ -161,24 +166,20 @@ def __toProtDescr(orig, trans) :
     from Bio.SeqUtils import seq3
 
     if str(trans) == str(orig) :
-        print "p.="
-        return
+        return "p.="
 
     if len(trans) > len(orig) :
         ext = abs(len(orig) - len(trans))
-        print "p.*%i%sext*%i" % (len(orig) + 1, seq3(trans[len(orig)]), ext)
-        return
+        return "p.*%i%sext*%i" % (len(orig) + 1, seq3(trans[len(orig)]), ext)
 
     if len(orig) > len(trans) :
-        print "p.%s%i*" % (seq3(orig[len(trans)]), len(trans) + 1)
-        #print "p.%s%i*" % (seq3(orig[len(trans) - 1]), i + 1)
-        return
+        return "p.%s%i*" % (seq3(orig[len(trans)]), len(trans) + 1)
 
     i = 0
     while i < len(orig) - 1 and orig[i] == trans[i] :
         i += 1
 
-    print "p.%s%i%s" % (seq3(orig[i]), i + 1, seq3(trans[i]))
+    return "p.%s%i%s" % (seq3(orig[i]), i + 1, seq3(trans[i]))
 #__toProtDescr
 
 def __constructCDS(mRNA, CDSpos) :
@@ -221,7 +222,7 @@ def __checkOptArg(ref, p1, p2, arg, M, O) :
             length = int(arg)
             interval = p2 - p1 + 1
             if length != interval :
-                O.ErrorMsg(__file__, "The length (%i) differed from that of " \
+                O.addMessage(__file__, 3, "EARGLEN", "The length (%i) differed from that of " \
                     "the range (%i)." % (length, interval))
                 return False
             #if
@@ -233,7 +234,7 @@ def __checkOptArg(ref, p1, p2, arg, M, O) :
             #if M.orientation == -1 :
             #    ref_slice = Bio.Seq.reverse_complement(ref_slice)
             if ref_slice != str(arg) : # FIXME more informative.
-                O.ErrorMsg(__file__, "%s not found at position c.%s (g.%i), " \
+                O.addMessage(__file__, 3, "EREF", "%s not found at position c.%s (g.%i), " \
                     "found %s instead." % (arg, M.g2c(p1), p1, ref_slice))
                 return False
             #if
@@ -338,18 +339,18 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
     start_c, end_c = __rangeToC(M, start_g, end_g)
     if start_c.isdigit() and 1 <= int(start_c) <= 3 or \
        end_c.isdigit() and 1 <= int(end_c) <= 3 :
-        O.WarningMsg(__file__, "Mutation in start codon.")
+        O.addMessage(__file__, 2, "WSTART", "Mutation in start codon.")
 
     # start_offset has to be calculated (not accepted from the parser)
     start_t_m, start_t_o = M.g2x(start_g)
     t_s, t_e, c_s = M.info()
     if start_t_o == -1 or start_t_o == -2 :
         if start_t_m == t_s :
-            O.WarningMsg(__file__, "Mutation hits transcription start.")
+            O.addMessage(__file__, 2, "WTXSTART", "Mutation hits transcription start.")
         else :
-            O.WarningMsg(__file__, "Mutation hits a splice donor site.")
+            O.addMessage(__file__, 2, "WSPLDON", "Mutation hits a splice donor site.")
     if start_t_o == 1 or start_t_o == 2 :
-        O.WarningMsg(__file__, "Mutation hits a splice acceptor site.")
+        O.addMessage(__file__, 2, "WSPLACC", "Mutation hits a splice acceptor site.")
     
     #print str(record.seq[start_g - 20:start_g + 20])
     
@@ -361,9 +362,10 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
     # Substitution.
     if RawVar.MutationType == "subst" :
         if RawVar.Arg1 == RawVar.Arg2 :
-            O.ErrorMsg(__file__, "No mutation given (%c>%c) at position " \
+            O.addMessage(__file__, 3, "ENOCHANGE", "No mutation given (%c>%c) at position " \
                 "c.%s (g.%i)." % (RawVar.Arg1, RawVar.Arg1, M.g2c(start_g), 
                 start_g))
+
         MUU.subM(start_g, Arg2)
 
         NM.c += str(M.g2c(start_g)) + \
@@ -381,7 +383,7 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
                               M.orientation)
         if rollposstart != start_g :
             rollposend = rollposstart + (end_g - start_g)
-            O.WarningMsg(__file__, "Sequence %s at position c.%s (g.%i) was " \
+            O.addMessage(__file__, 2, "WROLL", "Sequence %s at position c.%s (g.%i) was " \
                 "given, however, the HGVS notation prescribes that it should " \
                 "be %s at position c.%s (g.%i)." % (
                 str(record.seq[start_g - 1:end_g]), M.g2c(start_g), start_g,
@@ -413,13 +415,13 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
         snoop = __palinsnoop(record.seq[start_g - 1:end_g])
         if snoop :
             if snoop == -1 :
-                O.WarningMsg(__file__, "Sequence %s at position c.%s (g.%i) " \
+                O.addMessage(__file__, 3, "ENOCHANGE", "Sequence %s at position c.%s (g.%i) " \
                     "is a palindrome (its own reverse complement)." % (
                     str(record.seq[start_g - 1:end_g]), 
                     M.g2c(start_g), start_g))
                 # Do nothing...
             else :
-                O.WarningMsg(__file__, "Sequence %s at position c.%s (g.%i) " \
+                O.addMessage(__file__, 2, "ENOTMINIMAL", "Sequence %s at position c.%s (g.%i) " \
                     "is a partial palindrome (the first %i " \
                     "nucleotide(s) are the reverse complement of " \
                     "the last one(s)), the HGVS notation " \
@@ -442,7 +444,7 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
     # Insertion.
     if RawVar.MutationType == "ins" :
         if start_g + 1 != end_g :
-            O.ErrorMsg(__file__, "c.%s (g.%i) and c.%s (g.%i) are not " \
+            O.addMessage(__file__, 3, "EINSRANGE", "c.%s (g.%i) and c.%s (g.%i) are not " \
                 "consecutive positions." % (
                 M.g2c(start_g), start_g, M.g2c(end_g), end_g))
     
@@ -472,7 +474,7 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
         corr = 0
         if rs1 != rs2 or \
            str(MUU.mutated[c1:c2 + 1]) == str(MUU.mutated[c1-l:(c2-l)+1]) :
-            O.WarningMsg(__file__, "Insertion of %s at position c.%s (g.%i) " \
+            O.addMessage(__file__, 2, "WINSDUP", "Insertion of %s at position c.%s (g.%i) " \
                 "was given, however, the HGVS notation prescribes that it " \
                 "should be a duplication of %s at position c.%s (g.%i)." % (
                 RawVar.Arg1, M.g2c(start_g), start_g, 
@@ -499,6 +501,7 @@ def __rv(MUU, record, GeneSymbol, RawVar, M, RefType, O, NM) :
         if lcp or lcs :
             del_part = __trim(RawVar.Arg1, lcp, lcs)
             ins_part = __trim(RawVar.Arg2, lcp, lcs)
+            # FIXME Output stuff and such.
             print start_g + lcp, end_g - lcs
             print M.g2c(start_g + lcp), M.g2c(end_g - lcs)
             print "del%sins%s" % (del_part, ins_part)
@@ -588,19 +591,26 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
 
         if parts.Gene and parts.Gene.GeneSymbol :
             GS = parts.Gene.GeneSymbol
-        print "Gene Name: " + GS
+        #print "Gene Name: " + GS
+        #O.createOutputNode("genename", 1) # Info message.
+        #O.addToOutputNode(__file__, "genename", "INFO", GS)
+        O.addOutput("genename", GS)
 
         transcriptvariant = "001" 
         if parts.Gene and parts.Gene.TransVar :
             transcriptvariant = parts.Gene.TransVar
-        print "Transcript variant: " + transcriptvariant
-        print
+        #print "Transcript variant: " + transcriptvariant
+        #O.createOutputNode("transcriptvariant", 1) # Info message.
+        #O.addToOutputNode(__file__, "transcriptvariant", "INFO", transcriptvariant)
+        O.addOutput("transcriptvariant", transcriptvariant)
+        #print
             
         if recordDict.genelist :
             if recordDict.genelist.has_key(GS) :
                 currentGene = recordDict.genelist[GS]
             else :
                 print "No such gene %s in record." % GS
+                # FIXME Output an stuff.
                 return
             #else
         else :
@@ -610,13 +620,14 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
         noTrans = False
         if not W.mRNA :
             if not W.exon:
-                O.WarningMsg(__file__, "No mRNA field found for gene %s, " \
+                O.addMessage(__file__, 2, "WNOMRNA", "No mRNA field found for gene %s, " \
                     "transcript variant %s in GenBank record %s, " \
                     "constructing it from CDS." % (GS, transcriptvariant, 
                     record.id))
                 if W.CDS :
                     if not W.CDS.list :
                         print "Extra warning"
+                        # FIXME Output and stuff.
                         W.mRNA = W.CDS
                         W.mRNA.list = W.CDS.location
                         noTrans = True
@@ -625,6 +636,7 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
                 #if
                 else :
                     print currentGene.location
+                    # FIXME Output and stuff.
                     W.CDS = GenRecord.Locus()
                     W.CDS.location = W.location
                     W.mRNA = W.CDS
@@ -632,7 +644,7 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
                     noTrans = True
             #if
             else :
-                O.WarningMsg(__file__, "No mRNA field found for gene %s, " \
+                O.addMessage(__file__, 2, "WNOMRNA", "No mRNA field found for gene %s, " \
                     "transcript variant %s in GenBank record %s, " \
                     "constructing it from gathered exon information." % (GS, 
                     transcriptvariant, record.id))
@@ -643,7 +655,7 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
             W.mRNA.list = W.mRNA.location
         if W.CDS :
             if not W.CDS.list :
-                O.WarningMsg(__file__, "No CDS list found for gene %s, " \
+                O.addMessage(__file__, 2, "WNOCDS", "No CDS list found for gene %s, " \
                     "transcript variant %s in GenBank record %s, " \
                     "constructing it from mRNA list and CDS location." % (GS, 
                     transcriptvariant, record.id))
@@ -663,7 +675,7 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
                 currentGene.orientation)
         else :                
             if not W.CDS :
-                O.ErrorMsg(__file__, "No CDS information found for gene %s, " \
+                O.addMessage(__file__, 3, "ENOCDS", "No CDS information found for gene %s, " \
                                      "transcript variant %s in GenBank " \
                                      "record %s." % (GS, transcriptvariant, 
                                                      record.id))
@@ -711,9 +723,14 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
         else :
             NM = __rv(MUU, record, GS, parts.RawVar, M, parts.RefType, O, NM)
 
-        print
-        print "+++", NM.c
-        print "+++", NM.g
+        #print
+        #print "+++", NM.c
+        #print "+++", NM.g
+        #O.createOutputNode("variantdescription", 1) # Info message.
+        #O.addToOutputNode(__file__, "variantdescription", "INFO", NM.c)
+        #O.addToOutputNode(__file__, "variantdescription", "INFO", NM.g)
+        O.addOutput("variantdescription", NM.c)
+        O.addOutput("variantdescription", NM.g)
         del NM
 
         if not W.CDS : # Noncoding.
@@ -736,14 +753,17 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
             cdsm = Bio.Seq.reverse_complement(cdsm)
         del M
 
-        print "\n<b>Old protein:</b>"
+        #print "\n<b>Old protein:</b>"
         if '*' in cds.translate()[:-1] :
             print "In frame stop codon found."
             return
         #if
         orig = cds.translate(table = W.txTable, cds = True, to_stop = True)
-        __bprint(orig + '*')
-        print "\n\n<b>New protein:</b>"
+        #__bprint(orig + '*')
+        #O.createOutputNode("oldprotein", 1) # Info message.
+        #O.addToOutputNode(__file__, "oldprotein", "INFO", orig + '*')
+        O.addOutput("oldprotein", orig + '*')
+        #print "\n\n<b>New protein:</b>"
         trans = cdsm.translate(table = W.txTable, to_stop = True)
 
         if not trans or trans[0] != 'M' :
@@ -754,28 +774,49 @@ def __ppp(MUU, record, parts, recordDict, refseq, depth, O) :
                 print "\n\n<b>Alternative protein using start codon %s:</b>" % \
                     str(cdsm[0:3])
                 __bprint('M' + trans[1:] + '*')
+                #O.createOutputNode("altprotein", 1) # Info message.
+                #O.addToOutputNode(__file__, "altprotein", "INFO", 'M' + trans[1:] + '*')
+                O.addOutput("altprotein", 'M' + trans[1:] + '*')
             else :
                 __bprint('?')
+                #O.createOutputNode("newprotein", 1) # Info message.
+                #O.addToOutputNode(__file__, "newprotein", "INFO", '?')
+                O.addOutput("newprotein", '?')
         else :
-            __bprint(trans + '*')
+            #__bprint(trans + '*')
+            #O.createOutputNode("newprotein", 1) # Info message.
+            #O.addToOutputNode(__file__, "newprotein", "INFO", trans + '*')
+            O.addOutput("newprotein", trans + '*')
 
         if protDescr :
-            print
-            print
-            __toProtDescr(orig, trans)
+            #print
+            #print
+            #O.createOutputNode("proteindescription", 1) # Info message.
+            #O.addToOutputNode(__file__, "proteindescription", "INFO", 
+            #                  __toProtDescr(orig, trans))
+            O.addOutput("proteindescription", __toProtDescr(orig, trans))
         #if
     #if                
 #__ppp
 
 def main(cmd) :
-    O = Output.Output(__file__)
+    C = Config.Config()
+    O = Output.Output(__file__, C.Output)
 
-    O.LogMsg(__file__, "Received variant " + cmd)
+    #O.LogMsg(__file__, "Received variant " + cmd)
+    O.addMessage(__file__, -1, "INFO", "Received variant " + cmd)
 
     parser = Parser.Nomenclatureparser(O)
-    print cmd
-    print
+    #print cmd
+    #O.createOutputNode("inputvariant", 1) # Info message.
+    #O.addToOutputNode(__file__, "inputvariant", "INFO", cmd)
+    O.addOutput("inputvariant", cmd)
+    #print
     ParseObj = parser.parse(cmd)
+    #print
+    #for i in parser.outputData : # HMMMM
+    #    #print i.origin, i.name, i.msgType, i.severity, i.message
+    #    print i, parser.outputData[i].message
     del parser
 
     if ParseObj :
@@ -786,11 +827,13 @@ def main(cmd) :
         
         #print "Retrieving..."
 
-        retriever = Retriever.Retriever()
+        D = Db.Db("local", C.Db.internalDb, C.Db)
+        retriever = Retriever.Retriever(C.Retriever, O, D)
         record = retriever.loadrecord(RetrieveRecord)
         if not record :
             return
         del retriever
+        del D
         
         #print "Dicting..."
         D = GenRecord.GenRecord()
@@ -801,13 +844,87 @@ def main(cmd) :
         
         from Modules import Mutator
         
-        MUU = Mutator.Mutator(record.seq)
+        MUU = Mutator.Mutator(record.seq, C.Mutator, O)
+
+        #MUU.createOutputNode(__file__, "errors", 3) # Error message.
+        #MUU.createOutputNode(__file__, "warnings", 3) # Error message.
+
         __ppp(MUU, record, ParseObj, d, "",  0, O)
+        #for i in MUU.outputData : # HMMMM
+        #    #print i.origin, i.name, i.msgType, i.severity, i.message
+        #    print i, MUU.outputData[i].message
+
+
         del MUU
     #if
-    print "\n\n"
+    #print "\n\n"
     O.Summary()
-    O.LogMsg(__file__, "Finished processing variant " + cmd)
+    #O.LogMsg(__file__, "Finished processing variant " + cmd)
+    O.addMessage(__file__, -1, "INFO", "Finished processing variant " + cmd)
+    #for i in O.outputData : # HMMMM
+    #    #print i.origin, i.name, i.msgType, i.severity, i.message
+    #    print i, O.outputData[i].message
+
+    ### OUTPUT BLOCK ###
+    print "NEW OUTPUT BLOCK"
+    vd = O.getOutput("variantdescription")
+    if vd :
+        print vd[0]
+        print vd[1]
+        print
+    #if
+    gn = O.getOutput("genename")
+    if gn :
+        print "Gene Name: " + gn[0]
+    tv = O.getOutput("transcriptvariant")
+    if tv :
+        print "Transcript variant: " + tv[0]
+        print
+    #if
+    
+    #for i in O.getOutput("fatalerrors") :
+    #    print "Fatal (%s) %s: %s" % (i.origin, i.code, i.description)
+    #for i in O.getOutput("errors") :
+    #    print "Error (%s) %s: %s" % (i.origin, i.code, i.description)
+    #for i in O.getOutput("warnings") :
+    #    print "Warning (%s) %s: %s" % (i.origin, i.code, i.description)
+    #for i in O.getOutput("info") :
+    #    print "Info (%s) %s: %s" % (i.origin, i.code, i.description)
+    #for i in O.getOutput("debug") :
+    #    print "Debug (%s) %s: %s" % (i.origin, i.code, i.description)
+    O.getMessages()
+
+    visualisation = O.getOutput("visualisation")
+    if visualisation :
+        for i in range(len(visualisation)) :
+            if i and not i % 3 :
+                print
+            print visualisation[i]
+        #for
+        print
+    #if
+    vd = O.getOutput("variantdescription")
+    if vd :
+        for i in vd :
+            print i
+    op = O.getOutput("oldprotein")
+    if op :
+        print "\n<b>Old protein:</b>"
+        __bprint(op[0])
+        print
+    #if
+    np = O.getOutput("newprotein")
+    if np :
+        print "\n<b>New protein:</b>"
+        __bprint(np[0])
+        print
+    #if
+    pd = O.getOutput("proteindescription")
+    if pd :
+        print
+        print pd[0]
+    print "/NEW OUTPUT BLOCK"
+    ### OUTPUT BLOCK ###
     del O
 #main
 

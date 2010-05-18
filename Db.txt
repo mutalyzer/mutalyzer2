@@ -15,3 +15,42 @@ not increased.
 CREATE TABLE map_cdsBackup
   LIKE map;
 ---
+
+---
+CREATE DATABASE mutalyzer;
+GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
+FLUSH PRIVILEGES;
+---
+
+In database mutalyzer:
+---
+CREATE TABLE GBInfo (
+  AccNo CHAR(20) PRIMARY KEY,
+  hash CHAR(32) UNIQUE NOT NULL,
+  ChrAccVer CHAR(20),
+  ChrStart INT(12),
+  ChrStop INT(12),
+  orientation INT(2),
+  url CHAR(255)
+);
+
+CREATE TABLE BatchQueue (
+  QueueID INT(5) PRIMARY KEY AUTO_INCREMENT,
+  JobID CHAR(20) NOT NULL,
+  AccNo CHAR(13) NOT NULL,
+  Gene CHAR(20) NOT NULL,
+  Variant CHAR(255) NOT NULL
+);
+
+CREATE TABLE BatchJob (
+  JobID CHAR(20) PRIMARY KEY,
+  Filter CHAR(20) NOT NULL,
+  EMail CHAR(255) NOT NULL
+);
+
+CREATE TABLE Var (
+  Name CHAR(20) PRIMARY KEY,
+  Value Char(255) NOT NULL
+);
+INSERT INTO Var VALUES ("WatchDog", 0);
+---

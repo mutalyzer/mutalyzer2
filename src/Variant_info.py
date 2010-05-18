@@ -23,6 +23,7 @@ from Modules import Crossmap # Crossmap(), g2x(), x2g(), main2int(),
                              # offset2int(), info()
 from Modules import Parser   # Nomenclatureparser(), parse()
 from Modules import Output   # Output(), LogMsg()
+from Modules import Config
 
 def __sl2il(l) :
     """
@@ -68,10 +69,10 @@ def __getcoords(C, Loc, Type) :
 #__getcoords
 
 
-def __process(LOVD_ver, build, acc, var, O) :
+def __process(LOVD_ver, build, acc, var, C, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
-    Database = Db.Db("local", build) # Open the database.
+    Database = Db.Db("local", build, C.Db) # Open the database.
     if not Database.opened :
         O.ErrorMsg(__file__, "Database %s not found." % build)
         return
@@ -199,16 +200,18 @@ def main(LOVD_ver, build, acc, var) :
             CDS_stop     ; CDS stop in c. notation.
     """
 
-    O = Output.Output(__file__)
+    C = Config.Config()
+    O = Output.Output(__file__, C.Output)
 
-    O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
+    O.addMessage(__file__, -1, "INFO", "Received %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
 
-    __process(LOVD_ver, build, acc, var, O)
+    __process(LOVD_ver, build, acc, var, C, O)
 
-    O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
+    O.addMessage(__file__, -1, "INFO", "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
         acc, var, LOVD_ver, build))
     del O
+    del C
 #main        
 
 if __name__ == "__main__" :

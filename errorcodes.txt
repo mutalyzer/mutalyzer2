@@ -1,0 +1,34 @@
+Information:
+INFO        | Information.
+
+Warnings:
+WSTART      | Mutation in the start codon.
+WTXSTART    | Mutation hits transcription start.
+WSPLDON     | Mutation hits a splice donor site.
+WSPLACC     | Mutation hits a splice acceptor site.
+WROLL       | Variant position is ambiguous and not the last one was given.
+WINSDUP     | Variant was described as an insertion, but it is a duplication.
+WNOMRNA     | No mRNA field was found in the GenBank record.
+WNOCDS      | No CDS field was found in the GenBank record.
+WNOVER      | No accession version number was given.
+WHASH       | Hash of a GenBank record has changed.
+
+Errors:
+EARGLEN     | There was a discrepancy between the range and the length of the
+            | optional argument.
+EREF        | There was a discrepancy between the reference sequence and the
+            | optional argument.
+ENOCHANGE   | Mutation has no effect.
+ENOTMINIMAL | A shorter description of a raw variant is possible.
+EINSRANGE   | The positions of an insertion are not consecutive.
+ENOCDS      | No CDS field was found in the GenBank record and none could be 
+            | constructed.
+
+Fatal errors:
+EPARSE      | Nomenclature parse error.
+ERECPARSE   | GenBank record parse error.
+EARG        |
+EFILESIZE   | The filesize is either too large or too small.
+ERETR       | Could not retrieve a GenBank record.
+EARG        | Error in the arguments (of a webservice).
+ERANGE      | Position out of range (webservice).

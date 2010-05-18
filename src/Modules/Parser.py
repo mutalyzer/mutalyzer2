@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
+#from Output import Output
 from pyparsing import *
 
-class Nomenclatureparser(object) :
+class Nomenclatureparser() :
     """
         Parse an input string.
 
@@ -53,7 +54,8 @@ class Nomenclatureparser(object) :
     # GI         -> (`GI' | `GI:')? Number
     # Version    -> `.' Number
     # AccNo      -> ([a-Z] Number `_')+ Version? 
-    # RefSeqAcc  -> (GI | AccNo) (`(' GeneSymbol `)')?
+    # UD         -> `UD_' [a-Z]+ (`_' Number)+
+    # RefSeqAcc  -> (GI | AccNo | UD) (`(' GeneSymbol `)')?
     TransVar = Suppress("_v") + Number("TransVar")
     ProtIso = Suppress("_i") + Number("ProtIso")
     GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
@@ -62,7 +64,8 @@ class Nomenclatureparser(object) :
     Version = Suppress('.') + Number("Version")
     AccNo = Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \
             Optional(Version)
-    RefSeqAcc = (GI ^ AccNo) + Optional(GeneSymbol)
+    UD = Combine("UD_" + Word(alphas) + OneOrMore('_' + Number))("RefSeqAcc")
+    RefSeqAcc = (GI ^ AccNo ^ UD) + Optional(GeneSymbol)
 
     # Chrom -> `1'..`22' | `X' | `Y'
     # Changed to:
@@ -282,19 +285,21 @@ class Nomenclatureparser(object) :
                 __output ; Set to the output object.
         """
 
-        self.__output = output
+        #self.__output = output
+        #Output.__init__(self, __file__)
+        self.output = output
 
         ParserElement.enablePackrat() # Speed up parsing considerably.
     #__init__
 
-    def parse(self, input) :
+    def parse(self, variant) :
         """
             Parse the input string and return a parse tree if the parsing was
             successful. Otherwise print the parse error and the position in 
             the input where the error occurred.
             
             Arguments:
-                input ; The input string that needs to be parsed.
+                variant ; The input string that needs to be parsed.
 
             Private variables:
                 __output ; The output object.
@@ -307,16 +312,21 @@ class Nomenclatureparser(object) :
         """
 
         try :
-            return self.Var.parseString(input, parseAll = True)
+            return self.Var.parseString(variant, parseAll = True)
         except ParseException, err :
-            self.__output.ErrorMsg(__file__, str(err))
+            self.output.addMessage(__file__, 4, "EPARSE", str(err))
 
             # Print the input.
-            print input
+            #print variant
+            #self.output.createOutputNode("parseError", 4) # Fatal error.
+            #self.output.addOutput("nomenclatureparser", variant)
+            self.output.addMessage(__file__, 4, "EPARSE", variant)
 
             # And print the position where the parsing error occurred.
             pos = int(str(err).split(':')[-1][:-1]) - 1
-            print pos * ' ' + '^'
+            #print pos * ' ' + '^'
+            #self.output.addOutput("nomenclatureparser", pos * ' ' + '^')
+            self.output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
 
             return None
         #except

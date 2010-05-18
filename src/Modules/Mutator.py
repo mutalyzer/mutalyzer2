@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-from Config import Config
+#from Output import Output
 
-class Mutator(Config) :
+class Mutator() :
     """
         Mutate a string and register all shift points.
 
@@ -45,7 +45,7 @@ class Mutator(Config) :
                                        position pos1 to pos2.
     """
 
-    def __init__(self, orig) :
+    def __init__(self, orig, config, output) :
         """
             Initialise the class with the original string.
 
@@ -60,11 +60,15 @@ class Mutator(Config) :
                 mutated ; Initialised to the parameter orig.
         """
 
-        Config.__init__(self)
+        #Output.__init__(self, __file__)
+        self.__config = config
+        self.__output = output
 
         self.__shift = []
         self.orig = orig
         self.mutated = orig
+
+        #self.output.createOutputNode("visualisation", 1) # Info message.
     #__init__
     
     def __sortins(self, tuple) :
@@ -126,33 +130,43 @@ class Mutator(Config) :
         # This part is just a visualisation, needs more attention.
         #
 
-        loflank = self.orig[max(pos1 - self.flanksize, 0):pos1]
-        roflank = self.orig[pos2:pos2 + self.flanksize]
+        loflank = self.orig[max(pos1 - self.__config.flanksize, 0):pos1]
+        roflank = self.orig[pos2:pos2 + self.__config.flanksize]
         odel = self.orig[pos1:pos2]
-        if len(odel) > self.maxvissize :
-            odel = "%s [%ibp] %s" % (odel[:self.flankclipsize], 
-                                     len(odel) - self.flankclipsize * 2,
-                                     odel[-self.flankclipsize:])
+        if len(odel) > self.__config.maxvissize :
+            odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize], 
+                                     len(odel) - self.__config.flankclipsize * 2,
+                                     odel[-self.__config.flankclipsize:])
 
         bp1 = self.shiftpos(pos1)
         bp2 = self.shiftpos(pos2)
-        lmflank = self.mutated[max(bp1 - self.flanksize, 0):bp1]
-        rmflank = self.mutated[bp2:bp2 + self.flanksize]
+        lmflank = self.mutated[max(bp1 - self.__config.flanksize, 0):bp1]
+        rmflank = self.mutated[bp2:bp2 + self.__config.flanksize]
 
-        print
+        #print
         insvis = ins
-        if len(ins) > self.maxvissize :
-            insvis = "%s [%ibp] %s" % (ins[:self.flankclipsize],
-                                       len(ins) - self.flankclipsize * 2,
-                                       ins[-self.flankclipsize:])
+        if len(ins) > self.__config.maxvissize :
+            insvis = "%s [%ibp] %s" % (ins[:self.__config.flankclipsize],
+                                       len(ins) - self.__config.flankclipsize * 2,
+                                       ins[-self.__config.flankclipsize:])
         fill = abs(len(odel) - len(insvis))
         if len(odel) > len(ins) :
-            print "%s %s %s" % (loflank, odel, roflank)
-            print "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)
+            #print "%s %s %s" % (loflank, odel, roflank)
+            #print "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)
+            self.__output.addOutput("visualisation", 
+                                  "%s %s %s" % (loflank, odel, roflank))
+            self.__output.addOutput("visualisation",
+                                  "%s %s%s %s" % (lmflank, insvis, '-' * fill, 
+                                                  rmflank))
         #if
         else :
-            print "%s %s%s %s" % (loflank, odel, '-' * fill, roflank)
-            print "%s %s %s" % (lmflank, insvis, rmflank)
+            #print "%s %s%s %s" % (loflank, odel, '-' * fill, roflank)
+            #print "%s %s %s" % (lmflank, insvis, rmflank)
+            self.__output.addOutput("visualisation",
+                                  "%s %s%s %s" % (loflank, odel, '-' * fill, 
+                                                  roflank))
+            self.__output.addOutput("visualisation",
+                                        "%s %s %s" % (lmflank, insvis, rmflank))
         #else
 
         #
@@ -236,6 +250,11 @@ class Mutator(Config) :
                 pos2 ; The last nucleotide of the range to be deleted.
         """
 
+        if pos1 == pos2 :
+            self.__output.addOutput("visualisation", "deletion of %i" % pos1)
+        else :
+            self.__output.addOutput("visualisation", "deletion of %i to %i" % (
+                                 pos1, pos2))
         self.__mutate(pos1 - 1, pos2, '')
     #delM
     
@@ -249,6 +268,8 @@ class Mutator(Config) :
                 ins ; The insertion, a string.
         """
 
+        self.__output.addOutput("visualisation", "insertion between %i and %i" % (
+                             pos, pos + 1))
         self.__mutate(pos, pos, ins)
     #insM
     
@@ -275,6 +296,7 @@ class Mutator(Config) :
                 nuc ; The new nucleotide.
         """
 
+        self.__output.addOutput("visualisation", "substitution at %i" % pos)
         self.__mutate(pos - 1, pos, nuc)
     #subM
     

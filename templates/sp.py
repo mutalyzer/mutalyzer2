@@ -4,6 +4,7 @@ from SOAPpy import WSDL
 
 o = WSDL.Proxy("http://<tal tal:replace = "path"></tal>/service.wsdl")
 
+"""
 # Get all transcripts that are hit when we look at position 159272155 on 
 # chromosome 1.
 print "hg19", "chr1", 159272155
@@ -57,3 +58,7 @@ print "123", "hg18", "NM_002001.2", "\"\""
 for i in eval(o.varInfo(LOVD_ver = "123", build = "hg18", 
               accno = "NM_002001.2", var = "")) :
     print i,
+
+"""
+bla = o.complexTest(i = 10)
+dir(bla)

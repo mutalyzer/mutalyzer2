@@ -5,7 +5,26 @@ from soaplib.service import soapmethod
 from soaplib.serializers.primitive import String, Integer, Array
 from ZSI.fault import Fault
 
+#from Modules import Output
+
+from soaplib.serializers.clazz import ClassSerializer
+from ZSI import TC
+
+import Variant_info as VI
+from Modules import Web
+from Modules import Db
 from Modules import Output
+from Modules import Config
+    
+
+class Complex(ClassSerializer) :
+    class types :
+        var1 = Integer
+        var2 = String
+    #types
+#Complex
+Complex.typecode = TC.Struct(Complex, [ TC.String('var2'), TC.Integer('var1') ], 'Complex')
+
 
 class MutalyzerService(SimpleWSGISoapApp) :
     """
@@ -46,7 +65,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         """
 
         if not D.opened :
-            L.LogMsg(__file__, "EARG %s" % build)
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault(Fault.Client, "EARG", 
                 detail = "The build argument (%s) was not a valid " \
                          "build name." % build)
@@ -67,7 +86,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         """
 
         if not D.isChrom(chrom) :
-            L.LogMsg(__file__, "EARG %s" % chrom)
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
             raise Fault(Fault.Client, "EARG", 
                 detail = "The chrom argument (%s) was not a valid " \
                          "chromosome name." % chrom)
@@ -87,7 +106,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         """
 
         if pos < 1 :
-            L.LogMsg(__file__, "ERANGE %i" % pos)
+            L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
             raise Fault(Fault.Client, "ERANGE", 
                 detail = "The pos argument (%i) is out of range." % pos)
         #if                         
@@ -113,26 +132,25 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     ERANGE ; An invalid range was given.
         """
     
-        from Modules import Db
-        from Modules import Output
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
     
-        L = Output.Output(__file__)
-    
-        L.LogMsg(__file__, "Received request getTranscripts(%s %s %s)" % (
+        L.addMessage(__file__, -1, "INFO", "Received request getTranscripts(%s %s %s)" % (
             build, chrom, pos))
 
-        D = Db.Db("local", build)
+        D = Db.Db("local", build, C.Db)
         self.__checkBuild(L, D, build)
 
         self.__checkChrom(L, D, chrom)
         self.__checkPos(L, pos)
         
         ret = str(D.get_Transcripts(chrom, pos, pos, True))
-        L.LogMsg(__file__, "Finished processing getTranscripts(%s %s %s)" % (
+        L.addMessage(__file__, -1, "INFO", "Finished processing getTranscripts(%s %s %s)" % (
                  build, chrom, pos))
     
         del L
         del D
+        del C
         return ret
     #getTranscripts
     
@@ -148,33 +166,32 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 int    pos1   ; The first postion of the range.
                 int    pos2   ; The last postion of the range.
                 int    method ; The method of determining overlap:
-                                0 ; Return all hit transcripts.
-                                1 ; Return only the transcripts that completely
+                                0 ; Return only the transcripts that completely
                                     fall in the range [pos1, pos2].
+                                1 ; Return all hit transcripts.
     
             Returns:
                 string ; A list of transcripts.
         """
     
-        from Modules import Db
-        from Modules import Output
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
     
-        L = Output.Output(__file__)
-    
-        L.LogMsg(__file__, 
+        L.addMessage(__file__, -1, "INFO", 
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
 
-        D = Db.Db("local", build)
+        D = Db.Db("local", build, C.Db)
         self.__checkBuild(L, D, build)
 
         ret = str(D.get_Transcripts(chrom, pos1, pos2, method))
-        L.LogMsg(__file__, 
+        L.addMessage(__file__, -1, "INFO", 
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
     
         del D
         del L
+        del C
         return ret
     #getTranscriptsRange
 
@@ -191,23 +208,21 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 string ; The name of the associated gene.
         """
     
-        from Modules import Db
-        from Modules import Output
-    
-        
-        L = Output.Output(__file__)
-        L.LogMsg(__file__, "Received request getGeneName(%s %s)" % (build, 
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
+        L.addMessage(__file__, -1, "INFO", "Received request getGeneName(%s %s)" % (build, 
             accno))
 
-        D = Db.Db("local", build)
+        D = Db.Db("local", build, C.Db)
         self.__checkBuild(L, D, build)
     
         ret = str(D.get_GeneName(accno.split('.')[0]))
-        L.LogMsg(__file__, "Finished processing getGeneName(%s %s)" % (build,
+        L.addMessage(__file__, -1, "INFO", "Finished processing getGeneName(%s %s)" % (build,
             accno))
     
         del L
         del D
+        del C
         return ret
     #getGeneName
 
@@ -259,28 +274,35 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     CDS_stop     ; CDS stop in c. notation.
         """
 
-        import Variant_info as VI
-        from Modules import Web
-        from Modules import Db
-        from Modules import Output
-    
-        L = Output.Output(__file__)
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
 
-        L.LogMsg(__file__, "Received request varInfo(%s %s %s %s)" % (
+        L.addMessage(__file__, -1, "INFO", "Received request varInfo(%s %s %s %s)" % (
                  LOVD_ver, build, accno, var))
 
-        D = Db.Db("local", build)
+        D = Db.Db("local", build, C.Db)
         self.__checkBuild(L, D, build)
 
         W = Web.Web()
         result = W.run(VI.main, LOVD_ver, build, accno, var)
         del W
+        del C
 
-        L.LogMsg(__file__, "Finished processing varInfo(%s %s %s %s)" % (
+        L.addMessage(__file__, -1, "INFO", "Finished processing varInfo(%s %s %s %s)" % (
                  LOVD_ver, build, accno, var))
 
         del L
         del D
         return str(result.split("\n")[:-1])
     #varInfo
+
+    @soapmethod(Integer, _returns = Complex)
+    def complexTest(self, i) :
+        C = Complex()
+
+        C.var1 = int(i)
+        C.var2 = "Hi"
+
+        return C
+    #complexTest
 #MutalyzerService

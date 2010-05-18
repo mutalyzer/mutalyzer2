@@ -88,7 +88,6 @@ class Crossmap() :
             
             Returns:
                 integer ; a + b or a + b + 1.
-
         """
         
         r = a + b

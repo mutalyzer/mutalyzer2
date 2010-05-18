@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
+    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <script type = "text/javascript" 
+        language = "javascript" 
+        src = "test.js">
+    </script>
+  </head>
+  <body onload = "yo()">
+    <br>
+    It is not unlikely that you want to use your own reference sequence,
+    but are not (yet) willing to submit your sequence data to
+    GenBank.<br>
+    Mutalyzer has an option for you to submit your own reference sequence
+    files.<br>
+    Mutalyzer will generate a unique identifier, which you can use from
+    then on.<br>
+    <br>
+    Please insert the GenBank record below:<br>
+    <i>The file needs to be a text file in GenBank format. The name of the
+    file should not contain any spaces! You can choose to upload your file
+    from your local computer or from a remote location.</i><br>
+    <br>
+    <form name='invoer' enctype="multipart/form-data" 
+          action="" method="post">
+      <table border="0" cellpadding="0" cellspacing="0">
+        <tr valign="top">
+          <th width="200" style="padding-top : 1px;">Options</th>
+          <td>
+            <input type="radio" name="invoermethode" value='file' checked 
+                   onClick="updateVisibility();">
+            My GenBank is a local file<br>
+            <input type="radio" name="invoermethode" value='url' 
+                   onClick="updateVisibility();">
+            I have an URL on the Internet where my GenBank file can be found
+            <br>
+            <input type="radio" name="invoermethode" value='gene' 
+                   onClick="updateVisibility();">
+            I want to fetch the reference genome for a (HGNC) gene symbol<br>
+            <input type="radio" name="invoermethode" value='chr' 
+                   onClick="updateVisibility();">
+            I want to fetch a range of a chromosome<br>
+          </td>
+        </tr>
+        <tr height="20px"></tr>
+        <tr valign="top">
+          <th width="200" style="padding-top : 1px;">Input</th>
+          <td>
+            <span id="file_label">
+              <i>Please select a GenBank file</i><br>
+              <input type='file' name="bestandsveld"><br>
+            </span>
+            <span id="url_label">
+              <i>Please enter a GenBank file location (including http://)</i>
+              <br>
+              <input type='text' name="urlveld"><br>
+            </span>
+            <span id="gene_label">
+              <i>Please enter a Gene symbol and organism name without spaces
+              and specify the flanking sequences</i>
+            	<table>
+             		<tr>
+                  <td>Gene symbol</td>
+                  <td><input type='text' name="genesymbol"></td>
+                </tr>
+              	<tr>
+                  <td>Organism name</td>
+                  <td><input type='text' name="organism"></td>
+                </tr>
+              	<tr>
+                  <td># of 5' flanking nucleotides</td>
+                  <td><input type='text' name="5utr" value="0"></td>
+                </tr>
+                	<tr><td># of 3' flanking nucleotides</td>
+                  <td><input type='text' name="3utr" value="0"></td>
+                </tr>               	
+             	</table>
+            </span>
+            <span id="range_label">
+              <i>Please enter a NC accession number and the range of the
+              chromosome you want to upload.</i><br>
+              Chromosome Accession Number<br>
+              <input type='text' name="chracc"><br>
+              Start Position<br>
+              <input type='text' name="start"><br>
+              Stop Position<br>
+              <input type='text' name="stop"><br>
+            </span>
+            <input type='hidden' name="method" value="gbupload">
+            <input type='hidden' name="client" value="human">  
+            <input type='hidden' name="location" value="file">
+            <input type='hidden' name="bestandsnaam" 
+                   value="">
+          </td>
+        </tr>
+        <tr height="20px"></tr>
+        <tr>
+          <td></td>
+          <td><input type="submit" value="Submit"></td>
+        </tr>
+      </table>
+    </form><br>
+  </body>
+</html>

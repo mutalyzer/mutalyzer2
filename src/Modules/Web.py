@@ -120,7 +120,7 @@ class Web() :
         for i in args :
             context.addGlobal(i, args[i])
 
-        templateFile = open("templates/bla.html", 'r')
+        templateFile = open("templates/download.html", 'r')
         macros = simpleTAL.compileHTMLTemplate(templateFile)
         templateFile.close()
         context.addGlobal("sitemacros", macros)

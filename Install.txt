@@ -1,16 +1,17 @@
 This program depends on the following packages:
+- mysql-server     >= 5.0.0
 - python           >= 2.5.2
-- python-biopython >= 1.43
 - python-mysqldb   >= 1.2.2
+- python-biopython >= 1.43
 - python-pyparsing >= 1.5.0
 - python-configobj >= 4.4.0
-- pyton-simpletal  >= 4.1-6
+- python-simpletal >= 4.1-6
 - python-zsi       >= 2.0-2
-- mysql-server     >= 5.0.0
+- python-soaplib   >= 0.8.1-2
 - python-soappy    >= 0.12.0-2
 
 The web interface depends on the following packages:
-- apache                >= 2.2.11
+- apache2               >= 2.2.11
 - libapache2-mod-python >= 3.3.1
 
 Install and configure these packages before continuing.
@@ -35,6 +36,11 @@ cat << EOF | mysql -u root -p
   CREATE USER mutalyzer;
   CREATE DATABASE hg19;
   GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
+  FLUSH PRIVILEGES;
+EOF
+cat << EOF | mysql -u root -p
+  CREATE DATABASE hg18;
+  GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
   FLUSH PRIVILEGES;
 EOF
 ---

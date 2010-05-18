@@ -97,8 +97,38 @@ class Gene(object) :
 #gene
 
 class RecordObj(object) :
+    """
+        A RecordObj object, to store a genelist and other additional 
+        information.
+
+        Special methods:
+            __init__() ; Initialise the class.
+
+        Public variables:
+            genelist  ; List of Gene objects.
+            mol_type  ; Variable to indicate the sequence type (DNA, RNA, ...)
+            organelle ; Variable to indicate whether the sequence is from the
+                        nucleus or from an onganelle (if so, also from which 
+                        one).
+            source    ; A fake gene that can be used when no gene information
+                        is present.
+    """
 
     def __init__(self) :
+        """
+            Initialise the class.
+
+
+            Public variables (altered):
+                genelist  ; List of Gene objects.
+                mol_type  ; Variable to indicate the sequence type (DNA, RNA, 
+                            ...)
+                organelle ; Variable to indicate whether the sequence is from
+                            the nucleus or from an onganelle (if so, also from
+                            which one).
+                source    ; A fake gene that can be used when no gene
+                            information is present.
+        """
 
         self.genelist = {}
         self.mol_type = None
@@ -116,6 +146,8 @@ class GenRecord() :
             __locationList2posList(locationList) ;
 
         Public methods:
+            record2dict(record) ; Parse the GenBank record and return a 
+                                  structured dictionary.
     """
 
     def __location2pos(self, location) :
