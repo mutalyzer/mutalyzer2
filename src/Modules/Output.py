@@ -141,15 +141,15 @@ class Output() :
         """
 
         if level == 0 :
-            return "Debug"
+            return "Debug: "
         if level == 1 :
-            return "Info"
+            return "Info: "
         if level == 2 :
-            return "Warning"
+            return "Warning: "
         if level == 3 :
-            return "Error"
+            return "Error: "
         if level == 4 :
-            return "Fatal"
+            return "Fatal: "
         return ""
     #__levelToName
 

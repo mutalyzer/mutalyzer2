@@ -74,7 +74,8 @@ def __process(LOVD_ver, build, acc, var, C, O) :
     #   information from the configuration file.
     Database = Db.Db("local", build, C.Db) # Open the database.
     if not Database.opened :
-        O.ErrorMsg(__file__, "Database %s not found." % build)
+        O.addMessage(__file__, 4, "EARG", "Database %s not found." % build)
+        print "Error (Variant_info): Database %s not found." % build
         return
     #if        
     
@@ -89,13 +90,16 @@ def __process(LOVD_ver, build, acc, var, C, O) :
     # Check whether the NM version number is in the database.
     db_version = Database.get_NM_version(accno)
     if not db_version :
-        O.ErrorMsg(__file__, "Reference sequence not found.")
+        O.addMessage(__file__, 4, "EARG", "Reference sequence not found.")
+        print "Error (Variant_info): Reference sequence not found."
         return
     #if
     if db_version != version :
-        O.ErrorMsg(__file__, 
+        O.addMessage(__file__, 4, "EARG",
             "Reference sequence version not found. Available: %s.%i" % (
             accno, db_version))
+        print "Error (Variant_info): Reference sequence version not found. " \
+              "Available: %s.%i" % (accno, db_version)
         return
     #if
     
@@ -203,13 +207,15 @@ def main(LOVD_ver, build, acc, var) :
     C = Config.Config()
     O = Output.Output(__file__, C.Output)
 
-    O.addMessage(__file__, -1, "INFO", "Received %s:%s (LOVD_ver %s, build %s)" % (
-        acc, var, LOVD_ver, build))
+    O.addMessage(__file__, -1, "INFO", 
+                 "Received %s:%s (LOVD_ver %s, build %s)" % (acc, var,
+                 LOVD_ver, build))
 
     __process(LOVD_ver, build, acc, var, C, O)
 
-    O.addMessage(__file__, -1, "INFO", "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
-        acc, var, LOVD_ver, build))
+    O.addMessage(__file__, -1, "INFO", 
+                 "Finished processing %s:%s (LOVD_ver %s, build %s)" % (acc,
+                 var, LOVD_ver, build))
     del O
     del C
 #main        

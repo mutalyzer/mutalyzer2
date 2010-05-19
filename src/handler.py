@@ -21,7 +21,7 @@ except ImportError :
     pass
 
 from Modules import Web
-from Interfaces import webservice
+import webservice
 
 def handler(req):
     """
@@ -50,7 +50,7 @@ def handler(req):
     """
 
     # Figure out where this program is located and go to the parent directory.
-    myPath = os.path.dirname(__file__) + "/.."
+    myPath = os.path.dirname(__file__)
     os.chdir(myPath + "/..")
 
     reqPath = req.hostname + req.uri.rsplit('/', 1)[0]
@@ -67,7 +67,7 @@ def handler(req):
     # Return raw content (for includes from an HTML file).
     if ".js" in req.uri or "base" in req.uri :
         req.content_type = 'text/html'
-        req.write(W.read("templates/", req))
+        req.write(W.read("../templates/", req))
         return apache.OK
     #if
 
@@ -94,6 +94,6 @@ def handler(req):
     #if
 
     # By default, use the HTML publisher.
-    req.filename = myPath + "/Interfaces/" + req.filename.split('/')[-1]
+    req.filename = myPath + "/" + req.filename.split('/')[-1]
     return publisher.handler(req)
 #handler

@@ -11,15 +11,15 @@
         download(req)     ; The download page.
 """
 
-import sys
+#import sys
 
 import Mutalyzer
-import Variant_info as VI
+import VarInfo
 from Modules import Web
 from mod_python import apache
 from Modules import Config
 import pydoc
-from Interfaces import webservice
+import webservice
 
 def index(req) :
     """
@@ -81,7 +81,7 @@ def Variant_info(req) :
     if req.form.has_key('var') :
         var = req.form['var']
 
-    result = W.run(VI.main, LOVD_ver, build, acc, var)
+    result = W.run(VarInfo.main, LOVD_ver, build, acc, var)
 
     if LOVD_ver == "2.0-23" : # Obsoleted error messages, remove when possible.
         import re

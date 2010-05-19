@@ -152,7 +152,10 @@ class Db() :
         if args != (None,) : # Don't escape the empty string.
             for i in args :
                 if i :
-                    escaped_args.append(MySQLdb.escape_string(str(i)))
+                    if type(i) == types.StringType :
+                        escaped_args.append(MySQLdb.escape_string(str(i)))
+                    else :
+                        escaped_args.append(i)
                 else :
                     escaped_args.append(None)
         #if                    

@@ -9,12 +9,15 @@ This program depends on the following packages:
 - python-zsi       >= 2.0-2
 - python-soaplib   >= 0.8.1-2
 - python-soappy    >= 0.12.0-2
+- python-soaplib   >= 0.8.1
 
 The web interface depends on the following packages:
 - apache2               >= 2.2.11
 - libapache2-mod-python >= 3.3.1
 
 Install and configure these packages before continuing.
+a2enmod python
+a2enmod rewrite
 
 Edit /etc/apache2/mods-available/python.load (change the path 
 /var/www/mutalyzer2 when appropriate):
