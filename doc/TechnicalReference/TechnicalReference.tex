@@ -1,0 +1,69 @@
+\newcommand{\thisversion}{2.0}
+
+\documentclass{article}
+\usepackage{amssymb, amsthm, graphicx, float, textcomp}
+\title{\Huge Mutalyzer \thisversion\ Technical Reference Manual}
+\author{Jeroen F. J. Laros
+        \vspace{10pt}\\
+        Department of Human Genetics\\
+        Center for Human and Clinical Genetics\\
+        \texttt{j.f.j.laros@lumc.nl}}
+\date{\today}
+\frenchspacing
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{definition}[]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+
+\pagenumbering{arabic}
+
+\section{Introduction}\label{sec:introduction}
+This document is intended for developers.
+
+\section{Modules}\label{sec:modules}
+Mutalyzer \thisversion\ blabla.
+\subsection{Config}\label{subsec:config}
+\subsection{Output}\label{subsec:output}
+\subsection{Db}\label{subsec:db}
+\subsection{Retriever}\label{subsec:retriever}
+\subsection{Mutator}\label{subsec:mutator}
+\subsection{Scheduler}\label{subsec:scheduler}
+\subsection{GenRecord}\label{subsec:genrecord}
+\subsection{Web}\label{subsec:web}
+\subsection{Misc}\label{subsec:misc}
+
+\section{Programs}\label{sec:programs}
+\subsection{Mutalyzer}\label{subsec:mutalyzer}
+\subsection{VarInfo}\label{subsec:varinfo}
+\subsection{UCSC\_Update}\label{subsec:ucsc_update}
+
+\section{Interfaces}\label{sec:interfaces}
+% handler.py
+\subsection{Web}\label{subsec:webinterface}
+% index.py
+\subsubsection{TAL}
+% templates/
+\subsection{Webservices}\label{subsec:webservinterface}
+% webservice.py
+\subsection{Command line}\label{subsec:commandline}
+
+\bibliography{bibliography}{}
+\bibliographystyle{plain}
+
+\end{document}

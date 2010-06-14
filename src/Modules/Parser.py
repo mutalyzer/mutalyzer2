@@ -1,6 +1,16 @@
 #!/usr/bin/python
 
-#from Output import Output
+"""
+    Module for parting a variant described using the HGVS nomenclature.
+
+    A context-free parser is defined here, the nomenclature rules are specified
+    in BNF, which is used (with some minor modifications) as source of this
+    module.
+
+    Public classes:
+        Nomenclatureparser ; Parse an input string.
+"""
+
 from pyparsing import *
 
 class Nomenclatureparser() :
@@ -285,10 +295,7 @@ class Nomenclatureparser() :
                 __output ; Set to the output object.
         """
 
-        #self.__output = output
-        #Output.__init__(self, __file__)
-        self.output = output
-
+        self.__output = output
         ParserElement.enablePackrat() # Speed up parsing considerably.
     #__init__
 
@@ -314,19 +321,14 @@ class Nomenclatureparser() :
         try :
             return self.Var.parseString(variant, parseAll = True)
         except ParseException, err :
-            self.output.addMessage(__file__, 4, "EPARSE", str(err))
+            self.__output.addMessage(__file__, 4, "EPARSE", str(err))
 
-            # Print the input.
-            #print variant
-            #self.output.createOutputNode("parseError", 4) # Fatal error.
-            #self.output.addOutput("nomenclatureparser", variant)
-            self.output.addMessage(__file__, 4, "EPARSE", variant)
+            # Log the input.
+            self.__output.addMessage(__file__, 4, "EPARSE", variant)
 
-            # And print the position where the parsing error occurred.
+            # And log the position where the parsing error occurred.
             pos = int(str(err).split(':')[-1][:-1]) - 1
-            #print pos * ' ' + '^'
-            #self.output.addOutput("nomenclatureparser", pos * ' ' + '^')
-            self.output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
+            self.__output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
 
             return None
         #except

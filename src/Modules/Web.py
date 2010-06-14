@@ -1,6 +1,14 @@
 #!/usr/bin/python
 
+"""
+    Module that provides general functions used by the web interfaces.
+
+    Public classes:
+        Web ; General functions used by the web interfaces.
+"""
+
 import sys                     # sys.stdout
+import re                      # match
 from cStringIO import StringIO # StringIO() getvalue()
 
 class Web() :
@@ -153,4 +161,14 @@ class Web() :
     
         return s
     #read
+
+    def isEMail(self, eMail) :
+        """
+        """
+
+        if re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$", 
+                    eMail) :
+            return True
+        return False
+    #isEmail
 #Web

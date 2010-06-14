@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+"""
+    Mutalyzer webservices.
+
+    Public classes:
+        MutalyzerService ; Mutalyzer webservices.
+"""
 
 from soaplib.wsgi_soap import SimpleWSGISoapApp
 from soaplib.service import soapmethod
@@ -9,7 +15,7 @@ from ZSI import TC
 from ZSI.fault import Fault
 
 from Modules import Web
-from Modules import Db
+from Modules.Db import Mapping
 from Modules import Output
 from Modules import Config
 from Modules import Parser
@@ -48,7 +54,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             gTocConversion(self, build, variant) ; Convert g. to c.
     """
 
-    def __checkBuild(self, L, D, build) :
+    def __checkBuild(self, build, config) :
         """
             Check if the build is supported (hg18 or hg19).
 
@@ -61,7 +67,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 Nothing (but raises an EARG exception).
         """
 
-        if not D.opened :
+        if not build in config.dbNames :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault(Fault.Client, "EARG", 
                 detail = "The build argument (%s) was not a valid " \
@@ -178,8 +184,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
 
-        D = Db.Db("local", build, C.Db)
-        self.__checkBuild(L, D, build)
+        self.__checkBuild(build, C.Db)
+        D = Mapping(build, C.Db)
 
         self.__checkChrom(L, D, chrom)
         self.__checkPos(L, pos)
@@ -220,8 +226,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
-        D = Db.Db("local", build, C.Db)
-        self.__checkBuild(L, D, build)
+        D = Mapping(build, C.Db)
+        self.__checkBuild(build, C.Db)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
         L.addMessage(__file__, -1, "INFO", 
@@ -252,8 +258,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO", 
                      "Received request getGeneName(%s %s)" % (build, accno))
 
-        D = Db.Db("local", build, C.Db)
-        self.__checkBuild(L, D, build)
+        D = Mapping(build, C.Db)
+        self.__checkBuild(build, C.Db)
     
         ret = D.get_GeneName(accno.split('.')[0])
         L.addMessage(__file__, -1, "INFO", 
@@ -424,7 +430,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         """
     
         Conf = Config.Config() # Read the configuration file.
-        Database = Db.Db("local", build, Conf.Db)
+        D = Mapping(build, C.Db)
 
         O = Output.Output(__file__, Conf.Output)
     

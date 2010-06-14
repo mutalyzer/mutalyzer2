@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+    Module for retrieving files from either the cache or the NCBI.
+
+    A hash of every retrieved file is stored in the internal database. If a 
+    requested file is not found, but its hash is, we use additional information
+    to re-download the file.
+
+    Public classes:
+        Retriever ; Retrieve a record from either the cache or the NCBI.
+"""
+
 import os              # path.isfile(), link() path.isdir(), path.mkdir(),
                        # walk(), path.getsize(), path.join(), stat(), remove()
 import bz2             # BZ2Compressor(), BZ2File()
@@ -9,10 +20,7 @@ import StringIO        # StringIO()
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 
-import Misc
-
-#from Output import Output
-#from Db import Db
+from Modules import Misc
 
 class Retriever() :
     """
@@ -24,8 +32,10 @@ class Retriever() :
             cachesize ; Maximum size of the cache.
 
         Special methods:
-            __init__(config) ; Use variables from the configuration file to 
-                               initialise the class private variables.
+            __init__(config,   ; Use variables from the configuration file to 
+                     output,     initialise the class private variables.
+                     database) 
+                               
 
         Private methods:
             __foldersize(folder) ; Return the size of a folder.
@@ -68,8 +78,6 @@ class Retriever() :
                 cache     ; The directory where the records are stored.
         """
 
-        #Db.__init__(self, "local", "mutalyzer")
-
         self.__config = config
         self.__output = output
         self.__database = database
@@ -91,8 +99,8 @@ class Retriever() :
 
         folder_size = 0
         for (path, dirs, files) in os.walk(folder) :
-            for file in files :
-                folder_size += os.path.getsize(os.path.join(path, file))
+            for fileName in files :
+                folder_size += os.path.getsize(os.path.join(path, fileName))
 
         return folder_size
     #__foldersize
@@ -259,13 +267,14 @@ class Retriever() :
             name, GI = self.__write(raw_data, name, 1)
             if name :               # Processing went okay.
                 currentmd5sum = self.__database.getHash(name)
-                md5sum = self.__calcHash(raw_data)
-                if md5sum != currentmd5sum :
-                    self.__output.addMessage(__file__, -1, "WHASH", 
-                        "Warning: Hash of %s changed from %s to %s." % (
-                        name, currentmd5sum, md5sum))
-                    self.__database.updateHash(name, md5sum)
-                #if
+                if currentmd5sum :
+                    md5sum = self.__calcHash(raw_data)
+                    if md5sum != currentmd5sum :
+                        self.__output.addMessage(__file__, -1, "WHASH", 
+                            "Warning: Hash of %s changed from %s to %s." % (
+                            name, currentmd5sum, md5sum))
+                        self.__database.updateHash(name, md5sum)
+                    #if
                 else :
                     self.__database.insertGB(name, GI, 
                         self.__calcHash(raw_data), None, 0, 0, 0, None)
@@ -353,6 +362,9 @@ class Retriever() :
                 organism   ; The organism in which we search.
                 upstream   ; Number of upstream nucleotides for the slice.
                 downstream ; Number of downstream nucleotides for the slice.
+            
+            Returns:
+                
         """
 
         # Search the NCBI for a specific gene in an organism.
@@ -361,41 +373,53 @@ class Retriever() :
         searchresult = Entrez.read(handle)
         handle.close()
 
-        # FIXME
-        if len(searchresult["IdList"]) > 1 :
-            print "Hmmmmm."
+        ChrAccVer = None        # We did not find anything yet.
+        aliases = []            # A list of aliases in case we find them.
+        for i in searchresult["IdList"] :                 # Inspect all results.
+            handle = Entrez.esummary(db = "gene", id = i)
+            summary = Entrez.read(handle)
+            handle.close()
+            if summary[0]["NomenclatureSymbol"] == gene : # Found it.
+                ChrAccVer = summary[0]["GenomicInfo"][0]["ChrAccVer"]
+                ChrLoc = summary[0]["GenomicInfo"][0]["ChrLoc"]
+                ChrStart = summary[0]["GenomicInfo"][0]["ChrStart"]
+                ChrStop = summary[0]["GenomicInfo"][0]["ChrStop"]
+                break;
+            #if
+
+            # Collect official symbols that has this gene as alias in case we 
+            # can not find anything.
+            if gene in summary[0]["OtherAliases"] and \
+                summary[0]["NomenclatureSymbol"] :
+                aliases.append(summary[0]["NomenclatureSymbol"]);
+        #for
+                
+        if not ChrAccVer : # We did not find any genes.
+            if aliases :
+                self.__output.addMessage(__file__, 4, "ENOGENE",
+                    "Gene %s not found, found aliases: %s" % (gene, aliases))
+                return None
+            #if
+            self.__output.addMessage(__file__, 4, "ENOGENE",
+                "Gene %s not found." % gene)
             return None
         #if
-
-        # Get summary information for the first search hit.
-        handle = Entrez.esummary(db = "gene", id = searchresult["IdList"][0])
-        summary = Entrez.read(handle)
-        handle.close()
-        if not len(summary[0]["GenomicInfo"]) :
-            print "No mapping information found."
-            #FIXME Output and stuff.
-            return
-        #if
-        ChrAccVer = summary[0]["GenomicInfo"][0]["ChrAccVer"] # Extract the mapping
-        ChrLoc = summary[0]["GenomicInfo"][0]["ChrLoc"]       # information.
-        ChrStart = summary[0]["GenomicInfo"][0]["ChrStart"]
-        ChrStop = summary[0]["GenomicInfo"][0]["ChrStop"]
-
+            
         # Figure out the orientation of the gene.
         orientation = "1"
         if ChrStart > ChrStop :             # Swap start and stop.
             orientation = "2"
             temp = ChrStart
             ChrStart = ChrStop - downstream # Also take care of the flanking
-            ChrStop = temp + upstream       # sequences.
+            ChrStop = temp + upstream + 1   # sequences.
         #if
         else :
-            ChrStart -= upstream
-            ChrStop += downstream
+            ChrStart -= upstream - 1
+            ChrStop += downstream + 2
         #else
 
         # And retrieve the slice.
-        self.retrieveslice(ChrAccVer, ChrStart, ChrStop, orientation)
+        return self.retrieveslice(ChrAccVer, ChrStart, ChrStop, orientation)
     #retrievegene
 
     def downloadrecord(self, url) :
@@ -544,120 +568,11 @@ class Retriever() :
 
         return record
     #loadrecord
-
-    #'''
-    #def loadrecord_old(self, identifier) :
-    #    """
-    #        Return a record from either the cache or the NCBI. 
-    #        If a file is retrieved from the NCBI, a hard link is made to its
-    #        alternative name (GI when an accession number is given and vice
-    #        versa). If no version is given, it will be retrieved and the
-    #        record will be renamed.
-    #        After downloading a file, the cache is checked for overflows by
-    #        calling the __cleancache() function.
-    #        The files are stored in compressed format in the cache.
-
-    #        Variables: 
-    #            identifier ; Either an accession number or a GI number.
-
-    #        Inherited variables from Config:
-    #            cache      ; The directory where the record is stored.
-    #            email      ; The email address which we give to the NCBI.
-    #            output     ; The output object.
-
-    #        Returns:
-    #            SeqRecord ; The record that was requested.
-    #    """
-
-    #    # If a GI is given, remove the "GI" or "GI:" part.
-    #    if (identifier[:2] == "GI") :
-    #        if (identifier[2] == ':') :
-    #            name = identifier[3:]
-    #        else :
-    #            name = identifier[2:]
-    #    #if
-    #    else :
-    #        name = identifier
-    #
-    #    # Make a filename based upon the identifier.
-    #    filename = self.__nametofile(name)
-    #
-    #    # If the filename is not present, retrieve it from the NCBI.
-    #    if not os.path.isfile(filename) :
-    #        Loc = self.__database.getLoc(name) # Look in the UD database
-    #        if not Loc :            # Never seen this name before.
-    #            net_handle = \
-    #                Entrez.efetch(db = "nucleotide", id = name, rettype = "gb")
-    #            raw_data = net_handle.read()
-    #            net_handle.close()
-    #            # Check if the record is empty or not.
-    #            if raw_data != "\n" :
-    #                self.__write(raw_data, filename, 1)
-    #            else :
-    #                self.__output.addMessage(__file__, 4, "ERETR", 
-    #                                         "Could not retrieve %s." % name)
-    #                return None
-    #        #if                    
-    #        else :                  # We know the name.
-    #            self.retrieveslice(*Loc)
-    #    #if
-    #    
-    #    # Now we have the file, so we can parse it.
-    #    file_handle = bz2.BZ2File(filename, "r")
-    #    try :
-    #        record = SeqIO.read(file_handle, "genbank")
-    #    except ValueError :
-    #        self.__output.addMessage(__file__, 4, "ERECPARSE", 
-    #                                 "Could not parse %s, purging." % filename)
-    #        os.remove(filename)
-    #        file_handle.close()
-    #        return None
-    #    #except
-
-    #    file_handle.close()
-
-    #    if name[:3] == "UD_" : # No renaming is needed.
-    #        return record
-
-    #    # If a GI is supplied, find out the accession number (plus version)
-    #    #   and vice versa.
-    #    if name != record.annotations["gi"] :
-    #        altfilename = self.__nametofile(record.annotations["gi"])
-    #        altfilename2 = self.__nametofile(record.id)
-    #    #if
-    #    else :
-    #        altfilename = self.__nametofile(record.id)
-    #
-    #    # If the alternative filename is not present yet, make a hard link.
-    #    if not os.path.isfile(altfilename) :
-    #        os.link(filename, altfilename)
-
-    #    # If the other alternative filename is not present (no version was 
-    #    #   given), rename the file. If it already exists, remove the file.
-    #    if filename != altfilename2 :
-    #        if not os.path.isfile(altfilename2) :
-    #            os.rename(filename, altfilename2)
-    #        else :
-    #            os.remove(filename)
-
-    #        self.__output.addMessage(__file__, 2, "WNOVRE", 
-    #        "No version number is given, using %s. Please use version numbers to reduce " \
-    #              "downloading overhead." % record.id)
-    #    #if
-
-    #    return record
-    ##loadrecord
-    #'''
 #Retriever
 
 #
 # Unit test.
 #
 if __name__ == "__main__" :
-    # Get the location of the cache, the cachesize and the email address from 
-    #   the config file.
-    R = Retriever()
-
-    R.loadrecord("AB026906.1") # Retrieve a GenBank record.
-    del R
+    pass
 #if

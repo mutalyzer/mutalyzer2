@@ -1,23 +1,60 @@
 #!/usr/bin/python
 
-#from Config import Config
-from time import strftime
+"""
+    Module for storing output and messages. 
+    Output is stored as a named list that can be expanded.
+    Messages can be retrieved at a later time to provide flexibility. Message
+    levels are defined to increase or decrease the amount of logging and ouput.
+    The position of the log file, as well as the levels are defined in the
+    configuration file.
 
-class Node() :
-    """
-    """
+    Message levels:
+        -1 : Log     ; Specifically log a message.
+         0 : Debug   ; Debug information.
+         1 : Info    ; Info.
+         2 : Warning ; Regular warnings.
+         3 : Error   ; Serious errors that can be compensated for.
+         4 : Fatal   ; Errors that are not recoverable.
+         5 : Off     ; Can be used as a log/output level to turn off output.
 
-    def __init__(self, level) :
-        self.message = []
-        self.level = level
-    #__init__
-#Node
+    Public classes:
+        Message ; Container class for message variables.
+        Output  ; Output interface for errors, warnings and logging.
+"""
+
+import time # strftime()
 
 class Message() :
     """
+        Container class for message variables.
+
+        Special methods:
+            __init__(origin, level, code, description) ; Make a message object.
+
+        Public variables:
+            origin      ; Name of the module creating this object.
+            level       ; Importance of the message.
+            code        ; The error code of the message.
+            description ; A description of the message.
     """
 
     def __init__(self, origin, level, code, description) :
+        """
+            Make a new message object.
+
+            Arguments:
+                origin      ; Name of the module creating this object.
+                level       ; Importance of the message.
+                code        ; The error code of the message.
+                description ; A description of the message.
+
+            Public variables (altered):
+                origin      ; Name of the module creating this object.
+                level       ; Importance of the message.
+                code        ; The error code of the message.
+                description ; A description of the message.
+        """
+    
         self.origin = origin
         self.level = level
         self.code = code
@@ -25,39 +62,41 @@ class Message() :
     #__init__
 #Message
 
-#class Empty() :
-#    def __len__(self) :
-#        return 0
-
 class Output() :
     """
         Provide an output interface for errors, warnings and logging purposes.
 
         Private variables:
+            __config     ; Configuration variables.
+            __outputdata ; The output dictionary.
+            __messages   ; The messages list.
             __instance   ; The name of the module that made this object.
             __loghandle  ; The handle of the log file.
-            __datestring ; Format of the prefix for log messages.
             __errors     ; The number of errors that have been processed.
             __warnings   ; The number of warnings that have been processed.
 
         Special methods:
-            __init__(config, instance) ; Initialise the class with variables
+            __init__(instance, config) ; Initialise the class with variables
                                          from the config file and the calling
                                          module.
-            __del__()                  ; Close the logfile.
+            __del__()                  ; Close the logfile and clean up.
 
         Private methods:                                         
             __niceName(filename) ; Strip the path and the extention from a
                                    filename.
+            __levelToName(level) ; Convert a log level to a readable string.
 
         Public methods:
-            ErrorMsg(filename, message)   ; Print an error message to standard
-                                            output and log it.
-            WarningMsg(filename, message) ; Print an error message to standard
-                                            output.
-            LogMsg(filename, message)     ; Log a message.
-            Summary()                     ; Print a summary of the number of
-                                            errors and warnings.
+            addMessage(filename,    ; Add a message to the message list.
+                       level, 
+                       code, 
+                       description) 
+            getMessages()           ; Print all messages that exceed the
+                                      configured output level.
+            addOutput(name, data)   ; Add output to the output dictionary.
+            getOutput(name)         ; Retrieve data from the output dictionary.
+            Summary()               ; Print a summary of the number of errors
+                                      and warnings.
     """
 
     def __init__(self, instance, config) :
@@ -66,26 +105,21 @@ class Output() :
             config file and the calling module.
             
             Arguments:
-                config   ; The configuration object.
                 instance ; The filename of the module that created this object.
-
-            Public variables(altered):
-                outputdata ; The output list.
+                config   ; The configuration object.
 
             Private variables (altered):
+                __config     ; Configuration variables.
+                __outputdata ; The output dictionary.
+                __messages   ; The messages list.
                 __instance   ; Initialised with the name of the module that
                                created this object.
                 __loghandle  ; Initialised as the handle of the log file 
                                defined in the configuration file.
-                __datestring ; Format of the prefix for log messages.
                 __errors     ; Initialised to 0.
                 __warnings   ; Initialised to 0.
-
-            Inherited variables from Config:
-                log ; Location of the log file.
         """
 
-        #Config.__init__(self)
         self.__config = config
         self.__outputData = {}
         self.__messages = []
@@ -93,26 +127,18 @@ class Output() :
         self.__loghandle = open(self.__config.log, "a")
         self.__errors = 0
         self.__warnings = 0
-
-
-        #self.createOutputNode("debug", 0)
-        #self.createOutputNode("info", 1)
-        #self.createOutputNode("warnings", 2)
-        #self.createOutputNode("errors", 3)
-        #self.createOutputNode("fatalerrors", 4)
-        #self.createOutputNode("log", 5)
     #__init__
 
     def __del__(self) :
         """
-            Clean up the output list and close the log file.
+            Clean up the output dictionary, the messages list and close the log 
+            file.
             
-            Public variables(altered):
-                outputdata ; The output list.
-
             Private variables(altered):
-                __loghandle ; The handle of the log file defined in the 
-                             configuration file.
+                __loghandle  ; The handle of the log file defined in the 
+                               configuration file.
+                __outputdata ; The output dictionary.
+                __messages   ; The messages list.
         """
 
         self.__loghandle.close()
@@ -138,6 +164,13 @@ class Output() :
 
     def __levelToName(self, level) :
         """
+            Convert a log level to a readable string.
+            
+            Arguments:
+                level ; A log level (an integer between -1 and 5).
+
+            Returns:
+                string ; A readable description of the log level.
         """
 
         if level == 0 :
@@ -153,63 +186,79 @@ class Output() :
         return ""
     #__levelToName
 
-    #def addToOutputNode(self, filename, name, code, message) :
-    #    """
-    #    """
-
-    #    niceName = self.__niceName(filename)
-
-    #    self.__outputData[name].message.append(Message(niceName, code, message))
-
-    #    level = self.__outputData[name].level
-    #    if level >= self.__config.loglevel :
-    #        prefix = ""
-    #        if level == 2 :
-    #            prefix = "Warning: "
-    #        if level == 3 :
-    #            prefix = "Error: "
-    #        if level == 4 :
-    #            prefix = "Fatal: "
-    #        self.__loghandle.write(strftime(self.__config.datestring + ' ') + \
-    #                               "%s (%s) %s: %s%s\n" % (self.__instance, 
-    #                               niceName, code, prefix, message))
-    #        self.__loghandle.flush()
-    #    #if
-    ##addToOutputNode
-
     def addMessage(self, filename, level, code, description) :
         """
+            Add a message to the message list. 
+            If the level exceeds the configured loglevel or if the level is -1,
+            then the message is also logged.
+            If the severity equals 2, then the number of warnings is inreased,
+            if it exceeds 2, then the number of errors is increased. 
+
+            Arguments:
+                filename    ; Name of the calling module.
+                level       ; Severity of the message.
+                code        ; Error code of the message.
+                description ; Description of the message.
+                
+            Private variables:
+                __messages  ; The messages list.
+                __instance  ; Module that created the Output object.
+                __config    ; The variables loglevel and datestring are used.
+                __loghandle ; Handle to the log file.
+
+            Private variables (altered):
+                __warnings ; Increased by one if the severity equals 2.
+                __errors   ; Increased by one if the severity exceeds 2.
         """
 
         niceName = self.__niceName(filename)
 
+        # Append a new message object to the messages list.
         self.__messages.append(Message(niceName, level, code, description))
 
         if level == 2 :
             self.__warnings += 1
         if level > 2 :
             self.__errors += 1
+
+        # Log the message if the message is important enough, or if it is only
+        # meant to be logged (level -1).
         if level > self.__config.loglevel or level == -1 :
-            self.__loghandle.write(strftime(self.__config.datestring + ' ') + \
-                                   "%s (%s) %s: %s%s\n" % (self.__instance, 
-                                   niceName, code, self.__levelToName(level), 
-                                   description))
+            self.__loghandle.write(time.strftime(
+                self.__config.datestring + ' ') + "%s (%s) %s: %s%s\n" % (
+                    self.__instance, niceName, code, self.__levelToName(level), 
+                    description))
             self.__loghandle.flush()
         #if
     #addMessage
 
     def getMessages(self) :
         """
+            Print all messages that exceed the configured output level.
+
+            Private variables:
+                __messages  ; The messages list.
+                __config    ; The variable outputlevel is used.
         """
 
         for i in self.__messages :
             if i.level > self.__config.outputlevel :
-                print "%s (%s): %s" % (self.__levelToName(i.level), i.origin,
-                                       i.description)
+                print "%s(%s): %s" % (self.__levelToName(i.level), i.origin,
+                                      i.description)
     #getMessages
 
     def addOutput(self, name, data) :
         """
+            If the output dictionary already has a node with the specified
+            name, the list that this name points to is expanded with the data.
+            Otherwise create a node and assign a list containing the data.
+            
+            Arguments:
+                name ; Name of a node in the output dictionary.
+                data ; The data to be stored at this node.
+
+            Private variables:
+                __outputData ; The output dictionary.
         """
 
         if self.__outputData.has_key(name) :
@@ -220,100 +269,19 @@ class Output() :
 
     def getOutput(self, name) :
         """
+            Return a list of data from the output dictionary.
+
+            Arguments:
+                name ; Name of a node in the output dictionary.
+                
+            Private variables:
+                __outputData ; The output dictionary.
         """
 
         if self.__outputData.has_key(name) :
             return self.__outputData[name]
         return None
     #getOutput
-
-
-    #def createOutputNode(self, name, level) :
-    #    """
-    #    """
-
-    #    self.__outputData[name] = Node(level)
-    ##createOutputNode
-
-    #def getData(self, name) :
-    #    """
-    #    """
-
-    #    if self.__outputData.has_key(name) and \
-    #       self.__outputData[name].level >= self.__config.outputlevel :
-    #        return self.__outputData[name].message
-    #    return []
-    ##getdata
-
-    #'''
-    #def getMsg(self, name) :
-    #    """
-    #    """
-
-    #    if self.__outputData[name].serverity >= self.__config.outputlevel :
-    #        return 
-    ##getMsg    
-
-    #def ErrorMsg(self, filename, message) :
-    #    """
-    #        Print an error message to standard output and log it.
-
-    #        Arguments:
-    #            filename ; The file where the error originated.
-    #            message  ; The error message.
-
-    #        Private variables (altered):
-    #            __errors ; Increased by one.
-    #    """
-
-    #    print "Error (%s): %s" % (self.__niceName(filename), message)
-    #    self.LogMsg(filename, "Error: " + message)
-    #    #self.addData(filename, "test", "error", "5", message)
-    #    self.__errors += 1
-    ##ErrorMsg
-
-    #def WarningMsg(self, filename, message) :
-    #    """
-    #        Print an error message to standard output.
-
-    #        Arguments:
-    #            filename ; The file where the warning originated.
-    #            message  ; The warning message.
-
-    #        Private variables (altered):
-    #            __warnings ; Increased by one.
-    #    """
-
-    #    print "Warning (%s): %s" % (self.__niceName(filename), message)
-    #    #self.addData(filename, "test", "warning", "5", message)
-    #    self.__warnings += 1
-    ##WarningMsg
-
-    #def LogMsg(self, filename, message) :
-    #    """
-    #        Log a message to the log file defined in the configuration file.
-
-    #        Arguments:
-    #            filename ; The file where the logging request originated.
-    #            message  ; The message to be logged.
-
-    #        Private variables:
-    #            __loghandle  ; The handle of the log file defined in the 
-    #                           configuration file.
-    #            __instance   ; The name of the module that created this output
-    #                           object.
-
-    #        Inherited variables from Config:
-    #            datestring ; Format of the prefix for log messages.
-    #    """
-
-
-    #    self.__loghandle.write(strftime(self.__config.datestring + ' ') + \
-    #        "%s (%s): %s\n" % (self.__instance, self.__niceName(filename), 
-    #        message))
-    #    self.__loghandle.flush()
-    ##LogMsg
-    #'''
 
     def Summary(self) :
         """
@@ -322,6 +290,12 @@ class Output() :
             Private variables:
                 __errors   ; The number of errors.
                 __warnings ; The number of warnings.
+            
+            Returns:
+                triple:
+                    integer ; Number of errors.
+                    integer ; Number of warnings.
+                    string  ; Summary.
         """
 
         e_s = 's'
@@ -331,8 +305,8 @@ class Output() :
         if self.__warnings == 1 :
             w_s = ''
             
-        print "%i Error%s, %i Warning%s." % (self.__errors, e_s, 
-                                             self.__warnings, w_s)
+        return self.__errors, self.__warnings, "%i Error%s, %i Warning%s." % (
+            self.__errors, e_s, self.__warnings, w_s)
     #Summary
 #Output
 
@@ -340,12 +314,5 @@ class Output() :
 # Unit test.
 #
 if __name__ == "__main__" :
-    import Config
-
-    C = Config.Config()
-
-    O = Output(__file__, C.Output)
-
-    O.WarningMsg(__file__, "Ja, er ging wat mis.")
-    del O
+    pass
 #if

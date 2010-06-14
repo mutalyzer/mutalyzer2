@@ -3,26 +3,29 @@
 """
     Get updates on mapping information from the UCSC.
 
-    This program is intended to be run dayly from cron. 
+    This program is intended to be run daily from cron. 
 """
 
-import sys
-import os
-os.chdir(sys.argv[0].rsplit('/', 2)[0])
+import sys # sys.argv
+import os  # os.chdir()
 
 from Modules import Config
 from Modules import Output
-from Modules import Db
+from Modules.Db import Remote
+from Modules.Db import Update
+
+os.chdir(sys.argv[0].rsplit('/', 2)[0])
 
 C = Config.Config()
 O = Output.Output(__file__, C.Output)
 O.addMessage(__file__, -1, "INFO", "Starting UCSC mapping data update")
 
 for i in C.Db.dbNames :
-    RemoteDb = Db.Db("remote", i, C.Db)
-    LocalDb = Db.Db("local", i, C.Db)
-    
+    RemoteDb = Remote(i, C.Db)
     RemoteDb.get_Update()
+    del RemoteDb
+
+    LocalDb = Update(i, C.Db)
     LocalDb.load_Update()
     
     count_Updates = LocalDb.count_Updates()
@@ -36,11 +39,10 @@ for i in C.Db.dbNames :
         LocalDb.merge_cdsUpdates()
     #if
     LocalDb.merge_Update()
+
+    del LocalDb
 #for    
 
 O.addMessage(__file__, -1, "INFO", "UCSC mapping data update end")
 
-del LocalDb
-del RemoteDb
-del O
-del C
+del O, C

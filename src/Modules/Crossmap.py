@@ -1,5 +1,15 @@
 #!/usr/bin/python
 
+"""
+    Module for conversion from genomic coordinates to coding sequence
+    orientated coordinates and vice versa.
+    The conversions are done based upon a list of splice sites, the CDS start
+    and stop and the orientation of a transcript.
+
+    Public classes:
+        Crossmap ; Convert from g. to c. or n. notation or vice versa.
+"""
+
 class Crossmap() :
     """
         Convert from g. to c. or n. notation or vice versa.

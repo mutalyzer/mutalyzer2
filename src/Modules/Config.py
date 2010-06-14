@@ -1,61 +1,136 @@
 #!/usr/bin/python
 
+"""
+    Module for reading the config file and splitting up the variables into
+    subclasses. Each of these subclasses are used to configure a specific
+    module.
+
+    Public classes:
+        Config ; Read the configuration file and store the data in subclasses.
+"""
+
 class Config() :
     """
-        Read the configuration file and store the data.
+        Read the configuration file and store the data in subclasses.
 
-        Public variables:
-            # Used by the Retriever module:
-            email      ; Email address used for Entrez.
-            cache      ; Location of the cache directory.
-            cachesize  ; Maximum size of the cache directory in bytes.
-            maxDldSize ; Maximum size of a GenBank record in bytes.
-            minDldSize ; Minimum size of a GenBank record in bytes.
-
-            # Used by the Db module:
-            internalDb      ; Name of the internal database.
-            dbNames         ; Name of the mapping databases
-            LocalMySQLuser  ; Username for the local databases.
-            RemoteMySQLuser ; Username for the remote UCSC database.
-            RemoteMySQLhost ; Hostname of the UCSC database server.
-            UpdateInterval  ; Time window (in days) to search for updates.
-            TempFile        ; Location for downloaded updates.
-
-            # Used by the Output module:
-            log        ; Name and location of the logfile.
-            datestring ; Prefix for log messages.
-
-            # Used by the Mutator module:
-            flanksize     ; Length of the flanking sequences in the 
-                            visualisation.
-            maxvissize    ; Maximum length of the variation in the 
-                            visualisation.
-            flankclipsize ; Length of the inserted/deleted flanks.
-
+        Public subclasses:
+            Retriever ; Container for the Retriever configuration variables.
+            Db        ; Container for the Db configuration variables.
+            Output    ; Container for the Output configuration variables.
+            Mutator   ; Container for the Mutator configuration variables.
+            Scheduler ; Container for the Scheduler configuration variables.
+            File      ; Container for the File configuration variables.
+            GenRecord ; Container for the File configuration variables.
 
         Special Methods:
-            __init__ ; Read the configuration file.
+            __init__ ; Read the configuration file and initialise the 
+                       subclasses.
     """
 
     class Retriever() :
+        """
+            Container class for the Retriever configuration variables.
+            
+            Public variables:
+                email      ; Email address used for Entrez.
+                cache      ; Location of the cache directory.
+                cachesize  ; Maximum size of the cache directory in bytes.
+                maxDldSize ; Maximum size of a GenBank record in bytes.
+                minDldSize ; Minimum size of a GenBank record in bytes.
+        """
+
         pass
     #Retriever
 
     class Db() :
-        pass
+        """
+            Container class for the Db configuration variables.
+            
+            Public variables:
+                internalDb      ; Name of the internal database.
+                dbNames         ; Name of the mapping databases
+                LocalMySQLuser  ; Username for the local databases.
+                LocalMySQLhost  ; Hostname of the local databases.
+
+                RemoteMySQLuser ; Username for the remote UCSC database.
+                RemoteMySQLhost ; Hostname of the UCSC database server.
+                UpdateInterval  ; Time window (in days) to search for
+                                  updates.
+                TempFile        ; Location for downloaded updates.
+            """
     #Db
 
     class Output() :
+        """
+            Container class for the Output configuration variables.
+            
+            Public variables:
+                log         ; Name and location of the logfile.
+                datestring  ; Prefix for log messages.
+                loglevel    ; Default level for logging.
+                outputlevel ; Default level for output.
+        """
+
         pass
     #Output
 
     class Mutator() :
+        """
+            Container class for the Mutator configuration variables.
+            
+            Public variables:
+                flanksize     ; Length of the flanking sequences in the 
+                                visualisation.
+                maxvissize    ; Maximum length of the variation in the 
+                                visualisation.
+                flankclipsize ; Length of the inserted/deleted flanks.
+        """
+
         pass
     #Mutator
 
     class Scheduler() :
+        """
+            Container class for the Scheduler configuration variables.
+            
+            Public variables:
+                processName ; Name of the scheduler in the process list.
+                mailFrom    ; Return e-mail address.
+                mailMessage ; Template e-mail.
+                mailSubject ; Subject of the  e-mail.
+                resultsDir  ; Location of the results.
+        """
+
         pass
     #Scheduler
+
+    class File() :
+        """
+            Container class for the File configuration variables.
+            
+            Public variables:
+                bufSize ; Amount of bytes to be read for determining the file 
+                          type.
+                header  ; The obligatory header in batch request files.
+                tempDir ; Directory for temporary files.
+        """
+
+        pass
+    #File
+
+    class GenRecord() :
+        """
+            Container class for the GenRecord configuration variables.
+            
+            Public variables:
+            upstream   ; Number of upstream nucleotides when searching for a 
+                         transcript.
+            downstream ; Number of downstream nucleotides when searching for a 
+                         transcript.
+        """
+
+        pass
+    #File
 
     def __init__(self) :
         """
@@ -64,33 +139,12 @@ class Config() :
             hard coded constant is used (the name and path to the configuration
             file).
 
-            Public variables (altered):
-                # Used by the Retriever module:
-                email      ; Email address used for Entrez.
-                cache      ; Location of the cache directory.
-                cachesize  ; Maximum size of the cache directory in bytes.
-                maxDldSize ; Maximum size of a GenBank record in bytes.
-                minDldSize ; Minimum size of a GenBank record in bytes.
-
-                # Used by the Db module:
-                internalDb      ; Name of the internal database.
-                dbNames         ; Name of the mapping databases
-                LocalMySQLuser  ; Username for the local databases.
-                RemoteMySQLuser ; Username for the remote UCSC database.
-                RemoteMySQLhost ; Hostname of the UCSC database server.
-                UpdateInterval  ; Time window (in days) to search for updates.
-                TempFile        ; Location for downloaded updates.
-
-                # Used by the Output module:
-                log        ; Name and location of the logfile.
-                datestring ; Prefix for log messages.
-
-                # Used by the Mutator module:
-                flanksize     ; Length of the flanking sequences in the 
-                                visualisation.
-                maxvissize    ; Maximum length of the variation in the 
-                                visualisation.
-                flankclipsize ; Length of the inserted/deleted flanks.
+            Public subclasses (altered):
+                Retriever ; Initialised with Retriever configuration variables.
+                Db        ; Initialised with Db configuration variables.
+                Output    ; Initialised with Output configuration variables.
+                Mutator   ; Initialised with Mutator configuration variables.
+                Scheduler ; Initialised with Scheduler configuration variables.
         """
         from configobj import ConfigObj # ConfigObj()
 
@@ -106,7 +160,9 @@ class Config() :
         # Set the variables needed by the Db module.
         self.Db.internalDb = config["internalDb"]
         self.Db.dbNames = config["dbNames"]
+
         self.Db.LocalMySQLuser = config["LocalMySQLuser"]
+        self.Db.LocalMySQLhost = config["LocalMySQLhost"]
         self.Db.RemoteMySQLuser = config["RemoteMySQLuser"]
         self.Db.RemoteMySQLhost = config["RemoteMySQLhost"]
         self.Db.UpdateInterval = int(config["UpdateInterval"])
@@ -124,8 +180,20 @@ class Config() :
         self.Mutator.flankclipsize = int(config["flankclipsize"])
 
         # Set the variables needed by the Scheduler module.
-        self.Scheduler.watchDogTimeOut = int(config["watchDogTimeOut"])
         self.Scheduler.processName = config["processName"]
+        self.Scheduler.mailFrom = config["mailFrom"]
+        self.Scheduler.mailMessage = config["mailMessage"]
+        self.Scheduler.mailSubject = config["mailSubject"]
+        self.Scheduler.resultsDir = config["resultsDir"]
+
+        # Set the variables needed by the File module.
+        self.File.bufSize = int(config["bufSize"])
+        self.File.header = config["header"]
+        self.File.tempDir = config["tempDir"]
+
+        # Set the variables needed by the GenRecord module.
+        self.File.upstream = int(config["upstream"])
+        self.File.downstream = int(config["downstream"])
     #__init__
 #Config
 

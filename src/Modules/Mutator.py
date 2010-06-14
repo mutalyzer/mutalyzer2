@@ -1,6 +1,18 @@
 #!/usr/bin/python
 
-#from Output import Output
+"""
+    Module for mutating a string.
+
+    Mutations are described in the original coordinates. These coordinates are
+    transfered to the mutated coordinates with the aid of an internal shift
+    list, which keeps track of the sizes of changes. Using the original
+    coordinates greatly simplifies combined mutations in a variant.
+
+    The original as well as the mutated string are stored.
+
+    Public classes:
+        Mutator ; Mutate a string and register all shift points.
+"""
 
 class Mutator() :
     """
@@ -50,25 +62,26 @@ class Mutator() :
             Initialise the class with the original string.
 
             Arguments:
-                orig ; The original string before mutation.
+                orig   ; The original string before mutation.
+                config ; Configuration variables.
+                output ; The output object.
 
             Private variables (altered):
-                __shift ; Initialised to the empty list.
+                __config ; Initialised with the configuration variables.
+                __output ; Initialised with the output object.
+                __shift  ; Initialised to the empty list.
 
             Public variables (altered):
                 orig    ; Initialised to the parameter orig.
                 mutated ; Initialised to the parameter orig.
         """
 
-        #Output.__init__(self, __file__)
         self.__config = config
         self.__output = output
-
         self.__shift = []
+
         self.orig = orig
         self.mutated = orig
-
-        #self.output.createOutputNode("visualisation", 1) # Info message.
     #__init__
     
     def __sortins(self, tuple) :
@@ -122,6 +135,11 @@ class Mutator() :
                 pos2 ; The second interbase position of the deletion.
                 ins  ; The insertion.
 
+            Private variables:
+                __config ; The variables maxvissize, flanksize and flankclipsize
+                           are used in the visualisation.
+                __output ; Visualisation information is added.
+
             Public variables (altered):
                 mutated ; This string will reflect the result of the given 
                           delins.
@@ -135,24 +153,21 @@ class Mutator() :
         odel = self.orig[pos1:pos2]
         if len(odel) > self.__config.maxvissize :
             odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize], 
-                                     len(odel) - self.__config.flankclipsize * 2,
-                                     odel[-self.__config.flankclipsize:])
+                len(odel) - self.__config.flankclipsize * 2,
+                odel[-self.__config.flankclipsize:])
 
         bp1 = self.shiftpos(pos1)
         bp2 = self.shiftpos(pos2)
         lmflank = self.mutated[max(bp1 - self.__config.flanksize, 0):bp1]
         rmflank = self.mutated[bp2:bp2 + self.__config.flanksize]
 
-        #print
         insvis = ins
         if len(ins) > self.__config.maxvissize :
             insvis = "%s [%ibp] %s" % (ins[:self.__config.flankclipsize],
-                                       len(ins) - self.__config.flankclipsize * 2,
-                                       ins[-self.__config.flankclipsize:])
+                len(ins) - self.__config.flankclipsize * 2,
+                ins[-self.__config.flankclipsize:])
         fill = abs(len(odel) - len(insvis))
         if len(odel) > len(ins) :
-            #print "%s %s %s" % (loflank, odel, roflank)
-            #print "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)
             self.__output.addOutput("visualisation", 
                                   "%s %s %s" % (loflank, odel, roflank))
             self.__output.addOutput("visualisation",
@@ -160,8 +175,6 @@ class Mutator() :
                                                   rmflank))
         #if
         else :
-            #print "%s %s%s %s" % (loflank, odel, '-' * fill, roflank)
-            #print "%s %s %s" % (lmflank, insvis, rmflank)
             self.__output.addOutput("visualisation",
                                   "%s %s%s %s" % (loflank, odel, '-' * fill, 
                                                   roflank))
@@ -175,19 +188,6 @@ class Mutator() :
         self.mutated = self.mutated[:self.shiftpos(pos1)] + ins + \
                        self.mutated[self.shiftpos(pos2):]
         self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
-
-        """
-        from Bio import pairwise2
-        po1 = max(pos1 - 25, 0)                # Bug fix for mutations at the
-        pm1 = max(self.shiftpos(pos1) - 25, 0) # start of a sequence.
-
-        alignments = pairwise2.align.globalms(self.orig[po1:pos2 + 25],
-            self.mutated[pm1:self.shiftpos(pos2) + 25],
-            1, -1, -2, -1)
-        print
-        print alignments[0][0]
-        print alignments[0][1]
-        """
     #__mutate
 
     def shiftpos(self, position) :
@@ -248,13 +248,16 @@ class Mutator() :
             Arguments:
                 pos1 ; The first nucleotide of the range to be deleted.
                 pos2 ; The last nucleotide of the range to be deleted.
+
+            Private variables:
+                __output ; Visualisation information is added.
         """
 
         if pos1 == pos2 :
             self.__output.addOutput("visualisation", "deletion of %i" % pos1)
         else :
             self.__output.addOutput("visualisation", "deletion of %i to %i" % (
-                                 pos1, pos2))
+                                    pos1, pos2))
         self.__mutate(pos1 - 1, pos2, '')
     #delM
     
@@ -266,10 +269,13 @@ class Mutator() :
                 pos ; The interbase position where the insertion should take
                       place.
                 ins ; The insertion, a string.
+
+            Private variables:
+                __output ; Visualisation information is added.
         """
 
-        self.__output.addOutput("visualisation", "insertion between %i and %i" % (
-                             pos, pos + 1))
+        self.__output.addOutput("visualisation", 
+                                "insertion between %i and %i" % (pos, pos + 1))
         self.__mutate(pos, pos, ins)
     #insM
     
@@ -294,6 +300,9 @@ class Mutator() :
             Arguments:
                 pos ; The position where the substitution should take place.
                 nuc ; The new nucleotide.
+
+            Private variables:
+                __output ; Visualisation information is added.
         """
 
         self.__output.addOutput("visualisation", "substitution at %i" % pos)
@@ -340,84 +349,3 @@ class Mutator() :
 if __name__ == "__main__" :
     pass
 #if
-"""
-import sys
-
-def ladder() :
-    length = 79
-
-    for i in range(length) :
-        sys.stdout.write(str((i + 1) / 10))
-    sys.stdout.write("\n")
-    for i in range(length) :
-        sys.stdout.write(str((i + 1) % 10))
-    sys.stdout.write("\n")
-#ladder
-
-M = Mutator("AAAGCCACCAGTTTCTTCCATGTGTTTTCACTCGCTTCGAAAAATTTAGGTAGGCTCTAGATATC")
-
-M.invM(44, 50)
-print "Inv 44 50"
-ladder()
-print M.orig
-print M.mutated
-
-M.delinsM(34, 38, "TTTAAAATTTTAA")
-print "Delins 34 38 TTTAAAATTTTAA"
-ladder()
-print M.orig
-print M.mutated
-
-M.invM(24, 30)
-print "Inv 24 30"
-ladder()
-print M.orig
-print M.mutated
-
-M.delM(10, 10)
-print "Del 10"
-ladder()
-print M.orig
-print M.mutated
-
-M.subM(5, 'T')
-print "Sub 5 T"
-ladder()
-print M.orig
-print M.mutated
-
-M.insM(7, 'G')
-print "Ins 7_8 G"
-ladder()
-print M.orig
-print M.mutated
-print M._Mutator__shift
-
-M.delM(4, 8)
-print "Del 4 8"
-ladder()
-print M.orig
-print M.mutated
-M.insM(4, "TTTA")
-print "Ins 4 TTTA"
-ladder()
-print M.orig
-print M.mutated
-M.delM(4, 8)
-print "Del 4 8"
-ladder()
-print M.orig
-print M.mutated
-M.delinsM(4, 8, "TTTAAAATTTTAA")
-print "Delins 4 8 TTTAAAATTTTAA"
-ladder()
-print M.orig
-print M.mutated
-M.invM(24, 30,)
-print "Inv 24 30"
-ladder()
-print M.orig
-print M.mutated
-
-print M.newSplice([1, 10, 20, 30, 40])
-"""

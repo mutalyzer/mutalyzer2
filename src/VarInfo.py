@@ -72,12 +72,12 @@ def __getcoords(C, Loc, Type) :
 def __process(LOVD_ver, build, acc, var, C, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
-    Database = Db.Db("local", build, C.Db) # Open the database.
-    if not Database.opened :
+    if not build in C.Db.dbNames :
         O.addMessage(__file__, 4, "EARG", "Database %s not found." % build)
         print "Error (Variant_info): Database %s not found." % build
         return
     #if        
+    Database = Db.Mapping(build, C.Db) # Open the database.
     
     # Get the rest of the input variables.
     accno = acc

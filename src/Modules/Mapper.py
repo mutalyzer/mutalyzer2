@@ -30,7 +30,7 @@ from soaplib.serializers.primitive import String, Integer
 from soaplib.serializers.clazz import ClassSerializer
 
 class Mapping(ClassSerializer) :
-    '''
+    """
         Extended ClassSerializer object with mixed types of attributes
         
         Attributes:
@@ -41,49 +41,69 @@ class Mapping(ClassSerializer) :
             start_g ; Define the type of start_g value.
             end_g ; Define the type of end_g value.
             mutationType ; Define the type of mutation type
-    '''
-    class types :
-        startmain    = Integer
-        startoffset  = Integer
-        endmain      = Integer
-        endoffset    = Integer
-        start_g      = Integer
-        end_g        = Integer
+    """
+
+    class types() :
+        """
+            Types are defined here for the TC module.
+        """
+
+        startmain = Integer
+        startoffset = Integer
+        endmain = Integer
+        endoffset = Integer
+        start_g = Integer
+        end_g = Integer
         mutationType = String
     #types
+
+    def __init__(self) :
+        """
+            Types are defined here for the soaplib module.
+        """
+
+        self.typecode = TC.Struct(Mapping, [ 
+            TC.Integer('startmain'),
+            TC.Integer('startoffset'),
+            TC.Integer('endmain'),
+            TC.Integer('endoffset'),
+            TC.Integer('start_g'),
+            TC.Integer('end_g'),
+            TC.String('mutationType') 
+            ], 'Mapping')
+    #__init__                                                            
 #Mapping
 
-# Any comments on the following statement??
-Mapping.typecode = TC.Struct(Mapping, 
-                                        [ TC.Integer('startmain'),
-                                        TC.Integer('startoffset'),
-                                        TC.Integer('endmain'),
-                                        TC.Integer('endoffset'),
-                                        TC.Integer('start_g'),
-                                        TC.Integer('end_g'),
-                                        TC.String('mutationType') ], 
-                                                            'Mapping')
-
 class Transcript(ClassSerializer) :
-    '''
+    """
         Extended ClassSerializer object with mixed types of attributes
         
         Attributes:
             trans_start ; Define the type of trans_start
             trans_stop  ; Define the type of trans_stop
             CDS_stop    ; Define the type of CDS_stop
-    '''
-    class types :
+    """
+
+    class types() :
+        """
+        """
+
         trans_start = Integer
-        trans_stop  = Integer
-        CDS_stop    = Integer
+        trans_stop = Integer
+        CDS_stop = Integer
     #types
+
+    def __init__(self) :
+        """
+        """
+
+        self.typecode = TC.Struct(Transcript, [ 
+            TC.Integer('trans_start'),
+            TC.Integer('trans_stop'),
+            TC.Integer('CDS_stop') 
+            ], 'Transcript')
+    #__init__                                                            
 #Transcript
-Transcript.typecode = TC.Struct(Transcript, 
-                                        [ TC.Integer('trans_start'),
-                                        TC.Integer('trans_stop'),
-                                        TC.Integer('CDS_stop') ], 
-                                                        'Transcript')
 
 def __sl2il(l) :
     """
@@ -132,7 +152,7 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
     #Database = Db.Db("local", O) # Open the database.
-    Database = Db.Db("local", build, Conf.Db)
+    Database = Db.Mapping(build, Conf.Db)
 
     
     # Get the rest of the input variables.
@@ -199,7 +219,7 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
 #__process
 
 def conversionToCoding(offset, main, trans_start, trans_stop, CDS_stop) :
-    '''
+    """
     Converts c. (non-star) positions to c. numbered (star and +-) positions
     
     Arguments:
@@ -216,7 +236,7 @@ def conversionToCoding(offset, main, trans_start, trans_stop, CDS_stop) :
                       (intronic position, +- notation)
         cMain   ; The main coordinate of a position in c. (star) notation.
             
-    '''
+    """
     cOffset = ""
     cMain = main
     if offset != "0" :

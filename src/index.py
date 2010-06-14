@@ -15,11 +15,17 @@
 
 import Mutalyzer
 import VarInfo
-from Modules import Web
-from mod_python import apache
-from Modules import Config
 import pydoc
 import webservice
+
+from mod_python import apache
+
+from Modules import Web
+from Modules import Config
+from Modules import Output
+from Modules import Db
+from Modules import Scheduler
+from Modules import File
 
 def index(req) :
     """
@@ -111,6 +117,9 @@ def download(req) :
 #download
 
 def upload(req) :
+    """
+    """
+
     C = Config.Config()
     maxUploadSize = C.Retriever.maxDldSize
     del C
@@ -135,6 +144,41 @@ def upload(req) :
     del W
     return ret
 #upload
+
+def batch(req) :
+    """
+    """
+
+    W = Web.Web()
+    eMail = ""
+    if req.form :
+        eMail = req.form['eMail']
+        fileUpload = req.form['file']
+        
+        if fileUpload.filename and W.isEMail(eMail) :
+            C = Config.Config()
+            D = Db.Batch(C.Db)
+            S = Scheduler.Scheduler(C.Scheduler, D)
+            O = Output.Output(__file__, C.Output)
+            FileInstance = File.File(C.File, O)
+
+            job = FileInstance.parseBatchFile(fileUpload.file)
+            S.addJob("1231243", eMail, job, "http://%s%s" % (req.hostname, 
+                                                             req.uri))
+
+            del FileInstance, S, D, C
+        #if            
+    #if
+
+    args = {
+        "version" : W.version,
+        "lastEMail" : eMail
+    }
+
+    ret = W.tal("HTML", "templates/batch.html", args)
+    del W
+    return ret
+#batch
 
 def documentation(req) :
     """

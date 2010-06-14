@@ -11,16 +11,14 @@
 """
 
 import os
+import bz2
 from ZSI import dispatch
-
-# This is a workaround for pydoc. Aparently it crashes when a module can not be
-# imported.
-try : 
-    from mod_python import apache, publisher
-except ImportError :
-    pass
+from soaplib.client import make_service_client
+from mod_python import apache, publisher
 
 from Modules import Web
+from Modules import Config
+
 import webservice
 
 def handler(req):
@@ -76,16 +74,43 @@ def handler(req):
         reqFile = req.uri.split('/')[-1]
         req.content_type = 'text/plain'
         req.headers_out["Content-Disposition"] = \
-          "attachment; filename = \"%s\"" % reqFile # To force downloading.
-        args = {"path" : reqPath}                   # Replace the path variable.
+            "attachment; filename = \"%s\"" % reqFile # To force downloading.
+        args = {"path" : reqPath}                     # Replace the path.
         req.write(W.tal("HTML", "templates/" + reqFile, args))
+        return apache.OK
+    #if
+
+    # Return raw content (for batch checker results).
+    if "Results" in req.uri :
+        reqFile = req.uri.split('/')[-1]
+        C = Config.Config()
+        req.write(open("%s/%s" % (C.Scheduler.resultsDir, reqFile)).read())
+        del C
+        return apache.OK
+    #if
+
+    # Return uncompressed GenBank files from the cache.
+    if "GenBank" in req.uri :
+        reqFile = req.uri.split('/')[-1]
+        C = Config.Config()
+        fileName = "%s/%s.bz2" % (C.Retriever.cache, reqFile)
+        if os.path.isfile(fileName) :
+            handle = bz2.BZ2File("%s/%s.bz2" % (C.Retriever.cache, reqFile), 
+                                 "r")
+            req.content_type = 'text/plain'
+            req.headers_out["Content-Disposition"] = \
+                "attachment; filename = \"%s\"" % reqFile # Force downloading.
+            req.write(handle.read())
+            handle.close()
+            del C
+        #if
+        else :
+            return apache.HTTP_FORBIDDEN
         return apache.OK
     #if
 
     # Generate the WSDL file from the MutalyzerService class.
     if ".wsdl" in req.uri :
-        from soaplib.client import make_service_client
-
         servicepath = "http://" + reqPath + "/services"
         client = make_service_client(servicepath, webservice.MutalyzerService())
         req.content_type = 'text/xml'

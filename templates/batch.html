@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
+    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <script type = "text/javascript" 
+        language = "javascript" 
+        src = "test.js">
+    </script>
+  </head>
+  <body onload = "yo()">
+<!--
+    <div metal:use-macro = "sitemacros/macros/menu"></div>
+-->
+    <center>
+      <big tal:content = "structure string:Mutalyzer ${version} batch checker.">
+      </big>
+    </center><br>
+    Blablabla
+    <br>
+    <form action = "" method = "post" enctype = "multipart/form-data">
+      <input 
+        type = "file" 
+        name = "file" 
+        size = "100%"
+      ><br>
+      <input 
+        type = "text" 
+        name = "eMail" 
+        tal:attributes = "value lastEMail"
+        size = "100%"
+      ><br>
+      <input 
+        type="submit" 
+        value="Submit"
+      >
+    </form>
+  </body>
+</html>
