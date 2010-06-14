@@ -24,6 +24,7 @@ from Modules import Crossmap # Crossmap(), g2x(), x2g(), main2int(),
 from Modules import Parser   # Nomenclatureparser(), parse()
 from Modules import Output   # Output(), LogMsg()
 from Modules import Config
+from Modules import Mapper
 
 def __sl2il(l) :
     """
@@ -68,120 +69,13 @@ def __getcoords(C, Loc, Type) :
     return (main, offset, g)
 #__getcoords
 
-
-def __process(LOVD_ver, build, acc, var, C, O) :
-    # Make a connection to the MySQL database with the username / db
-    #   information from the configuration file.
-    if not build in C.Db.dbNames :
-        O.addMessage(__file__, 4, "EARG", "Database %s not found." % build)
-        print "Error (Variant_info): Database %s not found." % build
-        return
-    #if        
-    Database = Db.Mapping(build, C.Db) # Open the database.
-    
-    # Get the rest of the input variables.
-    accno = acc
-    version = 0
-    if '.' in acc :
-        accno = acc.split('.')[0]        # The NM accession number.
-        version = int(acc.split('.')[1]) # The version of the accession 
-                                         #   number.
-    
-    # Check whether the NM version number is in the database.
-    db_version = Database.get_NM_version(accno)
-    if not db_version :
-        O.addMessage(__file__, 4, "EARG", "Reference sequence not found.")
-        print "Error (Variant_info): Reference sequence not found."
-        return
-    #if
-    if db_version != version :
-        O.addMessage(__file__, 4, "EARG",
-            "Reference sequence version not found. Available: %s.%i" % (
-            accno, db_version))
-        print "Error (Variant_info): Reference sequence version not found. " \
-              "Available: %s.%i" % (accno, db_version)
-        return
-    #if
-    
-    # Retrieve info on the NM accession number.
-    result = Database.get_NM_info(accno)
-    del Database
-    
-    exonStarts = __sl2il(result[0].split(',')[:-1]) # Get all the exon start 
-                                                    # sites.
-    exonEnds = __sl2il(result[1].split(',')[:-1])   # Get all the end sites.
-    cdsStart = int(result[2])                     # The CDS start.
-    cdsEnd = int(result[3])                       # The CDS stop.
-    strand = result[4]                            # The orientation.
-    
-    # Convert the exonStarts and exonEnds lists to an RNA splice sites list and
-    #   a CDS splice sites list.
-    mRNA = []
-    
-    CDS = []
-    if cdsStart != cdsEnd :
-        CDS = [cdsStart + 1]              # The counting from 0 conversion.
-        CDS.append(cdsEnd)
-    #if
-    
-    for i in range(len(exonStarts)) :
-        mRNA.append(exonStarts[i] + 1)    # This is an interbase conversion.
-        mRNA.append(exonEnds[i])
-    #for
-    
-    # Convert the strand information to orientation.
-    orientation = 1
-    if strand == '-' :
-        orientation = -1
-    
-    # Build the crossmapper.
-    Cross = Crossmap.Crossmap(mRNA, CDS, orientation)
-    
-    # If no variant is given, return transcription start, transcription end and
-    #   CDS stop in c. notation.
-    if not var :
-        info = Cross.info()
-        print "%i\n%i\n%i" % info
-        return
-    #if
-    
-    # Make a parsetree for the given variation.
-    P = Parser.Nomenclatureparser(O)
-    parsetree = P.parse("NM_0000:" + var) # This NM number is bogus.
-    del P
-
-    if parsetree :
-        # Get the coordinates in both c. and g. notation.
-        startmain, startoffset, start_g = \
-            __getcoords(Cross, parsetree.RawVar.StartLoc.PtLoc, 
-                        parsetree.RefType)
-        
-        # Assume there is no end position given.
-        end_g = start_g
-        endmain = startmain
-        endoffset = startoffset
-        
-        # If there is an end position, calculate the coordinates.
-        if parsetree.RawVar.EndLoc :
-            endmain, endoffset, end_g = \
-                __getcoords(Cross, parsetree.RawVar.EndLoc.PtLoc, 
-                            parsetree.RefType)
-        
-        # And return the output.
-        print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (startmain, startoffset, endmain, 
-                                              endoffset, start_g, end_g, 
-                                              parsetree.RawVar.MutationType)
-    #if
-    del Cross
-#__process
-
 def main(LOVD_ver, build, acc, var) :
     """
         The entry point (called by the HTML publisher).
             
         Arguments:
             LOVD_ver ; The LOVD version (ignored for now).
-            build    ; The human genome build (ignored for now, hg19 assumed).
+            build    ; The human genome build.
             acc      ; The NM accession number and version.
             var      ; The variant, or empty.
     
@@ -211,13 +105,18 @@ def main(LOVD_ver, build, acc, var) :
                  "Received %s:%s (LOVD_ver %s, build %s)" % (acc, var,
                  LOVD_ver, build))
 
-    __process(LOVD_ver, build, acc, var, C, O)
+    Cross = Mapper.makeCrossmap(build, acc, C)
+    V = Mapper.makeParsetree(O, Cross, var)
 
     O.addMessage(__file__, -1, "INFO", 
                  "Finished processing %s:%s (LOVD_ver %s, build %s)" % (acc,
                  var, LOVD_ver, build))
-    del O
-    del C
+    del O, C, Cross
+    # And return the output.
+    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain, 
+                                          V.endoffset, V.start_g, V.end_g, 
+                                          V.mutationType)
+        
 #main        
 
 if __name__ == "__main__" :

@@ -47,9 +47,6 @@ class MutalyzerService(SimpleWSGISoapApp) :
             transcriptInfo(LOVD_ver, build, ; Find transcription start and
                            accNo)             end, and CDS end (in c. 
                                               notation) for a given transcript 
-            __extractChange(self, variant, O)  ; Extracts the part of a variant 
-                                                 description after the
-                                                 coordinates (positions)
             cTogConversion(self, build, variant) ; Convert c. to g.
             gTocConversion(self, build, variant) ; Convert g. to c.
     """
@@ -115,48 +112,25 @@ class MutalyzerService(SimpleWSGISoapApp) :
         #if                         
     #__checkPos
 
-    #@soapmethod(String, _returns = String)
-    def __extractChange(self, variant, O) :
-        '''
-            Extracts.
+    def __checkVariant(self, L, variant) :
+        """
+            Check if a variant is provided.
 
-            
-            Argument:
-                string variant ; The variant in complete HGVS notation
-             
+            Arguments:
+                L       ; An output object for logging.
+                variant ; The variant.
+
             Returns:
-                tuple: The position and the part behind the positions
-                    in HGVS notation
-        '''
-        
-        P = Parser.Nomenclatureparser(O)
-        parsetree = P.parse(variant) # 
-        del P
+                Nothing (but raises an EARG exception).
+        """
 
-        position = parsetree.RawVar.StartLoc.PtLoc.Main # Start position.
-        
-        if parsetree.RawVar.Arg1 :
-            change = parsetree.RawVar.Arg1
-            if parsetree.RawVar.Arg2 :
-                change += '>' + parsetree.RawVar.Arg2
-        #if
-        else :
-            change = ''
+        if not variant :
+            L.addMessage(__file__, 4, "EARG", "EARG no variant")
+            raise Fault(Fault.Client, "EARG", 
+                detail = "The variant argument is not provided.")
+        #if                         
+    #__checkVariant
 
-        if parsetree.RawVar.MutationType not in ('subst', 'del') :
-            changeSuffix = parsetree.RawVar.MutationType + change
-        else :
-            if parsetree.RawVar.MutationType == 'del' :
-                changeSuffix = parsetree.RawVar.MutationType
-            else :
-                changeSuffix = change
-        #else
-
-        del parsetree, change
-
-        return position, changeSuffix
-    #__extractChange
-    
     @soapmethod(String, String, Integer, _returns = Array(String))
     def getTranscripts(self, build, chrom, pos) :
         """
@@ -293,7 +267,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             
             Arguments (all strings):
                 LOVD_ver ; The LOVD version.
-                build ; The human genome build (ignored for now, hg19 assumed).
+                build ; The human genome build (hg19 or hg18).
                 accNo ; The NM accession number and version.
                 variant ; The variant.
              
@@ -313,21 +287,20 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         """
 
-        Conf = Config.Config()
-        O = Output.Output(__file__, Conf.Output)
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
     
-        O.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO", 
                      "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver,
                      build, accNo, variant))
 
-        result = Mapper.mainMapping(LOVD_ver, build, accNo, variant,
-                                             Conf, O)
+        result = Mapper.mainMapping(build, accNo, variant, C, L)
 
-        O.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO", 
                      "Finished processing mappingInfo(%s %s %s %s)" % (
                      LOVD_ver, build, accNo, variant))
 
-        del O, Conf
+        del L, C
         return result
     #mappingInfo
 
@@ -341,7 +314,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             
             Arguments (all strings:
                 LOVD_ver ; The LOVD version.
-                build ; The human genome build (ignored for now, hg19 assumed).
+                build ; The human genome build (hg19 or hg18).
                 accNo ; The NM accession number and version.
              
             Returns:
@@ -351,166 +324,60 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     CDS_stop     ; CDS stop in c. notation.
         """
 
-        Conf = Config.Config()
-        O = Output.Output(__file__, Conf.Output)
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
     
-        O.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO", 
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
-        result = Mapper.mainTranscript(LOVD_ver, build, accNo, Conf, O)
+        result = Mapper.mainTranscript(build, accNo, C)
 
-        O.addMessage(__file__, -1, "INFO",
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing transcriptInfo(%s %s %s)" % (
                      LOVD_ver, build, accNo))
 
-        del O, Conf
+        del L, C
         return result
     #transcriptInfo
     
     @soapmethod(String, String, _returns = String)
-    def cTogConversion(self, build, variant) :
+    def numberConversion(self, build, variant) :
         """
-            Converts a complete HGVS c. notation into a g. notation
+            Converts c. to g. notation or vice versa
 
             
             Arguments (all strings:
-                build  ; The human genome build (ignored for now, hg19 assumed).
-                variant ; The variant in c.notation.
+                build  ; The human genome build (hg19 or hg18).
+                variant ; The variant in either c. or g. notation.
              
             Returns:
-                string var_in_g ; The variant in g. notation.
+                string; The variant in either g. or c. notation.
         
         """
     
-        Conf = Config.Config() # Read the configuration file.
-        O = Output.Output(__file__, Conf.Output)
-    
-        O.addMessage(__file__, -1, "INFO",
+        C = Config.Config() # Read the configuration file.
+        D = Mapping(build, C.Db)
+        L = Output.Output(__file__, C.Output)
+        L.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
         
-        accno = variant.split(':')[0] # the transcript (NM_..) accession number 
-        var = variant.split(':')[1]  # the variant
-        changeSuffix = self.__extractChange(variant, O)[1]
-        mapped_mrnaAcc = Mapper.mainMapping("123", build, accno, var, Conf,
-                                            O)
-        if str(mapped_mrnaAcc.start_g) != str(mapped_mrnaAcc.end_g) :
-            var_in_g = "g." + str(mapped_mrnaAcc.start_g) \
-                        + "_" + str(mapped_mrnaAcc.end_g) + changeSuffix
-        #if
-        else :
-            var_in_g = "g." + str(mapped_mrnaAcc.start_g) + changeSuffix
-        #else
+        self.__checkBuild(build, C.Db)
+        self.__checkVariant(L, variant)
         
-        del changeSuffix, mapped_mrnaAcc
+        if "c." in variant :
+            result = Mapper.cTog(build, variant, C, D, L)
+        if "g." in variant :
+            result = Mapper.gToc(build, variant, C, D, L)
+        
 
-        O.addMessage(__file__, -1, "INFO",
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing cTogConversion(%s %s)" % (
                      build, variant))
-        del O
+        del L
 
-        return var_in_g
-    #cTogConversion
+        return result
+    #numberConversion
         
-    @soapmethod(String, String, _returns = String)
-    def gTocConversion(self, build, variant) :
-        """
-            Converts a complete HGVS g. notation into a c. notation
-
-            
-            Arguments (all strings):
-                build  ; The human genome build (ignored for now, hg19 assumed).
-                variant ; The variant in g. notation.
-             
-            Returns:
-                string var_in_g ; The variant in c. notation.
-        
-        
-        """
-    
-        Conf = Config.Config() # Read the configuration file.
-        D = Mapping(build, C.Db)
-
-        O = Output.Output(__file__, Conf.Output)
-    
-        O.addMessage(__file__, -1, "INFO",
-                     "Received request gTocConversion(%s %s)" % (
-                     build, variant))
-
-        var = variant.split(':')[1]  # the variant
-        pos1 = self.__extractChange(variant, O)[0]
-        changeSuffix = self.__extractChange(variant, O)[1]
-        upPos = int(pos1) - 5000
-        downPos = int(pos1) + 5000
-        chrom = variant.split(':')[0]    # the chromosome (for now: e.g. chr1)
-        transcripts = eval(self.getTranscriptsRange('chrX', upPos, downPos, 1))
-        HGVS_notations = '' # To contain >= 1 HGVS notations (transcripts)
-        for mrnaAcc in transcripts:
-            if '.' in mrnaAcc :
-                accno = mrnaAcc.split('.')[0] # The NM accession number.
-
-            # Retrieve info on the NM accession number.
-            result = Database.get_NM_info(accno)
-            strand = result[4] # The orientation.
-            del result
-
-            info_mrnaAcc = Mapper.mainTranscript("123", "hg19", mrnaAcc, Conf,
-                                                 O)
-            mapped_mrnaAcc = Mapper.mainMapping("123", "hg19", mrnaAcc, var, 
-                                                Conf, O)
-
-            vStart = Mapper.conversionToCoding(str(mapped_mrnaAcc.startoffset), 
-                                          mapped_mrnaAcc.startmain, 
-                                          info_mrnaAcc.trans_start, 
-                                          info_mrnaAcc.trans_stop, 
-                                          info_mrnaAcc.CDS_stop)
-            # end position of the variant
-            vEnd = Mapper.conversionToCoding(str(mapped_mrnaAcc.endoffset), 
-                                        mapped_mrnaAcc.endmain, 
-                                        info_mrnaAcc.trans_start, 
-                                        info_mrnaAcc.trans_stop, 
-                                        info_mrnaAcc.CDS_stop)
-    
-            # Use n. or c. numbering
-            if info_mrnaAcc.trans_start == "1" and \
-                info_mrnaAcc.trans_stop == info_mrnaAcc.CDS_stop :
-                numbType = ":n."
-            #if
-            else :
-                numbType = ":c."
-            #else
-    
-            if strand == '+' :
-                var_in_c = mrnaAcc + numbType + str(vStart[1]) + str(vStart[0])
-                if (vStart[0] and vEnd[0] and vStart[0] == vEnd[0]) \
-                    or mapped_mrnaAcc.mutationType == 'subst' :
-                    var_in_c += changeSuffix
-                else :
-                    var_in_c += "_" + str(vEnd[1]) + str(vEnd[0]) \
-                                + changeSuffix
-            else :
-                # reversed orientation
-                var_in_c = mrnaAcc + numbType + str(vEnd[1]) + str(vEnd[0])
-                if vStart[0] and vEnd[0] and vStart[0] == vEnd[0] \
-                or mapped_mrnaAcc.mutationType == 'subst' :
-                    var_in_c += changeSuffix
-                else :
-                    var_in_c += "_" + str(vStart[1]) + str(vStart[0]) \
-                                + changeSuffix
-            #if
-            del vStart, vEnd, info_mrnaAcc, mapped_mrnaAcc
-            
-            if HGVS_notations == '' :
-                HGVS_notations = var_in_c
-            else :
-                HGVS_notations += ";" + var_in_c
-        #for
-        return HGVS_notations
-
-        O.addMessage(__file__, -1, "INFO",
-                     "Finished processing gTocConversion(%s %s)" % (
-                     build, variant))
-        del O
-    #gTocConversion
 #MutalyzerService

@@ -291,7 +291,10 @@ class Mapping(Db) :
               WHERE acc = %s;
         """, mrnaAcc
 
-        return self.query(statement)[0][0]
+        ret = self.query(statement)
+        if ret :
+            return ret[0][0]
+        return None
     #get_GeneName
 
     def isChrom(self, name) :
@@ -340,7 +343,10 @@ class Mapping(Db) :
               WHERE AccNo = %s;
         """, accNo
 
-        return self.query(statement)[0][0]
+        ret = self.query(statement)
+        if ret :
+            return ret[0][0]
+        return None
     #chromName
 
     def chromAcc(self, name) :
@@ -363,8 +369,38 @@ class Mapping(Db) :
               WHERE name = %s;
         """, name
 
-        return self.query(statement)[0][0]
+        ret = self.query(statement)
+        if ret :
+            return ret[0][0]
+        return None
     #chromAcc
+
+    def get_chromName(self, acc) :
+        """
+            Get the chromosome name, given a transcript identifier (NM number).
+            
+            Arguments:
+                acc ; The NM accession number (version NOT included)
+
+            SQL tables from dbNames:
+                map ; .
+
+            Returns:
+                string  ; The chromosome name (e.g. chr1)
+            
+        """
+
+        statement = """
+            SELECT chrom
+              FROM map
+              WHERE acc = %s;
+        """, acc
+        print acc
+        ret = self.__query(statement)
+        if ret :
+            return ret[0][0]
+        return None
+    #get_chromName
 #Mapper    
 
 class Remote(Db) :

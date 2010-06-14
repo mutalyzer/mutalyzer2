@@ -20,6 +20,7 @@ import webservice
 
 from mod_python import apache
 
+from Modules import Mapper
 from Modules import Web
 from Modules import Config
 from Modules import Output
@@ -62,6 +63,152 @@ def index(req) :
     del W
     return ret
 #index
+
+from SOAPpy import WSDL
+
+def numberingConversion(req) :
+    """
+        The c. to g. notation or vice versa for the web interface
+        
+        Arguments:
+            req ; The request:
+                  req.form['build']    ; The human genome build.
+                  req.form['variant']  ; A description of the variant.
+
+        Returns:
+            string ; An HTML page containing the results of either cTog or gToc
+    """
+    W = Web.Web()
+    C = Config.Config() # Read the configuration file.
+    availBuilds = C.Db.dbNames  # available builds in config file
+    build = availBuilds[1] # default to the highest build
+    if req.form :
+        build = req.form['build']
+    # error if build not in available builds
+    if build not in availBuilds :
+        req.write("This build is not available.")
+        return None
+    D = Db.Db("local", build, C.Db)
+    L = Output.Output(__file__, C.Output)
+    
+    variant = ""
+    reply = ""
+    replyTranscripts = []
+    final = []
+    title = ""
+    title2 = ""
+        
+    if req.form.has_key('variant') :
+        variant = req.form['variant']
+        '''
+        if ">" in variant :
+            import re
+            matchstr = re.compile(r'.+([ATGC]>[ATGC])$')
+            if not matchstr.match(variant) :
+                reply = "Input does not match the pattern [ATGC]>[ATGC]"
+                args = {
+                    "version"     : W.version, 
+                    "build"       : build,
+                    "variant"     : variant,
+                    "conv_output" : reply
+                }
+            
+                ret = W.tal("HTML", "templates/convert.html", args)
+                del W
+                return ret
+        #if  
+        '''
+        if "c." in variant :
+            reply = Mapper.cTog(build, variant, C, D, L)
+            if not reply :
+                reply = "Nothing found, please check your input"
+            mrnaAcc = variant.split(':')[0]
+            accno = Mapper.mrnaSplit(mrnaAcc)[0]
+            chrom = D.get_chromName(accno)
+            chromacc = D.chromAcc(chrom)
+            reply = chromacc + ":" + reply
+            # to check for other transcripts
+            replyTranscripts = Mapper.gToc(build, reply, C, D, L)
+            for acc in replyTranscripts :
+                genesDict = {}
+                gene = D.get_GeneName(acc.split('.')[0])
+                if not gene :
+                    reply = "No gene found"
+#                    req.write("No gene found")
+#                    return None
+                genesDict['gene'] = gene
+                genesDict['mrnaAcc'] = acc
+                final.append(genesDict)
+            #for
+            title2 = "Chromosomal position: "
+            title = "Genes and transcripts found associated with this variant"\
+                    " (including the provided one):"
+        #if
+        if "g." in variant :
+            # check if build and NC_ accNo agree
+            if "NC_" in variant :
+                accNo = variant.split(':')[0] # the chromosome accession number
+                # get the chromosome name
+                chrom = D.chromName(accNo)
+                if not chrom :
+                    reply = "This chromosome accession number was not found in this build"
+                    args = {
+                        "version"     : W.version, 
+                        "build"       : build,
+                        "variant"     : variant,
+                        "conv_output" : reply
+                    }
+                
+                    ret = W.tal("HTML", "templates/convert.html", args)
+                    del W
+                    return ret
+            #if
+            if "chr" in variant :
+                # Get the chromosome accession number (NC)
+                mrnaAcc = D.chromAcc(variant.split(':')[0])
+                variant = mrnaAcc + ":" + variant.split(':')[1]
+            #if
+            replyTranscripts = Mapper.gToc(build, variant, C, D, L)
+            if not replyTranscripts :
+                reply = "Nothing found, please check your input"
+                args = {
+                    "version"     : W.version, 
+                    "build"       : build,
+                    "variant"     : variant,
+                    "conv_output" : reply
+                }
+            
+                ret = W.tal("HTML", "templates/convert.html", args)
+                del W
+                return ret
+            #if not
+            for acc in replyTranscripts :
+                genesDict = {}
+                gene = D.get_GeneName(acc.split('.')[0])
+                genesDict['gene'] = gene
+                genesDict['mrnaAcc'] = acc
+                final.append(genesDict)
+            #for
+            title = "Genes and transcripts found associated with this variant:"
+        #if
+    #if
+    # now sort the dictionary genesDict
+    final.sort()
+    # use the TAL template
+    args = {
+        "version"     : W.version, 
+        "build"       : build,
+        "variant"     : variant,
+        "conv_output" : reply,
+#        "trans_output": replyTranscripts,
+        "genes_output": final,
+        "title"       : title,
+        "title2"      : title2
+    }
+    ret = W.tal("HTML", "templates/convert.html", args)
+    del W
+    return ret
+#numberingConversion
 
 def Variant_info(req) :
     """

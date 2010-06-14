@@ -45,7 +45,7 @@ class Mapping(ClassSerializer) :
 
     class types() :
         """
-            Types are defined here for the TC module.
+            Types are defined here for the soaplib module.
         """
 
         startmain = Integer
@@ -59,7 +59,7 @@ class Mapping(ClassSerializer) :
 
     def __init__(self) :
         """
-            Types are defined here for the soaplib module.
+            Types are defined here for the TC module.
         """
 
         self.typecode = TC.Struct(Mapping, [ 
@@ -148,43 +148,56 @@ def __getcoords(C, Loc, Type) :
     return (main, offset, g)
 #__getcoords
 
-def __process(LOVD_ver, build, acc, var, Conf, O) :
+def mrnaSplit(mrnaAcc) :
+    """
+        Extract the NM accession number without version.
+        
+        Arguments:
+            mrnaAcc ; The NM accession number with version
+            
+        Returns:
+            tuple  ; The NM accession number without version.
+    """
+    accno = mrnaAcc
+    version = 0
+    if '.' in mrnaAcc :
+        accno = mrnaAcc.split('.')[0]
+        version = int(mrnaAcc.split('.')[1])
+    return (accno, version)
+#    return accno
+#mrnaSplit
+
+
+def makeCrossmap(build, acc, Conf) :
+    '''
+        Build the crossmapper
+
+        Arguments:
+            build   ; The human genome build
+            acc     ; The NM accession number, including version.
+
+        Returns:
+            Cross ; A Crossmap object.
+        
+        
+    '''
     # Make a connection to the MySQL database with the username / db
     #   information from the configuration file.
-    #Database = Db.Db("local", O) # Open the database.
-    Database = Db.Mapping(build, Conf.Db)
+    D = Db.Mapping(build, Conf.Db)
 
-    
     # Get the rest of the input variables.
-    accno = acc
-    version = 0
-    if '.' in acc :
-        accno = acc.split('.')[0]        # The NM accession number.
-        version = int(acc.split('.')[1]) # The version of the accession 
-                                         #   number.
+    accno = mrnaSplit(acc)[0]
+    version = mrnaSplit(acc)[1]
     
     # Check whether the NM version number is in the database.
-    db_version = Database.get_NM_version(accno)
+    db_version = D.get_NM_version(accno)
     if not db_version :
-        O.addMessage(__file__, 4, "EARG", "EARG %s" % accno)
-        raise Fault(Fault.Client, "EARG",
-            detail = "The accno argument %s was not a valid "\
-                     "NM accession number." % accno)
-        return
-    #if
+        return None
     if db_version != version :
-        O.addMessage(__file__, 4, "EARG",
-            "Reference sequence version not found. Available: %s.%i" % (
-            accno, db_version))
-        raise Fault(Fault.Client, "EARG",
-            detail = "The Reference sequence version (%s.%i) was not found. "\
-                     "Available: %s.%i" % (accno, version, accno, db_version))
-        return
-    #if
-
+        return None
     # Retrieve info on the NM accession number.
-    result = Database.get_NM_info(accno)
-    del Database
+    result = D.get_NM_info(accno)
+    del D
     
     exonStarts = __sl2il(result[0].split(',')[:-1]) # Get all the exon start 
                                                     # sites.
@@ -215,8 +228,11 @@ def __process(LOVD_ver, build, acc, var, Conf, O) :
     
     # Build the crossmapper.
     Cross = Crossmap.Crossmap(mRNA, CDS, orientation)
-    return Cross
-#__process
+    if not Cross :
+        return None
+    else :
+        return Cross
+#makeCrossmap
 
 def conversionToCoding(offset, main, trans_start, trans_stop, CDS_stop) :
     """
@@ -254,52 +270,17 @@ def conversionToCoding(offset, main, trans_start, trans_stop, CDS_stop) :
     return cOffset, cMain
 #conversionToCoding
 
-def mainMapping(LOVD_ver, build, acc, var, Conf, O) :
+def makeParsetree(O, Cross, var) :
     """
-        One of the entry points (called by the HTML publisher).
-            
+        Calculate the coordinates of a variant
         Arguments:
-            LOVD_ver ; The LOVD version (ignored for now).
-            build    ; The human genome build (ignored for now, hg19 assumed).
-            acc      ; The NM accession number and version.
-            var      ; The variant.
-    
+            Cross   ; results from Crossmapper
+            var     ; The variant
+            
         Returns:
-            start_main   ; The main coordinate of the start position in c. 
-                           (non-star) notation.
-            start_offset ; The offset coordinate of the start position in c. 
-                           notation (intronic position).
-            end_main     ; The main coordinate of the end position in c. 
-                           (non-star) notation.
-            end_offset   ; The offset coordinate of the end position in c. 
-                           notation (intronic position).
-            start_g      ; The g. notation of the start position.
-            end_g        ; The g. notation of the end position.
-            type         ; The mutation type.
-    
-        On error an exception is raised:
-            detail       ; Human readable description of the error.
-            faultstring: ; A code to indicate the type of error.
-                EARG   ; The argument was not valid.
-                ERANGE ; An invalid range was given.
+            V       ; A Mapping object
+            
     """
-    # If no variant is given, return an error
-
-    if not var :
-        O.addMessage(__file__, 4, "EARG", "Variant was not provided. ")
-        raise Fault(Fault.Client, "EARG", detail = "Variant was not provided. ")
-        return
-    #if
-    
-    #Conf = Config.Config() # Read the configuration file.
-    #O = Output.Output(__file__, Conf.Output)
-
-    #O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
-    #    acc, var, LOVD_ver, build))
-
-    # first get a result from __process
-    Cross = __process(LOVD_ver, build, acc, var, Conf, O)
-
     # Make a parsetree for the given variation.
     P = Parser.Nomenclatureparser(O)
     parsetree = P.parse("NM_0000:" + var) # This NM number is bogus.
@@ -333,68 +314,340 @@ def mainMapping(LOVD_ver, build, acc, var, Conf, O) :
         V.start_g = start_g
         V.end_g = end_g
         V.mutationType = parsetree.RawVar.MutationType
-        
-        
     #if
-    del Cross
-
-
-    #O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
-    #    acc, var, LOVD_ver, build))
-    #del O
-    #del Conf
     return V
-#main_Mapping       
+#makeParsetree
 
-def mainTranscript(LOVD_ver, build, acc, Conf, O) :
+
+def mainMapping(build, acc, var, C, O) :
     """
         One of the entry points (called by the HTML publisher).
             
         Arguments:
-            LOVD_ver ; The LOVD version (ignored for now).
-            build    ; The human genome build (ignored for now, hg19 assumed).
-            acc      ; The NM accession number and version.
-            var      ; The (empty) variant.
+            build   ; The human genome build.
+            acc     ; The NM accession number and version.
+            var     ; The variant.
+            C    ;
+            O       ;
     
         Returns:
-            trans_start  ; Transcription start in c. notation (number only).
-            trans_stop   ; Transcription stop in c. notation (number only).
-            CDS_stop     ; CDS stop in c. notation (number only).
+            V       ; ClassSerializer object with types startmain, startoffset,
+                      endmain, endoffset, start_g, end_g and mutation type
+    """
 
-        On error an exception is raised:
-            detail       ; Human readable description of the error.
-            faultstring: ; A code to indicate the type of error.
-                EARG   ; The argument was not valid.
-                ERANGE ; An invalid range was given.
+    Cross = makeCrossmap(build, acc, C)
+    if not Cross :
+        return
+
+    V = makeParsetree(O, Cross, var)
+    if not V :
+        return
+    del Cross
+
+    return V
+#main_Mapping       
+
+def mainTranscript(build, acc, C) :
+    """
+        One of the entry points (called by the HTML publisher).
+            
+        Arguments:
+            build   ; The human genome build.
+            acc     ; The NM accession number and version.
+            C       ; 
+    
+        Returns:
+            T       ; ClassSerializer object with the types trans_start,
+                      trans_stop and CDS_stop.
+
     """
 
 
-    #Conf = Config.Config() # Read the configuration file.
-    #O = Output.Output(Conf, __file__)
-
-    #O.LogMsg(__file__, "Received %s:%s (LOVD_ver %s, build %s)" % (
-    #    acc, '', LOVD_ver, build))
-
-    # first get a result from __process
-    Cross = __process(LOVD_ver, build, acc, '', Conf, O)
+    Cross = makeCrossmap(build, acc, C)
 
     # Initiate ClassSerializer object
     T = Transcript()
     # Return transcription start, transcription end and
     # CDS stop in c. notation.
     info = Cross.info()
+    del Cross
     # Assign these values to the Transcript T types.
     T.trans_start = info[0]
     T.trans_stop  = info[1]
     T.CDS_stop    = info[2]
 
-    #O.LogMsg(__file__, "Finished processing %s:%s (LOVD_ver %s, build %s)" % (
-    #    acc, '', LOVD_ver, build))
-    #del O
-    #del Conf
-
     return T
 #mainTranscript       
+
+def __extractChange(L, var) :
+    '''
+        Extracts the position and the mutation description (part behind
+        the positions) from a (complete) HGVS notation.
+
+        Arguments:
+            L   ; output object
+            var ; The variant in complete HGVS notation
+         
+        Returns:
+            tuple: position and the part behind the positions
+                in HGVS notation
+    '''
+        
+    P = Parser.Nomenclatureparser(L)
+    numVar = var
+    if 'X' in var :
+        numVar = var.replace('X', '11')
+    if 'Y' in var :
+        numVar = var.replace('Y', '11')
+    parsetree = P.parse(numVar)
+    del P
+    if not parsetree :
+        return
+    #if                         
+        
+    position = parsetree.RawVar.StartLoc.PtLoc.Main # Start position.
+    if parsetree.RawVar.Arg1 :
+        change = parsetree.RawVar.Arg1
+        if parsetree.RawVar.Arg2 :
+            change += '>' + parsetree.RawVar.Arg2
+    #if
+    else :
+        change = ''
+
+    if parsetree.RawVar.MutationType not in ('subst', 'del') :
+        changeSuffix = parsetree.RawVar.MutationType + change
+    else :
+        if parsetree.RawVar.MutationType == 'del' :
+            changeSuffix = parsetree.RawVar.MutationType
+        else :
+            changeSuffix = change
+    #else
+    del parsetree, change
+
+    return position, changeSuffix
+#__extractChange
+
+#def getCodingNotation(build, mrnaAcc, var, changeSuffix, C, D, L) :
+#    """
+#        Misschien overbodige method
+#    """
+#    accno = mrnaAcc
+#    if '.' in mrnaAcc :
+#        accno = mrnaAcc.split('.')[0] # The NM accession number.
+#
+#    # Retrieve info on the NM accession number.
+#    result = D.get_NM_info(accno)
+#    strand = result[4] # The orientation.
+#    del result
+#
+#    info_mrnaAcc = mainTranscript(build, mrnaAcc, C)
+#    mapped_mrnaAcc = mainMapping(build, mrnaAcc, var, C, L)
+#
+#    vStart = conversionToCoding(str(mapped_mrnaAcc.startoffset), 
+#                                  mapped_mrnaAcc.startmain, 
+#                                  info_mrnaAcc.trans_start, 
+#                                  info_mrnaAcc.trans_stop, 
+#                                  info_mrnaAcc.CDS_stop)
+#    # end position of the variant
+#    vEnd = conversionToCoding(str(mapped_mrnaAcc.endoffset), 
+#                                mapped_mrnaAcc.endmain, 
+#                                info_mrnaAcc.trans_start, 
+#                                info_mrnaAcc.trans_stop, 
+#                                info_mrnaAcc.CDS_stop)
+#
+#    # Use n. or c. numbering
+#    if info_mrnaAcc.trans_start == "1" and \
+#        info_mrnaAcc.trans_stop == info_mrnaAcc.CDS_stop :
+#        numbType = ":n."
+#    #if
+#    else :
+#        numbType = ":c."
+#    #else
+#
+#    if strand == '+' :
+#        var_in_c = mrnaAcc + numbType + str(vStart[1]) + str(vStart[0])
+#        if (vStart[0] == vEnd[0] and vStart[1] == vEnd[1]) \
+#            or mapped_mrnaAcc.mutationType == 'subst' :
+#            var_in_c += changeSuffix
+#        else :
+#            var_in_c += "_" + str(vEnd[1]) + str(vEnd[0]) \
+#                        + changeSuffix
+#    else :
+#        # reversed orientation
+#        var_in_c = mrnaAcc + numbType + str(vEnd[1]) + str(vEnd[0])
+#        if (vStart[0] == vEnd[0] and vStart[1] == vEnd[1]) \
+#        or mapped_mrnaAcc.mutationType == 'subst' :
+#            var_in_c += changeSuffix
+#        else :
+#            var_in_c += "_" + str(vStart[1]) + str(vStart[0]) \
+#                        + changeSuffix
+#    #if
+#    del vStart, vEnd, info_mrnaAcc, mapped_mrnaAcc
+#    return var_in_c
+#    
+##getCodingNotation    
+#def getGenomicNotation(build, mrnaAcc, var, changeSuffix, C, D, L) :
+#    """
+#        Misschien overbodige method
+#    """
+#    # you will have to deal with the orientation
+#    accno = mrnaAcc
+#    if '.' in mrnaAcc :
+#        accno = mrnaAcc.split('.')[0] # The NM accession number without version.
+#    mapped_mrnaAcc = mainMapping(build, mrnaAcc, var, C, L)
+#    if not mapped_mrnaAcc :
+#        return
+#    
+#    accInfo = D.get_NM_info(accno)
+#    if not accInfo :
+#        return
+#    strand = accInfo[4] # The orientation.
+#    
+#    if str(mapped_mrnaAcc.start_g) != str(mapped_mrnaAcc.end_g) :
+#        if strand == '+' :
+#            var_in_g = "g." + str(mapped_mrnaAcc.start_g) \
+#                    + "_" + str(mapped_mrnaAcc.end_g) + changeSuffix
+#        else :
+#            var_in_g = "g." + str(mapped_mrnaAcc.end_g) \
+#                    + "_" + str(mapped_mrnaAcc.start_g) + changeSuffix
+#    #if
+#    else :
+#        var_in_g = "g." + str(mapped_mrnaAcc.start_g) + changeSuffix
+#    #else
+#    return var_in_g
+##getGenomicNotation
+
+def cTog(build, var, C, D, L) :
+    """
+       Converts a complete HGVS c. notation into a g. notation
+
+       Arguments:
+           build    ; The human genome build.
+           var      ; The variant in HGVS c.notation.
+        
+       Returns:
+           var_in_g ; The variant in HGVS g. notation (string).
+        
+    """
+
+    mrnaAcc = var.split(':')[0] # the transcript (NM_..) accession number 
+    mut = var.split(':')[1]  # the mutiant
+
+    changeSuffix = __extractChange(L, var)[1]
+#    var_in_g = getGenomicNotation(build, mrnaAcc, var, changeSuffix, C, D, L)
+     
+    mapped_mrnaAcc = mainMapping(build, mrnaAcc, mut, C, L)
+    if not mapped_mrnaAcc :
+        return None
+        
+    # you will have to deal with the orientation
+    accno = mrnaSplit(mrnaAcc)[0]
+    accInfo = D.get_NM_info(accno)
+    del D
+    strand = accInfo[4] # The orientation.
+    
+    if str(mapped_mrnaAcc.start_g) != str(mapped_mrnaAcc.end_g) :
+        if strand == '+' :
+            var_in_g = "g." + str(mapped_mrnaAcc.start_g) \
+                    + "_" + str(mapped_mrnaAcc.end_g) + changeSuffix
+        else :
+            var_in_g = "g." + str(mapped_mrnaAcc.end_g) \
+                    + "_" + str(mapped_mrnaAcc.start_g) + changeSuffix
+    #if
+    else :
+        var_in_g = "g." + str(mapped_mrnaAcc.start_g) + changeSuffix
+    #else
+    
+    del changeSuffix, mapped_mrnaAcc
+    
+    return var_in_g
+#cTog
+
+
+def gToc(build, var, C, D, L) :
+    """
+        Conversion of (chromosomal) g. to c. numbering
+        
+        Arguments:
+            build   ; The human genome build
+            var     ; The (complete) variant in HGVS g. notation
+            
+        Returns:
+            list of variants in HGVS c. notation for all transcripts at that
+            position
+    """
+
+    mut = var.split(':')[1]  # the variant
+    accNo = var.split(':')[0] # the chromosomal accession number (NC_)
+    # get the chromosome name
+    chrom = D.chromName(accNo)
+
+    pos1 = __extractChange(L, var)[0]
+    changeSuffix = __extractChange(L, var)[1]
+    upPos = int(pos1) - 5000
+    downPos = int(pos1) + 5000
+
+    transcripts = D.get_Transcripts(chrom, upPos, downPos,1)
+    HGVS_notations = []
+
+    for mrnaAcc in transcripts:
+#        var_in_c = getCodingNotation(build, mrnaAcc, var, changeSuffix, C, D, L)
+        accno = mrnaSplit(mrnaAcc)[0]
+    
+        # Retrieve info on the NM accession number.
+        result = D.get_NM_info(accno)
+        strand = result[4] # The orientation.
+        del result
+    
+        info_mrnaAcc = mainTranscript(build, mrnaAcc, C)
+        mapped_mrnaAcc = mainMapping(build, mrnaAcc, mut, C, L)
+    
+        vStart = conversionToCoding(str(mapped_mrnaAcc.startoffset), 
+                                      mapped_mrnaAcc.startmain, 
+                                      info_mrnaAcc.trans_start, 
+                                      info_mrnaAcc.trans_stop, 
+                                      info_mrnaAcc.CDS_stop)
+        # end position of the variant
+        vEnd = conversionToCoding(str(mapped_mrnaAcc.endoffset), 
+                                    mapped_mrnaAcc.endmain, 
+                                    info_mrnaAcc.trans_start, 
+                                    info_mrnaAcc.trans_stop, 
+                                    info_mrnaAcc.CDS_stop)
+    
+        # Use n. or c. numbering
+        if info_mrnaAcc.trans_start == "1" and \
+            info_mrnaAcc.trans_stop == info_mrnaAcc.CDS_stop :
+            numbType = ":n."
+        #if
+        else :
+            numbType = ":c."
+        #else
+    
+        if strand == '+' :
+            var_in_c = mrnaAcc + numbType + str(vStart[1]) + str(vStart[0])
+            if (vStart[0] == vEnd[0] and vStart[1] == vEnd[1]) \
+                or mapped_mrnaAcc.mutationType == 'subst' :
+                var_in_c += changeSuffix
+            else :
+                var_in_c += "_" + str(vEnd[1]) + str(vEnd[0]) \
+                            + changeSuffix
+        else :
+            # reversed orientation
+            var_in_c = mrnaAcc + numbType + str(vEnd[1]) + str(vEnd[0])
+            if (vStart[0] == vEnd[0] and vStart[1] == vEnd[1]) \
+            or mapped_mrnaAcc.mutationType == 'subst' :
+                var_in_c += changeSuffix
+            else :
+                var_in_c += "_" + str(vStart[1]) + str(vStart[0]) \
+                            + changeSuffix
+        #if
+        del vStart, vEnd, info_mrnaAcc, mapped_mrnaAcc
+        HGVS_notations.append(var_in_c)
+
+    #for
+    return HGVS_notations
+#gToC
+
 
 #if __name__ == "__main__" :
 #    main_Mapping(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
