@@ -543,7 +543,7 @@ def cTog(build, var, C, D, L) :
     # you will have to deal with the orientation
     accno = mrnaSplit(mrnaAcc)[0]
     accInfo = D.get_NM_info(accno)
-    del D
+    #del D
     strand = accInfo[4] # The orientation.
     
     if str(mapped_mrnaAcc.start_g) != str(mapped_mrnaAcc.end_g) :

@@ -88,6 +88,8 @@ class Locus(object) :
         self.proteinID = None
         self.molType = 'c'
         self.description = ""
+        self.proteinDescription = "?"
+        self.locusTag = None
     #__init__
 
     def addToDescription(self, rawVariant) :
@@ -127,6 +129,7 @@ class Gene(object) :
         self.name = name
         self.orientation = 1
         self.transcriptList = []
+        self.location = []
     #__init__
 
     def findLocus(self, name) :
@@ -175,20 +178,11 @@ class Record(object) :
         """
 
         self.geneList = []
-        self.mol_type = None
+        self.molType = ''
         self.organelle = None
         self.source = Gene(None)
+        self.description = ""
     #__init__
-
-    def hasGene(self, name) :
-        """
-        """
-
-        for i in self.geneList :
-            if i.name == name :
-                return True
-        return False                
-    #hasGene
 
     def findGene(self, name) :
         """
@@ -199,6 +193,16 @@ class Record(object) :
                 return i
         return None
     #findGene
+
+    def addToDescription(self, rawVariant) :
+        """
+        """
+
+        if self.description :
+            self.description = "%s;%s" % (self.description, rawVariant)
+        else :
+            self.description = rawVariant
+    #addToDescription
 #Record
 
 class GenRecord() :
@@ -313,10 +317,17 @@ class GenRecord() :
         for i in  record.features :
             if i.qualifiers :
                 if i.type == "source" :
+                    if i.qualifiers.has_key("mol_type") :
+                        if i.qualifiers["mol_type"][0] == "mRNA" :
+                            self.record.molType = 'n'
+                        else :
+                            self.record.molType = 'g'
+                    #if
                     if i.qualifiers.has_key("organelle") :
                         self.record.organelle = i.qualifiers["organelle"][0]
-                    if i.qualifiers.has_key("mol_type") :
-                        self.record.mol_type = i.qualifiers["mol_type"][0]
+                        if self.record.organelle == "mitochondrion" :
+                            self.record.molType = 'm'
+                    #if
 
                     fakeGene = Locus("001")
                     self.record.source.transcriptList.append(fakeGene)
@@ -341,13 +352,16 @@ class GenRecord() :
     
                     # Look if there is a locus tag present, if not, give it the
                     # default tag `001'.
-                    locus_tag = "001"
+                    locusName = "001"
+                    locusTag = None
                     if i.qualifiers.has_key("locus_tag") :
-                        locus_tag = i.qualifiers["locus_tag"][0][-3:]
+                        locusTag = i.qualifiers["locus_tag"][0]
+                        locusName = locusTag[-3:]
+                    #if
 
-                    LocusInstance = GeneInstance.findLocus(locus_tag)
+                    LocusInstance = GeneInstance.findLocus(locusName)
                     if not LocusInstance :
-                        LocusInstance = Locus(locus_tag)
+                        LocusInstance = Locus(locusName)
                         GeneInstance.transcriptList.append(LocusInstance)
                     #if
     
@@ -361,7 +375,10 @@ class GenRecord() :
                                 self.__location2pos(i.location)
                             PListInstance.positionList = posList
                         #if
-
+                        if i.qualifiers.has_key("transcript_id") :
+                            LocusInstance.transcriptID = \
+                                i.qualifiers["transcript_id"][0]
+                        LocusInstance.locusTag = locusTag
                     #if
                     if i.type == "CDS" :
                         PListInstance = PList()
@@ -374,19 +391,23 @@ class GenRecord() :
                         if i.qualifiers.has_key("transl_table") :
                             LocusInstance.txTable = \
                                 int(i.qualifiers["transl_table"][0])
+                        if i.qualifiers.has_key("protein_id") :
+                            LocusInstance.proteinID = \
+                                i.qualifiers["protein_id"][0]
+                        LocusInstance.locusTag = locusTag
                     #if
                     if i.type == "exon" :
                         if not LocusInstance.exon :
-                            PListInstance = PList()
-                            LocusInstance.exon = PListInstance
-                        #if
-                        PListInstance.positionList.extend(
+                            LocusInstance.exon = PList()
+                        LocusInstance.exon.positionList.extend(
                             self.__location2pos(i.location))
                     #if
                 #if                            
             #if
         #for
+    #parseRecord
 
+    def checkRecord(self) :
         # Now we have gathered all information.
         for i in self.record.geneList :
             for j in i.transcriptList :
@@ -394,16 +415,15 @@ class GenRecord() :
                     if not j.exon:
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
-                            "variant %s in GenBank record %s, constructing " \
-                            "it from CDS." % (i.name, j.name, record.id))
+                            "variant %s in GenBank record, constructing " \
+                            "it from CDS." % (i.name, j.name))
                         if j.CDS :
                             if not j.CDS.positionList :
                                 self.__output.addMessage(__file__, 2, 
                                     "WNOCDSLIST", "No CDS list found for " \
                                     "gene %s, transcript variant %s in " \
-                                    "GenBank record %s, constructing it from " \
-                                    "CDS location." % (i.name, j.name,
-                                                       record.id))
+                                    "GenBank record, constructing it from " \
+                                    "CDS location." % (i.name, j.name))
                                 j.mRNA = j.CDS
                                 j.mRNA.positionList = j.CDS.location
                             #if
@@ -413,9 +433,9 @@ class GenRecord() :
                         else :
                             self.__output.addMessage(__file__, 2, "WNOCDS",
                                 "No CDS found for gene %s, transcript " \
-                                "variant %s in GenBank record %s, " \
+                                "variant %s in GenBank record, " \
                                 "constructing it from genelocation." % (
-                                i.name, j.name, record.id))
+                                i.name, j.name))
                             j.CDS = GenRecord.Locus()
                             j.CDS.location = j.location
                             j.mRNA = j.CDS
@@ -426,9 +446,9 @@ class GenRecord() :
                     else :
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
-                            "variant %s in GenBank record %s, constructing " \
+                            "variant %s in GenBank record, constructing " \
                             "it from gathered exon information." % (
-                            i.name, j.name, record.id))
+                            i.name, j.name))
                         j.mRNA = j.exon
                     #else
                 #if
@@ -438,9 +458,9 @@ class GenRecord() :
                     if not j.CDS.positionList :
                         self.__output.addMessage(__file__, 2, "WNOCDS",
                             "No CDS list found for gene %s, transcript " \
-                            "variant %s in GenBank record %s, constructing " \
+                            "variant %s in GenBank record, constructing " \
                             "it from mRNA list and CDS location." % (i.name, 
-                            j.name, record.id))
+                            j.name))
                         if j.mRNA.positionList :
                             j.CDS.positionList = self.__constructCDS(
                                 j.mRNA.positionList, j.CDS.location)
@@ -461,26 +481,65 @@ class GenRecord() :
                 #else                                                 
             #for
         #for
-    #parseRecord
+    #checkRecord
 
-    def name(self, start, stop, varType, arg1, arg2) :
+    def name(self, start_g, stop_g, varType, arg1, arg2, roll) :
         """
         """
+
+        forwardStart = start_g
+        forwardStop = stop_g
+        reverseStart = stop_g
+        reverseStop = start_g
+        if roll :
+            forwardStart += roll[1]
+            forwardStop += roll[1]
+            reverseStart -= roll[0]
+            reverseStop -= roll[0]
+        #if
+
+        if varType != "subst" :
+            if forwardStart != forwardStop :
+                self.record.addToDescription("%s_%s%s%s" % (forwardStart, 
+                    forwardStop, varType, arg1))
+            else :
+                self.record.addToDescription("%s%s%s" % (forwardStart, varType,
+                                                         arg1))
+        #if
+        else :
+            self.record.addToDescription("%s%c>%c" % (forwardStart, arg1, arg2))
 
         for i in self.record.geneList :
             for j in i.transcriptList :
                 if j.CM :
+                    orientedStart = forwardStart
+                    orientedStop = forwardStop
+                    if i.orientation == -1 :
+                        orientedStart = reverseStart
+                        orientedStop = reverseStop
+                    #if
+
+                    # Check whether the variant hits CDS start.
+                    if j.molType == 'c' and forwardStop >= j.CM.x2g(1, 0) \
+                       and forwardStart <= j.CM.x2g(3, 0) :
+                        self.__output.addMessage(__file__, 2, "WSTART", 
+                            "Mutation in start codon of gene %s transcript " \
+                            "%s." % (i.name, j.name))
+
+                    # FIXME Check whether the variant hits a splice site.
+
                     if varType != "subst" :
-                        if start != stop :
-                            j.addToDescription("%s_%s%s%s" % (j.CM.g2c(start), 
-                                j.CM.g2c(stop), varType, 
-                                self.__maybeInvert(i, arg1)))
-                        else :
-                            j.addToDescription("%s%s%s" % (j.CM.g2c(start), 
+                        if orientedStart != orientedStop :
+                            j.addToDescription("%s_%s%s%s" % (
+                                j.CM.g2c(orientedStart), j.CM.g2c(orientedStop),
                                 varType, self.__maybeInvert(i, arg1)))
+                        else :
+                            j.addToDescription("%s%s%s" % (
+                                j.CM.g2c(orientedStart), varType, 
+                                self.__maybeInvert(i, arg1)))
                     #if
                     else :
-                        j.addToDescription("%s%c>%c" % (j.CM.g2c(start), 
+                        j.addToDescription("%s%c>%c" % (j.CM.g2c(orientedStart),
                             self.__maybeInvert(i, arg1), 
                             self.__maybeInvert(i, arg2)))
                 #if

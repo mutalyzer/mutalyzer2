@@ -10,6 +10,9 @@ This program depends on the following packages:
 - python-soaplib   >= 0.8.1-2
 - python-soappy    >= 0.12.0-2
 - python-soaplib   >= 0.8.1
+- python-magic     >= 5.04-2
+- python-psutil    >= 0.1.3-1
+- python-xlrd      >= 0.6.1-2
 
 The web interface depends on the following packages:
 - apache2               >= 2.2.11

@@ -50,9 +50,10 @@ class Nomenclatureparser() :
     Nt = Word("acgturykmswbdhvnACGTU", exact = 1)
 
     # New:
-    NtString = Combine(OneOrMore(Nt));
+    NtString = Combine(OneOrMore(Nt))
 
     # Number -> [0-9]+
+    #Number = Combine(OneOrMore((nums)))
     Number = Word(nums)
 
     # RefSeqAcc  -> [A-Z][A-Z0-9_]+ (`.' [0-9]+)?
@@ -65,17 +66,28 @@ class Nomenclatureparser() :
     # Version    -> `.' Number
     # AccNo      -> ([a-Z] Number `_')+ Version? 
     # UD         -> `UD_' [a-Z]+ (`_' Number)+
-    # RefSeqAcc  -> (GI | AccNo | UD) (`(' GeneSymbol `)')?
     TransVar = Suppress("_v") + Number("TransVar")
     ProtIso = Suppress("_i") + Number("ProtIso")
     GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
                  Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
     GI = Suppress(Optional("GI") ^ Optional("GI:")) + Number("RefSeqAcc")
     Version = Suppress('.') + Number("Version")
-    AccNo = Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \
+    AccNo = NotAny("LRG") + \
+            Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \
             Optional(Version)
     UD = Combine("UD_" + Word(alphas) + OneOrMore('_' + Number))("RefSeqAcc")
-    RefSeqAcc = (GI ^ AccNo ^ UD) + Optional(GeneSymbol)
+
+    # LRGTranscriptID -> `t' [0-9]+
+    # LRGProteinID    -> `p' [0-9]+
+    # LRG             -> `LRG' [0-9]+ (`_' (LRGTranscriptID | LRGProteinID))?
+    LRGTranscriptID = Suppress('t') + Number("LRGTranscriptID")
+    LRGProteinID = Suppress('p') + Number("LRGProteinID")
+    LRG = Suppress("LRG") + Number("LrgAcc") + Optional(Suppress('_') + (
+          LRGTranscriptID ^ LRGProteinID))
+
+    # RefSeqAcc  -> (GI | AccNo | UD | LRG) (`(' GeneSymbol `)')?
+    GenBankRef = (GI ^ AccNo ^ UD) + Optional(GeneSymbol)
+    RefSeqAcc = GenBankRef ^ LRG
 
     # Chrom -> `1'..`22' | `X' | `Y'
     # Changed to:
@@ -329,7 +341,6 @@ class Nomenclatureparser() :
             # And log the position where the parsing error occurred.
             pos = int(str(err).split(':')[-1][:-1]) - 1
             self.__output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
-
             return None
         #except
     #parse
