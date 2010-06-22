@@ -673,7 +673,7 @@ def __ppp(MUU, record, parts, GenRecordInstance, refseq, depth, O) :
             O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
             return
         #if
-        orig = cds.translate(table = W.txTable, cds = True, to_stop = True)
+        orig = cds.translate(table = W.txTable, to_stop = True)
         O.addOutput("oldprotein", orig + '*')
         trans = cdsm.translate(table = W.txTable, to_stop = True)
 
@@ -712,17 +712,30 @@ def process(cmd, C, O) :
         else :
             RetrieveRecord = ParseObj.RefSeqAcc
         O.addOutput("reference", RetrieveRecord)
-        
+
         D = Db.Cache(C.Db)
         retriever = Retriever.Retriever(C.Retriever, O, D)
-        record = retriever.loadrecord(RetrieveRecord)
+        if ParseObj.LrgAcc:
+            filetype = "LRG"
+        else:
+            filetype = "GB"
+        record = retriever.loadrecord(RetrieveRecord, filetype)
         if not record :
             return
         del retriever
         del D
-        
+
         GenRecordInstance = GenRecord.GenRecord(C.GenRecord, O)
-        GenRecordInstance.parseRecord(record)
+
+        #FIXME: REMOVE Stealing thunder to test lrg file
+
+        if filetype == "LRG":
+            GenRecordInstance.record = record
+            #The GRI contains a few fields that it won't need
+            #del(GenRecordInstance.record.seq)
+            GenRecordInstance._populatePositionLists("LRG_ID")
+        else: #filetype == "GB"
+            GenRecordInstance.parseRecord(record)
 
         MUU = Mutator.Mutator(record.seq, C.Mutator, O)
         __ppp(MUU, record, ParseObj, GenRecordInstance, "",  0, O)
