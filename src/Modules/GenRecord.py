@@ -377,16 +377,17 @@ class GenRecord() :
                     #if
                     if i.type == "exon" :
                         if not LocusInstance.exon :
-                            PListInstance = PList()
-                            LocusInstance.exon = PListInstance
+                            LocusInstance.exon = PList()
                         #if
-                        PListInstance.positionList.extend(
+                        LocusInstance.exon.positionList.extend(
                             self.__location2pos(i.location))
                     #if
                 #if                            
             #if
         #for
+        self._populatePositionLists(record.id)
 
+    def _populatePositionLists(self, recID):
         # Now we have gathered all information.
         for i in self.record.geneList :
             for j in i.transcriptList :
@@ -395,7 +396,7 @@ class GenRecord() :
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
                             "variant %s in GenBank record %s, constructing " \
-                            "it from CDS." % (i.name, j.name, record.id))
+                            "it from CDS." % (i.name, j.name, recID))
                         if j.CDS :
                             if not j.CDS.positionList :
                                 self.__output.addMessage(__file__, 2, 
@@ -403,7 +404,7 @@ class GenRecord() :
                                     "gene %s, transcript variant %s in " \
                                     "GenBank record %s, constructing it from " \
                                     "CDS location." % (i.name, j.name,
-                                                       record.id))
+                                                       recID))
                                 j.mRNA = j.CDS
                                 j.mRNA.positionList = j.CDS.location
                             #if
@@ -415,7 +416,7 @@ class GenRecord() :
                                 "No CDS found for gene %s, transcript " \
                                 "variant %s in GenBank record %s, " \
                                 "constructing it from genelocation." % (
-                                i.name, j.name, record.id))
+                                i.name, j.name, recID))
                             j.CDS = GenRecord.Locus()
                             j.CDS.location = j.location
                             j.mRNA = j.CDS
@@ -428,7 +429,7 @@ class GenRecord() :
                             "No mRNA field found for gene %s, transcript " \
                             "variant %s in GenBank record %s, constructing " \
                             "it from gathered exon information." % (
-                            i.name, j.name, record.id))
+                            i.name, j.name, recID))
                         j.mRNA = j.exon
                     #else
                 #if
@@ -440,7 +441,7 @@ class GenRecord() :
                             "No CDS list found for gene %s, transcript " \
                             "variant %s in GenBank record %s, constructing " \
                             "it from mRNA list and CDS location." % (i.name, 
-                            j.name, record.id))
+                            j.name, recID))
                         if j.mRNA.positionList :
                             j.CDS.positionList = self.__constructCDS(
                                 j.mRNA.positionList, j.CDS.location)
