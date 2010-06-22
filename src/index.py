@@ -88,7 +88,9 @@ def numberingConversion(req) :
     if build not in availBuilds :
         req.write("This build is not available.")
         return None
-    D = Db.Db("local", build, C.Db)
+    #D = Db.Db("local", build, C.Db)
+    D = Db.Mapping(build, C.Db)
+
     L = Output.Output(__file__, C.Output)
     
     variant = ""

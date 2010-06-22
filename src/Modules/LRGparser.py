@@ -35,7 +35,7 @@ def createLrgRecord(data):
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
             CDSPList.location = \
-            [int(CDS.getAttribute("start")), int(CDS.getAttribute("start"))]
+            [int(CDS.getAttribute("start")), int(CDS.getAttribute("end"))]
 
         transcription.exon = exonPList
         transcription.CDS = CDSPList

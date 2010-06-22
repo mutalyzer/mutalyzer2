@@ -396,7 +396,7 @@ class Mapping(Db) :
               WHERE acc = %s;
         """, acc
         print acc
-        ret = self.__query(statement)
+        ret = self.query(statement)
         if ret :
             return ret[0][0]
         return None

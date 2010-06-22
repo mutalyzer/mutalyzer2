@@ -33,7 +33,7 @@ print "\n"
 print o.transcriptInfo(LOVD_ver = "123", build = "hg19", accNo = "NM_002001.2")
 
 print "\n"
-print o.cTogConversion(build = "hg19", variant = "NM_002001.2:c.1del")
+print o.numberConversion(build = "hg19", variant = "NM_002001.2:c.1del")
 
 m = o.transcriptInfo(LOVD_ver = "123", build = "hg19", accNo = "NM_002001.2")
 print m.CDS_stop

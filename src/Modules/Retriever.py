@@ -282,7 +282,7 @@ class Retriever() :
     def __lrgFetch(self, name):
         try:
             ftpdata = []            #placeholder for the FTP binary retrieve
-            ftp = ftplib.FTP("ftp.ebi.ac.uk", timeout=10)
+            ftp = ftplib.FTP("ftp.ebi.ac.uk")
             ftp.login()
             ftp.cwd("pub/databases/lrgex")
             ftp.retrbinary("RETR %s.xml" % name, ftpdata.append)

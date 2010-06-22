@@ -23,70 +23,38 @@ from Modules import Mutator
 from Modules import Output
 from Modules import Config
 
-class newMut() :
-    def __init__(self) :
-        self.c = ""
-        self.g = ""
-    #__init__
-#newMut
+#def __order(a, b) :
+#    """
+#    """
+#
+#    if a < b :
+#        return a, b
+#    return b, a
+##__order
 
-def __order(a, b) :
-    if a < b :
-        return a, b
-    return b, a
-#__order
-
-def __roll(string, start, stop, orientation) :
+def __roll(ref, start, stop) :
     """
     """
 
-    pattern = string[start:stop]
-    if orientation == 1 :
-        i = stop - 1
-
-        while i < len(string) and string[i] == pattern[-1] :
-            pattern = pattern[1:] + pattern[0]
-            i += 1
-        #while
-
-        return i - len(pattern) + 1
-    #if
-    else :
-        i = start
-
-        while i > -1 and string[i] == pattern[0] :
-            pattern = pattern[-1] + pattern[:-1]
-            i -= 1
-        #while
-
-        return i + 2
-    #else
-#__roll
-
-def roll2(ref, start, stop) :
-    """
-    """
-
-    pattern = ref[start:stop]
+    pattern = ref[start - 1:stop]
     patternLength = len(pattern)
 
-    g_min = start - 1
+    minimum = start - 2
     j = patternLength - 1
-    while g_min > -1 and ref[g_min] == pattern[j % patternLength] :
+    while minimum > -1 and ref[minimum] == pattern[j % patternLength] :
         j -= 1
-        g_min -= 1
+        minimum -= 1
     #while 
-    g_min += 1
 
-    g_max = stop
+    maximum = stop
     j = 0
-    while g_max < len(ref) and ref[g_max] == pattern[j % patternLength] :
+    while maximum < len(ref) and ref[maximum] == pattern[j % patternLength] :
         j += 1
-        g_max += 1
+        maximum += 1
     #while 
 
-    return g_min, g_max - patternLength
-#roll2
+    return start - minimum - 2, maximum - stop
+#__roll
 
 def __palinsnoop(string) :
     """
@@ -200,7 +168,7 @@ def __nsplice(string, splice_sites, CDS, orientation) :
     return transcript
 #__nsplice
 
-def __checkOptArg(ref, p1, p2, arg, M, O) :
+def __checkOptArg(ref, p1, p2, arg, O) :
     """
     """
 
@@ -219,8 +187,8 @@ def __checkOptArg(ref, p1, p2, arg, M, O) :
             ref_slice = str(ref[p1 - 1:p2])
             if ref_slice != str(arg) : # FIXME more informative.
                 O.addMessage(__file__, 3, "EREF", 
-                    "%s not found at position c.%s (g.%i), found %s instead." \
-                    % (arg, M.g2c(p1), p1, ref_slice))
+                    "%s not found at position %i_%i, found %s instead." % (
+                    arg, p1, p2, ref_slice))
                 return False
             #if
         #else
@@ -302,7 +270,7 @@ def findInFrameDescription(str1, str2) :
     # Deletion.
     if not str2_end - lcp :
         if lcp + 1 == str1_end :
-            return "p.(%s%idel)" % (seq3(str1[lcp], lcp + 1))
+            return "p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1)
         return "p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1, 
                                      seq3(str1[str1_end - 1]), str1_end)
     #if
@@ -345,12 +313,21 @@ def __toProtDescr(CDSStop, orig, trans) :
     return findInFrameDescription(str(orig), str(trans))
 #__toProtDescr
 
-def __trim(string, lcp, lcs) :
+#def __trim(string, lcp, lcs) :
+#    """
+#    """
+#
+#    return string[lcp:len(string) - lcs]
+##__trim
+
+def __trim2(str1, str2) :
     """
     """
 
-    return string[lcp:len(string) - lcs]
-#__trim
+    lcp = __lcp(str1, str2)
+    lcs = __lcs(str1[lcp:], str2[lcp:])
+    return str1[lcp:len(str1) - lcs], str2[lcp:len(str2) - lcs], lcp, lcs
+#__trim2
 
 def __rangeToC(M, g1, g2) :
     """
@@ -361,300 +338,236 @@ def __rangeToC(M, g1, g2) :
     return M.g2c(g1), M.g2c(g2)
 #__rangeToC
 
-def __maybeInvert(M, string) :
+def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, record, O) :
     """
     """
 
-    if M.orientation == -1 :
-        return Bio.Seq.reverse_complement(string)
-    return string
-#__maybeInvert
-
-def __searchFrameShift(orig, mutated) :
-    pass
-#__searchFrameShift
-
-def __rv(MUU, record, RawVar, GenRecordInstance, RefType, O, NM) :
-    """
-    """
-
-    for i in GenRecordInstance.record.geneList :
-        for j in i.transcriptList :
-            M = j.CM
-            if j.CM :
-                start_main = j.CM.main2int(RawVar.StartLoc.PtLoc.MainSgn + 
-                                        RawVar.StartLoc.PtLoc.Main)
-                start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
-                end_main = start_main
-                end_offset = start_offset
-                if RawVar.EndLoc :
-                    end_main = j.CM.main2int(RawVar.EndLoc.PtLoc.MainSgn + 
-                                          RawVar.EndLoc.PtLoc.Main)
-                    end_offset = __PtLoc2offset(RawVar.EndLoc.PtLoc)
-                #if
-                
-                start_g = int(start_main)
-                end_g = int(end_main)
-
-                Arg1 = RawVar.Arg1
-                Arg2 = RawVar.Arg2
-                if RefType in ['c', 'n'] :
-                    start_g = j.CM.x2g(start_main, start_offset)
-                    end_g = j.CM.x2g(end_main, end_offset)
-                    if j.CM.orientation == -1 :
-                        Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
-                        Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
-                    #if
-                #if
-                
-                start_g, end_g = __order(start_g, end_g)
-
-                start_c, end_c = __rangeToC(M, start_g, end_g)
-                if start_c.isdigit() and 1 <= int(start_c) <= 3 or \
-                   end_c.isdigit() and 1 <= int(end_c) <= 3 :
-                    O.addMessage(__file__, 2, "WSTART", 
-                                 "Mutation in start codon.")
-
-                # start_offset has to be calculated (not accepted from the 
-                # parser)
-                start_t_m, start_t_o = j.CM.g2x(start_g)
-                t_s, t_e, c_s = j.CM.info()
-                if start_t_o == -1 or start_t_o == -2 :
-                    if start_t_m == t_s :
-                        O.addMessage(__file__, 2, "WTXSTART", 
-                            "Mutation hits transcription start.")
-                    else :
-                        O.addMessage(__file__, 2, "WSPLDON", 
-                            "Mutation hits a splice donor site.")
-                #if                            
-                if start_t_o == 1 or start_t_o == 2 :
-                    O.addMessage(__file__, 2, "WSPLACC", 
-                        "Mutation hits a splice acceptor site.")
-                
-                if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
-                    __checkOptArg(record.seq, start_g, end_g, Arg1, M, O)
-            #if                    
-        #for
-    #for
-
-    # Substitution.
-    if RawVar.MutationType == "subst" :
-        if RawVar.Arg1 == RawVar.Arg2 :
-            O.addMessage(__file__, 3, "ENOVAR", 
-                "No mutation given (%c>%c) at position c.%s (g.%i)." % (
-                RawVar.Arg1, RawVar.Arg1, M.g2c(start_g), start_g))
-
-        MUU.subM(start_g, Arg2)
-
-        GenRecordInstance.name(start_g, 0, "subst", record.seq[start_g - 1], 
-                               Arg2)
-        NM.g += str(start_g) + record.seq[start_g - 1] + '>' + Arg2
-    #if
+    if Arg1 == Arg2 :
+        O.addMessage(__file__, 3, "ENOVAR", 
+            "No mutation given (%c>%c) at position %i." % (
+            Arg1, Arg1, start_g))
+    MUU.subM(start_g, Arg2)
+    GenRecordInstance.name(start_g, start_g, "subst", record.seq[start_g - 1], 
+                           Arg2, None)
+#checkSubstitution
     
-    # Deletion / Duplication.
-    if RawVar.MutationType in ["del", "dup"] :
-        rollposstart = __roll(record.seq, start_g - 1, end_g,
-                              M.orientation)
-        if rollposstart != start_g :
-            rollposend = rollposstart + (end_g - start_g)
-            O.addMessage(__file__, 2, "WROLL", 
-                "Sequence %s at position c.%s (g.%i) was given, however, " \
-                "the HGVS notation prescribes that it should be %s at " \
-                "position c.%s (g.%i)." % (str(record.seq[start_g - 1:end_g]), 
-                M.g2c(start_g), start_g, 
-                str(record.seq[rollposstart - 1:rollposend]), 
-                M.g2c(rollposstart), rollposstart))
-            start_g = rollposstart
-            end_g = rollposend
-        #if
-        if RawVar.MutationType == "del" :
-            MUU.delM(start_g, end_g)
-        else :
-            MUU.dupM(start_g, end_g)
+def checkDeletionDuplication(start_g, end_g, mutationType, MUU, 
+                             GenRecordInstance, record, O) :
+    """
+    """
 
-        if start_g != end_g :
-            c1, c2 = __rangeToC(M, start_g, end_g)
-            cpos = c1 + '_' + c2
-            gpos = str(start_g) + '_' + str(end_g)
+    roll = __roll(record.seq, start_g, end_g)
+    if roll[1] :
+        newStart = start_g + roll[1]
+        newStop = end_g + roll[1]
+        O.addMessage(__file__, 2, "WROLL", 
+            "Sequence %s at position %i_%i was given, however, " \
+            "the HGVS notation prescribes that it should be %s at " \
+            "position %i_%i." % (str(record.seq[start_g - 1:end_g]), 
+            start_g, end_g, str(record.seq[newStart - 1:newStop]), 
+            newStart, newStop))
+    #if
+    if mutationType == "del" :
+        MUU.delM(start_g, end_g)
+    else :
+        MUU.dupM(start_g, end_g)
+    GenRecordInstance.name(start_g, end_g, mutationType, "", "", 
+                           roll)
+#checkDeletionDuplication
+    
+def checkInversion(start_g, end_g, MUU, GenRecordInstance, record, O) :
+    """
+    """
+
+    snoop = __palinsnoop(record.seq[start_g - 1:end_g])
+    if snoop :
+        if snoop == -1 :
+            O.addMessage(__file__, 2, "WNOCHANGE", 
+                "Sequence %s at position %i_%i is a palindrome " \
+                "(its own reverse complement)." % (
+                str(record.seq[start_g - 1:end_g]), start_g, end_g))
+            return
         #if
         else :
-            cpos = str(M.g2c(start_g))
-            gpos = str(start_g)
+            O.addMessage(__file__, 2, "WNOTMINIMAL", 
+                "Sequence %s at position %i_%i is a partial " \
+                "palindrome (the first %i nucleotide(s) are the reverse " \
+                "complement of the last one(s)), the HGVS notation " \
+                "prescribes that it should be %s at position %i_%i." % (
+                str(record.seq[start_g - 1:end_g]), 
+                start_g, end_g, snoop, 
+                str(record.seq[start_g + snoop - 1: end_g - snoop]),
+                start_g + snoop, end_g - snoop))
+            start_g += snoop
+            end_g -= snoop
         #else
-        GenRecordInstance.name(start_g, end_g, RawVar.MutationType, "", "")
-        NM.g += gpos + RawVar.MutationType
     #if
+    # FIXME if length == 1 -> substitution.
+    MUU.invM(start_g, end_g)
+    GenRecordInstance.name(start_g, end_g, "inv", "", "", None)
+#checkInversion
     
-    # Inversion.
+def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, record, O) :
+    """
+    """
+
+    if start_g + 1 != end_g :
+        O.addMessage(__file__, 3, "EINSRANGE", 
+            "%i and %i are not consecutive positions." % (start_g, end_g))
+    MUU.insM(start_g, Arg1)
+    insertionLength = len(Arg1)
+    newStart = MUU.shiftpos(start_g)
+    newStop = MUU.shiftpos(start_g) + insertionLength
+    roll = __roll(MUU.mutated, newStart + 1, newStop)
+    if roll[0] + roll[1] >= insertionLength :
+        O.addMessage(__file__, 2, "WINSDUP", 
+            "Insertion of %s at position %i_%i was given, " \
+            "however, the HGVS notation prescribes that it should be a " \
+            "duplication of %s at position %i_%i." % (
+            MUU.mutated[newStart:newStop], start_g, start_g + 1,
+            MUU.mutated[newStart:newStop], start_g + roll[1], 
+            start_g + roll[1] + insertionLength - 1))
+        end_g += roll[1] - 1
+        start_g = end_g - insertionLength + 1
+        GenRecordInstance.name(start_g, end_g, "dup", "", "", 
+                               (roll[0] + roll[1] - insertionLength, 0))
+    #if
+    else :
+        GenRecordInstance.name(start_g, start_g + 1, "ins", 
+            MUU.mutated[newStart + roll[1]:newStop + roll[1]] , "", 
+            roll)
+#checkInsertion
+
+def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
+    """
+    """
+
+    # First assume that the variant is given in g. notation.
+    start_g = int(RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main)
+    start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
+    end_g = start_g
+    end_offset = start_offset
+    if RawVar.EndLoc :
+        end_g = int(RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
+        end_offset = __PtLoc2offset(RawVar.EndLoc.PtLoc)
+    #if
+    Arg1 = RawVar.Arg1
+    Arg2 = RawVar.Arg2
+
+    
+    # If it is not, convert it to g. notation.
+    if transcript :
+        start_g = transcript.CM.x2g(start_g, start_offset)
+        end_g = transcript.CM.x2g(end_g, end_offset)
+        if transcript.CM.orientation == -1 :
+            Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
+            Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
+            start_g, end_g = end_g, start_g
+        #if
+    #if
+
+    if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
+        __checkOptArg(record.seq, start_g, end_g, Arg1, O)
+
+    if RawVar.MutationType == "subst" :
+        checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, record, 
+                          O)
+    if RawVar.MutationType in ["del", "dup"] :
+        checkDeletionDuplication(start_g, end_g, RawVar.MutationType, MUU, 
+                                 GenRecordInstance, record, O)
     if RawVar.MutationType == "inv" :
-        snoop = __palinsnoop(record.seq[start_g - 1:end_g])
-        if snoop :
-            if snoop == -1 :
-                O.addMessage(__file__, 2, "WNOCHANGE", 
-                    "Sequence %s at position c.%s (g.%i) is a palindrome " \
-                    "(its own reverse complement)." % (
-                    str(record.seq[start_g - 1:end_g]), 
-                    M.g2c(start_g), start_g))
-                return NM
-            else :
-                O.addMessage(__file__, 2, "WNOTMINIMAL", 
-                    "Sequence %s at position c.%s (g.%i) is a partial " \
-                    "palindrome (the first %i nucleotide(s) are the reverse " \
-                    "complement of the last one(s)), the HGVS notation " \
-                    "prescribes that it should be %s at position c.%s " \
-                    "(g.%i)." % (str(record.seq[start_g - 1:end_g]), 
-                    M.g2c(start_g), start_g, snoop, 
-                    str(record.seq[start_g + snoop - 1: end_g - snoop]),
-                    M.g2c(start_g + snoop), start_g + snoop))
-                start_g += snoop
-                end_g -= snoop
-        #if
-        MUU.invM(start_g, end_g)
-            
-        c1, c2 = __rangeToC(M, start_g, end_g)
-        #NM.c += c1 + '_' + c2 + "inv"
-        GenRecordInstance.name(start_g, end_g, "inv", "", "")
-        NM.g += str(start_g) + '_' + str(end_g) + "inv"
-    #if
-    
-    # Insertion.
+        checkInversion(start_g, end_g, MUU, GenRecordInstance, record, O)
     if RawVar.MutationType == "ins" :
-        if start_g + 1 != end_g :
-            O.addMessage(__file__, 3, "EINSRANGE", 
-                "c.%s (g.%i) and c.%s (g.%i) are not consecutive positions." \
-                % (M.g2c(start_g), start_g, M.g2c(end_g), end_g))
-    
-        MUU.insM(start_g, Arg1)
-    
-        way = M.orientation
-        l = len(Arg1)
-        rs1 = MUU.shiftpos(start_g)
-        re1 = MUU.shiftpos(start_g) + l
+        checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, record, O)
 
-        rs2 = __roll(MUU.mutated, rs1, re1, way) - 1
-
-        shiftlen = (((rs2 - rs1) * way) - l + 1) * way
-
-        c1 = rs2
-        c2 = rs2 + ((l - 1) * way)
-        c1, c2 = __order(c1, c2)
-        corr = 0
-        if rs1 != rs2 or \
-           str(MUU.mutated[c1:c2 + 1]) == str(MUU.mutated[c1-l:(c2-l)+1]) :
-            O.addMessage(__file__, 2, "WINSDUP", 
-                "Insertion of %s at position c.%s (g.%i) was given, " \
-                "however, the HGVS notation prescribes that it should be a " \
-                "duplication of %s at position c.%s (g.%i)." % (RawVar.Arg1, 
-                M.g2c(start_g), start_g, str(MUU.mutated[c1:c2 + 1]),
-                M.g2c(start_g + shiftlen), start_g + shiftlen))
-            start_g += shiftlen
-            end_g += shiftlen
-            corr = 1
-        #if
-
-        c1, c2 = __rangeToC(M, start_g, end_g)
-        if corr :
-            #NM.c += c1 + '_' + c2 + "dup"
-            GenRecordInstance.name(start_g, end_g, "dup", "", "")
-            NM.g += str(start_g) + '_' + str(end_g) + "dup"
-        else :
-            #NM.c += c1 + '_' + c2 + "ins" + RawVar.Arg1
-            GenRecordInstance.name(start_g, end_g, "ins", "", "")
-            NM.g += str(start_g) + '_' + str(end_g) + "ins" + Arg1
-    #if
 
     # DelIns.
     if RawVar.MutationType == "delins" :
-        Arg1 = RawVar.Arg1
-        if not RawVar.Arg1 :
+        if not Arg1 :
             Arg1 = MUU.orig[start_g - 1:end_g]
 
-        lcp =  __lcp(Arg1, RawVar.Arg2)
-        lcs =  __lcs(Arg1, RawVar.Arg2)
+        #lcp =  __lcp(Arg1, Arg2)
+        #lcs =  __lcs(Arg1, Arg2)
 
-        if str(Arg1) == str(RawVar.Arg2) :
+        if str(Arg1) == str(Arg2) :
             O.addMessage(__file__, 2, "WNOCHANGE", 
-                "Sequence %s at position c.%s (g.%i) is identical to the " \
+                "Sequence %s at position %i_%i is identical to the " \
                 "variant." % (
                 str(record.seq[start_g - 1:end_g]), 
-                M.g2c(start_g), start_g))
-            return NM
-        ins_part = RawVar.Arg2
-        if lcp or lcs :
-            del_part = __trim(Arg1, lcp, lcs)
-            ins_part = __trim(RawVar.Arg2, lcp, lcs)
-            #O.addMessage(__file__, 2, "WNOTMINIMAL", 
-            #    "")
-
-        start_g += lcp
-        end_g -= lcs
-        MUU.delinsM(start_g, end_g, ins_part)
-
-        if start_g != end_g :
-            c1, c2 = __rangeToC(M, start_g, end_g)
-            cpos = c1 + '_' + c2
-            gpos = str(start_g) + '_' + str(end_g)
+                start_g, end_g))
+            return
         #if
-        else :
-            cpos = str(M.g2c(start_g))
-            gpos = str(start_g)
-        #else
-        #NM.c += cpos + "delins" + __maybeInvert(M, ins_part)
-        GenRecordInstance.name(start_g, end_g, "delins", ins_part, "")
-        NM.g += gpos + "delins" + ins_part
+        #ins_part = Arg2
+
+        #del_part = __trim(Arg1, lcp, lcs)
+        #ins_part = __trim(Arg2, lcp, lcs)
+        del_part, ins_part, lcp, lcs = __trim2(Arg1, Arg2)
+        if not len(del_part) :
+            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
+                         "is actually an insertion.")
+            checkInsertion(start_g + lcp - 1, start_g + lcp, ins_part, MUU,
+                           GenRecordInstance, record, O)
+            return                               
+        #if                
+        if len(del_part) == 1 and len(ins_part) == 1 :
+            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
+                         "is actually a substitution.")
+            checkSubstitution(start_g + lcp, del_part, ins_part, MUU, 
+                              GenRecordInstance, record, O)
+            return                                  
+        #if                
+        if not len(ins_part) :
+            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
+                         "is actually a deletion.")
+            checkDeletionDuplication(start_g + lcp, end_g - lcs, "del", 
+                                     MUU, GenRecordInstance, record, O)
+            return                                  
+        #if                
+        if str(Bio.Seq.reverse_complement(del_part)) == ins_part :
+            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
+                         "is actually an inversion.")
+            checkInversion(start_g + lcp, end_g - lcs, MUU,
+                           GenRecordInstance, record, O)
+            return                                  
+        #if                
+
+        MUU.delinsM(start_g + lcp, end_g - lcs, ins_part)
+
+        GenRecordInstance.name(start_g, end_g, "delins", ins_part, "", None)
     #if
-    
-    return NM
 #__rv
 
-def __ppp(MUU, record, parts, GenRecordInstance, refseq, depth, O) :
-    if parts.RefSeqAcc :
-        refseq = parts.RefSeqAcc
-
+def __ppp(MUU, record, parts, GenRecordInstance, O) :
     if parts.RawVar or parts.SingleAlleleVarSet :
-        NM = newMut()
-
-        print GenRecordInstance.record.mol_type
-        #if parts.RefType == 'n' :
-        #    #NM.c += "n."
-        #else :
-        #    #NM.c += "c."
-        if GenRecordInstance.record.organelle and \
-           GenRecordInstance.record.organelle == "mitochondrion" :
-            NM.g += "m."
-        else :
-            if GenRecordInstance.record.geneList :
-                NM.g += "g."
-            #else : # EST
-            #    NM.g += ""
-        #else   
-
-        GS = GenRecordInstance.record.geneList[0].name
-        if parts.SingleAlleleVarSet :
-            #NM.c += '['
-            NM.g += '['
-            for i in parts.SingleAlleleVarSet :
-                __rv(MUU, record, i.RawVar, GenRecordInstance, 
-                     parts.RefType, O, NM)
-                #NM.c += ';'
-                NM.g += ';'
-            #for
-            #NM.c = NM.c[0:-1] + ']'
-            NM.g = NM.g[0:-1] + ']'
+        if parts.RefType in ['c', 'n'] :
+            if parts.Gene :
+                if parts.Gene.GeneSymbol :
+                    GS = GenRecordInstance.record.findGene(
+                         parts.Gene.GeneSymbol)
+                else :
+                    GS = GenRecordInstance.record.geneList[0]
+                if parts.Gene.TransVar :
+                    W = GS.findLocus(parts.Gene.TransVar)
+                else :
+                    W = GS.transcriptList[0]
+            #if
+            else :
+                W = GenRecordInstance.record.geneList[0].transcriptList[0]
         #if
         else :
-            NM = __rv(MUU, record, parts.RawVar, GenRecordInstance, 
-                      parts.RefType, O, NM)
+            W = None
 
-        #O.addOutput("variantdescription", NM.c)
-        O.addOutput("variantdescription", NM.g)
-        del NM
+        if parts.SingleAlleleVarSet :
+            for i in parts.SingleAlleleVarSet :
+                __rv(MUU, record, i.RawVar, GenRecordInstance, 
+                     parts, O, W)
+        #if
+        else :
+            __rv(MUU, record, parts.RawVar, GenRecordInstance, parts, O, W)
 
-        W = GenRecordInstance.record.geneList[0].transcriptList[0]
-        if not W.CDS : # Noncoding.
+
+        if not W : # Genomic given.
             return
-        #if noTrans :
-        #    return
         if not GenRecordInstance.record.geneList : # EST
             return
 
@@ -668,6 +581,7 @@ def __ppp(MUU, record, parts, GenRecordInstance, refseq, depth, O) :
         if W.CM.orientation == -1 :
             cds = Bio.Seq.reverse_complement(cds)
             cdsm = Bio.Seq.reverse_complement(cdsm)
+        #if
 
         if '*' in cds.translate()[:-1] :
             O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
@@ -685,18 +599,19 @@ def __ppp(MUU, record, parts, GenRecordInstance, refseq, depth, O) :
                 O.addOutput("altstart", str(cdsm[0:3]))
                 O.addOutput("altprotein", 'M' + trans[1:] + '*')
             else :
-                __bprint('?')
                 O.addOutput("newprotein", '?')
         else :
             O.addOutput("newprotein", trans + '*')
 
-        if not parts.SingleAlleleVarSet :
-            O.addOutput("proteindescription", __toProtDescr(
-                W.CM.g2x(MUU.newSplice(W.CDS.location)[1])[0], orig, trans))
-        else :
-            O.addOutput("proteindescription", "p.?")
+        #if not parts.SingleAlleleVarSet :
+        #    #O.addOutput("proteindescription", "p.?")
+        #    # FIXME
+        #    O.addOutput("proteindescription", __toProtDescr(
+        #        W.CM.g2x(MUU.newSplice(W.CDS.location)[1])[0], orig, trans))
+        #else :
+        #    O.addOutput("proteindescription", "p.?")
             
-        del W.CM
+        #del W.CM
     #if                
 #__ppp
 
@@ -717,6 +632,8 @@ def process(cmd, C, O) :
         retriever = Retriever.Retriever(C.Retriever, O, D)
         if ParseObj.LrgAcc:
             filetype = "LRG"
+            RetrieveRecord = ParseObj.LrgAcc
+            print RetrieveRecord
         else:
             filetype = "GB"
         record = retriever.loadrecord(RetrieveRecord, filetype)
@@ -733,12 +650,52 @@ def process(cmd, C, O) :
             GenRecordInstance.record = record
             #The GRI contains a few fields that it won't need
             #del(GenRecordInstance.record.seq)
-            GenRecordInstance._populatePositionLists("LRG_ID")
+            GenRecordInstance.checkRecord()
         else: #filetype == "GB"
             GenRecordInstance.parseRecord(record)
 
         MUU = Mutator.Mutator(record.seq, C.Mutator, O)
-        __ppp(MUU, record, ParseObj, GenRecordInstance, "",  0, O)
+        __ppp(MUU, record, ParseObj, GenRecordInstance, O)
+
+        # PROTEIN
+        for i in GenRecordInstance.record.geneList :
+            for j in i.transcriptList :
+                if not ';' in j.description and j.CDS :
+                    print j.CDS.positionList
+                    print j.mRNA.positionList
+                    cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
+                              IUPAC.unambiguous_dna)
+                    cdsm = Seq(str(__nsplice(MUU.mutated, 
+                                             MUU.newSplice(j.mRNA.positionList), 
+                                             MUU.newSplice(j.CDS.location), 
+                                             j.CM.orientation)),
+                               IUPAC.unambiguous_dna)
+                    cdsStop = 1                               
+                    if j.CM.orientation == -1 :
+                        cds = Bio.Seq.reverse_complement(cds)
+                        cdsm = Bio.Seq.reverse_complement(cdsm)
+                        cdsStop = 0
+                    #if
+
+                    #if '*' in cds.translate()[:-1] :
+                    #    O.addMessage(__file__, 3, "ESTOP", 
+                    #                 "In frame stop codon found.")
+                    #    return
+                    ##if
+                    orig = cds.translate(table = j.txTable, cds = True, 
+                                         to_stop = True)
+                    #O.addOutput("oldprotein", orig + '*')
+                    trans = cdsm.translate(table = j.txTable, to_stop = True)
+
+                    #print i.name, j.name
+                    #print j.CDS.location
+                    j.proteinDescription = __toProtDescr(
+                        j.CM.g2x(MUU.newSplice(j.CDS.location)[cdsStop])[0], 
+                                 orig, trans)
+                    #print j.proteinDescription                                 
+
+        # /PROTEIN
+
         del MUU
         return GenRecordInstance
     #if
@@ -769,7 +726,8 @@ def main(cmd) :
     print summary
     print
 
-    if not errors :
+    #if not errors :
+    if not False :
         visualisation = O.getOutput("visualisation")
         if visualisation :
             for i in range(len(visualisation)) :
@@ -785,24 +743,29 @@ def main(cmd) :
         for i in RD.record.geneList :
             for j in i.transcriptList :
                 if ';' in j.description :
-                    print "%s(%s_%s):%c.[%s]" % (reference, i.name, j.name, 
-                                                 j.molType, j.description)
+                    print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name, 
+                                                  j.molType, j.description)
                 else :
-                    print "%s(%s_%s):%c.%s" % (reference, i.name, j.name, 
-                                               j.molType, j.description)
+                    print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name, 
+                                                j.molType, j.description)
+                    if (j.molType == 'c') :
+                        print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
+                                                 j.proteinDescription)
+            #for                                                
+        #if ';' in RD.record.description :
+        #    print "%s:%c.[%s]" % (reference, RD.record.molType, 
+        #                          RD.record.description)
+        #else :
+        #    print "%s:%c.%s" % (reference, RD.record.molType, 
+        #                        RD.record.description)
 
-        vd = O.getOutput("variantdescription")
-        if vd :
-            for i in vd :
-                print "%s:%s" % (reference, i)
-
-        pd = O.getOutput("proteindescription")
-        if pd :
-            if O.getOutput("altprotein") :
-                print "%s:p.(0)" % reference
-            else :
-                print "%s:%s" % (reference, pd[0])
-        #if
+        #pd = O.getOutput("proteindescription")
+        #if pd :
+        #    if O.getOutput("altprotein") :
+        #        print "%s:p.(0)" % reference
+        #    else :
+        #        print "%s:%s" % (reference, pd[0])
+        ##if
 
         op = O.getOutput("oldprotein")
         if op :
@@ -823,6 +786,15 @@ def main(cmd) :
             __bprint(ap[0])
             print
         #if
+
+        print
+        for i in RD.record.geneList :
+            for j in i.transcriptList :
+                print "%s_v%s = %s = %s" % (i.name, j.name, j.transcriptID,
+                                            j.locusTag)
+                print "%s_i%s = %s = %s" % (i.name, j.name, j.proteinID,
+                                                j.locusTag)
+            #for
     #if
     ### OUTPUT BLOCK ###
     del O
