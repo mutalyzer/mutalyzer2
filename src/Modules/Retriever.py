@@ -17,10 +17,13 @@ import bz2             # BZ2Compressor(), BZ2File()
 import hashlib         # md5(), update(), hexdigest()
 import urllib2         # urlopen()
 import StringIO        # StringIO()
+import ftplib          # FTP(), all_errors 
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 
 from Modules import Misc
+from Modules import LRGparser
+from xml.dom import DOMException
 
 class Retriever() :
     """
@@ -180,7 +183,8 @@ class Retriever() :
                         1 ; (id, GI)
                 
         """
-
+        #FIXME: Dirty way to test if a file is valid, first parse it with BioPython
+        #FIXME: If it fails check it with the LRG parser. If both fail log Error.
         # Parse the file to see if it's a real GenBank file.
         fakehandle = StringIO.StringIO() # Unfortunately, BioPython needs a
         fakehandle.write(raw_data)       # file handle.
@@ -189,11 +193,14 @@ class Retriever() :
             record = SeqIO.read(fakehandle, "genbank")
         except ValueError :              # An error occured while parsing.
             fakehandle.close()
-            self.__output.addMessage(__file__, 4, "ERECPARSE", 
-                                     "Could not parse file.")
-            return None
+            try:
+                LRGparser.createLrgRecord(raw_data)
+            except DOMException:
+                self.__output.addMessage(__file__, 4, "ERECPARSE",
+                                          "Could not parse file.")
+                return None             # If both fail return
         #except
-        
+
         outfile = filename
         GI = None
         if extract :
@@ -266,24 +273,43 @@ class Retriever() :
         else :                      # Something is present in the file.
             name, GI = self.__write(raw_data, name, 1)
             if name :               # Processing went okay.
-                currentmd5sum = self.__database.getHash(name)
-                if currentmd5sum :
-                    md5sum = self.__calcHash(raw_data)
-                    if md5sum != currentmd5sum :
-                        self.__output.addMessage(__file__, -1, "WHASH", 
-                            "Warning: Hash of %s changed from %s to %s." % (
-                            name, currentmd5sum, md5sum))
-                        self.__database.updateHash(name, md5sum)
-                    #if
-                else :
-                    self.__database.insertGB(name, GI, 
-                        self.__calcHash(raw_data), None, 0, 0, 0, None)
-                return self.__nametofile(name)
-            #if
+                return self.__updateDBmd5(raw_data, name, GI)
             else :                  # Parse error in the GenBank file.
                 return None
          #else
     #__eFetch                        
+
+    def __lrgFetch(self, name):
+        try:
+            ftpdata = []            #placeholder for the FTP binary retrieve
+            ftp = ftplib.FTP("ftp.ebi.ac.uk", timeout=10)
+            ftp.login()
+            ftp.cwd("pub/databases/lrgex")
+            ftp.retrbinary("RETR %s.xml" % name, ftpdata.append)
+            ftp.quit()
+        except ftplib.all_errors, e: #Catch all FTP related exceptions
+            self.__output.addMessage(__file__, 4, "ERETR",
+                                     "Could not retrieve %s." % name)
+            return None
+
+        rawdata = "".join(ftpdata)
+        self.__write(rawdata, name, 0)
+        return self.__updateDBmd5(rawdata, name, None)
+
+    def __updateDBmd5(self, raw_data, name, GI):
+        currentmd5sum = self.__database.getHash(name)
+        if currentmd5sum :
+            md5sum = self.__calcHash(raw_data)
+            if md5sum != currentmd5sum :
+                self.__output.addMessage(__file__, -1, "WHASH", 
+                    "Warning: Hash of %s changed from %s to %s." % (
+                    name, currentmd5sum, md5sum))
+                self.__database.updateHash(name, md5sum)
+            #if
+        else :
+            self.__database.insertGB(name, GI, 
+                self.__calcHash(raw_data), None, 0, 0, 0, None)
+        return self.__nametofile(name)
 
     def retrieveslice(self, accno, start, stop, orientation) :
         """
@@ -485,7 +511,7 @@ class Retriever() :
         self.__write(raw_data, UD, 0)
     #uploadrecord
     
-    def loadrecord(self, identifier) :
+    def loadrecord(self, identifier, filetype) :
         """
             Load a record and return it.
             If the identifier is a GI number, try to find its record ID in the
@@ -501,6 +527,7 @@ class Retriever() :
 
             Arguments:
                 identifier ; An accession number.
+                filetype   ; Type of file retrieved 
 
             Returns:
                 record ; A Genbank record.
@@ -516,7 +543,8 @@ class Retriever() :
 
         if not os.path.isfile(filename) :   # We can't find the file.
             md5 = self.__database.getHash(name)
-            if md5 :                        # We have seen it before though.
+            #escape in case of LRG file
+            if md5 and not(filetype=="LRG"):   # We have seen it before though.
                 Loc = self.__database.getLoc(name)  # Try to find the location.
                 if not Loc[0]:              # No location found.
                     url = self.__database.getUrl(name)   # Try to find an URL.
@@ -535,35 +563,45 @@ class Retriever() :
                     self.retrieveslice(*Loc)
             #if
             else :                          # Never seen this name before.
-                filename = self.__eFetch(name)
-                """
-                net_handle = Entrez.efetch(db = "nucleotide", id = name, 
-                                           rettype = "gb")
-                raw_data = net_handle.read()
-                net_handle.close()
-                
-                if raw_data == "\n" :       # Check if the file is empty or not.
-                    self.__output.addMessage(__file__, 4, "ERETR", 
-                        "Could not retrieve %s." % name)
-                    return None
-                #if
-                else :                      # Something is present in the file.
-                    name, GI = self.__write(raw_data, name, 1)
-                    if name :               # Processing went okay.
-                        self.__database.insertGB(name, GI, 
-                            self.__calcHash(raw_data), None, 0, 0, 0, None)
-                        filename = self.__nametofile(name)
-                    #if
-                    else :                  # Parse error in the GenBank file.
+                if filetype == "LRG":
+                    #get LRG file from ftp
+                    filename = self.__lrgFetch(name)
+                else:
+                    #default: get GB file
+                    filename = self.__eFetch(name)
+                    """
+                    net_handle = Entrez.efetch(db = "nucleotide", id = name, 
+                                               rettype = "gb")
+                    raw_data = net_handle.read()
+                    net_handle.close()
+                    
+                    if raw_data == "\n" :       # Check if the file is empty or not.
+                        self.__output.addMessage(__file__, 4, "ERETR", 
+                            "Could not retrieve %s." % name)
                         return None
-                #else
-                """
+                    #if
+                    else :                      # Something is present in the file.
+                        name, GI = self.__write(raw_data, name, 1)
+                        if name :               # Processing went okay.
+                            self.__database.insertGB(name, GI, 
+                                self.__calcHash(raw_data), None, 0, 0, 0, None)
+                            filename = self.__nametofile(name)
+                        #if
+                        else :                  # Parse error in the GenBank file.
+                            return None
+                    #else
+                    """
             #else
         #if
                 
         # Now we have the file, so we can parse it.
         file_handle = bz2.BZ2File(filename, "r")
-        record = SeqIO.read(file_handle, "genbank")
+        if filetype == "LRG":
+            #create Record from LRG file
+            record = LRGparser.createLrgRecord(file_handle.read())
+        else:
+            #default behaviour GB file
+            record = SeqIO.read(file_handle, "genbank")
         file_handle.close()
 
         return record
