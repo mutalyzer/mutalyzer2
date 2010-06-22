@@ -405,6 +405,7 @@ class GenRecord() :
                 #if                            
             #if
         #for
+        self.checkRecord()
     #parseRecord
 
     def checkRecord(self) :

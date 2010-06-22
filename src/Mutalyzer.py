@@ -587,7 +587,7 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
             O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
             return
         #if
-        orig = cds.translate(table = W.txTable, cds = True, to_stop = True)
+        orig = cds.translate(table = W.txTable, to_stop = True)
         O.addOutput("oldprotein", orig + '*')
         trans = cdsm.translate(table = W.txTable, to_stop = True)
 
@@ -627,18 +627,32 @@ def process(cmd, C, O) :
         else :
             RetrieveRecord = ParseObj.RefSeqAcc
         O.addOutput("reference", RetrieveRecord)
-        
+
         D = Db.Cache(C.Db)
         retriever = Retriever.Retriever(C.Retriever, O, D)
-        record = retriever.loadrecord(RetrieveRecord)
+        if ParseObj.LrgAcc:
+            filetype = "LRG"
+            RetrieveRecord = ParseObj.LrgAcc
+            print RetrieveRecord
+        else:
+            filetype = "GB"
+        record = retriever.loadrecord(RetrieveRecord, filetype)
         if not record :
             return
         del retriever
         del D
-        
+
         GenRecordInstance = GenRecord.GenRecord(C.GenRecord, O)
-        GenRecordInstance.parseRecord(record)
-        GenRecordInstance.checkRecord()
+
+        #FIXME: REMOVE Stealing thunder to test lrg file
+
+        if filetype == "LRG":
+            GenRecordInstance.record = record
+            #The GRI contains a few fields that it won't need
+            #del(GenRecordInstance.record.seq)
+            GenRecordInstance.checkRecord()
+        else: #filetype == "GB"
+            GenRecordInstance.parseRecord(record)
 
         MUU = Mutator.Mutator(record.seq, C.Mutator, O)
         __ppp(MUU, record, ParseObj, GenRecordInstance, O)
@@ -647,6 +661,8 @@ def process(cmd, C, O) :
         for i in GenRecordInstance.record.geneList :
             for j in i.transcriptList :
                 if not ';' in j.description and j.CDS :
+                    print j.CDS.positionList
+                    print j.mRNA.positionList
                     cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
                               IUPAC.unambiguous_dna)
                     cdsm = Seq(str(__nsplice(MUU.mutated, 
@@ -736,12 +752,12 @@ def main(cmd) :
                         print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
                                                  j.proteinDescription)
             #for                                                
-        if ';' in RD.record.description :
-            print "%s:%c.[%s]" % (reference, RD.record.molType, 
-                                  RD.record.description)
-        else :
-            print "%s:%c.%s" % (reference, RD.record.molType, 
-                                RD.record.description)
+        #if ';' in RD.record.description :
+        #    print "%s:%c.[%s]" % (reference, RD.record.molType, 
+        #                          RD.record.description)
+        #else :
+        #    print "%s:%c.%s" % (reference, RD.record.molType, 
+        #                        RD.record.description)
 
         #pd = O.getOutput("proteindescription")
         #if pd :

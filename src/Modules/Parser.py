@@ -72,7 +72,7 @@ class Nomenclatureparser() :
                  Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
     GI = Suppress(Optional("GI") ^ Optional("GI:")) + Number("RefSeqAcc")
     Version = Suppress('.') + Number("Version")
-    AccNo = NotAny("LRG") + \
+    AccNo = NotAny("LRG_") + \
             Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \
             Optional(Version)
     UD = Combine("UD_" + Word(alphas) + OneOrMore('_' + Number))("RefSeqAcc")
@@ -82,8 +82,8 @@ class Nomenclatureparser() :
     # LRG             -> `LRG' [0-9]+ (`_' (LRGTranscriptID | LRGProteinID))?
     LRGTranscriptID = Suppress('t') + Number("LRGTranscriptID")
     LRGProteinID = Suppress('p') + Number("LRGProteinID")
-    LRG = Suppress("LRG") + Number("LrgAcc") + Optional(Suppress('_') + (
-          LRGTranscriptID ^ LRGProteinID))
+    LRG = Combine("LRG_" + Number)("LrgAcc") + Optional(LRGTranscriptID ^ \
+                                                        LRGProteinID)
 
     # RefSeqAcc  -> (GI | AccNo | UD | LRG) (`(' GeneSymbol `)')?
     GenBankRef = (GI ^ AccNo ^ UD) + Optional(GeneSymbol)
