@@ -416,14 +416,14 @@ class GenRecord() :
                     if not j.exon:
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
-                            "variant %s in GenBank record, constructing " \
+                            "variant %s in record, constructing " \
                             "it from CDS." % (i.name, j.name))
                         if j.CDS :
                             if not j.CDS.positionList :
                                 self.__output.addMessage(__file__, 2, 
                                     "WNOCDSLIST", "No CDS list found for " \
                                     "gene %s, transcript variant %s in " \
-                                    "GenBank record, constructing it from " \
+                                    "record, constructing it from " \
                                     "CDS location." % (i.name, j.name))
                                 j.mRNA = j.CDS
                                 j.mRNA.positionList = j.CDS.location
@@ -434,7 +434,7 @@ class GenRecord() :
                         else :
                             self.__output.addMessage(__file__, 2, "WNOCDS",
                                 "No CDS found for gene %s, transcript " \
-                                "variant %s in GenBank record, " \
+                                "variant %s in record, " \
                                 "constructing it from genelocation." % (
                                 i.name, j.name))
                             j.CDS = GenRecord.Locus()
@@ -447,7 +447,7 @@ class GenRecord() :
                     else :
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
-                            "variant %s in GenBank record, constructing " \
+                            "variant %s in record, constructing " \
                             "it from gathered exon information." % (
                             i.name, j.name))
                         j.mRNA = j.exon
@@ -459,7 +459,7 @@ class GenRecord() :
                     if not j.CDS.positionList :
                         self.__output.addMessage(__file__, 2, "WNOCDS",
                             "No CDS list found for gene %s, transcript " \
-                            "variant %s in GenBank record, constructing " \
+                            "variant %s in record, constructing " \
                             "it from mRNA list and CDS location." % (i.name, 
                             j.name))
                         if j.mRNA.positionList :

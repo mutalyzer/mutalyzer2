@@ -37,7 +37,7 @@ def createLrgRecord(data):
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
             CDSPList.positionList.extend(\
-            [int(CDS.getAttribute("start")), int(CDS.getAttribute("end"))]
+            [int(CDS.getAttribute("start")), int(CDS.getAttribute("end"))])
 
         if CDSPList.positionList:
             transcription.molType = 'c'
