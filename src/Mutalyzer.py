@@ -23,6 +23,9 @@ from Modules import Mutator
 from Modules import Output
 from Modules import Config
 
+#TODO: SET TO FALSE DEBUG FLAG
+DEBUG = False
+
 #def __order(a, b) :
 #    """
 #    """
@@ -633,7 +636,6 @@ def process(cmd, C, O) :
         if ParseObj.LrgAcc:
             filetype = "LRG"
             RetrieveRecord = ParseObj.LrgAcc
-            print RetrieveRecord
         else:
             filetype = "GB"
         record = retriever.loadrecord(RetrieveRecord, filetype)
@@ -661,8 +663,6 @@ def process(cmd, C, O) :
         for i in GenRecordInstance.record.geneList :
             for j in i.transcriptList :
                 if not ';' in j.description and j.CDS :
-                    print j.CDS.positionList
-                    print j.mRNA.positionList
                     cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
                               IUPAC.unambiguous_dna)
                     cdsm = Seq(str(__nsplice(MUU.mutated, 
@@ -727,7 +727,7 @@ def main(cmd) :
     print
 
     #if not errors :
-    if not False :
+    if not errors or DEBUG:
         visualisation = O.getOutput("visualisation")
         if visualisation :
             for i in range(len(visualisation)) :

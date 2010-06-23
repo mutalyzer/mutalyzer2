@@ -11,7 +11,9 @@ def createLrgRecord(data):
     record = GenRecord.Record()
     data = xml.dom.minidom.parseString(data)
     fixed = data.getElementsByTagName("fixed_annotation")[0]
-    #record.mol_type = _getContent(data, "mol_type")
+
+    #LRG file should have dna as mol_type
+    assert(_getContent(fixed, "mol_type") == "dna")
     record.mol_type = 'g'
 
     genename = _getContent(data, "lrg_gene_name")
@@ -34,8 +36,16 @@ def createLrgRecord(data):
         #get CDS
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
-            CDSPList.location = \
+            CDSPList.positionList.extend(\
             [int(CDS.getAttribute("start")), int(CDS.getAttribute("end"))]
+
+        if CDSPList.positionList:
+            transcription.molType = 'c'
+            CDSPList.location = [CDSPList.positionList[0], CDSPList.positionList[-1]]
+            if len(CDSPList.positionList) == 2: # if only 1 CDS is found remove and
+                CDSPList.positionList = []      # construnct positionList from exons
+        else:
+            transcription.molType = 'n'
 
         transcription.exon = exonPList
         transcription.CDS = CDSPList

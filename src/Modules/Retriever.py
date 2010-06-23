@@ -280,11 +280,19 @@ class Retriever() :
     #__eFetch                        
 
     def __lrgFetch(self, name):
+        filename = "%s.xml" % name
         try:
             ftpdata = []            #placeholder for the FTP binary retrieve
             ftp = ftplib.FTP("ftp.ebi.ac.uk")
             ftp.login()
             ftp.cwd("pub/databases/lrgex")
+            if filename not in ftp.nlst():
+                ftp.cwd("pending")
+                if filename in ftp.nlst():
+                    self.__output.addMessage(__file__, 2, "WPEND",
+                    "Warning: LRG file %s is a pending entry." % name)
+                else:
+                    raise ftplib.Error("File not found")
             ftp.retrbinary("RETR %s.xml" % name, ftpdata.append)
             ftp.quit()
         except ftplib.all_errors, e: #Catch all FTP related exceptions
@@ -532,12 +540,11 @@ class Retriever() :
             Returns:
                 record ; A Genbank record.
         """
-
         if (identifier[0].isdigit()) : # This is a GI identifier.
             name = self.__database.getGBFromGI(identifier)
         else :
             name = identifier
-        
+
         # Make a filename based upon the identifier.
         filename = self.__nametofile(name)
 
@@ -569,31 +576,12 @@ class Retriever() :
                 else:
                     #default: get GB file
                     filename = self.__eFetch(name)
-                    """
-                    net_handle = Entrez.efetch(db = "nucleotide", id = name, 
-                                               rettype = "gb")
-                    raw_data = net_handle.read()
-                    net_handle.close()
-                    
-                    if raw_data == "\n" :       # Check if the file is empty or not.
-                        self.__output.addMessage(__file__, 4, "ERETR", 
-                            "Could not retrieve %s." % name)
-                        return None
-                    #if
-                    else :                      # Something is present in the file.
-                        name, GI = self.__write(raw_data, name, 1)
-                        if name :               # Processing went okay.
-                            self.__database.insertGB(name, GI, 
-                                self.__calcHash(raw_data), None, 0, 0, 0, None)
-                            filename = self.__nametofile(name)
-                        #if
-                        else :                  # Parse error in the GenBank file.
-                            return None
-                    #else
-                    """
             #else
         #if
-                
+
+        # TODO: If filename is None an error occured
+        if filename is None:
+            return None
         # Now we have the file, so we can parse it.
         file_handle = bz2.BZ2File(filename, "r")
         if filetype == "LRG":
