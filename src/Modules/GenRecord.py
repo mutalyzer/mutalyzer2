@@ -90,6 +90,8 @@ class Locus(object) :
         self.description = ""
         self.proteinDescription = "?"
         self.locusTag = None
+        self.transLongName = ""
+        self.protLongName = ""
     #__init__
 
     def addToDescription(self, rawVariant) :
@@ -130,6 +132,7 @@ class Gene(object) :
         self.orientation = 1
         self.transcriptList = []
         self.location = []
+        self.longName = ""
     #__init__
 
     def findLocus(self, name) :
@@ -155,7 +158,7 @@ class Record(object) :
             geneList  ; List of Gene objects.
             mol_type  ; Variable to indicate the sequence type (DNA, RNA, ...)
             organelle ; Variable to indicate whether the sequence is from the
-                        nucleus or from an onganelle (if so, also from which 
+                        nucleus or from an onganelle (if so, also from which
                         one).
             source    ; A fake gene that can be used when no gene information
                         is present.
@@ -168,8 +171,11 @@ class Record(object) :
 
             Public variables (altered):
                 geneList  ; List of Gene objects.
-                mol_type  ; Variable to indicate the sequence type (DNA, RNA, 
+                molType   ; Variable to indicate the sequence type (DNA, RNA,
                             ...)
+                seq       ; The reference sequence
+                mapping   ; The mapping of the reference sequence to the genome
+                            include a list of differences between the sequences
                 organelle ; Variable to indicate whether the sequence is from
                             the nucleus or from an onganelle (if so, also from
                             which one).
@@ -179,6 +185,8 @@ class Record(object) :
 
         self.geneList = []
         self.molType = ''
+        self.seq = ""
+        self.mapping = []
         self.organelle = None
         self.source = Gene(None)
         self.description = ""
@@ -409,7 +417,7 @@ class GenRecord() :
     #parseRecord
 
     def checkRecord(self) :
-        # Now we have gathered all information.
+        # Now we have gathered all information
         for i in self.record.geneList :
             for j in i.transcriptList :
                 if not j.mRNA :
@@ -420,7 +428,7 @@ class GenRecord() :
                             "it from CDS." % (i.name, j.name))
                         if j.CDS :
                             if not j.CDS.positionList :
-                                self.__output.addMessage(__file__, 2, 
+                                self.__output.addMessage(__file__, 2,
                                     "WNOCDSLIST", "No CDS list found for " \
                                     "gene %s, transcript variant %s in " \
                                     "record, constructing it from " \
