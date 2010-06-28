@@ -16,6 +16,9 @@ class TestRecordFromLRG(TestRecord):
         #self.record = LRGparser.createLrgRecord_new(data)
         self.record = LRGparser.createLrgRecord(data)
 
+    def test_moltype(self): #overwrite parent
+        self.assertEqual(self.record.molType, 'g')
+
     def test_mapping(self):
         mapp = self.record.mapping
         loc = mapp["chr_location"]
