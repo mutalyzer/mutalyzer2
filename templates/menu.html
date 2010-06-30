@@ -1,0 +1,462 @@
+<html>
+  <head>
+    <link rel="shortcut icon" 
+      href="base/images/favicon.ico" 
+      type="image/x-icon">
+    <link rel="stylesheet" 
+      type="text/css" 
+      href="base/css/style.css">
+    <script 
+      type="text/javascript" 
+      language="JavaScript" 
+      src="base/js/index.js">
+    </script>
+    <script 
+      type="text/javascript" 
+      language="javascript" 
+      src="base/js/menu.js">
+    </script>
+    <script 
+      type="text/javascript" 
+      language="javascript" 
+      src="interface.js">
+    </script>
+    <meta http-equiv="Content-Type" 
+      content="text/html; charset=iso-8859-1">
+    <title>Mutalyzer</title>
+  </head>
+  <body 
+    background="base/images/background.gif" 
+    leftmargin="0" 
+    topmargin="0" 
+    marginwidth="0" 
+    marginheight="0"
+    onload="initActive(); 
+            preloadImages('base/images/bullitlicht1.gif',
+                          'base/images/bullitlicht2.gif');
+            updateVisibility();"> 
+    <!-- Header -->
+    <a id="top"></a>
+    
+    <table width="98%" 
+      border="0" 
+      cellspacing="0" 
+      cellpadding="0">
+      <tr>
+        <!-- Corner logo -->
+        <td rowspan="2" 
+          valign="bottom" 
+          width="180">
+          <a href="/" 
+            target="_top"><img 
+              src="base/images/cubic4-17.gif" width="180" height="106" 
+              alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
+        <td valign="top" 
+          bgcolor="#FFFFFF" 
+          width="20"><img 
+            src="base/images/1x1b.gif" height="1" width="20" border="0">
+        </td>
+        <td align="left" 
+          valign="bottom" 
+          bgcolor="White" 
+          width="98%">
+          <!-- Banner -->
+          <center>
+            <a href="/"><img 
+                src="base/images/cubic4-17c.gif" 
+                width="90%" 
+                height="90" 
+                alt="Rauzy color fractal" 
+                border="0"></a>
+          </center>
+        </td>
+      </tr>
+  
+      <tr>
+        <td width="20">
+          <img src="base/images/1x1b.gif" 
+            height="1" 
+            width="20" 
+            border="0">
+        </td>
+        <td align="right" 
+          width="510">
+          <a href="/" 
+            class="hornav">home</a>&nbsp;&nbsp;&nbsp;
+          <a href="/contact.html" 
+            class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
+          <a href="/squirrelmail/" 
+            class="hornav">webmail</a>&nbsp;&nbsp;&nbsp;
+        </td>
+      </tr>
+  
+      <tr>
+        <td colspan="3" 
+          bgcolor="#000000"><img 
+            src="base/images/1x1b.gif" 
+            height="1" 
+            border="0"></td>
+      </tr>
+    </table>
+  
+    <table width="98%" 
+      border="0" 
+      cellspacing="0" 
+      cellpadding="0">
+    <tr>
+      <td width="180" valign="top">
+    
+      <!-- Menu -->
+      <table id="menu" width="180" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/1x1b.gif" height="19" border="0">
+        </td>
+      </tr>
+  
+      <!-- Home 
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_">
+        </td>
+        <td colspan="3">
+          <a id="page_" 
+            onClick="swapActive('');"
+            href="/" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                '');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 '');" 
+            class="vertnavsub">Home</a>
+        </td>
+      </tr>
+      -->
+    
+      <!-- Contact - ->
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_contact">
+        </td> 
+        <td colspan="3">
+          <a id="page_contact" 
+            onClick="swapActive('contact');" 
+            href="/#contact" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                'contact');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'contact');" 
+            class="vertnavsub">Contact</a>
+        </td>
+      </tr>  
+  -->
+    
+      <!-- Current Projects -->
+      <!--
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_projects">
+        </td>
+        <td colspan="3">
+          <a id="page_projects" 
+            onClick="swapActive('projects');" 
+            href="/#projects" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                'projects');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'projects');"
+            class="vertnavsub">Current Projects</a>
+        </td>
+      </tr>
+      <!- - Current Projects sub: SNP - ->
+      <tr style="display:none" id="projects_0">
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_projects_snp">
+        </td>
+        <td colspan="2">
+          <a id="page_projects_snp" 
+            onClick="swapActive('projects_snp');" 
+            href="/projects/snp/" 
+            onMouseover="navAct('base/images/bullitlicht2.gif', 
+                                'projects_snp');" 
+            onMouseout="navDeAct('base/images/bullitmiddel.gif', 
+                                 'projects_snp');" 
+            class="vertnavsub">SNP</a>
+        </td>
+      </tr>
+      -->
+    
+      <!-- Finished Projects -->
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_index">
+        </td>
+        <td colspan="3">
+          <a id="page_index" 
+            onclick="swapActive('index');" 
+            href="index" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'index');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'index');" 
+            class="vertnavsub">Home</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_nameCheck">
+        </td>
+        <td colspan="3">
+          <a id="page_nameCheck" 
+            onclick="swapActive('nameCheck');" 
+            href="check" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'nameCheck');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'nameCheck');" 
+            class="vertnavsub">Name checker</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_upload">
+        </td>
+        <td colspan="3">
+          <a id="page_upload" 
+            onclick="swapActive('upload');" 
+            href="upload" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'upload');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'upload');" 
+            class="vertnavsub">GenBank uploader</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_download">
+        </td>
+        <td colspan="3">
+          <a id="page_download" 
+            onclick="swapActive('download');" 
+            href="download" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'download');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'download');" 
+            class="vertnavsub">Download page</a>
+        </td>
+      </tr>
+      
+      <!-- Publications - ->
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_publications">
+        </td>
+        <td colspan="3">
+          <a id="page_publications" 
+            onClick="swapActive('publications');" 
+            href="/#publications" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                'publications');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'publications');" 
+            class="vertnavsub">Publications</a>
+        </td>
+      </tr>
+  -->
+    
+      <!-- Posters - ->
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_posters">
+        </td>
+        <td colspan="3">
+          <a id="page_posters" 
+            onClick="swapActive('posters');" 
+            href="/#posters" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                'posters');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'posters');" 
+            class="vertnavsub">Posters</a>
+        </td>
+      </tr>
+  -->
+    
+      <!-- Presentations - ->
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_presentations">
+        </td>
+        <td colspan="3">
+          <a id="page_presentations" 
+            onClick="swapActive('presentations');" 
+            href="/#presentations" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                'presentations');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'presentations');" 
+            class="vertnavsub">Presentations</a>
+        </td>
+      </tr>
+  -->
+      
+  <!-- # include virtual="/edu/menu.shtml"-->
+      
+      <!-- Links - ->
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_links">
+        </td>
+        <td colspan="3">
+          <a id="page_links" 
+            onClick="swapActive('links');" 
+            href="/#links" 
+            onMouseover="navAct('base/images/bullitlicht1.gif', 
+                                'links');" 
+            onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'links');" 
+            class="vertnavsub">Links</a>
+        </td>
+      </tr>
+  -->
+    
+  <!-- # include virtual="/studies/menu.shtml"-->
+    
+  <!-- # include virtual="/personal/menu.shtml"-->
+  
+      <!-- Search - ->
+      <tr>
+       <td valign="top" width="20">
+         <img src="base/images/bullitdonker.gif" id="b_search">
+       </td>
+       <td colspan="3">
+         <form action="base/cgi/gs.cgi">
+  <!- -
+           <a id="page_search" 
+             onClick="swapActive('search');" 
+             id="gs" 
+             onMouseover="navDeAct('base/images/bullitlicht1.gif', 
+                                    'search');" 
+             onMouseout="navDeAct('base/images/bullitdonker.gif', 
+                                   'search');"
+             class="vertnavsub">Search&#160;</a> 
+  - ->
+           <a id="page_search" 
+             href=""
+             class="vertnavsub">Search&#160;</a> 
+           <input 
+             type="text" 
+             value="" 
+             framewidth="0" 
+             name="q" 
+             style="width:100px" 
+             maxlength="256">
+         </form>
+       </td>
+      </tr>
+      -->
+  
+      <tr>
+        <td width="20"><img 
+          src="base/images/1x1b.gif" 
+          height="10" 
+          width="20" 
+          border="0">
+        </td>
+        <td width="12"><img 
+          src="base/images/1x1b.gif" 
+          height="10" 
+          width="10" 
+          border="0">
+        </td>
+        <td valign="top" width="12"><img 
+          src="base/images/1x1b.gif" 
+          height="10" 
+          width="10" 
+          border="0">
+        </td>
+        <td valign="top" width="136"><img 
+          src="base/images/1x1b.gif" 
+          height="10" 
+          width="136" 
+          border="0">
+        </td>
+      </tr>
+      </table>
+    
+    </td>
+    <td width="20"><img 
+      src="base/images/1x1b.gif" 
+      height="1" 
+      width="20" 
+      border="0">
+    </td>
+    <td width="98%" valign="top"><br>
+    
+    <!-- Content -->
+    
+    <table cellpadding="0" cellspacing="0" width="100%" border="0">
+    <tbody onMouseover="resetAll();"><tr>
+    <td width="0"></td>
+    <td width="0">
+  
+  
+    <big><big><center>Mutalyzer</center></big></big><br>
+    <p>
+  
+    <div metal:use-macro = "sitemacros/macros/content"></div>
+  
+      <!-- Navigation bar -->
+      <table border="0" 
+        cellspacing="0" 
+        cellpadding="0" 
+          width="100%" 
+        align="center">
+      <tr>
+        <td colspan="2"><img 
+          src="base/images/1x1b.gif" 
+          width="1" 
+          height="20"  
+          border="0">
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#000000" colspan="2"><img 
+          src="base/images/1x1b.gif" 
+          width="100%" 
+          height="1" 
+          border="0"></td>
+      </tr>
+      <tr>
+        <td align="left">
+          <a href="javascript:history.back(-1);" class="hornav">previous page</a>
+        </td>
+        <td align="right"><a href="#top" class="hornav">go to top</a>
+        </td>
+      </tr>
+      <tr>
+  <!--
+        <td colspan="2" 
+          align="center">Last edited by:  with /usr/bin/vim
+        </td>
+  -->
+      </tr>
+      <tr>
+        <td colspan="2"><img 
+          src="base/images/1x1b.gif" 
+          width="1" 
+          height="10" 
+          border="0">
+        </td>
+      </tr>
+      </table>
+    </td>
+  </tr>
+  </table>
+  </body>
+</html>

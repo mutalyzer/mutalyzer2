@@ -65,7 +65,7 @@ def handler(req):
     # Return raw content (for includes from an HTML file).
     if ".js" in req.uri or "base" in req.uri :
         req.content_type = 'text/html'
-        req.write(W.read("../templates/", req))
+        req.write(W.read("templates/", req))
         return apache.OK
     #if
 
@@ -76,7 +76,7 @@ def handler(req):
         req.headers_out["Content-Disposition"] = \
             "attachment; filename = \"%s\"" % reqFile # To force downloading.
         args = {"path" : reqPath}                     # Replace the path.
-        req.write(W.tal("HTML", "templates/" + reqFile, args))
+        req.write(W.tal("TEXT", "templates/" + reqFile, args))
         return apache.OK
     #if
 

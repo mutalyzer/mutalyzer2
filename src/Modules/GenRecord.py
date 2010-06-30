@@ -89,6 +89,7 @@ class Locus(object) :
         self.molType = 'c'
         self.description = ""
         self.proteinDescription = "?"
+        self.proteinRange = []
         self.locusTag = None
     #__init__
 
@@ -137,10 +138,20 @@ class Gene(object) :
         """
 
         for i in self.transcriptList :
-            if i.name == name :
+            if i.name == name or i.name == str("%03i" % int(name)):
                 return i
         return None
     #findLocus
+
+    def listLoci(self) :
+        """
+        """
+
+        ret = []
+        for i in self.transcriptList :
+            ret.append(i.name)
+        return ret
+    #listLoci
 #Gene
 
 class Record(object) :
@@ -178,7 +189,7 @@ class Record(object) :
         """
 
         self.geneList = []
-        self.molType = ''
+        self.molType = 'g'
         self.organelle = None
         self.source = Gene(None)
         self.description = ""
@@ -193,6 +204,16 @@ class Record(object) :
                 return i
         return None
     #findGene
+
+    def listGenes(self) :
+        """
+        """
+
+        ret = []
+        for i in self.geneList :
+            ret.append(i.name)
+        return ret
+    #listGenes
 
     def addToDescription(self, rawVariant) :
         """
@@ -240,6 +261,11 @@ class GenRecord() :
 
         ret = []
     
+        if not str(location.start).isdigit() or \
+           not str(location.end).isdigit() :
+            return None
+        #if
+
         ret.append(location.start.position + 1)
         ret.append(location.end.position)
     
@@ -260,6 +286,10 @@ class GenRecord() :
 
         ret = []
     
+        if not str(locationList.location.start).isdigit() or \
+           not str(locationList.location.end).isdigit() :
+            return None
+        #if
         for i in locationList.sub_features :
             if i.ref : # This is a workaround for a bug in BioPython.
                 ret = None
@@ -314,6 +344,23 @@ class GenRecord() :
         """
 
         self.record = Record()
+
+        mRNAProducts = []
+        CDSProducts = []
+        for i in record.features :
+            if i.qualifiers :
+                if i.qualifiers.has_key("gene") :
+                    if i.type == "mRNA" :
+                        if i.qualifiers.has_key("product") :
+                            mRNAProducts.append(i.qualifiers["product"][0])
+                    if i.type == "CDS" :
+                        if i.qualifiers.has_key("product") :
+                            CDSProducts.append(i.qualifiers["product"][0])
+                #if
+        print mRNAProducts                
+        print CDSProducts                
+        
+                        
         for i in  record.features :
             if i.qualifiers :
                 if i.type == "source" :
@@ -366,6 +413,8 @@ class GenRecord() :
                     #if
     
                     if i.type == "mRNA" :
+                        #if i.qualifiers.has_key("product") :
+                        #    print i.qualifiers["product"]
                         PListInstance = PList()
                         LocusInstance.mRNA = PListInstance
 
@@ -381,6 +430,8 @@ class GenRecord() :
                         LocusInstance.locusTag = locusTag
                     #if
                     if i.type == "CDS" :
+                        #if i.qualifiers.has_key("product") :
+                        #    print i.qualifiers["product"]
                         PListInstance = PList()
                         LocusInstance.CDS = PListInstance
 
@@ -435,12 +486,13 @@ class GenRecord() :
                             self.__output.addMessage(__file__, 2, "WNOCDS",
                                 "No CDS found for gene %s, transcript " \
                                 "variant %s in GenBank record, " \
-                                "constructing it from genelocation." % (
+                                "constructing it from gene location." % (
                                 i.name, j.name))
-                            j.CDS = GenRecord.Locus()
-                            j.CDS.location = j.location
-                            j.mRNA = j.CDS
-                            j.mRNA.positionList = i.location
+                            j.CDS = None #PList()
+                            #j.CDS.location = i.location
+                            j.mRNA = PList()
+                            j.mRNA.location = i.location
+                            #j.mRNA.positionList = i.location
                             j.molType = 'n'
                         #else
                     #if
@@ -455,7 +507,7 @@ class GenRecord() :
                 #if
                 if not j.mRNA.positionList :
                     j.mRNA.positionList = j.mRNA.location
-                if j.CDS :
+                if j.CDS and j.CDS.positionList != None :
                     if not j.CDS.positionList :
                         self.__output.addMessage(__file__, 2, "WNOCDS",
                             "No CDS list found for gene %s, transcript " \

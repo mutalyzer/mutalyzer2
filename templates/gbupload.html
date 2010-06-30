@@ -6,10 +6,11 @@
     <title tal:content = "structure string:Mutalyzer ${version}"></title>
     <script type = "text/javascript" 
         language = "javascript" 
-        src = "test.js">
+        src = "interface.js">
     </script>
   </head>
-  <body onload = "yo()">
+  <body onload = "updateVisibility()">
+    <div metal:define-macro="content">
     <br>
     It is not unlikely that you want to use your own reference sequence,
     but are not (yet) willing to submit your sequence data to
@@ -88,6 +89,8 @@
               <input type='text' name="start"><br>
               Stop Position<br>
               <input type='text' name="stop"><br>
+              Orientation (1 or -1)<br>
+              <input type='text' name="orientation"><br>
             </span>
             <input type='hidden' name="method" value="gbupload">
             <input type='hidden' name="client" value="human">  
@@ -103,5 +106,6 @@
         </tr>
       </table>
     </form><br>
+    </div>
   </body>
 </html>

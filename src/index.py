@@ -4,7 +4,7 @@
     The HTML publisher.
 
     These functions appear as HTML pages on the web server.
-    
+
     Public methods:
         index(req)        ; The mutation checker page.
         Variant_info(req) ; The g. to c. and vice versa interface for LOVD.
@@ -26,13 +26,22 @@ from Modules import Config
 from Modules import Output
 from Modules import Db
 from Modules import Scheduler
+from Modules import Retriever
 from Modules import File
 
 def index(req) :
+    W = Web.Web()
+    ret = W.tal("HTML", "templates/index.html", {})
+
+    del W
+    return ret
+#index
+
+def check(req) :
     """
         The mutation checker page.
 
-        If the incoming request has a form, run Mutalyzer. The output of 
+        If the incoming request has a form, run Mutalyzer. The output of
         Mutalyzer is used together with a version and the last posted value
         to make an HTML page from a TAL template.
 
@@ -45,31 +54,56 @@ def index(req) :
     """
 
     W = Web.Web()
+    C = Config.Config()
+    O = Output.Output(__file__, C.Output)
 
     name = ""
     reply = ""
     if req.form :
         name = req.form['mutationName']
-        reply = W.run(Mutalyzer.main, name)
+        O.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
+        RD = Mutalyzer.process(name, C, O)
+        O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
+                     name)
     #if
+    errors, warnings, summary = O.Summary()
+
+    altStart = O.getOutput("altstart")
+    if altStart :
+        altStart = altStart[0]
+
+    genomicDescription = O.getOutput("genomicDescription")
+    if genomicDescription :
+        genomicDescription = genomicDescription[0]
 
     args = {
-        "version"    : W.version, 
-        "lastpost"   : name, 
-        "mut_output" : reply
+        "version"            : W.version,
+        "lastpost"           : name,
+        "messages"           : O.getMessages(),
+        "summary"            : summary,
+        "genomicDescription" : genomicDescription,
+        "visualisation"      : O.getOutput("visualisation"),
+        "descriptions"       : O.getOutput("descriptions"),
+        "protDescriptions"   : O.getOutput("protDescriptions"),
+        "oldProtein"         : O.getOutput("oldProteinFancy"),
+        "altStart"           : altStart,
+        "altProtein"         : O.getOutput("altProteinFancy"),
+        "newProtein"         : O.getOutput("newProteinFancy"),
+        "legends"            : O.getOutput("legends"),
+        "mut_output"         : None
     }
 
     ret = W.tal("HTML", "templates/check.html", args)
     del W
     return ret
-#index
+#check
 
 from SOAPpy import WSDL
 
 def numberingConversion(req) :
     """
         The c. to g. notation or vice versa for the web interface
-        
+
         Arguments:
             req ; The request:
                   req.form['build']    ; The human genome build.
@@ -92,14 +126,14 @@ def numberingConversion(req) :
     D = Db.Mapping(build, C.Db)
 
     L = Output.Output(__file__, C.Output)
-    
+
     variant = ""
     reply = ""
     replyTranscripts = []
     final = []
     title = ""
     title2 = ""
-        
+
     if req.form.has_key('variant') :
         variant = req.form['variant']
         '''
@@ -109,16 +143,16 @@ def numberingConversion(req) :
             if not matchstr.match(variant) :
                 reply = "Input does not match the pattern [ATGC]>[ATGC]"
                 args = {
-                    "version"     : W.version, 
+                    "version"     : W.version,
                     "build"       : build,
                     "variant"     : variant,
                     "conv_output" : reply
                 }
-            
+
                 ret = W.tal("HTML", "templates/convert.html", args)
                 del W
                 return ret
-        #if  
+        #if
         '''
         if "c." in variant :
             reply = Mapper.cTog(build, variant, C, D, L)
@@ -155,12 +189,12 @@ def numberingConversion(req) :
                 if not chrom :
                     reply = "This chromosome accession number was not found in this build"
                     args = {
-                        "version"     : W.version, 
+                        "version"     : W.version,
                         "build"       : build,
                         "variant"     : variant,
                         "conv_output" : reply
                     }
-                
+
                     ret = W.tal("HTML", "templates/convert.html", args)
                     del W
                     return ret
@@ -174,12 +208,12 @@ def numberingConversion(req) :
             if not replyTranscripts :
                 reply = "Nothing found, please check your input"
                 args = {
-                    "version"     : W.version, 
+                    "version"     : W.version,
                     "build"       : build,
                     "variant"     : variant,
                     "conv_output" : reply
                 }
-            
+
                 ret = W.tal("HTML", "templates/convert.html", args)
                 del W
                 return ret
@@ -198,7 +232,7 @@ def numberingConversion(req) :
     final.sort()
     # use the TAL template
     args = {
-        "version"     : W.version, 
+        "version"     : W.version,
         "build"       : build,
         "variant"     : variant,
         "conv_output" : reply,
@@ -271,18 +305,42 @@ def upload(req) :
 
     C = Config.Config()
     maxUploadSize = C.Retriever.maxDldSize
-    del C
+
+    O = Output.Output(__file__, C.Output)
+    D = Db.Cache(C.Db)
+    R = Retriever.Retriever(C.Retriever, O, D)
 
     if req.method == 'POST' :
-        length = req.headers_in.get('Content-Length')
-        if not length :
-            req.status = apache.HTTP_LENGTH_REQUIRED
-            req.write("Content length required.")
+        if req.form["invoermethode"] == "file" :
+            length = req.headers_in.get('Content-Length')
+            if not length :
+                req.status = apache.HTTP_LENGTH_REQUIRED
+                req.write("Content length required.")
+                return None
+            #if
+            if int(length) > maxUploadSize :
+                req.status = apache.HTTP_REQUEST_ENTITY_TOO_LARGE
+                req.write("Upload limit exceeded.")
+                return None
+            #if
+        #if
+        if req.form["invoermethode"] == "gene" :
+            geneName = req.form["genesymbol"]
+            organism = req.form["organism"]
+            upStream = int(req.form["5utr"])
+            downStream = int(req.form["3utr"])
+
+            UD = R.retrievegene(geneName, organism, upStream, downStream)
+            req.write(UD)
             return None
         #if
-        if int(length) > maxUploadSize :
-            req.status = apache.HTTP_REQUEST_ENTITY_TOO_LARGE
-            req.write("Upload limit exceeded.")
+        if req.form["invoermethode"] == "chr" :
+            accNo = req.form["chracc"]
+            start = int(req.form["start"])
+            stop = int(req.form["stop"])
+            orientation = int(req.form["orientation"])
+            UD = R.retrieveslice(accNo, start, stop, orientation)
+            req.write(UD)
             return None
         #if
     #if
@@ -303,7 +361,7 @@ def batch(req) :
     if req.form :
         eMail = req.form['eMail']
         fileUpload = req.form['file']
-        
+
         if fileUpload.filename and W.isEMail(eMail) :
             C = Config.Config()
             D = Db.Batch(C.Db)
@@ -312,11 +370,11 @@ def batch(req) :
             FileInstance = File.File(C.File, O)
 
             job = FileInstance.parseBatchFile(fileUpload.file)
-            S.addJob("1231243", eMail, job, "http://%s%s" % (req.hostname, 
+            S.addJob("1231243", eMail, job, "http://%s%s" % (req.hostname,
                                                              req.uri))
 
             del FileInstance, S, D, C
-        #if            
+        #if
     #if
 
     args = {

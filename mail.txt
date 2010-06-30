@@ -1,0 +1,12 @@
+Dear submitter,
+
+The batch operation you have submitted, has been processed successfully.
+
+Your results can be found here:
+%s
+
+Thanks for using Mutalyzer.
+
+
+With kind regards,
+Mutalyzer batch checker.

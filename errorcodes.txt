@@ -37,3 +37,6 @@ EFILESIZE   | N | The filesize is either too large or too small.
 ERETR       | R | Could not retrieve a GenBank record.
 EARG        | N | Error in the arguments (of a webservice).
 ERANGE      | D | Position out of range (webservice).
+
+EINVALIDGENE | D | Invalid gene name given.
+EINVALIDTRANSCRIPT | D | Invalid gene name given.

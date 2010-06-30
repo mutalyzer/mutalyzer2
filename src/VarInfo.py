@@ -113,7 +113,7 @@ def main(LOVD_ver, build, acc, var) :
                  var, LOVD_ver, build))
     del O, C, Cross
     # And return the output.
-    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain, 
+    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain,
                                           V.endoffset, V.start_g, V.end_g, 
                                           V.mutationType)
         

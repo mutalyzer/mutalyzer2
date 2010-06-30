@@ -23,6 +23,8 @@ from Modules import Mutator
 from Modules import Output
 from Modules import Config
 
+from operator import itemgetter, attrgetter
+
 #def __order(a, b) :
 #    """
 #    """
@@ -68,7 +70,7 @@ def __palinsnoop(string) :
     return -1        # Perfect palindrome.
 #__palinsnoop
 
-def __bprint(s) :
+def __bprint(s, O, where) :
     """
     """
 
@@ -80,15 +82,55 @@ def __bprint(s) :
 
     m = int(math.floor(math.log(len(s), 10)) + 1)
     o = 1
-    print "%s " % str(o).rjust(m),
+    output = "%s " % str(o).rjust(m)
     for i in range(0, len(s), block) :
-        print s[i:i + block],
+        output += ' ' + s[i:i + block]
         if not (i + block) % line and i + block < len(s) :
+            o += line
+            O.addOutput(where, output)
+            output = "%s " % str(o).rjust(m)
+        #if
+    #for
+    O.addOutput(where, output)
+#__bprint
+
+def __bprint2(s, pos1, pos2) :
+    """
+    """
+
+    if not s :
+        return
+
+    block = 10
+    line = 6 * block
+    tag1 = "<tt style=\"color:#FF0080\">"
+    tag2 = "</tt>"
+
+    m = int(math.floor(math.log(len(s), 10)) + 1)
+    o = 1
+
+    newString = s[:pos1] + tag1 + s[pos1:pos2] + tag2 + s[pos2:]
+
+    print "%s " % str(o).rjust(m),
+
+    i = 0
+    seen = 0
+    while i < len(s) :
+        skip = 0
+        if i <= pos1 < i + block :
+            skip += len(tag1)
+        if i <= pos2 < i + block :
+            skip += len(tag2)
+        print newString[i:i + block + skip],
+        seen += block
+        if not (seen) % line and seen < len(s) :
             o += line
             print "\n%s " % str(o).rjust(m),
         #if
-    #for
-#__bprint
+        i += block + skip
+    #while
+
+#__bprint2
 
 def __PtLoc2main(Loc) :
     """
@@ -143,7 +185,6 @@ def __nsplice(string, splice_sites, CDS, orientation) :
     """
 
     transcript = ""
-
     if orientation == 1 :
         for i in range(0, len(splice_sites), 2) :
             if CDS[0] >= splice_sites[i] and CDS[0] <= splice_sites[i + 1] :
@@ -167,6 +208,17 @@ def __nsplice(string, splice_sites, CDS, orientation) :
 
     return transcript
 #__nsplice
+
+def __cdsLen(splice_sites) :
+    """
+    """
+
+    l = 0
+
+    for i in range(0, len(splice_sites), 2) :
+        l += splice_sites[i + 1] - splice_sites[i] + 1
+    return l        
+#__cdsLen
 
 def __checkOptArg(ref, p1, p2, arg, O) :
     """
@@ -250,8 +302,11 @@ def findInFrameDescription(str1, str2) :
     str1_end = len(str1) - lcs
     str2_end = len(str2) - lcs
 
-    # Insertion / Duplication.
+    # Insertion / Duplication / Extention.
     if not str1_end - lcp :
+        if len(str1) == lcp :
+            return "p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]), 
+                                        abs(len(str1) - len(str2)))
         inLen = str2_end - lcp
 
         if lcp - inLen >= 0 and str1[lcp - inLen:lcp] == str2[lcp:str2_end] :
@@ -267,8 +322,11 @@ def findInFrameDescription(str1, str2) :
                                        seq3(str2[lcp:str2_end]))
     #if
 
-    # Deletion.
+    # Deletion / Inframe stop.
     if not str2_end - lcp :
+        if len(str2) == lcp :
+            return "p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1)
+
         if lcp + 1 == str1_end :
             return "p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1)
         return "p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1, 
@@ -277,13 +335,7 @@ def findInFrameDescription(str1, str2) :
 
     # Substitution.
     if str1_end == str2_end and str1_end == lcp + 1 :
-        if len(str1) > len(str2) :
-            return "p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]), 
-                                        abs(len(str1) - len(str2)))
-        if len(str1) > len(str2) :
-            return "p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1)
         return "p.(%s%i%s)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp]))
-    #if
 
     # InDel.
     if lcp + 1 == str1_end :
@@ -442,14 +494,18 @@ def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
     """
     """
 
+    # FIXME check this 
     # First assume that the variant is given in g. notation.
-    start_g = int(RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main)
-    start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
+    #print RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main
+    #print __PtLoc2offset(RawVar.StartLoc.PtLoc)
+    if not RawVar.StartLoc.PtLoc.Main.isdigit() : # For ? in a position.
+        return
+    start_g = int(RawVar.StartLoc.PtLoc.Main)
     end_g = start_g
-    end_offset = start_offset
     if RawVar.EndLoc :
+        if not RawVar.EndLoc.PtLoc.Main.isdigit() : # For ? in a position.
+            return
         end_g = int(RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
-        end_offset = __PtLoc2offset(RawVar.EndLoc.PtLoc)
     #if
     Arg1 = RawVar.Arg1
     Arg2 = RawVar.Arg2
@@ -457,8 +513,21 @@ def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
     
     # If it is not, convert it to g. notation.
     if transcript :
-        start_g = transcript.CM.x2g(start_g, start_offset)
-        end_g = transcript.CM.x2g(end_g, end_offset)
+        start_main = transcript.CM.main2int(RawVar.StartLoc.PtLoc.MainSgn + \
+                                            RawVar.StartLoc.PtLoc.Main)
+        #if not RawVar.StartLoc.PtLoc.Offset.isdigit() :
+        #    return
+        start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
+        start_g = transcript.CM.x2g(start_main, start_offset)
+        end_g = start_g
+        if RawVar.EndLoc :
+            end_main = transcript.CM.main2int(RawVar.EndLoc.PtLoc.MainSgn + \
+                                           RawVar.EndLoc.PtLoc.Main)
+            #if not RawVar.EndLoc.PtLoc.Offset.isdigit() :
+            #    return
+            end_offset = __PtLoc2offset(RawVar.EndLoc.PtLoc)
+            end_g = transcript.CM.x2g(end_main, end_offset)
+        #if
         if transcript.CM.orientation == -1 :
             Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
             Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
@@ -544,10 +613,21 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
                 if parts.Gene.GeneSymbol :
                     GS = GenRecordInstance.record.findGene(
                          parts.Gene.GeneSymbol)
+                    if not GS :
+                        O.addMessage(__file__, 3, "EINVALIDGENE", 
+                            "Gene %s not found. Please choose from: %s" % (
+                            parts.Gene.GeneSymbol, 
+                            GenRecordInstance.record.listGenes()))
+                        return
                 else :
                     GS = GenRecordInstance.record.geneList[0]
                 if parts.Gene.TransVar :
                     W = GS.findLocus(parts.Gene.TransVar)
+                    if not W :
+                        O.addMessage(__file__, 3, "ENOTRANSCRIPT",
+                            "Transcript %s not found for gene %s. Please " \
+                            "choose from: %s" %(parts.Gene.TransVar, GS.name,
+                            GS.listLoci()))
                 else :
                     W = GS.transcriptList[0]
             #if
@@ -555,6 +635,8 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
                 W = GenRecordInstance.record.geneList[0].transcriptList[0]
         #if
         else :
+            W = None
+        if W and not W.location :
             W = None
 
         if parts.SingleAlleleVarSet :
@@ -589,6 +671,7 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
         #if
         orig = cds.translate(table = W.txTable, to_stop = True)
         O.addOutput("oldprotein", orig + '*')
+        __bprint(orig + '*', O, "oldProteinFancy")
         trans = cdsm.translate(table = W.txTable, to_stop = True)
 
         if not trans or trans[0] != 'M' :
@@ -596,12 +679,19 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
                 Bio.Data.CodonTable.unambiguous_dna_by_id[
                     W.txTable].start_codons :
                 O.addOutput("newprotein", '?')
+                __bprint('?', O, "newProteinFancy")
                 O.addOutput("altstart", str(cdsm[0:3]))
                 O.addOutput("altprotein", 'M' + trans[1:] + '*')
+                __bprint('M' + trans[1:] + '*', O, "altProteinFancy")
+            #if
             else :
                 O.addOutput("newprotein", '?')
+                __bprint('?', O, "newProteinFancy")
+            #else
         else :
             O.addOutput("newprotein", trans + '*')
+            __bprint(trans + '*', O, "newProteinFancy")
+        #else
 
         #if not parts.SingleAlleleVarSet :
         #    #O.addOutput("proteindescription", "p.?")
@@ -633,7 +723,6 @@ def process(cmd, C, O) :
         if ParseObj.LrgAcc:
             filetype = "LRG"
             RetrieveRecord = ParseObj.LrgAcc
-            print RetrieveRecord
         else:
             filetype = "GB"
         record = retriever.loadrecord(RetrieveRecord, filetype)
@@ -659,44 +748,74 @@ def process(cmd, C, O) :
 
         # PROTEIN
         for i in GenRecordInstance.record.geneList :
-            for j in i.transcriptList :
-                if not ';' in j.description and j.CDS :
-                    print j.CDS.positionList
-                    print j.mRNA.positionList
-                    cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
-                              IUPAC.unambiguous_dna)
-                    cdsm = Seq(str(__nsplice(MUU.mutated, 
-                                             MUU.newSplice(j.mRNA.positionList), 
-                                             MUU.newSplice(j.CDS.location), 
-                                             j.CM.orientation)),
-                               IUPAC.unambiguous_dna)
-                    cdsStop = 1                               
-                    if j.CM.orientation == -1 :
-                        cds = Bio.Seq.reverse_complement(cds)
-                        cdsm = Bio.Seq.reverse_complement(cdsm)
-                        cdsStop = 0
-                    #if
+            if i.location :
+                for j in i.transcriptList :
+                    if not ';' in j.description and j.CDS :
+                        #print i.name, j.name, j.CDS.positionList, j.CDS.location
+                        cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
+                                  IUPAC.unambiguous_dna)
+                        cdsm = Seq(str(__nsplice(MUU.mutated, 
+                                                 MUU.newSplice(j.mRNA.positionList), 
+                                                 MUU.newSplice(j.CDS.location), 
+                                                 j.CM.orientation)),
+                                   IUPAC.unambiguous_dna)
+                        if j.CM.orientation == -1 :
+                            cds = Bio.Seq.reverse_complement(cds)
+                            cdsm = Bio.Seq.reverse_complement(cdsm)
+                        #if
 
-                    #if '*' in cds.translate()[:-1] :
-                    #    O.addMessage(__file__, 3, "ESTOP", 
-                    #                 "In frame stop codon found.")
-                    #    return
-                    ##if
-                    orig = cds.translate(table = j.txTable, cds = True, 
-                                         to_stop = True)
-                    #O.addOutput("oldprotein", orig + '*')
-                    trans = cdsm.translate(table = j.txTable, to_stop = True)
+                        #if '*' in cds.translate()[:-1] :
+                        #    O.addMessage(__file__, 3, "ESTOP", 
+                        #                 "In frame stop codon found.")
+                        #    return
+                        ##if
 
-                    #print i.name, j.name
-                    #print j.CDS.location
-                    j.proteinDescription = __toProtDescr(
-                        j.CM.g2x(MUU.newSplice(j.CDS.location)[cdsStop])[0], 
-                                 orig, trans)
-                    #print j.proteinDescription                                 
+                        orig = cds.translate(table = j.txTable, cds = True, 
+                                             to_stop = True)
+                        trans = cdsm.translate(table = j.txTable, 
+                                               to_stop = True)
+
+                        cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
+
+                        #print cdsLen, len(__splice(MUU.orig, MUU.newSplice(j.CDS.positionList)))
+                        j.proteinDescription = __toProtDescr(cdsLen, orig, 
+                                                             trans)
 
         # /PROTEIN
 
+        reference = O.getOutput("reference")[0]
+        for i in GenRecordInstance.record.geneList :
+            for j in sorted(i.transcriptList, key = attrgetter("name")) :
+                if ';' in j.description :
+                    O.addOutput("descriptions", "%s(%s_v%s):%c.[%s]" % (
+                        reference, i.name, j.name, j.molType, j.description))
+                else :
+                    O.addOutput("descriptions", "%s(%s_v%s):%c.%s" % (
+                        reference, i.name, j.name, j.molType, j.description))
+                    if (j.molType == 'c') :
+                        O.addOutput("protDescriptions", "%s(%s_i%s):%s" % (
+                            reference, i.name, j.name, j.proteinDescription))
+            #for
+        if ';' in GenRecordInstance.record.description :
+            O.addOutput("genomicDescription", "%s:%c.[%s]" % (reference, 
+                GenRecordInstance.record.molType, 
+                GenRecordInstance.record.description))
+        else :
+            O.addOutput("genomicDescription", "%s:%c.%s" % (reference, 
+                GenRecordInstance.record.molType, 
+                GenRecordInstance.record.description))
+
         del MUU
+
+        # LEGEND
+        for i in GenRecordInstance.record.geneList :
+            for j in i.transcriptList :
+                O.addOutput("legends", ["%s_v%s" % (i.name, j.name), 
+                            str(j.transcriptID), str(j.locusTag)])
+                O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
+                            str(j.proteinID), str(j.locusTag)])
+            #for
+
         return GenRecordInstance
     #if
 #process
@@ -721,13 +840,13 @@ def main(cmd) :
         print
     #if
     
-    O.getMessages()
+    for i in O.getMessages() :
+        print i
     errors, warnings, summary = O.Summary()
     print summary
     print
 
-    #if not errors :
-    if not False :
+    if not errors :
         visualisation = O.getOutput("visualisation")
         if visualisation :
             for i in range(len(visualisation)) :
@@ -738,20 +857,26 @@ def main(cmd) :
             print
         #if
 
-        reference = O.getOutput("reference")[0]
+        #reference = O.getOutput("reference")[0]
+        for i in O.getOutput("descriptions") :
+            print i
+        print
+        for i in O.getOutput("protDescriptions") :
+            print i
+        print
 
-        for i in RD.record.geneList :
-            for j in i.transcriptList :
-                if ';' in j.description :
-                    print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name, 
-                                                  j.molType, j.description)
-                else :
-                    print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name, 
-                                                j.molType, j.description)
-                    if (j.molType == 'c') :
-                        print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
-                                                 j.proteinDescription)
-            #for                                                
+        #for i in RD.record.geneList :
+        #    for j in i.transcriptList :
+        #        if ';' in j.description :
+        #            print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name, 
+        #                                          j.molType, j.description)
+        #        else :
+        #            print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name, 
+        #                                        j.molType, j.description)
+        #            if (j.molType == 'c') :
+        #                print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
+        #                                         j.proteinDescription)
+        #    #for
         #if ';' in RD.record.description :
         #    print "%s:%c.[%s]" % (reference, RD.record.molType, 
         #                          RD.record.description)
@@ -769,32 +894,40 @@ def main(cmd) :
 
         op = O.getOutput("oldprotein")
         if op :
-            print "\n<b>Old protein:</b>"
-            __bprint(op[0])
+            print "\nOld protein:"
+            #__bprint(op[0], O)
+            for i in O.getOutput("oldProteinFancy") :
+                print i
             print
         #if
         np = O.getOutput("newprotein")
         if np :
-            print "\n<b>New protein:</b>"
-            __bprint(np[0])
+            print "\nNew protein:"
+            #__bprint(np[0], O)
+            for i in O.getOutput("newProteinFancy") :
+                print i
             print
         #if
         ap = O.getOutput("altprotein")
         if ap :
-            print "\n<b>Alternative protein using start codon %s:</b>" % \
+            print "\nAlternative protein using start codon %s:" % \
                 O.getOutput("altstart")[0]
-            __bprint(ap[0])
+            #__bprint(ap[0], O)
+            for i in O.getOutput("altProteinFancy") :
+                print i
             print
         #if
 
         print
-        for i in RD.record.geneList :
-            for j in i.transcriptList :
-                print "%s_v%s = %s = %s" % (i.name, j.name, j.transcriptID,
-                                            j.locusTag)
-                print "%s_i%s = %s = %s" % (i.name, j.name, j.proteinID,
-                                                j.locusTag)
-            #for
+        #for i in RD.record.geneList :
+        #    for j in i.transcriptList :
+        #        print "%s_v%s = %s = %s" % (i.name, j.name, j.transcriptID,
+        #                                    j.locusTag)
+        #        print "%s_i%s = %s = %s" % (i.name, j.name, j.proteinID,
+        #                                        j.locusTag)
+        #    #for
+        for i in O.getOutput("legends") :
+            print i
     #if
     ### OUTPUT BLOCK ###
     del O

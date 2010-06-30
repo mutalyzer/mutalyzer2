@@ -241,10 +241,14 @@ class Output() :
                 __config    ; The variable outputlevel is used.
         """
 
+        ret = []
         for i in self.__messages :
             if i.level > self.__config.outputlevel :
-                print "%s(%s): %s" % (self.__levelToName(i.level), i.origin,
-                                      i.description)
+                #print "%s(%s): %s" % (self.__levelToName(i.level), i.origin,
+                #                      i.description)
+                ret.append("%s(%s): %s" % (self.__levelToName(i.level), 
+                                           i.origin, i.description))
+        return ret                                           
     #getMessages
 
     def addOutput(self, name, data) :
