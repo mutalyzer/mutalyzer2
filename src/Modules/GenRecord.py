@@ -190,6 +190,7 @@ class Record(object) :
         self.organelle = None
         self.source = Gene(None)
         self.description = ""
+        self._sourcetype = None           #LRG or GB
     #__init__
 
     def findGene(self, name) :
@@ -217,13 +218,8 @@ class GenRecord() :
     """
         Convert a GenBank record to a nested dictionary.
 
-        Private methods:
-            __location2pos(location)             ;
-            __locationList2posList(locationList) ;
-
         Public methods:
-            record2dict(record) ; Parse the GenBank record and return a 
-                                  structured dictionary.
+            checkRecord()   ;   Check and repair self.record
     """
 
     def __init__(self, config, output) :
@@ -234,52 +230,6 @@ class GenRecord() :
         self.__output = output
         self.record = None
     #__init__
-
-    def __location2pos(self, location) :
-        """
-            Convert a location object to a tuple of integers.
-    
-            Arguments:
-                location ; A location object (see the BioPython documentation).
-    
-            Returns:
-                List ; A tuple of integers.
-        """
-
-        ret = []
-    
-        ret.append(location.start.position + 1)
-        ret.append(location.end.position)
-    
-        return ret
-    #__location2pos
-    
-    def __locationList2posList(self, locationList) :
-        """
-            Convert a list of locations to a list of integers.
-    
-            Arguments:
-                locationList ; A list of locations (see the BioPython 
-                               documentation).
-    
-            Returns:
-                List ; A list (of even length) of integers.
-        """
-
-        ret = []
-    
-        for i in locationList.sub_features :
-            if i.ref : # This is a workaround for a bug in BioPython.
-                ret = None
-                break
-            #if
-            temp = self.__location2pos(i.location)
-            ret.append(temp[0])
-            ret.append(temp[1])
-        #for
-        
-        return ret
-    #__locationList2posList
 
     def __constructCDS(self, mRNA, CDSpos) :
         """
@@ -310,114 +260,14 @@ class GenRecord() :
         return string
     #__maybeInvert
 
-    def parseRecord(self, record) :
-        """
-            Convert a GenBank record to a nested dictionary.
-
-            Arguments:
-                record ; A GenBank record.
-
-            Returns:
-                dict ; A nested dictionary.
-        """
-
-        self.record = Record()
-        for i in  record.features :
-            if i.qualifiers :
-                if i.type == "source" :
-                    if i.qualifiers.has_key("mol_type") :
-                        if i.qualifiers["mol_type"][0] == "mRNA" :
-                            self.record.molType = 'n'
-                        else :
-                            self.record.molType = 'g'
-                    #if
-                    if i.qualifiers.has_key("organelle") :
-                        self.record.organelle = i.qualifiers["organelle"][0]
-                        if self.record.organelle == "mitochondrion" :
-                            self.record.molType = 'm'
-                    #if
-
-                    fakeGene = Locus("001")
-                    self.record.source.transcriptList.append(fakeGene)
-                    fakeGene.CDS = PList()
-                    fakeGene.CDS.location = self.__location2pos(i.location)
-                #if
-
-                if i.qualifiers.has_key("gene") :
-                    gene = i.qualifiers["gene"][0]
-
-                    GeneInstance = self.record.findGene(gene)
-                    if not GeneInstance :
-                        GeneInstance = Gene(gene)
-                        self.record.geneList.append(GeneInstance)
-                    #if
-
-                    if i.type == "gene" :
-                        if i.strand :
-                            GeneInstance.orientation = i.strand
-                        GeneInstance.location = self.__location2pos(i.location)
-                    #if
-    
-                    # Look if there is a locus tag present, if not, give it the
-                    # default tag `001'.
-                    locusName = "001"
-                    locusTag = None
-                    if i.qualifiers.has_key("locus_tag") :
-                        locusTag = i.qualifiers["locus_tag"][0]
-                        locusName = locusTag[-3:]
-                    #if
-
-                    LocusInstance = GeneInstance.findLocus(locusName)
-                    if not LocusInstance :
-                        LocusInstance = Locus(locusName)
-                        GeneInstance.transcriptList.append(LocusInstance)
-                    #if
-    
-                    if i.type == "mRNA" :
-                        PListInstance = PList()
-                        LocusInstance.mRNA = PListInstance
-
-                        posList = self.__locationList2posList(i)
-                        if posList != None :
-                            PListInstance.location = \
-                                self.__location2pos(i.location)
-                            PListInstance.positionList = posList
-                        #if
-                        if i.qualifiers.has_key("transcript_id") :
-                            LocusInstance.transcriptID = \
-                                i.qualifiers["transcript_id"][0]
-                        LocusInstance.locusTag = locusTag
-                    #if
-                    if i.type == "CDS" :
-                        PListInstance = PList()
-                        LocusInstance.CDS = PListInstance
-
-                        PListInstance.location = self.__location2pos(i.location)
-                        PListInstance.positionList = \
-                            self.__locationList2posList(i)
-
-                        if i.qualifiers.has_key("transl_table") :
-                            LocusInstance.txTable = \
-                                int(i.qualifiers["transl_table"][0])
-                        if i.qualifiers.has_key("protein_id") :
-                            LocusInstance.proteinID = \
-                                i.qualifiers["protein_id"][0]
-                        LocusInstance.locusTag = locusTag
-                    #if
-                    if i.type == "exon" :
-                        if not LocusInstance.exon :
-                            LocusInstance.exon = PList()
-                        LocusInstance.exon.positionList.extend(
-                            self.__location2pos(i.location))
-                    #if
-                #if                            
-            #if
-        #for
-        self.checkRecord()
-    #parseRecord
-
     def checkRecord(self) :
-        # Now we have gathered all information
+        """
+            Check if the record in self.record is compatible with mutalyzer
+
+            update the mRNA PList with the exon and CDS data
+        """
+        #TODO:  This function should really check 
+        #       the record for minimal requirements.
         for i in self.record.geneList :
             for j in i.transcriptList :
                 if not j.mRNA :

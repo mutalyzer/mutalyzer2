@@ -811,6 +811,19 @@ class Cache(Db) :
         self.query(statement)
     #insertGB
 
+    def insertLRG(self, accNo, fileHash, url):
+        """
+        Insert information about a LRG record in the internal database
+        """
+        statement = """
+            INSERT INTO GBInfo
+              VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        """, (accNo, None, fileHash, None, None, None, None, url)
+
+        self.query(statement)
+    #insertLRG
+
+
     def updateHash(self, accNo, fileHash) :
         """
             Update the hash of an accession number.
