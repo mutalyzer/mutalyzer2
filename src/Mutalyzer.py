@@ -636,8 +636,8 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
         #if
         else :
             W = None
-        if W and not W.location :
-            W = None
+        #if W and not W.location :
+        #    W = None
 
         if parts.SingleAlleleVarSet :
             for i in parts.SingleAlleleVarSet :

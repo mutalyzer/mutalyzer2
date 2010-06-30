@@ -106,6 +106,15 @@ def main(LOVD_ver, build, acc, var) :
                  LOVD_ver, build))
 
     Cross = Mapper.makeCrossmap(build, acc, C)
+
+    # If no variant is given, return transcription start, transcription end and
+    #   CDS stop in c. notation.
+    if not var :
+        info = Cross.info()
+        print "%i\n%i\n%i" % info
+        return
+    #if
+    
     V = Mapper.makeParsetree(O, Cross, var)
 
     O.addMessage(__file__, -1, "INFO", 

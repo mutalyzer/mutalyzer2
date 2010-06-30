@@ -165,6 +165,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         self.__checkPos(L, pos)
         
         ret = D.get_Transcripts(chrom, pos, pos, True)
+
         L.addMessage(__file__, -1, "INFO", 
                      "Finished processing getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
@@ -204,13 +205,12 @@ class MutalyzerService(SimpleWSGISoapApp) :
         self.__checkBuild(build, C.Db)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
+
         L.addMessage(__file__, -1, "INFO", 
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
     
-        del D
-        del L
-        del C
+        del D, L, C
         return [ret]
     #getTranscriptsRange
 
@@ -229,6 +229,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
     
         C = Config.Config()
         L = Output.Output(__file__, C.Output)
+
         L.addMessage(__file__, -1, "INFO", 
                      "Received request getGeneName(%s %s)" % (build, accno))
 
@@ -236,12 +237,11 @@ class MutalyzerService(SimpleWSGISoapApp) :
         self.__checkBuild(build, C.Db)
     
         ret = D.get_GeneName(accno.split('.')[0])
+
         L.addMessage(__file__, -1, "INFO", 
                      "Finished processing getGeneName(%s %s)" % (build, accno))
     
-        del D
-        del L
-        del C
+        del D, L, C
         return ret
     #getGeneName
 
@@ -331,7 +331,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
-        result = Mapper.mainTranscript(build, accNo, C)
+        Cross = Mapper.makeCrossmap(build, accNo, C)
+        result = Mapper.mainTranscript(build, accNo, C, Cross)
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing transcriptInfo(%s %s %s)" % (
@@ -342,14 +343,111 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #transcriptInfo
     
     @soapmethod(String, String, _returns = String)
+    def chromAccession(self, build, name) :
+        """
+            Get the accession number of a chromosome, given a name.
+            
+            Arguments:
+                build   ; The human genome build.
+                name    ; The name of a chromosome.
+                
+            Returns:
+                string ; The accession number of a chromosome.
+        """
+        C = Config.Config() # Read the configuration file.
+        D = Mapping(build, C.Db)
+        L = Output.Output(__file__, C.Output)
+
+        L.addMessage(__file__, -1, "INFO", 
+                     "Received request chromAccession(%s %s)" % (build, name))
+
+        self.__checkBuild(build, C.Db)
+        self.__checkChrom(L, D, name)
+        
+        result = D.chromAcc(name)
+
+        L.addMessage(__file__, -1, "INFO", 
+                     "Finished processing chromAccession(%s %s)" % (build,
+                     name))
+
+        del D,L,C
+        return result
+    #chromAccession
+    
+    @soapmethod(String, String, _returns = String)
+    def chromosomeName(self, build, accNo) :
+        """
+            Get the name of a chromosome, given a chromosome accession number.
+            
+            Arguments:
+                build   ; The human genome build.
+                accNo    ; The accession number of a chromosome (NC_...).
+                
+            Returns:
+                string ; The name of a chromosome.
+        """
+        C = Config.Config() # Read the configuration file.
+        D = Mapping(build, C.Db)
+        L = Output.Output(__file__, C.Output)
+
+        L.addMessage(__file__, -1, "INFO", 
+                     "Received request chromName(%s %s)" % (build, accNo))
+
+        self.__checkBuild(build, C.Db)
+#        self.__checkChrom(L, D, name)
+        
+        result = D.chromName(accNo)
+
+        L.addMessage(__file__, -1, "INFO", 
+                     "Finished processing chromName(%s %s)" % (build,
+                     accNo))
+
+        del D,L,C
+        return result
+    #chromosomeName
+    
+    @soapmethod(String, String, _returns = String)
+    def getchromName(self, build, acc) :
+        """
+            Get the chromosome name, given a transcript identifier (NM number).
+            
+            Arguments:
+                build ; The human genome build.
+                acc   ; The NM accession number (version NOT included)
+                
+            Returns:
+                string ; The name of a chromosome.
+        """
+        C = Config.Config() # Read the configuration file.
+        D = Mapping(build, C.Db)
+        L = Output.Output(__file__, C.Output)
+
+        L.addMessage(__file__, -1, "INFO", 
+                     "Received request getchromName(%s %s)" % (build, acc))
+
+        self.__checkBuild(build, C.Db)
+#        self.__checkChrom(L, D, name)
+        
+        result = D.get_chromName(acc)
+
+        L.addMessage(__file__, -1, "INFO", 
+                     "Finished processing getchromName(%s %s)" % (build,
+                     acc))
+
+        del D,L,C
+        return result
+    #chromosomeName
+    
+    @soapmethod(String, String, _returns = String)
     def numberConversion(self, build, variant) :
         """
             Converts c. to g. notation or vice versa
 
             
             Arguments (all strings:
-                build  ; The human genome build (hg19 or hg18).
-                variant ; The variant in either c. or g. notation.
+                build   ; The human genome build (hg19 or hg18).
+                variant ; The variant in either c. or g. notation, full HGVS
+                          notation, including NM_ or NC_ accession number.
              
             Returns:
                 string; The variant in either g. or c. notation.
@@ -371,13 +469,41 @@ class MutalyzerService(SimpleWSGISoapApp) :
         if "g." in variant :
             result = Mapper.gToc(build, variant, C, D, L)
         
-
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing cTogConversion(%s %s)" % (
                      build, variant))
-        del L
 
-        return result
+        del C, D, L
+        return [result]
     #numberConversion
+    
+    @soapmethod(String, _returns = String)
+    def checkSyntax(self, variant) :
+        """
+        """
+        C = Config.Config() # Read the configuration file.
+        L = Output.Output(__file__, C.Output)
+        L.addMessage(__file__, -1, "INFO",
+                     "Received request checkSyntax(%s)" % (variant))
+        
+        self.__checkVariant(L, variant)
+        
+        P = Parser.Nomenclatureparser(L)
+        parsetree = P.parse(variant)
+        del C, P
+        if not parsetree :
+            result = "This variant does not have the right syntax. "\
+                     "Please try again."
+        #if 
+        else :
+            result = "The syntax of this variant is OK!"
+
+        L.addMessage(__file__, -1, "INFO",
+                     "Finished processing checkSyntax(%s)" % (variant))
+        
+        del L
+        return result
+   #checkSyntax
+        
         
 #MutalyzerService
