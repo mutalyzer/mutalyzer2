@@ -115,7 +115,8 @@ def main(LOVD_ver, build, acc, var) :
         return
     #if
     
-    V = Mapper.makeParsetree(O, Cross, var)
+    #V = Mapper.makeParsetree(O, Cross, var)
+    V = Mapper.mainMapping(build, acc, var, C, O)
 
     O.addMessage(__file__, -1, "INFO", 
                  "Finished processing %s:%s (LOVD_ver %s, build %s)" % (acc,

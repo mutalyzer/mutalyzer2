@@ -16,6 +16,7 @@ WNOVER      | R | No accession version number was given.
 WHASH       | N | Hash of a GenBank record has changed.
 WNOCHANGE   | D | Variant equals reference sequence.
 WNOTMINIMAL | D | A shorter description of a raw variant is possible.
+WPEND       | E | The LRG file is still pending
 
 Errors:
 ENOVAR      | D | No mutation given.

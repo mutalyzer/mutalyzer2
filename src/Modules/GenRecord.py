@@ -91,6 +91,8 @@ class Locus(object) :
         self.proteinDescription = "?"
         self.proteinRange = []
         self.locusTag = None
+        self.transLongName = ""
+        self.protLongName = ""
     #__init__
 
     def addToDescription(self, rawVariant) :
@@ -131,6 +133,7 @@ class Gene(object) :
         self.orientation = 1
         self.transcriptList = []
         self.location = []
+        self.longName = ""
     #__init__
 
     def findLocus(self, name) :
@@ -166,7 +169,7 @@ class Record(object) :
             geneList  ; List of Gene objects.
             mol_type  ; Variable to indicate the sequence type (DNA, RNA, ...)
             organelle ; Variable to indicate whether the sequence is from the
-                        nucleus or from an onganelle (if so, also from which 
+                        nucleus or from an onganelle (if so, also from which
                         one).
             source    ; A fake gene that can be used when no gene information
                         is present.
@@ -179,8 +182,11 @@ class Record(object) :
 
             Public variables (altered):
                 geneList  ; List of Gene objects.
-                mol_type  ; Variable to indicate the sequence type (DNA, RNA, 
+                molType   ; Variable to indicate the sequence type (DNA, RNA,
                             ...)
+                seq       ; The reference sequence
+                mapping   ; The mapping of the reference sequence to the genome
+                            include a list of differences between the sequences
                 organelle ; Variable to indicate whether the sequence is from
                             the nucleus or from an onganelle (if so, also from
                             which one).
@@ -190,9 +196,12 @@ class Record(object) :
 
         self.geneList = []
         self.molType = 'g'
+        self.seq = ""
+        self.mapping = []
         self.organelle = None
         self.source = Gene(None)
         self.description = ""
+        self._sourcetype = None           #LRG or GB
     #__init__
 
     def findGene(self, name) :
@@ -230,13 +239,8 @@ class GenRecord() :
     """
         Convert a GenBank record to a nested dictionary.
 
-        Private methods:
-            __location2pos(location)             ;
-            __locationList2posList(locationList) ;
-
         Public methods:
-            record2dict(record) ; Parse the GenBank record and return a 
-                                  structured dictionary.
+            checkRecord()   ;   Check and repair self.record
     """
 
     def __init__(self, config, output) :
@@ -247,61 +251,6 @@ class GenRecord() :
         self.__output = output
         self.record = None
     #__init__
-
-    def __location2pos(self, location) :
-        """
-            Convert a location object to a tuple of integers.
-    
-            Arguments:
-                location ; A location object (see the BioPython documentation).
-    
-            Returns:
-                List ; A tuple of integers.
-        """
-
-        ret = []
-    
-        if not str(location.start).isdigit() or \
-           not str(location.end).isdigit() :
-            return None
-        #if
-
-        ret.append(location.start.position + 1)
-        ret.append(location.end.position)
-    
-        return ret
-    #__location2pos
-    
-    def __locationList2posList(self, locationList) :
-        """
-            Convert a list of locations to a list of integers.
-    
-            Arguments:
-                locationList ; A list of locations (see the BioPython 
-                               documentation).
-    
-            Returns:
-                List ; A list (of even length) of integers.
-        """
-
-        ret = []
-    
-        if not str(locationList.location.start).isdigit() or \
-           not str(locationList.location.end).isdigit() :
-            return None
-        #if
-        for i in locationList.sub_features :
-            if i.ref : # This is a workaround for a bug in BioPython.
-                ret = None
-                break
-            #if
-            temp = self.__location2pos(i.location)
-            ret.append(temp[0])
-            ret.append(temp[1])
-        #for
-        
-        return ret
-    #__locationList2posList
 
     def __constructCDS(self, mRNA, CDSpos) :
         """
@@ -332,149 +281,29 @@ class GenRecord() :
         return string
     #__maybeInvert
 
-    def parseRecord(self, record) :
-        """
-            Convert a GenBank record to a nested dictionary.
-
-            Arguments:
-                record ; A GenBank record.
-
-            Returns:
-                dict ; A nested dictionary.
-        """
-
-        self.record = Record()
-
-        mRNAProducts = []
-        CDSProducts = []
-        for i in record.features :
-            if i.qualifiers :
-                if i.qualifiers.has_key("gene") :
-                    if i.type == "mRNA" :
-                        if i.qualifiers.has_key("product") :
-                            mRNAProducts.append(i.qualifiers["product"][0])
-                    if i.type == "CDS" :
-                        if i.qualifiers.has_key("product") :
-                            CDSProducts.append(i.qualifiers["product"][0])
-                #if
-        print mRNAProducts                
-        print CDSProducts                
-        
-                        
-        for i in  record.features :
-            if i.qualifiers :
-                if i.type == "source" :
-                    if i.qualifiers.has_key("mol_type") :
-                        if i.qualifiers["mol_type"][0] == "mRNA" :
-                            self.record.molType = 'n'
-                        else :
-                            self.record.molType = 'g'
-                    #if
-                    if i.qualifiers.has_key("organelle") :
-                        self.record.organelle = i.qualifiers["organelle"][0]
-                        if self.record.organelle == "mitochondrion" :
-                            self.record.molType = 'm'
-                    #if
-
-                    fakeGene = Locus("001")
-                    self.record.source.transcriptList.append(fakeGene)
-                    fakeGene.CDS = PList()
-                    fakeGene.CDS.location = self.__location2pos(i.location)
-                #if
-
-                if i.qualifiers.has_key("gene") :
-                    gene = i.qualifiers["gene"][0]
-
-                    GeneInstance = self.record.findGene(gene)
-                    if not GeneInstance :
-                        GeneInstance = Gene(gene)
-                        self.record.geneList.append(GeneInstance)
-                    #if
-
-                    if i.type == "gene" :
-                        if i.strand :
-                            GeneInstance.orientation = i.strand
-                        GeneInstance.location = self.__location2pos(i.location)
-                    #if
-    
-                    # Look if there is a locus tag present, if not, give it the
-                    # default tag `001'.
-                    locusName = "001"
-                    locusTag = None
-                    if i.qualifiers.has_key("locus_tag") :
-                        locusTag = i.qualifiers["locus_tag"][0]
-                        locusName = locusTag[-3:]
-                    #if
-
-                    LocusInstance = GeneInstance.findLocus(locusName)
-                    if not LocusInstance :
-                        LocusInstance = Locus(locusName)
-                        GeneInstance.transcriptList.append(LocusInstance)
-                    #if
-    
-                    if i.type == "mRNA" :
-                        #if i.qualifiers.has_key("product") :
-                        #    print i.qualifiers["product"]
-                        PListInstance = PList()
-                        LocusInstance.mRNA = PListInstance
-
-                        posList = self.__locationList2posList(i)
-                        if posList != None :
-                            PListInstance.location = \
-                                self.__location2pos(i.location)
-                            PListInstance.positionList = posList
-                        #if
-                        if i.qualifiers.has_key("transcript_id") :
-                            LocusInstance.transcriptID = \
-                                i.qualifiers["transcript_id"][0]
-                        LocusInstance.locusTag = locusTag
-                    #if
-                    if i.type == "CDS" :
-                        #if i.qualifiers.has_key("product") :
-                        #    print i.qualifiers["product"]
-                        PListInstance = PList()
-                        LocusInstance.CDS = PListInstance
-
-                        PListInstance.location = self.__location2pos(i.location)
-                        PListInstance.positionList = \
-                            self.__locationList2posList(i)
-
-                        if i.qualifiers.has_key("transl_table") :
-                            LocusInstance.txTable = \
-                                int(i.qualifiers["transl_table"][0])
-                        if i.qualifiers.has_key("protein_id") :
-                            LocusInstance.proteinID = \
-                                i.qualifiers["protein_id"][0]
-                        LocusInstance.locusTag = locusTag
-                    #if
-                    if i.type == "exon" :
-                        if not LocusInstance.exon :
-                            LocusInstance.exon = PList()
-                        LocusInstance.exon.positionList.extend(
-                            self.__location2pos(i.location))
-                    #if
-                #if                            
-            #if
-        #for
-        self.checkRecord()
-    #parseRecord
-
     def checkRecord(self) :
-        # Now we have gathered all information.
+        """
+            Check if the record in self.record is compatible with mutalyzer
+
+            update the mRNA PList with the exon and CDS data
+        """
+
+        #TODO:  This function should really check 
+        #       the record for minimal requirements.
         for i in self.record.geneList :
             for j in i.transcriptList :
                 if not j.mRNA :
                     if not j.exon:
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
-                            "variant %s in GenBank record, constructing " \
+                            "variant %s in record, constructing " \
                             "it from CDS." % (i.name, j.name))
                         if j.CDS :
                             if not j.CDS.positionList :
-                                self.__output.addMessage(__file__, 2, 
+                                self.__output.addMessage(__file__, 2,
                                     "WNOCDSLIST", "No CDS list found for " \
                                     "gene %s, transcript variant %s in " \
-                                    "GenBank record, constructing it from " \
+                                    "record, constructing it from " \
                                     "CDS location." % (i.name, j.name))
                                 j.mRNA = j.CDS
                                 j.mRNA.positionList = j.CDS.location
@@ -485,7 +314,7 @@ class GenRecord() :
                         else :
                             self.__output.addMessage(__file__, 2, "WNOCDS",
                                 "No CDS found for gene %s, transcript " \
-                                "variant %s in GenBank record, " \
+                                "variant %s in record, " \
                                 "constructing it from gene location." % (
                                 i.name, j.name))
                             j.CDS = None #PList()
@@ -499,7 +328,7 @@ class GenRecord() :
                     else :
                         self.__output.addMessage(__file__, 2, "WNOMRNA",
                             "No mRNA field found for gene %s, transcript " \
-                            "variant %s in GenBank record, constructing " \
+                            "variant %s in record, constructing " \
                             "it from gathered exon information." % (
                             i.name, j.name))
                         j.mRNA = j.exon
@@ -511,7 +340,7 @@ class GenRecord() :
                     if not j.CDS.positionList :
                         self.__output.addMessage(__file__, 2, "WNOCDS",
                             "No CDS list found for gene %s, transcript " \
-                            "variant %s in GenBank record, constructing " \
+                            "variant %s in record, constructing " \
                             "it from mRNA list and CDS location." % (i.name, 
                             j.name))
                         if j.mRNA.positionList :

@@ -567,7 +567,7 @@ def upload(req) :
 
     O = Output.Output(__file__, C.Output)
     D = Db.Cache(C.Db)
-    R = Retriever.Retriever(C.Retriever, O, D)
+    R = Retriever.GenBankRetriever(C.Retriever, O, D)
 
     if req.method == 'POST' :
         if req.form["invoermethode"] == "file" :

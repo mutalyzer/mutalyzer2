@@ -25,6 +25,9 @@ from Modules import Config
 
 from operator import itemgetter, attrgetter
 
+#TODO: SET TO FALSE DEBUG FLAG
+DEBUG = False
+
 #def __order(a, b) :
 #    """
 #    """
@@ -390,7 +393,7 @@ def __rangeToC(M, g1, g2) :
     return M.g2c(g1), M.g2c(g2)
 #__rangeToC
 
-def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, record, O) :
+def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
     """
     """
 
@@ -399,24 +402,24 @@ def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, record, O) :
             "No mutation given (%c>%c) at position %i." % (
             Arg1, Arg1, start_g))
     MUU.subM(start_g, Arg2)
-    GenRecordInstance.name(start_g, start_g, "subst", record.seq[start_g - 1], 
+    GenRecordInstance.name(start_g, start_g, "subst", MUU.orig[start_g - 1], 
                            Arg2, None)
 #checkSubstitution
     
 def checkDeletionDuplication(start_g, end_g, mutationType, MUU, 
-                             GenRecordInstance, record, O) :
+                             GenRecordInstance, O) :
     """
     """
 
-    roll = __roll(record.seq, start_g, end_g)
+    roll = __roll(MUU.orig, start_g, end_g)
     if roll[1] :
         newStart = start_g + roll[1]
         newStop = end_g + roll[1]
         O.addMessage(__file__, 2, "WROLL", 
             "Sequence %s at position %i_%i was given, however, " \
             "the HGVS notation prescribes that it should be %s at " \
-            "position %i_%i." % (str(record.seq[start_g - 1:end_g]), 
-            start_g, end_g, str(record.seq[newStart - 1:newStop]), 
+            "position %i_%i." % (str(MUU.orig[start_g - 1:end_g]), 
+            start_g, end_g, str(MUU.orig[newStart - 1:newStop]), 
             newStart, newStop))
     #if
     if mutationType == "del" :
@@ -427,17 +430,17 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
                            roll)
 #checkDeletionDuplication
     
-def checkInversion(start_g, end_g, MUU, GenRecordInstance, record, O) :
+def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
     """
     """
 
-    snoop = __palinsnoop(record.seq[start_g - 1:end_g])
+    snoop = __palinsnoop(MUU.orig[start_g - 1:end_g])
     if snoop :
         if snoop == -1 :
             O.addMessage(__file__, 2, "WNOCHANGE", 
                 "Sequence %s at position %i_%i is a palindrome " \
                 "(its own reverse complement)." % (
-                str(record.seq[start_g - 1:end_g]), start_g, end_g))
+                str(MUU.orig[start_g - 1:end_g]), start_g, end_g))
             return
         #if
         else :
@@ -446,9 +449,9 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, record, O) :
                 "palindrome (the first %i nucleotide(s) are the reverse " \
                 "complement of the last one(s)), the HGVS notation " \
                 "prescribes that it should be %s at position %i_%i." % (
-                str(record.seq[start_g - 1:end_g]), 
+                str(MUU.orig[start_g - 1:end_g]), 
                 start_g, end_g, snoop, 
-                str(record.seq[start_g + snoop - 1: end_g - snoop]),
+                str(MUU.orig[start_g + snoop - 1: end_g - snoop]),
                 start_g + snoop, end_g - snoop))
             start_g += snoop
             end_g -= snoop
@@ -459,7 +462,7 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, record, O) :
     GenRecordInstance.name(start_g, end_g, "inv", "", "", None)
 #checkInversion
     
-def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, record, O) :
+def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     """
     """
 
@@ -490,7 +493,7 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, record, O) :
             roll)
 #checkInsertion
 
-def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
+def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     """
     """
 
@@ -536,18 +539,17 @@ def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
     #if
 
     if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
-        __checkOptArg(record.seq, start_g, end_g, Arg1, O)
+        __checkOptArg(MUU.orig, start_g, end_g, Arg1, O)
 
     if RawVar.MutationType == "subst" :
-        checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, record, 
-                          O)
+        checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O)
     if RawVar.MutationType in ["del", "dup"] :
         checkDeletionDuplication(start_g, end_g, RawVar.MutationType, MUU, 
-                                 GenRecordInstance, record, O)
+                                 GenRecordInstance, O)
     if RawVar.MutationType == "inv" :
-        checkInversion(start_g, end_g, MUU, GenRecordInstance, record, O)
+        checkInversion(start_g, end_g, MUU, GenRecordInstance, O)
     if RawVar.MutationType == "ins" :
-        checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, record, O)
+        checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O)
 
 
     # DelIns.
@@ -562,7 +564,7 @@ def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
             O.addMessage(__file__, 2, "WNOCHANGE", 
                 "Sequence %s at position %i_%i is identical to the " \
                 "variant." % (
-                str(record.seq[start_g - 1:end_g]), 
+                str(MUU.orig[start_g - 1:end_g]), 
                 start_g, end_g))
             return
         #if
@@ -575,29 +577,29 @@ def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually an insertion.")
             checkInsertion(start_g + lcp - 1, start_g + lcp, ins_part, MUU,
-                           GenRecordInstance, record, O)
-            return                               
+                           GenRecordInstance, O)
+            return
         #if                
         if len(del_part) == 1 and len(ins_part) == 1 :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually a substitution.")
-            checkSubstitution(start_g + lcp, del_part, ins_part, MUU, 
-                              GenRecordInstance, record, O)
-            return                                  
+            checkSubstitution(start_g + lcp, del_part, ins_part, MUU,
+                              GenRecordInstance, O)
+            return
         #if                
         if not len(ins_part) :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually a deletion.")
-            checkDeletionDuplication(start_g + lcp, end_g - lcs, "del", 
-                                     MUU, GenRecordInstance, record, O)
-            return                                  
+            checkDeletionDuplication(start_g + lcp, end_g - lcs, "del",
+                                     MUU, GenRecordInstance, O)
+            return
         #if                
         if str(Bio.Seq.reverse_complement(del_part)) == ins_part :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually an inversion.")
             checkInversion(start_g + lcp, end_g - lcs, MUU,
-                           GenRecordInstance, record, O)
-            return                                  
+                           GenRecordInstance, O)
+            return
         #if                
 
         MUU.delinsM(start_g + lcp, end_g - lcs, ins_part)
@@ -606,7 +608,7 @@ def __rv(MUU, record, RawVar, GenRecordInstance, parts, O, transcript) :
     #if
 #__rv
 
-def __ppp(MUU, record, parts, GenRecordInstance, O) :
+def __ppp(MUU, parts, GenRecordInstance, O) :
     if parts.RawVar or parts.SingleAlleleVarSet :
         if parts.RefType in ['c', 'n'] :
             if parts.Gene :
@@ -631,6 +633,9 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
                 else :
                     W = GS.transcriptList[0]
             #if
+            elif parts.LrgAcc:                   # LRG
+                    W = GenRecordInstance.record.geneList[0].findLocus(
+                        parts.LRGTranscriptID)
             else :
                 W = GenRecordInstance.record.geneList[0].transcriptList[0]
         #if
@@ -639,13 +644,13 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
         #if W and not W.location :
         #    W = None
 
-        if parts.SingleAlleleVarSet :
+        if parts.SingleAlleleVarSet:
             for i in parts.SingleAlleleVarSet :
-                __rv(MUU, record, i.RawVar, GenRecordInstance, 
+                __rv(MUU, i.RawVar, GenRecordInstance, 
                      parts, O, W)
         #if
         else :
-            __rv(MUU, record, parts.RawVar, GenRecordInstance, parts, O, W)
+            __rv(MUU, parts.RawVar, GenRecordInstance, parts, O, W)
 
 
         if not W : # Genomic given.
@@ -700,7 +705,6 @@ def __ppp(MUU, record, parts, GenRecordInstance, O) :
         #        W.CM.g2x(MUU.newSplice(W.CDS.location)[1])[0], orig, trans))
         #else :
         #    O.addOutput("proteindescription", "p.?")
-            
         #del W.CM
     #if                
 #__ppp
@@ -716,35 +720,31 @@ def process(cmd, C, O) :
             RetrieveRecord = ParseObj.RefSeqAcc + '.' + ParseObj.Version
         else :
             RetrieveRecord = ParseObj.RefSeqAcc
-        O.addOutput("reference", RetrieveRecord)
 
         D = Db.Cache(C.Db)
-        retriever = Retriever.Retriever(C.Retriever, O, D)
         if ParseObj.LrgAcc:
             filetype = "LRG"
             RetrieveRecord = ParseObj.LrgAcc
+            retriever = Retriever.LargeRetriever(C.Retriever, O, D)
         else:
+            retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
             filetype = "GB"
-        record = retriever.loadrecord(RetrieveRecord, filetype)
+
+        O.addOutput("reference", RetrieveRecord)
+        record = retriever.loadrecord(RetrieveRecord)
         if not record :
             return
         del retriever
         del D
 
         GenRecordInstance = GenRecord.GenRecord(C.GenRecord, O)
+        GenRecordInstance.record = record
+        GenRecordInstance.checkRecord()
+        #NOTE:  GenRecordInstance is carrying the sequence in   .record.seq
+        #       so is the Mutator.Mutator instance MUU          .orig
 
-        #FIXME: REMOVE Stealing thunder to test lrg file
-
-        if filetype == "LRG":
-            GenRecordInstance.record = record
-            #The GRI contains a few fields that it won't need
-            #del(GenRecordInstance.record.seq)
-            GenRecordInstance.checkRecord()
-        else: #filetype == "GB"
-            GenRecordInstance.parseRecord(record)
-
-        MUU = Mutator.Mutator(record.seq, C.Mutator, O)
-        __ppp(MUU, record, ParseObj, GenRecordInstance, O)
+        MUU = Mutator.Mutator(GenRecordInstance.record.seq, C.Mutator, O)
+        __ppp(MUU, ParseObj, GenRecordInstance, O)
 
         # PROTEIN
         for i in GenRecordInstance.record.geneList :
@@ -784,18 +784,6 @@ def process(cmd, C, O) :
         # /PROTEIN
 
         reference = O.getOutput("reference")[0]
-        for i in GenRecordInstance.record.geneList :
-            for j in sorted(i.transcriptList, key = attrgetter("name")) :
-                if ';' in j.description :
-                    O.addOutput("descriptions", "%s(%s_v%s):%c.[%s]" % (
-                        reference, i.name, j.name, j.molType, j.description))
-                else :
-                    O.addOutput("descriptions", "%s(%s_v%s):%c.%s" % (
-                        reference, i.name, j.name, j.molType, j.description))
-                    if (j.molType == 'c') :
-                        O.addOutput("protDescriptions", "%s(%s_i%s):%s" % (
-                            reference, i.name, j.name, j.proteinDescription))
-            #for
         if ';' in GenRecordInstance.record.description :
             O.addOutput("genomicDescription", "%s:%c.[%s]" % (reference, 
                 GenRecordInstance.record.molType, 
@@ -804,6 +792,42 @@ def process(cmd, C, O) :
             O.addOutput("genomicDescription", "%s:%c.%s" % (reference, 
                 GenRecordInstance.record.molType, 
                 GenRecordInstance.record.description))
+
+        if GenRecordInstance.record._sourcetype == "LRG": #LRG record
+            #from collections import defaultdict
+            #toutput = defaultdict(list)
+            #poutput = defaultdict(list)
+            for i in GenRecordInstance.record.geneList:
+                for j in sorted(i.transcriptList, key = attrgetter("name")) :
+                    d = j.description
+                    d = ';' in d and '['+d+']' or d
+                    O.addOutput("descriptions", (
+                        "%st%s:%c.%s" % (reference, j.name, j.molType,
+                          d)))
+                    if j.molType == 'c':
+                        O.addOutput("protDescriptions", (
+                                "%sp%s:%s" % (reference, j.name, 
+                                    j.proteinDescription)))
+                        #poutput[i.name].sort()
+                #toutput[i.name].sort()
+        #if                
+        else :                
+            for i in GenRecordInstance.record.geneList :
+                for j in sorted(i.transcriptList, key = attrgetter("name")) :
+                    if ';' in j.description :
+                        O.addOutput("descriptions", "%s(%s_v%s):%c.[%s]" % (
+                            reference, i.name, j.name, j.molType, 
+                            j.description))
+                    else :
+                        O.addOutput("descriptions", "%s(%s_v%s):%c.%s" % (
+                            reference, i.name, j.name, j.molType, 
+                            j.description))
+                        if (j.molType == 'c') :
+                            O.addOutput("protDescriptions", "%s(%s_i%s):%s" % (
+                                reference, i.name, j.name, 
+                                j.proteinDescription))
+                #for
+        #else
 
         del MUU
 
@@ -846,7 +870,8 @@ def main(cmd) :
     print summary
     print
 
-    if not errors :
+    #if not errors :
+    if not errors or DEBUG:
         visualisation = O.getOutput("visualisation")
         if visualisation :
             for i in range(len(visualisation)) :
@@ -857,7 +882,7 @@ def main(cmd) :
             print
         #if
 
-        #reference = O.getOutput("reference")[0]
+        reference = O.getOutput("reference")[0]
         for i in O.getOutput("descriptions") :
             print i
         print
@@ -865,32 +890,58 @@ def main(cmd) :
             print i
         print
 
-        #for i in RD.record.geneList :
-        #    for j in i.transcriptList :
-        #        if ';' in j.description :
-        #            print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name, 
-        #                                          j.molType, j.description)
-        #        else :
-        #            print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name, 
-        #                                        j.molType, j.description)
-        #            if (j.molType == 'c') :
-        #                print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
-        #                                         j.proteinDescription)
-        #    #for
-        #if ';' in RD.record.description :
-        #    print "%s:%c.[%s]" % (reference, RD.record.molType, 
-        #                          RD.record.description)
-        #else :
-        #    print "%s:%c.%s" % (reference, RD.record.molType, 
-        #                        RD.record.description)
+        if RD.record._sourcetype == "LRG": #LRG record
+            from collections import defaultdict
+            toutput = defaultdict(list)
+            poutput = defaultdict(list)
+            for i in RD.record.geneList:
+                for j in i.transcriptList:
+                    d = j.description
+                    d = ';' in d and '['+d+']' or d
+                    toutput[i.name].append(
+                        "%st%s:%c.%s" % (reference, j.name, j.molType,
+                          d))
+                    if j.molType == 'c':
+                        poutput[i.name].append(
+                                "%sp%s:%s" % (reference, j.name, 
+                                    j.proteinDescription))
+                        poutput[i.name].sort()
+                toutput[i.name].sort()
 
-        #pd = O.getOutput("proteindescription")
-        #if pd :
-        #    if O.getOutput("altprotein") :
-        #        print "%s:p.(0)" % reference
-        #    else :
-        #        print "%s:%s" % (reference, pd[0])
-        ##if
+            #Transcript Notation
+            print "Following transcripts were affected:"
+            for key, values in toutput.items():
+                print key
+                for value in values:
+                    print "\t"+value
+
+            #Protein Notation
+            print "\nFollowing proteins were affected:"
+            for key, values in poutput.items():
+                print key
+                for value in values:
+                    print "\t"+value
+
+
+        else:
+            for i in RD.record.geneList :
+                for j in i.transcriptList :
+                    if ';' in j.description :
+                        print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name, 
+                                                      j.molType, j.description)
+                    else :
+                        print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name, 
+                                                    j.molType, j.description)
+                        if (j.molType == 'c') :
+                            print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
+                                                     j.proteinDescription)
+            #for                                                
+        #for
+
+        #Genomic Notation
+        rdrd = RD.record.description
+        gdescr = ';' in rdrd and '['+rdrd+']' or rdrd
+        print "\nGenomic notation:\n\t%s:g.%s" % (reference, gdescr)
 
         op = O.getOutput("oldprotein")
         if op :
