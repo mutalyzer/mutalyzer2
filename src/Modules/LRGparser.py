@@ -162,7 +162,10 @@ def _transcriptPopulator(trName, trData):
         transcript.proteinID = pA.get("accession")
         CDS = GenRecord.PList()
         CDS.location = [pA.get("cds_start"), pA.get("cds_end")]
+        if not any(CDS.location): CDS = None
         transcript.CDS = CDS
+    else:
+        transcript.molType = 'n'
 
     # Check if the transcript has a name, if not; use transcriptid
     # This is needed for the transcripts without a fixed ID

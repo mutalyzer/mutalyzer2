@@ -295,9 +295,7 @@ class GenRecord() :
                                 "variant %s in record, " \
                                 "constructing it from genelocation." % (
                                 i.name, j.name))
-                            j.CDS = GenRecord.Locus()
-                            j.CDS.location = j.location
-                            j.mRNA = j.CDS
+                            j.mRNA = PList()
                             j.mRNA.positionList = i.location
                             j.molType = 'n'
                         #else
