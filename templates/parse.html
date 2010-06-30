@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
+    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <script type = "text/javascript" 
+        language = "javascript" 
+        src = "test.js">
+    </script>
+  </head>
+  <body onload = "yo()">
+<!--
+    <div metal:use-macro = "sitemacros/macros/menu"></div>
+-->
+    <big tal:content = "structure string:Variant syntax check
+      by Mutalyzer ${version}.">
+    </big>
+    <br>
+    <br>
+    <br>
+    Please insert the variant name using the format:<br>
+    <small>
+      &lt;Accession Number&gt;.&lt;version 
+      number&gt;:c.&lt;variant&gt;<br>or<br>
+      &lt;Accession Number&gt;.&lt;version 
+      number&gt;:g.&lt;variant&gt;
+    </small><br>
+    <br>
+    <h3> Examples:</h3>
+    NM_000051.3:c.274G&gt;T<br>
+    or
+    <br>
+    NC_000011.9:g.66594541T&gt;C<br>
+    or
+    <br>
+    chr11:g.66594541T&gt;C<br>
+    <br>
+    <h5>Note: this is a variant nomenclature syntax checker only. Please use
+    <A href="http://mutalyzer.nl/1.0.4/">
+    Mutalyzer's name checker</A> to also check nomenclature semantics. 
+    
+    </h5>
+    <form action = "" method = "post">
+      <small> Variant name </small>
+      <input 
+        type = "text" 
+        name = "variant" 
+        tal:attributes = "value variant"
+        size = "100%"
+      ><br><br>
+      <input 
+        type="submit" 
+        value="Submit"
+      >
+    </form>
+    <br>
+    <B tal:content = "parse_output"></B>
+  </body>
+</html>

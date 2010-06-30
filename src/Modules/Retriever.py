@@ -648,10 +648,15 @@ class LargeRetriever(Retriever):
         #if not lrgID.startswith("LRG"):
         #    return None
         filename = self._nametofile(lrgID)
+        print lrgID, url
 
         handle = urllib2.urlopen(url)
         info = handle.info()
         if info["Content-Type"] == "application/xml" :
+
+            if not info.has_key("Content-length") : # FIXME
+                raise urllib2.URLError("hallo")
+
             length = int(info["Content-Length"])
             if self._config.minDldSize < length < self._config.maxDldSize:
                 raw_data = handle.read()

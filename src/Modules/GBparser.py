@@ -20,6 +20,11 @@ def __location2pos(location) :
 
     ret = []
 
+    if not str(location.start).isdigit() or \
+       not str(location.end).isdigit() :
+        return None
+    #if
+
     ret.append(location.start.position + 1)
     ret.append(location.end.position)
 
@@ -39,6 +44,11 @@ def __locationList2posList(locationList) :
     """
 
     ret = []
+
+    if not str(locationList.location.start).isdigit() or \
+       not str(locationList.location.end).isdigit() :
+        return None
+    #if
 
     for i in locationList.sub_features :
         if i.ref : # This is a workaround for a bug in BioPython.
@@ -71,6 +81,22 @@ def createGBRecord(filename):
 
     record = Record()
     record.seq = biorecord.seq
+
+    mRNAProducts = []
+    CDSProducts = []
+    for i in biorecord.features :
+        if i.qualifiers :
+            if i.qualifiers.has_key("gene") :
+                if i.type == "mRNA" :
+                    if i.qualifiers.has_key("product") :
+                        mRNAProducts.append(i.qualifiers["product"][0])
+                if i.type == "CDS" :
+                    if i.qualifiers.has_key("product") :
+                        CDSProducts.append(i.qualifiers["product"][0])
+            #if
+    print mRNAProducts
+    print CDSProducts
+
     for i in biorecord.features :
         if i.qualifiers :
             if i.type == "source" :

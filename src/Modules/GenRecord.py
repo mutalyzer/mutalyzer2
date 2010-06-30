@@ -89,6 +89,7 @@ class Locus(object) :
         self.molType = 'c'
         self.description = ""
         self.proteinDescription = "?"
+        self.proteinRange = []
         self.locusTag = None
         self.transLongName = ""
         self.protLongName = ""
@@ -140,10 +141,20 @@ class Gene(object) :
         """
 
         for i in self.transcriptList :
-            if i.name == name :
+            if i.name == name or i.name == str("%03i" % int(name)):
                 return i
         return None
     #findLocus
+
+    def listLoci(self) :
+        """
+        """
+
+        ret = []
+        for i in self.transcriptList :
+            ret.append(i.name)
+        return ret
+    #listLoci
 #Gene
 
 class Record(object) :
@@ -184,7 +195,7 @@ class Record(object) :
         """
 
         self.geneList = []
-        self.molType = ''
+        self.molType = 'g'
         self.seq = ""
         self.mapping = []
         self.organelle = None
@@ -202,6 +213,16 @@ class Record(object) :
                 return i
         return None
     #findGene
+
+    def listGenes(self) :
+        """
+        """
+
+        ret = []
+        for i in self.geneList :
+            ret.append(i.name)
+        return ret
+    #listGenes
 
     def addToDescription(self, rawVariant) :
         """
@@ -266,6 +287,7 @@ class GenRecord() :
 
             update the mRNA PList with the exon and CDS data
         """
+
         #TODO:  This function should really check 
         #       the record for minimal requirements.
         for i in self.record.geneList :
@@ -293,10 +315,13 @@ class GenRecord() :
                             self.__output.addMessage(__file__, 2, "WNOCDS",
                                 "No CDS found for gene %s, transcript " \
                                 "variant %s in record, " \
-                                "constructing it from genelocation." % (
+                                "constructing it from gene location." % (
                                 i.name, j.name))
+                            j.CDS = None #PList()
+                            #j.CDS.location = i.location
                             j.mRNA = PList()
-                            j.mRNA.positionList = i.location
+                            j.mRNA.location = i.location
+                            #j.mRNA.positionList = i.location
                             j.molType = 'n'
                         #else
                     #if
@@ -311,7 +336,7 @@ class GenRecord() :
                 #if
                 if not j.mRNA.positionList :
                     j.mRNA.positionList = j.mRNA.location
-                if j.CDS :
+                if j.CDS and j.CDS.positionList != None :
                     if not j.CDS.positionList :
                         self.__output.addMessage(__file__, 2, "WNOCDS",
                             "No CDS list found for gene %s, transcript " \

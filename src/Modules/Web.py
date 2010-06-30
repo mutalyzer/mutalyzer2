@@ -60,6 +60,50 @@ class Web() :
         return reply 
     #run
 
+    #def tal(self, scheme, filename, args) :
+    #    """
+    #        Compile a TAL template to HTML or XML.
+
+    #        Arguments:
+    #            scheme   ; Either "HTML" or "XML", output will be in this 
+    #                       format.
+    #            filename ; The filename of the template.
+    #            args     ; A dictionary with variables (whose name correspond
+    #                       to the ones in the template) and their values.
+
+    #        Returns:
+    #            string ; An HTML or XML file.
+    #    """
+
+    #    from simpletal import simpleTALES # context(), addGlobal()
+    #    from simpletal import simpleTAL   # compileHTMLTemplate, 
+    #                                      # compileXMLTemplate,
+
+    #    context = simpleTALES.Context()
+    #
+    #    for i in args :
+    #        context.addGlobal(i, args[i])
+
+    #    #templateFile = open("templates/menu.html", 'r')
+    #    #macros = simpleTAL.compileHTMLTemplate(templateFile)
+    #    #templateFile.close()
+    #    #context.addGlobal("sitemacros", macros)
+    #
+    #    templateFile = open(filename, 'r')
+
+    #    if scheme == "HTML" :
+    #        template = simpleTAL.compileHTMLTemplate(templateFile)
+    #    else :
+    #        template = simpleTAL.compileXMLTemplate(templateFile)
+
+    #    templateFile.close()
+    #
+    #    string = StringIO()
+    #    template.expand(context, string)
+    #
+    #    return string.getvalue()
+    ##tal
+
     def tal(self, scheme, filename, args) :
         """
             Compile a TAL template to HTML or XML.
@@ -84,64 +128,27 @@ class Web() :
         for i in args :
             context.addGlobal(i, args[i])
 
-        #templateFile = open("templates/menu.html", 'r')
-        #macros = simpleTAL.compileHTMLTemplate(templateFile)
-        #templateFile.close()
-        #context.addGlobal("sitemacros", macros)
-    
-        templateFile = open(filename, 'r')
-
         if scheme == "HTML" :
+            templateFile = open(filename, 'r')
+            macros = simpleTAL.compileHTMLTemplate(templateFile)
+            templateFile.close()
+            context.addGlobal("sitemacros", macros)
+    
+            templateFile = open("templates/menu.html", 'r')
             template = simpleTAL.compileHTMLTemplate(templateFile)
+            templateFile.close()
+        #if
         else :
-            template = simpleTAL.compileXMLTemplate(templateFile)
-
-        templateFile.close()
+            templateFile = open(filename, 'r')
+            template = simpleTAL.compileHTMLTemplate(templateFile)
+            templateFile.close()
+        #else
     
         string = StringIO()
         template.expand(context, string)
     
         return string.getvalue()
     #tal
-
-    #def tal2(self, filename, args) :
-    #    """
-    #        Compile a TAL template to HTML or XML.
-
-    #        Arguments:
-    #            scheme   ; Either "HTML" or "XML", output will be in this 
-    #                       format.
-    #            filename ; The filename of the template.
-    #            args     ; A dictionary with variables (whose name correspond
-    #                       to the ones in the template) and their values.
-
-    #        Returns:
-    #            string ; An HTML or XML file.
-    #    """
-
-    #    from simpletal import simpleTALES # context(), addGlobal()
-    #    from simpletal import simpleTAL   # compileHTMLTemplate, 
-    #                                      # compileXMLTemplate,
-
-    #    context = simpleTALES.Context()
-    #
-    #    for i in args :
-    #        context.addGlobal(i, args[i])
-
-    #    templateFile = open("../templates/download.html", 'r')
-    #    macros = simpleTAL.compileHTMLTemplate(templateFile)
-    #    templateFile.close()
-    #    context.addGlobal("sitemacros", macros)
-    #
-    #    templateFile = open("../templates/menu.html", 'r')
-    #    template = simpleTAL.compileHTMLTemplate(templateFile)
-    #    templateFile.close()
-    #
-    #    string = StringIO()
-    #    template.expand(context, string)
-    #
-    #    return string.getvalue()
-    ##tal2
 
     def read(self, path, req) :
         """

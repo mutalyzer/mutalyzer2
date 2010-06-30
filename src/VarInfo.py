@@ -106,14 +106,24 @@ def main(LOVD_ver, build, acc, var) :
                  LOVD_ver, build))
 
     Cross = Mapper.makeCrossmap(build, acc, C)
-    V = Mapper.makeParsetree(O, Cross, var)
+
+    # If no variant is given, return transcription start, transcription end and
+    #   CDS stop in c. notation.
+    if not var :
+        info = Cross.info()
+        print "%i\n%i\n%i" % info
+        return
+    #if
+    
+    #V = Mapper.makeParsetree(O, Cross, var)
+    V = Mapper.mainMapping(build, acc, var, C, O)
 
     O.addMessage(__file__, -1, "INFO", 
                  "Finished processing %s:%s (LOVD_ver %s, build %s)" % (acc,
                  var, LOVD_ver, build))
     del O, C, Cross
     # And return the output.
-    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain, 
+    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain,
                                           V.endoffset, V.start_g, V.end_g, 
                                           V.mutationType)
         

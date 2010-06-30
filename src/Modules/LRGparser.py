@@ -54,7 +54,7 @@ def createLrgRecord(data):
 
     # Update the Gene object with transcripts from fixed section
     for tData in fixed.getElementsByTagName("transcript"):
-        transcriptName = tData.getAttribute("name").encode("utf8")
+        transcriptName = tData.getAttribute("name").encode("utf8")[1:]
         transcription = [t for t in gene.transcriptList if t.name ==
                 transcriptName][0]
 
@@ -138,7 +138,7 @@ def transcriptsFromParsed(parsedData):
 #transcriptsFromParsed
 
 def _emptyTranscripts(symbol, data):
-    transcript = GenRecord.Locus('t1')
+    transcript = GenRecord.Locus('1')
     transcript.molType = 'n'
     mRNA = GenRecord.PList()
     location = [data["geneAttr"]["start"],
@@ -170,7 +170,7 @@ def _transcriptPopulator(trName, trData):
     # Check if the transcript has a name, if not; use transcriptid
     # This is needed for the transcripts without a fixed ID
     if trName == "":
-        transcript.name = transcript.transcriptID
+        transcript.name = '1' #transcript.transcriptID
 
     return transcript
 #_transcriptPopulator
@@ -268,7 +268,7 @@ def getFeaturesAnnotation(data):
 
             # Check if the transcript is linked to the fixed section
             if transAttr.has_key("fixed_id"):
-                transcripts[transAttr["fixed_id"]] = transRet
+                transcripts[transAttr["fixed_id"][1:]] = transRet
             else:
                 transcripts["noFixedId"].append(transRet)
 

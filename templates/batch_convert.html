@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
+    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <script type = "text/javascript" 
+        language = "javascript" 
+        src = "test.js">
+    </script>
+  </head>
+  <body onload = "yo()">
+<!--
+    <div metal:use-macro = "sitemacros/macros/menu"></div>
+-->
+    <center>
+      <big tal:content = "structure string:Batch position numbering conversion
+      by Mutalyzer ${version}.">
+      </big>
+   </center>
+    <br>
+    <br>
+    <br>
+    Please insert the build, hg18 (NCBI 36) or hg19 (GRCh37) and the file name
+    <br>
+    <br>
+    <h5>Note: this is a position converter! It does not check variant
+    nomenclature. Please use <A href="http://mutalyzer.nl/1.0.4/">
+    Mutalyzer's name checker</A> to check nomenclature
+    
+    </h5>
+    <form action = "" method = "post">
+      <small> Build</small>
+<!--
+      <input 
+        type = "text" 
+        name = "build" 
+        tal:attributes = "value build"
+        size = "10%"
+      ><br><br>
+-->      
+      <select name="build">
+        <option tal:repeat="build_list avail_builds"
+                tal:content="build_list/build"
+                tal:attributes="value build_list/build; selected python:hg19">
+        </option>
+      </select>
+<!--
+      <select class="tablevalues" tal:attributes="name MyBooleanProperty:boolean">
+        <option 
+          tal:repeat="boolProp python:(True,False)" 
+          tal:content="boolProp"
+          tal:attributes="value boolProp; selected python:boolProp==here.getMyBooleanProperty()"
+        />
+</select>
+<select class="tablevalues" 
+    tal:attributes="name MySelectProperty">
+    <option tal:repeat="propOption here/getMySelectPropertyOptions"
+        tal:content="propOption"
+        tal:attributes="value propOption; selected python:propOption==getMySelectProperty()" />
+</select>
+
+-->      
+      <small> File name</small>
+      <input 
+        type = "file" 
+        name = "fileName" 
+        size = "100%"
+      ><br><br>
+      <small> email </small>
+      <input 
+        type = "text" 
+        name = "eMail" 
+        tal:attributes = "value lastEMail"
+        size = "100%"
+      ><br><br>
+      <input 
+        type="submit" 
+        value="Submit"
+      >
+    </form>
+    <br>
+    <H3 tal:content="message"></H3>
+    <a tal:attributes = "href link_output/page" 
+       tal:content="link_output/title" target="_blank">link</a>
+    <table>
+      <tr tal:repeat="genes_list batch_output">
+        <td tal:content = "genes_list/var"></td>
+        <td tal:content = "genes_list/gene"></td>
+        <td tal:content = "genes_list/mrnaAcc"></td>
+      </tr>
+    </table>
+  </body>
+</html>

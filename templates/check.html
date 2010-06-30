@@ -9,36 +9,110 @@
         src = "test.js">
     </script>
   </head>
-  <body onload = "yo()">
+  <body>
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
-    <center>
-      <big tal:content = "structure string:Mutalyzer ${version} nomenclature 
-                          check.">
-      </big>
-    </center><br>
-    Please insert the mutation name using the format:<br>
-    <small>
-      &lt;Accession Number&gt;.&lt;version 
-      number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
-      type&gt;.&lt;mutation&gt;
-    </small><br>
-    <br>
-    Example: AB026906.1:c.274G&gt;T<br>
-    <br>
-    <form action = "" method = "post">
-      <input 
-        type = "text" 
-        name = "mutationName" 
-        tal:attributes = "value lastpost"
-        size = "100%"
-      ><br>
-      <input 
-        type="submit" 
-        value="Submit"
-      >
-    </form>
-    <pre tal:content = "structure mut_output"></pre>
+    <div metal:define-macro="content">
+      <center>
+        <big tal:content = "structure string:Mutalyzer ${version} nomenclature 
+                            check.">
+        </big>
+      </center><br>
+      Please insert the mutation name using the format:<br>
+      <small>
+        &lt;Accession Number&gt;.&lt;version 
+        number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
+        type&gt;.&lt;mutation&gt;
+      </small><br>
+      <br>
+      Example: AB026906.1:c.274G&gt;T<br>
+      <br>
+      <form action = "" method = "post">
+        <input 
+          type = "text" 
+          name = "mutationName" 
+          tal:attributes = "value lastpost"
+          style = "width:100%"
+        ><br>
+        <input 
+          type="submit" 
+          value="Submit"
+        >
+      </form>
+      <br>
+      <div tal:condition = "lastpost">
+        <big><b>Mutalyzer output:</b><br></big>
+        <br>
+        <div tal:repeat = "i messages"
+             tal:replace = "structure string:${i}<br>">
+        </div>
+        <div tal:replace = "summary"></div><br>
+        <br>
+        <br>
+        <b>Overview of the raw variants:</b><br>
+        <br>
+        <tt>
+          <div tal:repeat = "i visualisation" 
+               tal:replace = "structure string:${i}<br>">
+          </div>
+        </tt>
+        <br>
+        <br>
+        <b>Genomic description:</b><br>
+        <br>
+        <tt>
+          <div tal:replace = "genomicDescription"></div><br>
+        </tt>
+        <br>
+        <br>
+        <b>Affected transcripts:</b><br>
+        <br>
+        <tt>
+          <div tal:repeat = "i descriptions"
+               tal:replace = "structure string:${i}<br>">
+          </div>
+        </tt>
+        <br>
+        <br>
+        <b>Affected proteins:</b><br>
+        <br>
+        <tt>
+          <div tal:repeat = "i protDescriptions"
+               tal:replace = "structure string:${i}<br>">
+          </div>
+        </tt>
+        <br>
+        <br>
+        <b>Old protein:</b><br>
+        <pre><div tal:repeat = "i oldProtein"
+                  tal:replace = "structure string:${i}<br>">
+          </div></pre>
+        <br>
+        <b>New protein:</b><br>
+        <pre><div tal:repeat = "i newProtein"
+                  tal:replace = "structure string:${i}<br>">
+          </div></pre>
+        <br>
+        <div tal:condition = "altStart">
+          <b tal:content = "structure string:Alternative protein using start 
+                            codon ${altStart}:"></b><br>
+          <pre><div tal:repeat = "i altProtein"
+                 tal:replace = "structure string:${i}<br>">
+            </div></pre>
+        </div>
+        <br>
+        <b>Legend:</b><br>
+        <br>
+        <table border = "1">
+          <tr>
+            <td>Name</td><td>ID</td><td>Locus tag</td>
+          </tr>
+          <tr tal:repeat = "i legends">
+            <td tal:repeat = "j i" tal:content = "j"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
   </body>
 </html>
