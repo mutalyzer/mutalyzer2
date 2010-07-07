@@ -561,7 +561,8 @@ class GenBankRetriever(Retriever):
         if filename is None: return None
 
         # Now we have the file, so we can parse it.
-        record = GBparser.createGBRecord(filename)
+        GenBankParser = GBparser.GBparser()
+        record = GenBankParser.createGBRecord(filename)
 
         return record
     #loadrecord
@@ -648,7 +649,6 @@ class LargeRetriever(Retriever):
         #if not lrgID.startswith("LRG"):
         #    return None
         filename = self._nametofile(lrgID)
-        print lrgID, url
 
         handle = urllib2.urlopen(url)
         info = handle.info()

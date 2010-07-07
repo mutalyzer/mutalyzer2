@@ -2,6 +2,7 @@
 
 import Crossmap
 import Bio
+import Db
 
 """
     Module to convert a GenBank record to a nested dictionary consisting of
@@ -91,8 +92,11 @@ class Locus(object) :
         self.proteinDescription = "?"
         self.proteinRange = []
         self.locusTag = None
+        self.link = None
         self.transLongName = ""
         self.protLongName = ""
+        self.transcribe = True
+        self.translate = True
     #__init__
 
     def addToDescription(self, rawVariant) :
@@ -134,7 +138,17 @@ class Gene(object) :
         self.transcriptList = []
         self.location = []
         self.longName = ""
+        self.__locusTag = "000"
     #__init__
+
+    def newLocusTag(self) :
+        """
+        """
+
+        self.__locusTag = "%03i" % (int(self.__locusTag) + 1)
+
+        return self.__locusTag
+    #newLocusTag
 
     def findLocus(self, name) :
         """
@@ -155,6 +169,16 @@ class Gene(object) :
             ret.append(i.name)
         return ret
     #listLoci
+
+    def findLink(self, protAcc) :
+        """
+        """
+
+        for i in self.transcriptList :
+            if i.link == protAcc :
+                return i
+        return None
+    #findCDS        
 #Gene
 
 class Record(object) :
@@ -243,11 +267,10 @@ class GenRecord() :
             checkRecord()   ;   Check and repair self.record
     """
 
-    def __init__(self, config, output) :
+    def __init__(self, output) :
         """
         """
 
-        self.__config = config
         self.__output = output
         self.record = None
     #__init__

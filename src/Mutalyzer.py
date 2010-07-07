@@ -356,7 +356,7 @@ def findFrameShift(str1, str2) :
     lcp = __lcp(str1, str2)
 
     return "p.(%s%i%sfs*%i)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp]),
-                                len(str2) - lcp)
+                                len(str2) - lcp + 1)
 #findFrameShift
 
 def __toProtDescr(CDSStop, orig, trans) :
@@ -412,9 +412,27 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     """
 
     roll = __roll(MUU.orig, start_g, end_g)
-    if roll[1] :
-        newStart = start_g + roll[1]
-        newStop = end_g + roll[1]
+
+    shift = roll[1]
+    if GenRecordInstance.record.molType == 'n' :
+        mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
+            ].mRNA.positionList
+        print mRNA
+        print end_g - roll[0], end_g + roll[1]
+        for i in mRNA :
+            if end_g <= i and end_g + roll[1] > i :
+                print "ALARM"
+                shift = i - end_g
+                print shift
+                break
+            #if
+        #for
+    #if
+
+
+    if shift :
+        newStart = start_g + shift
+        newStop = end_g + shift
         O.addMessage(__file__, 2, "WROLL", 
             "Sequence %s at position %i_%i was given, however, " \
             "the HGVS notation prescribes that it should be %s at " \
@@ -427,7 +445,7 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     else :
         MUU.dupM(start_g, end_g)
     GenRecordInstance.name(start_g, end_g, mutationType, "", "", 
-                           roll)
+                           (roll[0], shift))
 #checkDeletionDuplication
     
 def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
@@ -474,23 +492,42 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     newStart = MUU.shiftpos(start_g)
     newStop = MUU.shiftpos(start_g) + insertionLength
     roll = __roll(MUU.mutated, newStart + 1, newStop)
-    if roll[0] + roll[1] >= insertionLength :
+
+    #roll = __roll(MUU.orig, start_g, end_g)
+
+    shift = roll[1]
+    if GenRecordInstance.record.molType == 'n' :
+        mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
+            ].mRNA.positionList
+        print mRNA
+        print newStop - roll[0], newStop + roll[1]
+        for i in mRNA :
+            if newStop <= i and newStop + roll[1] > i :
+                print "ALARM"
+                shift = i - newStop
+                print shift
+                break
+            #if
+        #for
+    #if
+
+    if roll[0] + shift >= insertionLength :
         O.addMessage(__file__, 2, "WINSDUP", 
             "Insertion of %s at position %i_%i was given, " \
             "however, the HGVS notation prescribes that it should be a " \
             "duplication of %s at position %i_%i." % (
             MUU.mutated[newStart:newStop], start_g, start_g + 1,
-            MUU.mutated[newStart:newStop], start_g + roll[1], 
-            start_g + roll[1] + insertionLength - 1))
-        end_g += roll[1] - 1
+            MUU.mutated[newStart:newStop], start_g + shift, 
+            start_g + shift + insertionLength - 1))
+        end_g += shift - 1
         start_g = end_g - insertionLength + 1
         GenRecordInstance.name(start_g, end_g, "dup", "", "", 
-                               (roll[0] + roll[1] - insertionLength, 0))
+                               (roll[0] + shift - insertionLength, 0))
     #if
     else :
         GenRecordInstance.name(start_g, start_g + 1, "ins", 
-            MUU.mutated[newStart + roll[1]:newStop + roll[1]] , "", 
-            roll)
+            MUU.mutated[newStart + shift:newStop + shift] , "", 
+            (roll[0], shift))
 #checkInsertion
 
 def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
@@ -737,7 +774,7 @@ def process(cmd, C, O) :
         del retriever
         del D
 
-        GenRecordInstance = GenRecord.GenRecord(C.GenRecord, O)
+        GenRecordInstance = GenRecord.GenRecord(O)
         GenRecordInstance.record = record
         GenRecordInstance.checkRecord()
         #NOTE:  GenRecordInstance is carrying the sequence in   .record.seq
@@ -748,38 +785,39 @@ def process(cmd, C, O) :
 
         # PROTEIN
         for i in GenRecordInstance.record.geneList :
-            if i.location :
-                for j in i.transcriptList :
-                    if not ';' in j.description and j.CDS :
-                        #print i.name, j.name, j.CDS.positionList, j.CDS.location
-                        cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
-                                  IUPAC.unambiguous_dna)
-                        cdsm = Seq(str(__nsplice(MUU.mutated, 
-                                                 MUU.newSplice(j.mRNA.positionList), 
-                                                 MUU.newSplice(j.CDS.location), 
-                                                 j.CM.orientation)),
-                                   IUPAC.unambiguous_dna)
-                        if j.CM.orientation == -1 :
-                            cds = Bio.Seq.reverse_complement(cds)
-                            cdsm = Bio.Seq.reverse_complement(cdsm)
-                        #if
+            #print i.location, i.transcriptList
+            #if i.location :
+            for j in i.transcriptList :
+                if not ';' in j.description and j.CDS :
+                    #print i.name, j.name, j.CDS.positionList, j.CDS.location
+                    cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
+                              IUPAC.unambiguous_dna)
+                    cdsm = Seq(str(__nsplice(MUU.mutated, 
+                                             MUU.newSplice(j.mRNA.positionList), 
+                                             MUU.newSplice(j.CDS.location), 
+                                             j.CM.orientation)),
+                               IUPAC.unambiguous_dna)
+                    if j.CM.orientation == -1 :
+                        cds = Bio.Seq.reverse_complement(cds)
+                        cdsm = Bio.Seq.reverse_complement(cdsm)
+                    #if
 
-                        #if '*' in cds.translate()[:-1] :
-                        #    O.addMessage(__file__, 3, "ESTOP", 
-                        #                 "In frame stop codon found.")
-                        #    return
-                        ##if
+                    #if '*' in cds.translate()[:-1] :
+                    #    O.addMessage(__file__, 3, "ESTOP", 
+                    #                 "In frame stop codon found.")
+                    #    return
+                    ##if
 
-                        orig = cds.translate(table = j.txTable, cds = True, 
-                                             to_stop = True)
-                        trans = cdsm.translate(table = j.txTable, 
-                                               to_stop = True)
+                    orig = cds.translate(table = j.txTable, cds = True, 
+                                         to_stop = True)
+                    trans = cdsm.translate(table = j.txTable, 
+                                           to_stop = True)
 
-                        cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
+                    cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
 
-                        #print cdsLen, len(__splice(MUU.orig, MUU.newSplice(j.CDS.positionList)))
-                        j.proteinDescription = __toProtDescr(cdsLen, orig, 
-                                                             trans)
+                    #print cdsLen, len(__splice(MUU.orig, MUU.newSplice(j.CDS.positionList)))
+                    j.proteinDescription = __toProtDescr(cdsLen, orig, 
+                                                         trans)
 
         # /PROTEIN
 
