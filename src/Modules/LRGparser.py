@@ -138,7 +138,7 @@ def transcriptsFromParsed(parsedData):
 #transcriptsFromParsed
 
 def _emptyTranscripts(symbol, data):
-    transcript = GenRecord.Locus('1')
+    transcript = GenRecord.Locus('')
     transcript.molType = 'n'
     mRNA = GenRecord.PList()
     location = [data["geneAttr"]["start"],
@@ -169,8 +169,8 @@ def _transcriptPopulator(trName, trData):
 
     # Check if the transcript has a name, if not; use transcriptid
     # This is needed for the transcripts without a fixed ID
-    if trName == "":
-        transcript.name = '1' #transcript.transcriptID
+    #if trName == "":
+    #    transcript.name = '1' #transcript.transcriptID
 
     return transcript
 #_transcriptPopulator
