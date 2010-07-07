@@ -176,8 +176,10 @@ class Scheduler() :
 
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         #TODO: If path not exists create file with correct header
-        with open(filename, "a") as handle:
-            handle.write(outputline)
+        handle = open(filname, 'a')
+        handle.write(outputline)
+        handle.close()
+
     #_processNameBatch
 
     def _processSyntaxCheck(self, results, i):
@@ -214,9 +216,9 @@ class Scheduler() :
         #FIXME!:    This will not work, because Popen doesn't detach from the
         #           parent, so on return, the process is interrupted. BAD!
         #           Use multiprocessing, check if PID catch still works
-        #time.sleep(1)
-        #subprocess.Popen([self.__config.processName, "src/BatchChecker.py"],
-        #                 executable = "python")
+        subprocess.Popen([self.__config.processName, "src/BatchChecker.py"],
+                         executable = "python")
+        time.sleep(1)
     #addJob
 #Scheduler
 
