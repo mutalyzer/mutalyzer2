@@ -20,7 +20,7 @@ class Config() :
             Mutator   ; Container for the Mutator configuration variables.
             Scheduler ; Container for the Scheduler configuration variables.
             File      ; Container for the File configuration variables.
-            GenRecord ; Container for the File configuration variables.
+            GBparser  ; Container for the File configuration variables.
 
         Special Methods:
             __init__ ; Read the configuration file and initialise the 
@@ -118,9 +118,9 @@ class Config() :
         pass
     #File
 
-    class GenRecord() :
+    class GBparser() :
         """
-            Container class for the GenRecord configuration variables.
+            Container class for the GBparser configuration variables.
             
             Public variables:
             upstream   ; Number of upstream nucleotides when searching for a 
@@ -160,7 +160,6 @@ class Config() :
         # Set the variables needed by the Db module.
         self.Db.internalDb = config["internalDb"]
         self.Db.dbNames = config["dbNames"]
-
         self.Db.LocalMySQLuser = config["LocalMySQLuser"]
         self.Db.LocalMySQLhost = config["LocalMySQLhost"]
         self.Db.RemoteMySQLuser = config["RemoteMySQLuser"]
@@ -191,9 +190,12 @@ class Config() :
         self.File.header = config["header"]
         self.File.tempDir = config["tempDir"]
 
-        # Set the variables needed by the GenRecord module.
-        self.File.upstream = int(config["upstream"])
-        self.File.downstream = int(config["downstream"])
+        # Set the variables needed by the GBparser module.
+        self.GBparser.email = config["email"]
+
+        ## Set the variables needed by the File module.
+        #self.File.upstream = int(config["upstream"])
+        #self.File.downstream = int(config["downstream"])
     #__init__
 #Config
 

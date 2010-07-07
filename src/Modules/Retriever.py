@@ -561,7 +561,8 @@ class GenBankRetriever(Retriever):
         if filename is None: return None
 
         # Now we have the file, so we can parse it.
-        record = GBparser.createGBRecord(filename)
+        GenBankParser = GBparser.GBparser()
+        record = GenBankParser.createGBRecord(filename)
 
         return record
     #loadrecord

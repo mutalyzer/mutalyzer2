@@ -26,6 +26,7 @@ In database mutalyzer:
 ---
 CREATE TABLE GBInfo (
   AccNo CHAR(20) PRIMARY KEY,
+  GI CHAR(13) UNIQUE NOT NULL,
   hash CHAR(32) UNIQUE NOT NULL,
   ChrAccVer CHAR(20),
   ChrStart INT(12),
@@ -48,6 +49,20 @@ CREATE TABLE BatchJob (
   EMail CHAR(255) NOT NULL,
   FromHost Char(255) NOT NULL
 );
+
+CREATE TABLE Link (
+  mrnaAcc CHAR(20) PRIMARY KEY,
+  protAcc CHAR(20) UNIQUE NOT NULL
+);
+
+INSERT INTO Link 
+  SELECT DISTINCT acc, protAcc 
+    FROM hg18.map 
+    WHERE protAcc != '' 
+  UNION 
+  SELECT DISTINCT acc, protAcc 
+    FROM hg19.map 
+    WHERE protAcc != '';
 
 CREATE TABLE Var (
   Name CHAR(20) PRIMARY KEY,

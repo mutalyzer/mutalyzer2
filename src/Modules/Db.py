@@ -1040,6 +1040,51 @@ class Cache(Db) :
             return ret[0][0]
         return None
     #getGI
+
+    def getProtAcc(self, mrnaAcc) :
+        """
+        """
+
+        statement = """
+            SELECT protAcc
+              FROM Link
+              WHERE mrnaAcc = %s;
+        """, mrnaAcc
+
+        ret = self.query(statement)
+        if ret :
+            return ret[0][0]
+        return None
+    #getProtAcc
+
+    def getmrnaAcc(self, protAcc) :
+        """
+        """
+
+        statement = """
+            SELECT mrnaAcc
+              FROM Link
+              WHERE protAcc = %s;
+        """, protAcc
+
+        ret = self.query(statement)
+        if ret :
+            return ret[0][0]
+        return None
+
+    #getProtAcc
+
+    def insertLink(self, mrnaAcc, protAcc) :
+        """
+        """
+
+        statement = """
+            INSERT INTO Link
+              VALUES (%s, %s);
+        """, (mrnaAcc, protAcc)
+
+        self.query(statement)
+    #insertLink
 #Cache    
 
 class Batch(Db) :
