@@ -94,8 +94,6 @@ def createGBRecord(filename):
                     if i.qualifiers.has_key("product") :
                         CDSProducts.append(i.qualifiers["product"][0])
             #if
-    print mRNAProducts
-    print CDSProducts
 
     for i in biorecord.features :
         if i.qualifiers :

@@ -49,14 +49,14 @@ def __roll(ref, start, stop) :
     while minimum > -1 and ref[minimum] == pattern[j % patternLength] :
         j -= 1
         minimum -= 1
-    #while 
+    #while
 
     maximum = stop
     j = 0
     while maximum < len(ref) and ref[maximum] == pattern[j % patternLength] :
         j += 1
         maximum += 1
-    #while 
+    #while
 
     return start - minimum - 2, maximum - stop
 #__roll
@@ -171,14 +171,14 @@ def __splice(string, splice_sites) :
             splice_sites ; A list of even length of integers.
 
         Returns:
-            String ; The concatenation of slices from the sequence that is 
+            String ; The concatenation of slices from the sequence that is
                      present in the GenBank record.
     """
 
     transcript = ""
 
     for i in range(0, len(splice_sites), 2) :
-        transcript += string[splice_sites[i] - 1:splice_sites[i + 1]] 
+        transcript += string[splice_sites[i] - 1:splice_sites[i + 1]]
 
     return transcript
 #__splice
@@ -195,9 +195,9 @@ def __nsplice(string, splice_sites, CDS, orientation) :
             else :
                 if splice_sites[i] > CDS[0] :
                     transcript += \
-                        string[splice_sites[i] - 1:splice_sites[i + 1]] 
+                        string[splice_sites[i] - 1:splice_sites[i + 1]]
         #for
-    #if        
+    #if
     else :
         for i in range(0, len(splice_sites), 2) :
             if CDS[1] >= splice_sites[i] and CDS[1] <= splice_sites[i + 1] :
@@ -205,9 +205,9 @@ def __nsplice(string, splice_sites, CDS, orientation) :
             else :
                 if splice_sites[i] < CDS[1] :
                     transcript += \
-                     string[splice_sites[i] - 1:splice_sites[i + 1]] 
+                     string[splice_sites[i] - 1:splice_sites[i + 1]]
         #for
-    #else        
+    #else
 
     return transcript
 #__nsplice
@@ -220,7 +220,7 @@ def __cdsLen(splice_sites) :
 
     for i in range(0, len(splice_sites), 2) :
         l += splice_sites[i + 1] - splice_sites[i] + 1
-    return l        
+    return l
 #__cdsLen
 
 def __checkOptArg(ref, p1, p2, arg, O) :
@@ -232,7 +232,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             length = int(arg)
             interval = p2 - p1 + 1
             if length != interval :
-                O.addMessage(__file__, 3, "EARGLEN", 
+                O.addMessage(__file__, 3, "EARGLEN",
                     "The length (%i) differed from that of the range (%i)." % (
                     length, interval))
                 return False
@@ -241,7 +241,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
         else :
             ref_slice = str(ref[p1 - 1:p2])
             if ref_slice != str(arg) : # FIXME more informative.
-                O.addMessage(__file__, 3, "EREF", 
+                O.addMessage(__file__, 3, "EREF",
                     "%s not found at position %i_%i, found %s instead." % (
                     arg, p1, p2, ref_slice))
                 return False
@@ -289,7 +289,7 @@ def __lcs(str1, str2) :
     t2 = str2[::-1] # Invert str2.
 
     # The lcp of the two inverted strings is the lcs of the original strings.
-    return __lcp(t1, t2) 
+    return __lcp(t1, t2)
 #__lcs
 
 def findInFrameDescription(str1, str2) :
@@ -308,19 +308,19 @@ def findInFrameDescription(str1, str2) :
     # Insertion / Duplication / Extention.
     if not str1_end - lcp :
         if len(str1) == lcp :
-            return "p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]), 
+            return "p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),
                                         abs(len(str1) - len(str2)))
         inLen = str2_end - lcp
 
         if lcp - inLen >= 0 and str1[lcp - inLen:lcp] == str2[lcp:str2_end] :
             if inLen == 1 :
-                return "p.(%s%idup)" % (seq3(str1[lcp - inLen]), 
+                return "p.(%s%idup)" % (seq3(str1[lcp - inLen]),
                                         lcp - inLen + 1)
-            return "p.(%s%i_%s%idup)" % (seq3(str1[lcp - inLen]), 
+            return "p.(%s%i_%s%idup)" % (seq3(str1[lcp - inLen]),
                                          lcp - inLen + 1,
                                          seq3(str1[lcp - 1], lcp))
         #if
-        return "p.(%s%i_%s%iins%s)" % (seq3(str1[lcp - 1]), lcp, 
+        return "p.(%s%i_%s%iins%s)" % (seq3(str1[lcp - 1]), lcp,
                                        seq3(str1[lcp]), lcp + 1,
                                        seq3(str2[lcp:str2_end]))
     #if
@@ -332,7 +332,7 @@ def findInFrameDescription(str1, str2) :
 
         if lcp + 1 == str1_end :
             return "p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1)
-        return "p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1, 
+        return "p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1,
                                      seq3(str1[str1_end - 1]), str1_end)
     #if
 
@@ -342,9 +342,9 @@ def findInFrameDescription(str1, str2) :
 
     # InDel.
     if lcp + 1 == str1_end :
-        return "p.(%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1, 
+        return "p.(%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
                                      seq3(str2[lcp:str2_end]))
-    return "p.(%s%i_%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1, 
+    return "p.(%s%i_%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
                                       seq3(str1[str1_end - 1]),
                                       str1_end, seq3(str2[lcp:str2_end]))
 #findInFrameDescription
@@ -368,13 +368,6 @@ def __toProtDescr(CDSStop, orig, trans) :
     return findInFrameDescription(str(orig), str(trans))
 #__toProtDescr
 
-#def __trim(string, lcp, lcs) :
-#    """
-#    """
-#
-#    return string[lcp:len(string) - lcs]
-##__trim
-
 def __trim2(str1, str2) :
     """
     """
@@ -393,20 +386,106 @@ def __rangeToC(M, g1, g2) :
     return M.g2c(g1), M.g2c(g2)
 #__rangeToC
 
+def _createBatchOutput(GRI, O, ParseObj):
+    """
+        Format the results to a batch output.
+
+        Save the output of the query to the output object "batch" entry
+    """
+    messages = []
+    exitcode = 0
+
+    if GRI.record._sourcetype == "LRG":
+        gene = GRI.record.geneList[0]           #LRG main Gene on top of list
+        transVar = ParseObj.LRGTranscriptID
+    else:
+        if ParseObj.Gene:
+            geneName = ParseObj.Gene.GeneSymbol
+            transVar = ParseObj.Gene.TransVar
+            gene = GRI.record.findGene(geneName)
+        elif len(GRI.record.geneList) == 0:
+            gene = None
+        elif len(GRI.record.geneList) == 1:
+            gene = GRI.record.geneList[0]
+            transVar = None
+        else:
+            messages.append("Multiple genes found, please supply a valid "
+                    "Gene Symbol")
+            exitcode+=1
+            gene = None
+
+    if gene:
+        geneName = gene.name
+        if not transVar:
+            transcripts = gene.listLoci()
+            if len(transcripts) == 0:    #No transcripts
+                transcript = None
+            elif len(transcripts) == 1:  #One transcript
+                transcript = gene.transcriptList[0]
+                transVar = transcript.name
+            else:                        #Multiple transcripts
+                messages.append("Multiple transcripts available, please supply "
+                        "a valid transcript id.")
+                transcript = None
+                exitcode += 2
+        else:
+            transcript = gene.findLocus(transVar)
+    else:
+        exitcode += 4
+        transcript = None
+
+    if transcript:
+        cName = "c.%s" % transcript.description     #add brackets TODO
+        pName = transcript.proteinDescription       #p. already included
+        if GRI.record._sourcetype == "LRG":
+            cSymbol = "t%s" % transVar
+            pSymbol = "p%s" % transVar
+        else: #GenBank
+            if transVar:
+                cSymbol = "%s_v%s" % (geneName, transVar)
+                pSymbol = "%s_i%s" % (geneName, transVar)
+            else:
+                cSymbol = geneName
+                pSymbol = geneName
+        cAcc = transcript.transcriptID
+        pAcc = transcript.proteinID
+    else:
+        cName =   ""
+        pName =   ""
+        cSymbol = ""
+        pSymbol = ""
+        cAcc =    ""
+        pAcc =    ""
+
+    batchOutput = {
+            "input":        O.getOutput("inputvariant")[0],
+            "messages":     messages,
+            "gName":        O.getOutput("genomicDescription")[0].split(':')[1],
+            "cName":        cName,
+            "pName":        pName,
+            "cSymbol":      cSymbol,
+            "pSymbol":      pSymbol,
+            "gAcc":         None,
+            "cAcc":         cAcc,
+            "pAcc":         pAcc,
+            "exitcode":     exitcode}
+
+    O.addOutput("batch", batchOutput)
+
 def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
     """
     """
 
     if Arg1 == Arg2 :
-        O.addMessage(__file__, 3, "ENOVAR", 
+        O.addMessage(__file__, 3, "ENOVAR",
             "No mutation given (%c>%c) at position %i." % (
             Arg1, Arg1, start_g))
     MUU.subM(start_g, Arg2)
-    GenRecordInstance.name(start_g, start_g, "subst", MUU.orig[start_g - 1], 
+    GenRecordInstance.name(start_g, start_g, "subst", MUU.orig[start_g - 1],
                            Arg2, None)
 #checkSubstitution
-    
-def checkDeletionDuplication(start_g, end_g, mutationType, MUU, 
+
+def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
                              GenRecordInstance, O) :
     """
     """
@@ -415,21 +494,21 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     if roll[1] :
         newStart = start_g + roll[1]
         newStop = end_g + roll[1]
-        O.addMessage(__file__, 2, "WROLL", 
+        O.addMessage(__file__, 2, "WROLL",
             "Sequence %s at position %i_%i was given, however, " \
             "the HGVS notation prescribes that it should be %s at " \
-            "position %i_%i." % (str(MUU.orig[start_g - 1:end_g]), 
-            start_g, end_g, str(MUU.orig[newStart - 1:newStop]), 
+            "position %i_%i." % (str(MUU.orig[start_g - 1:end_g]),
+            start_g, end_g, str(MUU.orig[newStart - 1:newStop]),
             newStart, newStop))
     #if
     if mutationType == "del" :
         MUU.delM(start_g, end_g)
     else :
         MUU.dupM(start_g, end_g)
-    GenRecordInstance.name(start_g, end_g, mutationType, "", "", 
+    GenRecordInstance.name(start_g, end_g, mutationType, "", "",
                            roll)
 #checkDeletionDuplication
-    
+
 def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
     """
     """
@@ -437,20 +516,20 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
     snoop = __palinsnoop(MUU.orig[start_g - 1:end_g])
     if snoop :
         if snoop == -1 :
-            O.addMessage(__file__, 2, "WNOCHANGE", 
+            O.addMessage(__file__, 2, "WNOCHANGE",
                 "Sequence %s at position %i_%i is a palindrome " \
                 "(its own reverse complement)." % (
                 str(MUU.orig[start_g - 1:end_g]), start_g, end_g))
             return
         #if
         else :
-            O.addMessage(__file__, 2, "WNOTMINIMAL", 
+            O.addMessage(__file__, 2, "WNOTMINIMAL",
                 "Sequence %s at position %i_%i is a partial " \
                 "palindrome (the first %i nucleotide(s) are the reverse " \
                 "complement of the last one(s)), the HGVS notation " \
                 "prescribes that it should be %s at position %i_%i." % (
-                str(MUU.orig[start_g - 1:end_g]), 
-                start_g, end_g, snoop, 
+                str(MUU.orig[start_g - 1:end_g]),
+                start_g, end_g, snoop,
                 str(MUU.orig[start_g + snoop - 1: end_g - snoop]),
                 start_g + snoop, end_g - snoop))
             start_g += snoop
@@ -461,13 +540,13 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
     MUU.invM(start_g, end_g)
     GenRecordInstance.name(start_g, end_g, "inv", "", "", None)
 #checkInversion
-    
+
 def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     """
     """
 
     if start_g + 1 != end_g :
-        O.addMessage(__file__, 3, "EINSRANGE", 
+        O.addMessage(__file__, 3, "EINSRANGE",
             "%i and %i are not consecutive positions." % (start_g, end_g))
     MUU.insM(start_g, Arg1)
     insertionLength = len(Arg1)
@@ -475,21 +554,21 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     newStop = MUU.shiftpos(start_g) + insertionLength
     roll = __roll(MUU.mutated, newStart + 1, newStop)
     if roll[0] + roll[1] >= insertionLength :
-        O.addMessage(__file__, 2, "WINSDUP", 
+        O.addMessage(__file__, 2, "WINSDUP",
             "Insertion of %s at position %i_%i was given, " \
             "however, the HGVS notation prescribes that it should be a " \
             "duplication of %s at position %i_%i." % (
             MUU.mutated[newStart:newStop], start_g, start_g + 1,
-            MUU.mutated[newStart:newStop], start_g + roll[1], 
+            MUU.mutated[newStart:newStop], start_g + roll[1],
             start_g + roll[1] + insertionLength - 1))
         end_g += roll[1] - 1
         start_g = end_g - insertionLength + 1
-        GenRecordInstance.name(start_g, end_g, "dup", "", "", 
+        GenRecordInstance.name(start_g, end_g, "dup", "", "",
                                (roll[0] + roll[1] - insertionLength, 0))
     #if
     else :
-        GenRecordInstance.name(start_g, start_g + 1, "ins", 
-            MUU.mutated[newStart + roll[1]:newStop + roll[1]] , "", 
+        GenRecordInstance.name(start_g, start_g + 1, "ins",
+            MUU.mutated[newStart + roll[1]:newStop + roll[1]] , "",
             roll)
 #checkInsertion
 
@@ -497,7 +576,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     """
     """
 
-    # FIXME check this 
+    # FIXME check this
     # First assume that the variant is given in g. notation.
     #print RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main
     #print __PtLoc2offset(RawVar.StartLoc.PtLoc)
@@ -513,7 +592,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     Arg1 = RawVar.Arg1
     Arg2 = RawVar.Arg2
 
-    
+
     # If it is not, convert it to g. notation.
     if transcript :
         start_main = transcript.CM.main2int(RawVar.StartLoc.PtLoc.MainSgn + \
@@ -544,7 +623,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     if RawVar.MutationType == "subst" :
         checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O)
     if RawVar.MutationType in ["del", "dup"] :
-        checkDeletionDuplication(start_g, end_g, RawVar.MutationType, MUU, 
+        checkDeletionDuplication(start_g, end_g, RawVar.MutationType, MUU,
                                  GenRecordInstance, O)
     if RawVar.MutationType == "inv" :
         checkInversion(start_g, end_g, MUU, GenRecordInstance, O)
@@ -561,10 +640,10 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
         #lcs =  __lcs(Arg1, Arg2)
 
         if str(Arg1) == str(Arg2) :
-            O.addMessage(__file__, 2, "WNOCHANGE", 
+            O.addMessage(__file__, 2, "WNOCHANGE",
                 "Sequence %s at position %i_%i is identical to the " \
                 "variant." % (
-                str(MUU.orig[start_g - 1:end_g]), 
+                str(MUU.orig[start_g - 1:end_g]),
                 start_g, end_g))
             return
         #if
@@ -579,28 +658,28 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             checkInsertion(start_g + lcp - 1, start_g + lcp, ins_part, MUU,
                            GenRecordInstance, O)
             return
-        #if                
+        #if
         if len(del_part) == 1 and len(ins_part) == 1 :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually a substitution.")
             checkSubstitution(start_g + lcp, del_part, ins_part, MUU,
                               GenRecordInstance, O)
             return
-        #if                
+        #if
         if not len(ins_part) :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually a deletion.")
             checkDeletionDuplication(start_g + lcp, end_g - lcs, "del",
                                      MUU, GenRecordInstance, O)
             return
-        #if                
+        #if
         if str(Bio.Seq.reverse_complement(del_part)) == ins_part :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually an inversion.")
             checkInversion(start_g + lcp, end_g - lcs, MUU,
                            GenRecordInstance, O)
             return
-        #if                
+        #if
 
         MUU.delinsM(start_g + lcp, end_g - lcs, ins_part)
 
@@ -616,9 +695,9 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                     GS = GenRecordInstance.record.findGene(
                          parts.Gene.GeneSymbol)
                     if not GS :
-                        O.addMessage(__file__, 3, "EINVALIDGENE", 
+                        O.addMessage(__file__, 3, "EINVALIDGENE",
                             "Gene %s not found. Please choose from: %s" % (
-                            parts.Gene.GeneSymbol, 
+                            parts.Gene.GeneSymbol,
                             GenRecordInstance.record.listGenes()))
                         return
                 else :
@@ -634,8 +713,22 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                     W = GS.transcriptList[0]
             #if
             elif parts.LrgAcc:                   # LRG
-                    W = GenRecordInstance.record.geneList[0].findLocus(
-                        parts.LRGTranscriptID)
+                    GS = GenRecordInstance.record.geneList[0]
+                    if parts.LRGTranscriptID:
+                        W = GS.findLocus(parts.LRGTranscriptID)
+                        if not W:
+                            O.addMessage(__file__, 3, "ENOTRANSCRIPT",
+                                "Transcript %s not found for gene %s. Please " \
+                                "choose from: %s" %(parts.LRGTranscriptID,
+                                    GS.name, GS.listLoci()))
+                    else:                       # No transcript id given
+                        if len(GS.transcriptList) == 1:
+                            #No transcript given, only 1 found
+                            W = GS.transcriptList[0]
+                        else:
+                            O.addMessage(__file__, 3, "ENOTRANSCRIPT",
+                                "No transcript given for gene %s. Please " \
+                                "choose from: %s" %(GS.name, GS.listLoci()))
             else :
                 W = GenRecordInstance.record.geneList[0].transcriptList[0]
         #if
@@ -646,23 +739,21 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
 
         if parts.SingleAlleleVarSet:
             for i in parts.SingleAlleleVarSet :
-                __rv(MUU, i.RawVar, GenRecordInstance, 
-                     parts, O, W)
-        #if
+                __rv(MUU, i.RawVar, GenRecordInstance, parts, O, W)
         else :
             __rv(MUU, parts.RawVar, GenRecordInstance, parts, O, W)
 
 
-        if not W : # Genomic given.
+        if not W : # Genomic given or error with transcript
             return
         if not GenRecordInstance.record.geneList : # EST
             return
 
-        cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)), 
+        cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)),
                   IUPAC.unambiguous_dna)
-        cdsm = Seq(str(__nsplice(MUU.mutated, 
-                                 MUU.newSplice(W.mRNA.positionList), 
-                                 MUU.newSplice(W.CDS.location), 
+        cdsm = Seq(str(__nsplice(MUU.mutated,
+                                 MUU.newSplice(W.mRNA.positionList),
+                                 MUU.newSplice(W.CDS.location),
                                  W.CM.orientation)),
                    IUPAC.unambiguous_dna)
         if W.CM.orientation == -1 :
@@ -706,7 +797,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         #else :
         #    O.addOutput("proteindescription", "p.?")
         #del W.CM
-    #if                
+    #if
 #__ppp
 
 def process(cmd, C, O) :
@@ -752,11 +843,11 @@ def process(cmd, C, O) :
                 for j in i.transcriptList :
                     if not ';' in j.description and j.CDS :
                         #print i.name, j.name, j.CDS.positionList, j.CDS.location
-                        cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
+                        cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)),
                                   IUPAC.unambiguous_dna)
-                        cdsm = Seq(str(__nsplice(MUU.mutated, 
-                                                 MUU.newSplice(j.mRNA.positionList), 
-                                                 MUU.newSplice(j.CDS.location), 
+                        cdsm = Seq(str(__nsplice(MUU.mutated,
+                                                 MUU.newSplice(j.mRNA.positionList),
+                                                 MUU.newSplice(j.CDS.location),
                                                  j.CM.orientation)),
                                    IUPAC.unambiguous_dna)
                         if j.CM.orientation == -1 :
@@ -765,33 +856,32 @@ def process(cmd, C, O) :
                         #if
 
                         #if '*' in cds.translate()[:-1] :
-                        #    O.addMessage(__file__, 3, "ESTOP", 
+                        #    O.addMessage(__file__, 3, "ESTOP",
                         #                 "In frame stop codon found.")
                         #    return
                         ##if
 
-                        orig = cds.translate(table = j.txTable, cds = True, 
+                        orig = cds.translate(table = j.txTable, cds = True,
                                              to_stop = True)
-                        trans = cdsm.translate(table = j.txTable, 
+                        trans = cdsm.translate(table = j.txTable,
                                                to_stop = True)
 
                         cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
 
                         #print cdsLen, len(__splice(MUU.orig, MUU.newSplice(j.CDS.positionList)))
-                        j.proteinDescription = __toProtDescr(cdsLen, orig, 
+                        j.proteinDescription = __toProtDescr(cdsLen, orig,
                                                              trans)
 
         # /PROTEIN
 
         reference = O.getOutput("reference")[0]
         if ';' in GenRecordInstance.record.description :
-            O.addOutput("genomicDescription", "%s:%c.[%s]" % (reference, 
-                GenRecordInstance.record.molType, 
-                GenRecordInstance.record.description))
-        else :
-            O.addOutput("genomicDescription", "%s:%c.%s" % (reference, 
-                GenRecordInstance.record.molType, 
-                GenRecordInstance.record.description))
+            descr = '['+GenRecordInstance.record.description+']'
+        else:
+            descr = GenRecordInstance.record.description
+
+        O.addOutput("genomicDescription", "%s:%c.%s" % (reference,
+            GenRecordInstance.record.molType, descr))
 
         if GenRecordInstance.record._sourcetype == "LRG": #LRG record
             #from collections import defaultdict
@@ -801,31 +891,39 @@ def process(cmd, C, O) :
                 for j in sorted(i.transcriptList, key = attrgetter("name")) :
                     d = j.description
                     d = ';' in d and '['+d+']' or d
-                    O.addOutput("descriptions", (
-                        "%st%s:%c.%s" % (reference, j.name, j.molType,
-                          d)))
+                    if j.name:
+                        O.addOutput("descriptions", (
+                            "%st%s:%c.%s" % (reference, j.name, j.molType,
+                              d)))
+                    else:
+                        O.addOutput("descriptions", (i.name))
                     if j.molType == 'c':
                         O.addOutput("protDescriptions", (
-                                "%sp%s:%s" % (reference, j.name, 
+                                "%sp%s:%s" % (reference, j.name,
                                     j.proteinDescription)))
                         #poutput[i.name].sort()
                 #toutput[i.name].sort()
-        #if                
-        else :                
+        #if
+        else :
             for i in GenRecordInstance.record.geneList :
+                names = {}
                 for j in sorted(i.transcriptList, key = attrgetter("name")) :
+                    cName, pName = None, None
                     if ';' in j.description :
-                        O.addOutput("descriptions", "%s(%s_v%s):%c.[%s]" % (
-                            reference, i.name, j.name, j.molType, 
-                            j.description))
-                    else :
-                        O.addOutput("descriptions", "%s(%s_v%s):%c.%s" % (
-                            reference, i.name, j.name, j.molType, 
-                            j.description))
-                        if (j.molType == 'c') :
-                            O.addOutput("protDescriptions", "%s(%s_i%s):%s" % (
-                                reference, i.name, j.name, 
-                                j.proteinDescription))
+                        descr = '['+j.description+']'
+                    else:
+                        descr = j.description
+                    O.addOutput("descriptions", "%s(%s_v%s):%c.%s" % (
+                        reference, i.name, j.name, j.molType, descr))
+
+                    if (j.molType == 'c') :
+                        O.addOutput("protDescriptions", "%s(%s_i%s):%s" % (
+                            reference, i.name, j.name,
+                            j.proteinDescription))
+                        cName = "c.%s" % descr
+                        pName = j.proteinDescription
+                    names[j.name] = (cName, pName)
+                #O.addOutput("batch", (i.name, names))
                 #for
         #else
 
@@ -834,12 +932,22 @@ def process(cmd, C, O) :
         # LEGEND
         for i in GenRecordInstance.record.geneList :
             for j in i.transcriptList :
-                O.addOutput("legends", ["%s_v%s" % (i.name, j.name), 
+
+                if not j.name: continue #Exclude nameless transcripts
+
+                O.addOutput("legends", ["%s_v%s" % (i.name, j.name),
                             str(j.transcriptID), str(j.locusTag)])
                 O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
                             str(j.proteinID), str(j.locusTag)])
             #for
 
+        #Add GeneSymbol and Transcript Var to the Output object for batch
+        if ParseObj.Gene:
+            O.addOutput("geneOfInterest", dict(ParseObj.Gene.items()))
+        else:
+            O.addOutput("geneOfInterest", dict())
+
+        _createBatchOutput(GenRecordInstance, O, ParseObj)
         return GenRecordInstance
     #if
 #process
@@ -863,7 +971,7 @@ def main(cmd) :
         print "Transcript variant: " + tv[0]
         print
     #if
-    
+
     for i in O.getMessages() :
         print i
     errors, warnings, summary = O.Summary()
@@ -898,12 +1006,14 @@ def main(cmd) :
                 for j in i.transcriptList:
                     d = j.description
                     d = ';' in d and '['+d+']' or d
-                    toutput[i.name].append(
-                        "%st%s:%c.%s" % (reference, j.name, j.molType,
-                          d))
+                    if j.name:
+                        toutput[i.name].append(
+                            "%st%s:%c.%s" % (reference, j.name, j.molType, d))
+                    else:
+                        pass
                     if j.molType == 'c':
                         poutput[i.name].append(
-                                "%sp%s:%s" % (reference, j.name, 
+                                "%sp%s:%s" % (reference, j.name,
                                     j.proteinDescription))
                         poutput[i.name].sort()
                 toutput[i.name].sort()
@@ -927,15 +1037,15 @@ def main(cmd) :
             for i in RD.record.geneList :
                 for j in i.transcriptList :
                     if ';' in j.description :
-                        print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name, 
+                        print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name,
                                                       j.molType, j.description)
                     else :
-                        print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name, 
+                        print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name,
                                                     j.molType, j.description)
                         if (j.molType == 'c') :
-                            print "%s(%s_i%s):%s" % (reference, i.name, j.name, 
+                            print "%s(%s_i%s):%s" % (reference, i.name, j.name,
                                                      j.proteinDescription)
-            #for                                                
+            #for
         #for
 
         #Genomic Notation
@@ -978,6 +1088,8 @@ def main(cmd) :
         #                                        j.locusTag)
         #    #for
         for i in O.getOutput("legends") :
+            #if i[1] == 'None':
+            #    continue
             print i
     #if
     ### OUTPUT BLOCK ###

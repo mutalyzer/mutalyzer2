@@ -20,33 +20,33 @@ from Modules import Output
 from Modules import Config
 from Modules import Parser
 from Modules import Mapper
-    
+
 class MutalyzerService(SimpleWSGISoapApp) :
     """
         Mutalyzer webservices.
-    
+
         These methods are made public via a SOAP interface.
-    
+
         Private methods:
             __checkBuild(L, D, build) ; Check if the build is supported.
-            __checkChrom(L, D, chrom) ; Check if the chromosome is in our 
+            __checkChrom(L, D, chrom) ; Check if the chromosome is in our
                                         database.
             __checkPos(L, pos)        ; Check if the posision is valid.
 
         Public methods:
-            getTranscripts(build, chrom, pos)    ; Get all transcripts that 
-                                                   overlap with a chromosomal 
+            getTranscripts(build, chrom, pos)    ; Get all transcripts that
+                                                   overlap with a chromosomal
                                                    position.
-            getTranscriptsRange(build, chrom,    ; Get all transcripts that 
-                                pos1, pos2,        overlap with a range on a 
-                                method)            chromosome.                 
+            getTranscriptsRange(build, chrom,    ; Get all transcripts that
+                                pos1, pos2,        overlap with a range on a
+                                method)            chromosome.
             getGeneName(build, accno)            ; Find the gene name associated
                                                    with a transcript.
             mappingInfo(LOVD_ver, build, accNo,  ; FIXME
-                        variant) ; 
+                        variant) ;
             transcriptInfo(LOVD_ver, build, ; Find transcription start and
-                           accNo)             end, and CDS end (in c. 
-                                              notation) for a given transcript 
+                           accNo)             end, and CDS end (in c.
+                                              notation) for a given transcript
             cTogConversion(self, build, variant) ; Convert c. to g.
             gTocConversion(self, build, variant) ; Convert g. to c.
     """
@@ -66,10 +66,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if not build in config.dbNames :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
-            raise Fault(Fault.Client, "EARG", 
+            raise Fault(Fault.Client, "EARG",
                 detail = "The build argument (%s) was not a valid " \
                          "build name." % build)
-        #if                         
+        #if
     #__checkBuild
 
     def __checkChrom(self, L, D, chrom) :
@@ -87,10 +87,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if not D.isChrom(chrom) :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
-            raise Fault(Fault.Client, "EARG", 
+            raise Fault(Fault.Client, "EARG",
                 detail = "The chrom argument (%s) was not a valid " \
                          "chromosome name." % chrom)
-        #if                         
+        #if
     #__checkChrom
 
     def __checkPos(self, L, pos) :
@@ -107,9 +107,9 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if pos < 1 :
             L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
-            raise Fault(Fault.Client, "ERANGE", 
+            raise Fault(Fault.Client, "ERANGE",
                 detail = "The pos argument (%i) is out of range." % pos)
-        #if                         
+        #if
     #__checkPos
 
     def __checkVariant(self, L, variant) :
@@ -126,21 +126,21 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if not variant :
             L.addMessage(__file__, 4, "EARG", "EARG no variant")
-            raise Fault(Fault.Client, "EARG", 
+            raise Fault(Fault.Client, "EARG",
                 detail = "The variant argument is not provided.")
-        #if                         
+        #if
     #__checkVariant
 
     @soapmethod(String, String, Integer, _returns = Array(String))
     def getTranscripts(self, build, chrom, pos) :
         """
             Get all the transcripts that overlap with a chromosomal position.
-    
+
             Arguments:
                 string build ; The build name encoded as "hg18" or "hg19".
                 string chrom ; A chromosome encoded as "chr1", ..., "chrY".
                 int    pos   ; A postion on the chromosome.
-    
+
             Returns:
                 string ; A list of transcripts.
 
@@ -150,11 +150,11 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     EARG   ; The argument was not valid.
                     ERANGE ; An invalid range was given.
         """
-    
+
         C = Config.Config()
         L = Output.Output(__file__, C.Output)
-    
-        L.addMessage(__file__, -1, "INFO", 
+
+        L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
 
@@ -163,23 +163,23 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         self.__checkChrom(L, D, chrom)
         self.__checkPos(L, pos)
-        
+
         ret = D.get_Transcripts(chrom, pos, pos, True)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
-    
+
         del D, L, C
         return [ret]
     #getTranscripts
-    
-    @soapmethod(String, String, Integer, Integer, Integer, 
+
+    @soapmethod(String, String, Integer, Integer, Integer,
                 _returns = Array(String))
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """
             Get all the transcripts that overlap with a range on a chromosome.
-    
+
             Arguments:
                 string build ; The build name encoded as "hg18" or "hg19".
                 string chrom  ; A chromosome encoded as "chr1", ..., "chrY".
@@ -189,15 +189,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
                                 0 ; Return only the transcripts that completely
                                     fall in the range [pos1, pos2].
                                 1 ; Return all hit transcripts.
-    
+
             Returns:
                 string ; A list of transcripts.
         """
-    
+
         C = Config.Config()
         L = Output.Output(__file__, C.Output)
-    
-        L.addMessage(__file__, -1, "INFO", 
+
+        L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
@@ -206,10 +206,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
-    
+
         del D, L, C
         return [ret]
     #getTranscriptsRange
@@ -218,29 +218,29 @@ class MutalyzerService(SimpleWSGISoapApp) :
     def getGeneName(self, build, accno) :
         """
             Find the gene name associated with a transcript.
-    
+
             Arguments:
                 string build ; The build name encoded as "hg18" or "hg19".
                 string accno ; The identifier of a transcript.
-    
+
             Returns:
                 string ; The name of the associated gene.
         """
-    
+
         C = Config.Config()
         L = Output.Output(__file__, C.Output)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Received request getGeneName(%s %s)" % (build, accno))
 
         D = Mapping(build, C.Db)
         self.__checkBuild(build, C.Db)
-    
+
         ret = D.get_GeneName(accno.split('.')[0])
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing getGeneName(%s %s)" % (build, accno))
-    
+
         del D, L, C
         return ret
     #getGeneName
@@ -254,7 +254,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             notation and vice versa.
 
             - If no end position is present, the start position is assumed to
-              be the end position. 
+              be the end position.
             - If the version number is not found in the database, an error
               message is generated and a suggestion for an other version is
               given.
@@ -264,20 +264,20 @@ class MutalyzerService(SimpleWSGISoapApp) :
             - If the variant is not accepted by the nomenclature parser, a
               parse error will be printed.
 
-            
+
             Arguments (all strings):
                 LOVD_ver ; The LOVD version.
                 build ; The human genome build (hg19 or hg18).
                 accNo ; The NM accession number and version.
                 variant ; The variant.
-             
+
             Returns:
                 complex object:
-                    start_main   ; The main coordinate of the start position 
+                    start_main   ; The main coordinate of the start position
                                    in c. (non-star) notation.
                     start_offset ; The offset coordinate of the start position
                                    in c. notation (intronic position).
-                    end_main     ; The main coordinate of the end position in 
+                    end_main     ; The main coordinate of the end position in
                                    c. (non-star) notation.
                     end_offset   ; The offset coordinate of the end position in
                                    c. notation (intronic position).
@@ -289,14 +289,14 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         C = Config.Config()
         L = Output.Output(__file__, C.Output)
-    
-        L.addMessage(__file__, -1, "INFO", 
+
+        L.addMessage(__file__, -1, "INFO",
                      "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver,
                      build, accNo, variant))
 
         result = Mapper.mainMapping(build, accNo, variant, C, L)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing mappingInfo(%s %s %s %s)" % (
                      LOVD_ver, build, accNo, variant))
 
@@ -308,15 +308,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
     def transcriptInfo(self, LOVD_ver, build, accNo) :
         """
             Search for an NM number in the MySQL database, if the version
-            number matches, the transcription start and end and CDS end 
+            number matches, the transcription start and end and CDS end
             in c. notation is returned.
 
-            
+
             Arguments (all strings:
                 LOVD_ver ; The LOVD version.
                 build ; The human genome build (hg19 or hg18).
                 accNo ; The NM accession number and version.
-             
+
             Returns:
                 complex object:
                     trans_start  ; Transcription start in c. notation.
@@ -326,8 +326,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         C = Config.Config()
         L = Output.Output(__file__, C.Output)
-    
-        L.addMessage(__file__, -1, "INFO", 
+
+        L.addMessage(__file__, -1, "INFO",
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
@@ -341,16 +341,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del L, C
         return result
     #transcriptInfo
-    
+
     @soapmethod(String, String, _returns = String)
     def chromAccession(self, build, name) :
         """
             Get the accession number of a chromosome, given a name.
-            
+
             Arguments:
                 build   ; The human genome build.
                 name    ; The name of a chromosome.
-                
+
             Returns:
                 string ; The accession number of a chromosome.
         """
@@ -358,31 +358,31 @@ class MutalyzerService(SimpleWSGISoapApp) :
         D = Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Received request chromAccession(%s %s)" % (build, name))
 
         self.__checkBuild(build, C.Db)
         self.__checkChrom(L, D, name)
-        
+
         result = D.chromAcc(name)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing chromAccession(%s %s)" % (build,
                      name))
 
         del D,L,C
         return result
     #chromAccession
-    
+
     @soapmethod(String, String, _returns = String)
     def chromosomeName(self, build, accNo) :
         """
             Get the name of a chromosome, given a chromosome accession number.
-            
+
             Arguments:
                 build   ; The human genome build.
                 accNo    ; The accession number of a chromosome (NC_...).
-                
+
             Returns:
                 string ; The name of a chromosome.
         """
@@ -390,31 +390,31 @@ class MutalyzerService(SimpleWSGISoapApp) :
         D = Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Received request chromName(%s %s)" % (build, accNo))
 
         self.__checkBuild(build, C.Db)
 #        self.__checkChrom(L, D, name)
-        
+
         result = D.chromName(accNo)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing chromName(%s %s)" % (build,
                      accNo))
 
         del D,L,C
         return result
     #chromosomeName
-    
+
     @soapmethod(String, String, _returns = String)
     def getchromName(self, build, acc) :
         """
             Get the chromosome name, given a transcript identifier (NM number).
-            
+
             Arguments:
                 build ; The human genome build.
                 acc   ; The NM accession number (version NOT included)
-                
+
             Returns:
                 string ; The name of a chromosome.
         """
@@ -422,53 +422,53 @@ class MutalyzerService(SimpleWSGISoapApp) :
         D = Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Received request getchromName(%s %s)" % (build, acc))
 
         self.__checkBuild(build, C.Db)
 #        self.__checkChrom(L, D, name)
-        
+
         result = D.get_chromName(acc)
 
-        L.addMessage(__file__, -1, "INFO", 
+        L.addMessage(__file__, -1, "INFO",
                      "Finished processing getchromName(%s %s)" % (build,
                      acc))
 
         del D,L,C
         return result
     #chromosomeName
-    
+
     @soapmethod(String, String, _returns = String)
     def numberConversion(self, build, variant) :
         """
             Converts c. to g. notation or vice versa
 
-            
+
             Arguments (all strings:
                 build   ; The human genome build (hg19 or hg18).
                 variant ; The variant in either c. or g. notation, full HGVS
                           notation, including NM_ or NC_ accession number.
-             
+
             Returns:
                 string; The variant in either g. or c. notation.
-        
+
         """
-    
+
         C = Config.Config() # Read the configuration file.
         D = Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
         L.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
-        
+
         self.__checkBuild(build, C.Db)
         self.__checkVariant(L, variant)
-        
+
         if "c." in variant :
             result = Mapper.cTog(build, variant, C, D, L)
         if "g." in variant :
             result = Mapper.gToc(build, variant, C, D, L)
-        
+
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing cTogConversion(%s %s)" % (
                      build, variant))
@@ -476,7 +476,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del C, D, L
         return [result]
     #numberConversion
-    
+
     @soapmethod(String, _returns = String)
     def checkSyntax(self, variant) :
         """
@@ -485,25 +485,25 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L = Output.Output(__file__, C.Output)
         L.addMessage(__file__, -1, "INFO",
                      "Received request checkSyntax(%s)" % (variant))
-        
+
         self.__checkVariant(L, variant)
-        
+
         P = Parser.Nomenclatureparser(L)
         parsetree = P.parse(variant)
         del C, P
         if not parsetree :
             result = "This variant does not have the right syntax. "\
                      "Please try again."
-        #if 
+        #if
         else :
             result = "The syntax of this variant is OK!"
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing checkSyntax(%s)" % (variant))
-        
+
         del L
         return result
    #checkSyntax
-        
-        
+
+
 #MutalyzerService

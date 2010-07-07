@@ -44,9 +44,9 @@
       <div tal:condition = "lastpost">
         <big><b>Mutalyzer output:</b><br></big>
         <br>
-        <div tal:repeat = "i messages"
+        <pre><div tal:repeat = "i messages"
              tal:replace = "structure string:${i}<br>">
-        </div>
+        </div></pre>
         <div tal:replace = "summary"></div><br>
         <br>
         <br>

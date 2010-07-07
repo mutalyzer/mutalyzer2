@@ -4,81 +4,57 @@
   <head>
     <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
     <title tal:content = "structure string:Mutalyzer ${version}"></title>
-    <script type = "text/javascript" 
-        language = "javascript" 
-        src = "test.js">
-    </script>
   </head>
-  <body onload = "yo()">
+  <body>
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
-    <center>
+    <div metal:define-macro="content">
+      <center>
       <big tal:content = "structure string:Batch position numbering conversion
       by Mutalyzer ${version}.">
       </big>
-   </center>
+    </center>
     <br>
-    <br>
-    <br>
-    Please insert the build, hg18 (NCBI 36) or hg19 (GRCh37) and the file name
-    <br>
+    Please select the build, hg18 (NCBI 36) or hg19 (GRCh37) and the file name
     <br>
     <h5>Note: this is a position converter! It does not check variant
-    nomenclature. Please use <A href="http://mutalyzer.nl/1.0.4/">
-    Mutalyzer's name checker</A> to check nomenclature
-    
+        nomenclature. Please use <A href="check"> Mutalyzer's name checker</A>
+        to check nomenclature
     </h5>
-    <form action = "" method = "post">
-      <small> Build</small>
-<!--
-      <input 
-        type = "text" 
-        name = "build" 
-        tal:attributes = "value build"
-        size = "10%"
-      ><br><br>
--->      
-      <select name="build">
-        <option tal:repeat="build_list avail_builds"
-                tal:content="build_list/build"
-                tal:attributes="value build_list/build; selected python:hg19">
-        </option>
-      </select>
-<!--
-      <select class="tablevalues" tal:attributes="name MyBooleanProperty:boolean">
-        <option 
-          tal:repeat="boolProp python:(True,False)" 
-          tal:content="boolProp"
-          tal:attributes="value boolProp; selected python:boolProp==here.getMyBooleanProperty()"
-        />
-</select>
-<select class="tablevalues" 
-    tal:attributes="name MySelectProperty">
-    <option tal:repeat="propOption here/getMySelectPropertyOptions"
-        tal:content="propOption"
-        tal:attributes="value propOption; selected python:propOption==getMySelectProperty()" />
-</select>
+      <table id="inputform">
+          <form action = "" method = "post" enctype = "multipart/form-data">
+              <tr>
+                  <td><b>Build</b></td>
+                  <td>
+                      <select name="build">
+                        <option tal:repeat="build avail_builds"
+                        tal:content="build"
+                        tal:attributes="value build">
+                        </option>
+                      </select>
+                  </td>
+              </tr>
+              <tr>
+                  <td><b>Email</b></td>
+                  <td><input type = "text" 
+                             name = "batchConvertEmail" 
+                             tal:attributes = "value batchConvertEmail"
+                             style = "width:200px"></td>
+              </tr>
+              <tr>
+                  <td><b>File</b></td>
+                  <td><input type = "file" 
+                             name = "batchConvertFile" 
+                             style = "width:200px"></td>
+              </tr>
+              <tr>
+                  <td colspan="2"><input type="submit" value="Submit"></td>
+              </tr>
+          </form>
+      </table> <!-- inputform -->
 
--->      
-      <small> File name</small>
-      <input 
-        type = "file" 
-        name = "fileName" 
-        size = "100%"
-      ><br><br>
-      <small> email </small>
-      <input 
-        type = "text" 
-        name = "eMail" 
-        tal:attributes = "value lastEMail"
-        size = "100%"
-      ><br><br>
-      <input 
-        type="submit" 
-        value="Submit"
-      >
-    </form>
+
     <br>
     <H3 tal:content="message"></H3>
     <a tal:attributes = "href link_output/page" 
@@ -90,5 +66,14 @@
         <td tal:content = "genes_list/mrnaAcc"></td>
       </tr>
     </table>
+
+      <div tal:condition = "debug">
+        <b>Debug output:</b><br>
+        <pre><div tal:repeat = "i debug"
+             tal:replace = "structure string:${i}<br>">
+        </div></pre>
+      </div>
+  
+    </div>
   </body>
 </html>

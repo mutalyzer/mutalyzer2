@@ -99,10 +99,80 @@ def check(req) :
     return ret
 #check
 
+def batchCheck(req):
+    attr = {"lastpost"  : None,
+            "messages"  : [],
+            "errors"    : [],
+            "debug"     : [],
+           }
+    W = Web.Web()
+
+    if req.form:
+        email = req.form["batchNameCheckEmail"]
+        iFile = req.form["batchNameCheckFile"]
+
+        if iFile and W.isEMail(email):
+            C = Config.Config()
+            D = Db.Batch(C.Db)
+            S = Scheduler.Scheduler(C.Scheduler, D)
+            O = Output.Output(__file__, C.Output)
+            FileInstance = File.File(C.File, O)     #What happens on error
+            job = FileInstance.parseBatchFile(iFile.file)
+            if job is None:
+                O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
+                        "input file, please check your format")
+            else:
+                fromHost = "http://%s%s" % (req.hostname, req.uri)
+                #TODO: Add Binair Switches to toggle some events
+                S.addJob("BINSWITHCES", email, job, fromHost, "NameChecker")
+                attr["messages"].append("File parsed and added to batchqueue")
+
+            attr["errors"].extend(O.getMessages())
+
+    ret = W.tal("HTML", "templates/batchCheck.html", attr)
+    return ret
+#batchCheck
+
+def batchConvert(req):
+    attr = {"lastpost"  : None,
+            "messages"  : [],
+            "errors"    : [],
+            "debug"     : [],
+           }
+    W = Web.Web()
+    C = Config.Config()
+    
+
+    if req.form:
+        email = req.form["batchNameCheckEmail"]
+        iFile = req.form["batchNameCheckFile"]
+
+        if iFile and W.isEMail(email):
+            C = Config.Config()
+            D = Db.Batch(C.Db)
+            S = Scheduler.Scheduler(C.Scheduler, D)
+            O = Output.Output(__file__, C.Output)
+            FileInstance = File.File(C.File, O)     #What happens on error
+            job = FileInstance.parseBatchFile(iFile.file)
+            if job is None:
+                O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
+                        "input file, please check your format")
+            else:
+                fromHost = "http://%s%s" % (req.hostname, req.uri)
+                #TODO: Add Binair Switches to toggle some events
+                S.addJob("BINSWITHCES", email, job, fromHost, "NameChecker")
+                attr["messages"].append("File parsed and added to batchqueue")
+
+            attr["errors"].extend(O.getMessages())
+
+    ret = W.tal("HTML", "templates/batchCheck.html", attr)
+    return ret
+#batchConvert
+
 def checkingSyntax(req) :
     """
         Checks the syntax of a variant
-        
+
         Arguments:
             req ; The request:
                   req.form['build']    ; The human genome build.
@@ -112,40 +182,31 @@ def checkingSyntax(req) :
             string ; An HTML page containing the remark if the variant syntax
                      is OK or not
     """
-    
+
     W = Web.Web()
     C = Config.Config() # Read the configuration file.
-    L = Output.Output(__file__, C.Output)
-    variant = ""
+    O = Output.Output(__file__, C.Output)
+    variant = req.form.get("variant", None)
     args = {
         "version"       : W.version,
         "variant"       : variant,
-        "parse_output"  : ""
+        "messages"      : [],
+        "debug"         : ""
     }
-    if req.form.has_key('variant') :
-#    if req.form :
-        variant  = string.replace(req.form['variant'], ",", "")
-        args["variant"] = variant
-        if variant == "" :
-            args["parse_output"] = "You did not fill in the variant name"\
-                " field.Please enter a variant using the format as shown"\
-                " above."
-            ret = W.tal("HTML", "templates/parse.html", args)
-            del W
-            return ret
-        #if
-        P = Parser.Nomenclatureparser(L)
+    if variant:
+        if variant.find(',') >= 0:
+            O.addMessage(__file__, 2, "WCOMMASYNTAX",
+                    "Comma's are not allowed in the syntax, autofixed")
+            variant = variant.replace(',', '')
+            args["variant"]=variant
+        P = Parser.Nomenclatureparser(O)
         parsetree = P.parse(variant)
-        del P
         if not parsetree :
-            args["parse_output"] = "This variant does not have the right"\
-                " syntax. Please try again."
-            ret = W.tal("HTML", "templates/parse.html", args)
-            del W
-            return ret
-        #if
+            args["messages"].append("This variant does not have the right"
+                " syntax. Please try again.")
+            args["messages"].extend(O.getMessages())
         else :
-            args["parse_output"] = "The syntax of this variant is OK!"
+            args["messages"].append("The syntax of this variant is OK!")
     #if
     ret = W.tal("HTML", "templates/parse.html", args)
     del W
@@ -187,14 +248,7 @@ def numberingConversion(req) :
         "avail_builds" : finalbuilds,
         "variant"  : variant
         }
-    """
-    availBuilds = C.Db.dbNames  # available builds in config file
-    args = {
-        "version"  : W.version,
-        "build"    : build,
-        "variant"  : variant
-        }
-    """
+
     # Check the build
 #    if req.form.has_key('build') :
     if req.form :
@@ -219,10 +273,10 @@ def numberingConversion(req) :
             return ret
         #if
     #if
-        
+
     D = Db.Mapping(build, C.Db)
     L = Output.Output(__file__, C.Output)
-    
+
     if req.form.has_key('variant') :
         variant = req.form['variant']
         if variant == "" :
@@ -285,7 +339,7 @@ def numberingConversion(req) :
                 del W
                 return ret
             #if
-                
+
             # check if build and NC_ accNo agree
             if "NC_" in variant :
                 accNo = variant.split(':')[0] # the chromosome accession number
@@ -346,165 +400,112 @@ def numberingConversion(req) :
 #numberingConversion
 
 def batchConversion(req) :
-    """
-        The c. to g. notation or vice versa for the batch web interface
-        
-        Arguments:
-            req ; The request:
-                  req.form['build']    ; The human genome build.
-                  req.form['fileName']  ; A file name.
-
-        Returns:
-            
-    """
-
     W = Web.Web()
     C = Config.Config() # Read the configuration file.
-    build = ""
-    fileName = ""
-    eMail = ""
-    reply = ""
-    message = ""
-    replyTranscripts = []
-    final = []
-    finalbuilds = []
     availBuilds = C.Db.dbNames  # available builds in config file
-    for x in availBuilds :
-        builds = {}
-        builds["build"] = x
-        finalbuilds.append(builds)
-#    build = availBuilds[len(availBuilds)-1] # default to the highest build
-    build = ""
     args = {
-        "version" : W.version,
-        "build" : build,
-        "avail_builds" : finalbuilds,
-        "fileName" : fileName,
-        "eMail" : eMail,
-        "message" : message
+        "version" :             W.version,
+        "avail_builds" :        availBuilds,
+        "debug" :               []
         }
-    # Check the build
-    if req.form.has_key('build') :
-        build = req.form['build']
-        args["build"] = build
-        buildStr = ', '.join(availBuilds)
-        # error if build not in available builds
-        if build == "" :
-            args["message"] = "You did not provide the build. "\
-                                  "Available builds are: " + buildStr
-            ret = W.tal("HTML", "templates/batch_convert.html", args)
-            del W
-            return ret
-        #if
-        if build not in availBuilds :
-            args["message"] = "This build is not available."\
-                " Available builds are: " + buildStr
-            ret = W.tal("HTML", "templates/batch_convert.html", args)
-            del W
-            return ret
-        #if
-    #if
-    D = Db.Mapping(build, C.Db)
-    L = Output.Output(__file__, C.Output)
-    
-    if req.form.has_key('fileName') :
-        fileName = req.form['fileName']
-        if fileName == "" :
-            args["message"] = "You did not provide a file name."\
-                " Please enter a file name in the appropriate field."
-            ret = W.tal("HTML", "templates/batch_convert.html", args)
-            del W
-            return ret
-        #if
-        
-    #if
-    if req.form.has_key('eMail') :
-        eMail = req.form['eMail']
-        if eMail == "" :
-            args["message"] = "You did not provide an email"\
-                " address. Please enter an email address."
-            ret = W.tal("HTML", "templates/batch_convert.html", args)
-            del W
-            return ret
-        #if
-        fileName = req.form['fileName']
-        
-#        if fileName.filename and W.isEMail(eMail) :
-#            C = Config.Config()
-#            D = Db.Batch(C.Db)
-#            S = Scheduler.Scheduler(C.Scheduler, D)
-#            O = Output.Output(__file__, C.Output)
-#            FileInstance = File.File(C.File, O)
 
-#            job = FileInstance.parseBatchFile(fileUpload.file)
-#            S.addJob("1231243", eMail, job, "http://%s%s" % (req.hostname, 
-#                                                             req.uri))
+    #return W.tal("HTML", "templates/batch_convert.html", args)
 
-#            del FileInstance, S, D, C
-        inputFile = open(fileName, 'r')
-        c_outputFile = open("batchconversion_to_cnum.txt", 'w')
-        g_outputFile = open("batchconversion_to_gnum.txt", 'w')
-        for line in inputFile :
-            variant = line.strip()
-            if "g." in variant :
-                info = variant.split(':')
-                chrom = info[0]
-                if "chr" in chrom :
-                    accNo = D.chromAcc(chrom)
-                    var = accNo + ":" + info[1]
-                replyTranscripts = Mapper.gToc(build, var, C, D, L)
-    #            final.append(var)
-                for acc in replyTranscripts :
-#                    genesDict = {}
-#                    gene = D.get_GeneName(acc.split('.')[0])
-#                    genesDict['var'] = var
-#                    genesDict['gene'] = gene
-#                    genesDict['mrnaAcc'] = acc
-#                    final.append(genesDict)
-    #                outputFile.write(var + "\t")
-    #                outputFile.write(gene + "\t")
-                    c_outputFile.write(acc + "\n")
-                #for
-#                c_outputFile.close
+    if req.form:
+        args["debug"].append("req.form exists")
+    else:
+        args["debug"].append("req.form does not exists")
+    return W.tal("HTML", "templates/batch_convert.html", args)
+    if False:
+        # Check the build
+        if req.form.has_key('build') :
+            build = req.form['build']
+            args["build"] = build
+            buildStr = ', '.join(availBuilds)
+            # error if build not in available builds
+            if build == "" :
+                args["message"] = "You did not provide the build. "\
+                                      "Available builds are: " + buildStr
+                ret = W.tal("HTML", "templates/batch_convert.html", args)
+                del W
+                return ret
             #if
-            if "c." in variant :
-                reply = Mapper.cTog(build, variant, C, D, L)
-                if not reply :
-                    var = ""
-                else :
-                    mrnaAcc = variant.split(':')[0]
-                    accno = Mapper.mrnaSplit(mrnaAcc)[0]
-                    chrom = D.get_chromName(accno)
-                    chromacc = D.chromAcc(chrom)
-                    if not chromacc :
-                        chromacc = "NC_0000.0"
-                    var = chromacc + ":" + reply
-#                genesDict = {}
-#                genesDict['var'] = variant
-#                genesDict['mrnaAcc'] = var
-#                final.append(genesDict)
-#                outputFile.write(var + "\t")
-#                outputFile.write(gene + "\t")
-                g_outputFile.write(var + "\n")
-#                g_outputFile.close
-                
-        #for
-        inputFile.close
-        c_outputFile.close
-        g_outputFile.close
-        args["message"] = "Conversion completed! You can find the resulting"\
-        " file here:"
-        args["link_output"] = {
-                            "title" : "output",
-                            "page" : "http://localhost/batchconversion_to_cnum.txt"
-                            }
-    #if
-    args["batch_output"] = final
+            if build not in availBuilds :
+                args["message"] = "This build is not available."\
+                    " Available builds are: " + buildStr
+                ret = W.tal("HTML", "templates/batch_convert.html", args)
+                del W
+                return ret
+            #if
+        #if
+        D = Db.Mapping(build, C.Db)
+        L = Output.Output(__file__, C.Output)
+
+        if req.form.has_key('fileName') :
+            fileName = req.form['fileName']
+            if fileName == "" :
+                args["message"] = "You did not provide a file name."\
+                    " Please enter a file name in the appropriate field."
+                ret = W.tal("HTML", "templates/batch_convert.html", args)
+                del W
+                return ret
+            #if
+        #if
+        if req.form.has_key('eMail') :
+            eMail = req.form['eMail']
+            if eMail == "" :
+                args["message"] = "You did not provide an email"\
+                    " address. Please enter an email address."
+                ret = W.tal("HTML", "templates/batch_convert.html", args)
+                del W
+                return ret
+            #if
+            fileName = req.form['fileName']
+
+            inputFile = open(fileName, 'r')
+            c_outputFile = open("batchconversion_to_cnum.txt", 'w')
+            g_outputFile = open("batchconversion_to_gnum.txt", 'w')
+            for line in inputFile :
+                variant = line.strip()
+                if "g." in variant :
+                    info = variant.split(':')
+                    chrom = info[0]
+                    if "chr" in chrom :
+                        accNo = D.chromAcc(chrom)
+                        var = accNo + ":" + info[1]
+                    replyTranscripts = Mapper.gToc(build, var, C, D, L)
+                    for acc in replyTranscripts :
+                        c_outputFile.write(acc + "\n")
+                if "c." in variant :
+                    reply = Mapper.cTog(build, variant, C, D, L)
+                    if not reply :
+                        var = ""
+                    else :
+                        mrnaAcc = variant.split(':')[0]
+                        accno = Mapper.mrnaSplit(mrnaAcc)[0]
+                        chrom = D.get_chromName(accno)
+                        chromacc = D.chromAcc(chrom)
+                        if not chromacc :
+                            chromacc = "NC_0000.0"
+                        var = chromacc + ":" + reply
+                    g_outputFile.write(var + "\n")
+
+            inputFile.close
+            c_outputFile.close
+            g_outputFile.close
+            args["message"] = "Conversion completed! You can find the resulting"\
+            " file here:"
+            args["link_output"] = {
+                                "title" : "output",
+                                "page" : "http://localhost/batchconversion_to_cnum.txt"
+                                }
+        #if
+        args["batch_output"] = final
     ret = W.tal("HTML", "templates/batch_convert.html", args)
     del W
     return ret
-    
 #batchConversion
+
 def Variant_info(req) :
     """
         The g. to c. and vice versa interface for LOVD.
@@ -621,7 +622,7 @@ def batch(req) :
         eMail = req.form['eMail']
         fileUpload = req.form['file']
 
-        if fileUpload.filename and W.isEMail(eMail) :
+        if fileUpload.filename and W.isEMail(eMail):
             C = Config.Config()
             D = Db.Batch(C.Db)
             S = Scheduler.Scheduler(C.Scheduler, D)

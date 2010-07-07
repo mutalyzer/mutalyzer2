@@ -13,6 +13,7 @@
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
+    <div metal:define-macro="content">
     <big tal:content = "structure string:Variant syntax check
       by Mutalyzer ${version}.">
     </big>
@@ -37,7 +38,7 @@
     chr11:g.66594541T&gt;C<br>
     <br>
     <h5>Note: this is a variant nomenclature syntax checker only. Please use
-    <A href="http://mutalyzer.nl/1.0.4/">
+    <A href="check">
     Mutalyzer's name checker</A> to also check nomenclature semantics. 
     
     </h5>
@@ -55,6 +56,15 @@
       >
     </form>
     <br>
-    <B tal:content = "parse_output"></B>
+    <h3>Output </h3>
+    <pre><div tal:repeat = "i messages"
+         tal:replace = "structure string:${i}<br>">
+    </div></pre>
+
+    <div tal:repeat = "i debug"
+         tal:replace = "structure string:${i}<br>">
+     </div>
+
+    </div>
   </body>
 </html>

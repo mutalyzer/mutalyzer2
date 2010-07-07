@@ -648,7 +648,6 @@ class LargeRetriever(Retriever):
         #if not lrgID.startswith("LRG"):
         #    return None
         filename = self._nametofile(lrgID)
-        print lrgID, url
 
         handle = urllib2.urlopen(url)
         info = handle.info()

@@ -13,6 +13,7 @@
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
+    <div metal:define-macro="content">
     <center>
       <big tal:content = "structure string:Mutalyzer ${version} batch checker.">
       </big>
@@ -36,5 +37,6 @@
         value="Submit"
       >
     </form>
+    </div> <!-- div metal:define-macro="content" -->
   </body>
 </html>

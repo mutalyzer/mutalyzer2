@@ -13,6 +13,7 @@
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
+    <div metal:define-macro="content">
       <big tal:content = "structure string:Position numbering conversion
       by Mutalyzer ${version}.">
       </big>
@@ -97,6 +98,6 @@
       >
     </form>
 -->
-
+    </div> <!-- div metal:define-macro="content" -->
   </body>
 </html>

@@ -1105,13 +1105,14 @@ class Batch(Db) :
         return True
     #isJobListEmpty
 
-    def addJob(self, outputFilter, email, fromHost) :
+    def addJob(self, outputFilter, email, fromHost, jobType = None) :
         """
             Add a job and give it a unique ID.
 
             Arguments:
                 outputFilter ; Output settings for all requests in this job.
                 email        ; Contact information of the submitter.
+                jobType      ; The type of batch job
 
             SQL tables from internalDb (altered):
                 BatchJob ; Job information.
@@ -1125,8 +1126,8 @@ class Batch(Db) :
         del M
         statement = """
             INSERT INTO BatchJob
-              VALUES (%s, %s, %s, %s);
-        """, (jobID, outputFilter, email, fromHost)
+              VALUES (%s, %s, %s, %s, %s);
+        """, (jobID, outputFilter, email, fromHost, jobType)
 
         self.query(statement)
         return jobID
@@ -1140,18 +1141,15 @@ class Batch(Db) :
                 BatchJob ; Job information.
 
             Returns:
-                list ; List of job IDs.
+                list ; List of tuples (job ID, job Type).
         """
         
         statement = """
-            SELECT JobID
+            SELECT JobID, JobType
               FROM BatchJob;
         """, None
 
-        ret = []
-        for i in self.query(statement) :
-            ret.append(i[0])
-        return ret
+        return self.query(statement)
     #getJobs
 
     def removeJob(self, jobID) :
