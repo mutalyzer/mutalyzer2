@@ -4,58 +4,39 @@
   <head>
     <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
     <title tal:content = "structure string:Mutalyzer ${version}"></title>
-    <script type = "text/javascript" 
-        language = "javascript" 
-        src = "test.js">
-    </script>
   </head>
   <body onload = "yo()">
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
     <div metal:define-macro="content">
-    <big tal:content = "structure string:Variant syntax check
-      by Mutalyzer ${version}.">
-    </big>
-    <br>
-    <br>
-    <br>
-    Please insert the variant name using the format:<br>
-    <small>
-      &lt;Accession Number&gt;.&lt;version 
-      number&gt;:c.&lt;variant&gt;<br>or<br>
-      &lt;Accession Number&gt;.&lt;version 
-      number&gt;:g.&lt;variant&gt;
-    </small><br>
-    <br>
-    <h3> Examples:</h3>
-    NM_000051.3:c.274G&gt;T<br>
-    or
-    <br>
-    NC_000011.9:g.66594541T&gt;C<br>
-    or
-    <br>
-    chr11:g.66594541T&gt;C<br>
-    <br>
-    <h5>Note: this is a variant nomenclature syntax checker only. Please use
-    <A href="check">
-    Mutalyzer's name checker</A> to also check nomenclature semantics. 
-    
-    </h5>
+        <center><big tal:content = "structure string:Variant syntax check
+            by Mutalyzer ${version}."></big></center>
+        
+    <p>Please insert the mutation name using the following format:<br />
+      <small>
+        &lt;Accession Number&gt;.&lt;version 
+        number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
+        type&gt;.&lt;mutation&gt;
+      </small>
+      </p>
+      Example: AB026906.1:c.274G&gt;T<br>
+      <br>
+ 
     <form action = "" method = "post">
       <small> Variant name </small>
       <input 
         type = "text" 
         name = "variant" 
         tal:attributes = "value variant"
-        size = "100%"
-      ><br><br>
+        size = "100%">
+        <br><br>
       <input 
         type="submit" 
-        value="Submit"
-      >
+        value="Submit">
     </form>
     <br>
+
     <h3>Output </h3>
     <pre><div tal:repeat = "i messages"
          tal:replace = "structure string:${i}<br>">

@@ -85,11 +85,16 @@ def createLrgRecord(data):
             # GenRecord.checkRecord will reconstruct it later on
             if len(CDSPList.positionList) == 2:
                 CDSPList.positionList = []
+            transcription.translate = True
         else:
             transcription.molType = 'n'
 
+        transcription.transcribe = True
+
         transcription.exon = exonPList
         transcription.CDS = CDSPList
+
+
     #for
     return record
 #createLrgRecord

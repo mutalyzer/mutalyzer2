@@ -40,8 +40,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             getTranscriptsRange(build, chrom,    ; Get all transcripts that
                                 pos1, pos2,        overlap with a range on a
                                 method)            chromosome.
-            getGeneName(build, accno)            ; Find the gene name associated
-                                                   with a transcript.
+            getGeneName(build, accno)            ; Find the gene name associated                                        with a transcript.
             mappingInfo(LOVD_ver, build, accNo,  ; FIXME
                         variant) ;
             transcriptInfo(LOVD_ver, build, ; Find transcription start and
@@ -166,6 +165,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         ret = D.get_Transcripts(chrom, pos, pos, True)
 
+        #filter out the accNo
+        ret = [r[0] for r in ret]
+
+
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
@@ -206,6 +209,9 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
 
+        #filter out the accNo
+        ret = [r[0] for r in ret]
+
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
@@ -244,6 +250,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del D, L, C
         return ret
     #getGeneName
+
 
     @soapmethod(String, String, String, String, _returns = Mapper.Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
@@ -294,7 +301,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver,
                      build, accNo, variant))
 
-        result = Mapper.mainMapping(build, accNo, variant, C, L)
+        conv = Mapper.Converter(build, C, L)
+        result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing mappingInfo(%s %s %s %s)" % (

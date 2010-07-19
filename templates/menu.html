@@ -33,8 +33,7 @@
     marginheight="0"
     onload="initActive(); 
             preloadImages('base/images/bullitlicht1.gif',
-                          'base/images/bullitlicht2.gif');
-            updateVisibility();"> 
+                          'base/images/bullitlicht2.gif');"> 
     <!-- Header -->
     <a id="top"></a>
     
@@ -106,7 +105,6 @@
     <tr>
       <td width="180" valign="top">
     
-      <!-- Menu -->
       <table id="menu" width="180" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td valign="top" width="20">
@@ -187,6 +185,8 @@
       -->
     
       <!-- Finished Projects -->
+
+
       <tr>
         <td valign="top" width="20">
           <img src="base/images/bullitdonker.gif" id="b_index">
@@ -215,23 +215,39 @@
                                 'nameCheck');" 
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
                                  'nameCheck');" 
-            class="vertnavsub">Name checker</a>
+            class="vertnavsub">Name Checker</a>
         </td>
       </tr>
 
       <tr>
         <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_batchCheck">
+          <img src="base/images/bullitdonker.gif" id="b_checkingSyntax">
         </td>
         <td colspan="3">
-          <a id="page_batchCheck" 
-            onclick="swapActive('batchCheck');" 
-            href="batchCheck" 
+          <a id="page_checkingSyntax" 
+            onclick="swapActive('checkingSyntax');" 
+            href="syntaxCheck" 
             onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'batchCheck');" 
+                                'checkingSyntax');" 
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'batchCheck');" 
-            class="vertnavsub">Batch Name checker</a>
+                                 'checkingSyntax');" 
+            class="vertnavsub">Syntax Checker</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_positionConverter">
+        </td>
+        <td colspan="3">
+          <a id="page_positionConverter" 
+            onclick="swapActive('positionConverter');" 
+            href="positionConverter" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'positionConverter');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'positionConverter');" 
+            class="vertnavsub">Position Converter</a>
         </td>
       </tr>
 
@@ -266,52 +282,50 @@
             class="vertnavsub">Download page</a>
         </td>
       </tr>
-      
+
       <tr>
         <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_batchConversion">
+          <img src="base/images/bullitdonker.gif" id="b_batch">
         </td>
         <td colspan="3">
-          <a id="page_batchConversion" 
-            onclick="swapActive('batchConversion');" 
-            href="batchConversion" 
+          <a id="page_batch" 
+            onclick="swapActive('batch');" 
+            href="batch" 
             onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'batchConversion');" 
+                                'batch');" 
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'batchConversion');" 
-            class="vertnavsub">Batch Conversion</a>
-        </td>
-      </tr>
-      
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_checkingSyntax">
-        </td>
-        <td colspan="3">
-          <a id="page_checkingSyntax" 
-            onclick="swapActive('checkingSyntax');" 
-            href="checkingSyntax" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'checkingSyntax');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'checkingSyntax');" 
-            class="vertnavsub">Checking Syntax</a>
+                                 'batch');" 
+            class="vertnavsub">Batch Jobs</a>
         </td>
       </tr>
 
       <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_numberingConversion">
+        <td colspan="2"></td>
+        <td colspan="2">
+          <a id="page_batchNameChecker" 
+            onclick="swapActive('batchNameChecker');" 
+            href="batchNameChecker" 
+            class="vertnavsub">Name Checker</a>
         </td>
-        <td colspan="3">
-          <a id="page_numberingConversion" 
-            onclick="swapActive('numberingConversion');" 
-            href="numberingConversion" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'numberingConversion');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'numberingConversion');" 
-            class="vertnavsub">Convert</a>
+      </tr>
+
+      <tr>
+        <td colspan="2"></td>
+        <td colspan="2">
+          <a id="page_batchSyntaxChecker" 
+            onclick="swapActive('batchSyntaxChecker');" 
+            href="batchSyntaxChecker" 
+            class="vertnavsub">Syntax Checker</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="2"></td>
+        <td colspan="2">
+          <a id="page_batchConversionChecker" 
+            onclick="swapActive('batchConversionChecker');" 
+            href="batchConversionChecker" 
+            class="vertnavsub">Conversion Checker</a>
         </td>
       </tr>
 

@@ -83,6 +83,8 @@ class File() :
 
         # Open the file with func().
         ret = func(fileName)
+        # Apperantly apache will remove this file even when opened by the 
+        # function *func
         os.remove(fileName)
 
         return ret
@@ -143,6 +145,10 @@ class File() :
             return None
         #except
 
+        #Watch out for : delimiter FIXME and for the . delimiter
+        if dialect.delimiter == ":":
+            dialect.delimiter = "\t"
+
         handle.seek(0)
         reader = csv.reader(handle, dialect)
 
@@ -198,7 +204,8 @@ class File() :
 
         """
 
-        zipFile = self.__tempFileWrapper(zipfile.ZipFile, handle)
+        #zipFile = self.__tempFileWrapper(zipfile.ZipFile, handle)
+        zipFile = zipfile.ZipFile(handle)
         doc = xml.dom.minidom.parseString(zipFile.read("content.xml"))
         zipFile.close()
 
@@ -235,46 +242,65 @@ class File() :
                 list ; A sanitised list of lists (without a header or empty
                        lines).
         """
-        
-        if job[0] != self.__config.header :
-            self.__output.addMessage(__file__, 4, "EBPARSE", 
-                                     "Header not valid.")
-            return None
-        #if
+        #remove empty lines (store original line numbers line 1 = job[0])
+        jobl = [(l+1, row) for l, row in enumerate(job) if row and any(row)]
 
-        for i in range(0, len(job)) :
-            if job[i] :                                      # Non empty line.
-                if len(job[i]) == 3 :
-                    if job[i][0] or job[i][1] or job[i][2] : # Non empty line.
-                        if not job[i][0] :
-                            self.__output.addMessage(__file__, 4, "EBPARSE",
-                                "The first column may not be empty in line " \
-                                "%i." % i)
-                            return None
-                        #if
-                        if not job[i][2] :
-                            self.__output.addMessage(__file__, 4, "EBPARSE",
-                                "The last column may not be empty in line " \
-                                "%i." % i)
-                            return None
-                        #if
-                    #if
-                #if
-                else :
-                    self.__output.addMessage(__file__, 4, "EBPARSE",
-                        "Wrong amount of columns in line %i.\n" % i)
-                    return None
-                #else
-            #if
-        #for
+        #TODO:  Add more new style old style logic
+        #       Should empty lines be stored
+        #       Can we concatonate 3 column entries to 1 column
 
-        # All tests are passed, now we do some trimming.
-        ret = []
-        for i in range(1, len(job)) :
-            if job[i] and job[i] != ['', '', ''] :
-                ret.append(job[i])
+        if jobl[0][1] == self.__config.header : #Old style NameCheckBatch job
+            #collect all lines where the amount of arguments != 3
+            notthree = filter(lambda i: len(i[1])!=3, jobl)
 
-        return ret
+            [jobl.remove(r) for r in notthree]       # update job
+
+            #collect all lines where the first or third argument is empty
+            emptyfield = filter(lambda i: not(i[1][0] and i[1][2]), jobl)
+
+            [jobl.remove(r) for r in emptyfield]     # update job
+
+            #Create output Message for incompatible fields
+            if any(notthree):
+                lines = ", ".join([str(i[0]) for i in notthree])
+                self.__output.addMessage(__file__, 4, "EBPARSE",
+                        "Wrong amount of columns in line(s): %s.\n" % lines)
+
+            if any(emptyfield):
+                lines = ", ".join([str(i[0]) for i in emptyfield])
+                self.__output.addMessage(__file__, 4, "EBPARSE",
+                        "The first and last column can't be left empty on "
+                        "line(s): %s.\n" % lines)
+
+            if notthree or emptyfield:
+                return None
+
+            #Create a Namechecker batch entry
+            ret = []
+            for line, job in jobl[1:]:
+                if job[1]:
+                    if job[0].startswith("LRG"):
+                        inputl = "%s%s:%s" % tuple(job)
+                    else:
+                        inputl = "%s(%s):%s" % tuple(job)
+                else:
+                    inputl = "%s:%s" % (job[0], job[2])
+                ret.append(inputl)
+            return ret
+
+        else:   #No Header, possibly a new BatchType
+            #collect all lines with data in fields other than the first
+            lines = ", ".join([str(row[0]) for row in jobl if any(row[1][1:])])
+            if any(lines):
+                self.__output.addMessage(__file__, 4, "EBPARSE",
+                    "New Type Batch jobs (see help) should contain one "
+                    "entry per line, please check line(s): %s" % lines)
+                self.__output.addMessage(__file__, 2, "DEBUG",
+                        `job`)
+            else:
+                return [job[0] for line, job in jobl]
+
+
     #__checkBatchFormat
 
     def parseFileRaw(self, handle) :

@@ -1,5 +1,8 @@
-The initial mapping table was created using the following command:
+-- hg19 & hg18 databases
+--------
+-- The initial mapping table was created using the following command
 ---
+USE hg19;
 CREATE TABLE map
   SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, 
                   exonEnds, name2 AS geneName, chrom, strand, protAcc
@@ -9,74 +12,18 @@ CREATE TABLE map
     AND acc = mrnaAcc;
 ---
 
-We need an axillary table for updated entries where the version numbers are
-not increased.
----
-CREATE TABLE map_cdsBackup
-  LIKE map;
----
+-- We need an auxillary table for updated entries where the version numbers are
+-- not increased.
 
 ---
-CREATE DATABASE mutalyzer;
-GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
-FLUSH PRIVILEGES;
+CREATE TABLE map_cdsBackup LIKE map;
 ---
-
-In database mutalyzer:
----
-CREATE TABLE GBInfo (
-  AccNo CHAR(20) PRIMARY KEY,
-  GI CHAR(13) UNIQUE,
-  hash CHAR(32) UNIQUE NOT NULL,
-  ChrAccVer CHAR(20),
-  ChrStart INT(12),
-  ChrStop INT(12),
-  orientation INT(2),
-  url CHAR(255)
-);
-
-CREATE TABLE BatchQueue (
-  QueueID INT(5) PRIMARY KEY AUTO_INCREMENT,
-  JobID CHAR(20) NOT NULL,
-  AccNo CHAR(13) NOT NULL,
-  Gene CHAR(20),
-  Variant CHAR(255) NOT NULL
-);
-
-CREATE TABLE BatchJob (
-  JobID CHAR(20) PRIMARY KEY,
-  Filter CHAR(20) NOT NULL,
-  EMail CHAR(255) NOT NULL,
-  FromHost Char(255) NOT NULL
-);
-
-CREATE TABLE Link (
-  mrnaAcc CHAR(20) PRIMARY KEY,
-  protAcc CHAR(20) UNIQUE NOT NULL
-);
-
-INSERT INTO Link 
-  SELECT DISTINCT acc, protAcc 
-    FROM hg18.map 
-    WHERE protAcc != '' 
-  UNION 
-  SELECT DISTINCT acc, protAcc 
-    FROM hg19.map 
-    WHERE protAcc != '';
-
-#CREATE TABLE Var (
-#  Name CHAR(20) PRIMARY KEY,
-#  Value Char(255) NOT NULL
-#);
-#INSERT INTO Var VALUES ("WatchDog", 0);
----
-
 CREATE TABLE ChrName (
   AccNo CHAR(20) PRIMARY KEY,
   name CHAR(20) NOT NULL
 );
 
-# hg19:
+-- hg19 specific Accession Numbers
 INSERT INTO ChrName (AccNo, name) VALUES
   ("NC_000001.10", "chr1"),
   ("NC_000002.11", "chr2"), 
@@ -113,6 +60,28 @@ INSERT INTO ChrName (AccNo, name) VALUES
   ("NT_167251.1", "chr17_ctg5_hap1")
 ;
 
+--- SAME THING for HG18
+
+USE hg18;
+CREATE TABLE map
+  SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, 
+                  exonEnds, name2 AS geneName, chrom, strand, protAcc
+    FROM gbStatus, refGene, refLink
+    WHERE type = "mRNA"
+    AND refGene.name = acc
+    AND acc = mrnaAcc;
+---
+
+-- We need an auxillary table for updated entries where the version numbers are
+-- not increased.
+---
+CREATE TABLE map_cdsBackup LIKE map;
+---
+CREATE TABLE ChrName (
+  AccNo CHAR(20) PRIMARY KEY,
+  name CHAR(20) NOT NULL
+);
+
 # hg18:
 INSERT INTO ChrName (AccNo, name) VALUES
   ("NC_000001.9", "chr1"),
@@ -143,3 +112,55 @@ INSERT INTO ChrName (AccNo, name) VALUES
   ("NT_113891.1", "chr6_cox_hap1"),
   ("NT_113959.1", "chr22_h2_hap1")
 ;
+
+---
+CREATE DATABASE mutalyzer;
+GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
+FLUSH PRIVILEGES;
+---
+
+---
+USE mutalyzer;
+CREATE TABLE GBInfo (
+  AccNo CHAR(20) PRIMARY KEY,
+  GI CHAR(13) UNIQUE,
+  hash CHAR(32) UNIQUE NOT NULL,
+  ChrAccVer CHAR(20),
+  ChrStart INT(12),
+  ChrStop INT(12),
+  orientation INT(2),
+  url CHAR(255)
+);
+
+CREATE TABLE BatchQueue (
+  QueueID INT(5) PRIMARY KEY AUTO_INCREMENT,
+  JobID CHAR(20) NOT NULL,
+  Input CHAR(255) NOT NULL
+);
+
+CREATE TABLE BatchJob (
+  JobID CHAR(20) PRIMARY KEY,
+  Filter CHAR(20) NOT NULL,
+  EMail CHAR(255) NOT NULL,
+  FromHost Char(255) NOT NULL,
+  JobType CHAR(20) NULL,
+  Arg1 char(20) DEFAULT NULL
+);
+
+CREATE TABLE Link (
+  mrnaAcc CHAR(20) PRIMARY KEY,
+  protAcc CHAR(20) UNIQUE NOT NULL
+);
+
+INSERT INTO Link 
+  SELECT DISTINCT acc, protAcc 
+    FROM hg18.map 
+    WHERE protAcc != '' 
+  UNION 
+  SELECT DISTINCT acc, protAcc 
+    FROM hg19.map 
+    WHERE protAcc != '';
+
+---------
+-- End of mutalyzer database
+---------

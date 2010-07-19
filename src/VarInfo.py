@@ -105,23 +105,23 @@ def main(LOVD_ver, build, acc, var) :
                  "Received %s:%s (LOVD_ver %s, build %s)" % (acc, var,
                  LOVD_ver, build))
 
-    Cross = Mapper.makeCrossmap(build, acc, C)
+    Converter = Mapper.Converter(build, C, O)
+
+    #V = Mapper.makeParsetree(O, Cross, var)
 
     # If no variant is given, return transcription start, transcription end and
     #   CDS stop in c. notation.
-    if not var :
-        info = Cross.info()
-        print "%i\n%i\n%i" % info
+    if var :
+        V = Converter.mainMapping(acc, var)
+    else :
+        print "%i\n%i\n%i" % Converter.giveInfo(acc)
         return
     #if
     
-    #V = Mapper.makeParsetree(O, Cross, var)
-    V = Mapper.mainMapping(build, acc, var, C, O)
-
     O.addMessage(__file__, -1, "INFO", 
                  "Finished processing %s:%s (LOVD_ver %s, build %s)" % (acc,
                  var, LOVD_ver, build))
-    del O, C, Cross
+    del O, C
     # And return the output.
     print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain,
                                           V.endoffset, V.start_g, V.end_g, 

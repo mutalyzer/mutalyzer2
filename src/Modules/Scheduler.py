@@ -19,9 +19,27 @@ import daemon
 from Modules import Config
 from Modules import Output
 from Modules import Db
+from Modules import Parser
+from Modules import Mapper
 
 import Mutalyzer
 #import BatchChecker
+
+def debug(f):
+    """Debug Wrapper for functions called from within the daemon"""
+    def _tempf(*args):
+        of = open("/tmp/daemon.out", "a+")
+        try:
+            of.write("\nFunction %s\n\targs: %s\n\t" % (`f`, `args`))
+            ret = f(*args)
+            of.write("Returns: %s" % `ret`)
+            return ret
+        except Exception, e:
+            import traceback
+            of.write("\nEXCEPTION:\n")
+            traceback.print_exc(file=of)
+    return _tempf
+
 
 class Scheduler() :
     """
@@ -58,7 +76,7 @@ class Scheduler() :
                 __config ; The variables mailMessage, mailSubject and mailFrom
                            are used.
         """
-        #TODO: Handle Connection errors in a try, except fasion
+        #TODO: Handle Connection errors in a try, except fassion
         #socket.error 
 
         handle = open(self.__config.mailMessage)
@@ -93,67 +111,60 @@ class Scheduler() :
     def process(self) :
         """
         """
-
         jobList = self.__database.getJobs()
 
         while jobList :
-            for i, jobType in jobList :
-                results = self.__database.getFromQueue(i)
-                if results:
+            for i, jobType, arg1 in jobList :
+                inputl = self.__database.getFromQueue(i)
+                if inputl:
                     if jobType == "NameChecker":
-                        self._processNameBatch(results, i)
+                        self._processNameBatch(inputl, i)
                     elif jobType == "SyntaxChecker":
-                        self._processSyntaxCheck(results, i)
-                    elif jobType == "Conversions":
-                        self._processConversion(results, i)
+                        self._processSyntaxCheck(inputl, i)
+                    elif jobType == "ConversionChecker":
+                        self._processConversion(inputl, i, arg1)
                     else: #unknown jobType
                         pass #TODO: Scream burning water
                 else :
                     eMail, stuff, fromHost = self.__database.removeJob(i)
                     print "Job %s finished, email %s file %s" % (i, eMail, i)
-                    self.__sendMail(eMail, "%sResults_%s.txt" % (fromHost, i))
+                    self.__sendMail(eMail, "%sResults_%s.csv" % (fromHost, i))
                 #else
             #for
             jobList = self.__database.getJobs()
         #while
     #process
 
-    def _processNameBatch(self, results, i):
+    def _processNameBatch(self, cmd, i):
         """
             Process an entry from the Name Batch,
 
             write the results to the job-file
         """
+        #FIXME: This output is generated in an UUUUUUGLY way, see Mutalyzer.py
+        # Preferably receive the 12 output fields in tact
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
 
-        #create NameCheck cmd
-        if results[1] :
-            if results[0].startswith("LRG"):
-                cmd = "%s%s:%s" % results
-            else:
-                cmd = "%s(%s):%s" % results
-        else :
-            cmd = "%s:%s" % (results[0], results[2])
 
         #Run mutalyzer and get values from Output Object 'O'
         Mutalyzer.process(cmd, C, O)
-        batchData = O.getOutput("batch")    #what if batch does not exist
+        batchData = O.getOutput("batch")
         if batchData:
             bO = batchData[0]
         else:
-            bO = None
+            bO = {}
 
-        #AccNo, GeneSymbol, Mutation
-        outputline =  "%s\t%s\t%s\t" % results[:3]
+        #AccNo, GeneSymbol, Mutation FIXME for oneliners
+        outputline =  "%s\t%s\t%s\t" % (cmd, "", "") #split up the cmd
 
-        if bO:
+        if bO and bO["exitcode"] == 0:
             g = bO["gName"]                     #Genomic Plain Description
             c = bO["cName"]                     #Coding  Plain Description
             p = bO["pName"]                     #Protein Plain Description
             gc = "%s:%s" % (bO["cSymbol"], c)   #Coding  GeneSymbol Description
             gp = "%s:%s" % (bO["pSymbol"], p)   #Protein GeneSymbol Description
-            ag = results[0]                     #Genomic Accesion Description
+            ag = cmd.split(':')[0].split('(')[0]#Genomic Accesion Description
             ac = bO["cAcc"] or ag               #Coding  Accesion Description
             ap = bO["pAcc"] or ag               #Protein Accesion Description
 
@@ -166,42 +177,108 @@ class Scheduler() :
             #AccNo          gName, cName, pName
             outputline += "%s\t%s\t%s\t" % (ag, ac, ap)
 
-            #Messages & Newline
-            outputline += "{%s}\n" % "|".join(bO["messages"])
-
-       #if
+        #if
         else:
-            #Parsing went wrong, skip fields
-            outputline += "\t"*9
+            #Something went wrong, skip fields
+            outputline += "\t"*8
 
-        #Add Debug Data
-        outputline += "DEBUG:\n\t%s\n" % "\n\t".join(O.getMessages())
+        outputline += "%s\n" % "|".join(O.getBatchMessages(3)+\
+                bO.get("messages",[]))
 
+        #Output
+        filename = "%s/Results_%s.csv" % (self.__config.resultsDir, i)
+        if not os.path.exists(filename):
+            handle = open(filename, 'a')
+            handle.write("%s\n" % "\t".join(i for i in
+                self.__config.nameCheckOutHeader))
+        else:
+            handle = open(filename, 'a')
 
-        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
-        #TODO: If path not exists create file with correct header
-        handle = open(filename, "a")
         handle.write(outputline)
         handle.close()
+
     #_processNameBatch
 
-    def _processSyntaxCheck(self, results, i):
+    def _processSyntaxCheck(self, cmd, i):
         """
             _processSyntaxCheck docstring
         """
-        pass
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        P = Parser.Nomenclatureparser(O)
+
+        #Process
+        parsetree = P.parse(cmd)
+        if parsetree:
+            result = "OK"
+        else:
+            result = "|".join(O.getBatchMessages(3))
+
+        #Output
+        filename = "%s/Results_%s.csv" % (self.__config.resultsDir, i)
+        if not os.path.exists(filename):
+            handle = open(filename, 'a')
+            handle.write("%s\n" % "\t".join(i for i in
+                self.__config.syntaxCheckOutHeader))
+        else:
+            handle = open(filename, 'a')
+
+        handle.write("%s\t%s\n" % (cmd, result))
+        handle.close()
     #_processSyntaxCheck
 
-    def _processConversion(self, results, i):
+    def _processConversion(self, cmd, i, build):
         """
             _processConversion docstring
         """
-        pass
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        variant = cmd
+
+        #process
+        converter = Mapper.Converter(build, C, O)
+
+        variants = None
+        gName = ""
+        cNames = [""]
+
+        #Also accept chr accNo
+        variant = converter.correctChrVariant(variant)
+
+        if not(":c." in variant or ":g." in variant):
+            #Bad name
+            P = Parser.Nomenclatureparser(O)
+            parsetree = P.parse(variant)
+
+        if ":c." in variant:
+            # Do the c2chrom dance
+            variant = converter.c2chrom(variant)
+        if variant and ":g." in variant:
+            # Do the g2c dance
+            variants = converter.chrom2c(variant)
+            if variants:
+                gName = variant
+                cNames = [cName for cName2 in variants.values() for cName in
+                        cName2]
+
+        error = "%s" % "|".join(O.getBatchMessages(3))
+
+        #Output
+        filename = "%s/Results_%s.csv" % (self.__config.resultsDir, i)
+        if not os.path.exists(filename):
+            handle = open(filename, 'a')
+            handle.write("%s\n" % "\t".join(i for i in
+                self.__config.positionConverterOutHeader))
+        else:
+            handle = open(filename, 'a')
+
+        handle.write("%s\t%s\t%s\t%s\n" % (cmd, error, gName, "\t".join(cNames)))
+        handle.close()
     #_processConversion
 
 
 
-    def addJob(self, outputFilter, eMail, queue, fromHost, jobType) :
+    def addJob(self, outputFilter, eMail, queue, fromHost, jobType, Arg1) :
         """
             Arguments:
                 outputFilter ; Filter the output of Mutalyzer
@@ -210,20 +287,18 @@ class Scheduler() :
                 fromHost     ; From where is the request made
                 jobType      ; The type of Batch Job that should be run
         """
+        # Add jobs to the database
+        jobID = self.__database.addJob(outputFilter, eMail,
+                fromHost, jobType, Arg1)
+        for inputl in queue :
+            self.__database.addToQueue(jobID, inputl)
 
-        print "called addjob"
-        jobList = self.__database.getJobs()
-        jobID = self.__database.addJob(outputFilter, eMail, fromHost, jobType)
-        for i in queue :
-            self.__database.addToQueue(jobID, *i)
-        #FIXME!:    This will not work, because Popen doesn't detach from the
-        #           parent, so on return, the process is interrupted. BAD!
-        #           Use multiprocessing, check if PID catch still works
-        #time.sleep(1)
-        #with daemon.DaemonContext() :
-        #    BatchChecker()
-        #subprocess.Popen([self.__config.processName, "src/BatchChecker.py"],
-        #                 executable = "python")
+        # Spawn child
+        p = subprocess.Popen(["MutalyzerBatch",
+            "src/BatchChecker.py"], executable="python")
+
+        #Wait for the BatchChecker to fork of the Daemon
+        p.communicate()
     #addJob
 #Scheduler
 

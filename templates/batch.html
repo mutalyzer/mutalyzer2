@@ -4,39 +4,139 @@
   <head>
     <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
     <title tal:content = "structure string:Mutalyzer ${version}"></title>
-    <script type = "text/javascript" 
-        language = "javascript" 
-        src = "test.js">
-    </script>
   </head>
-  <body onload = "yo()">
+  <body >
 <!--
     <div metal:use-macro = "sitemacros/macros/menu"></div>
 -->
-    <div metal:define-macro="content">
-    <center>
-      <big tal:content = "structure string:Mutalyzer ${version} batch checker.">
-      </big>
-    </center><br>
-    Blablabla
-    <br>
-    <form action = "" method = "post" enctype = "multipart/form-data">
-      <input 
-        type = "file" 
-        name = "file" 
-        size = "100%"
-      ><br>
-      <input 
-        type = "text" 
-        name = "eMail" 
-        tal:attributes = "value lastEMail"
-        size = "100%"
-      ><br>
-      <input 
-        type="submit" 
-        value="Submit"
-      >
-    </form>
-    </div> <!-- div metal:define-macro="content" -->
-  </body>
+<div metal:define-macro="content">
+  <center>
+    <big tal:content = "structure string:Mutalyzer ${version} Batch ${batchType} Interface."></big>
+  </center>
+
+  <a href="#" onclick="toggle_visibility('help');">Toggle File Format Help</a>
+  <div id='help' style="display:none">
+    <p>The mutalyzer batch checker accepts the following file formats
+      <ul>
+          <li>Tab Delimited Text File / CSV File</li>
+          <li>Microsoft Excel XML File</li>
+          <li>OpenOffice .odt File</li>
+      </ul>
+      </p>
+    <h5>We accept two types of input files, you can download examples below</h5>
+    <h5>Old Style: 
+        <a href="downloads/batchtestold.txt">Download Example File</a></h5>
+    <div style="padding-left:20px; width:400px">
+        <p >This file format has a header-row, which consists of
+        three tab delimited fields. In each following row the
+        corressponding data is also tab delimited.</p>
+        <table>
+            <tr>
+                <td>AccNo</td><td>Genesymbol</td><td>Mutation</td>
+            </tr>
+            <tr>
+                <td>AB026906.1</td><td>SDHD</td><td>g.7872G>T</td>
+            </tr>
+        </table>
+    </div>
+    <h5>New Style <a href="downloads/batchtestnew.txt">Download Example File</a></h5>
+    <div style="padding-left:20px; width:400px">
+        <p>This file format has no header-row and no columns. 
+        Instead each row contains a single variant for the Batch.</p>
+        <table>
+            <tr><td>AB026906.1:c.274G&gt;T</td></tr>
+            <tr><td>AL449423.14(CDKN2A_v002):c.5_400del<td></tr>
+        </table>
+    </div>
+    <h5>Output Format</h5>
+    <div style="padding-left:20px; width:400px">
+        <p>The output of a Mutalyzer Batch run is a CSV file, which has a
+        header-row to clarify the results. <BR /> Note that empty lines
+        are removed from the batch input file.</p>
+    </div>
+  </div> <!-- help -->
+  <br /><br />
+
+      <div tal:condition = "errors" id="errors">
+          <b>Errors:</b><br />
+        <div tal:repeat = "i errors"
+                  tal:replace = "structure string:${i}<br>">
+         </div>
+      </div>
+
+      <table id="inputform">
+          <form action = "" method = "post" enctype = "multipart/form-data">
+              <tr id="batchRow">
+                  <td><b>BatchType</b></td>
+                  <td>
+                <select id="batchType" name="batchType" onchange="return changeBatch(this)">
+
+                <option 
+                    tal:repeat = "i batchTypes"
+                    tal:content = "structure string:${i}"
+                    tal:attributes = "value i">
+                </option>
+            </select>
+                  </td>
+                </tr>
+              <tr>
+              <tr id="build" style="display:none">
+                  <td><b>Build</b></td>
+                  <td>
+                      <select name="arg1">
+                        <option tal:repeat="build avail_builds"
+                        tal:content="build"
+                        tal:attributes="value build">
+                        </option>
+                      </select>
+                  </td>
+              </tr>
+              <tr>
+                  <td><b>Email</b></td>
+                  <td><input type = "text" 
+                             name = "batchEmail" 
+                             tal:attributes = "value lastpost"
+                             style = "width:200px"></td>
+              </tr>
+              <tr>
+                  <td><b>File</b></td>
+                  <td><input type = "file" 
+                             name = "batchFile" 
+                             style = "width:200px"></td>
+              </tr>
+              <tr>
+                  <td colspan="2"><input type="submit" value="Submit"></td>
+              </tr>
+          </form>
+      </table> <!-- inputform -->
+<br />
+
+    <script language="javascript">
+        oldload = window.onload
+        initpage = function() {
+            oldload();
+            changeBatch(document.getElementById('batchType'));
+        }
+    </script>
+
+    <script language="javascript" 
+        tal:content="structure string:document.getElementById('batchType').selectedIndex = ${selected}; document.getElementById('batchRow').style.display = '${hideTypes}'; window.onload = initpage;">
+        </script>
+
+  <div tal:condition = "messages">
+    <b>Messages</b><br>
+     <pre><div tal:repeat = "i messages"
+         tal:replace = "structure string:${i}<br>">
+    </div></pre>
+    <br />
+  </div>
+
+  <div tal:condition = "debug">
+    <b>Debug output:</b><br>
+    <pre><div tal:repeat = "i debug"
+         tal:replace = "structure string:${i}<br>">
+    </div></pre>
+  </div>
+</div>
+</body>
 </html>

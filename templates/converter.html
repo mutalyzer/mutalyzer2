@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
+    <title>Mutalyzer Position Converter</title>
+  </head>
+  <body>
+<!--
+    <div metal:use-macro = "sitemacros/macros/menu"></div>
+-->
+    <div metal:define-macro="content">
+        <center><big tal:content = "structure string:Position Conversion by Mutalyzer 
+                ${version}."></big></center>
+        <p> Please supply the build which you want to use to convert your
+        position, available builds at the moment are: hg18 (NCBI 36) and hg19
+        (GRCh37).</p>
+
+      <table id="inputform">
+          <form action = "" method = "post" enctype = "multipart/form-data">
+              <tr>
+                  <td><b>Build</b></td>
+                  <td>
+                      <select name="build">
+                        <option tal:repeat="build avail_builds"
+                        tal:content="build"
+                        tal:attributes="value build">
+                        </option>
+                      </select>
+                  </td>
+              </tr>
+              <tr>
+                  <td><b>Variant</b></td>
+                  <td><input type = "text" 
+                             name = "variant" 
+                             tal:attributes = "value variant"
+                             style = "width:500px"></td>
+              </tr>
+              <tr>
+                  <td colspan="2"><input type="submit" value="Submit"></td>
+              </tr>
+          </form>
+      </table> <!-- inputform -->
+
+      <div tal:condition = "gName">
+        <b>Chromosomal Variant:</b><br>
+        <pre><div tal:replace = "structure string:${gName}<br>"></div></pre>
+      </div>
+
+      <div tal:condition = "cNames">
+        <b>Found transcripts in mutation region:</b><br>
+        <pre><div tal:repeat = "i cNames"
+             tal:replace = "structure string:${i}<br>">
+        </div></pre>
+      </div>
+
+      <div tal:condition = "debug">
+        <b>Debug output:</b><br>
+        <pre><div tal:repeat = "i debug"
+             tal:replace = "structure string:${i}<br>">
+        </div></pre>
+      </div>
+
+      <div tal:condition = "errors">
+        <b>Error output:</b><br>
+        <pre><div tal:repeat = "i errors"
+             tal:replace = "structure string:${i}<br>">
+        </div></pre>
+      </div>
+
+    </div> <!-- div metal:define-macro="content" -->
+  </body>
+</html>

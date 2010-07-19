@@ -9,8 +9,15 @@
         src = "interface.js">
     </script>
   </head>
-  <body onload = "updateVisibility()">
+  <body>
     <div metal:define-macro="content">
+        <script>
+            var oldLoad = window.onload;
+            window.onload=function(){
+                  oldLoad();
+                  updateVisibility();
+            }
+        </script>
     <br>
     It is not unlikely that you want to use your own reference sequence,
     but are not (yet) willing to submit your sequence data to
