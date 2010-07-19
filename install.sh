@@ -33,6 +33,7 @@ PythonDebug On
 
 RewriteEngine on
 RewriteRule Variant_info.php Variant_info
+RewriteRule .*bugtracker.* https://www.mutalyzer.nl/projects/mutalyzer2/
 EOF
 
 chmod go+rx . src src/Modules templates

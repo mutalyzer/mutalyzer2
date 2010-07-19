@@ -39,13 +39,17 @@ a:hover {
 	font-size : 10pt;
 	font-weight : normal;
 	text-decoration : none;
-	}
+}
 
 body, div, span, font, td {
 	font-family : Arial, Helvetica, sans-serif;
 	font-size : 10pt;
 	font-weight : normal;
 	text-decoration : none;
+}
+
+.rightTd {
+  text-align : right;
 }
 
 ol, li, p {
@@ -291,4 +295,16 @@ i {
 .person:visited {
 	text-decoration: none;
 	font-style: italic;
+}
+
+.submitLink {
+  color: #00f;
+  font-family: monospace;
+  background-color: transparent;
+  text-decoration: underline;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  cursor: hand;
+  text-align: left;
 }

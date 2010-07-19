@@ -95,8 +95,8 @@ class Locus(object) :
         self.link = None
         self.transLongName = ""
         self.protLongName = ""
-        self.transcribe = True
-        self.translate = True
+        self.transcribe = False
+        self.translate = False
     #__init__
 
     def addToDescription(self, rawVariant) :
@@ -226,6 +226,7 @@ class Record(object) :
         self.source = Gene(None)
         self.description = ""
         self._sourcetype = None           #LRG or GB
+        self.version = None
     #__init__
 
     def findGene(self, name) :

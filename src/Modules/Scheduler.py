@@ -5,6 +5,8 @@
         Scheduler ;
 """
 
+#from __future__ import with_statement
+
 import time
 
 import subprocess
@@ -12,12 +14,14 @@ import psutil
 import os
 import smtplib
 from email.mime.text import MIMEText
+import daemon
 
 from Modules import Config
 from Modules import Output
 from Modules import Db
 
 import Mutalyzer
+#import BatchChecker
 
 class Scheduler() :
     """
@@ -176,8 +180,9 @@ class Scheduler() :
 
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         #TODO: If path not exists create file with correct header
-        with open(filename, "a") as handle:
-            handle.write(outputline)
+        handle = open(filename, "a")
+        handle.write(outputline)
+        handle.close()
     #_processNameBatch
 
     def _processSyntaxCheck(self, results, i):
@@ -215,6 +220,8 @@ class Scheduler() :
         #           parent, so on return, the process is interrupted. BAD!
         #           Use multiprocessing, check if PID catch still works
         #time.sleep(1)
+        #with daemon.DaemonContext() :
+        #    BatchChecker()
         #subprocess.Popen([self.__config.processName, "src/BatchChecker.py"],
         #                 executable = "python")
     #addJob

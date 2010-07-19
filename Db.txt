@@ -26,7 +26,7 @@ In database mutalyzer:
 ---
 CREATE TABLE GBInfo (
   AccNo CHAR(20) PRIMARY KEY,
-  GI CHAR(13) UNIQUE NOT NULL,
+  GI CHAR(13) UNIQUE,
   hash CHAR(32) UNIQUE NOT NULL,
   ChrAccVer CHAR(20),
   ChrStart INT(12),
@@ -64,11 +64,11 @@ INSERT INTO Link
     FROM hg19.map 
     WHERE protAcc != '';
 
-CREATE TABLE Var (
-  Name CHAR(20) PRIMARY KEY,
-  Value Char(255) NOT NULL
-);
-INSERT INTO Var VALUES ("WatchDog", 0);
+#CREATE TABLE Var (
+#  Name CHAR(20) PRIMARY KEY,
+#  Value Char(255) NOT NULL
+#);
+#INSERT INTO Var VALUES ("WatchDog", 0);
 ---
 
 CREATE TABLE ChrName (

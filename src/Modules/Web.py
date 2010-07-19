@@ -60,49 +60,49 @@ class Web() :
         return reply 
     #run
 
-    #def tal(self, scheme, filename, args) :
-    #    """
-    #        Compile a TAL template to HTML or XML.
+    def tal_old(self, scheme, filename, args) :
+        """
+            Compile a TAL template to HTML or XML.
 
-    #        Arguments:
-    #            scheme   ; Either "HTML" or "XML", output will be in this 
-    #                       format.
-    #            filename ; The filename of the template.
-    #            args     ; A dictionary with variables (whose name correspond
-    #                       to the ones in the template) and their values.
+            Arguments:
+                scheme   ; Either "HTML" or "XML", output will be in this 
+                           format.
+                filename ; The filename of the template.
+                args     ; A dictionary with variables (whose name correspond
+                           to the ones in the template) and their values.
 
-    #        Returns:
-    #            string ; An HTML or XML file.
-    #    """
+            Returns:
+                string ; An HTML or XML file.
+        """
 
-    #    from simpletal import simpleTALES # context(), addGlobal()
-    #    from simpletal import simpleTAL   # compileHTMLTemplate, 
-    #                                      # compileXMLTemplate,
+        from simpletal import simpleTALES # context(), addGlobal()
+        from simpletal import simpleTAL   # compileHTMLTemplate, 
+                                          # compileXMLTemplate,
 
-    #    context = simpleTALES.Context()
-    #
-    #    for i in args :
-    #        context.addGlobal(i, args[i])
+        context = simpleTALES.Context()
+    
+        for i in args :
+            context.addGlobal(i, args[i])
 
-    #    #templateFile = open("templates/menu.html", 'r')
-    #    #macros = simpleTAL.compileHTMLTemplate(templateFile)
-    #    #templateFile.close()
-    #    #context.addGlobal("sitemacros", macros)
-    #
-    #    templateFile = open(filename, 'r')
+        #templateFile = open("templates/menu.html", 'r')
+        #macros = simpleTAL.compileHTMLTemplate(templateFile)
+        #templateFile.close()
+        #context.addGlobal("sitemacros", macros)
+    
+        templateFile = open(filename, 'r')
 
-    #    if scheme == "HTML" :
-    #        template = simpleTAL.compileHTMLTemplate(templateFile)
-    #    else :
-    #        template = simpleTAL.compileXMLTemplate(templateFile)
+        if scheme == "HTML" :
+            template = simpleTAL.compileHTMLTemplate(templateFile)
+        else :
+            template = simpleTAL.compileXMLTemplate(templateFile)
 
-    #    templateFile.close()
-    #
-    #    string = StringIO()
-    #    template.expand(context, string)
-    #
-    #    return string.getvalue()
-    ##tal
+        templateFile.close()
+    
+        string = StringIO()
+        template.expand(context, string)
+    
+        return string.getvalue()
+    #tal
 
     def tal(self, scheme, filename, args) :
         """

@@ -13,6 +13,7 @@ import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqUtils import seq3
+from Bio import Restriction
 
 from Modules import Retriever
 from Modules import GenRecord
@@ -97,7 +98,65 @@ def __bprint(s, O, where) :
     O.addOutput(where, output)
 #__bprint
 
-def __bprint2(s, pos1, pos2) :
+#def __Xbprint2(s, pos1, pos2, O, where) :
+#    """
+#    """
+#
+#    if not s :
+#        return
+#
+#    block = 10
+#    line = 6 * block
+#    tag1 = "<tt style=\"color:#FF0080\">"
+#    tag2 = "</tt>"
+#
+#    m = int(math.floor(math.log(len(s), 10)) + 1)
+#    o = 1
+#
+#    newString = s[:pos1] + tag1 + s[pos1:pos2] + tag2 + s[pos2:]
+#
+#    output = "%s " % str(o).rjust(m)
+#
+#    i = 0
+#    seen = 0
+#    while i < len(s) + len(tag1) + len(tag2) :
+#        skip = 0
+#        if i <= pos1 < i + block :
+#            skip += len(tag1)
+#        if i <= pos2 < i + block :
+#            skip += len(tag2)
+#        output += "%s " % newString[i:i + block + skip]
+#        seen += block
+#        if not (seen) % line and seen < len(s) :
+#            o += line
+#            O.addOutput(where, output)
+#            output = "%s " % str(o).rjust(m)
+#        #if
+#        i += block + skip
+#    #while
+#    O.addOutput(where, output)
+##__bprint2
+
+def __insertTag(s, pos1, pos2, tag1, tag2) :
+    """
+    """
+
+    output = s
+    block = len(s)
+
+    if pos1 != pos2 :
+        if 0 <= pos1 < block :
+            output = output[:pos1] + tag1 + output[pos1:]
+        if 0 <= pos2 < block :
+            #if pos2 >= len(s) - 1 and s[-1] == '*' :
+            #    output = output + tag2
+            #else :
+            output = output[:-(block - pos2)] + tag2 + \
+                     output[-(block - pos2):]
+    return output
+#__insertTag
+
+def __bprint2(s, pos1, pos2, O, where) :
     """
     """
 
@@ -106,34 +165,26 @@ def __bprint2(s, pos1, pos2) :
 
     block = 10
     line = 6 * block
-    tag1 = "<tt style=\"color:#FF0080\">"
-    tag2 = "</tt>"
+
+    tag1 = "<b style=\"color:#FF0000\">"
+    tag2 = "</b>"
 
     m = int(math.floor(math.log(len(s), 10)) + 1)
     o = 1
-
-    newString = s[:pos1] + tag1 + s[pos1:pos2] + tag2 + s[pos2:]
-
-    print "%s " % str(o).rjust(m),
-
-    i = 0
-    seen = 0
-    while i < len(s) :
-        skip = 0
-        if i <= pos1 < i + block :
-            skip += len(tag1)
-        if i <= pos2 < i + block :
-            skip += len(tag2)
-        print newString[i:i + block + skip],
-        seen += block
-        if not (seen) % line and seen < len(s) :
+    output = "%s " % str(o).rjust(m)
+    for i in range(0, len(s), block) :
+        output += ' ' + __insertTag(s[i:i + block], pos1 - i, 
+                                    pos2 - i, tag1, tag2)
+        if not (i + block) % line and i + block < len(s) :
             o += line
-            print "\n%s " % str(o).rjust(m),
+            O.addOutput(where, output)
+            output = \
+                "<tt style = \"color:000000;font-weight:normal\">%s</tt> " % \
+                str(o).rjust(m)
         #if
-        i += block + skip
-    #while
-
-#__bprint2
+    #for
+    O.addOutput(where, output)
+#__bprint
 
 def __PtLoc2main(Loc) :
     """
@@ -298,7 +349,7 @@ def findInFrameDescription(str1, str2) :
 
     # Nothing happened.
     if str1 == str2 :
-        return "p.(=)"
+        return ("p.(=)", 0, 0, 0)
 
     lcp = __lcp(str1, str2)
     lcs = __lcs(str1[lcp:], str2[lcp:])
@@ -308,45 +359,55 @@ def findInFrameDescription(str1, str2) :
     # Insertion / Duplication / Extention.
     if not str1_end - lcp :
         if len(str1) == lcp :
-            return "p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),
-                                        abs(len(str1) - len(str2)))
+            return ("p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),
+                                         abs(len(str1) - len(str2))), 
+                    len(str1), len(str1), len(str2))
         inLen = str2_end - lcp
 
         if lcp - inLen >= 0 and str1[lcp - inLen:lcp] == str2[lcp:str2_end] :
             if inLen == 1 :
-                return "p.(%s%idup)" % (seq3(str1[lcp - inLen]),
-                                        lcp - inLen + 1)
-            return "p.(%s%i_%s%idup)" % (seq3(str1[lcp - inLen]),
-                                         lcp - inLen + 1,
-                                         seq3(str1[lcp - 1], lcp))
+                return ("p.(%s%idup)" % (seq3(str1[lcp - inLen]),
+                                         lcp - inLen + 1), 
+                        lcp, lcp, lcp + 1)
+            return ("p.(%s%i_%s%idup)" % (seq3(str1[lcp - inLen]),
+                                          lcp - inLen + 1,
+                                          seq3(str1[lcp - 1]), lcp), 
+                    lcp, lcp, lcp + inLen)
         #if
-        return "p.(%s%i_%s%iins%s)" % (seq3(str1[lcp - 1]), lcp,
-                                       seq3(str1[lcp]), lcp + 1,
-                                       seq3(str2[lcp:str2_end]))
+        return ("p.(%s%i_%s%iins%s)" % (seq3(str1[lcp - 1]), lcp,
+                                        seq3(str1[lcp]), lcp + 1,
+                                        seq3(str2[lcp:str2_end])), 
+                lcp, lcp, str2_end)
     #if
 
     # Deletion / Inframe stop.
     if not str2_end - lcp :
         if len(str2) == lcp :
-            return "p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1)
+            return ("p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1), 
+                    0, 0, 0)
 
         if lcp + 1 == str1_end :
-            return "p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1)
-        return "p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1,
-                                     seq3(str1[str1_end - 1]), str1_end)
+            return ("p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1), 
+                    lcp, lcp + 1, lcp)
+        return ("p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1,
+                                      seq3(str1[str1_end - 1]), str1_end), 
+                lcp, str1_end, lcp)
     #if
 
     # Substitution.
     if str1_end == str2_end and str1_end == lcp + 1 :
-        return "p.(%s%i%s)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp]))
+        return ("p.(%s%i%s)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp])), 
+                lcp, lcp + 1, lcp + 1)
 
     # InDel.
     if lcp + 1 == str1_end :
-        return "p.(%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
-                                     seq3(str2[lcp:str2_end]))
-    return "p.(%s%i_%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
-                                      seq3(str1[str1_end - 1]),
-                                      str1_end, seq3(str2[lcp:str2_end]))
+        return ("p.(%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
+                                      seq3(str2[lcp:str2_end])), 
+                lcp, lcp + 1, str2_end)
+    return ("p.(%s%i_%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
+                                       seq3(str1[str1_end - 1]),
+                                       str1_end, seq3(str2[lcp:str2_end])),
+            lcp, str1_end, str2_end)
 #findInFrameDescription
 
 def findFrameShift(str1, str2) :
@@ -355,8 +416,15 @@ def findFrameShift(str1, str2) :
 
     lcp = __lcp(str1, str2)
 
-    return "p.(%s%i%sfs*%i)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp]),
-                                len(str2) - lcp + 1)
+    if lcp == len(str2) : # NonSense mutation.
+        return ("p.(%s%i*)" % (seq3(str1[lcp]), lcp + 1), lcp, len(str1), 
+                lcp)
+    if lcp == len(str1) :
+        return ("p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),
+                                     abs(len(str1) - len(str2))), 
+                len(str1), len(str1), len(str2))
+    return ("p.(%s%i%sfs*%i)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp]),
+            len(str2) - lcp + 1), lcp, len(str1), len(str2))
 #findFrameShift
 
 def __toProtDescr(CDSStop, orig, trans) :
@@ -385,6 +453,18 @@ def __rangeToC(M, g1, g2) :
         return M.g2c(g2), M.g2c(g1)
     return M.g2c(g1), M.g2c(g2)
 #__rangeToC
+
+#def __makeSet(seq, rb) :
+#    a = Restriction.Analysis(rb, seq)
+#    d = a.with_sites()
+#
+#    ss = set()
+#    for i in d.keys() :
+#        for j in d[i] :
+#            ss.add((i, j))
+#
+#    return ss
+##__makeSet
 
 def _createBatchOutput(GRI, O, ParseObj):
     """
@@ -496,8 +576,8 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     if GenRecordInstance.record.molType == 'n' :
         mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
             ].mRNA.positionList
-        print mRNA
-        print end_g - roll[0], end_g + roll[1]
+        #print mRNA
+        #print end_g - roll[0], end_g + roll[1]
         for i in mRNA :
             if end_g <= i and end_g + roll[1] > i :
                 print "ALARM"
@@ -509,7 +589,7 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     #if
 
 
-    if shift :
+    if shift : # FIXME, The warning may not be apropriate.
         newStart = start_g + shift
         newStop = end_g + shift
         O.addMessage(__file__, 2, "WROLL",
@@ -554,9 +634,15 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
             end_g -= snoop
         #else
     #if
-    # FIXME if length == 1 -> substitution.
     MUU.invM(start_g, end_g)
-    GenRecordInstance.name(start_g, end_g, "inv", "", "", None)
+    if start_g == end_g :
+        O.addMessage(__file__, 2, "WWRONGTYPE", "Inversion at position "\
+            "%i is actually a substitution." % start_g)
+        GenRecordInstance.name(start_g, start_g, "subst", MUU.orig[start_g - 1],
+            Bio.Seq.reverse_complement(MUU.orig[start_g - 1]), None)
+    #if
+    else :
+        GenRecordInstance.name(start_g, end_g, "inv", "", "", None)
 #checkInversion
 
 def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
@@ -578,8 +664,8 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     if GenRecordInstance.record.molType == 'n' :
         mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
             ].mRNA.positionList
-        print mRNA
-        print newStop - roll[0], newStop + roll[1]
+        #print mRNA
+        #print newStop - roll[0], newStop + roll[1]
         for i in mRNA :
             if newStop <= i and newStop + roll[1] > i :
                 print "ALARM"
@@ -609,16 +695,51 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
             (roll[0], shift))
 #checkInsertion
 
-def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
+def __ivs2g(location, transcript) :
     """
     """
 
-    # FIXME check this
-    # First assume that the variant is given in g. notation.
-    #print RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main
-    #print __PtLoc2offset(RawVar.StartLoc.PtLoc)
-    if not RawVar.StartLoc.PtLoc.Main.isdigit() : # For ? in a position.
-        return
+    ivsNumber = int(location.IVSNumber)
+
+    if ivsNumber < 1 or ivsNumber > transcript.CM.numberOfIntrons() :
+        return None
+
+    if location.OffSgn == '+' :
+        return transcript.CM.getSpliceSite(ivsNumber * 2 - 1) + \
+            transcript.CM.orientation * int(location.Offset)
+    return transcript.CM.getSpliceSite(ivsNumber * 2) - \
+        transcript.CM.orientation * int(location.Offset)
+#__ivs2g
+
+def __ex2g(location, transcript) :
+    """
+    """
+
+    numberOfExons = transcript.CM.numberOfExons()
+
+    exNumberStart = int(location.EXNumberStart)
+    if exNumberStart < 1 or exNumberStart > transcript.CM.numberOfExons() :
+        return None
+    start_g = transcript.CM.getSpliceSite(exNumberStart * 2 - 2)
+
+    if location.EXNumberStop :
+        exNumberStop = int(location.EXNumberStop)
+        if exNumberStop < 1 or exNumberStop > transcript.CM.numberOfExons() :
+            return None
+        stop_g = transcript.CM.getSpliceSite(exNumberStop * 2 - 1)
+    else :
+        stop_g = transcript.CM.getSpliceSite(exNumberStart * 2 - 1)
+
+    return start_g, stop_g
+#__ex2g
+
+def __normal2g(RawVar, transcript) :
+    """
+    """
+
+    if not RawVar.StartLoc.PtLoc.Main.isdigit() :
+        return  # For ? in a position.
+
     start_g = int(RawVar.StartLoc.PtLoc.Main)
     end_g = start_g
     if RawVar.EndLoc :
@@ -626,8 +747,6 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             return
         end_g = int(RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
     #if
-    Arg1 = RawVar.Arg1
-    Arg2 = RawVar.Arg2
 
 
     # If it is not, convert it to g. notation.
@@ -648,11 +767,67 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             end_g = transcript.CM.x2g(end_main, end_offset)
         #if
         if transcript.CM.orientation == -1 :
-            Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
-            Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
             start_g, end_g = end_g, start_g
-        #if
     #if
+
+    return start_g, end_g
+#__normal2g    
+
+def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
+    """
+    """
+
+    # FIXME check this
+    # First assume that the variant is given in g. notation.
+    #print RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main
+    #print __PtLoc2offset(RawVar.StartLoc.PtLoc)
+
+
+
+    Arg1 = RawVar.Arg1
+    Arg2 = RawVar.Arg2
+    
+    if RawVar.EXLoc :
+        start_g, end_g = __ex2g(RawVar.EXLoc, transcript)
+        if not start_g :
+            O.addMessage(__file__, 3, "EPOS", "Invalid EX position given.")
+            return
+        #if
+        if end_g < start_g : # FIXME
+            start_g, end_g = end_g, start_g
+    #if
+    else :
+        if RawVar.StartLoc.IVSLoc :
+            start_g = __ivs2g(RawVar.StartLoc.IVSLoc, transcript)
+            if not start_g :
+                O.addMessage(__file__, 3, "EPOS", "Invalid IVS position given.")
+                return
+            #if
+            end_g = start_g
+            if RawVar.EndLoc and RawVar.EndLoc.IVSLoc : # FIXME
+                end_g = __ivs2g(RawVar.EndLoc.IVSLoc, transcript)
+                if end_g < start_g :
+                    start_g, end_g = end_g, start_g
+            #if
+        #if
+        else :        
+            start_g, end_g = __normal2g(RawVar, transcript)
+    #else            
+
+    if start_g < 1 :
+        O.addMessage(__file__, 4, "ERANGE", "Position %i is out of range." %
+                     start_g)
+        return
+    #if
+    if end_g > len(MUU.orig) :
+        O.addMessage(__file__, 4, "ERANGE", "Position %s is out of range." %
+                     end_g)
+        return
+    #if
+
+    if transcript and transcript.CM.orientation == -1 :
+        Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
+        Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
 
     if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
         __checkOptArg(MUU.orig, start_g, end_g, Arg1, O)
@@ -673,9 +848,6 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
         if not Arg1 :
             Arg1 = MUU.orig[start_g - 1:end_g]
 
-        #lcp =  __lcp(Arg1, Arg2)
-        #lcs =  __lcs(Arg1, Arg2)
-
         if str(Arg1) == str(Arg2) :
             O.addMessage(__file__, 2, "WNOCHANGE",
                 "Sequence %s at position %i_%i is identical to the " \
@@ -684,10 +856,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                 start_g, end_g))
             return
         #if
-        #ins_part = Arg2
 
-        #del_part = __trim(Arg1, lcp, lcs)
-        #ins_part = __trim(Arg2, lcp, lcs)
         del_part, ins_part, lcp, lcs = __trim2(Arg1, Arg2)
         if not len(del_part) :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
@@ -786,45 +955,65 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         if not GenRecordInstance.record.geneList : # EST
             return
 
-        cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)),
-                  IUPAC.unambiguous_dna)
-        cdsm = Seq(str(__nsplice(MUU.mutated,
-                                 MUU.newSplice(W.mRNA.positionList),
-                                 MUU.newSplice(W.CDS.location),
-                                 W.CM.orientation)),
-                   IUPAC.unambiguous_dna)
-        if W.CM.orientation == -1 :
-            cds = Bio.Seq.reverse_complement(cds)
-            cdsm = Bio.Seq.reverse_complement(cdsm)
-        #if
+        for i in range(0, W.CM.numberOfExons() * 2, 2) :
+            exonStart = W.CM.getSpliceSite(i)
+            exonStop = W.CM.getSpliceSite(i + 1)
+            O.addOutput("exonInfo", [exonStart, exonStop,
+                W.CM.g2c(exonStart), W.CM.g2c(exonStop)])
 
-        if '*' in cds.translate()[:-1] :
-            O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
-            return
-        #if
-        orig = cds.translate(table = W.txTable, to_stop = True)
-        O.addOutput("oldprotein", orig + '*')
-        __bprint(orig + '*', O, "oldProteinFancy")
-        trans = cdsm.translate(table = W.txTable, to_stop = True)
+        O.addOutput("cdsStart_g", W.CM.x2g(1, 0))
+        O.addOutput("cdsStart_c", 1)
+        cdsStop = W.CM.info()[2]
+        O.addOutput("cdsStop_g", W.CM.x2g(cdsStop, 0))
+        O.addOutput("cdsStop_c", cdsStop)
 
-        if not trans or trans[0] != 'M' :
-            if str(cdsm[0:3]) in \
-                Bio.Data.CodonTable.unambiguous_dna_by_id[
-                    W.txTable].start_codons :
-                O.addOutput("newprotein", '?')
-                __bprint('?', O, "newProteinFancy")
-                O.addOutput("altstart", str(cdsm[0:3]))
-                O.addOutput("altprotein", 'M' + trans[1:] + '*')
-                __bprint('M' + trans[1:] + '*', O, "altProteinFancy")
+        if W.translate :
+            cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)),
+                      IUPAC.unambiguous_dna)
+            cdsm = Seq(str(__nsplice(MUU.mutated,
+                                     MUU.newSplice(W.mRNA.positionList),
+                                     MUU.newSplice(W.CDS.location),
+                                     W.CM.orientation)),
+                       IUPAC.unambiguous_dna)
+            if W.CM.orientation == -1 :
+                cds = Bio.Seq.reverse_complement(cds)
+                cdsm = Bio.Seq.reverse_complement(cdsm)
             #if
+
+            if '*' in cds.translate()[:-1] :
+                O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
+                return
+            #if
+            orig = cds.translate(table = W.txTable, to_stop = True)
+            O.addOutput("oldprotein", orig + '*')
+            trans = cdsm.translate(table = W.txTable, to_stop = True)
+
+            if not trans or trans[0] != 'M' :
+                __bprint(orig + '*', O, "oldProteinFancy")
+                if str(cdsm[0:3]) in \
+                    Bio.Data.CodonTable.unambiguous_dna_by_id[
+                        W.txTable].start_codons :
+                    O.addOutput("newprotein", '?')
+                    __bprint('?', O, "newProteinFancy")
+                    O.addOutput("altstart", str(cdsm[0:3]))
+                    O.addOutput("altprotein", 'M' + trans[1:] + '*')
+                    __bprint('M' + trans[1:] + '*', O, "altProteinFancy")
+                #if
+                else :
+                    O.addOutput("newprotein", '?')
+                    __bprint('?', O, "newProteinFancy")
+                #else
             else :
-                O.addOutput("newprotein", '?')
-                __bprint('?', O, "newProteinFancy")
+                cdsLen = __cdsLen(MUU.newSplice(W.CDS.positionList))
+                descr = __toProtDescr(cdsLen, orig, trans)
+
+                __bprint2(orig + '*', descr[1], descr[2], O, 
+                    "oldProteinFancy")
+                O.addOutput("newprotein", trans + '*')
+                __bprint2(trans + '*', descr[1], descr[3], O, 
+                    "newProteinFancy")
             #else
-        else :
-            O.addOutput("newprotein", trans + '*')
-            __bprint(trans + '*', O, "newProteinFancy")
-        #else
+        #if
 
         #if not parts.SingleAlleleVarSet :
         #    #O.addOutput("proteindescription", "p.?")
@@ -850,16 +1039,20 @@ def process(cmd, C, O) :
             RetrieveRecord = ParseObj.RefSeqAcc
 
         D = Db.Cache(C.Db)
-        if ParseObj.LrgAcc:
+        if ParseObj.LrgAcc :
             filetype = "LRG"
             RetrieveRecord = ParseObj.LrgAcc
             retriever = Retriever.LargeRetriever(C.Retriever, O, D)
-        else:
+        else :
             retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
             filetype = "GB"
 
-        O.addOutput("reference", RetrieveRecord)
         record = retriever.loadrecord(RetrieveRecord)
+        #if record and record.version and not '.' in RetrieveRecord : #FIXME
+        #    O.addOutput("reference", RetrieveRecord + '.' + record.version)
+        #else :
+        O.addOutput("reference", RetrieveRecord)
+
         if not record :
             return
         del retriever
@@ -876,11 +1069,9 @@ def process(cmd, C, O) :
 
         # PROTEIN
         for i in GenRecordInstance.record.geneList :
-            #print i.location, i.transcriptList
             #if i.location :
             for j in i.transcriptList :
                 if not ';' in j.description and j.CDS :
-                    #print i.name, j.name, j.CDS.positionList, j.CDS.location
                     cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
                               IUPAC.unambiguous_dna)
                     cdsm = Seq(str(__nsplice(MUU.mutated, 
@@ -905,10 +1096,7 @@ def process(cmd, C, O) :
                                            to_stop = True)
 
                     cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
-
-                    #print cdsLen, len(__splice(MUU.orig, MUU.newSplice(j.CDS.positionList)))
-                    j.proteinDescription = __toProtDescr(cdsLen, orig, 
-                                                         trans)
+                    j.proteinDescription = __toProtDescr(cdsLen, orig, trans)[0]
 
         # /PROTEIN
 
@@ -965,8 +1153,6 @@ def process(cmd, C, O) :
                 #for
         #else
 
-        del MUU
-
         # LEGEND
         for i in GenRecordInstance.record.geneList :
             for j in i.transcriptList :
@@ -986,6 +1172,9 @@ def process(cmd, C, O) :
             O.addOutput("geneOfInterest", dict())
 
         _createBatchOutput(GenRecordInstance, O, ParseObj)
+
+        del MUU
+
         return GenRecordInstance
     #if
 #process
@@ -1071,7 +1260,7 @@ def main(cmd) :
                     print "\t"+value
 
 
-        else:
+        else :
             for i in RD.record.geneList :
                 for j in i.transcriptList :
                     if ';' in j.description :
@@ -1117,17 +1306,23 @@ def main(cmd) :
             print
         #if
 
+        for i in O.getOutput("exonInfo") :
+            print i
         print
-        #for i in RD.record.geneList :
-        #    for j in i.transcriptList :
-        #        print "%s_v%s = %s = %s" % (i.name, j.name, j.transcriptID,
-        #                                    j.locusTag)
-        #        print "%s_i%s = %s = %s" % (i.name, j.name, j.proteinID,
-        #                                        j.locusTag)
-        #    #for
+        print O.getOutput("cdsStart")
+        print O.getOutput("cdsStop")
+        print
+
         for i in O.getOutput("legends") :
-            #if i[1] == 'None':
-            #    continue
+            print i
+
+        print
+        print "Added restriction sites:"
+        for i in O.getOutput("addedRestrictionSites") :
+            print i
+
+        print "Deleted restriction sites:"
+        for i in O.getOutput("deletedRestrictionSites") :
             print i
     #if
     ### OUTPUT BLOCK ###

@@ -287,6 +287,16 @@ class Output() :
         return None
     #getOutput
 
+    def getIndexedOutput(self, name, index) :
+        """
+        """
+
+        if self.__outputData.has_key(name) :
+            if 0 <= index < len(self.__outputData[name]) :
+                return self.__outputData[name][index]
+        return None
+    #getFirst
+
     def Summary(self) :
         """
             Print a summary of the number of errors and warnings.

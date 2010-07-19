@@ -1,14 +1,20 @@
 #!/usr/bin/python
 
+from Bio import Restriction
+from Bio.Seq import Seq
+from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
+
 """
     Module for mutating a string.
 
     Mutations are described in the original coordinates. These coordinates are
     transfered to the mutated coordinates with the aid of an internal shift
     list, which keeps track of the sizes of changes. Using the original
-    coordinates greatly simplifies combined mutations in a variant.
+    coordinates greatly simplifies combined mutations in a variant. A
+    visualisation of each raw variant within a combined variant is made and 
+    effects on restriction sites are also analysed.
 
-    The original as well as the mutated string are stored.
+    The original as well as the mutated string are stored here.
 
     Public classes:
         Mutator ; Mutate a string and register all shift points.
@@ -16,13 +22,21 @@
 
 class Mutator() :
     """
-        Mutate a string and register all shift points.
+        Mutate a string and register all shift points. For each mutation a 
+        visualisation is made (on genomic level) and the addition or deletion
+        of restriction sites is detected. Output for each raw variant is stored
+        in the output object as 'visualisation', 'deletedRestrictionSites' and
+        'addedRestrictionSites' respectively.
 
         Private variables:
-            __shift ; A sorted list of tuples (position, shiftsize) where the
-                      modifications in length are stored. Each first element of
-                      the tuples in this list is unique, each second element is
-                      non-zero.
+            __config           ; Configuration variables of this class:
+                                 
+            __output           ; The output object.
+            __shift            ; A sorted list of tuples (position, shiftsize)
+                                 where the modifications in length are stored.
+                                 Each first element of the tuples in this list
+                                 is unique, each second element is non-zero.
+            __restrictionBatch ;                      
 
         Public variables:
             orig    ; The original string.
@@ -34,6 +48,7 @@ class Mutator() :
         Private methods:
             __sortins(tuple)      ; Insert a tuple in a sorted list, after 
                                     insertion the list stays sorted.
+            __makeRestrictionSet()                                    
             __mutate(pos1, pos2, ins) ; A general mutation function that does a
                                         delins on interbase coordinates of the 
                                         original string.
@@ -67,9 +82,12 @@ class Mutator() :
                 output ; The output object.
 
             Private variables (altered):
-                __config ; Initialised with the configuration variables.
-                __output ; Initialised with the output object.
-                __shift  ; Initialised to the empty list.
+                __config           ; Initialised with the configuration 
+                                     variables.
+                __output           ; Initialised with the output object.
+                __shift            ; Initialised to the empty list.
+                __restrictionBatch ; Initialised to a default set of
+                                     restriction enzymes.
 
             Public variables (altered):
                 orig    ; Initialised to the parameter orig.
@@ -79,6 +97,7 @@ class Mutator() :
         self.__config = config
         self.__output = output
         self.__shift = []
+        self.__restrictionBatch = Restriction.RestrictionBatch([], ['N'])
 
         self.orig = orig
         self.mutated = orig
@@ -120,6 +139,26 @@ class Mutator() :
         self.__shift.append(tuple) # If we couldn't find a successor, so this 
                                    # entry will be the last one in the list.
     #__sortins
+
+    def __makeRestrictionSet(self, seq) :
+        """
+            Return a set of restriction enzymes that can bind in a certain
+            sequence.
+
+            Arguments:
+                seq ; The sequence to be analysed.
+
+            Returns:
+                set ; A set of restriction enzymes.
+
+            Private variables:
+                __restrictionBatch ; A RestrictionBatch object.
+        """
+
+        restrictionAnalysis = Restriction.Analysis(self.__restrictionBatch, seq)
+    
+        return set(restrictionAnalysis.with_sites().keys())
+    #__makeRestrictionSet
     
     def __mutate(self, pos1, pos2, ins) :
         """
@@ -150,7 +189,8 @@ class Mutator() :
 
         loflank = self.orig[max(pos1 - self.__config.flanksize, 0):pos1]
         roflank = self.orig[pos2:pos2 + self.__config.flanksize]
-        odel = self.orig[pos1:pos2]
+        delPart = self.orig[pos1:pos2]
+        odel = delPart
         if len(odel) > self.__config.maxvissize :
             odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize], 
                 len(odel) - self.__config.flankclipsize * 2,
@@ -168,26 +208,47 @@ class Mutator() :
                 ins[-self.__config.flankclipsize:])
         fill = abs(len(odel) - len(insvis))
         if len(odel) > len(ins) :
-            self.__output.addOutput("visualisation", 
-                                  "%s %s %s" % (loflank, odel, roflank))
-            self.__output.addOutput("visualisation",
-                                  "%s %s%s %s" % (lmflank, insvis, '-' * fill, 
-                                                  rmflank))
+            #self.__output.addOutput("visualisation", 
+            #                      "%s %s %s" % (loflank, odel, roflank))
+            #self.__output.addOutput("visualisation",
+            #                      "%s %s%s %s" % (lmflank, insvis, '-' * fill, 
+            #                                      rmflank))
+            visualisation = ["%s %s %s" % (loflank, odel, roflank), 
+                "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)]
         #if
         else :
-            self.__output.addOutput("visualisation",
-                                  "%s %s%s %s" % (loflank, odel, '-' * fill, 
-                                                  roflank))
-            self.__output.addOutput("visualisation",
-                                        "%s %s %s" % (lmflank, insvis, rmflank))
+            #self.__output.addOutput("visualisation",
+            #                      "%s %s%s %s" % (loflank, odel, '-' * fill, 
+            #                                      roflank))
+            #self.__output.addOutput("visualisation",
+            #                            "%s %s %s" % (lmflank, insvis, 
+            #                                          rmflank))
+            visualisation = ["%s %s%s %s" % (loflank, odel, '-' * fill, 
+                                             roflank),
+                             "%s %s %s" % (lmflank, insvis, rmflank)]
         #else
 
         #
         # End visualisation part.
 
+        # Restriction site analysis:
+        #
+
+        set1 = self.__makeRestrictionSet(loflank + delPart + roflank)
+        set2 = self.__makeRestrictionSet(lmflank + ins + rmflank)
+        self.__output.addOutput("deletedRestrictionSites", 
+            str(list(set1 - set2))[1:-1])
+        self.__output.addOutput("addedRestrictionSites", 
+            str(list(set2 - set1))[1:-1])
+
+        #
+        # End restriction site analysis:
+
         self.mutated = self.mutated[:self.shiftpos(pos1)] + ins + \
                        self.mutated[self.shiftpos(pos2):]
         self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
+
+        return visualisation
     #__mutate
 
     def shiftpos(self, position) :
@@ -254,11 +315,13 @@ class Mutator() :
         """
 
         if pos1 == pos2 :
-            self.__output.addOutput("visualisation", "deletion of %i" % pos1)
+            #self.__output.addOutput("visualisation", "deletion of %i" % pos1)
+            visualisation = ["deletion of %i" % pos1]
         else :
-            self.__output.addOutput("visualisation", "deletion of %i to %i" % (
-                                    pos1, pos2))
-        self.__mutate(pos1 - 1, pos2, '')
+            visualisation = ["deletion of %i to %i" % (pos1, pos2)]
+
+        visualisation.extend(self.__mutate(pos1 - 1, pos2, ''))
+        self.__output.addOutput("visualisation", visualisation)
     #delM
     
     def insM(self, pos, ins) :
@@ -274,9 +337,9 @@ class Mutator() :
                 __output ; Visualisation information is added.
         """
 
-        self.__output.addOutput("visualisation", 
-                                "insertion between %i and %i" % (pos, pos + 1))
-        self.__mutate(pos, pos, ins)
+        visualisation = ["insertion between %i and %i" % (pos, pos + 1)]
+        visualisation.extend(self.__mutate(pos, pos, ins))
+        self.__output.addOutput("visualisation", visualisation)
     #insM
     
     def delinsM(self, pos1, pos2, ins) :
@@ -290,7 +353,9 @@ class Mutator() :
                 ins  ; The insertion, a string.
         """
 
-        self.__mutate(pos1 - 1, pos2, ins)
+        visualisation = ["delins from %i to %i" % (pos1, pos2)]
+        visualisation.extend(self.__mutate(pos1 - 1, pos2, ins))
+        self.__output.addOutput("visualisation", visualisation)
     #delinsM
     
     def subM(self, pos, nuc) :
@@ -305,8 +370,9 @@ class Mutator() :
                 __output ; Visualisation information is added.
         """
 
-        self.__output.addOutput("visualisation", "substitution at %i" % pos)
-        self.__mutate(pos - 1, pos, nuc)
+        visualisation = ["substitution at %i" % pos]
+        visualisation.extend(self.__mutate(pos - 1, pos, nuc))
+        self.__output.addOutput("visualisation", visualisation)
     #subM
     
     def invM(self, pos1, pos2) :
@@ -323,8 +389,10 @@ class Mutator() :
 
         from Bio.Seq import reverse_complement # reverse_complement()
 
-        self.__mutate(pos1 - 1, pos2, \
-                      reverse_complement(self.orig[pos1 - 1:pos2]))
+        visualisation = ["inversion between %i and %i" % (pos1, pos2)]
+        visualisation.extend(self.__mutate(pos1 - 1, pos2, \
+            reverse_complement(self.orig[pos1 - 1:pos2])))
+        self.__output.addOutput("visualisation", visualisation)
     #invM
 
     def dupM(self, pos1, pos2) :
@@ -339,7 +407,10 @@ class Mutator() :
                 orig ; The original string.
         """
 
-        self.__mutate(pos2, pos2, self.orig[pos1 - 1:pos2])
+        visualisation = ["duplication from %i to %i" % (pos1, pos2)]
+        visualisation.extend(self.__mutate(pos2, pos2, 
+                                           self.orig[pos1 - 1:pos2]))
+        self.__output.addOutput("visualisation", visualisation)
     #dupM
 #Mutator
 

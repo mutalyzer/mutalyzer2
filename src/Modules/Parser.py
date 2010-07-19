@@ -47,7 +47,7 @@ class Nomenclatureparser() :
     # Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' | 
     #       `m' | `s' | `w' | `b' | `d' | `h' | `v' | `i' | 
     #       `n' | `A' | `C' | `G' | `T' | `U' 
-    Nt = Word("acgturykmswbdhvnACGTU", exact = 1)
+    Nt = Word("acgtuACGTU", exact = 1)
 
     # New:
     NtString = Combine(OneOrMore(Nt))
@@ -106,9 +106,14 @@ class Nomenclatureparser() :
 
     # PtLoc -> AbsLoc | `-' AbsLoc Offset? | AbsLoc Offset | `*' AbsLoc Offset?
     # Changed to:
+    # RealPtLoc -> ((`-' | `*')? Number Offset?) | `?'
+    # IVSLoc -> `IVS' Number (`+' | `-') Number
     # PtLoc -> ((`-' | `*')? Number Offset?) | `?'
-    PtLoc = Group((Optional(Word("-*", exact = 1))("MainSgn") + \
-            Number("Main") + Optional(Offset)) ^ '?')
+    RealPtLoc = Group((Optional(Word("-*", exact = 1))("MainSgn") + \
+                Number("Main") + Optional(Offset)) ^ '?')
+    IVSLoc = Group(Suppress("IVS") + Number("IVSNumber") + \
+             Word("+-", exact = 1)("OffSgn") + Number("Offset"))("IVSLoc")
+    PtLoc = IVSLoc ^ RealPtLoc
 
     # Ref -> ((RefSeqAcc | GeneSymbol) `:')? (`c.' | `g.' | `m.')
     # Changed to:
@@ -121,11 +126,14 @@ class Nomenclatureparser() :
     # Extent -> PtLoc `_' (`o'? (RefSeqAcc | GeneSymbol) `:')? PtLoc
     # Changed to:
     # Extent -> PtLoc `_' (`o'? (RefSeqAcc | GeneSymbol) `:')? RefType? PtLoc
-    Extent = Group(PtLoc("PtLoc"))("StartLoc") + \
-             Suppress('_') + Group(Optional(Group(Optional('o') + \
-             (RefSeqAcc ^ GeneSymbol) + Suppress(':') + \
-             Optional(RefType)))("OptRef") + \
-             PtLoc("PtLoc"))("EndLoc")
+    RealExtent = Group(PtLoc("PtLoc"))("StartLoc") + \
+                 Suppress('_') + Group(Optional(Group(Optional('o') + \
+                 (RefSeqAcc ^ GeneSymbol) + Suppress(':') + \
+                 Optional(RefType)))("OptRef") + \
+                 PtLoc("PtLoc"))("EndLoc")
+    EXLoc = Group(Suppress("EX") + Number("EXNumberStart") + \
+            Optional(Suppress('-') + Number("EXNumberStop")))("EXLoc")
+    Extent = RealExtent ^ EXLoc            
 
     # RangeLoc -> Extent | `(` Extent `)'
     # Loc -> PtLoc | RangeLoc

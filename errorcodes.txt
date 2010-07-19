@@ -29,6 +29,7 @@ WNOCDS      | R | No CDS field was found in the GenBank record and none could
                   be constructed.
 ENOGENE     | R | Gene not found.            
 ESTOP       | R | In frame stop codon found.
+EPOS        | D | Invalid position.
 
 Fatal errors:
 EPARSE      | D | Nomenclature parse error.

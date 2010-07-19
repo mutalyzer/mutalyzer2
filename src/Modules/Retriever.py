@@ -474,7 +474,8 @@ class GenBankRetriever(Retriever):
                 UD = self._database.getGBFromHash(md5sum)
                 if not UD :
                     UD = self._newUD()
-                    self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, url)
+                    self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, 
+                                            url)
                 #if
                 if not os.path.isfile(self._nametofile(UD)) :
                     self.write(raw_data, UD, 0)
@@ -482,11 +483,17 @@ class GenBankRetriever(Retriever):
             else :
                 self._output.addMessage(__file__, 4, "EFILESIZE",
                     "Filesize is not within the allowed boundaries.")
+                return None
+            #else
         #if
         else :
             self._output.addMessage(__file__, 4, "ERECPARSE",
                                      "This is not a GenBank record.")
+            return None
+        #else
+
         handle.close()
+        return UD
     #downloadrecord
 
     def uploadrecord(self, raw_data) :
@@ -500,16 +507,18 @@ class GenBankRetriever(Retriever):
         """
 
         md5sum = self._calcHash(raw_data)
-        UD = self.getGBFromHash(md5sum)
+        UD = self._database.getGBFromHash(md5sum)
         if not UD :
             UD = self._newUD()
             self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, None)
         #if
         else :
             if os.path.isfile(self._nametofile(UD)) :
-                return
+                return UD
 
-        self.write(raw_data, UD, 0)
+        if self.write(raw_data, UD, 0) :
+            return UD
+        return None
     #uploadrecord
 
     def loadrecord(self, identifier) :

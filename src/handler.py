@@ -105,6 +105,7 @@ def handler(req):
             del C
         #if
         else :
+            raise fileName
             return apache.HTTP_FORBIDDEN
         return apache.OK
     #if

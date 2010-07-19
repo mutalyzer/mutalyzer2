@@ -69,32 +69,36 @@ def check(req) :
     #if
     errors, warnings, summary = O.Summary()
 
-    altStart = O.getOutput("altstart")
-    if altStart :
-        altStart = altStart[0]
-
-    genomicDescription = O.getOutput("genomicDescription")
-    if genomicDescription :
-        genomicDescription = genomicDescription[0]
-
     args = {
-        "version"            : W.version,
-        "lastpost"           : name,
-        "messages"           : O.getMessages(),
-        "summary"            : summary,
-        "genomicDescription" : genomicDescription,
-        "visualisation"      : O.getOutput("visualisation"),
-        "descriptions"       : O.getOutput("descriptions"),
-        "protDescriptions"   : O.getOutput("protDescriptions"),
-        "oldProtein"         : O.getOutput("oldProteinFancy"),
-        "altStart"           : altStart,
-        "altProtein"         : O.getOutput("altProteinFancy"),
-        "newProtein"         : O.getOutput("newProteinFancy"),
-        "legends"            : O.getOutput("legends"),
-        "mut_output"         : None
+        "version"                 : W.version,
+        "lastpost"                : name,
+        "messages"                : O.getMessages(),
+        "summary"                 : summary,
+        "genomicDescription"      : O.getIndexedOutput("genomicDescription", 0),
+        "visualisation"           : O.getOutput("visualisation"),
+        "descriptions"            : O.getOutput("descriptions"),
+        "protDescriptions"        : O.getOutput("protDescriptions"),
+        "oldProtein"              : O.getOutput("oldProteinFancy"),
+        "altStart"                : O.getIndexedOutput("altStart", 0),
+        "altProtein"              : O.getOutput("altProteinFancy"),
+        "newProtein"              : O.getOutput("newProteinFancy"),
+        "exonInfo"                : O.getOutput("exonInfo"),
+        "cdsStart_g"              : O.getIndexedOutput("cdsStart_g", 0),
+        "cdsStart_c"              : O.getIndexedOutput("cdsStart_c", 0),
+        "cdsStop_g"               : O.getIndexedOutput("cdsStop_g", 0),
+        "cdsStop_c"               : O.getIndexedOutput("cdsStop_c", 0),
+        "addedRestrictionSites"   : O.getOutput("addedRestrictionSites"),
+        "deletedRestrictionSites" : O.getOutput("deletedRestrictionSites"),
+        "legends"                 : O.getOutput("legends"),
+        "reference"               : O.getIndexedOutput("reference", 0)
     }
 
-    ret = W.tal("HTML", "templates/check.html", args)
+    if req.method == 'GET' and req.form :
+        args["interactive"] = False
+        ret = W.tal_old("HTML", "templates/check.html", args)
+    else :
+        args["interactive"] = True
+        ret = W.tal("HTML", "templates/check.html", args)
     del W
     return ret
 #check
@@ -570,6 +574,8 @@ def upload(req) :
     D = Db.Cache(C.Db)
     R = Retriever.GenBankRetriever(C.Retriever, O, D)
 
+    UD = ""
+
     if req.method == 'POST' :
         if req.form["invoermethode"] == "file" :
             length = req.headers_in.get('Content-Length')
@@ -583,6 +589,10 @@ def upload(req) :
                 req.write("Upload limit exceeded.")
                 return None
             #if
+            UD = R.uploadrecord(req.form["bestandsveld"].file.read())
+        #if
+        if req.form["invoermethode"] == "url" :
+            UD = R.downloadrecord(req.form["urlveld"])
         #if
         if req.form["invoermethode"] == "gene" :
             geneName = req.form["genesymbol"]
@@ -591,8 +601,6 @@ def upload(req) :
             downStream = int(req.form["3utr"])
 
             UD = R.retrievegene(geneName, organism, upStream, downStream)
-            req.write(UD)
-            return None
         #if
         if req.form["invoermethode"] == "chr" :
             accNo = req.form["chracc"]
@@ -600,13 +608,14 @@ def upload(req) :
             stop = int(req.form["stop"])
             orientation = int(req.form["orientation"])
             UD = R.retrieveslice(accNo, start, stop, orientation)
-            req.write(UD)
-            return None
         #if
     #if
 
     W = Web.Web()
-    args = {"version" : W.version}
+    args = {
+        "version" : W.version,
+        "UD"      : UD
+    }
     ret = W.tal("HTML", "templates/gbupload.html", args)
     del W
     return ret

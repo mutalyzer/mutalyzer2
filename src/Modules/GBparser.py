@@ -127,6 +127,8 @@ class GBparser() :
     
         record = Record()
         record.seq = biorecord.seq
+
+        record.version = biorecord.id.split('.')[1]
     
         #mRNAProducts = []
         #CDSProducts = []
@@ -186,7 +188,7 @@ class GBparser() :
                     locusTag = None
                     if i.qualifiers.has_key("locus_tag") :
                         locusTag = i.qualifiers["locus_tag"][0]
-                        locusName = locusTag[-3:]
+                        #locusName = locusTag[-3:]
                         LocusInstance = GeneInstance.findLocus(locusTag[-3:])
                     #if
                     else :
@@ -200,10 +202,17 @@ class GBparser() :
                     #else                                
                     if not LocusInstance and (i.type == "mRNA" or i.type == "CDS") :
                         if record.molType != 'n' :
-                            LocusInstance = Locus(GeneInstance.newLocusTag())
+                            if locusTag :
+                                LocusInstance = Locus(locusTag[-3:])
+                            else :
+                                LocusInstance = Locus(GeneInstance.newLocusTag())
                             GeneInstance.transcriptList.append(LocusInstance)
                         else :
-                            LocusInstance = GeneInstance.transcriptList[0]
+                            if GeneInstance.transcriptList :
+                                LocusInstance = GeneInstance.transcriptList[0]
+                            else :
+                                LocusInstance = Locus(GeneInstance.newLocusTag())
+                                GeneInstance.transcriptList.append(LocusInstance)
 
                     if not LocusInstance and i.type == "exon" :
                         if GeneInstance.transcriptList :
@@ -230,6 +239,7 @@ class GBparser() :
                                 LocusInstance.transcriptID.split('.')[0])
 
                         LocusInstance.locusTag = locusTag
+                        LocusInstance.transcribe = True
                     #if
                     if i.type == "CDS" :
                         PListInstance = PList()
@@ -249,6 +259,7 @@ class GBparser() :
                                 LocusInstance.proteinID.split('.')[0]
 
                         LocusInstance.locusTag = locusTag
+                        LocusInstance.translate = True
                     #if
                     if i.type == "exon" :
                         if not LocusInstance.exon :

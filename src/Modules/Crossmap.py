@@ -199,7 +199,7 @@ class Crossmap() :
         RNAlen = len(self.RNA)
         cPos = 1 # This value stays one unless we both have mRNA and CDS.
         d = self.orientation
-        c = (d - 1) / -2   # c, x and z are used to unify forward and
+        c = (d - 1) / -2   # c, x and y are used to unify forward and
         x = (-d - 1) / -2  # reverse complement.
         y = c * (RNAlen - 1)
 
@@ -282,7 +282,7 @@ class Crossmap() :
 
         RNAlen = len(self.RNA)
         d = self.orientation
-        c = (d - 1) / -2     # c and z are used to unify forward and reverse
+        c = (d - 1) / -2     # c and y are used to unify forward and reverse
         y = c * (RNAlen - 1) # complement.
 
         if d * a < d * self.RNA[y] : # A position before the first exon.
@@ -493,6 +493,18 @@ class Crossmap() :
 
         return (self.__trans_start, self.__trans_end, self.__STOP)
     #info
+
+    def getSpliceSite(self, number) :
+        if self.orientation == 1 :
+            return int(self.RNA[number])
+        return int(self.RNA[len(self.RNA) - number - 1])
+    #getSpliceSite
+
+    def numberOfIntrons(self) :
+        return len(self.RNA) / 2 - 1
+
+    def numberOfExons(self) :
+        return len(self.RNA) / 2
 #Crossmap
 
 #
