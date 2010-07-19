@@ -167,7 +167,7 @@ class Mapping(Db) :
         return self.query(statement)[0][0]
     #get_protAcc
 
-    def get_NM_info(self, mrnaAcc) :
+    def get_NM_info(self, mrnaAcc, version=None) :
         """
             Retrieve various data for an NM number.
 
@@ -186,7 +186,6 @@ class Mapping(Db) :
                     strand     ; The orientation of the gene (+ = forward,
                                                               - = reverse).
         """
-
         statement = """
             SELECT exonStarts, exonEnds, cdsStart, cdsEnd, strand
               FROM map
@@ -216,11 +215,39 @@ class Mapping(Db) :
               WHERE acc = %s;
         """, mrnaAcc
 
-        ret = self.query(statement)
-        if ret :
-            return int(ret[0][0])
-        return 0
+        return [i[0] for i in self.query(statement)]
     #get_NM_version
+
+    def getAllFields(self, mrnaAcc, version):
+        """
+            Get all Fields of an accession number and version number.
+
+            if version number is omitted, use the "newest" version number
+        """
+
+        q = """
+                select  acc,
+                        txStart, txEnd,
+                        cdsStart, cdsEnd,
+                        exonStarts, exonEnds,
+                        geneName, chrom,
+                        strand, protAcc,
+                        MAX(version)
+                from map
+        """
+        if version is None:
+            q += """
+                where acc = %s;
+                """
+            statement = (q, mrnaAcc)
+        else:
+            q += """
+                where acc = %s and
+                      version = %s;
+                """
+            statement = q, (mrnaAcc, version)
+
+        return self.query(statement)[0]
 
     def get_Transcripts(self, chrom, p1, p2, overlap) :
         """
@@ -245,30 +272,33 @@ class Mapping(Db) :
                 list ; All accession numbers that are hit according to the
                        overlap criterium.
         """
+        q = """
+                select  acc,
+                        txStart, txEnd,
+                        cdsStart, cdsEnd,
+                        exonStarts, exonEnds,
+                        geneName, chrom,
+                        strand, protAcc,
+                        version
+                from map
+        """
+        if overlap:
+            q += """
+              WHERE chrom = %s AND
+                    txStart <= "%s" AND
+                    txEnd >= "%s";
+            """
+            statement = q, (chrom, p2, p1)
 
-        if overlap :
-            statement = """
-                SELECT acc
-                  FROM map
-                  WHERE chrom = %s AND
-                        txStart <= "%s" AND
-                        txEnd >= "%s";
-            """, (chrom, p2, p1)
-        #if
-        else :
-            statement = """
-                SELECT acc
-                  FROM map
-                  WHERE chrom = %s AND
-                        txStart >= "%s" AND
-                        txEnd <= "%s";
-            """, (chrom, p1, p2)
-        #else
+        else:
+            q += """
+              WHERE chrom = %s AND
+                    txStart >= "%s" AND
+                    txEnd <= "%s";
+            """
+            statement = q, (chrom, p1, p2)
 
-        ret = [] # Convert the results to a normal list.
-        for i in self.query(statement) :
-            ret.append(i[0] + '.' + str(self.get_NM_version(i[0])))
-        return ret
+        return self.query(statement)
     #get_Transcripts
 
     def get_GeneName(self, mrnaAcc) :
@@ -1150,7 +1180,7 @@ class Batch(Db) :
         return True
     #isJobListEmpty
 
-    def addJob(self, outputFilter, email, fromHost, jobType = None) :
+    def addJob(self, outputFilter, email, fromHost, jobType, Arg1) :
         """
             Add a job and give it a unique ID.
 
@@ -1171,8 +1201,8 @@ class Batch(Db) :
         del M
         statement = """
             INSERT INTO BatchJob
-              VALUES (%s, %s, %s, %s, %s);
-        """, (jobID, outputFilter, email, fromHost, jobType)
+              VALUES (%s, %s, %s, %s, %s, %s)
+        """, (jobID, outputFilter, email, fromHost, jobType, Arg1)
 
         self.query(statement)
         return jobID
@@ -1190,7 +1220,7 @@ class Batch(Db) :
         """
         
         statement = """
-            SELECT JobID, JobType
+            SELECT JobID, JobType, Arg1
               FROM BatchJob;
         """, None
 
@@ -1231,15 +1261,13 @@ class Batch(Db) :
         return data
     #removeJob
 
-    def addToQueue(self, jobID, accNo, gene, variant) :
+    def addToQueue(self, jobID, inputl):
         """
             Add a request belonging to a certain job to the queue.
 
             Arguments:
                 jobID   ; Identifier of a job.
-                accNo   ; The accession number of a request.
-                gene    ; The gene and transcript variant information.
-                variant ; The variant.
+                inputl  ; The input line of an entry
 
             SQL tables from internalDb (altered):
                 BatchQueue ; Requests.
@@ -1248,8 +1276,8 @@ class Batch(Db) :
         # The first value (QueueID) will be auto increased by MySQL.
         statement = """
             INSERT INTO BatchQueue
-              VALUES (%s, %s, %s, %s, %s);
-        """, (None, jobID, accNo, gene, variant)
+              VALUES (%s, %s, %s);
+        """, (None, jobID, inputl)
 
         self.query(statement)
     #addToQueue
@@ -1274,7 +1302,7 @@ class Batch(Db) :
         """
 
         statement = """
-            SELECT QueueID, AccNo, Gene, Variant
+            SELECT QueueID, Input
               FROM BatchQueue
               WHERE JobID = %s
               ORDER BY QueueID
@@ -1283,19 +1311,19 @@ class Batch(Db) :
 
         results = self.query(statement)
         if results :
-            jobID, accNo, gene, variant = results[0]
+            jobID, inputl = results[0]
         else :
             return None
 
         # We have found a request, so remove it from the queue.
         statement = """
-            DELETE 
+            DELETE
               FROM BatchQueue
               WHERE QueueID = %s;
         """, jobID
 
         self.query(statement)
-        return accNo, gene, variant
+        return inputl
     #getFromQueue
 #Batch    
 

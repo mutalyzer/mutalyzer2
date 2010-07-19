@@ -27,7 +27,7 @@ def handler(req):
 
         Keywords in the URI of the request are used to decide what to do:
             "services" ; Dispatch the webservices handler.
-            ".js"      ; Return the raw content of the file (to include 
+            ".js"      ; Return the raw content of the file (to include
                          JavaScript from an HTML file).
             ".py"      ; Return the content as a downloadable file after it has
                          been processed by TAL (to generate webservice client
@@ -42,7 +42,7 @@ def handler(req):
             req ; The request.
 
         Returns:
-            int ; An apache return code, either generated in this function 
+            int ; An apache return code, either generated in this function
                   itself, or by the publisher handler which handles normal HTML
                   requests.
     """
@@ -63,14 +63,26 @@ def handler(req):
     #if
 
     # Return raw content (for includes from an HTML file).
-    if ".js" in req.uri or "base" in req.uri :
+    if req.uri.endswith(".js") or "base" in req.uri :
         req.content_type = 'text/html'
         req.write(W.read("templates/", req))
         return apache.OK
     #if
 
+    # Make all txt files in downloads directory downloadable
+    if "downloads/" in req.uri and req.uri.endswith(".txt"):
+        req.content_type = 'text/plain'
+        reqFile = req.uri.rsplit('/')[-1]
+        req.headers_out["Content-Disposition"] = \
+            "attachment; filename = \"%s\"" % reqFile # To force downloading.
+        handle = open("templates/downloads/" + reqFile)
+        req.write(handle.read())
+        handle.close()
+        return apache.OK
+    #if
+
     # Process the file with TAL and return the content as a downloadable file.
-    if ".py" in req.uri :
+    if req.uri.endswith(".py") :
         reqFile = req.uri.split('/')[-1]
         req.content_type = 'text/plain'
         req.headers_out["Content-Disposition"] = \
@@ -81,7 +93,7 @@ def handler(req):
     #if
 
     # Return raw content (for batch checker results).
-    if "Results" in req.uri :
+    if "Results" in req.uri:
         reqFile = req.uri.split('/')[-1]
         C = Config.Config()
         req.write(open("%s/%s" % (C.Scheduler.resultsDir, reqFile)).read())
@@ -90,12 +102,12 @@ def handler(req):
     #if
 
     # Return uncompressed GenBank files from the cache.
-    if "GenBank" in req.uri :
+    if "GenBank" in req.uri:
         reqFile = req.uri.split('/')[-1]
         C = Config.Config()
         fileName = "%s/%s.bz2" % (C.Retriever.cache, reqFile)
         if os.path.isfile(fileName) :
-            handle = bz2.BZ2File("%s/%s.bz2" % (C.Retriever.cache, reqFile), 
+            handle = bz2.BZ2File("%s/%s.bz2" % (C.Retriever.cache, reqFile),
                                  "r")
             req.content_type = 'text/plain'
             req.headers_out["Content-Disposition"] = \
@@ -110,7 +122,7 @@ def handler(req):
     #if
 
     # Generate the WSDL file from the MutalyzerService class.
-    if ".wsdl" in req.uri :
+    if req.uri.endswith(".wsdl"):
         servicepath = "http://" + reqPath + "/services"
         client = make_service_client(servicepath, webservice.MutalyzerService())
         req.content_type = 'text/xml'

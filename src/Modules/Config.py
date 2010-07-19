@@ -104,6 +104,17 @@ class Config() :
         pass
     #Scheduler
 
+    class Batch() :
+        """
+            Container class for the Scheduler configuration variables.
+
+            Public variables:
+                PIDfile     ; Location of the PID file
+        """
+
+        pass
+    #Batch
+
     class File() :
         """
             Container class for the File configuration variables.
@@ -184,6 +195,12 @@ class Config() :
         self.Scheduler.mailMessage = config["mailMessage"]
         self.Scheduler.mailSubject = config["mailSubject"]
         self.Scheduler.resultsDir = config["resultsDir"]
+        self.Scheduler.nameCheckOutHeader = config["nameCheckOutHeader"]
+        self.Scheduler.syntaxCheckOutHeader= config["syntaxCheckOutHeader"]
+        self.Scheduler.positionConverterOutHeader= config["positionConverterOutHeader"]
+
+        # Set thte variables neede for the Batch module.
+        self.Batch.PIDfile = config["PIDfile"]
 
         # Set the variables needed by the File module.
         self.File.bufSize = int(config["bufSize"])
