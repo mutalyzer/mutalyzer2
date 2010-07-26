@@ -94,31 +94,57 @@ class Scheduler() :
         smtpInstance.quit()
     #__sendMail
 
-    def isDaemonRunning(self) :
-        """
-            Returns:
-                True if an other scheduler is already running, False otherwise.
-        """
+    def __processFlags(self, O, flags):
+        #TODO: Add more info for the user 
+        if not flags: return
+        if 'S' in flags: #This entry is going to be skipped
+            #Add a usefull message to the Output object
+            O.addMessage(__file__, 4, "EBSKIP", "Skipping entry")
+            return True #skip
+        if 'A' in flags: #This entry is altered before execution
+            O.addMessage(__file__, 3, "WEALTER", "Entry altered before "
+                    "execution")
 
-        myPid = os.getpid()
-        for i in psutil.get_process_list() :
-            if i.cmdline and i.cmdline[0] == self.__config.processName  and \
-               i.pid != myPid :
-                return True
-        return False
-    #isDaemonRunning
+    def __alterBatchEntries(self, jobID, old, new, flag, nselector):
+        self.__database.updateBatchDb(jobID, old, new, flag, nselector)
+
+    def __skipBatchEntries(self, jobID, flag, selector):
+        self.__database.skipBatchDb(jobID, selector, flag)
+
+    def _updateDbFlags(self, O, jobID):
+        flags = O.getOutput("BatchFlags")
+        if not flags: return
+        #First check if we need to skip
+        for flag, args in flags:
+            if 'S' in flag:
+                selector = args
+                O.addMessage(__file__, 3, "WBSKIP",
+                        "All further occurrences with '%s' will be "
+                        "skipped" % selector)
+                self.__skipBatchEntries(jobID, flag, selector)
+                return
+        #If not skipflags, check if we need to alter
+        for flag, args in flags:
+            if 'A' in flag:
+                old, new, nselector = args  #nselector = negative selector
+                O.addMessage(__file__, 3, "WBSUBST",
+                        "All further occurrences of %s will be substituted "
+                        "by %s" % (old, new))
+                self.__alterBatchEntries(jobID, old, new, flag, nselector)
+
 
     def process(self) :
         """
+            Start the mutalyzer Batch Processing
         """
         jobList = self.__database.getJobs()
 
         while jobList :
             for i, jobType, arg1 in jobList :
-                inputl = self.__database.getFromQueue(i)
+                inputl, flags = self.__database.getFromQueue(i)
                 if inputl:
                     if jobType == "NameChecker":
-                        self._processNameBatch(inputl, i)
+                        self._processNameBatch(inputl, i, flags)
                     elif jobType == "SyntaxChecker":
                         self._processSyntaxCheck(inputl, i)
                     elif jobType == "ConversionChecker":
@@ -128,65 +154,53 @@ class Scheduler() :
                 else :
                     eMail, stuff, fromHost = self.__database.removeJob(i)
                     print "Job %s finished, email %s file %s" % (i, eMail, i)
-                    self.__sendMail(eMail, "%sResults_%s.csv" % (fromHost, i))
+                    self.__sendMail(eMail, "%sResults_%s.txt" % (fromHost, i))
                 #else
             #for
             jobList = self.__database.getJobs()
         #while
     #process
 
-    def _processNameBatch(self, cmd, i):
+    def _processNameBatch(self, cmd, i, flags):
         """
             Process an entry from the Name Batch,
 
             write the results to the job-file
         """
-        #FIXME: This output is generated in an UUUUUUGLY way, see Mutalyzer.py
-        # Preferably receive the 12 output fields in tact
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
 
+        #Read out the flags
+        skip = self.__processFlags(O, flags)
 
-        #Run mutalyzer and get values from Output Object 'O'
-        Mutalyzer.process(cmd, C, O)
-        batchData = O.getOutput("batch")
-        if batchData:
-            bO = batchData[0]
-        else:
-            bO = {}
+        if not skip:
+            #Run mutalyzer and get values from Output Object 'O'
+            try:
+                Mutalyzer.process(cmd, C, O)
+            except Exception, e:
+                #Catch all exceptions related to the processing of cmd
+                O.addMessage(__file__, -1, "EBATCH",
+                        "Error during NameChecker Batch. Input: %s" % `cmd`)
+                O.addMessage(__file__, 4, "EBATCHU",
+                        "Unexpected error occurred, dev-team notified")
+                #import traceback
+                #O.addMessage(__file__, 4, "DEBUG", `traceback.format_exc()`)
+            finally:
+                #check if we need to update the database
+                self._updateDbFlags(O, i)
 
-        #AccNo, GeneSymbol, Mutation FIXME for oneliners
-        outputline =  "%s\t%s\t%s\t" % (cmd, "", "") #split up the cmd
+        batchOutput = O.getOutput("batchDone")
 
-        if bO and bO["exitcode"] == 0:
-            g = bO["gName"]                     #Genomic Plain Description
-            c = bO["cName"]                     #Coding  Plain Description
-            p = bO["pName"]                     #Protein Plain Description
-            gc = "%s:%s" % (bO["cSymbol"], c)   #Coding  GeneSymbol Description
-            gp = "%s:%s" % (bO["pSymbol"], p)   #Protein GeneSymbol Description
-            ag = cmd.split(':')[0].split('(')[0]#Genomic Accesion Description
-            ac = bO["cAcc"] or ag               #Coding  Accesion Description
-            ap = bO["pAcc"] or ag               #Protein Accesion Description
+        outputline =  "%s\t" % cmd
+        outputline += "%s\t" % "|".join(O.getBatchMessages(3))
 
-            #plain          gName, cName, pName
-            outputline += "%s\t%s\t%s\t" % (g,c,p)
+        if batchOutput:
+            outputline += batchOutput[0]
 
-            #genesymbol     cName, pName
-            outputline += "%s\t%s\t" % (gc, gp)
-
-            #AccNo          gName, cName, pName
-            outputline += "%s\t%s\t%s\t" % (ag, ac, ap)
-
-        #if
-        else:
-            #Something went wrong, skip fields
-            outputline += "\t"*8
-
-        outputline += "%s\n" % "|".join(O.getBatchMessages(3)+\
-                bO.get("messages",[]))
+        outputline += "\n"
 
         #Output
-        filename = "%s/Results_%s.csv" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename):
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(i for i in
@@ -215,7 +229,7 @@ class Scheduler() :
             result = "|".join(O.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.csv" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename):
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(i for i in
@@ -234,37 +248,43 @@ class Scheduler() :
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         variant = cmd
-
-        #process
-        converter = Mapper.Converter(build, C, O)
-
         variants = None
         gName = ""
         cNames = [""]
 
-        #Also accept chr accNo
-        variant = converter.correctChrVariant(variant)
+        try:
+            #process
+            converter = Mapper.Converter(build, C, O)
 
-        if not(":c." in variant or ":g." in variant):
-            #Bad name
-            P = Parser.Nomenclatureparser(O)
-            parsetree = P.parse(variant)
+            #Also accept chr accNo
+            variant = converter.correctChrVariant(variant)
 
-        if ":c." in variant:
-            # Do the c2chrom dance
-            variant = converter.c2chrom(variant)
-        if variant and ":g." in variant:
-            # Do the g2c dance
-            variants = converter.chrom2c(variant)
-            if variants:
-                gName = variant
-                cNames = [cName for cName2 in variants.values() for cName in
-                        cName2]
+            if not(":c." in variant or ":g." in variant):
+                #Bad name
+                P = Parser.Nomenclatureparser(O)
+                parsetree = P.parse(variant)
+
+            if ":c." in variant:
+                # Do the c2chrom dance
+                variant = converter.c2chrom(variant)
+            if variant and ":g." in variant:
+                # Do the g2c dance
+                variants = converter.chrom2c(variant)
+                if variants:
+                    gName = variant
+                    cNames = [cName for cName2 in variants.values() for cName in
+                            cName2]
+        except Exception, e:
+            #Catch all exceptions related to the processing of cmd
+            O.addMessage(__file__, -1, "EBATCH",
+                    "Error during ConversionBatch. Input: %s" % `cmd`)
+            O.addMessage(__file__, 4, "EBATCHU",
+                    "Unexpected error occurred, dev-team notified")
 
         error = "%s" % "|".join(O.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.csv" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename):
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(i for i in
@@ -299,6 +319,7 @@ class Scheduler() :
 
         #Wait for the BatchChecker to fork of the Daemon
         p.communicate()
+        return jobID
     #addJob
 #Scheduler
 

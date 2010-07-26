@@ -274,6 +274,8 @@ class GenBankRetriever(Retriever):
         try :
             record = SeqIO.read(fakehandle, "genbank")
         except ValueError :              # An error occured while parsing.
+            self._output.addMessage(__file__, 2, "ENOPARSE",
+                    "The file could not be parsed.")
             fakehandle.close()
             return None
         #except
@@ -284,6 +286,14 @@ class GenBankRetriever(Retriever):
             outfile = record.id
             GI = record.annotations["gi"]
             if outfile != filename :
+                # Add the reference (incl version) to the reference output
+                # This differs if the original reference lacks a version
+                self._output.addOutput("reference", record.id)
+                self._output.addOutput(
+                        "BatchFlags", ("A1",(
+                            filename,
+                            outfile,
+                            filename+"[[.period.]]" )))
                 self._output.addMessage(__file__, 2, "WNOVER",
                     "No version number is given, using %s. Please use this " \
                     "number to reduce downloading overhead." % record.id)
@@ -375,9 +385,7 @@ class GenBankRetriever(Retriever):
                           stop, orientation, None)
         #else
 
-        self.write(raw_data, UD, 0)
-
-        return UD
+        return self.write(raw_data, UD, 0) and UD
     #retrieveslice
 
     def retrievegene(self, gene, organism, upstream, downstream) :
@@ -472,13 +480,17 @@ class GenBankRetriever(Retriever):
                 raw_data = handle.read()
                 md5sum = self._calcHash(raw_data)
                 UD = self._database.getGBFromHash(md5sum)
-                if not UD :
+                if UD:  #hash found
+                    if not os.path.isfile(self._nametofile(UD)):
+                        UD = self.write(raw_data, UD, 0) and UD
+                else:
                     UD = self._newUD()
-                    self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, 
-                                            url)
-                #if
-                if not os.path.isfile(self._nametofile(UD)) :
-                    self.write(raw_data, UD, 0)
+                    if not os.path.isfile(self._nametofile(UD)):
+                        UD = self.write(raw_data, UD, 0) and UD
+                    if UD:      #Parsing went OK, add to DB
+                        self._database.insertGB(UD, None, md5sum,
+                                None, 0, 0, 0, url)
+                return UD #Returns the UD or None
             #if
             else :
                 self._output.addMessage(__file__, 4, "EFILESIZE",
@@ -491,9 +503,6 @@ class GenBankRetriever(Retriever):
                                      "This is not a GenBank record.")
             return None
         #else
-
-        handle.close()
-        return UD
     #downloadrecord
 
     def uploadrecord(self, raw_data) :
@@ -516,9 +525,7 @@ class GenBankRetriever(Retriever):
             if os.path.isfile(self._nametofile(UD)) :
                 return UD
 
-        if self.write(raw_data, UD, 0) :
-            return UD
-        return None
+        return self.write(raw_data, UD, 0) and UD
     #uploadrecord
 
     def loadrecord(self, identifier) :
@@ -553,13 +560,13 @@ class GenBankRetriever(Retriever):
                         else :
                             self._output.addMessage(__file__, 4, "ERETR",
                                 "Please upload this sequence again.")
-                            return None
+                            filename = None
                     #if
                     else :                  # This used to be a downloaded seq.
-                        self.downloadrecord(url)
+                        filename = self.downloadrecord(url) and filename
                 #if
                 else :                      # This used to be a slice.
-                    self.retrieveslice(*Loc)
+                    filename = self.retrieveslice(*Loc) and filename
             #if
             else :                          # Never seen this name before.
                 filename = self.fetch(name)
@@ -567,13 +574,15 @@ class GenBankRetriever(Retriever):
         #if
 
         # TODO: If filename is None an error occured
-        if filename is None: return None
+        if filename is None:
+            #Notify batch to skip all instance of identifier
+            self._output.addOutput("BatchFlags", ("S1", identifier))
+            return None
 
         # Now we have the file, so we can parse it.
         GenBankParser = GBparser.GBparser()
-        record = GenBankParser.createGBRecord(filename)
+        return GenBankParser.createGBRecord(filename)
 
-        return record
     #loadrecord
 #GenBankRetriever
 
@@ -599,6 +608,8 @@ class LargeRetriever(Retriever):
             filename = self.fetch(identifier)
 
         if filename is None:                # return None in case of error
+            #Notify batch to skip all instance of identifier
+            self._output.addOutput("BatchFlags", ("S1", identifier))
             return None
 
         # Now we have the file, so we can parse it.

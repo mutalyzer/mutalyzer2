@@ -115,7 +115,7 @@
         oldload = window.onload
         initpage = function() {
             oldload();
-            changeBatch(document.getElementById('batchType'));
+            onloadBatch();
         }
     </script>
 
@@ -125,10 +125,20 @@
 
   <div tal:condition = "messages">
     <b>Messages</b><br>
-     <pre><div tal:repeat = "i messages"
+     <div tal:repeat = "i messages" 
          tal:replace = "structure string:${i}<br>">
-    </div></pre>
-    <br />
+    </div>
+    <div tal:condition = "jobID">
+        <div id="percent">Your job is in progress and currently at 0%</div>
+        <input  id = "jobID"
+                type = "hidden"
+                name = "jobID"
+                tal:attributes = "value jobID">
+        <input  id = "totalJobs"
+                type = "hidden"
+                name = "totalJobs"
+                tal:attributes = "value totalJobs">
+    </div>
   </div>
 
   <div tal:condition = "debug">
@@ -138,5 +148,7 @@
     </div></pre>
   </div>
 </div>
+
+
 </body>
 </html>

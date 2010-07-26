@@ -19,6 +19,7 @@ import string
 #import sys
 
 from mod_python import apache
+from mod_python import Session, util
 
 from Modules import Parser
 from Modules import Mapper
@@ -30,10 +31,19 @@ from Modules import Scheduler
 from Modules import Retriever
 from Modules import File
 
+class InputException(Exception):
+    pass
+
 def index(req) :
     W = Web.Web()
     return W.tal("HTML", "templates/index.html", {})
 #index
+
+def redirect(req):
+    session = Session.Session(req)
+    session['mut'] = req.form.get("mutationName", None)
+    session.save()
+    util.redirect(req, "check", permanent=False)
 
 def check(req) :
     """
@@ -58,7 +68,15 @@ def check(req) :
     name = ""
     reply = ""
     if req.form :
-        name = req.form['mutationName']
+        name = req.form.get('mutationName', None)
+    else:
+        session = Session.Session(req)
+        session.load()
+        name = session.get("mut", None)
+        #Remove from session
+        session["mut"] = None
+        session.save()
+    if name:
         O.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
         RD = Mutalyzer.process(name, C, O)
         O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
@@ -243,6 +261,14 @@ def download(req) :
     return ret
 #download
 
+def __checkInt(inpv, refname):
+    #remove , . and -
+    inpv = inpv.replace(',','').replace('.','').replace('-','')
+    try:
+        return int(inpv)
+    except ValueError, e:
+        raise InputException("Expected an integer in field: %s" % refname)
+
 def upload(req) :
     """
     """
@@ -254,52 +280,98 @@ def upload(req) :
     D = Db.Cache(C.Db)
     R = Retriever.GenBankRetriever(C.Retriever, O, D)
 
-    UD = ""
+    UD, errors = "", []
 
     if req.method == 'POST' :
-        if req.form["invoermethode"] == "file" :
-            length = req.headers_in.get('Content-Length')
-            if not length :
-                req.status = apache.HTTP_LENGTH_REQUIRED
-                req.write("Content length required.")
-                return None
+        try:
+            if req.form["invoermethode"] == "file" :
+                length = req.headers_in.get('Content-Length')
+                if not length :
+                    req.status = apache.HTTP_LENGTH_REQUIRED
+                    req.write("Content length required.")
+                    return None
+                #if
+                if int(length) > maxUploadSize :
+                    req.status = apache.HTTP_REQUEST_ENTITY_TOO_LARGE
+                    req.write("Upload limit exceeded.")
+                    return None
+                #if
+                UD = R.uploadrecord(req.form["bestandsveld"].file.read())
             #if
-            if int(length) > maxUploadSize :
-                req.status = apache.HTTP_REQUEST_ENTITY_TOO_LARGE
-                req.write("Upload limit exceeded.")
-                return None
+            elif req.form["invoermethode"] == "url" :
+                UD = R.downloadrecord(req.form["urlveld"])
             #if
-            UD = R.uploadrecord(req.form["bestandsveld"].file.read())
-        #if
-        if req.form["invoermethode"] == "url" :
-            UD = R.downloadrecord(req.form["urlveld"])
-        #if
-        if req.form["invoermethode"] == "gene" :
-            geneName = req.form["genesymbol"]
-            organism = req.form["organism"]
-            upStream = int(req.form["5utr"])
-            downStream = int(req.form["3utr"])
-
-            UD = R.retrievegene(geneName, organism, upStream, downStream)
-        #if
-        if req.form["invoermethode"] == "chr" :
-            accNo = req.form["chracc"]
-            start = int(req.form["start"])
-            stop = int(req.form["stop"])
-            orientation = int(req.form["orientation"])
-            UD = R.retrieveslice(accNo, start, stop, orientation)
-        #if
+            elif req.form["invoermethode"] == "gene" :
+                geneName = req.form["genesymbol"]
+                organism = req.form["organism"]
+                upStream = __checkInt((req.form["5utr"]),
+                        "5' flanking nucleotides")
+                downStream = __checkInt((req.form["3utr"]),
+                        "3' flanking nucleotides")
+                UD = R.retrievegene(geneName, organism, upStream, downStream)
+            #if
+            elif req.form["invoermethode"] == "chr" :
+                accNo = req.form["chracc"]
+                start = __checkInt((req.form["start"]),
+                        "Start position")
+                stop = __checkInt((req.form["stop"]),
+                        "Stop position")
+                orientation = int(req.form["orientation"])
+                UD = R.retrieveslice(accNo, start, stop, orientation)
+            #if
+            else:
+                #unknown "invoermethode"
+                raise InputException("Wrong method selected")
+        except InputException, e:
+            #DUMB USERS
+            errors.append(e)
+        finally:
+            if not UD:
+                #Something went wrong
+                errors += ["The request could not be completed"]
+                errors.extend(O.getMessages())
     #if
 
     W = Web.Web()
     args = {
         "version" : W.version,
-        "UD"      : UD
+        "UD"      : UD,
+        "errors"  : errors
     }
     ret = W.tal("HTML", "templates/gbupload.html", args)
     del W
     return ret
 #upload
+
+def progress(req):
+    """
+        Progress page for batch runs
+    """
+    W = Web.Web()
+    C = Config.Config()
+    O = Output.Output(__file__, C.Output)
+
+    attr = {"percentage"    : 0}
+
+    try:
+        jobID = int(req.form["jobID"])
+        total = int(req.form["totalJobs"])
+    except Exception, e:
+        return
+    D = Db.Batch(C.Db)
+    left = D.entriesLeftForJob(jobID)
+    percentage = int(100 - (100 * left / float(total)))
+    if req.form.get("ajax", None):
+        if percentage == 100:
+            #download url, check if file still exists
+            ret = "OK"
+        else:
+            ret = percentage
+        return ret
+    else:
+        #Return progress html page
+        return W.tal("HTML", "templates/progress.html", attr)
+
 
 def batch(req, batchType=None):
     """
@@ -319,7 +391,9 @@ def batch(req, batchType=None):
             "hideTypes"     : batchType and 'none' or '',
             "selected"      : "0",
             "batchType"     : batchType or "",
-            "avail_builds"  : C.Db.dbNames[::-1]
+            "avail_builds"  : C.Db.dbNames[::-1],
+            "jobID"         : None,
+            "totalJobs"     : None
          }
 
     # Use an empty dictionary if no form is filed
@@ -350,7 +424,9 @@ def batch(req, batchType=None):
                 " file, please check your file format.")
         else:
             #TODO: Add Binair Switches to toggle some events
-            S.addJob("BINSWITHCES", email, job, fromHost, batchType, arg1)
+            attr["jobID"] =\
+                    S.addJob("BINSWITHCES", email, job, fromHost, batchType, arg1)
+            attr["totalJobs"] = len(job) or 1
             attr["messages"].append("Your file has been parsed and the job"
                 " is scheduled, you will receive an email when the job is "
                 "finished.")

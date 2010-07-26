@@ -97,7 +97,7 @@
               Stop Position<br>
               <input type='text' name="stop"><br>
               Orientation<br>
-              <select>
+              <select name="orientation">
                 <option value="1">Forward</option>
                 <option value="-1">Reverse</option>
               </select>
@@ -116,6 +116,13 @@
         </tr>
       </table>
     </form><br>
+
+  <div tal:condition = "errors">
+    <b>Error output:</b><br>
+    <pre><div tal:repeat = "i errors"
+         tal:replace = "structure string:${i}<br>">
+    </div></pre>
+  </div>
     <div tal:condition = "UD">
       <b>Output:</b><br>
       <br>

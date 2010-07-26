@@ -215,7 +215,7 @@ class Mapping(Db) :
               WHERE acc = %s;
         """, mrnaAcc
 
-        return [i[0] for i in self.query(statement)]
+        return [int(i[0]) for i in self.query(statement)]
     #get_NM_version
 
     def getAllFields(self, mrnaAcc, version):
@@ -1180,6 +1180,29 @@ class Batch(Db) :
         return True
     #isJobListEmpty
 
+    def entriesLeftForJob(self, jobID):
+        """
+            Count the number of entries of a job that are still to be processed
+
+            Arguments:
+                jobID       ; The JobID of interest
+
+            SQL tables from internalDB:
+                BatchQueue  ; Queue information
+
+            Returns:
+                int         ; The number of entries
+        """
+        statement = """
+            SELECT COUNT(*)
+              FROM BatchQueue
+              WHERE JobID = %s;
+        """, jobID
+
+        return int(self.query(statement)[0][0])
+    #entriesLeftForJob
+
+
     def addJob(self, outputFilter, email, fromHost, jobType, Arg1) :
         """
             Add a job and give it a unique ID.
@@ -1276,11 +1299,44 @@ class Batch(Db) :
         # The first value (QueueID) will be auto increased by MySQL.
         statement = """
             INSERT INTO BatchQueue
-              VALUES (%s, %s, %s);
-        """, (None, jobID, inputl)
+              VALUES (%s, %s, %s, %s);
+        """, (None, jobID, inputl, None)
 
         self.query(statement)
     #addToQueue
+
+    def updateBatchDb(self, jobID, old, new, flag, whereNot):
+        """
+            Update the Entries of a BatchJob
+        """
+        #update whereNot to escape parenthesis
+        whereNot = whereNot.replace("(","[(]").replace(")","[)]")
+        statement = """
+            update `BatchQueue` set
+               `Input` = REPLACE(`Input`, %s, %s),
+               `Flags` = CONCAT(IFNULL(`Flags`,""), %s)
+               WHERE `JobID` = %s and NOT
+               `Input` RLIKE %s;
+        """, (old, new, flag, jobID, whereNot)
+
+        self.query(statement)
+
+    def skipBatchDb(self, jobID, where, flag):
+        """
+            Flag batch entries to be skipped
+        """
+        #update where to escape parenthesis
+        where = where.replace("(","[(]").replace(")","[)]")
+
+        statement = """
+            update `BatchQueue` set
+                `Flags` = CONCAT(IFNULL(`Flags`, ""), %s)
+                where `JobID` = %s AND
+                `Input` RLIKE %s;
+        """, (flag, jobID, where)
+
+        self.query(statement)
+
 
     def getFromQueue(self, jobID) :
         """
@@ -1302,7 +1358,7 @@ class Batch(Db) :
         """
 
         statement = """
-            SELECT QueueID, Input
+            SELECT QueueID, Input, Flags
               FROM BatchQueue
               WHERE JobID = %s
               ORDER BY QueueID
@@ -1311,19 +1367,19 @@ class Batch(Db) :
 
         results = self.query(statement)
         if results :
-            jobID, inputl = results[0]
+            queueID, inputl,flags = results[0]
         else :
-            return None
+            return None, None
 
         # We have found a request, so remove it from the queue.
         statement = """
             DELETE
               FROM BatchQueue
               WHERE QueueID = %s;
-        """, jobID
+        """, queueID
 
         self.query(statement)
-        return inputl
+        return inputl, flags
     #getFromQueue
 #Batch    
 

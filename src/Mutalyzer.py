@@ -4,6 +4,7 @@
     The nomenclature checker.
 """
 
+import time
 import sys
 import math
 import types
@@ -25,9 +26,6 @@ from Modules import Output
 from Modules import Config
 
 from operator import itemgetter, attrgetter
-
-#TODO: SET TO FALSE DEBUG FLAG
-DEBUG = False
 
 #def __order(a, b) :
 #    """
@@ -466,91 +464,87 @@ def __rangeToC(M, g1, g2) :
 #    return ss
 ##__makeSet
 
-def _createBatchOutput(GRI, O, ParseObj):
+def _createBatchOutput(O):
     """
         Format the results to a batch output.
 
-        Save the output of the query to the output object "batch" entry
+        Filter the mutalyzer output
+
     """
-    messages = []
-    exitcode = 0
+    goi, toi = O.getOutput("geneSymbol")[-1] # Two strings [can be empty]
+    tList   = []                             # Temporary List
+    tDescr  = []                             # Temporary Descr
 
-    if GRI.record._sourcetype == "LRG":
-        gene = GRI.record.geneList[0]           #LRG main Gene on top of list
-        transVar = ParseObj.LRGTranscriptID
+    reference = O.getOutput("reference")[-1]
+    recordType = O.getOutput("recordType")[0]
+    descriptions = O.getOutput("NewDescriptions")
+        #iName, jName, mType, cDescr, pDescr, gAcc, cAcc, pAcc, 
+        #fullDescr, fullpDescr
+
+    if len(descriptions) == 0:
+        #No descriptions generated [unlikely]
+        return
+    for descr in descriptions:
+        if goi in descr[0] and toi in descr[1]: # Gene and Transcript
+            if tDescr:
+                # Already inserted a value in the tDescr
+                tDescr, tList = [], descriptions
+                break
+            tDescr = descr
+
+    tList = descriptions
+
+    var = O.getOutput("variant")[-1]
+
+    # Generate output
+    outputline = ""
+    if tDescr: #Filtering worked, only one Description left
+        (gName, trName, mType, cDescr,
+            pDescr, gAcc, cAcc, pAcc, fullD, fullpD) = tDescr
+
+        gene = "%s_v%.3i" % (gName, int(trName))
+
+        outputline += "%s\t%s\t%s\t" % (reference, gene, var)
+
+        #Add genomic Description
+        outputline += "%s\t" % O.getOutput("gDescription")[0]
+
+        #Add coding Description & protein Description
+        outputline += "%s\t%s\t" % (cDescr, pDescr)
+
+        gc = cDescr and "%s:%s" % (gene, cDescr)
+        gp = pDescr and "%s:%s" % (gene, pDescr)
+
+        #Add mutation with GeneSymbols
+        outputline += "%s\t%s\t" % (gc, gp)
+
+        #Add References, should get genomic ref from parsed data
+        if recordType == "LRG":
+            gAcc = reference
+        if recordType == "GB":
+            geno = ["NC", "NG", "AC", "NT", "NW", "NZ", "NS"]
+            for g in geno:
+                if reference.startswith(g):
+                    gAcc = reference
+                    break
+        outputline += "%s\t%s\t%s\t" % (gAcc or "", cAcc or "", pAcc or "")
+
     else:
-        if ParseObj.Gene:
-            geneName = ParseObj.Gene.GeneSymbol
-            transVar = ParseObj.Gene.TransVar
-            gene = GRI.record.findGene(geneName)
-        elif len(GRI.record.geneList) == 0:
-            gene = None
-        elif len(GRI.record.geneList) == 1:
-            gene = GRI.record.geneList[0]
-            transVar = None
-        else:
-            messages.append("Multiple genes found, please supply a valid "
-                    "Gene Symbol")
-            exitcode+=1
-            gene = None
+        outputline += "\t"*11
 
-    if gene:
-        geneName = gene.name
-        if not transVar:
-            transcripts = gene.listLoci()
-            if len(transcripts) == 0:    #No transcripts
-                transcript = None
-            elif len(transcripts) == 1:  #One transcript
-                transcript = gene.transcriptList[0]
-                transVar = transcript.name
-            else:                        #Multiple transcripts
-                messages.append("Multiple transcripts available, please supply "
-                        "a valid transcript id.")
-                transcript = None
-                exitcode += 2
-        else:
-            transcript = gene.findLocus(transVar)
+    #Add list of affected transcripts "|" seperator
+    if tList:
+        outputline += "%s\t" % "|".join(e[-2] for e in tList)
+        outputline += "%s\t" % "|".join(e[-1] for e in tList)
     else:
-        exitcode += 4
-        transcript = None
+        outputline += "\t"*2
 
-    if transcript:
-        cName = "c.%s" % transcript.description     #add brackets TODO
-        pName = transcript.proteinDescription       #p. already included
-        if GRI.record._sourcetype == "LRG":
-            cSymbol = "t%s" % transVar
-            pSymbol = "p%s" % transVar
-        else: #GenBank
-            if transVar:
-                cSymbol = "%s_v%s" % (geneName, transVar)
-                pSymbol = "%s_i%s" % (geneName, transVar)
-            else:
-                cSymbol = geneName
-                pSymbol = geneName
-        cAcc = transcript.transcriptID
-        pAcc = transcript.proteinID
-    else:
-        cName =   ""
-        pName =   ""
-        cSymbol = ""
-        pSymbol = ""
-        cAcc =    ""
-        pAcc =    ""
+    #Link naar additional info:
+    #outputline+="http://localhost/mutalyzer2/redirect?mutationName=%s" %\
+    #        "todovariant"
 
-    batchOutput = {
-            "input":        O.getOutput("inputvariant")[0],
-            "messages":     messages,
-            "gName":        O.getOutput("genomicDescription")[0].split(':')[1],
-            "cName":        cName,
-            "pName":        pName,
-            "cSymbol":      cSymbol,
-            "pSymbol":      pSymbol,
-            "gAcc":         None,
-            "cAcc":         cAcc,
-            "pAcc":         pAcc,
-            "exitcode":     exitcode}
 
-    O.addOutput("batch", batchOutput)
+    O.addOutput("batchDone", outputline)
 
 def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
     """
@@ -896,52 +890,71 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
 def __ppp(MUU, parts, GenRecordInstance, O) :
     if parts.RawVar or parts.SingleAlleleVarSet :
         if parts.RefType in ['c', 'n'] :
-            if parts.Gene :
-                if parts.Gene.GeneSymbol :
-                    GS = GenRecordInstance.record.findGene(
-                         parts.Gene.GeneSymbol)
-                    if not GS :
-                        O.addMessage(__file__, 3, "EINVALIDGENE",
-                            "Gene %s not found. Please choose from: %s" % (
-                            parts.Gene.GeneSymbol,
-                            GenRecordInstance.record.listGenes()))
-                        return
-                else :
-                    GS = GenRecordInstance.record.geneList[0]
-                if parts.Gene.TransVar :
-                    W = GS.findLocus(parts.Gene.TransVar)
-                    if not W :
-                        O.addMessage(__file__, 3, "ENOTRANSCRIPT",
-                            "Transcript %s not found for gene %s. Please " \
-                            "choose from: %s" %(parts.Gene.TransVar, GS.name,
-                            GS.listLoci()))
-                else :
-                    W = GS.transcriptList[0]
+            GS, W = None, None
+            goi, toi = O.getOutput("geneSymbol")[-1]
+            #O.addMessage("DEBUG", 3, "DEBUG", `goi`+`toi`)
+            if parts.LrgAcc:                   # LRG
+                GS = GenRecordInstance.record.geneList[0] #LRG pick top gene
+                if toi:
+                    W = GS.findLocus(toi)
+                    if not W:
+                        O.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                            "Multiple transcripts found for gene %s. Please " \
+                            "choose from: %s" %(GS.name,
+                                ", ".join(GS.listLoci())))
+                else:                       # No transcript id given
+                    if len(GS.transcriptList) == 1:
+                        #No transcript given, only 1 found
+                        W = GS.transcriptList[0]
+                    else:
+                        O.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                            "No transcript given for gene %s. Please " \
+                            "choose from: %s" %(GS.name,
+                                ", ".join(GS.listLoci())))
+
             #if
-            elif parts.LrgAcc:                   # LRG
+            else:
+                # gene of interest
+                genes = GenRecordInstance.record.listGenes()
+                toi = toi and "%.3i" % int(toi)
+
+                if goi in genes: #we found our gene
+                    GS = GenRecordInstance.record.findGene(goi)
+                elif (len(genes) == 1) and not(goi):
+                    #There is only one gene in the Record, message?
                     GS = GenRecordInstance.record.geneList[0]
-                    if parts.LRGTranscriptID:
-                        W = GS.findLocus(parts.LRGTranscriptID)
-                        if not W:
-                            O.addMessage(__file__, 3, "ENOTRANSCRIPT",
-                                "Transcript %s not found for gene %s. Please " \
-                                "choose from: %s" %(parts.LRGTranscriptID,
-                                    GS.name, GS.listLoci()))
-                    else:                       # No transcript id given
-                        if len(GS.transcriptList) == 1:
-                            #No transcript given, only 1 found
-                            W = GS.transcriptList[0]
-                        else:
-                            O.addMessage(__file__, 3, "ENOTRANSCRIPT",
-                                "No transcript given for gene %s. Please " \
-                                "choose from: %s" %(GS.name, GS.listLoci()))
-            else :
-                W = GenRecordInstance.record.geneList[0].transcriptList[0]
+                else:
+                    O.addMessage(__file__, 4, "EINVALIDGENE",
+                        "Gene %s not found. Please choose from: %s" % (
+                        goi, ", ".join(genes)))
+
+                if GS:
+                    #Find Transcript
+                    transcripts = GS.listLoci()
+                    if toi in transcripts:
+                        W = GS.findLocus(toi)
+                    elif (len(transcripts) == 1) and not(toi):
+                        W = GS.transcriptList[0]
+                    else:
+                        O.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                            "Multiple transcripts found for gene %s. Please " \
+                            "choose from: %s" %(GS.name,
+                            ", ".join(GS.listLoci())))
+            #else
+
+            # Add seletcted geneSymbol to output
+            O.addOutput("geneSymbol", (GS and GS.name or "", W and W.name or ""))
+
+            # Return if no transcript is selected
+            if not W:
+                #Skip all BatchJobs with the same preColon data
+                O.addOutput("BatchFlags", ("S2",
+                    O.getOutput("preColon")[-1]))
+                return None #Explicit return in case of an error
         #if
         else :
             W = None
-        #if W and not W.location :
-        #    W = None
+
 
         if parts.SingleAlleleVarSet:
             for i in parts.SingleAlleleVarSet :
@@ -1032,150 +1045,191 @@ def process(cmd, C, O) :
     ParseObj = parser.parse(cmd)
     del parser
 
-    if ParseObj :
-        if ParseObj.Version :
-            RetrieveRecord = ParseObj.RefSeqAcc + '.' + ParseObj.Version
-        else :
-            RetrieveRecord = ParseObj.RefSeqAcc
+    if not ParseObj :
+        #Parsing went wrong
+        return None     #Excplicit return of None in case of an error
 
-        D = Db.Cache(C.Db)
-        if ParseObj.LrgAcc :
-            filetype = "LRG"
-            RetrieveRecord = ParseObj.LrgAcc
-            retriever = Retriever.LargeRetriever(C.Retriever, O, D)
-        else :
-            retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
-            filetype = "GB"
+    if ParseObj.Version :
+        RetrieveRecord = ParseObj.RefSeqAcc + '.' + ParseObj.Version
+    else :
+        RetrieveRecord = ParseObj.RefSeqAcc
 
-        record = retriever.loadrecord(RetrieveRecord)
-        #if record and record.version and not '.' in RetrieveRecord : #FIXME
-        #    O.addOutput("reference", RetrieveRecord + '.' + record.version)
-        #else :
-        O.addOutput("reference", RetrieveRecord)
-
-        if not record :
-            return
-        del retriever
-        del D
-
-        GenRecordInstance = GenRecord.GenRecord(O)
-        GenRecordInstance.record = record
-        GenRecordInstance.checkRecord()
-        #NOTE:  GenRecordInstance is carrying the sequence in   .record.seq
-        #       so is the Mutator.Mutator instance MUU          .orig
-
-        MUU = Mutator.Mutator(GenRecordInstance.record.seq, C.Mutator, O)
-        __ppp(MUU, ParseObj, GenRecordInstance, O)
-
-        # PROTEIN
-        for i in GenRecordInstance.record.geneList :
-            #if i.location :
-            for j in i.transcriptList :
-                if not ';' in j.description and j.CDS :
-                    cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
-                              IUPAC.unambiguous_dna)
-                    cdsm = Seq(str(__nsplice(MUU.mutated, 
-                                             MUU.newSplice(j.mRNA.positionList), 
-                                             MUU.newSplice(j.CDS.location), 
-                                             j.CM.orientation)),
-                               IUPAC.unambiguous_dna)
-                    if j.CM.orientation == -1 :
-                        cds = Bio.Seq.reverse_complement(cds)
-                        cdsm = Bio.Seq.reverse_complement(cdsm)
-                    #if
-
-                    #if '*' in cds.translate()[:-1] :
-                    #    O.addMessage(__file__, 3, "ESTOP", 
-                    #                 "In frame stop codon found.")
-                    #    return
-                    ##if
-
-                    orig = cds.translate(table = j.txTable, cds = True, 
-                                         to_stop = True)
-                    trans = cdsm.translate(table = j.txTable, 
-                                           to_stop = True)
-
-                    cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
-                    j.proteinDescription = __toProtDescr(cdsLen, orig, trans)[0]
-
-        # /PROTEIN
-
-        reference = O.getOutput("reference")[0]
-        if ';' in GenRecordInstance.record.description :
-            descr = '['+GenRecordInstance.record.description+']'
-        else:
-            descr = GenRecordInstance.record.description
-
-        O.addOutput("genomicDescription", "%s:%c.%s" % (reference,
-            GenRecordInstance.record.molType, descr))
-
-        if GenRecordInstance.record._sourcetype == "LRG": #LRG record
-            #from collections import defaultdict
-            #toutput = defaultdict(list)
-            #poutput = defaultdict(list)
-            for i in GenRecordInstance.record.geneList:
-                for j in sorted(i.transcriptList, key = attrgetter("name")) :
-                    d = j.description
-                    d = ';' in d and '['+d+']' or d
-                    if j.name:
-                        O.addOutput("descriptions", (
-                            "%st%s:%c.%s" % (reference, j.name, j.molType,
-                              d)))
-                    else:
-                        O.addOutput("descriptions", (i.name))
-                    if j.molType == 'c':
-                        O.addOutput("protDescriptions", (
-                                "%sp%s:%s" % (reference, j.name,
-                                    j.proteinDescription)))
-                        #poutput[i.name].sort()
-                #toutput[i.name].sort()
-        #if
-        else :
-            for i in GenRecordInstance.record.geneList :
-                names = {}
-                for j in sorted(i.transcriptList, key = attrgetter("name")) :
-                    cName, pName = None, None
-                    if ';' in j.description :
-                        descr = '['+j.description+']'
-                    else:
-                        descr = j.description
-                    O.addOutput("descriptions", "%s(%s_v%s):%c.%s" % (
-                        reference, i.name, j.name, j.molType, descr))
-
-                    if (j.molType == 'c') :
-                        O.addOutput("protDescriptions", "%s(%s_i%s):%s" % (
-                            reference, i.name, j.name,
-                            j.proteinDescription))
-                        cName = "c.%s" % descr
-                        pName = j.proteinDescription
-                    names[j.name] = (cName, pName)
-                #O.addOutput("batch", (i.name, names))
-                #for
-        #else
-
-        # LEGEND
-        for i in GenRecordInstance.record.geneList :
-            for j in i.transcriptList :
-
-                if not j.name: continue #Exclude nameless transcripts
-
-                O.addOutput("legends", ["%s_v%s" % (i.name, j.name),
-                            str(j.transcriptID), str(j.locusTag)])
-                O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
-                            str(j.proteinID), str(j.locusTag)])
-            #for
-
-        #Add GeneSymbol and Transcript Var to the Output object for batch
+    D = Db.Cache(C.Db)
+    if ParseObj.LrgAcc :
+        filetype = "LRG"
+        RetrieveRecord = ParseObj.LrgAcc
+        geneSymbol = ("", ParseObj.LRGTranscriptID)
+        retriever = Retriever.LargeRetriever(C.Retriever, O, D)
+    else :
         if ParseObj.Gene:
-            O.addOutput("geneOfInterest", dict(ParseObj.Gene.items()))
+            geneSymbol = (ParseObj.Gene.GeneSymbol or "",
+                    ParseObj.Gene.TransVar or "")
         else:
-            O.addOutput("geneOfInterest", dict())
+            geneSymbol = ("", "")
+        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        filetype = "GB"
 
-        _createBatchOutput(GenRecordInstance, O, ParseObj)
+    # Store the recordType for output formatting
+    O.addOutput("recordType", filetype)
 
-        del MUU
+    # Note concerning objects in outputObject, example:
+    # O.getOutput('reference')[-1] countains the last added value
+    # O.getOutput('reference')[0] countains the first added value
+    # These can refer to the same element
+    O.addOutput("reference", RetrieveRecord)
 
-        return GenRecordInstance
+    # The geneSymbol[0] is used as a filter for batch runs
+    O.addOutput("geneSymbol", geneSymbol) #tuple(Gene, TransV)
+
+    # preColon is used to filter out Batch entries
+    # that will result in identical errors
+    O.addOutput("preColon", cmd.split(":")[0])
+    O.addOutput("variant", cmd.split(":")[-1])
+
+    record = retriever.loadrecord(RetrieveRecord)
+    #if record and record.version and not '.' in RetrieveRecord : #FIXME
+    #    O.addOutput("reference", RetrieveRecord + '.' + record.version)
+    #else :
+
+    if not record :
+        return
+    del retriever
+    del D
+
+    GenRecordInstance = GenRecord.GenRecord(O)
+    GenRecordInstance.record = record
+    GenRecordInstance.checkRecord()
+    #NOTE:  GenRecordInstance is carrying the sequence in   .record.seq
+    #       so is the Mutator.Mutator instance MUU          .orig
+    MUU = Mutator.Mutator(GenRecordInstance.record.seq, C.Mutator, O)
+    __ppp(MUU, ParseObj, GenRecordInstance, O)
+    # PROTEIN
+    for i in GenRecordInstance.record.geneList :
+        #if i.location :
+        for j in i.transcriptList :
+            if not ';' in j.description and j.CDS :
+                cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)),
+                          IUPAC.unambiguous_dna)
+                cdsm = Seq(str(__nsplice(MUU.mutated,
+                                         MUU.newSplice(j.mRNA.positionList),
+                                         MUU.newSplice(j.CDS.location),
+                                         j.CM.orientation)),
+                           IUPAC.unambiguous_dna)
+                if j.CM.orientation == -1 :
+                    cds = Bio.Seq.reverse_complement(cds)
+                    cdsm = Bio.Seq.reverse_complement(cdsm)
+                #if
+
+                #if '*' in cds.translate()[:-1] :
+                #    O.addMessage(__file__, 3, "ESTOP", 
+                #                 "In frame stop codon found.")
+                #    return
+                ##if
+
+                orig = cds.translate(table = j.txTable, cds = True, 
+                                     to_stop = True)
+                trans = cdsm.translate(table = j.txTable, 
+                                       to_stop = True)
+
+                cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
+                j.proteinDescription = __toProtDescr(cdsLen, orig, trans)[0]
+
+    # /PROTEIN
+
+    reference = O.getOutput("reference")[-1]
+    if ';' in GenRecordInstance.record.description :
+        descr = '['+GenRecordInstance.record.description+']'
+    else:
+        descr = GenRecordInstance.record.description
+
+    O.addOutput("genomicDescription", "%s:%c.%s" % (reference,
+        GenRecordInstance.record.molType, descr))
+    O.addOutput("gDescription", "%c.%s" % (
+        GenRecordInstance.record.molType, descr))
+
+    if GenRecordInstance.record._sourcetype == "LRG": #LRG record
+        for i in GenRecordInstance.record.geneList:
+            for j in sorted(i.transcriptList, key = attrgetter("name")) :
+                (iName, jName, mType, cDescr, pDescr,
+                        gAcc, cAcc, pAcc, fullDescr, fullpDescr) =\
+                    (i.name, j.name, j.molType, "", "", "", "", "", "", "")
+
+                if ';' in j.description:
+                    descr = '['+j.description+']'
+                else:
+                    descr = j.description
+
+                if j.name:
+                    fullDescr =\
+                        "%st%s:%c.%s" % (reference, j.name, j.molType, descr)
+                    O.addOutput("descriptions", fullDescr)
+                else:
+                    O.addOutput("descriptions", (i.name))
+
+                if j.molType == 'c':
+                    cDescr = "c.%s" % descr
+                    pDescr = j.proteinDescription
+                    fullpDescr = "%sp%s:%s" % (reference, j.name, pDescr)
+                    O.addOutput("protDescriptions", fullpDescr)
+                    cAcc, pAcc = j.transcriptID, j.proteinID
+
+                O.addOutput("NewDescriptions", (
+                    iName, jName, mType, cDescr, pDescr, gAcc,
+                    cAcc, pAcc, fullDescr, fullpDescr))
+
+    #if
+    else :
+        for i in GenRecordInstance.record.geneList :
+            for j in sorted(i.transcriptList, key = attrgetter("name")) :
+                (iName, jName, mType, cDescr, pDescr,
+                        gAcc, cAcc, pAcc, fullDescr, fullpDescr) =\
+                    (i.name, j.name, j.molType, "", "", "", "", "", "", "")
+
+                if ';' in j.description :
+                    descr = '['+j.description+']'
+                else:
+                    descr = j.description
+
+                fullDescr = "%s(%s_v%s):%c.%s" % (reference,\
+                        iName, jName, mType, descr)
+                O.addOutput("descriptions", fullDescr)
+
+                if (j.molType == 'c') :
+                    cDescr = "c.%s" % descr
+                    pDescr = j.proteinDescription
+                    fullpDescr = "%s(%s_i%s):%s" % (
+                        reference, iName, jName, pDescr)
+                    O.addOutput("protDescriptions", fullpDescr)
+                    cAcc, pAcc = j.transcriptID, j.proteinID
+
+                O.addOutput("NewDescriptions", (
+                    iName, jName, mType, cDescr, pDescr, gAcc,
+                    cAcc, pAcc, fullDescr, fullpDescr))
+            #for
+    #else
+
+    # LEGEND
+    for i in GenRecordInstance.record.geneList :
+        for j in i.transcriptList :
+
+            if not j.name: continue #Exclude nameless transcripts
+
+            O.addOutput("legends", ["%s_v%s" % (i.name, j.name),
+                        str(j.transcriptID), str(j.locusTag)])
+            O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
+                        str(j.proteinID), str(j.locusTag)])
+        #for
+
+    #Add GeneSymbol and Transcript Var to the Output object for batch
+    if ParseObj.Gene:
+        O.addOutput("geneOfInterest", dict(ParseObj.Gene.items()))
+    else:
+        O.addOutput("geneOfInterest", dict())
+
+    _createBatchOutput(O)
+
+    del MUU
+    return GenRecordInstance
     #if
 #process
 
@@ -1217,7 +1271,7 @@ def main(cmd) :
             print
         #if
 
-        reference = O.getOutput("reference")[0]
+        reference = O.getOutput("reference")[-1]
         for i in O.getOutput("descriptions") :
             print i
         print
@@ -1330,5 +1384,6 @@ def main(cmd) :
 #main
 
 if __name__ == "__main__" :
-    main(sys.argv[1])
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
 #if

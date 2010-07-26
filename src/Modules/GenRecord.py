@@ -87,6 +87,7 @@ class Locus(object) :
         self.CM = None
         self.transcriptID = None
         self.proteinID = None
+        self.genomicID = None
         self.molType = 'c'
         self.description = ""
         self.proteinDescription = "?"

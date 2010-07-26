@@ -1,4 +1,9 @@
 Information:
+N :     No Error
+E :     Unspecified
+R :     Record related
+D :     Description error
+
 INFO        | N | Information.
 
 Warnings:
@@ -16,7 +21,8 @@ WNOVER      | R | No accession version number was given.
 WHASH       | N | Hash of a GenBank record has changed.
 WNOCHANGE   | D | Variant equals reference sequence.
 WNOTMINIMAL | D | A shorter description of a raw variant is possible.
-WPEND       | E | The LRG file is still pending
+WPEND       | R | The LRG file is still pending
+WDIFFFOUND  | D | 
 
 Errors:
 ENOVAR      | D | No mutation given.
@@ -39,6 +45,11 @@ EFILESIZE   | N | The filesize is either too large or too small.
 ERETR       | R | Could not retrieve a GenBank record.
 EARG        | N | Error in the arguments (of a webservice).
 ERANGE      | D | Position out of range (webservice).
+EONLYGB     | D | Conversion only supports GenBank Files
+EACCNOTINDB | E | Accession Number Not in Database
+ENOVERSION  | D | Must supply a version number
+
+
 
 EINVALIDGENE | D | Invalid gene name given.
 EINVALIDTRANSCRIPT | D | Invalid gene name given.

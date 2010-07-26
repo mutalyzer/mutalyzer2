@@ -87,7 +87,6 @@ def handler(req):
         req.content_type = 'text/plain'
         req.headers_out["Content-Disposition"] = \
             "attachment; filename = \"%s\"" % reqFile # To force downloading.
-        args = {"path" : reqPath}                     # Replace the path.
         req.write(W.tal("TEXT", "templates/" + reqFile, args))
         return apache.OK
     #if
@@ -96,8 +95,11 @@ def handler(req):
     if "Results" in req.uri:
         reqFile = req.uri.split('/')[-1]
         C = Config.Config()
-        req.write(open("%s/%s" % (C.Scheduler.resultsDir, reqFile)).read())
-        del C
+        req.headers_out["Content-Disposition"] = \
+            "attachment; filename = \"%s\"" % reqFile # To force downloading.
+        fh = open("%s/%s" % (C.Scheduler.resultsDir, reqFile))
+        req.write(fh.read())
+        fh.close()
         return apache.OK
     #if
 

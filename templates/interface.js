@@ -40,3 +40,70 @@ function toggle_visibility(id) {
         e.style.display = 'block';
     }
 }
+
+
+var doInterval;
+function onloadBatch() {
+    changeBatch(document.getElementById('batchType'));
+    doInterval = setInterval(updatePercentage, 3000);
+}
+
+// Get the HTTP Object
+function getHTTPObject(){
+    if (window.ActiveXObject)
+        return new ActiveXObject("Microsoft.XMLHTTP");
+    else if (window.XMLHttpRequest) 
+        return new XMLHttpRequest();
+    else {
+        alert("Your browser does not support AJAX.");
+        return null;
+    }
+}
+
+function updatePercentage() {
+    if (!document.getElementById('jobID')){ return; };
+    id = document.getElementById('jobID').value;
+    total = document.getElementById('totalJobs').value;
+    var url = 'progress?jobID='+id+'&totalJobs='+total+'&ajax=1';
+
+    http = getHTTPObject();
+    if (http == null){
+        val = "Your browser does not support Ajax, swith to a different ";
+        val +="or wait for the email to arrive."
+        document.getElementById('percent').innerHTML = val;
+        clearInterval(doInterval);
+        return null;
+    }
+
+    http.open("GET", url, true);
+    http.onreadystatechange=function() {
+      if(http.readyState == 4) {
+          if (http.responseText == "OK"){
+              val = "Your job is finished, results can be downloaded from: ";
+              val += "<a href='Results_"+id+".txt'>here</a>";
+              clearInterval(doInterval);
+          } else if (isNaN(http.responseText)){
+                  //Something went wrong
+                  val = "Updating went wrong please wait for your email";
+                  clearInterval(doInterval);
+          } else {
+                  val = "Your job is in progress and currently at ";
+                  val += parseInt(http.responseText);
+                  val += "%.";
+          }
+      }
+      document.getElementById('percent').innerHTML = val;
+    }
+    http.send(null);
+}
+
+function linkify(text){
+    var replacePattern = /(\S+\:[cgnp]\.\[?[\S]+\]?)(<)/gim;
+    var replacedText = text.replace(replacePattern, '<a href="http://localhost/mutalyzer2/redirect?mutationName=$1">$1</a>$2');
+    return replacedText
+}
+
+function makeMutalyzer(){
+    var iBody = document.body.innerHTML;
+    document.body.innerHTML = linkify(iBody);
+}

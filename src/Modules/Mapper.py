@@ -263,27 +263,45 @@ class Converter(object):
 
     def _FieldsFromDb(self, acc, version):
         """Get data from database and populate dbFields dict"""
-        Values = self.__database.getAllFields(acc, version)
-        if Values[-1] is None:
-            versions = self.__database.get_NM_version(acc)
-            if not versions:
-                self.__output.addMessage(__file__, 4, "ENOTFOUND",
-                        "The accession number: %s could not be "
-                        "found in our database." % acc)
-            else:
-                if not version:
-                    self.__output.addMessage(__file__, 4, "ENOVERSION",
-                        "Version number missing for %s" % acc)
-                else:
-                    self.__output.addMessage(__file__, 4, "ENOTFOUND",
-                        "The accession number: %s version %s "
-                        "could not be found in our database." %
-                        (acc, version))
-                self.__output.addMessage(__file__, 2, "WDIFFFOUND",
-                    "We found these versions: %s" %
-                    (", ".join("%s.%s" % (acc, i) for i in sorted(versions))))
+        if version is None:
+            version = 0
+        version = int(version)
+        versions = self.__database.get_NM_version(acc)
+        if not versions:
+            self.__output.addMessage(__file__, 4, "EACCNOTINDB",
+                    "The accession number: %s could not be "
+                    "found in our database." % acc)
+            self.__output.addOutput("LOVDERR",
+                    "Reference sequence version not found.")
             return None     #Excplicit return of None in case of error
-        return self._FieldsFromValues(Values)
+        else:
+            if version in versions:
+                Values = self.__database.getAllFields(acc, version)
+                return self._FieldsFromValues(Values)
+
+            if not version:
+                self.__output.addMessage(__file__, 4, "ENOVERSION",
+                    "Version number missing for %s" % acc)
+            else:
+                self.__output.addMessage(__file__, 4, "EACCNOTINDB",
+                    "The accession number: %s version %s "
+                    "could not be found in our database." %
+                    (acc, version))
+            self.__output.addMessage(__file__, 2, "WDIFFFOUND",
+                "We found these versions: %s" %
+                (", ".join("%s.%s" % (acc, i) for i in sorted(versions))))
+
+            #LOVD list of versions available
+            self.__output.addOutput("LOVDERR",
+                    "Reference sequence version not found. "
+                    "Available: %s" %
+                (", ".join("%s.%s" % (acc, i) for i in sorted(versions))))
+
+            #LOVD Only newest
+            #self.__output.addOutput("LOVDERR",
+            #        "Reference sequence version not found. "
+            #        "Available: %s.%s" % (acc, sorted(versions)[-1]))
+            return None
 
     def makeCrossmap(self) :
         ''' Build the crossmapper
@@ -349,9 +367,35 @@ class Converter(object):
         return V
 
     def giveInfo(self, accNo) :
-        self._FieldsFromDb(*accNo.split('.'))
-        self.makeCrossmap()
-        return self.crossmap.info()
+        if '.' not in accNo:
+            acc, ver = accNo, None
+        else:
+            acc, ver = accNo.split('.')
+        self._FieldsFromDb(acc, ver)
+        CM = self.makeCrossmap()
+        if CM: return CM.info()
+
+    def mainTranscript(self, accNo):
+        """
+            One of the entry points (called by the HTML publisher).
+
+            Arguments:
+                acc     ; The full NM accession number (including version).
+
+            Returns:
+                T       ; ClassSerializer object with the types trans_start,
+                          trans_stop and CDS_stop.
+
+        """
+        # Initiate ClassSerializer object
+        info = self.giveInfo(accNo)
+        T = Transcript()
+        if info:
+            T.trans_start = info[0]
+            T.trans_stop  = info[1]
+            T.CDS_stop    = info[2]
+        return T
+    #mainTranscript
 
     def mainMapping(self, accNo, mutation) :
         """
@@ -417,6 +461,8 @@ class Converter(object):
     #cTog
 
     def correctChrVariant(self, variant):
+        #Remove whitespace
+        variant = variant.replace(" ","")
         if variant.startswith("chr"):
             if ':' not in variant:
                 self.__output.addMessage(__file__, 4, "EPARSE",
@@ -516,30 +562,4 @@ class Converter(object):
     #_constructChange
 
 
-def mainTranscript(build, acc, C, Cross) :
-    """
-        One of the entry points (called by the HTML publisher).
 
-        Arguments:
-            build   ; The human genome build.
-            acc     ; The full NM accession number (including version).
-            C       ; Conf object
-
-        Returns:
-            T       ; ClassSerializer object with the types trans_start,
-                      trans_stop and CDS_stop.
-
-    """
-
-    # Initiate ClassSerializer object
-    T = Transcript()
-    # Return transcription start, transcription end and
-    # CDS stop in c. notation.
-    info = Cross.info()
-    # Assign these values to the Transcript T types.
-    T.trans_start = info[0]
-    T.trans_stop  = info[1]
-    T.CDS_stop    = info[2]
-
-    return T
-#mainTranscript

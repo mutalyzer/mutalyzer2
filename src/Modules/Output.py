@@ -313,7 +313,7 @@ class Output() :
 
         if self.__outputData.has_key(name) :
             return self.__outputData[name]
-        return None
+        return []
     #getOutput
 
     def getIndexedOutput(self, name, index) :
@@ -325,6 +325,14 @@ class Output() :
                 return self.__outputData[name][index]
         return None
     #getFirst
+
+    def getMessagesWithErrorCode(self, errorcode):
+        ret = []
+        for i in self.__messages:
+            if i.code == errorcode:
+                ret.append(i)
+        return ret
+
 
     def Summary(self) :
         """

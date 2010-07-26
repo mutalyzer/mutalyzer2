@@ -1,3 +1,5 @@
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 from Modules import GenRecord
 import xml.dom.minidom
 DEBUG = False
@@ -44,7 +46,7 @@ def createLrgRecord(data):
     # Fixed Section
     assert(_getContent(fixed, "mol_type") == "dna")
     record.molType = 'g'
-    record.seq = _getContent(fixed, "sequence")
+    record.seq = Seq(_getContent(fixed, "sequence"), IUPAC.unambiguous_dna)
 
     # Get the genename of the fixed gene
     geneName = updParsed["LRG"]["genename"]

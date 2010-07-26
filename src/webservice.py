@@ -333,21 +333,19 @@ class MutalyzerService(SimpleWSGISoapApp) :
         """
 
         C = Config.Config()
-        L = Output.Output(__file__, C.Output)
+        O = Output.Output(__file__, C.Output)
 
-        L.addMessage(__file__, -1, "INFO",
+        O.addMessage(__file__, -1, "INFO",
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
-        Cross = Mapper.makeCrossmap(build, accNo, C)
-        result = Mapper.mainTranscript(build, accNo, C, Cross)
+        converter = Mapper.Converter(build, C, O)
+        T = converter.mainTranscript(accNo)
 
-        L.addMessage(__file__, -1, "INFO",
+        O.addMessage(__file__, -1, "INFO",
                      "Finished processing transcriptInfo(%s %s %s)" % (
                      LOVD_ver, build, accNo))
-
-        del L, C
-        return result
+        return T
     #transcriptInfo
 
     @soapmethod(String, String, _returns = String)
@@ -446,7 +444,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromosomeName
 
-    @soapmethod(String, String, _returns = String)
+    @soapmethod(String, String, _returns = Array(String))
     def numberConversion(self, build, variant) :
         """
             Converts c. to g. notation or vice versa
@@ -464,25 +462,24 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         C = Config.Config() # Read the configuration file.
         D = Mapping(build, C.Db)
-        L = Output.Output(__file__, C.Output)
-        L.addMessage(__file__, -1, "INFO",
+        O = Output.Output(__file__, C.Output)
+        O.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
-
-        self.__checkBuild(build, C.Db)
-        self.__checkVariant(L, variant)
+        converter = Mapper.Converter(build, C, O)
+        variant = converter.correctChrVariant(variant)
 
         if "c." in variant :
-            result = Mapper.cTog(build, variant, C, D, L)
-        if "g." in variant :
-            result = Mapper.gToc(build, variant, C, D, L)
+            result = [converter.c2chrom(variant)]
+        elif "g." in variant :
+            result = converter.chrom2c(variant)
+        else:
+            result = [""]
 
-        L.addMessage(__file__, -1, "INFO",
+        O.addMessage(__file__, -1, "INFO",
                      "Finished processing cTogConversion(%s %s)" % (
                      build, variant))
-
-        del C, D, L
-        return [result]
+        return result
     #numberConversion
 
     @soapmethod(String, _returns = String)
