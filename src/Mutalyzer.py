@@ -4,7 +4,6 @@
     The nomenclature checker.
 """
 
-import time
 import sys
 import math
 import types
@@ -27,14 +26,21 @@ from Modules import Config
 
 from operator import itemgetter, attrgetter
 
-#def __order(a, b) :
-#    """
-#    """
-#
-#    if a < b :
-#        return a, b
-#    return b, a
-##__order
+#TODO: SET TO FALSE DEBUG FLAG
+DEBUG = False
+
+def __intronicPosition(Loc) :
+    """
+    """
+
+    if not Loc :
+        return False
+    if not Loc.PtLoc :
+        return False
+    if not Loc.PtLoc.Offset :
+        return False
+    return True
+#__intronicPosition
 
 def __roll(ref, start, stop) :
     """
@@ -96,45 +102,6 @@ def __bprint(s, O, where) :
     O.addOutput(where, output)
 #__bprint
 
-#def __Xbprint2(s, pos1, pos2, O, where) :
-#    """
-#    """
-#
-#    if not s :
-#        return
-#
-#    block = 10
-#    line = 6 * block
-#    tag1 = "<tt style=\"color:#FF0080\">"
-#    tag2 = "</tt>"
-#
-#    m = int(math.floor(math.log(len(s), 10)) + 1)
-#    o = 1
-#
-#    newString = s[:pos1] + tag1 + s[pos1:pos2] + tag2 + s[pos2:]
-#
-#    output = "%s " % str(o).rjust(m)
-#
-#    i = 0
-#    seen = 0
-#    while i < len(s) + len(tag1) + len(tag2) :
-#        skip = 0
-#        if i <= pos1 < i + block :
-#            skip += len(tag1)
-#        if i <= pos2 < i + block :
-#            skip += len(tag2)
-#        output += "%s " % newString[i:i + block + skip]
-#        seen += block
-#        if not (seen) % line and seen < len(s) :
-#            o += line
-#            O.addOutput(where, output)
-#            output = "%s " % str(o).rjust(m)
-#        #if
-#        i += block + skip
-#    #while
-#    O.addOutput(where, output)
-##__bprint2
-
 def __insertTag(s, pos1, pos2, tag1, tag2) :
     """
     """
@@ -171,7 +138,7 @@ def __bprint2(s, pos1, pos2, O, where) :
     o = 1
     output = "%s " % str(o).rjust(m)
     for i in range(0, len(s), block) :
-        output += ' ' + __insertTag(s[i:i + block], pos1 - i, 
+        output += ' ' + __insertTag(s[i:i + block], pos1 - i,
                                     pos2 - i, tag1, tag2)
         if not (i + block) % line and i + block < len(s) :
             o += line
@@ -430,8 +397,13 @@ def __toProtDescr(CDSStop, orig, trans) :
     """
 
     if CDSStop % 3 :
-        return findFrameShift(str(orig), str(trans))
-    return findInFrameDescription(str(orig), str(trans))
+        ret = findFrameShift(str(orig), str(trans))
+    else :
+        ret = findInFrameDescription(str(orig), str(trans))
+    if str(orig[0:3]) != str(trans[0:3]) :
+        print ret
+        return ("p.?", ret[1], ret[2], ret[3])
+    return ret
 #__toProtDescr
 
 def __trim2(str1, str2) :
@@ -451,18 +423,6 @@ def __rangeToC(M, g1, g2) :
         return M.g2c(g2), M.g2c(g1)
     return M.g2c(g1), M.g2c(g2)
 #__rangeToC
-
-#def __makeSet(seq, rb) :
-#    a = Restriction.Analysis(rb, seq)
-#    d = a.with_sites()
-#
-#    ss = set()
-#    for i in d.keys() :
-#        for j in d[i] :
-#            ss.add((i, j))
-#
-#    return ss
-##__makeSet
 
 def _createBatchOutput(O):
     """
@@ -652,14 +612,10 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     newStop = MUU.shiftpos(start_g) + insertionLength
     roll = __roll(MUU.mutated, newStart + 1, newStop)
 
-    #roll = __roll(MUU.orig, start_g, end_g)
-
     shift = roll[1]
     if GenRecordInstance.record.molType == 'n' :
         mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
             ].mRNA.positionList
-        #print mRNA
-        #print newStop - roll[0], newStop + roll[1]
         for i in mRNA :
             if newStop <= i and newStop + roll[1] > i :
                 print "ALARM"
@@ -776,8 +732,6 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     #print RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main
     #print __PtLoc2offset(RawVar.StartLoc.PtLoc)
 
-
-
     Arg1 = RawVar.Arg1
     Arg2 = RawVar.Arg2
     
@@ -792,6 +746,10 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     #if
     else :
         if RawVar.StartLoc.IVSLoc :
+            if GenRecordInstance.record.molType != 'g' :
+                O.addMessage(__file__, 3, "ENOINTRON", "Intronic position " \
+                    "given for a non-genomic reference sequence.")
+                return
             start_g = __ivs2g(RawVar.StartLoc.IVSLoc, transcript)
             if not start_g :
                 O.addMessage(__file__, 3, "EPOS", "Invalid IVS position given.")
@@ -805,6 +763,12 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             #if
         #if
         else :        
+            if GenRecordInstance.record.molType != 'g' and \
+               (__intronicPosition(RawVar.StartLoc) or 
+                __intronicPosition(RawVar.EndLoc)) :
+                O.addMessage(__file__, 3, "ENOINTRON", "Intronic position " \
+                    "given for a non-genomic reference sequence.")
+                return
             start_g, end_g = __normal2g(RawVar, transcript)
     #else            
 
@@ -892,7 +856,6 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         if parts.RefType in ['c', 'n'] :
             GS, W = None, None
             goi, toi = O.getOutput("geneSymbol")[-1]
-            #O.addMessage("DEBUG", 3, "DEBUG", `goi`+`toi`)
             if parts.LrgAcc:                   # LRG
                 GS = GenRecordInstance.record.geneList[0] #LRG pick top gene
                 if toi:
@@ -954,7 +917,10 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         #if
         else :
             W = None
-
+        #if W and not W.location :
+        #    W = None
+        if W and not W.transcribe :
+            return
 
         if parts.SingleAlleleVarSet:
             for i in parts.SingleAlleleVarSet :
@@ -979,6 +945,9 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         cdsStop = W.CM.info()[2]
         O.addOutput("cdsStop_g", W.CM.x2g(cdsStop, 0))
         O.addOutput("cdsStop_c", cdsStop)
+
+        if W.transcribe :
+            O.addOutput("myTranscriptDescription", W.description)
 
         if W.translate :
             cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)),
@@ -1019,23 +988,17 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
             else :
                 cdsLen = __cdsLen(MUU.newSplice(W.CDS.positionList))
                 descr = __toProtDescr(cdsLen, orig, trans)
+                print descr
+                O.addOutput("myProteinDescription", descr[0])
 
                 __bprint2(orig + '*', descr[1], descr[2], O, 
                     "oldProteinFancy")
-                O.addOutput("newprotein", trans + '*')
-                __bprint2(trans + '*', descr[1], descr[3], O, 
-                    "newProteinFancy")
+                if str(orig) != str(trans) :
+                    O.addOutput("newprotein", trans + '*')
+                    __bprint2(trans + '*', descr[1], descr[3], O, 
+                        "newProteinFancy")
             #else
         #if
-
-        #if not parts.SingleAlleleVarSet :
-        #    #O.addOutput("proteindescription", "p.?")
-        #    # FIXME
-        #    O.addOutput("proteindescription", __toProtDescr(
-        #        W.CM.g2x(MUU.newSplice(W.CDS.location)[1])[0], orig, trans))
-        #else :
-        #    O.addOutput("proteindescription", "p.?")
-        #del W.CM
     #if
 #__ppp
 
@@ -1044,7 +1007,6 @@ def process(cmd, C, O) :
     O.addOutput("inputvariant", cmd)
     ParseObj = parser.parse(cmd)
     del parser
-
     if not ParseObj :
         #Parsing went wrong
         return None     #Excplicit return of None in case of an error
@@ -1096,23 +1058,25 @@ def process(cmd, C, O) :
     del retriever
     del D
 
-    GenRecordInstance = GenRecord.GenRecord(O)
+    GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
     GenRecordInstance.record = record
     GenRecordInstance.checkRecord()
     #NOTE:  GenRecordInstance is carrying the sequence in   .record.seq
     #       so is the Mutator.Mutator instance MUU          .orig
+
     MUU = Mutator.Mutator(GenRecordInstance.record.seq, C.Mutator, O)
     __ppp(MUU, ParseObj, GenRecordInstance, O)
+
     # PROTEIN
     for i in GenRecordInstance.record.geneList :
         #if i.location :
         for j in i.transcriptList :
-            if not ';' in j.description and j.CDS :
-                cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)),
+            if not ';' in j.description and j.CDS and j.translate :
+                cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
                           IUPAC.unambiguous_dna)
-                cdsm = Seq(str(__nsplice(MUU.mutated,
-                                         MUU.newSplice(j.mRNA.positionList),
-                                         MUU.newSplice(j.CDS.location),
+                cdsm = Seq(str(__nsplice(MUU.mutated, 
+                                         MUU.newSplice(j.mRNA.positionList), 
+                                         MUU.newSplice(j.CDS.location), 
                                          j.CM.orientation)),
                            IUPAC.unambiguous_dna)
                 if j.CM.orientation == -1 :
@@ -1126,14 +1090,21 @@ def process(cmd, C, O) :
                 #    return
                 ##if
 
-                orig = cds.translate(table = j.txTable, cds = True, 
-                                     to_stop = True)
-                trans = cdsm.translate(table = j.txTable, 
-                                       to_stop = True)
+                if not len(cds) % 3 :
+                    orig = cds.translate(table = j.txTable, cds = True, 
+                        to_stop = True)
+                    trans = cdsm.translate(table = j.txTable, 
+                        to_stop = True)
 
-                cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
-                j.proteinDescription = __toProtDescr(cdsLen, orig, trans)[0]
-
+                    cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
+                    j.proteinDescription = __toProtDescr(cdsLen, orig, 
+                        trans)[0]
+                #if
+                else :
+                    O.addMessage(__file__, 2, "ECDS", "CDS length is " \
+                        "not a multiple of three in gene %s, transcript " \
+                        "variant %s." % (i.name, j.name))
+                    j.proteinDescription = '?'
     # /PROTEIN
 
     reference = O.getOutput("reference")[-1]
@@ -1146,6 +1117,17 @@ def process(cmd, C, O) :
         GenRecordInstance.record.molType, descr))
     O.addOutput("gDescription", "%c.%s" % (
         GenRecordInstance.record.molType, descr))
+
+    if GenRecordInstance.record.chromOffset :
+        if ';' in GenRecordInstance.record.chromDescription :
+            chromDescr = '['+GenRecordInstance.record.chromDescription+']'
+        else:
+            chromDescr = GenRecordInstance.record.chromDescription
+
+        O.addOutput("genomicChromDescription", "%s:%c.%s" % (
+            GenRecordInstance.record.recordId, 
+            GenRecordInstance.record.molType, chromDescr))
+    #if
 
     if GenRecordInstance.record._sourcetype == "LRG": #LRG record
         for i in GenRecordInstance.record.geneList:
@@ -1177,7 +1159,7 @@ def process(cmd, C, O) :
                     iName, jName, mType, cDescr, pDescr, gAcc,
                     cAcc, pAcc, fullDescr, fullpDescr))
 
-    #if
+   #if
     else :
         for i in GenRecordInstance.record.geneList :
             for j in sorted(i.transcriptList, key = attrgetter("name")) :
@@ -1208,16 +1190,20 @@ def process(cmd, C, O) :
             #for
     #else
 
+
     # LEGEND
     for i in GenRecordInstance.record.geneList :
-        for j in i.transcriptList :
+        for j in sorted(i.transcriptList, key = attrgetter("name")) :
 
             if not j.name: continue #Exclude nameless transcripts
 
             O.addOutput("legends", ["%s_v%s" % (i.name, j.name),
-                        str(j.transcriptID), str(j.locusTag)])
-            O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
-                        str(j.proteinID), str(j.locusTag)])
+                        j.transcriptID, j.locusTag, 
+                        j.transcriptProduct, j.linkMethod])
+            if j.translate :
+                O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
+                    j.proteinID, j.locusTag, 
+                    j.proteinProduct, j.linkMethod])
         #for
 
     #Add GeneSymbol and Transcript Var to the Output object for batch
@@ -1229,6 +1215,7 @@ def process(cmd, C, O) :
     _createBatchOutput(O)
 
     del MUU
+
     return GenRecordInstance
     #if
 #process
@@ -1279,7 +1266,7 @@ def main(cmd) :
             print i
         print
 
-        if RD.record._sourcetype == "LRG": #LRG record
+        if RD.record and RD.record._sourcetype == "LRG": #LRG record
             from collections import defaultdict
             toutput = defaultdict(list)
             poutput = defaultdict(list)
@@ -1312,8 +1299,8 @@ def main(cmd) :
                 print key
                 for value in values:
                     print "\t"+value
-
-
+            #for
+        #if
         else :
             for i in RD.record.geneList :
                 for j in i.transcriptList :
@@ -1326,13 +1313,16 @@ def main(cmd) :
                         if (j.molType == 'c') :
                             print "%s(%s_i%s):%s" % (reference, i.name, j.name,
                                                      j.proteinDescription)
+                    #else
+                #for
             #for
-        #for
+        #else
 
         #Genomic Notation
         rdrd = RD.record.description
         gdescr = ';' in rdrd and '['+rdrd+']' or rdrd
         print "\nGenomic notation:\n\t%s:g.%s" % (reference, gdescr)
+        print O.getOutput("genomicChromDescription")
 
         op = O.getOutput("oldprotein")
         if op :
@@ -1371,13 +1361,12 @@ def main(cmd) :
             print i
 
         print
-        print "Added restriction sites:"
-        for i in O.getOutput("addedRestrictionSites") :
+        print "Restriction sites:"
+        for i in O.getOutput("restrictionSites") :
             print i
 
-        print "Deleted restriction sites:"
-        for i in O.getOutput("deletedRestrictionSites") :
-            print i
+        print "+++ %s" % O.getOutput("myTranscriptDescription")
+
     #if
     ### OUTPUT BLOCK ###
     del O
