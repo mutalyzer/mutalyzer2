@@ -115,13 +115,12 @@ def main(LOVD_ver, build, acc, var) :
         ret = Converter.mainMapping(acc, var)
     else :
         ret = Converter.giveInfo(acc)
+        if ret:
+            print "%i\n%i\n%i" % ret
+            return
 
     if not getattr(ret, "startmain", None) :
         print O.getOutput("LOVDERR")[0]
-        return
-
-    if not var:
-        print "%i\n%i\n%i" % ret
         return
 
     O.addMessage(__file__, -1, "INFO",

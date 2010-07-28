@@ -61,12 +61,6 @@ def index(req) :
     return W.tal("HTML", "templates/index.html", {})
 #index
 
-def redirect(req):
-    session = Session.Session(req)
-    session['mut'] = req.form.get("mutationName", None)
-    session.save()
-    util.redirect(req, "check", permanent=False)
-
 def check(req) :
     """
         The mutation checker page.
@@ -256,9 +250,7 @@ def Variant_info(req) :
     LOVD_ver = req.form['LOVD_ver']
     build = req.form['build']
     acc = req.form['acc']
-    var = ""
-    if req.form.has_key('var') :
-        var = req.form['var']
+    var = req.form.get("var", "")
 
     result = W.run(VarInfo.main, LOVD_ver, build, acc, var)
 

@@ -27,7 +27,20 @@ def _attr2dict(attr):
         ret[key.encode("utf-8")] = value
     return ret
 
+
+
 def createLrgRecord(data):
+    """
+        Create a GenRecord.Record of a LRG <xml> formatted string
+
+        Input:
+            data    :   String content of LRG file
+
+        Output
+            record  :   GenRecord.Record instance
+
+
+    """
     record = GenRecord.Record()
     record._sourcetype = "LRG"
 
@@ -39,16 +52,18 @@ def createLrgRecord(data):
     updParsed = parseUpdatable(updatable)
     __debugParsedData("Updatable Section",updParsed)
 
-    # Updatable Section
+    # Updatable Section get mapping and geneList
     record.mapping = getMapping(updParsed["LRG"]["mapping"])
     record.geneList = genesFromUpdatable(updParsed)
 
-    # Fixed Section
+    # Fixed Section get sequence
     assert(_getContent(fixed, "mol_type") == "dna")
     record.molType = 'g'
     record.seq = Seq(_getContent(fixed, "sequence"), IUPAC.unambiguous_dna)
 
-    # Get the genename of the fixed gene
+    # Get the genename of the fixed gene in the LRG and put that gene on top of
+    # the geneList. This is necessary because there is no way to otherwise
+    # identify the main gene in the LRG file.
     geneName = updParsed["LRG"]["genename"]
     gene = [gene for gene in record.geneList if gene.name == geneName][0]
     record.geneList.remove(gene)
@@ -118,7 +133,7 @@ def genesFromUpdatable(updParsed):
         genes.append(gene)
     #for
     for geneSymbol, geneData in updParsed["Ensembl"].items():
-        #add notation from gathered Ensembl annotation
+        #add notation from gathered Ensembl annotation TODO
         pass
     return genes
 #genesFromUpdatable
@@ -224,9 +239,11 @@ def getLrgAnnotation(data):
         # only the most recent mapping
         if not(mapattr.has_key("most_recent")): continue
 
-        # TODO: check if span exists
-        span = mapp.getElementsByTagName("mapping_span")[0]
-        spanattr = _attr2dict(span.attributes)
+        # check if span exists
+        for span in mapp.getElementsByTagName("mapping_span"):
+            spanattr = _attr2dict(span.attributes)
+            break
+        else: continue
 
         diffs = []
         for diff in span.getElementsByTagName("diff"):
@@ -234,7 +251,7 @@ def getLrgAnnotation(data):
         ret["mapping"] = (mapattr,spanattr,diffs)
     #for
 
-    # Get the LRG Gene Name
+    # Get the LRG Gene Name, this is the main gene in this LRG
     ret["genename"] = _getContent(data, "lrg_gene_name")
 
     return ret
@@ -243,8 +260,10 @@ def getLrgAnnotation(data):
 def getFeaturesAnnotation(data):
     ret = {} # Get annotation per gene symbol {"COL1A1":{}}
 
-    #TODO: check if features exists
+    #Check if features exists
+    if not data.getElementsByTagName("features"): return ret
     feature = data.getElementsByTagName("features")[0]
+
     for gene in feature.getElementsByTagName("gene"):
         geneAttr = _attr2dict(gene.attributes)
         geneLongName = _getContent(gene, "long_name")

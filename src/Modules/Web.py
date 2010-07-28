@@ -37,7 +37,7 @@ class Web() :
                 version ; Here the displayed version is defined.
         """
 
-        self.version = "2.0&alpha;-4"
+        self.version = "2.0&alpha;-5"
         self.nomenclatureVersion = "2.0"
     #__init__
 

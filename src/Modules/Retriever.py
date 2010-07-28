@@ -285,11 +285,11 @@ class GenBankRetriever(Retriever):
         fakehandle.seek(0)
         try :
             record = SeqIO.read(fakehandle, "genbank")
-        except ValueError :              # An error occured while parsing.
+        except (ValueError, AttributeError):  # An error occured while parsing.
             self._output.addMessage(__file__, 2, "ENOPARSE",
                     "The file could not be parsed.")
             fakehandle.close()
-            return None
+            return None, None
         #except
 
         if type(record.seq) == UnknownSeq :

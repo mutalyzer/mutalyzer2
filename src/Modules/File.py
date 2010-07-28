@@ -296,8 +296,6 @@ class File() :
                 self.__output.addMessage(__file__, 4, "EBPARSE",
                     "New Type Batch jobs (see help) should contain one "
                     "entry per line, please check line(s): %s" % lines)
-                self.__output.addMessage(__file__, 2, "DEBUG",
-                        `job`)
             else:
                 return [job[0] for line, job in jobl]
 

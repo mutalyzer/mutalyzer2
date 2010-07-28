@@ -862,7 +862,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                     W = GS.findLocus(toi)
                     if not W:
                         O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "Multiple transcripts found for gene %s. Please " \
+                            "Transcripts found for gene %s. Please " \
                             "choose from: %s" %(GS.name,
                                 ", ".join(GS.listLoci())))
                 else:                       # No transcript id given
@@ -900,7 +900,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                         W = GS.transcriptList[0]
                     else:
                         O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "Multiple transcripts found for gene %s. Please " \
+                            "Transcripts found for gene %s. Please " \
                             "choose from: %s" %(GS.name,
                             ", ".join(GS.listLoci())))
             #else

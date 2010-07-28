@@ -148,7 +148,7 @@ class GBparser() :
         if locus.qualifiers.has_key(key) :
             setattr(locus, key, locus.qualifiers[key][0])
         else :
-            setattr(locus, key, None)
+            setattr(locus, key, "")
     #__tagByDict
 
     def __tagLocus(self, locusList) :
@@ -157,12 +157,15 @@ class GBparser() :
 
         productList = []
         for i in locusList :
-            productList.extend(i.qualifiers["product"])
+            #productList.extend(i.qualifiers["product"])
             self.__tagByDict(i, "locus_tag")
             self.__tagByDict(i, "transcript_id")
             self.__tagByDict(i, "protein_id")
             self.__tagByDict(i, "gene")
             self.__tagByDict(i, "product")
+
+            productList.append(i.product)
+
             i.proteinLink = None
             i.linked = False
             if not i.transcript_id :

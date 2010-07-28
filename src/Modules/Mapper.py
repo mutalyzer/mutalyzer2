@@ -263,7 +263,7 @@ class Converter(object):
 
     def _FieldsFromDb(self, acc, version):
         """Get data from database and populate dbFields dict"""
-        if version is None:
+        if not version:
             version = 0
         version = int(version)
         versions = self.__database.get_NM_version(acc)
