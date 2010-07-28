@@ -18,6 +18,7 @@ from mod_python import apache, publisher
 
 from Modules import Web
 from Modules import Config
+from Modules import File
 
 import webservice
 
@@ -64,18 +65,20 @@ def handler(req):
 
     # Return raw content (for includes from an HTML file).
     if req.uri.endswith(".js") or "base" in req.uri :
-        req.content_type = 'text/html'
+        #req.content_type = 'text/html'
         req.write(W.read("templates/", req))
         return apache.OK
     #if
 
     # Make all txt files in downloads directory downloadable
-    if "downloads/" in req.uri and req.uri.endswith(".txt"):
-        req.content_type = 'text/plain'
+    if "downloads/" in req.uri :
         reqFile = req.uri.rsplit('/')[-1]
         req.headers_out["Content-Disposition"] = \
             "attachment; filename = \"%s\"" % reqFile # To force downloading.
         handle = open("templates/downloads/" + reqFile)
+        C = Config.Config()
+        F = File.File(C.File, None)
+        req.content_type = F.getMimeType(handle)[0]
         req.write(handle.read())
         handle.close()
         return apache.OK
@@ -119,7 +122,7 @@ def handler(req):
             del C
         #if
         else :
-            raise fileName
+            #raise fileName
             return apache.HTTP_FORBIDDEN
         return apache.OK
     #if

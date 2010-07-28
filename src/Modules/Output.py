@@ -323,7 +323,7 @@ class Output() :
         if self.__outputData.has_key(name) :
             if 0 <= index < len(self.__outputData[name]) :
                 return self.__outputData[name][index]
-        return None
+        return []
     #getFirst
 
     def getMessagesWithErrorCode(self, errorcode):

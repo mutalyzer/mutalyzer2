@@ -48,8 +48,32 @@ body, div, span, font, td {
 	text-decoration : none;
 }
 
-.rightTd {
+.raTable tr td {
   text-align : right;
+  border : 1px solid grey;
+  padding : 0px 4px; 
+}
+.raTable {
+  border : 1px solid grey;
+  border-collapse : collapse;
+}
+
+.laTable tr td {
+  border : 1px solid grey;
+  padding : 0px 4px; 
+}
+
+.laTable {
+  border : 1px solid grey;
+  border-collapse : collapse;
+}
+
+.helper {
+  border : 1px dotted grey;
+  background-color : #ffffcc;
+  display: inline-block;
+  vertical-align: baseline;
+  line-height: 12px;
 }
 
 ol, li, p {

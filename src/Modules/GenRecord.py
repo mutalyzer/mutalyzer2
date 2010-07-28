@@ -98,6 +98,9 @@ class Locus(object) :
         self.protLongName = ""
         self.transcribe = False
         self.translate = False
+        self.linkMethod = None
+        self.transcriptProduct = None
+        self.proteinProduct = None
     #__init__
 
     def addToDescription(self, rawVariant) :
@@ -228,6 +231,10 @@ class Record(object) :
         self.description = ""
         self._sourcetype = None           #LRG or GB
         self.version = None
+        self.chromOffset = 0
+        self.chromDescription = ""
+        self.orientation = 1
+        self.recordId = None
     #__init__
 
     def findGene(self, name) :
@@ -259,6 +266,28 @@ class Record(object) :
         else :
             self.description = rawVariant
     #addToDescription
+
+    def toChromPos(self, i) :
+        """
+        """
+
+        if self.orientation == 1 :
+            return self.chromOffset + i - 1
+        return self.chromOffset - i + 1
+    #toChromPos
+
+    def addToChromDescription(self, rawVariant) :
+        """
+        """
+
+        if not self.chromOffset :
+            return
+        if self.chromDescription :
+            self.chromDescription = "%s;%s" % (self.chromDescription, 
+                rawVariant)
+        else :
+            self.chromDescription = rawVariant
+    #addToChromDescription
 #Record
 
 class GenRecord() :
@@ -269,11 +298,12 @@ class GenRecord() :
             checkRecord()   ;   Check and repair self.record
     """
 
-    def __init__(self, output) :
+    def __init__(self, output, config) :
         """
         """
 
         self.__output = output
+        self.__config = config
         self.record = None
     #__init__
 
@@ -316,25 +346,41 @@ class GenRecord() :
         #TODO:  This function should really check 
         #       the record for minimal requirements.
         for i in self.record.geneList :
+            """
+            if len(i.transcriptList) == 2 :
+                if i.transcriptList[0].CDS and not i.transcriptList[1].CDS and \
+                   i.transcriptList[1].mRNA and not i.transcriptList[0].mRNA :
+                    i.transcriptList[0].mRNA = i.transcriptList[1].mRNA
+                if i.transcriptList[1].CDS and not i.transcriptList[0].CDS and \
+                   i.transcriptList[0].mRNA and not i.transcriptList[1].mRNA :
+                    i.transcriptList[0].CDS = i.transcriptList[1].CDS
+                i.transcriptList = [i.transcriptList[0]]
+                i.transcriptList[0].transcribe = True
+                i.transcriptList[0].translate = True
+            #if
+            """
             for j in i.transcriptList :
                 if not j.mRNA :
                     if not j.exon:
-                        self.__output.addMessage(__file__, 2, "WNOMRNA",
-                            "No mRNA field found for gene %s, transcript " \
-                            "variant %s in record, constructing " \
-                            "it from CDS." % (i.name, j.name))
+                        if self.record.molType == 'g' :
+                            self.__output.addMessage(__file__, 2, "WNOMRNA",
+                                "No mRNA field found for gene %s, transcript " \
+                                "variant %s in record, constructing " \
+                                "it from CDS." % (i.name, j.name))
                         if j.CDS :
                             if not j.CDS.positionList :
-                                self.__output.addMessage(__file__, 2,
-                                    "WNOCDSLIST", "No CDS list found for " \
-                                    "gene %s, transcript variant %s in " \
-                                    "record, constructing it from " \
-                                    "CDS location." % (i.name, j.name))
+                                #self.__output.addMessage(__file__, 2,
+                                #    "WNOCDSLIST", "No CDS list found for " \
+                                #    "gene %s, transcript variant %s in " \
+                                #    "record, constructing it from " \
+                                #    "CDS location." % (i.name, j.name))
                                 j.mRNA = j.CDS
                                 j.mRNA.positionList = j.CDS.location
                             #if
                             else :
                                 j.mRNA = j.CDS
+                            j.transcribe = True
+                            j.translate = True
                         #if
                         else :
                             self.__output.addMessage(__file__, 2, "WNOCDS",
@@ -351,29 +397,34 @@ class GenRecord() :
                         #else
                     #if
                     else :
-                        self.__output.addMessage(__file__, 2, "WNOMRNA",
-                            "No mRNA field found for gene %s, transcript " \
-                            "variant %s in record, constructing " \
-                            "it from gathered exon information." % (
-                            i.name, j.name))
+                        #self.__output.addMessage(__file__, 2, "WNOMRNA",
+                        #    "No mRNA field found for gene %s, transcript " \
+                        #    "variant %s in record, constructing " \
+                        #    "it from gathered exon information." % (
+                        #    i.name, j.name))
                         j.mRNA = j.exon
                     #else
                 #if
+                #else :
+                #    j.transcribe = True
+
                 if not j.mRNA.positionList :
                     j.mRNA.positionList = j.mRNA.location
-                if j.CDS and j.CDS.positionList != None :
+                if j.mRNA.positionList and j.CDS and j.CDS.positionList != None :
                     if not j.CDS.positionList :
-                        self.__output.addMessage(__file__, 2, "WNOCDS",
-                            "No CDS list found for gene %s, transcript " \
-                            "variant %s in record, constructing " \
-                            "it from mRNA list and CDS location." % (i.name, 
-                            j.name))
+                        #self.__output.addMessage(__file__, 2, "WNOCDS",
+                        #    "No CDS list found for gene %s, transcript " \
+                        #    "variant %s in record, constructing " \
+                        #    "it from mRNA list and CDS location." % (i.name, 
+                        #    j.name))
                         if j.mRNA.positionList :
                             j.CDS.positionList = self.__constructCDS(
                                 j.mRNA.positionList, j.CDS.location)
                         else :
                             j.CDS.positionList = self.__constructCDS(
                                 j.mRNA.location, j.CDS.location)
+                        j.transcribe = True                                
+                        j.translate = True                                
                     #if
                     j.CM = Crossmap.Crossmap(j.mRNA.positionList, 
                                              j.CDS.location, i.orientation)
@@ -409,12 +460,21 @@ class GenRecord() :
             if forwardStart != forwardStop :
                 self.record.addToDescription("%s_%s%s%s" % (forwardStart, 
                     forwardStop, varType, arg1))
+                self.record.addToChromDescription("%s_%s%s%s" % (
+                    self.record.toChromPos(forwardStart), 
+                    self.record.toChromPos(forwardStop), varType, arg1))
+            #if
             else :
                 self.record.addToDescription("%s%s%s" % (forwardStart, varType,
                                                          arg1))
+                self.record.addToChromDescription("%s%s%s" % (
+                    self.record.toChromPos(forwardStart), varType, arg1))
+            #else
         #if
         else :
             self.record.addToDescription("%s%c>%c" % (forwardStart, arg1, arg2))
+            self.record.addToChromDescription("%s%c>%c" % (
+                self.record.toChromPos(forwardStart), arg1, arg2))
 
         for i in self.record.geneList :
             for j in i.transcriptList :
@@ -440,19 +500,45 @@ class GenRecord() :
                             j.addToDescription("%s_%s%s%s" % (
                                 j.CM.g2c(orientedStart), j.CM.g2c(orientedStop),
                                 varType, self.__maybeInvert(i, arg1)))
+                            self.checkIntron(i, j, orientedStart)
+                            self.checkIntron(i, j, orientedStop)
+                        #if
                         else :
                             j.addToDescription("%s%s%s" % (
                                 j.CM.g2c(orientedStart), varType, 
                                 self.__maybeInvert(i, arg1)))
+                            self.checkIntron(i, j, orientedStart)
+                        #else
                     #if
                     else :
                         j.addToDescription("%s%c>%c" % (j.CM.g2c(orientedStart),
                             self.__maybeInvert(i, arg1), 
                             self.__maybeInvert(i, arg2)))
+                        self.checkIntron(i, j, orientedStart)
+                    #else
                 #if
             #for
         #for
     #name
+
+    def checkIntron(self, gene, transcript, position) :
+        # TODO Also check a range properly.
+        intronPos = abs(transcript.CM.g2x(position)[1])
+        if intronPos :
+            if intronPos <= self.__config.spliceAlarm :
+                self.__output.addMessage(__file__, 2, "WSPLICE", 
+                    "Mutation on splice site in gene %s transcript %s." % (
+                    gene.name, transcript.name))
+                return
+            #if
+            if intronPos <= self.__config.spliceWarn :
+                self.__output.addMessage(__file__, 2, "WSPLICE", 
+                    "Mutation near splice site in gene %s transcript %s." % (
+                    gene.name, transcript.name))
+                return
+            #if
+        #if
+    #checkIntron
 #GenRecord
 
 if __name__ == "__main__" :

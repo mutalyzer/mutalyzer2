@@ -143,6 +143,9 @@ class Config() :
         pass
     #File
 
+    class GenRecord() :
+        pass
+
     def __init__(self) :
         """
             Initialise the class with variables read from the configuration 
@@ -213,6 +216,8 @@ class Config() :
         ## Set the variables needed by the File module.
         #self.File.upstream = int(config["upstream"])
         #self.File.downstream = int(config["downstream"])
+        self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
+        self.GenRecord.spliceWarn = int(config["spliceWarn"])
     #__init__
 #Config
 

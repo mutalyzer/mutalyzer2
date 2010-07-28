@@ -90,10 +90,10 @@ class File() :
         return ret
     #__tempFileWrapper
 
-    def __getMimeType(self, handle) :
+    def getMimeType(self, handle) :
         """
             Get the mime type of a stream by inspecting a fixed number of bytes.
-            The stream is not rewinded after use.
+            The stream is rewinded after use.
 
             Arguments:
                 handle ; A handle to a stream.
@@ -116,9 +116,10 @@ class File() :
         MagicInstance.load()
         description = MagicInstance.buffer(buf)
         del MagicInstance
+        handle.seek(0)
         
         return mimeType, description
-    #__getMimeType
+    #getMimeType
 
     def __parseCsvFile(self, handle) :
         """
@@ -315,7 +316,7 @@ class File() :
                 list ; A list of lists, None if an error occured.
         """
 
-        mimeType = self.__getMimeType(handle)
+        mimeType = self.getMimeType(handle)
         if mimeType[0] == "text/plain" :
             return self.__parseCsvFile(handle)
         if mimeType[0] == "application/vnd.ms-office" :

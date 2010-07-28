@@ -1,25 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
-  "http://www.w3.org/TR/html4/loose.dtd">
 <html>
   <head>
-    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
-    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <link rel="stylesheet" 
+      type="text/css" 
+      href="base/css/style.css">
+    <title></title>
   </head>
   <body>
     <div metal:define-macro="content">
       <center>
-        <big tal:content = "structure string:Mutalyzer ${version} nomenclature 
-                            check.">
-        </big>
-      </center><br>
+        <h3>Nomenclature check</h3>
+      </center>
       <div id = "output" tal:condition = "interactive">
-        Please insert the mutation name using the format:<br>
-        <small>
+        <div>
+        Please insert the mutation name using the 
+        <span class = "helper" 
+        title = "Human Genome Variation Society standard variant nomenclature">
+          <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
           &lt;Accession Number&gt;.&lt;version 
           number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
           type&gt;.&lt;mutation&gt;
-        </small><br>
-        <br>
+        </div><br>
         Example: AB026906.1:c.274G&gt;T<br>
         <br>
         <form action = "" method = "post">
@@ -37,7 +37,7 @@
         <br>
       </div>
       <div tal:condition = "lastpost">
-        <big><b>Mutalyzer output:</b><br></big>
+        <h3>Mutalyzer output:</h3>
         <br>
         <div tal:repeat = "i messages"
              tal:replace = "structure string:${i}<br>">
@@ -61,27 +61,25 @@
           <b>Genomic description:</b><br>
           <br>
           <tt>
-            <div tal:replace = "genomicDescription"></div><br>
+            <a tal:content = "genomicDescription/0"
+               tal:attributes = "href 
+                 string:checkForward?mutationName=${genomicDescription/1}"></a>
+            <br>
           </tt>
+          <div tal:condition = "chromDescription">
+            <br>
+            Alternative chromosomal position:<br>
+            <tt tal:content = "chromDescription"></tt>
+          </div>
           <br>
           <br>
           <b>Affected transcripts:</b><br>
           <br>
-          <div tal:condition = "interactive">
-            <form style = "margin:0px 0px 0px -2px" action = "" method = "post">
-              <div tal:repeat = "i descriptions">
-                <input 
-                  type="submit" 
-                  name = "mutationName" 
-                  tal:attributes = "value i"
-                  class="submitLink"><br>
-              </div>
-            </form>
-          </div>
-          <div tal:condition = "not:interactive">
-            <tt tal:repeat = "i descriptions"
-                tal:content = "i"></tt>
-          </div>
+          <tt tal:repeat = "i descriptions">
+            <a tal:content = "i/0"
+               tal:attributes = 
+                 "href string:checkForward?mutationName=${i/1}"></a><br>
+          </tt>
           <br>
           <br>
           <b>Affected proteins:</b><br>
@@ -94,115 +92,123 @@
           <br>
           <br>
           <div tal:condition = "oldProtein">
-            <b>Old protein:</b><br>
-            <pre><div tal:repeat = "i oldProtein"
-                      tal:replace = "structure string:${i}<br>">
-              </div></pre>
+            <b>Detailed information about the selected transcript and predicted
+               protein:</b><br>
             <br>
-            <b>New protein:</b><br>
-            <pre><div tal:repeat = "i newProtein"
-                      tal:replace = "structure string:${i}<br>">
-              </div></pre>
-            <br>
-            <div tal:condition = "altStart">
-              <b tal:content = "structure string:Alternative protein using 
-                                start codon ${altStart}:"></b><br>
-              <pre><div tal:repeat = "i altProtein"
-                     tal:replace = "structure string:${i}<br>">
+            <div style = "background-color : #ccffff;">
+              <b>Reference protein:</b><br>
+              <pre><div tal:repeat = "i oldProtein"
+                        tal:replace = "structure string:${i}<br>">
                 </div></pre>
+              <br>
+              <b>Protein predicted from variant coding sequence:</b><br>
+              <div tal:condition = "not:newProtein">
+                <br>
+                No change: Predicted protein (not shown) equals reference
+                protein. <br>
+                <br>
+              </div>
+              <div tal:condition = "newProtein">
+                <pre><div tal:repeat = "i newProtein"
+                          tal:replace = "structure string:${i}<br>">
+                  </div></pre>
+              </div>
+              <br>
+              <div tal:condition = "altStart">
+                <b tal:content = "structure string:Alternative protein using 
+                                  start codon ${altStart}:"></b><br>
+                <pre><div tal:repeat = "i altProtein"
+                       tal:replace = "structure string:${i}<br>">
+                  </div></pre>
+              </div>
             </div>
           </div>
         </div>
         <div tal:condition = "oldProtein">
-          <b>Additional information about the transcript:</b><br>
-          <br>
-          Exon information:<br>
-          <table border = "1">
-            <tr>
-              <td class = "rightTd">Number</td>
-              <td class = "rightTd">Start (g.)</td>
-              <td class = "rightTd">Stop (g.)</td>
-              <td class = "rightTd">Start (c.)</td>
-              <td class = "rightTd">Stop (c.)</td>
-            </tr>
-            <tr tal:repeat = "i exonInfo">
-              <td class = "rightTd" tal:content = "repeat/i/number"></td>
-              <td class = "rightTd" tal:repeat = "j i" tal:content = "j"></td>
-            </tr>
-          </table>
-          <br>
-          CDS information:<br>
-          <table border = "1">
-            <tr>
-              <td></td>
-              <td class = "rightTd">g.</td>
-              <td class = "rightTd">c.</td>
-            </tr>
-            <tr>
-              <td>Start</td>
-              <td class = "rightTd" tal:content = "cdsStart_g"></td>
-              <td class = "rightTd" tal:content = "cdsStart_c"></td>
-            </tr>
-            <tr>
-              <td>Stop</td>
-              <td class = "rightTd" tal:content = "cdsStop_g"></td>
-              <td class = "rightTd" tal:content = "cdsStop_c"></td>
-            </tr>
-            <tr>
-            </tr>
-          </table>
-          <br>
+          <div style = "background-color : #ccffff;">
+            <b>Additional information about the transcript:</b><br>
+            <br>
+            Exon information:<br>
+            <table class = "raTable">
+              <tr>
+                <td>Number</td>
+                <td>Start (g.)</td>
+                <td>Stop (g.)</td>
+                <td>Start (c.)</td>
+                <td>Stop (c.)</td>
+              </tr>
+              <tr tal:repeat = "i exonInfo">
+                <td tal:content = "repeat/i/number"></td>
+                <td tal:repeat = "j i" tal:content = "j"></td>
+              </tr>
+            </table>
+            <br>
+            <span class = "helper" title = "Coding Sequence">CDS</span> 
+            information:<br>
+            <table class = "raTable">
+              <tr>
+                <td></td>
+                <td>g.</td>
+                <td>c.</td>
+              </tr>
+              <tr>
+                <td>Start</td>
+                <td tal:content = "cdsStart_g"></td>
+                <td tal:content = "cdsStart_c"></td>
+              </tr>
+              <tr>
+                <td>Stop</td>
+                <td tal:content = "cdsStop_g"></td>
+                <td tal:content = "cdsStop_c"></td>
+              </tr>
+              <tr>
+              </tr>
+            </table>
+            <br>
+          </div>
           <br>
         </div>
         <div tal:condition = "visualisation">
           <b>Effects on Restriction sites:</b><br>
           <br>
-          Added restriction sites:
-          <table border = "1">
+          <table class = "laTable">
             <tr>
-              <td class = "rightTd">Raw variant</td>
-              <td class = "rightTd">Restriction sites</td>
+              <td>Raw variant</td>
+              <td>Created</td>
+              <td>Deleted</td>
             </tr>
-            <tr tal:repeat = "i addedRestrictionSites">
-              <td class = "rightTd" tal:content = "repeat/i/number"></td>
-              <td class = "rightTd" tal:content = "i"></td>
-            </tr>
-          </table>
-          <br>
-          Deleted restriction sites:
-          <table border = "1">
-            <tr>
-              <td class = "rightTd">Raw variant</td>
-              <td class = "rightTd">Restriction sites</td>
-            </tr>
-            <tr tal:repeat = "i deletedRestrictionSites">
-              <td class = "rightTd" tal:content = "repeat/i/number"></td>
-              <td class = "rightTd" tal:content = "i"></td>
+            <tr tal:repeat = "i restrictionSites">
+              <td tal:content = "repeat/i/number"></td>
+              <td tal:repeat = "j i" tal:content = "j"></td>
             </tr>
           </table>
           <br>
           <br>
         </div>
-        <b>Legend:</b><br>
-        <br>
-        <table border = "1">
-          <tr>
-            <td class = "rightTd">Name</td>
-            <td class = "rightTd">ID</td>
-            <td class = "rightTd">Locus tag</td>
-          </tr>
-          <tr tal:repeat = "i legends">
-            <td class = "rightTd" tal:repeat = "j i" tal:content = "j"></td>
-          </tr>
-        </table>
-        <div tal:condition = "interactive">
+        <div tal:condition = "legends">
+          <b>Legend:</b><br>
           <br>
-          <br>
-          <b>Links:</b><br>
-          <br>
-          Download this GenBank file: 
-          <a tal:content = "reference"
-             tal:attributes = "href string:GenBank/${reference}.gb"></a>
+          <table class = "laTable">
+            <tr>
+              <td>Name</td>
+              <td>ID</td>
+              <td>Locus tag</td>
+              <td>Product</td>
+              <td>Link method</td>
+            </tr>
+            <tr tal:repeat = "i legends">
+              <td tal:repeat = "j i" tal:content = "j"></td>
+            </tr>
+          </table>
+          <div tal:condition = "interactive">
+            <br>
+            <br>
+            <b>Links:</b><br>
+            <br>
+            Download this GenBank file: 
+            <a tal:content = "reference"
+               tal:attributes = "href string:GenBank/${reference}.gb"></a>
+          </div>
         </div>
       </div>
     </div>

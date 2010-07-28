@@ -20,11 +20,13 @@ import StringIO        # StringIO()
 import ftplib          # FTP(), all_errors
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
+from Bio.Seq import UnknownSeq
 
 from Modules import Misc
 from Modules import LRGparser
 from Modules import GBparser
 from xml.dom import DOMException
+import xml.dom.minidom
 
 class Retriever(object) :
     """
@@ -232,6 +234,16 @@ class Retriever(object) :
                 self._calcHash(raw_data), None, 0, 0, 0, None)
         return self._nametofile(name)
     #_updateDBmd5
+
+
+    def snpConvert(self, rsId) :
+        x = Entrez.efetch(db = "SNP", id = rsId, rettype = "flt", 
+            retmode = "xml")
+        
+        doc = xml.dom.minidom.parseString(x.read())
+        for i in doc.getElementsByTagName("hgvs") :
+            self._output.addOutput("snp", i.lastChild.data.encode("utf8"))
+    #snpConvert
 #Retriever
 
 class GenBankRetriever(Retriever):
@@ -279,6 +291,14 @@ class GenBankRetriever(Retriever):
             fakehandle.close()
             return None
         #except
+
+        if type(record.seq) == UnknownSeq :
+            fakehandle.close()
+            self._output.addMessage(__file__, 4, "ENOSEQ",
+                "This record contains no sequence. Chromosomal or contig " \
+                "records should be uploaded with the GenBank uploader.")
+            return None, None
+        #if
 
         outfile = filename
         GI = None
@@ -350,6 +370,10 @@ class GenBankRetriever(Retriever):
             Returns:
                 string ; An UD number.
         """
+
+        # Not a valid slice.
+        if start >= stop :
+            return None
 
         # The slice can not be too big.
         if stop - start > self._config.maxDldSize :

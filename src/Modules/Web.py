@@ -9,6 +9,7 @@
 
 import sys                     # sys.stdout
 import re                      # match
+import urllib                  # quote
 from cStringIO import StringIO # StringIO() getvalue()
 
 class Web() :
@@ -36,7 +37,8 @@ class Web() :
                 version ; Here the displayed version is defined.
         """
 
-        self.version = "2.0&alpha;-3"
+        self.version = "2.0&alpha;-4"
+        self.nomenclatureVersion = "2.0"
     #__init__
 
     def run(self, func, *args) :
@@ -125,6 +127,8 @@ class Web() :
 
         context = simpleTALES.Context()
     
+        context.addGlobal("version", self.version)
+        context.addGlobal("nomenclatureVersion", self.nomenclatureVersion)
         for i in args :
             context.addGlobal(i, args[i])
 
@@ -178,4 +182,11 @@ class Web() :
             return True
         return False
     #isEmail
+
+    def urlEncode(self, descriptions) :
+        newDescr = []
+        for i in descriptions :
+            newDescr.append([i, urllib.quote(i)])
+        return newDescr
+    #urlEncode
 #Web

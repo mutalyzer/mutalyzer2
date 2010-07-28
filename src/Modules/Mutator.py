@@ -236,10 +236,8 @@ class Mutator() :
 
         set1 = self.__makeRestrictionSet(loflank + delPart + roflank)
         set2 = self.__makeRestrictionSet(lmflank + ins + rmflank)
-        self.__output.addOutput("deletedRestrictionSites", 
-            str(list(set1 - set2))[1:-1])
-        self.__output.addOutput("addedRestrictionSites", 
-            str(list(set2 - set1))[1:-1])
+        self.__output.addOutput("restrictionSites", 
+            [str(list(set1 - set2))[1:-1], str(list(set2 - set1))[1:-1]])
 
         #
         # End restriction site analysis:

@@ -23,7 +23,7 @@
     </script>
     <meta http-equiv="Content-Type" 
       content="text/html; charset=iso-8859-1">
-    <title>Mutalyzer</title>
+    <title tal:content = "structure string:Mutalyzer ${version}"></title>
   </head>
   <body 
     background="base/images/background.gif" 
@@ -46,7 +46,7 @@
         <td rowspan="2" 
           valign="bottom" 
           width="180">
-          <a href="/" 
+          <a href="index" 
             target="_top"><img 
               src="base/images/mutalyzer_logo_bw.png" width="180" height="106" 
               alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
@@ -61,7 +61,7 @@
           width="98%">
           <!-- Banner -->
           <center>
-            <a href="/"><img 
+            <a href="index"><img 
                 src="base/images/mutalyzer_logo.png" 
                 width="90%" 
                 height="90" 
@@ -80,12 +80,10 @@
         </td>
         <td align="right" 
           width="510">
-          <a href="/" 
+          <a href="index" 
             class="hornav">home</a>&nbsp;&nbsp;&nbsp;
-          <a href="/contact.html" 
+          <a href="" 
             class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
-          <a href="/squirrelmail/" 
-            class="hornav">webmail</a>&nbsp;&nbsp;&nbsp;
         </td>
       </tr>
   
@@ -269,6 +267,22 @@
 
       <tr>
         <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_snp">
+        </td>
+        <td colspan="3">
+          <a id="page_snp" 
+            onclick="swapActive('snp');" 
+            href="snp" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'snp');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'snp');" 
+            class="vertnavsub">SNP converter</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
           <img src="base/images/bullitdonker.gif" id="b_download">
         </td>
         <td colspan="3">
@@ -279,7 +293,7 @@
                                 'download');" 
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
                                  'download');" 
-            class="vertnavsub">Download page</a>
+            class="vertnavsub">Webservices</a>
         </td>
       </tr>
 
@@ -342,6 +356,38 @@
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
                                  'bugTrack');" 
             class="vertnavsub">Report bugs</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_help">
+        </td>
+        <td colspan="3">
+          <a id="page_help" 
+            onclick="swapActive('help');" 
+            href="help" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'help');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'help');" 
+            class="vertnavsub">Help</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_exercise">
+        </td>
+        <td colspan="3">
+          <a id="page_exercise" 
+            onclick="swapActive('exercise');" 
+            href="exercise" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'exercise');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'exercise');" 
+            class="vertnavsub">Exercise</a>
         </td>
       </tr>
 
@@ -500,7 +546,11 @@
     <td width="0">
   
   
-    <big><big><center>Mutalyzer</center></big></big><br>
+    <center>
+      <h2 tal:content = "structure string:Mutalyzer ${version}"></h2>
+      HGVS nomenclature version 
+      <span tal:content = "nomenclatureVersion"></span>
+    </center>
     <p>
   
     <div metal:use-macro = "sitemacros/macros/content"></div>

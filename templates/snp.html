@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <link rel="stylesheet" 
+      type="text/css" 
+      href="base/css/style.css">
+    <title></title>
+  </head>
+  <body>
+    <div metal:define-macro="content">
+      <center>
+        <h3>SNP converter</h3>
+      </center>
+      <form action = "" method = "post">
+        <big><b>rs</b></big><input 
+          type = "text" 
+          name = "rsId" 
+          style = "width:25%"
+        ><br>
+        <input 
+          type="submit" 
+          value="Submit"
+        >
+      </form>
+      <div tal:condition = "snp">
+        <h3>Results:</h3><br>
+        <tt tal:content = "structure string:rs${lastpost}"></tt><br>
+        <br>
+        <tt tal:repeat = "i snp" tal:content = "structure string:${i}<br>"></tt>
+      </div>
+    </div>
+  </body>
+</html>

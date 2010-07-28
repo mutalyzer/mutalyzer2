@@ -116,7 +116,7 @@ def main(LOVD_ver, build, acc, var) :
     else :
         ret = Converter.giveInfo(acc)
 
-    if ret is None:
+    if not getattr(ret, "startmain", None) :
         print O.getOutput("LOVDERR")[0]
         return
 
@@ -129,9 +129,8 @@ def main(LOVD_ver, build, acc, var) :
                  var, LOVD_ver, build))
     del O, C
     # And return the output.
-    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (V.startmain, V.startoffset, V.endmain,
-                                          V.endoffset, V.start_g, V.end_g,
-                                          V.mutationType)
+    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (ret.startmain, ret.startoffset,
+        ret.endmain, ret.endoffset, ret.start_g, ret.end_g, ret.mutationType)
 
 #main
 

@@ -1,51 +1,41 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
-  "http://www.w3.org/TR/html4/loose.dtd">
 <html>
   <head>
-    <meta http-equiv = "Content-type" content = "text/html; charset=UTF-8">
-    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <title></title>
   </head>
-  <body onload = "yo()">
-<!--
-    <div metal:use-macro = "sitemacros/macros/menu"></div>
--->
+  <body>
     <div metal:define-macro="content">
-        <center><big tal:content = "structure string:Variant syntax check
-            by Mutalyzer ${version}."></big></center>
-        
-    <p>Please insert the mutation name using the following format:<br />
-      <small>
+      <center><h3>Variant syntax checker</h3></center>
+      <div>
+      Please insert the mutation name using the 
+      <span class = "helper" 
+        title = "Human Genome Variation Society standard variant nomenclature">
+        <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
         &lt;Accession Number&gt;.&lt;version 
         number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
         type&gt;.&lt;mutation&gt;
-      </small>
-      </p>
+      </div><br>
       Example: AB026906.1:c.274G&gt;T<br>
       <br>
- 
-    <form action = "" method = "post">
-      <small> Variant name </small>
-      <input 
-        type = "text" 
-        name = "variant" 
-        tal:attributes = "value variant"
-        size = "100%">
-        <br><br>
-      <input 
-        type="submit" 
-        value="Submit">
-    </form>
-    <br>
+      <form action = "" method = "post">
+        <input 
+          type = "text" 
+          name = "variant" 
+          tal:attributes = "value variant"
+          size = "100%"><br>
+        <input 
+          type="submit" 
+          value="Submit">
+      </form><br>
+      <div tal:condition = "messages">
+      <h3>Output</h3>
+      <pre><div tal:repeat = "i messages"
+           tal:replace = "structure string:${i}<br>">
+      </div></pre>
 
-    <h3>Output </h3>
-    <pre><div tal:repeat = "i messages"
-         tal:replace = "structure string:${i}<br>">
-    </div></pre>
-
-    <div tal:repeat = "i debug"
-         tal:replace = "structure string:${i}<br>">
-     </div>
-
+      <div tal:repeat = "i debug"
+           tal:replace = "structure string:${i}<br>">
+      </div>
+      </div>
     </div>
   </body>
 </html>

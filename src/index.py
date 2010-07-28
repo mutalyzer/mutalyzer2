@@ -18,7 +18,7 @@ import webservice
 import string
 #import sys
 
-from mod_python import apache
+from mod_python import apache, Session, util
 from mod_python import Session, util
 
 from Modules import Parser
@@ -30,6 +30,28 @@ from Modules import Db
 from Modules import Scheduler
 from Modules import Retriever
 from Modules import File
+
+def snp(req) :
+    C = Config.Config()
+    O = Output.Output(__file__, C.Output)
+    W = Web.Web()
+
+    rsId = None
+    if req.form :
+        rsId = req.form.get('rsId', None)
+    if rsId :
+        O.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
+        R = Retriever.Retriever(C.Retriever, O, None)
+        R.snpConvert(rsId)
+        O.addMessage(__file__, -1, "INFO", "Finished processing rs%s" % rsId)
+
+    args = {
+        "snp" : O.getOutput("snp"),
+        "lastpost" : rsId
+    }
+
+    return W.tal("HTML", "templates/snp.html", args)
+#snp
 
 class InputException(Exception):
     pass
@@ -85,27 +107,27 @@ def check(req) :
     errors, warnings, summary = O.Summary()
 
     args = {
-        "version"                 : W.version,
-        "lastpost"                : name,
-        "messages"                : O.getMessages(),
-        "summary"                 : summary,
-        "genomicDescription"      : O.getIndexedOutput("genomicDescription", 0),
-        "visualisation"           : O.getOutput("visualisation"),
-        "descriptions"            : O.getOutput("descriptions"),
-        "protDescriptions"        : O.getOutput("protDescriptions"),
-        "oldProtein"              : O.getOutput("oldProteinFancy"),
-        "altStart"                : O.getIndexedOutput("altStart", 0),
-        "altProtein"              : O.getOutput("altProteinFancy"),
-        "newProtein"              : O.getOutput("newProteinFancy"),
-        "exonInfo"                : O.getOutput("exonInfo"),
-        "cdsStart_g"              : O.getIndexedOutput("cdsStart_g", 0),
-        "cdsStart_c"              : O.getIndexedOutput("cdsStart_c", 0),
-        "cdsStop_g"               : O.getIndexedOutput("cdsStop_g", 0),
-        "cdsStop_c"               : O.getIndexedOutput("cdsStop_c", 0),
-        "addedRestrictionSites"   : O.getOutput("addedRestrictionSites"),
-        "deletedRestrictionSites" : O.getOutput("deletedRestrictionSites"),
-        "legends"                 : O.getOutput("legends"),
-        "reference"               : O.getIndexedOutput("reference", 0)
+        "lastpost"           : name,
+        "messages"           : O.getMessages(),
+        "summary"            : summary,
+        "genomicDescription" : W.urlEncode([O.getIndexedOutput(
+                                   "genomicDescription", 0)])[0],
+        "chromDescription"   : O.getIndexedOutput("genomicChromDescription", 0),
+        "visualisation"      : O.getOutput("visualisation"),
+        "descriptions"       : W.urlEncode(O.getOutput("descriptions")),
+        "protDescriptions"   : O.getOutput("protDescriptions"),
+        "oldProtein"         : O.getOutput("oldProteinFancy"),
+        "altStart"           : O.getIndexedOutput("altStart", 0),
+        "altProtein"         : O.getOutput("altProteinFancy"),
+        "newProtein"         : O.getOutput("newProteinFancy"),
+        "exonInfo"           : O.getOutput("exonInfo"),
+        "cdsStart_g"         : O.getIndexedOutput("cdsStart_g", 0),
+        "cdsStart_c"         : O.getIndexedOutput("cdsStart_c", 0),
+        "cdsStop_g"          : O.getIndexedOutput("cdsStop_g", 0),
+        "cdsStop_c"          : O.getIndexedOutput("cdsStop_c", 0),
+        "restrictionSites"   : O.getOutput("restrictionSites"),
+        "legends"            : O.getOutput("legends"),
+        "reference"          : O.getIndexedOutput("reference", 0)
     }
 
     if req.method == 'GET' and req.form :
@@ -117,6 +139,14 @@ def check(req) :
     del W
     return ret
 #check
+
+def checkForward(req) :
+    session = Session.Session(req)
+    session['mut'] = req.form.get("mutationName", None)
+    session.save()
+    util.redirect(req, "check", permanent=False)
+#checkForward
+
 
 def syntaxCheck(req) :
     """
@@ -136,7 +166,6 @@ def syntaxCheck(req) :
     O = Output.Output(__file__, C.Output)
     variant = req.form.get("variant", None)
     args = {
-        "version"       : W.version,
         "variant"       : variant,
         "messages"      : [],
         "debug"         : ""
@@ -171,7 +200,6 @@ def positionConverter(req):
     variant = req.form.get("variant", "")
 
     attr = {
-        "version" :         W.version,
         "avail_builds" :    C.Db.dbNames[::-1],
         "variant"  :        variant,
         "gName"     :       "",
@@ -255,8 +283,7 @@ def download(req) :
 
     W = Web.Web()
 
-    args = {"version" : W.version}
-    ret = W.tal("HTML", "templates/download.html", args)
+    ret = W.tal("HTML", "templates/download.html", {})
     del W
     return ret
 #download
@@ -334,8 +361,8 @@ def upload(req) :
 
     W = Web.Web()
     args = {
-        "version" : W.version,
         "UD"      : UD,
+        "maxSize" : float(maxUploadSize) / 1048576,
         "errors"  : errors
     }
     ret = W.tal("HTML", "templates/gbupload.html", args)
@@ -381,8 +408,7 @@ def batch(req, batchType=None):
     C = Config.Config()
     O = Output.Output(__file__, C.Output)
 
-    attr = {"version"       : W.version,
-            "messages"      : [],
+    attr = {"messages"      : [],
             "errors"        : [],
             "debug"         : [],
             "batchTypes"    : ["NameChecker",
@@ -478,7 +504,6 @@ def taltest(req) :
 #    build = availBuilds[len(availBuilds)-1] # default to the highest build
     build = "hg18"
     args = {
-        "version" : W.version,
         "build" : build,
         "avail_builds" : finalbuilds,
         "variant"  : variant
