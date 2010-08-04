@@ -29,6 +29,15 @@ from operator import itemgetter, attrgetter
 #TODO: SET TO FALSE DEBUG FLAG
 DEBUG = False
 
+def __formatRange(pos1, pos2) :
+    """
+    """
+
+    if pos1 == pos2 :
+        return str(pos1)
+    return "%i_%i" % (pos1, pos2)
+#__formatRange
+
 def __intronicPosition(Loc) :
     """
     """
@@ -41,6 +50,27 @@ def __intronicPosition(Loc) :
         return False
     return True
 #__intronicPosition
+
+def __checkIntronPosition(main, offset, transcript) :
+    main_g = transcript.CM.x2g(main, 0)
+    rnaList = transcript.CM.RNA
+
+    if offset :
+        print main_g, offset, rnaList
+        if main_g in rnaList :
+            if rnaList.index(main_g) % 2 == 0 :
+                if offset > 0 :
+                    return False
+            else :
+                if offset < 0 :
+                    return False
+        #if
+        else :
+            return False
+    #if
+
+    return True
+#__checkIntronPosition            
 
 def __roll(ref, start, stop) :
     """
@@ -258,8 +288,8 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             ref_slice = str(ref[p1 - 1:p2])
             if ref_slice != str(arg) : # FIXME more informative.
                 O.addMessage(__file__, 3, "EREF",
-                    "%s not found at position %i_%i, found %s instead." % (
-                    arg, p1, p2, ref_slice))
+                    "%s not found at position %s, found %s instead." % (
+                    arg, __formatRange(p1, p2), ref_slice))
                 return False
             #if
         #else
@@ -400,8 +430,7 @@ def __toProtDescr(CDSStop, orig, trans) :
         ret = findFrameShift(str(orig), str(trans))
     else :
         ret = findInFrameDescription(str(orig), str(trans))
-    if str(orig[0:3]) != str(trans[0:3]) :
-        print ret
+    if str(orig[0]) != str(trans[0]) :
         return ("p.?", ret[1], ret[2], ret[3])
     return ret
 #__toProtDescr
@@ -530,8 +559,6 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     if GenRecordInstance.record.molType == 'n' :
         mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
             ].mRNA.positionList
-        #print mRNA
-        #print end_g - roll[0], end_g + roll[1]
         for i in mRNA :
             if end_g <= i and end_g + roll[1] > i :
                 print "ALARM"
@@ -547,11 +574,13 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
         newStart = start_g + shift
         newStop = end_g + shift
         O.addMessage(__file__, 2, "WROLL",
-            "Sequence %s at position %i_%i was given, however, " \
-            "the HGVS notation prescribes that it should be %s at " \
-            "position %i_%i." % (str(MUU.orig[start_g - 1:end_g]),
-            start_g, end_g, str(MUU.orig[newStart - 1:newStop]),
-            newStart, newStop))
+            "Sequence \"%s\" at position %s was given, however, " \
+            "the HGVS notation prescribes that it should be \"%s\" at " \
+            "position %s." % (
+            MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
+            __formatRange(start_g, end_g), 
+            MUU.visualiseLargeString(str(MUU.orig[newStart - 1:newStop])),
+            __formatRange(newStart, newStop)))
     #if
     if mutationType == "del" :
         MUU.delM(start_g, end_g)
@@ -569,20 +598,22 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
     if snoop :
         if snoop == -1 :
             O.addMessage(__file__, 2, "WNOCHANGE",
-                "Sequence %s at position %i_%i is a palindrome " \
+                "Sequence \"%s\" at position %i_%i is a palindrome " \
                 "(its own reverse complement)." % (
-                str(MUU.orig[start_g - 1:end_g]), start_g, end_g))
+                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])), 
+                start_g, end_g))
             return
         #if
         else :
             O.addMessage(__file__, 2, "WNOTMINIMAL",
-                "Sequence %s at position %i_%i is a partial " \
+                "Sequence \"%s\" at position %i_%i is a partial " \
                 "palindrome (the first %i nucleotide(s) are the reverse " \
                 "complement of the last one(s)), the HGVS notation " \
-                "prescribes that it should be %s at position %i_%i." % (
-                str(MUU.orig[start_g - 1:end_g]),
+                "prescribes that it should be \"%s\" at position %i_%i." % (
+                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
                 start_g, end_g, snoop,
-                str(MUU.orig[start_g + snoop - 1: end_g - snoop]),
+                MUU.visualiseLargeString(
+                    str(MUU.orig[start_g + snoop - 1: end_g - snoop])),
                 start_g + snoop, end_g - snoop))
             start_g += snoop
             end_g -= snoop
@@ -688,13 +719,13 @@ def __normal2g(RawVar, transcript) :
     """
 
     if not RawVar.StartLoc.PtLoc.Main.isdigit() :
-        return  # For ? in a position.
+        return None, None # For ? in a position.
 
     start_g = int(RawVar.StartLoc.PtLoc.Main)
     end_g = start_g
     if RawVar.EndLoc :
         if not RawVar.EndLoc.PtLoc.Main.isdigit() : # For ? in a position.
-            return
+            return None, None
         end_g = int(RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
     #if
 
@@ -705,7 +736,12 @@ def __normal2g(RawVar, transcript) :
                                             RawVar.StartLoc.PtLoc.Main)
         #if not RawVar.StartLoc.PtLoc.Offset.isdigit() :
         #    return
+
         start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
+
+        if not __checkIntronPosition(start_main, start_offset, transcript) :
+            return None, None
+
         start_g = transcript.CM.x2g(start_main, start_offset)
         end_g = start_g
         if RawVar.EndLoc :
@@ -714,6 +750,8 @@ def __normal2g(RawVar, transcript) :
             #if not RawVar.EndLoc.PtLoc.Offset.isdigit() :
             #    return
             end_offset = __PtLoc2offset(RawVar.EndLoc.PtLoc)
+            if not __checkIntronPosition(end_main, end_offset, transcript) :
+                return None, None
             end_g = transcript.CM.x2g(end_main, end_offset)
         #if
         if transcript.CM.orientation == -1 :
@@ -770,6 +808,11 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                     "given for a non-genomic reference sequence.")
                 return
             start_g, end_g = __normal2g(RawVar, transcript)
+            if not start_g :
+                O.addMessage(__file__, 3, "ESPLICE", "Invalid intronic " \
+                    "position given.")
+                return
+        #else
     #else            
 
     if start_g < 1 :
@@ -808,9 +851,9 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
 
         if str(Arg1) == str(Arg2) :
             O.addMessage(__file__, 2, "WNOCHANGE",
-                "Sequence %s at position %i_%i is identical to the " \
+                "Sequence \"%s\" at position %i_%i is identical to the " \
                 "variant." % (
-                str(MUU.orig[start_g - 1:end_g]),
+                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
                 start_g, end_g))
             return
         #if
@@ -1026,6 +1069,9 @@ def process(cmd, C, O) :
         if ParseObj.Gene:
             geneSymbol = (ParseObj.Gene.GeneSymbol or "",
                     ParseObj.Gene.TransVar or "")
+            if ParseObj.Gene.ProtIso :
+                O.addMessage(__file__, 4, "EPROT", "Indexing by protein " \
+                    "isoform is not supported.")
         else:
             geneSymbol = ("", "")
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)

@@ -31,23 +31,27 @@ class MutalyzerService(SimpleWSGISoapApp) :
             __checkBuild(L, D, build) ; Check if the build is supported.
             __checkChrom(L, D, chrom) ; Check if the chromosome is in our
                                         database.
-            __checkPos(L, pos)        ; Check if the posision is valid.
+            __checkPos(L, pos)        ; Check if the position is valid.
 
         Public methods:
-            getTranscripts(build, chrom, pos)    ; Get all transcripts that
-                                                   overlap with a chromosomal
-                                                   position.
-            getTranscriptsRange(build, chrom,    ; Get all transcripts that
-                                pos1, pos2,        overlap with a range on a
-                                method)            chromosome.
-            getGeneName(build, accno)            ; Find the gene name associated                                        with a transcript.
-            mappingInfo(LOVD_ver, build, accNo,  ; FIXME
-                        variant) ;
-            transcriptInfo(LOVD_ver, build, ; Find transcription start and
-                           accNo)             end, and CDS end (in c.
-                                              notation) for a given transcript
-            cTogConversion(self, build, variant) ; Convert c. to g.
-            gTocConversion(self, build, variant) ; Convert g. to c.
+            getTranscripts(build, chrom, ; Get all transcripts that overlap
+                           pos)            with a chromosomal position.
+            getTranscriptsRange(build,   ; Get all transcripts that overlap
+                                chrom,     with a range on a chromosome.
+                                pos1,
+                                pos2,
+                                method)
+            getGeneName(build, accno)    ; Find the gene name associated with a
+                                           transcript.
+            mappingInfo(LOVD_ver, build, ; Convert a transcript coordinate to a
+                        accNo, variant)    chromosomal one, or vice versa.
+            transcriptInfo(LOVD_ver,     ; Find transcription start and end,
+                           build,          and CDS end (in c. notation) for a
+                           accNo)          given transcript.
+            cTogConversion(self, build,  ; Convert c. to g.
+                           variant)
+            gTocConversion(self, build,  ; Convert g. to c.
+                           variant)
     """
 
     def __checkBuild(self, build, config) :
@@ -509,6 +513,4 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del L
         return result
    #checkSyntax
-
-
 #MutalyzerService

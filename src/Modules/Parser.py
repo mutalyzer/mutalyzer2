@@ -344,11 +344,15 @@ class Nomenclatureparser() :
             self.__output.addMessage(__file__, 4, "EPARSE", str(err))
 
             # Log the input.
-            self.__output.addMessage(__file__, 4, "EPARSE", variant)
+            #self.__output.addMessage(__file__, 4, "EPARSE", variant)
 
             # And log the position where the parsing error occurred.
             pos = int(str(err).split(':')[-1][:-1]) - 1
-            self.__output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
+            #self.__output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
+
+            #self.__output.addOutput("parseError", str(err))
+            self.__output.addOutput("parseError", variant)
+            self.__output.addOutput("parseError", pos * ' ' + '^')
             return None
         #except
     #parse

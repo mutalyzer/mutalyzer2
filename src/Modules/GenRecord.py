@@ -366,7 +366,9 @@ class GenRecord() :
                             self.__output.addMessage(__file__, 2, "WNOMRNA",
                                 "No mRNA field found for gene %s, transcript " \
                                 "variant %s in record, constructing " \
-                                "it from CDS." % (i.name, j.name))
+                                "it from CDS. Please note that descriptions "\
+                                "exceeding CDS boundaries are invalid." % (
+                                i.name, j.name))
                         if j.CDS :
                             if not j.CDS.positionList :
                                 #self.__output.addMessage(__file__, 2,
@@ -379,6 +381,7 @@ class GenRecord() :
                             #if
                             else :
                                 j.mRNA = j.CDS
+                                j.linkMethod = "construction"
                             j.transcribe = True
                             j.translate = True
                         #if

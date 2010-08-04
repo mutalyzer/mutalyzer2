@@ -1,0 +1,53 @@
+\begin{longtable}{llp{7cm}}
+name     & $\rightarrow$ & ([a--z][A--Z][0--9])$^+$\\
+Nt       & $\rightarrow$ & `a' $|$ `c' $|$ `g' $|$ `t' $|$ `u' $|$ `r' $|$ 
+                           `y' $|$ `k' $|$ `m' $|$ `s' $|$ `w' $|$ `b' $|$ 
+                           `d' $|$ `h' $|$ `v' $|$ `i' $|$ `n' $|$ `A' $|$ 
+                           `C' $|$ `G' $|$ `T' $|$ `U'\\
+NtString & $\rightarrow$ & (Nt)$^+$\\
+Number & $\rightarrow$ & ([0--9])$^+$\\
+TransVar   & $\rightarrow$ & `\_v' Number\\
+ProtIso    & $\rightarrow$ & `\_i' Number\\
+GeneSymbol & $\rightarrow$ & `(' name (TransVar $|$ ProtVar)? `)'\\
+GI         & $\rightarrow$ & (`GI' $|$ `GI:')? Number\\
+Version    & $\rightarrow$ & `.' Number\\
+AccNo      & $\rightarrow$ & `ish.'? ([a--Z] Number `\_')$^+$ Version? \\
+RefSeqAcc  & $\rightarrow$ & (GI $|$ AccNo) (`(' GeneSymbol `)')?\\
+Chrom & $\rightarrow$ & name\\
+Offset & $\rightarrow$ & (`+' $|$ `-') (`u' $|$ `d')? (Number $|$ `?')\\
+PtLoc & $\rightarrow$ & ((`-' $|$ `*')? Number Offset?) $|$ `?'\\
+RefType & $\rightarrow$ & (`c' $|$ `g' $|$ `m' $|$ `n' $|$ `r') `.'\\
+Ref & $\rightarrow$ & ((RefSeqAcc $|$ GeneSymbol) `:')? RefType?\\
+Extent & $\rightarrow$ & PtLoc `\_' (`o'? (RefSeqAcc $|$ GeneSymbol) `:')? PtLoc\\
+RangeLoc & $\rightarrow$ & Extent $|$ `(` Extent `)'\\
+Loc & $\rightarrow$ & PtLoc $|$ RangeLoc\\
+FarLoc & $\rightarrow$ & (RefSeqAcc $|$ GeneSymbol) (`:' RefType? Extent)? \\
+Subst & $\rightarrow$ & PtLoc Nt `$>$' Nt\\
+Del & $\rightarrow$ & Loc `del' (Nt$^+$ $|$ Number)?\\
+Dup & $\rightarrow$ & Loc `dup' (Nt$^+$ $|$ Number)? Nest?\\
+AbrSSR & $\rightarrow$ & PtLoc  Nt$^+$ `(' Number `\_' Number `)'\\
+VarSSR & $\rightarrow$ & (PtLoc  Nt$^+$ `[' Number `]') $|$ (RangeLoc `[' Number `]') \\
+Ins & $\rightarrow$ & RangeLoc `ins' (Nt$^+$ $|$ Number $|$ RangeLoc $|$ FarLoc) Nest?\\
+Indel & $\rightarrow$ & RangeLoc `del' (Nt$^+$ $|$ Number)? `ins' (Nt$^+$ $|$ Number $|$ RangeLoc $|$ FarLoc) Nest?\\
+Inv & $\rightarrow$ & RangeLoc `inv' (Nt$^+$ $|$ Number)? Nest?\\
+Conv & $\rightarrow$ & RangeLoc `con' FarLoc Nest?\\
+ChromBand & $\rightarrow$ & (`p' $|$ `q') Number `.' Number\\
+ChromCoords & $\rightarrow$ & `(' Chrom `;' Chrom `)' `(' ChromBand `;' ChromBand `)'\\
+TransLoc & $\rightarrow$ & `t' ChromCoords `(' FarLoc `)'\\
+RawVar & $\rightarrow$ & Subst $|$ Del $|$ Dup $|$ VarSSR $|$ Ins $|$ Indel $|$ Inv $|$ Conv\\
+SingleVar & $\rightarrow$ & Ref RawVar $|$ TransLoc\\
+ExtendedRawVar & $\rightarrow$ & RawVar $|$ `=' $|$ `?'\\
+SimpleAlleleVarSet & $\rightarrow$ & (`[' ExtendedRawVar (`;' ExtendedRawVar)$^*$ `]') $|$ ExtendedRawVar\\ 
+MosaicSet & $\rightarrow$ & (`[' SimpleAlleleVarSet (`/' SimpleAlleleVarSet)$^*$ `]') $|$ SimpleAlleleVarSet\\
+ChimeronSet & $\rightarrow$ & (`[' MosaicSet (`//' MosaicSet)$^*$ `]') $|$ MosaicSet\\
+SingleAlleleVarSet & $\rightarrow$ & (`[' ChimeronSet ((`;' $|$ `\verb#^#') ChimeronSet)$^*$ (`(;)' ChimeronSet)$^*$ `]') $|$ ChimeronSet\\
+SingleAlleleVars & $\rightarrow$ & Ref SingleAlleleVarSet\\
+MultiAlleleVars & $\rightarrow$ & Ref SingleAlleleVarSet (`;' Ref? SingleAlleleVarSet)$^+$\\
+MultiVar & $\rightarrow$ & SingleAlleleVars $|$ MultiAlleleVars\\
+MultiTranscriptVar & $\rightarrow$ & Ref `[` ExtendedRawVar (`;' ExtendedRawVar)$^*$ (`,' ExtendedRawVar (`;' ExtendedRawVar)$^*$)$^+$ `]'\\
+UnkEffectVar & $\rightarrow$ & Ref (`(=)' $|$ `?')\\
+SplicingVar & $\rightarrow$ & Ref (`spl?' $|$ `(spl?)')\\
+NoRNAVar & $\rightarrow$ & Ref `0' `?'?\\
+Var & $\rightarrow$ & SingleVar $|$ MultiVar $|$ MultiTranscriptVar $|$ UnkEffectVar $|$ NoRNAVar $|$ SplicingVar\\
+Nest & $\rightarrow$ & `\{' SimpleAlleleVarSet `\}'
+\end{longtable}

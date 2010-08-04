@@ -1,0 +1,236 @@
+\subsubsection{Creating the user}
+
+\begin{verbatim}
+CREATE USER mutalyzer;
+\end{verbatim}
+
+\subsubsection{Creating the mapping databases}
+\paragraph{Human genome build 18}
+
+The table definitions of \texttt{refLink}, \texttt{refGene} and
+\texttt{gbStatus} and their content can be found at \\
+\verb#http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/#.
+
+\vbox{
+\begin{verbatim}
+CREATE DATABASE hg18;
+GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
+FLUSH PRIVILEGES;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+USE hg18;
+CREATE TABLE map
+  SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, 
+                  cdsEnd, exonStarts, exonEnds, name2 
+                  AS geneName, chrom, strand, protAcc
+    FROM gbStatus, refGene, refLink
+    WHERE type = "mRNA"
+    AND refGene.name = acc
+    AND acc = mrnaAcc;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE map_cdsBackup LIKE map;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE ChrName (
+  AccNo CHAR(20) PRIMARY KEY,
+  name CHAR(20) NOT NULL
+);
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+INSERT INTO ChrName (AccNo, name) VALUES
+  ("NC_000001.9", "chr1"),
+  ("NC_000002.10", "chr2"),
+  ("NC_000003.10", "chr3"),
+  ("NC_000004.10", "chr4"),
+  ("NC_000005.8", "chr5"),
+  ("NC_000006.10", "chr6"),
+  ("NC_000007.12", "chr7"),
+  ("NC_000008.9", "chr8"),
+  ("NC_000009.10", "chr9"),
+  ("NC_000010.9", "chr10"),
+  ("NC_000011.8", "chr11"),
+  ("NC_000012.10", "chr12"),
+  ("NC_000013.9", "chr13"),
+  ("NC_000014.7", "chr14"),
+  ("NC_000015.8", "chr15"),
+  ("NC_000016.8", "chr16"),
+  ("NC_000017.9", "chr17"),
+  ("NC_000018.8", "chr18"),
+  ("NC_000019.8", "chr19"),
+  ("NC_000020.9", "chr20"),
+  ("NC_000021.7", "chr21"),
+  ("NC_000022.9", "chr22"),
+  ("NC_000023.9", "chrX"),
+  ("NC_000024.8", "chrY"),
+  ("NC_001807.4", "chrM"),
+  ("NT_113891.1", "chr6_cox_hap1"),
+  ("NT_113959.1", "chr22_h2_hap1");
+\end{verbatim}
+}
+
+\paragraph{Human genome build 19}
+The table definitions of \texttt{refLink}, \texttt{refGene} and
+\texttt{gbStatus} and their content can be found at \\
+\verb#http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/#.
+
+\vbox{
+\begin{verbatim}
+CREATE DATABASE hg19;
+GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
+FLUSH PRIVILEGES;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+USE hg19;
+CREATE TABLE map
+  SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, 
+                  cdsEnd, exonStarts, exonEnds, name2 
+                  AS geneName, chrom, strand, protAcc
+    FROM gbStatus, refGene, refLink
+    WHERE type = "mRNA"
+    AND refGene.name = acc
+    AND acc = mrnaAcc;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE map_cdsBackup LIKE map;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE ChrName (
+  AccNo CHAR(20) PRIMARY KEY,
+  name CHAR(20) NOT NULL
+);
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+INSERT INTO ChrName (AccNo, name) VALUES
+  ("NC_000001.10", "chr1"),
+  ("NC_000002.11", "chr2"), 
+  ("NC_000003.11", "chr3"), 
+  ("NC_000004.11", "chr4"), 
+  ("NC_000005.9", "chr5"), 
+  ("NC_000006.11", "chr6"), 
+  ("NC_000007.13", "chr7"), 
+  ("NC_000008.10", "chr8"), 
+  ("NC_000009.11", "chr9"), 
+  ("NC_000010.10", "chr10"), 
+  ("NC_000011.9", "chr11"), 
+  ("NC_000012.11", "chr12"), 
+  ("NC_000013.10", "chr13"), 
+  ("NC_000014.8", "chr14"), 
+  ("NC_000015.9", "chr15"), 
+  ("NC_000016.9", "chr16"), 
+  ("NC_000017.10", "chr17"), 
+  ("NC_000018.9", "chr18"), 
+  ("NC_000019.9", "chr19"), 
+  ("NC_000020.10", "chr20"), 
+  ("NC_000021.8", "chr21"), 
+  ("NC_000022.10", "chr22"), 
+  ("NC_000023.10", "chrX"), 
+  ("NC_000024.9", "chrY"), 
+  ("NT_167244.1", "chr6_apd_hap1"), 
+  ("NT_113891.2", "chr6_cox_hap2"), 
+  ("NT_167245.1", "chr6_dbb_hap3"), 
+  ("NT_167246.1", "chr6_mann_hap4"), 
+  ("NT_167247.1", "chr6_mcf_hap5"), 
+  ("NT_167248.1", "chr6_qbl_hap6"), 
+  ("NT_167249.1", "chr6_ssto_hap7"), 
+  ("NT_167250.1", "chr4_ctg9_hap1"), 
+  ("NT_167251.1", "chr17_ctg5_hap1")
+;
+\end{verbatim}
+}
+
+\subsubsection{The internal database}
+
+\vbox{
+\begin{verbatim}
+CREATE DATABASE mutalyzer;
+GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
+FLUSH PRIVILEGES;
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+USE mutalyzer;
+CREATE TABLE GBInfo (
+  AccNo CHAR(20) PRIMARY KEY,
+  GI CHAR(13) UNIQUE,
+  hash CHAR(32) UNIQUE NOT NULL,
+  ChrAccVer CHAR(20),
+  ChrStart INT(12),
+  ChrStop INT(12),
+  orientation INT(2),
+  url CHAR(255)
+);
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE BatchQueue (
+  QueueID INT(5) PRIMARY KEY AUTO_INCREMENT,
+  JobID CHAR(20) NOT NULL,
+  Input CHAR(255) NOT NULL,
+  Flags CHAR(20)
+);
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE BatchJob (
+  JobID CHAR(20) PRIMARY KEY,
+  Filter CHAR(20) NOT NULL,
+  EMail CHAR(255) NOT NULL,
+  FromHost Char(255) NOT NULL,
+  JobType CHAR(20) NULL,
+  Arg1 char(20) DEFAULT NULL
+);
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+CREATE TABLE Link (
+  mrnaAcc CHAR(20) PRIMARY KEY,
+  protAcc CHAR(20) UNIQUE NOT NULL
+);
+\end{verbatim}
+}
+
+\vbox{
+\begin{verbatim}
+INSERT INTO Link 
+  SELECT DISTINCT acc, protAcc 
+    FROM hg18.map 
+    WHERE protAcc != '' 
+  UNION 
+  SELECT DISTINCT acc, protAcc 
+    FROM hg19.map 
+    WHERE protAcc != '';
+\end{verbatim}
+}

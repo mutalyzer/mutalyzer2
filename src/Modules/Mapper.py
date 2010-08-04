@@ -494,9 +494,10 @@ class Converter(object):
         f_change = self._constructChange(False)
         r_change = self._constructChange(True)
 
-        loc = int(self.parseTree.RawVar.StartLoc.PtLoc[0])
+        #FIXME This should be a proper conversion.
+        loc = int(self.parseTree.RawVar.StartLoc.PtLoc.Main)
         if self.parseTree.RawVar.EndLoc:
-            loc2 = int(self.parseTree.RawVar.EndLoc.PtLoc[0])
+            loc2 = int(self.parseTree.RawVar.EndLoc.PtLoc.Main)
         else:
             loc2 = loc
         transcripts = self.__database.get_Transcripts(\

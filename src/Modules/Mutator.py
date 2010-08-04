@@ -3,6 +3,7 @@
 from Bio import Restriction
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
+from Bio.Seq import reverse_complement # reverse_complement()
 
 """
     Module for mutating a string.
@@ -140,7 +141,7 @@ class Mutator() :
                                    # entry will be the last one in the list.
     #__sortins
 
-    def __makeRestrictionSet(self, seq) :
+    def __makeRestrictionList(self, seq) :
         """
             Return a set of restriction enzymes that can bind in a certain
             sequence.
@@ -149,7 +150,7 @@ class Mutator() :
                 seq ; The sequence to be analysed.
 
             Returns:
-                set ; A set of restriction enzymes.
+                list ; A list of restriction enzymes.
 
             Private variables:
                 __restrictionBatch ; A RestrictionBatch object.
@@ -157,8 +158,38 @@ class Mutator() :
 
         restrictionAnalysis = Restriction.Analysis(self.__restrictionBatch, seq)
     
-        return set(restrictionAnalysis.with_sites().keys())
+        d = restrictionAnalysis.with_sites()
+        ret = []
+
+        for i in d.keys() :
+            for j in d[i] :
+                ret.append(str(i))
+
+        return ret
     #__makeRestrictionSet
+
+    def __restrictionDiff(self, list1, list2) :
+        #TODO documentation
+        """
+        """
+
+        tempList = list(list1)
+        for i in list2 :
+            if i in tempList :
+                tempList.remove(i)
+
+        ret = []
+        tempList.sort()
+        for i in set(tempList) :
+            c = tempList.count(i)
+            if c > 1 :
+                ret.append("%s (%i)" % (i, c))
+            else :
+                ret.append(i)
+        #for
+
+        return ret
+    #__restrictionDiff
     
     def __mutate(self, pos1, pos2, ins) :
         """
@@ -184,63 +215,57 @@ class Mutator() :
                           delins.
         """
 
-        # This part is just a visualisation, needs more attention.
+        #
+        # This part is for visualisation.
         #
 
         loflank = self.orig[max(pos1 - self.__config.flanksize, 0):pos1]
         roflank = self.orig[pos2:pos2 + self.__config.flanksize]
         delPart = self.orig[pos1:pos2]
-        odel = delPart
-        if len(odel) > self.__config.maxvissize :
-            odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize], 
-                len(odel) - self.__config.flankclipsize * 2,
-                odel[-self.__config.flankclipsize:])
+        #odel = delPart
+        #if len(odel) > self.__config.maxvissize :
+        #    odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize], 
+        #        len(odel) - self.__config.flankclipsize * 2,
+        #        odel[-self.__config.flankclipsize:])
+        odel = self.visualiseLargeString(delPart)
 
         bp1 = self.shiftpos(pos1)
         bp2 = self.shiftpos(pos2)
         lmflank = self.mutated[max(bp1 - self.__config.flanksize, 0):bp1]
         rmflank = self.mutated[bp2:bp2 + self.__config.flanksize]
 
-        insvis = ins
-        if len(ins) > self.__config.maxvissize :
-            insvis = "%s [%ibp] %s" % (ins[:self.__config.flankclipsize],
-                len(ins) - self.__config.flankclipsize * 2,
-                ins[-self.__config.flankclipsize:])
+        #insvis = ins
+        #if len(ins) > self.__config.maxvissize :
+        #    insvis = "%s [%ibp] %s" % (ins[:self.__config.flankclipsize],
+        #        len(ins) - self.__config.flankclipsize * 2,
+        #        ins[-self.__config.flankclipsize:])
+        insvis = self.visualiseLargeString(ins)
         fill = abs(len(odel) - len(insvis))
         if len(odel) > len(ins) :
-            #self.__output.addOutput("visualisation", 
-            #                      "%s %s %s" % (loflank, odel, roflank))
-            #self.__output.addOutput("visualisation",
-            #                      "%s %s%s %s" % (lmflank, insvis, '-' * fill, 
-            #                                      rmflank))
             visualisation = ["%s %s %s" % (loflank, odel, roflank), 
                 "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)]
-        #if
         else :
-            #self.__output.addOutput("visualisation",
-            #                      "%s %s%s %s" % (loflank, odel, '-' * fill, 
-            #                                      roflank))
-            #self.__output.addOutput("visualisation",
-            #                            "%s %s %s" % (lmflank, insvis, 
-            #                                          rmflank))
             visualisation = ["%s %s%s %s" % (loflank, odel, '-' * fill, 
-                                             roflank),
-                             "%s %s %s" % (lmflank, insvis, rmflank)]
-        #else
+                roflank), "%s %s %s" % (lmflank, insvis, rmflank)]
 
         #
         # End visualisation part.
+        #
 
+        #
         # Restriction site analysis:
         #
 
-        set1 = self.__makeRestrictionSet(loflank + delPart + roflank)
-        set2 = self.__makeRestrictionSet(lmflank + ins + rmflank)
+        list1 = self.__makeRestrictionList(loflank + delPart + roflank)
+        list2 = self.__makeRestrictionList(lmflank + ins + rmflank)
         self.__output.addOutput("restrictionSites", 
-            [str(list(set1 - set2))[1:-1], str(list(set2 - set1))[1:-1]])
+            [self.__restrictionDiff(list2, list1), 
+             self.__restrictionDiff(list1, list2)])
+            #[str(list(set1 - set2))[1:-1], str(list(set2 - set1))[1:-1]])
 
         #
         # End restriction site analysis:
+        #
 
         self.mutated = self.mutated[:self.shiftpos(pos1)] + ins + \
                        self.mutated[self.shiftpos(pos2):]
@@ -248,6 +273,17 @@ class Mutator() :
 
         return visualisation
     #__mutate
+
+    def visualiseLargeString(self, string) :
+        """
+        """
+
+        if len(string) > self.__config.maxvissize :
+            return "%s [%ibp] %s" % (string[:self.__config.flankclipsize],
+                len(string) - self.__config.flankclipsize * 2,
+                string[-self.__config.flankclipsize:])
+        return string
+    #visualiseIns
 
     def shiftpos(self, position) :
         """
@@ -296,6 +332,7 @@ class Mutator() :
             else :
                 ret.append(self.shiftpos(i - 1) + 1)
             j += 1
+        #for
 
         return ret
     #newSplice
@@ -313,7 +350,6 @@ class Mutator() :
         """
 
         if pos1 == pos2 :
-            #self.__output.addOutput("visualisation", "deletion of %i" % pos1)
             visualisation = ["deletion of %i" % pos1]
         else :
             visualisation = ["deletion of %i to %i" % (pos1, pos2)]
@@ -384,8 +420,6 @@ class Mutator() :
             Public variables:
                 orig ; The original string.
         """
-
-        from Bio.Seq import reverse_complement # reverse_complement()
 
         visualisation = ["inversion between %i and %i" % (pos1, pos2)]
         visualisation.extend(self.__mutate(pos1 - 1, pos2, \

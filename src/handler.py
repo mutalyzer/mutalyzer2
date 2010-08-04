@@ -57,7 +57,7 @@ def handler(req):
     W = Web.Web()
 
     # Dispatch the webservices handler.
-    if "services" in req.uri :
+    if "/services" in req.uri :
         Export = webservice.MutalyzerService()
         dispatch.AsHandler(modules=(Export,), request=req, rpc=True)
         return apache.OK
@@ -107,8 +107,8 @@ def handler(req):
         return apache.OK
     #if
 
-    # Return uncompressed GenBank files from the cache.
-    if "GenBank" in req.uri:
+    # Return uncompressed reference sequence files from the cache.
+    if "Reference" in req.uri:
         reqFile = req.uri.split('/')[-1]
         C = Config.Config()
         fileName = "%s/%s.bz2" % (C.Retriever.cache, reqFile)

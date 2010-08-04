@@ -48,7 +48,7 @@
           width="180">
           <a href="index" 
             target="_top"><img 
-              src="base/images/mutalyzer_logo_bw.png" width="180" height="106" 
+              src="base/images/mutalyzer_logo_bw.png" width="180" height="112" 
               alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
         <td valign="top" 
           bgcolor="#FFFFFF" 
@@ -72,18 +72,24 @@
       </tr>
   
       <tr>
-        <td width="20">
-          <img src="base/images/1x1b.gif" 
-            height="1" 
-            width="20" 
-            border="0">
+        <td>
         </td>
-        <td align="right" 
-          width="510">
-          <a href="index" 
-            class="hornav">home</a>&nbsp;&nbsp;&nbsp;
-          <a href="" 
-            class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
+        <td>
+        <table width = "100%" style = "padding:0 border:0 margin:0">
+          <tr>
+            <td align="left">
+              <a href="javascript:history.back(-1);" 
+                 class="hornav">previous page</a>&nbsp;&nbsp;&nbsp;
+            </td>
+            <td align="right">
+              <a href="index" 
+                 class="hornav">home</a>&nbsp;&nbsp;&nbsp;
+              <a tal:attributes = "href string:mailto:${contactEmail}"
+                 class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
+              <a href="#bottom" class="hornav">go to bottom</a>&nbsp;&nbsp;&nbsp;
+            </td>
+          </tr>
+        </table>
         </td>
       </tr>
   
@@ -283,16 +289,16 @@
 
       <tr>
         <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_download">
+          <img src="base/images/bullitdonker.gif" id="b_webservices">
         </td>
         <td colspan="3">
-          <a id="page_download" 
-            onclick="swapActive('download');" 
-            href="download" 
+          <a id="page_webservices" 
+            onclick="swapActive('webservices');" 
+            href="webservices" 
             onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'download');" 
+                                'webservices');" 
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'download');" 
+                                 'webservices');" 
             class="vertnavsub">Webservices</a>
         </td>
       </tr>
@@ -314,7 +320,10 @@
       </tr>
 
       <tr>
-        <td colspan="2"></td>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_batchNameChecker">
+        </td>
         <td colspan="2">
           <a id="page_batchNameChecker" 
             onclick="swapActive('batchNameChecker');" 
@@ -324,7 +333,10 @@
       </tr>
 
       <tr>
-        <td colspan="2"></td>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_batchSyntaxChecker">
+        </td>
         <td colspan="2">
           <a id="page_batchSyntaxChecker" 
             onclick="swapActive('batchSyntaxChecker');" 
@@ -334,28 +346,15 @@
       </tr>
 
       <tr>
-        <td colspan="2"></td>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_batchPositionConverter">
+        </td>
         <td colspan="2">
-          <a id="page_batchConversionChecker" 
-            onclick="swapActive('batchConversionChecker');" 
-            href="batchConversionChecker" 
-            class="vertnavsub">Conversion Checker</a>
-        </td>
-      </tr>
-
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_bugTrack">
-        </td>
-        <td colspan="3">
-          <a id="page_bugTrack" 
-            onclick="swapActive('bugTrack');" 
-            href="bugtracker" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'bugTrack');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'bugTrack');" 
-            class="vertnavsub">Report bugs</a>
+          <a id="page_batchPositionConverter" 
+            onclick="swapActive('batchPositionConverter');" 
+            href="batchPositionConverter" 
+            class="vertnavsub">Position Converter</a>
         </td>
       </tr>
 
@@ -391,116 +390,108 @@
         </td>
       </tr>
 
-      <!-- Publications - ->
       <tr>
         <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_publications">
+          <img src="base/images/bullitdonker.gif" id="b_disclaimer">
         </td>
         <td colspan="3">
-          <a id="page_publications" 
-            onClick="swapActive('publications');" 
-            href="/#publications" 
-            onMouseover="navAct('base/images/bullitlicht1.gif', 
-                                'publications');" 
-            onMouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'publications');" 
-            class="vertnavsub">Publications</a>
+          <a id="page_disclaimer" 
+            onclick="swapActive('disclaimer');" 
+            href="disclaimer" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'disclaimer');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'disclaimer');" 
+            class="vertnavsub">Disclaimer</a>
         </td>
       </tr>
-  -->
-    
-      <!-- Posters - ->
+
       <tr>
         <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_posters">
+          <img src="base/images/bullitdonker.gif" id="b_bugTrack">
         </td>
         <td colspan="3">
-          <a id="page_posters" 
-            onClick="swapActive('posters');" 
-            href="/#posters" 
-            onMouseover="navAct('base/images/bullitlicht1.gif', 
-                                'posters');" 
-            onMouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'posters');" 
-            class="vertnavsub">Posters</a>
+          <a id="page_bugTrack" 
+            onclick="swapActive('bugTrack');" 
+            href="bugtracker" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'bugTrack');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'bugTrack');" 
+            class="vertnavsub">Report bugs</a>
         </td>
       </tr>
-  -->
-    
-      <!-- Presentations - ->
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_presentations">
-        </td>
-        <td colspan="3">
-          <a id="page_presentations" 
-            onClick="swapActive('presentations');" 
-            href="/#presentations" 
-            onMouseover="navAct('base/images/bullitlicht1.gif', 
-                                'presentations');" 
-            onMouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'presentations');" 
-            class="vertnavsub">Presentations</a>
-        </td>
-      </tr>
-  -->
       
-  <!-- # include virtual="/edu/menu.shtml"-->
-      
-      <!-- Links - ->
+      <tr><td>&nbsp;</td></tr>
+
       <tr>
         <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_links">
+          <img src="base/images/bullitdonker.gif" id="b_external">
         </td>
         <td colspan="3">
-          <a id="page_links" 
-            onClick="swapActive('links');" 
-            href="/#links" 
-            onMouseover="navAct('base/images/bullitlicht1.gif', 
-                                'links');" 
-            onMouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'links');" 
-            class="vertnavsub">Links</a>
+          <a id="page_external" 
+            onclick="swapActive('external');" 
+            href="external" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'external');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'external');" 
+            class="vertnavsub">External links</a>
         </td>
       </tr>
-  -->
-    
-  <!-- # include virtual="/studies/menu.shtml"-->
-    
-  <!-- # include virtual="/personal/menu.shtml"-->
-  
-      <!-- Search - ->
+
       <tr>
-       <td valign="top" width="20">
-         <img src="base/images/bullitdonker.gif" id="b_search">
-       </td>
-       <td colspan="3">
-         <form action="base/cgi/gs.cgi">
-  <!- -
-           <a id="page_search" 
-             onClick="swapActive('search');" 
-             id="gs" 
-             onMouseover="navDeAct('base/images/bullitlicht1.gif', 
-                                    'search');" 
-             onMouseout="navDeAct('base/images/bullitdonker.gif', 
-                                   'search');"
-             class="vertnavsub">Search&#160;</a> 
-  - ->
-           <a id="page_search" 
-             href=""
-             class="vertnavsub">Search&#160;</a> 
-           <input 
-             type="text" 
-             value="" 
-             framewidth="0" 
-             name="q" 
-             style="width:100px" 
-             maxlength="256">
-         </form>
-       </td>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_external_hgb">
+        </td>
+        <td colspan="2">
+          <a id="page_external_hgb" 
+            onclick="swapActive('external_hgb');" 
+            href="http://www.genenames.org/guidelines.html" 
+            class="vertnavsub">Human Gene Nomenclature</a>
+        </td>
       </tr>
-      -->
-  
+
+      <tr>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_external_hgvs">
+        </td>
+        <td colspan="2">
+          <a id="page_external_hgvs" 
+            onclick="swapActive('external_hgvs');" 
+            href="http://www.hgvs.org/mutnomen/" 
+            class="vertnavsub">HGVS variation nomenclature</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_external_hgvsext">
+        </td>
+        <td colspan="2">
+          <a id="page_external_hgvsext" 
+            onclick="swapActive('external_hgvsext');" 
+            href="downloads/HGVS_nomenclature_extension_proposal.pdf" 
+            class="vertnavsub">HGVS nomenclature extension proposal</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td></td>
+        <td valign="baseline" width="10">
+          <img src="base/images/bullitmiddel.gif" id="b_external_lovd">
+        </td>
+        <td colspan="2">
+          <a id="page_external_lovd" 
+            onclick="swapActive('external_lovd');" 
+            href="http://www.lovd.nl/" 
+            class="vertnavsub">LOVD</a>
+        </td>
+      </tr>
+
       <tr>
         <td width="20"><img 
           src="base/images/1x1b.gif" 
@@ -570,7 +561,7 @@
         </td>
       </tr>
       <tr>
-        <td bgcolor="#000000" colspan="2"><img 
+        <td bgcolor="#000000" colspan="3"><img 
           src="base/images/1x1b.gif" 
           width="100%" 
           height="1" 
@@ -578,10 +569,16 @@
       </tr>
       <tr>
         <td align="left">
-          <a href="javascript:history.back(-1);" class="hornav">previous page</a>
+          <a href="javascript:history.back(-1);" 
+             class="hornav">previous page</a>
         </td>
-        <td align="right"><a href="#top" class="hornav">go to top</a>
+        <td align="middle">
+          <img src = "base/images/LUMC_24x24.png" align = "middle"></img>
+          &nbsp; &copy; 2010 <a href = "http://www.lumc.nl">LUMC</a>
+          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+          &nbsp; &nbsp; 
         </td>
+        <td align="right"><a href="#top" class="hornav">go to top</a></td>
       </tr>
       <tr>
   <!--
@@ -602,5 +599,6 @@
     </td>
   </tr>
   </table>
+  <a id="bottom"></a>
   </body>
 </html>

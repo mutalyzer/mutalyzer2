@@ -26,22 +26,34 @@ import Mutalyzer
 #import BatchChecker
 
 def debug(f):
-    """Debug Wrapper for functions called from within the daemon"""
+    #TODO documentation
+    """
+        Debug Wrapper for functions called from within the daemon
+    """
+
     def _tempf(*args):
+        #TODO documentation
+        """
+        """
+
         of = open("/tmp/daemon.out", "a+")
         try:
             of.write("\nFunction %s\n\targs: %s\n\t" % (`f`, `args`))
             ret = f(*args)
             of.write("Returns: %s" % `ret`)
             return ret
+        #try
         except Exception, e:
             import traceback
             of.write("\nEXCEPTION:\n")
             traceback.print_exc(file=of)
+        #except
     return _tempf
+#debug
 
 
 class Scheduler() :
+    #TODO documentation
     """
         Special methods:
             __init__(config, database) ;
@@ -54,6 +66,7 @@ class Scheduler() :
     """
 
     def __init__(self, config, database) :
+        #TODO documentation
         """
             Arguments:
                 config   ;
@@ -76,6 +89,7 @@ class Scheduler() :
                 __config ; The variables mailMessage, mailSubject and mailFrom
                            are used.
         """
+
         #TODO: Handle Connection errors in a try, except fassion
         #socket.error 
 
@@ -95,23 +109,43 @@ class Scheduler() :
     #__sendMail
 
     def __processFlags(self, O, flags):
+        #TODO documentation
+        """
+        """
+
         #TODO: Add more info for the user 
         if not flags: return
         if 'S' in flags: #This entry is going to be skipped
             #Add a usefull message to the Output object
             O.addMessage(__file__, 4, "EBSKIP", "Skipping entry")
             return True #skip
+        #if
         if 'A' in flags: #This entry is altered before execution
             O.addMessage(__file__, 3, "WEALTER", "Entry altered before "
                     "execution")
+    #__processFlags                    
 
     def __alterBatchEntries(self, jobID, old, new, flag, nselector):
+        #TODO documentation
+        """
+        """
+
         self.__database.updateBatchDb(jobID, old, new, flag, nselector)
+    #__alterBatchEntries
 
     def __skipBatchEntries(self, jobID, flag, selector):
+        #TODO documentation
+        """
+        """
+
         self.__database.skipBatchDb(jobID, selector, flag)
+    #__skipBatchEntries
 
     def _updateDbFlags(self, O, jobID):
+        #TODO documentation
+        """
+        """
+
         flags = O.getOutput("BatchFlags")
         if not flags: return
         #First check if we need to skip
@@ -123,6 +157,8 @@ class Scheduler() :
                         "skipped" % selector)
                 self.__skipBatchEntries(jobID, flag, selector)
                 return
+            #if
+        #for
         #If not skipflags, check if we need to alter
         for flag, args in flags:
             if 'A' in flag:
@@ -131,12 +167,16 @@ class Scheduler() :
                         "All further occurrences of %s will be substituted "
                         "by %s" % (old, new))
                 self.__alterBatchEntries(jobID, old, new, flag, nselector)
-
+            #if
+        #for
+    #_updateDbFlags
 
     def process(self) :
+        #TODO documentation
         """
             Start the mutalyzer Batch Processing
         """
+
         jobList = self.__database.getJobs()
 
         while jobList :
@@ -162,11 +202,13 @@ class Scheduler() :
     #process
 
     def _processNameBatch(self, cmd, i, flags):
+        #TODO documentation
         """
             Process an entry from the Name Batch,
 
             write the results to the job-file
         """
+
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
 
@@ -185,9 +227,11 @@ class Scheduler() :
                         "Unexpected error occurred, dev-team notified")
                 #import traceback
                 #O.addMessage(__file__, 4, "DEBUG", `traceback.format_exc()`)
+            #except
             finally:
                 #check if we need to update the database
                 self._updateDbFlags(O, i)
+        #if
 
         batchOutput = O.getOutput("batchDone")
 
@@ -203,20 +247,22 @@ class Scheduler() :
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename):
             handle = open(filename, 'a')
-            handle.write("%s\n" % "\t".join(i for i in
+            handle.write("%s\n" % "\t".join(i for i in #TODO clarify
                 self.__config.nameCheckOutHeader))
+        #if
         else:
             handle = open(filename, 'a')
 
         handle.write(outputline)
         handle.close()
-
     #_processNameBatch
 
     def _processSyntaxCheck(self, cmd, i):
+        #TODO documentation
         """
             _processSyntaxCheck docstring
         """
+
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         P = Parser.Nomenclatureparser(O)
@@ -232,8 +278,9 @@ class Scheduler() :
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename):
             handle = open(filename, 'a')
-            handle.write("%s\n" % "\t".join(i for i in
+            handle.write("%s\n" % "\t".join(i for i in #TODO clarify
                 self.__config.syntaxCheckOutHeader))
+        #if
         else:
             handle = open(filename, 'a')
 
@@ -242,9 +289,11 @@ class Scheduler() :
     #_processSyntaxCheck
 
     def _processConversion(self, cmd, i, build):
+        #TODO documentation
         """
             _processConversion docstring
         """
+
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         variant = cmd
@@ -259,10 +308,11 @@ class Scheduler() :
             #Also accept chr accNo
             variant = converter.correctChrVariant(variant)
 
-            if not(":c." in variant or ":g." in variant):
+            if not (":c." in variant or ":g." in variant):
                 #Bad name
                 P = Parser.Nomenclatureparser(O)
                 parsetree = P.parse(variant)
+            #if
 
             if ":c." in variant:
                 # Do the c2chrom dance
@@ -271,15 +321,19 @@ class Scheduler() :
                 # Do the g2c dance
                 variants = converter.chrom2c(variant)
                 if variants:
-                    gName = variant
+                    gName = variant #TODO clarify
                     cNames = [cName for cName2 in variants.values() for cName in
                             cName2]
+                #if
+            #if
+        #try
         except Exception, e:
             #Catch all exceptions related to the processing of cmd
             O.addMessage(__file__, -1, "EBATCH",
                     "Error during ConversionBatch. Input: %s" % `cmd`)
             O.addMessage(__file__, 4, "EBATCHU",
                     "Unexpected error occurred, dev-team notified")
+        #except
 
         error = "%s" % "|".join(O.getBatchMessages(3))
 
@@ -289,6 +343,7 @@ class Scheduler() :
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(i for i in
                 self.__config.positionConverterOutHeader))
+        #if
         else:
             handle = open(filename, 'a')
 
@@ -299,6 +354,7 @@ class Scheduler() :
 
 
     def addJob(self, outputFilter, eMail, queue, fromHost, jobType, Arg1) :
+        #TODO documentation
         """
             Arguments:
                 outputFilter ; Filter the output of Mutalyzer
@@ -307,6 +363,7 @@ class Scheduler() :
                 fromHost     ; From where is the request made
                 jobType      ; The type of Batch Job that should be run
         """
+
         # Add jobs to the database
         jobID = self.__database.addJob(outputFilter, eMail,
                 fromHost, jobType, Arg1)

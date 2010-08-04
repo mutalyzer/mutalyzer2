@@ -25,7 +25,7 @@ function updateVisibility() {
 //Toggle the build option in the batch.html page
 function changeBatch(sel) {
     var opt = sel.options[sel.selectedIndex].value;
-    if(opt=='ConversionChecker') {
+    if(opt=='PositionConverter') {
         document.getElementById('build').style.display = "";
     } else {
         document.getElementById('build').style.display = "none";

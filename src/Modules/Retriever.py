@@ -90,6 +90,7 @@ class Retriever(object) :
         if not os.path.isdir(self._config.cache) :
             os.mkdir(self._config.cache)
         Entrez.email = self._config.email
+        self.fileType = None
     #__init__
 
     def _foldersize(self, folder) :
@@ -158,7 +159,7 @@ class Retriever(object) :
                 string ; A filename.
         """
 
-        return self._config.cache + '/' + name + ".gb.bz2"
+        return self._config.cache + '/' + name + "." + self.fileType + ".bz2"
     #_nametofile
 
     def _write(self, raw_data, filename) :
@@ -220,6 +221,17 @@ class Retriever(object) :
     #_newUD
 
     def _updateDBmd5(self, raw_data, name, GI):
+        #TODO documentation
+        """
+            Arguments:
+                raw_data ;
+                name     ;
+                GI       ;
+
+            Returns:
+                string ;
+        """
+
         currentmd5sum = self._database.getHash(name)
         if currentmd5sum :
             md5sum = self._calcHash(raw_data)
@@ -237,23 +249,49 @@ class Retriever(object) :
 
 
     def snpConvert(self, rsId) :
-        x = Entrez.efetch(db = "SNP", id = rsId, rettype = "flt", 
+        """
+            Search an rsId in dbSNP and return all annotated HGVS notations of
+            it.
+
+            Arguments:
+                rsId ; The id of the SNP.
+
+            Returns:
+                list ; A list of HGVS notations.
+        """
+
+        # A simple input check.
+        ID = rsId[2:]
+        if rsId[:2] != "rs" or not ID.isdigit() :
+            self._output.addMessage(__file__, 4, "ESNPID", "This is not a" \
+                "valid dbSNP id.")
+
+        # Query dbSNP for the SNP.
+        response = Entrez.efetch(db = "SNP", id = ID, rettype = "flt", 
             retmode = "xml")
         
-        doc = xml.dom.minidom.parseString(x.read())
+        # Parse the output.
+        doc = xml.dom.minidom.parseString(response.read())
         for i in doc.getElementsByTagName("hgvs") :
             self._output.addOutput("snp", i.lastChild.data.encode("utf8"))
     #snpConvert
 #Retriever
 
 class GenBankRetriever(Retriever):
+    # TODO documentation
     """
-        TODO: Update docstring
     """
+
     def __init__(self, config, output, database):
+        # TODO documentation
+        """
+        """
+
         # Recall init of parent
         Retriever.__init__(self, config, output, database)
+        self.fileType = "gb"
         # Child specific init
+    #__init__
 
     def write(self, raw_data, filename, extract) :
         """
@@ -326,6 +364,10 @@ class GenBankRetriever(Retriever):
     #write
 
     def fetch(self, name) :
+        #TODO documentation
+        """
+        """
+
         net_handle = Entrez.efetch(db = "nucleotide", id = name, rettype = "gb")
         raw_data = net_handle.read()
         net_handle.close()
@@ -606,25 +648,33 @@ class GenBankRetriever(Retriever):
         # Now we have the file, so we can parse it.
         GenBankParser = GBparser.GBparser()
         return GenBankParser.createGBRecord(filename)
-
     #loadrecord
 #GenBankRetriever
 
 class LargeRetriever(Retriever):
+    #TODO documentation
     """
-    LargeRetriever Docstring
     """
+
     def __init__(self, config, output, database):
+        #TODO documentation
+        """
+        """
+
         # Recall init of parent
         Retriever.__init__(self, config, output, database)
+        self.fileType = "xml"
         # Child specific init
+    #__init__
 
     def loadrecord(self, identifier):
+        #TODO documentation
         """
             Load and parse a LRG file based on the identifier
 
             returns a GenRecord.Record instance on succes, None on failure
         """
+
         # Make a filename based upon the identifier.
         filename = self._nametofile(identifier)
 
@@ -647,6 +697,7 @@ class LargeRetriever(Retriever):
     #loadrecord
 
     def fetch(self, name):
+        #TODO documentation
         """
             Fetch the LRG file from the ebi FTP domain
 
@@ -655,6 +706,7 @@ class LargeRetriever(Retriever):
 
             returns the full path to the file or None in case of an error
         """
+
         prefix = "ftp://ftp.ebi.ac.uk/pub/databases/lrgex/"
         url =        prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
@@ -673,6 +725,7 @@ class LargeRetriever(Retriever):
             self._output.addMessage(__file__, 4, "ERETR",
                                  "Could not retrieve %s." % name)
             return None             #Explicit return in case of an Error
+    #fetch
 
     def downloadrecord(self, url, name = None) :
         """
@@ -689,6 +742,7 @@ class LargeRetriever(Retriever):
                 filename    ; The full path to the file
                 None        ; in case of failure
         """
+
         lrgID = name or os.path.splitext(os.path.split(url)[1])[0]
         #if not lrgID.startswith("LRG"):
         #    return None
@@ -762,8 +816,7 @@ class LargeRetriever(Retriever):
 
         return self._write(raw_data, filename) #returns full path
     #write
-
-
+#LargeRetriever    
 
 if __name__ == "__main__" :
     pass

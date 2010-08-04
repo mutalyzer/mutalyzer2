@@ -94,6 +94,18 @@ class GBparser() :
 
     def __transcriptToProtein(self, transcriptAcc) :
         """
+            Try to find the protein linked to a transcript id. 
+
+            First look in our database, if a link can not be found, try to
+            retrieve it via the NCBI. Store the result in our database.
+
+            Arguments:
+                transcriptAcc ; Accession number of the transcript for which we
+                                want to find the protein.
+            
+            Returns:
+                string ; Accession number of a protein or None if nothing can
+                         be found.
         """
 
         proteinAcc = self.__database.getProtAcc(transcriptAcc)
@@ -128,6 +140,19 @@ class GBparser() :
 
     def __findMismatch(self, productList, direction) :
         """
+            Find the index of the first or last word that distinguishes one
+            sentence from an other.
+
+            If direction equals 1, search for the first word.
+            If direction equals -1, search for the last word.
+               
+            Arguments:
+                productList ; A list of sentences.
+                direction   ; The direction in which to search.
+
+            Returns:
+                integer ; The index of the word where sentences start to
+                          differ.
         """
 
         i = 0
@@ -135,7 +160,11 @@ class GBparser() :
             for j in range(1, len(productList)) :
                 if productList[0][::direction].split(' ')[i] != \
                    productList[j][::direction].split(' ')[i] :
-                    return i
+                    if direction == 1 :
+                        return i
+                    else :
+                        return productList[0].count(' ') - i + 1
+                #if
             i += 1
         #while
         return 0
@@ -143,6 +172,13 @@ class GBparser() :
 
     def __tagByDict(self, locus, key) :
         """
+            Transfer a variable in the qualifiers dictionary to the locus
+            object. If the variable does not exist, set it to the empty string.
+
+            Arguments:
+                locus ; The locus object on which the transfer should be
+                        performed.
+                key   ; The name of the variable that should be transferred.
         """
 
         if locus.qualifiers.has_key(key) :
@@ -153,26 +189,35 @@ class GBparser() :
 
     def __tagLocus(self, locusList) :
         """
+            Enrich a list of locus objects (mRNA or CDS) with information used
+            for linking (locus_tag, proteinLink and productTag). Also 
+            transfer the variables transcript_id, protein_id, gene and product
+            to each of the locus objects. If these variables do not exist, set
+            them to the empty string.
+            
+            Arguments:
+                locusList ; A list of locus objects.
         """
 
         productList = []
         for i in locusList :
-            #productList.extend(i.qualifiers["product"])
+            # Transfer some variables from the dictionary to the locus object.
             self.__tagByDict(i, "locus_tag")
             self.__tagByDict(i, "transcript_id")
             self.__tagByDict(i, "protein_id")
             self.__tagByDict(i, "gene")
             self.__tagByDict(i, "product")
 
+            # Gather the product tags.
             productList.append(i.product)
 
             i.proteinLink = None
             i.linked = False
             if not i.transcript_id :
-                if i.protein_id :
+                if i.protein_id : # Tag a CDS with the protein id.
                     i.proteinLink = i.protein_id.split('.')[0]
             #if                    
-            else :                    
+            else :                # Tag an mRNA with the protein id too.
                 i.proteinLink = \
                     self.__transcriptToProtein(i.transcript_id.split('.')[0])
             i.positionList = self.__locationList2posList(i)
@@ -186,10 +231,11 @@ class GBparser() :
         #for
 
         if productList :
+            # Find the defining words in the product list.
             a = self.__findMismatch(productList, 1)
-            b = productList[0].count(' ') - \
-                self.__findMismatch(productList, -1) + 1
+            b = self.__findMismatch(productList, -1)
 
+            # Add the defining words to the locus.
             for i in range(len(locusList)) :
                 locusList[i].productTag = \
                     ' '.join(productList[i].split(' ')[a:b])
@@ -199,27 +245,27 @@ class GBparser() :
 
     def __checkTags(self, locusList, tagName) :
         """
-            Check whether all tags in a locus list are unique.
+            Check whether all tags in a locus list are unique. Prune all the
+            non unique tags.
 
             Arguments:
                 locusList ; A list of loci.
                 tagName   ; Name of the tag to be checked.
-
-            Returns:
-                boolean ; True if the tags are unique, False otherwise.
         """
 
         tags = []
-        for i in locusList :
+        for i in locusList : # Gather all the tags.
             tags.append(getattr(i, tagName))
+
         badTags = []
-        for i in locusList :
+        for i in locusList : # Collect the tags that can not be used.
             myTag = getattr(i, tagName)
             numberOfTags = tags.count(myTag)
             if numberOfTags > 1 :
                 badTags.append(myTag)
         #for
-        for i in locusList :
+
+        for i in locusList : # Remove unusable tags.
             if getattr(i, tagName) in badTags :
                 setattr(i, tagName, None)
         #for
@@ -268,11 +314,33 @@ class GBparser() :
 
     def link(self, rnaList, cdsList) :
         """
+            Link mRNA loci to CDS loci (all belonging to one gene). 
+
+            First of all, the range of the CDS must be a sub range of that of
+            the mRNA. If this is true, then we try to link both loci. The first
+            method is by looking at the locus_tag, if this fails, we try to 
+            match the proteinLink tags, if this also fails, we try the
+            productTag.
+            If no link could be found, but there is only one possibility left,
+            the loci are linked too.
+            The method that was used to link the loci, is put in the linkmethod
+            variable of the transcript locus. The link variable of the
+            transcript locus is a pointer to the CDS locus. Furthermore, the
+            linked variable of the CDS locus is set to indicate that this locus
+            is no longer available for linking.
+
+            Available link methods are: locus, protein, product and exhaustion.
+
+            Arguments:
+                rnaList ; A list of mRNA loci.
+                cdsList ; A list of CDS loci.
         """
 
+        # Enrich the lists with as much information we can find.
         self.__tagLocus(rnaList)
         self.__tagLocus(cdsList)
 
+        # Prune the tags based upon uniqueness.
         self.__checkTags(rnaList, "locus_tag")
         self.__checkTags(cdsList, "locus_tag")
         self.__checkTags(rnaList, "proteinLink")
@@ -285,6 +353,7 @@ class GBparser() :
             i.linkMethod = None
             for j in cdsList :
                 if self.__matchByRange(i, j) > 0 :
+                    # Try to link via the locus tag first.
                     if i.locus_tag and i.locus_tag == j.locus_tag :
                         i.link = j
                         i.linkMethod = "locus"
@@ -292,12 +361,14 @@ class GBparser() :
                         print "Linked:", j.locus_tag
                         break
                     #if
+                    # Try the proteinLink tag.
                     if i.proteinLink and i.proteinLink == j.proteinLink :
                         i.link = j
                         i.linkMethod = "protein"
                         j.linked = True
                         break
                     #if
+                    # Try the productTag.
                     if i.productTag and i.productTag == j.productTag :
                         i.link = j
                         i.linkMethod = "product"
@@ -307,6 +378,7 @@ class GBparser() :
                 #if
             #for
 
+        # Now look if there is only one possibility left.
         # One *could* also do exhaustion per matched range...
         for i in rnaList :
             if not i.link :
@@ -354,7 +426,7 @@ class GBparser() :
         geneDict = {}
 
         accInfo = biorecord.annotations['accessions']
-        if len(accInfo) >= 3 :
+        if len(accInfo) >= 3 and accInfo[1] == "REGION:" :
             region = accInfo[2]
             if "complement" in region :
                 record.orientation = -1
@@ -402,7 +474,10 @@ class GBparser() :
                     if i.type == "CDS" :
                         geneDict[geneName].cdsList.append(i)
                     if i.type == "exon" :
-                        exonList.extend(self.__location2pos(i.location))
+                        exonLocation = self.__location2pos(i.location)
+                        if exonLocation :
+                            exonList.extend(exonLocation)
+                    #if
                 #if
             #if
         #for
@@ -461,28 +536,33 @@ class GBparser() :
             #for
         #if
         else :
-            myGene = geneDict[geneDict.keys()[0]]
-            myRealGene = record.geneList[0]
-            myCDS = myGene.cdsList[0]
-            self.__tagByDict(myCDS, "protein_id")
-            self.__tagByDict(myCDS, "product")
-            myTranscript = Locus("001")
-            myTranscript.exon = PList()
-            if exonList :
-                myTranscript.exon.positionList = exonList
-            else :
-                myTranscript.exon.location = myRealGene.location
-            myTranscript.CDS = PList()
-            myTranscript.CDS.location = self.__location2pos(myCDS.location)
-            myTranscript.transcriptID = biorecord.id
-            myTranscript.proteinID = myCDS.protein_id
-            myTranscript.proteinProduct = myCDS.product
-            myTranscript.linkMethod = "exhaustion"
-            myTranscript.transcribe = True
-            if myCDS.qualifiers.has_key("transl_table") :
-                myTranscript.txTable = \
-                    int(i.qualifiers["transl_table"][0]) 
-            myRealGene.transcriptList.append(myTranscript)
+            if geneDict :
+                myGene = geneDict[geneDict.keys()[0]]
+                myRealGene = record.geneList[0]
+                myCDS = myGene.cdsList[0]
+                self.__tagByDict(myCDS, "protein_id")
+                self.__tagByDict(myCDS, "product")
+                myTranscript = Locus("001")
+                myTranscript.exon = PList()
+                if exonList :
+                    myTranscript.exon.positionList = exonList
+                else :
+                    myTranscript.exon.location = myRealGene.location
+                myTranscript.CDS = PList()
+                myTranscript.CDS.location = self.__location2pos(myCDS.location)
+                if exonList or myRealGene.location or \
+                   myTranscript.CDS.location :
+                    myTranscript.transcriptID = biorecord.id
+                    myTranscript.proteinID = myCDS.protein_id
+                    myTranscript.proteinProduct = myCDS.product
+                    myTranscript.linkMethod = "exhaustion"
+                    myTranscript.transcribe = True
+                    if myCDS.qualifiers.has_key("transl_table") :
+                        myTranscript.txTable = \
+                            int(i.qualifiers["transl_table"][0]) 
+                    myRealGene.transcriptList.append(myTranscript)
+                #if
+            #if
         #else
         for i in record.geneList :
             if not i.transcriptList :

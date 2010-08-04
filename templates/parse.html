@@ -26,15 +26,22 @@
           type="submit" 
           value="Submit">
       </form><br>
-      <div tal:condition = "messages">
-      <h3>Output</h3>
-      <pre><div tal:repeat = "i messages"
-           tal:replace = "structure string:${i}<br>">
-      </div></pre>
-
-      <div tal:repeat = "i debug"
-           tal:replace = "structure string:${i}<br>">
-      </div>
+      <div tal:condition = "variant">
+        <h3>Output:</h3>
+        <div tal:condition = "parseError">
+          <div tal:repeat = "i messages"
+               tal:replace = "structure string:${i}<br>">
+          </div>
+          <br>
+          <h4>Details of the parse error:</h4>
+          <pre tal:content = 
+            "structure string:${parseError/0}<br>${parseError/1}">
+          </pre>
+          The &quot;^&quot; indicates the position where the error occurred.
+        </div>
+        <div tal:condition = "not:parseError">
+          The syntax of this variant is OK!
+        </div>
       </div>
     </div>
   </body>

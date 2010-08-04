@@ -1,8 +1,10 @@
-\newcommand{\thisversion}{2.0}
+\newcommand{\thisversion}{$2.0$}
+\newcommand{\nomenclatureversion}{$2.0$}
 
 \documentclass{article}
-\usepackage{amssymb, amsthm, graphicx, float, textcomp}
-\title{\Huge Mutalyzer \thisversion\ Technical Reference Manual}
+\usepackage{amssymb, amsthm, graphicx, float, textcomp, longtable}
+\title{\Huge Mutalyzer \thisversion\\
+       Technical Reference Manual}
 \author{Jeroen F. J. Laros
         \vspace{10pt}\\
         Department of Human Genetics\\
@@ -10,16 +12,7 @@
         \texttt{j.f.j.laros@lumc.nl}}
 \date{\today}
 \frenchspacing
-
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{corollary}[theorem]{Corollary}
-
-\theoremstyle{definition}
-\newtheorem{example}[theorem]{Example}
-\newtheorem{definition}[]{Definition}
-\newtheorem{remark}[theorem]{Remark}
-\newtheorem{conjecture}[theorem]{Conjecture}
+\setlength{\parindent}{0pt}
 
 \begin{document}
 
@@ -33,35 +26,675 @@
 
 \pagenumbering{arabic}
 
-\section{Introduction}\label{sec:introduction}
-This document is intended for developers.
+\section{Introduction} \label{sec:introduction}
+This document is intended for developers. It describes the internal workings
+of the Mutalyzer \thisversion\ modules and their interactions.
 
-\section{Modules}\label{sec:modules}
-Mutalyzer \thisversion\ blabla.
-\subsection{Config}\label{subsec:config}
-\subsection{Output}\label{subsec:output}
-\subsection{Db}\label{subsec:db}
-\subsection{Retriever}\label{subsec:retriever}
-\subsection{Mutator}\label{subsec:mutator}
-\subsection{Scheduler}\label{subsec:scheduler}
-\subsection{GenRecord}\label{subsec:genrecord}
-\subsection{Web}\label{subsec:web}
-\subsection{Misc}\label{subsec:misc}
+This document is for internal use only.
 
-\section{Programs}\label{sec:programs}
-\subsection{Mutalyzer}\label{subsec:mutalyzer}
-\subsection{VarInfo}\label{subsec:varinfo}
-\subsection{UCSC\_Update}\label{subsec:ucsc_update}
+\newpage
 
-\section{Interfaces}\label{sec:interfaces}
+\section{Modules} \label{sec:modules}
+Mutalyzer \thisversion\ consists of several modules, which can be used in a
+number of combinations. Several possible combinations are described in 
+Sections~\ref{sec:programs}~and~\ref{sec:interfaces}.
+
+In this section, we give a global overview of all modules and their function,
+for a detailed description of the module interface, please refer to the 
+API~\cite{API} documentation.
+
+\subsection{The Config module} \label{subsec:config}
+The \texttt{Config} module loads the configuration file
+(\texttt{mutalyzer.conf}) and processes the variables. 
+
+\begin{itemize}
+\item Numbers will be converted to integers.
+\item If necessary, integers will be multiplied by a constant (to convert 
+      megabytes to bytes for example).
+\item Variables are stored in a specific sub class of the \texttt{Config}
+      class. 
+\end{itemize}
+
+So all the variables that are associated with the \texttt{Retriever} module for
+example, are stored in the \texttt{Config.Retriever} class. Upon making an 
+instance of the \texttt{Retriever} class, this object can be passed to it to
+initialise the class.
+
+Configuration variables of specific classes are described in their own section.
+
+\subsection{The Output module} \label{subsec:output}
+The \texttt{Output} module consists of two main data structures; one for the
+storage of \emph{messages} and one for the storage of \emph{output}. Upon
+construction of the \texttt{Output} module, a file name should be passed to
+the constructor to make the module aware of the program that constructed it.
+This is a way to make a distinction between different programs and interfaces
+in the log file.
+
+Messages are stored in a list of \emph{message objects}. A message object 
+consists of the fields described in Table~\ref{tab:message}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l}
+Field name & Description \\
+\hline
+origin      & Name of the module creating this object. \\
+level       & Importance of the message (see Table~\ref{tab:messagelevel}). \\
+code        & The error code of the message 
+              (see Appendix~\ref{subsec:error}). \\
+description & A description of the message.
+\end{tabular}
+\caption{Fields in the message object} \label{tab:message}
+\end{center}
+\end{table}
+
+In the message object, the \emph{file name} field refers to the program in
+which the message was generated, the \emph{severity level}, as described in 
+Table~\ref{tab:messagelevel} indicates the class of the message, ranging from a
+log message to to fatal error, the \emph{code} field refers to the type of
+message and the \emph{description} field is used for a long descriptive
+message.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|l}
+Numeric value & Description & Effect when used as configurable level \\
+\hline
+$0$           & Debug   & Show all messages. \\
+$1$           & Info    & Show all messages except debug messages. \\
+$2$           & Warning & Show warning, error and fatal messages. \\
+$3$           & Error   & Show error and fatal messages. \\
+$4$           & Fatal   & Only show fatal messages. \\
+$5$           & Off     & Show nothing. \\
+\end{tabular}
+\caption{Message levels} \label{tab:messagelevel}
+\end{center}
+\end{table}
+
+The \emph{code} field can be used by a program that uses this module as a means to alter the control flow, instead of parsing the description (that is likely
+to change in later versions). The codes and their meaning can be found in 
+Appendix~\ref{subsec:error}.
+
+The \emph{severity level} field is used both for logging as well as for
+retrieving messages, both ways are controlled by configuration variables that
+are passed to the \texttt{Output} module at the time of construction. 
+The \texttt{outputlevel} variable is used by the \texttt{getMessages()} member
+function. All messages of which the level exceeds the value of this variable
+will be returned as a list. Logging is controlled by the \texttt{loglevel}
+variable. All messages of which the level exceeds the values of this variable
+will be logged. Additionally, the level $-1$ is reserved for logging
+exclusively. Messages that are generated with this level, will not appear when
+using the \texttt{getMessages()} function. 
+
+In Table~\ref{tab:outputconfig} all configurable settings of this module are
+described.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l}
+Variable    & Description \\
+\hline
+log         & Name and location of the log file. \\
+datestring  & Prefix for each log message. \\
+loglevel    & Level at which messages are logged. \\
+outputlevel & Level at which messages are returned by \texttt{getMessages()}.
+\end{tabular}
+\caption{Configuration variables of the \texttt{Output} object} 
+\label{tab:outputconfig}
+\end{center}
+\end{table}
+
+For storage of output, a dictionary is used. The values in this dictionary 
+are lists. A pair (key, value) can be set by using the \texttt{addOutput()}
+function. Subsequent calls to this function with the same key as parameter,
+will expand the list that is pointed to by the key.
+
+For retrieval of output, the \texttt{getOutput()} and
+\texttt{getIndexedOutput()} functions can be used. Both functions require a 
+key name as argument. The first one returns the entire list pointed at by the
+key, while the second one only returns one element of this list. The index of
+this element is passed as a parameter. If either the key or (in the latter 
+case) the index does not exist, an empty list is returned.
+
+\subsection{The Db module} \label{subsec:db}
+The \texttt{Db} module is an interface module for MySQL databases. It consists
+of one parent class and several derived classes. The parent class is used
+exclusively for its \texttt{query()} function. This function accepts an SQL
+query along with a list of parameters for this query. The parameters are
+escaped to prevent any SQL injections. After escaping, they are combined with
+the query to form the final query that is sent to an open database handle.
+
+The database handle is opened upon construction of the \texttt{Db} object and
+is closed when the object instance is destroyed.
+
+Please refer to Appendix~\ref{subsec:dbtables} for a full description of the
+SQL tables.
+
+The \texttt{Db} module has the following derived classes:
+\begin{itemize}
+\item \texttt{Mapping} for the mapping of transcripts and genes.
+\item \texttt{Remote} for retrieving updates for the mapping databases.
+\item \texttt{Update} for updating the mapping databases.
+\item \texttt{Cache} for cache administration.
+\item \texttt{Batch} for the batch checker.
+\end{itemize}
+
+The \texttt{Mapping} class provides an interface for databases that contain
+mapping information. At the time of this writing, mapping information of
+human builds \emph{hg18} and \emph{hg19}~\cite{UCSC} are available. This class 
+provides functions to convert chromosomal positions into transcript oriented
+positions and vice versa. These conversions are needed for the mapping of 
+data in locus specific databases~\cite{LOVD} (from transcript level to
+chromosome level), or for the analysis of variants discovered in Next
+Generation Sequencing projects (in which case the conversion is likely to be
+from chromosome to transcript level).
+
+The \texttt{Remote} class and the \texttt{Update} class provide functions for
+the querying of the UCSC databases to retrieve new mapping information and to
+merge it into the local database (which is controlled by the \texttt{Mapping}
+class).
+
+The \texttt{Cache} class makes use of an internal database (not one of the
+mapping databases). This class provides functions that query a table filled
+with information about downloaded and uploaded reference sequence files. See
+Section~\ref{subsec:retriever} for more information.
+
+The \texttt{Batch} class makes use of the same internal database, it uses a
+number of tables that contain information about submitted batch jobs and the
+submitters. See Section~\ref{subsec:scheduler} for more information.
+
+The \texttt{Db} class and al its derived classes are configured with the
+variables shown in Table~\ref{tab:dbconfig}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|p{8cm}}
+Variable        & Description \\
+\hline
+internalDb      & Name of the internal database. \\
+dbNames         & List of MySQL mapping database names. \\
+LocalMySQLuser  & MySQL username for the local databases (internalDb and 
+                  dbNames). \\
+LocalMySQLhost  & Host name for the local databases. \\
+RemoteMySQLuser & MySQL username for the UCSC database. \\
+RemoteMySQLhost & Host name for the UCSC database. \\
+UpdateInterval  & Retrieve all entries modified within a certain number of 
+                  days. \\
+TempFile        & Temporary file for updated UCSC mapping information.
+\end{tabular}
+\caption{Configuration variables of the \texttt{Db} object} 
+\label{tab:dbconfig}
+\end{center}
+\end{table}
+
+\subsection{The Retriever module} \label{subsec:retriever}
+The \texttt{Retriever} module consists of one parent class and two derived
+classes. The parent class handles all cache administration, after a write to
+the cache directory, it checks whether the cache size exceeds the configured
+maximum, and if so, deletes the oldest files in the cache until the size is
+under the limit again.
+
+It also has a function that calculates an md5sum of a \emph{reference sequence}
+file that is to be placed in the cache. This function is especially useful for
+one of the derived classes, the \texttt{GenBankRetriever} class, discussed
+in Section~\ref{subsubsec:genbankretriever}. Apart from a function that calculates an md5sum, there is also a
+function that updates an md5sum of a file. This can happen if the annotation
+within a reference sequence file has changed (without changing anything
+crucial), so the version number of this retrieved file was not increased. An
+other useful function is one that returns a new \texttt{UD} number. \texttt{UD}
+numbers are assigned to files that are local to the Mutalyzer installation.
+They will also be discussed in Section~\ref{subsubsec:genbankretriever}. 
+
+The \texttt{Retriever} class is configured with variables shown in
+Table~\ref{tab:retrieverconfig}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|p{9cm}}
+Variable   & Description \\
+\hline
+email      & Use this email address for retrieval of records at the NCBI. \\
+cache      & The cache directory. \\
+cachesize  & The maximum size of the cache in megabytes. \\
+maxDldSize & The maximum size of a downloaded reference sequence file in
+             megabytes. \\
+minDldSize & The minimum size of a downloaded reference sequence file in bytes.
+\end{tabular}
+\caption{Configuration variables of the \texttt{Retriever} object} 
+\label{tab:retrieverconfig}
+\end{center}
+\end{table}
+
+\subsubsection{The GenBankRetriever class} \label{subsubsec:genbankretriever}
+The \texttt{GenBankRetriever} class provides functions to retrieve a
+\emph{GenBank} file from the NCBI~\cite{NCBI}. There are several interfaces
+that accomplish this task: 
+
+\begin{itemize}
+\item Automatic retrieval.
+\item Retrieval by slicing a chromosome or contig.
+\item Retrieval by gene name.
+\item Manual uploading.
+\item Uploading by providing a hyperlink.
+\end{itemize}
+
+Automatic retrieval works for all \emph{accession numbers} and \texttt{GI}
+numbers of GenBank files known to the NCBI. The \texttt{efetch()} function from
+the \emph{Biopython}~\cite{BIOPYTHON} package is used to retrieve the record.
+After retrieving, the file is parsed with the \texttt{SeqIO.read()} function
+(also from Biopython). In this process, the \texttt{GI} number is extracted
+from the record. If there were no errors while parsing, the md5sum is
+calculated and stored in the internal database together with the accession
+number and the \texttt{GI} number in the \texttt{GBInfo} table.
+
+Retrieval by slicing a chromosome or contig is done by providing the
+\emph{accession number} and two coordinates of in this reference sequence.
+Before retrieving, the anticipated size of the slice is calculated to determine
+whether it is not too large (see the \texttt{maxDldSize} configuration
+variable). Then, the \texttt{efetch()} function from the Biopython package can
+be used to retrieve the sequence of interest. The retrieved slice is placed in
+the cache and is given its unique \texttt{UD} number. After retrieval, the
+md5sum is calculated and stored in the internal database together with the
+accession number of the chromosome or contig, the \texttt{UD} number, the 
+orientation and the positions used to make the slice in the \texttt{GBInfo}
+table. 
+
+Retrieval by gene name can only be done for builds of genomes that are
+considered current by the NCBI. At the time of this writing, for example, a
+retrieval of a gene of a human would result in the retrieval of a slice of a
+chromosome of human build hg19. This retrieval interface has the official
+gene symbol, the species and the size of the upstream and downstream flanking
+sequences as parameters. The functions \texttt{esearch()} and
+\texttt{esummary()} from the Biopython package are used to find the location
+and orientation of the gene. After this, we can follow the same procedure that
+is used to retrieve a slice of a contig. If a gene can not be found, but it was
+encountered as an alias of one or more official gene symbols, a list of
+suggestions is put in the description of a message with code \texttt{ENOGENE}
+that is given to the \texttt{Output} object (see Section~\ref{subsec:output}).
+
+Manual uploading is done by providing a stream to the \texttt{uploadrecord()}
+member function. This stream is first checked for size (see the
+\texttt{maxDldSize} and \texttt{minDldSize} configuration variables) and parsed
+to check whether it is a valid GenBank file. If all checks have been passed,
+the file is given a \texttt{UD} number and is placed in the cache directory.
+The md5sum of the file, as well as its \texttt{UD} number are stored in the
+database.
+
+Uploading by providing a hyperlink is done by providing a hyperlink to the
+\texttt{downloadrecord()} member function. This function will try to find the
+size of the record before actually downloading it. If no information can be
+retrieved, or when the size is not within the limits, this function will exit.
+After successful retrieval, the file is given a \texttt{UD} number and is
+placed in the cache directory. The md5sum of the file, as well as its
+\texttt{UD} number and the original hyperlink are stored in the database.
+
+Each interface stores information about the origin and the way of retrieval 
+in the local database in the \texttt{GBInfo} table. This is done to ease the
+task of retrieving a deleted file from the cache. If for example, an
+\texttt{UD} number of a deleted file is given, the database can be queried to
+see if there is still enough information to re-retrieve the reference sequence
+file. If the way of retrieval was by slicing (and thus also by retrieving via
+gene symbol), the coordinates and orientation, together with the accession 
+number of the chromosome or contig can be used to make the \texttt{UD}
+available again. If necessary, the md5sum is updated.
+
+When a file is deleted where the method of retrieval was via a hyperlink, the
+file is downloaded again, but is only revived if and only if the md5sum 
+matches. Manually uploaded files can not be revived.
+
+An other use of the md5sum is preventing multiple uploads. If the md5sum is
+found in the database, the accession number that is linked to this md5sum will
+be used as the accession number. So uploading a known GenBank file for example
+can result in the function returning not an \texttt{UD} number, but a normal
+accession number.
+
+\subsubsection{The LargeRetriever class} \label{subsubsec:genbankretriever}
+% TODO write this section.
+
+\subsection{The Mutator module} \label{subsec:mutator}
+The \texttt{Mutator} module provides a class that has a number of standard
+mutation functions like \texttt{delM()}, \texttt{insM()}, etc. which are all
+wrappers for the private \texttt{\_\_mutate()} member function. This function
+operates under the assumption that every mutation can be written as a
+\emph{deletion-insertion}. The wrapper functions convert positions to 
+\emph{interbase coordinates} when needed and call the \texttt{\_\_mutate()}
+function. Each wrapper function stores a triple (descriptive message, old 
+sequence, new sequence) in the \texttt{Output} object under the name 
+\texttt{visualisation}. The old- and new sequence are returned by the 
+\texttt{\_\_mutate()} function.
+
+The \texttt{\_\_mutate()} function performs the following tasks:
+\begin{itemize}
+\item Visualise each mutation.
+\item Report any added or removed \emph{enzyme restriction sites}.
+\item Mutate the sequence.
+\item Store \emph{shift} information.
+\end{itemize}
+
+Visualisation of each mutation goes as follows: The deleted part (if any) in
+the old sequence is separated from its flanking sequences, similarly, the
+inserted part (if any) in the new sequence is separated from its flanking
+sequences. The original sequence and the mutated sequence are trimmed when
+necessary. Configuration variables associated with the visualisation are
+shown in Table~\ref{tab:mutatorconfig}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|p{9cm}}
+Variable      & Description \\
+\hline
+flanksize     & Length of the flanking sequences (used in the visualisation of
+                mutations). \\
+maxvissize    & Maximum length of visualised mutations. \\
+flankclipsize & Length of the flanking sequences of the clipped mutations (see
+                maxvissize).
+\end{tabular}
+\caption{Configuration variables of the \texttt{Mutator} object} 
+\label{tab:mutatorconfig}
+\end{center}
+\end{table}
+
+If the original or mutated part of a sequence exceeds the \texttt{maxvissize} 
+configuration value, this subsequence is broken up in three parts. The outer
+parts consist of the head and tail of the subsequence (of length 
+\texttt{flankclipsize}) and the center part of the subsequence is replaced by
+a number to indicate the length of the subsequence that is not shown. Now the
+shortest subsequence is padded to align the flanking sequences vertically.
+
+Since the visualisation part of the \texttt{\_\_mutate()} function already
+selects the flanking sequences, the logical place for doing the enzyme
+restriction site analysis is here too. We use the
+\texttt{Restriction.Analysis()} function from the Biopython package to get a
+dictionary of restriction sites, where the key is the enzyme and the value is a
+list of positions. This dictionary is converted to a list where each enzyme can
+occur more than once by the \texttt{\_\_makeRestrictionList()} member
+functions. To compare both lists, all elements from one list are removed from
+the other, yielding either the added or the deleted sites, depending on which
+list is subtracted from the other. This comparison is done by the
+\texttt{\_\_restrictionDiff()} function.
+
+Since all variations are specified by using the \emph{original} coordinates,
+special care must be taken when mutating a sequence. A deletion or insertion
+will result in a position shift that will alter the coordinates of all
+downstream mutations. Therefore, when a mutation is requested (by calling the
+\texttt{\_\_mutate()} function), the coordinates are converted to the correct
+ones. This is done by registering each position where a \emph{shift} occurs 
+and the length and direction of this shift. By iterating through this list, the
+correct coordinate can be calculated (iteration stops when we find a shift
+position that is larger than the requested position).
+
+\subsection{The Scheduler module} \label{subsec:scheduler}
+% TODO write this section.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l}
+Variable                   & Description \\
+\hline
+processName                & Name of the batch process. \\
+mailFrom                   & Return e-mail address. \\
+mailMessage                & Location of the mail template. \\
+mailSubject                & Subject of the message. \\
+resultsDir                 & Location of the results. \\
+PIDfile                    & Location of the PID file. \\
+nameCheckOutHeader         & The output header for NameChecking \\
+syntaxCheckOutHeader       & The output header for NameChecking \\
+positionConverterOutHeader & The output header for NameChecking 
+\end{tabular}
+\caption{Configuration variables of the \texttt{Scheduler} object} 
+\label{tab:schedulerconfig}
+\end{center}
+\end{table}
+
+\subsection{The File module} \label{subsec:file}
+The \texttt{File} module provides a class that can handle different file types,
+mainly used for \emph{batch} input files. The class provides functions to
+convert \emph{comma separated values} (\emph{CSV} for short), \emph{Microsoft
+Excel} and \emph{Open Document Spreadsheet} (\emph{ODS} for short) files. These
+files can be converted to one intermediate format (a list of lists) that can be
+used by other modules. Configuration variables for this module can be found in
+Table~\ref{tab:fileconfig}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l}
+Variable & Description \\
+\hline
+bufSize  & Amount of bytes to be read for determining the file type. \\
+header   & The obligatory header in batch request files. \\
+tempDir  & Directory for temporary files.
+\end{tabular}
+\caption{Configuration variables of the \texttt{File} object} 
+\label{tab:fileconfig}
+\end{center}
+\end{table}
+
+Note that a CSV file does not need to be comma separated (contrary to what the
+name suggests). Therefore, a \emph{sniffer} function is used that tries to
+guess the \emph{dialect} of the CSV file. Once the dialect is determined, the
+file can be parsed. The sniffer function needs to read part of the file in
+order to determine the dialect. The size of this chunk is determined by the
+\texttt{bufSize} configuration variable.
+
+To determine which parser should be used, the \texttt{getMimeType} member
+function is used. This also uses the \texttt{bufSize} configuration variable to
+read part of a stream and subsequently guess its file type. This function
+returns two values; the \emph{mime type} and a \emph{description}. The latter
+is sometimes needed when a container file format is used (as is the case with
+OpenOffice documents). Once the file type is successfully determined, the 
+appropriate parser is selected.
+
+\subsection{The GenRecord module} \label{subsec:genrecord}
+% TODO write this section.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|p{9cm}}
+Variable    & Description \\
+\hline
+upstream    & Number of upstream nucleotides when searching for a 
+              transcript. \\ 
+downstream  & Number of downstream nucleotides when searching for a 
+              transcript. \\ 
+spliceAlarm & \\ 
+spliceWarn  &
+\end{tabular}
+\caption{Configuration variables of the \texttt{GenRecord} object} 
+\label{tab:genrecordconfig}
+\end{center}
+\end{table}
+
+\subsubsection{The GBparser class} \label{subsubsec:gbparser}
+% TODO write this section.
+
+\subsubsection{The LRGparser class} \label{subsubsec:lrgparser}
+% TODO write this section.
+
+\subsection{The Web module} \label{subsec:web}
+The \texttt{Web} module provides a class that is designed for interaction with
+a webserver. This class contains two variables that are not configurable from
+the configuration file. These variables are \texttt{version} and
+\texttt{nomenclatureVersion}. The reason that they are not configurable is 
+because these version numbers are deeply intertwined with the source code and
+independent of any system settings.
+
+The most important function in this class is the \texttt{tal()} function. This
+function compiles a \emph{Template Attribute Language}~\cite{TAL} (\emph{TAL}
+for short) template to a HTML or XML file. % FIXME describe menu.
+
+The TAL templates are discussed further in Section~\ref{subsubsec:templates}.
+
+Other functions of this class include a function that checks whether a string
+is an e-mail address, one that returns the content of a file as a string, a
+function that HTML-encodes a string and so on.
+
+\subsection{The Parser module} \label{subsec:parser}
+The \texttt{Parser} module provides the \texttt{Nomenclatureparser} class. This
+class has only one public function, the \texttt{parse()} function.
+
+The class almost solely consist of \emph{context free grammar} rules in
+\emph{BNF} format. This collection of rules define the current version of the
+\emph{Human Genome Variation Society} or \emph{HGVS}~\cite{HGVS}
+nomenclature~\cite{NOM1, NOM2, NOM3, NOM4, NOM5, NOM6, NOM7}. The version of
+the nomenclature is \nomenclatureversion\ at the time of this writing.
+
+A preliminary set of BNF rules is defined in~\cite{BNF}, we extended this set
+to include the complete HGVS nomenclature, extended with things like
+\emph{chimerism} and \emph{mosaicism}. Also the \emph{nesting} of variants is
+supported. This makes the grammar we use far more advanced than the official
+HGVS nomenclature. Please see Appendix~\ref{subsec:bnf} for a full description
+of the implemented rules.
+
+The \emph{Pyparsing}~\cite{PYPARSING} package is used to write a context free
+grammar as Python code. The code practically looks the same as BNF. By adding a
+name to a rule (or part of a rule), a \emph{parse tree} is built. This tree is
+returned as the result as the parsing process.
+
+If parsing fails, an error message is generated with the \texttt{EPARSE} code
+and an output object named \texttt{parseError} is created with a visualisation
+of where parsing failed to continue.
+
+\subsection{The Misc module} \label{subsec:misc}
+The \texttt{Misc} module provides a class \texttt{Misc} that contains various
+functions that are not related to anything else. Presently, it only contains
+a function that returns a unique ID used for \texttt{UD} numbers and results
+from batch jobs.
+
+\subsection{The Crossmap module} \label{subsec:crossmap}
+The \texttt{Crossmap} module provides a class that contains functions to
+convert from a \emph{genomic coordinate} to a \emph{transcript oriented}
+coordinate or a \emph{coding sequence oriented} coordinate. In the remainder
+of this section we shall refer to genomic coordinates as \emph{g.}, transcript oriented as \emph{n.} and coding sequence oriented as \emph{c.} coordinates.
+Coordinate conversion is done by linking each splice site to either an n. or
+g. coordinate. 
+
+The class is initialised by passing an RNA list, a CDS list and an orientation
+of the transcript to the constructor. If a CDS is given, the resulting
+crossmapper will convert from g. to c. coordinates. If no CDS is given, it will
+convert g. to n. coordinates. 
+
+Most internal functions are operators that deal with mathematical exceptions
+when using the ``biological'' coordinates. The number $0$ does not exist for
+example, making $-1$ and $1$ neighbouring integers, which makes calculations
+awkward. These internal functions take care of these problems.
+
+When a crossmapper is made that converts from g. to c. (a CDS was given at 
+construction time), the \emph{CDS stop} coordinate in c. notation is stored 
+separately. Internally the crossmapper does not work with ``star'' (*)
+positions for positions between CDS stop and \emph{transcription stop}. The
+conversion to ``star''-notation is done at the very end.
+
+After initialisation, two main functions are available, \texttt{g2x} and 
+\texttt{x2g}. Their behaviour depends upon the initialisation of the class and
+is described in Table~\ref{tab:behaviour}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|l}
+Initialisation & Function       & Behaviour \\
+\hline
+RNA only       & \texttt{g2x()} & g. to n. \\
+RNA only       & \texttt{x2g()} & n. to g. \\
+RNA plus CDS   & \texttt{g2x()} & g. to c. \\
+RNA plus CDS   & \texttt{x2g()} & c. to g.
+\end{tabular}
+\caption{Behaviour of the conversion functions.} \label{tab:behaviour}
+\end{center}
+\end{table}
+
+% TODO include figure from Peter.
+
+The function \texttt{g2x()} takes a positive integer as only argument and
+returns a tuple $(a, b)$, where $a$ is the ``main'' coordinate in c. or n.
+notation, this coordinate refers to any position that is within the transcript.
+The second element of the tuple $b$ is the ``offset'' coordinate, this
+coordinate refers to the distance to the closest \emph{splice site}. A tuple
+$(21, -2)$ for example, means that there is a splice site at position $21$ and
+that the coordinate of interest lies $2$ positions before this splice site (in
+an \emph{intron}). 
+
+As mentioned before, this function does not take CDS stop into account. It is 
+not concerned with positions upstream or downstream of the transcript either. 
+These final conversions are discussed further on in this section.
+
+The function \texttt{x2g()} takes a tuple $(a, b)$ as argument (discussed
+above) and returns a positive integer.
+
+The most important wrapper functions of the \texttt{Crossmap} class are:
+\begin{itemize}
+\item \texttt{int2main()} converts a $a$ coordinate to a string in
+      ``star''-notation.
+\item \texttt{main2int()} converts a string in ``star''-notation to the $a$ 
+      coordinate.
+\item \texttt{int2offset()} converts the $b$ coordinate to an
+      ``offset''-notation, adding an ``u'' for offsets upstream of the
+      transcript and a ``d'' for offsets downstream of the transcript.
+\item \texttt{offset2int()} removes any ``u'' or ``d'' from the offset and
+      converts the remainder to an integer.
+\end{itemize}
+
+Other wrapper functions in this class only call the wrappers described above.
+
+Finally, there are a couple of functions that offer more information of a 
+transcript; an \texttt{info()} function that gives information about
+transcription start, transcription stop and CDS stop, a function
+\texttt{getSpliceSite()} that returns the genomic coordinate of a splice site
+(indexed by rank), and functions that return the number of introns and exons.
+
+\newpage
+
+\section{Programs} \label{sec:programs}
+
+\subsection{Mutalyzer} \label{subsec:mutalyzer}
+
+\subsection{VarInfo} \label{subsec:varinfo}
+
+\subsection{UCSC\_Update} \label{subsec:ucsc_update}
+
+\newpage
+
+\section{Interfaces} \label{sec:interfaces}
 % handler.py
-\subsection{Web}\label{subsec:webinterface}
+
+\subsection{Web} \label{subsec:webinterface}
 % index.py
-\subsubsection{TAL}
+
+\subsubsection{TAL} \label{subsubsec:templates}
 % templates/
-\subsection{Webservices}\label{subsec:webservinterface}
+
+\subsection{Webservices} \label{subsec:webservinterface}
+
 % webservice.py
-\subsection{Command line}\label{subsec:commandline}
+\subsection{Command line} \label{subsec:commandline}
+
+\newpage
+
+\section{Auxiliary files}
+
+\subsection{mutalyzer.conf}
+
+\subsection{mutalyzer.log}
+
+\subsection{The cache directory}
+
+\subsection{templates}
+
+\newpage
+
+\appendix
+
+\section{Appendix}
+
+\subsection{Error codes} \label{subsec:error}
+\input{ErrorCodes}
+
+\subsection{Database definitions} \label{subsec:dbtables}
+\input{Db}
+
+\subsection{HGVS nomenclature BNF} \label{subsec:bnf}
+\input{bnf}
+
+\newpage
 
 \bibliography{bibliography}{}
 \bibliographystyle{plain}

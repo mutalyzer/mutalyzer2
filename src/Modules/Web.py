@@ -7,10 +7,15 @@
         Web ; General functions used by the web interfaces.
 """
 
-import sys                     # sys.stdout
-import re                      # match
-import urllib                  # quote
-from cStringIO import StringIO # StringIO() getvalue()
+import sys                        # sys.stdout
+import re                         # match
+import urllib                     # quote
+from cStringIO import StringIO    # StringIO() getvalue()
+from simpletal import simpleTALES # context(), addGlobal()
+from simpletal import simpleTAL   # compileHTMLTemplate, 
+                                  # compileXMLTemplate,
+import Config
+
 
 class Web() :
     """
@@ -39,6 +44,9 @@ class Web() :
 
         self.version = "2.0&alpha;-5"
         self.nomenclatureVersion = "2.0"
+
+        C = Config.Config()
+        self.email = C.Retriever.email
     #__init__
 
     def run(self, func, *args) :
@@ -63,6 +71,7 @@ class Web() :
     #run
 
     def tal_old(self, scheme, filename, args) :
+        #TODO merge this function with 'tal' (below).
         """
             Compile a TAL template to HTML or XML.
 
@@ -121,14 +130,11 @@ class Web() :
                 string ; An HTML or XML file.
         """
 
-        from simpletal import simpleTALES # context(), addGlobal()
-        from simpletal import simpleTAL   # compileHTMLTemplate, 
-                                          # compileXMLTemplate,
-
         context = simpleTALES.Context()
     
         context.addGlobal("version", self.version)
         context.addGlobal("nomenclatureVersion", self.nomenclatureVersion)
+        context.addGlobal("contactEmail", self.email)
         for i in args :
             context.addGlobal(i, args[i])
 
@@ -174,6 +180,7 @@ class Web() :
     #read
 
     def isEMail(self, eMail) :
+        #TODO documentation
         """
         """
 
@@ -184,6 +191,10 @@ class Web() :
     #isEmail
 
     def urlEncode(self, descriptions) :
+        #TODO documentation
+        """
+        """
+
         newDescr = []
         for i in descriptions :
             newDescr.append([i, urllib.quote(i)])

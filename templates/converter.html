@@ -4,20 +4,24 @@
   </head>
   <body>
     <div metal:define-macro="content">
-        <center><h3>Position Conversion</h3></center>
-        <p> Please supply the build which you want to use to convert your
-        position, available builds at the moment are: hg18 (NCBI 36) and hg19
-        (GRCh37).</p>
-
+      <center><h3>Position Conversion</h3></center>
+      Please supply the build which you want to use to convert your
+      position, available builds at the moment are: hg18 (NCBI 36) and hg19
+      (GRCh37).<br>
+      <br>
+      Example: NM_003002.2:c.274G&gt;T<br>
+      or: chr11:g.111959693G&gt;T<br>
+      or: NC_000011.9:g.111959693G&gt;T<br>
+      <br>
       <table id="inputform">
           <form action = "" method = "post" enctype = "multipart/form-data">
               <tr>
                   <td><b>Build</b></td>
+                  <div tal:content = "build"></div>
                   <td>
                       <select name="build">
-                        <option tal:repeat="build avail_builds"
-                        tal:content="build"
-                        tal:attributes="value build">
+                        <option tal:repeat = "i avail_builds"
+                        tal:content = "i">
                         </option>
                       </select>
                   </td>

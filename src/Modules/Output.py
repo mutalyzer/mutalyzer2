@@ -239,6 +239,9 @@ class Output() :
             Private variables:
                 __messages  ; The messages list.
                 __config    ; The variable outputlevel is used.
+
+            Returns:
+                list ; A list of messages.
         """
 
         ret = []
@@ -252,9 +255,18 @@ class Output() :
     #getMessages
 
     def getSoapMessages(self):
-        """ Returns a list of SoapMessages for over the wire """
-        #TODO: MOVE to top if works
-        from Modules.Mapper import SoapMessage
+        """ 
+            Returns a list of SoapMessages for over the wire 
+
+            Private variables:
+                __messages  ; The messages list.
+                __config    ; The variable outputlevel is used.
+
+            Returns:
+                list ; 
+        """
+
+        from Modules.Mapper import SoapMessage #TODO: MOVE to top if works
 
         ret = []
         for i in self.__messages:
@@ -263,21 +275,38 @@ class Output() :
                 mess.errorcode = i.code
                 mess.message = i.description
                 ret.append(mess)
+            #if
+        #for
         return ret
+    #getSoapMessages
 
     def getBatchMessages(self, level):
-        """ Returns a list of Messages with an errorlevel >= level
-
+        """ 
+            Returns a list of Messages with an errorlevel >= level
             and removes additional lines from a parseerror
+            
+            Arguments:
+                level ;
+
+            Private variables:
+                __messages   ; The messages list.
+
+            Returns:
+                list ;
         """
+
         ret = []
         lastorigin = ""
         for i in self.__messages:
             if i.level >= level:
-                if lastorigin == "Parser": continue #Only one parse error
+                if lastorigin == "Parser": #Only one parse error
+                    continue 
                 lastorigin = i.origin
                 ret.append("(%s): %s" % (i.origin, i.description))
+            #if
+        #for
         return ret
+    #getBatchMessages
 
 
     def addOutput(self, name, data) :
@@ -318,6 +347,19 @@ class Output() :
 
     def getIndexedOutput(self, name, index) :
         """
+            Return an element of a list, the list is called 'name' in de
+            __outputData dictionary. If either the list or the element does not
+            exist, return an empty list.
+
+            Arguments:
+                name  ; Name of the list.
+                index ; Index of the element to be retuned.
+
+            Private variables:
+                __outputData ; The output dictionary.
+
+            Returns:
+                list ; The requested element.
         """
 
         if self.__outputData.has_key(name) :
@@ -327,11 +369,25 @@ class Output() :
     #getFirst
 
     def getMessagesWithErrorCode(self, errorcode):
+        """
+            Retrieve all messages that have a specific error code.
+
+            Arguments:
+                errorcode ; The error code to filter on.
+
+            Private variables:
+                __messages   ; The messages list.
+
+            Returns:
+                list ; A filtered list.
+        """
+
         ret = []
         for i in self.__messages:
             if i.code == errorcode:
                 ret.append(i)
         return ret
+    #getMessagesWithErrorCode
 
 
     def Summary(self) :

@@ -10,8 +10,15 @@
       <center>
         <h3>SNP converter</h3>
       </center>
+      Please insert the 
+      <a href = "http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
+      number below. Mutalyzer will retrieve the HGVS description of the SNP
+      specified on the reference sequence(s) used by dbSNP.<br>
+      <br>
+      Example: rs9919552<br>
+      <br>
       <form action = "" method = "post">
-        <big><b>rs</b></big><input 
+        <input 
           type = "text" 
           name = "rsId" 
           style = "width:25%"
@@ -21,10 +28,18 @@
           value="Submit"
         >
       </form>
-      <div tal:condition = "snp">
-        <h3>Results:</h3><br>
-        <tt tal:content = "structure string:rs${lastpost}"></tt><br>
+      <div tal:condition = "lastpost">
         <br>
+        <h3>Results:</h3><br>
+        <div tal:repeat = "i messages"
+          tal:replace = "structure string:${i}<br>">
+        </div>
+        <div tal:replace = "summary"></div><br>
+        <br>
+        <h4>dbSNP rs ID:</h4>
+        <tt tal:content = "lastpost"></tt><br>
+        <br>
+        <h4>HGVS descriptions:</h4>
         <tt tal:repeat = "i snp" tal:content = "structure string:${i}<br>"></tt>
       </div>
     </div>

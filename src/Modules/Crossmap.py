@@ -279,6 +279,7 @@ class Crossmap() :
             Returns:
                 string ; The c. or n. notation of position a.
         """
+        # TODO update documentation.
 
         RNAlen = len(self.RNA)
         d = self.orientation
@@ -495,15 +496,27 @@ class Crossmap() :
     #info
 
     def getSpliceSite(self, number) :
+        #TODO documentation
+        """
+        """
+
         if self.orientation == 1 :
             return int(self.RNA[number])
         return int(self.RNA[len(self.RNA) - number - 1])
     #getSpliceSite
 
     def numberOfIntrons(self) :
+        #TODO documentation
+        """
+        """
+
         return len(self.RNA) / 2 - 1
 
     def numberOfExons(self) :
+        #TODO documentation
+        """
+        """
+
         return len(self.RNA) / 2
 #Crossmap
 

@@ -1,0 +1,94 @@
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|l}
+Code & Class & Description \\
+\hline
+INFO & N & Information.
+\end{tabular}
+\end{center}
+\caption{Informative messages} \label{tab:info}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|p{7cm}}
+Code & Class & Description \\
+\hline
+WSTART      & E & Mutation in the start codon. \\
+WTXSTART    & E & Mutation hits transcription start. \\
+WSPLDON     & E & Mutation hits a splice donor site. \\
+WSPLACC     & E & Mutation hits a splice acceptor site. \\
+WROLL       & D & Variant position is ambiguous and not the last one was 
+                  given. \\
+WINSDUP     & D & Variant was described as an insertion, but it is a
+                  duplication. \\
+WNOMRNA     & R & No mRNA field was found in the GenBank record. \\
+WNOCDS      & R & No CDS field was found in the GenBank record. \\
+WNOCDSLIST  & R & No CDS list was found in the GenBank record. \\
+WNOVER      & R & No accession version number was given. \\
+WHASH       & N & Hash of a GenBank record has changed. \\
+WNOCHANGE   & D & Variant equals reference sequence. \\
+WNOTMINIMAL & D & A shorter description of a raw variant is possible. \\
+WPEND       & R & The LRG file is still pending \\
+WDIFFFOUND  & D & 
+\end{tabular}
+\end{center}
+\caption{Warnings} \label{tab:warnings}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|p{7cm}}
+Code & Class & Description \\
+\hline
+ENOVAR      & D & No mutation given. \\
+EARGLEN     & D & There was a discrepancy between the range and the length of
+                  the optional argument. \\
+EREF        & D & There was a discrepancy between the reference sequence and 
+                  the optional argument. \\
+EINSRANGE   & D & The positions of an insertion are not consecutive. \\
+WNOCDS      & R & No CDS field was found in the GenBank record and none could
+                  be constructed. \\
+ENOGENE     & R & Gene not found. \\
+ESTOP       & R & In frame stop codon found. \\
+EPOS        & D & Invalid position.
+\end{tabular}
+\end{center}
+\caption{Errors} \label{tab:errors}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|p{6cm}}
+Code & Class & Description \\
+\hline
+EPARSE             & D & Nomenclature parse error. \\
+EBPARSE            & D & Parse error in the submitted batch file. \\
+ERECPARSE          & R & GenBank record parse error. \\
+EFILESIZE          & N & The filesize is either too large or too small. \\
+ERETR              & R & Could not retrieve a GenBank record. \\
+EARG               & N & Error in the arguments (of a webservice). \\
+ERANGE             & D & Position out of range (webservice). \\
+EONLYGB            & D & Conversion only supports GenBank Files \\
+EACCNOTINDB        & E & Accession Number Not in Database \\
+ENOVERSION         & D & Must supply a version number \\
+EINVALIDGENE       & D & Invalid gene name given. \\
+EINVALIDTRANSCRIPT & D & Invalid gene name given.
+\end{tabular}
+\end{center}
+\caption{Fatal errors} \label{tab:fatal}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l}
+Class & Description \\
+\hline
+N & No Error \\
+E & Unspecified \\
+R & Record related \\
+D & Description error
+\end{tabular}
+\end{center}
+\caption{Legend} \label{tab:legend}
+\end{table}

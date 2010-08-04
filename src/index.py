@@ -46,7 +46,9 @@ def snp(req) :
         O.addMessage(__file__, -1, "INFO", "Finished processing rs%s" % rsId)
 
     args = {
-        "snp" : O.getOutput("snp"),
+        "snp"      : O.getOutput("snp"),
+        "messages" : O.getMessages(),
+        "summary"  : O.Summary()[2],
         "lastpost" : rsId
     }
 
@@ -99,11 +101,19 @@ def check(req) :
                      name)
     #if
     errors, warnings, summary = O.Summary()
+    recordType = O.getIndexedOutput("recordType",0)
+    reference = O.getIndexedOutput("reference", 0)
+    if recordType == "LRG" :
+        reference += ".xml"
+    else :
+        reference += ".gb"
 
     args = {
         "lastpost"           : name,
         "messages"           : O.getMessages(),
         "summary"            : summary,
+        "parseError"         : O.getOutput("parseError"),
+        "errors"             : errors,
         "genomicDescription" : W.urlEncode([O.getIndexedOutput(
                                    "genomicDescription", 0)])[0],
         "chromDescription"   : O.getIndexedOutput("genomicChromDescription", 0),
@@ -121,7 +131,7 @@ def check(req) :
         "cdsStop_c"          : O.getIndexedOutput("cdsStop_c", 0),
         "restrictionSites"   : O.getOutput("restrictionSites"),
         "legends"            : O.getOutput("legends"),
-        "reference"          : O.getIndexedOutput("reference", 0)
+        "reference"          : reference
     }
 
     if req.method == 'GET' and req.form :
@@ -159,11 +169,6 @@ def syntaxCheck(req) :
     C = Config.Config() # Read the configuration file.
     O = Output.Output(__file__, C.Output)
     variant = req.form.get("variant", None)
-    args = {
-        "variant"       : variant,
-        "messages"      : [],
-        "debug"         : ""
-    }
     if variant:
         if variant.find(',') >= 0:
             O.addMessage(__file__, 2, "WCOMMASYNTAX",
@@ -172,13 +177,18 @@ def syntaxCheck(req) :
             args["variant"]=variant
         P = Parser.Nomenclatureparser(O)
         parsetree = P.parse(variant)
-        if not parsetree :
-            args["messages"].append("This variant does not have the right"
-                " syntax. Please try again.")
-            args["messages"].extend(O.getMessages())
-        else :
-            args["messages"].append("The syntax of this variant is OK!")
+        #if not parsetree :
+        #    args["messages"].append("This variant does not have the right"
+        #    args["messages"].extend(O.getMessages())
+        #else :
+        #    args["messages"].append("The syntax of this variant is OK!")
     #if
+    args = {
+        "variant"       : variant,
+        "messages"      : O.getMessages(),
+        "parseError"    : O.getOutput("parseError"),
+        "debug"         : ""
+    }
     ret = W.tal("HTML", "templates/parse.html", args)
     del W
     return ret
@@ -193,14 +203,21 @@ def positionConverter(req):
     build = req.form.get("build", "")
     variant = req.form.get("variant", "")
 
+    avail_builds = C.Db.dbNames[::-1]
+
+    if build :
+        avail_builds.remove(build)
+        avail_builds.insert(0, build)
+    #if
+
     attr = {
-        "avail_builds" :    C.Db.dbNames[::-1],
-        "variant"  :        variant,
-        "gName"     :       "",
-        "cNames"    :       [],
-        "messages" :        [],
-        "errors" :          [],
-        "debug" :           []
+        "avail_builds" : avail_builds,
+        "variant"      : variant,
+        "gName"        : "",
+        "cNames"       : [],
+        "messages"     : [],
+        "errors"       : [],
+        "debug"        : []
         }
 
     if build and variant:
@@ -209,22 +226,27 @@ def positionConverter(req):
         #Conver chr accNo to NC number
         variant = converter.correctChrVariant(variant)
 
-        if not(":c." in variant or ":g." in variant):
-            #Bad name
-            P = Parser.Nomenclatureparser(O)
-            parsetree = P.parse(variant)
+        if variant :
+            if not(":c." in variant or ":g." in variant):
+                #Bad name
+                P = Parser.Nomenclatureparser(O)
+                parsetree = P.parse(variant)
+            #if
 
-        if ":c." in variant:
-            # Do the c2chrom dance
-            variant = converter.c2chrom(variant)
-        if variant and ":g." in variant:
-            # Do the g2c dance
-            variants = converter.chrom2c(variant)
-            if variants:
-                attr["gName"] = variant
-                output = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\
-                        for key, value in variants.items()]
-                attr["cNames"].extend(output)
+            if ":c." in variant:
+                # Do the c2chrom dance
+                variant = converter.c2chrom(variant)
+            if variant and ":g." in variant:
+                # Do the g2c dance
+                variants = converter.chrom2c(variant)
+                if variants:
+                    attr["gName"] = variant
+                    output = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\
+                            for key, value in variants.items()]
+                    attr["cNames"].extend(output)
+                #if
+            #if
+        #if
 
         attr["errors"].extend(O.getMessages())
     return W.tal("HTML", "templates/converter.html", attr)
@@ -262,7 +284,7 @@ def Variant_info(req) :
     return result
 #Variant_info
 
-def download(req) :
+def webservices(req) :
     """
         The download page.
 
@@ -275,7 +297,7 @@ def download(req) :
 
     W = Web.Web()
 
-    ret = W.tal("HTML", "templates/download.html", {})
+    ret = W.tal("HTML", "templates/webservices.html", {})
     del W
     return ret
 #download
@@ -405,7 +427,7 @@ def batch(req, batchType=None):
             "debug"         : [],
             "batchTypes"    : ["NameChecker",
                                "SyntaxChecker",
-                               "ConversionChecker"],
+                               "PositionConverter"],
             "hideTypes"     : batchType and 'none' or '',
             "selected"      : "0",
             "batchType"     : batchType or "",
@@ -454,12 +476,17 @@ def batch(req, batchType=None):
     return W.tal("HTML", "templates/batch.html", attr)
 #batch
 
+def disclaimer(req) :
+    W = Web.Web()
+    return W.tal("HTML", "templates/disclaimer.html", [])
+#disclaimer
+
 def batchNameChecker(req):
     return batch(req, "NameChecker")
 #batchCheck
 
-def batchConversionChecker(req):
-    return batch(req, "ConversionChecker")
+def batchPositionConverter(req):
+    return batch(req, "PositionConverter")
 #batchConvert
 
 def batchSyntaxChecker(req):
