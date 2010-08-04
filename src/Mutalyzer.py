@@ -473,6 +473,9 @@ def _createBatchOutput(O):
     if len(descriptions) == 0:
         #No descriptions generated [unlikely]
         return
+    if O.Summary()[0]:
+        #There were errors during the run, return.
+        return
     for descr in descriptions:
         if goi in descr[0] and toi in descr[1]: # Gene and Transcript
             if tDescr:

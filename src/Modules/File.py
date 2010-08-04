@@ -244,62 +244,96 @@ class File() :
                        lines).
         """
         #remove empty lines (store original line numbers line 1 = job[0])
-        jobl = [(l+1, row) for l, row in enumerate(job) if row and any(row)]
+        #jobl = [(l+1, row) for l, row in enumerate(job) if row and any(row)]
+        jobl = [(l+1, row) for l, row in enumerate(job)]
 
         #TODO:  Add more new style old style logic
-        #       Should empty lines be stored
-        #       Can we concatonate 3 column entries to 1 column
 
         if jobl[0][1] == self.__config.header : #Old style NameCheckBatch job
-            #collect all lines where the amount of arguments != 3
-            notthree = filter(lambda i: len(i[1])!=3, jobl)
+            ret = []
+            notthree = []
+            emptyfield = []
+            for line, job in jobl[1:]:
+                if not any(job):    #Empty line
+                    ret.append("~!")
+                    continue
 
-            [jobl.remove(r) for r in notthree]       # update job
+                inputl = ""
+                if len(job)!=3:     #Need three columns
+                    notthree.append(line)
+                elif (not(job[0] and job[2])):
+                    emptyfield.append(line)
+                else:
+                    if job[1]:
+                        if job[0].startswith("LRG"):
+                            inputl = "%s%s:%s" % tuple(job)
+                        else:
+                            inputl = "%s(%s):%s" % tuple(job)
+                    else:
+                        inputl = "%s:%s" % (job[0], job[2])
 
-            #collect all lines where the first or third argument is empty
-            emptyfield = filter(lambda i: not(i[1][0] and i[1][2]), jobl)
+                if not inputl:
+                    #try to make something out of it
+                    inputl = "~!InputFields: " #start with the skip flag
+                    inputl+= "|".join(job)
 
-            [jobl.remove(r) for r in emptyfield]     # update job
+                ret.append(inputl)
+            #for
 
             #Create output Message for incompatible fields
             if any(notthree):
-                lines = ", ".join([str(i[0]) for i in notthree])
-                self.__output.addMessage(__file__, 4, "EBPARSE",
-                        "Wrong amount of columns in line(s): %s.\n" % lines)
+                lines = makeList(notthree, 10)
+                self.__output.addMessage(__file__, 3, "EBPARSE",
+                        "Wrong amount of columns in %i line(s): %s.\n" %
+                        (len(notthree), lines))
 
             if any(emptyfield):
-                lines = ", ".join([str(i[0]) for i in emptyfield])
-                self.__output.addMessage(__file__, 4, "EBPARSE",
-                        "The first and last column can't be left empty on "
-                        "line(s): %s.\n" % lines)
+                lines = makeList(emptyfield, 10)
+                self.__output.addMessage(__file__, 3, "EBPARSE",
+                        "The first and last column can't be left empty in "
+                        "%i line(s): %s.\n" % (len(emptyfield), lines))
 
-            if notthree or emptyfield:
-                return None
-
-            #Create a Namechecker batch entry
-            ret = []
-            for line, job in jobl[1:]:
-                if job[1]:
-                    if job[0].startswith("LRG"):
-                        inputl = "%s%s:%s" % tuple(job)
-                    else:
-                        inputl = "%s(%s):%s" % tuple(job)
-                else:
-                    inputl = "%s:%s" % (job[0], job[2])
-                ret.append(inputl)
-            return ret
+            errlist = notthree + emptyfield
+        #if
 
         else:   #No Header, possibly a new BatchType
+            if len(jobl) == 0: return
             #collect all lines with data in fields other than the first
-            lines = ", ".join([str(row[0]) for row in jobl if any(row[1][1:])])
-            if any(lines):
-                self.__output.addMessage(__file__, 4, "EBPARSE",
+            errlist = [line for line, row in jobl if any(row[1:])]
+            if any(errlist):
+                self.__output.addMessage(__file__, 3, "EBPARSE",
                     "New Type Batch jobs (see help) should contain one "
-                    "entry per line, please check line(s): %s" % lines)
-            else:
-                return [job[0] for line, job in jobl]
+                    "entry per line, please check %i line(s): %s" %
+                    (len(errList), makeList(errlist)))
 
+            ret = []
+            for line, job in jobl:
+                if not any(job):    #Empty line
+                    ret.append("~!")
+                    continue
+                if line in lines:
+                    inputl = "~!InputFields: "   #Dirty Escape BatchEntries
+                else:
+                    inputl = ""
+                ret.append(inputl+"|".join(job))
+        #else
 
+        if not ret: return None     #prevent divide by zero
+
+        err = float(len(errlist))/len(ret)
+        if err == 0:
+            return ret
+        elif err < 0.05:
+            #allow a 5 percent threshold for errors in batchfiles
+            self.__output.addMessage(__file__, 3, "EBPARSE",
+                    "There were errors in your batch entry file, they are "
+                    "omitted and your batch is started.")
+            self.__output.addMessage(__file__, 3, "EBPARSE",
+                    "Please check the batch input file help at the top of "
+                    "this page for additional information.")
+            return ret
+        else:
+            return None
     #__checkBatchFormat
 
     def parseFileRaw(self, handle) :
@@ -345,3 +379,10 @@ class File() :
         return None
     #parseBatchFile
 #File
+
+def makeList(l, maxlen=10):
+    ret = ", ".join(str(i) for i in l[:maxlen])
+    if len(l)>maxlen:
+        return ret+", ..."
+    else:
+        return ret

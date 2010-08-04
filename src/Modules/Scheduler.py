@@ -117,7 +117,14 @@ class Scheduler() :
         if not flags: return
         if 'S' in flags: #This entry is going to be skipped
             #Add a usefull message to the Output object
-            O.addMessage(__file__, 4, "EBSKIP", "Skipping entry")
+            if "S0" in flags:
+                message = "Entry could not be formatted correctly, check "\
+                        "batch input file help for details"
+            elif "S9" in flags:
+                message = "Empty Line"
+            else:
+                message = "Skipping entry"
+            O.addMessage(__file__, 4, "EBSKIP", message)
             return True #skip
         #if
         if 'A' in flags: #This entry is altered before execution
@@ -182,13 +189,13 @@ class Scheduler() :
         while jobList :
             for i, jobType, arg1 in jobList :
                 inputl, flags = self.__database.getFromQueue(i)
-                if inputl:
+                if not(inputl is None):
                     if jobType == "NameChecker":
                         self._processNameBatch(inputl, i, flags)
                     elif jobType == "SyntaxChecker":
-                        self._processSyntaxCheck(inputl, i)
+                        self._processSyntaxCheck(inputl, i, flags)
                     elif jobType == "ConversionChecker":
-                        self._processConversion(inputl, i, arg1)
+                        self._processConversion(inputl, i, arg1, flags)
                     else: #unknown jobType
                         pass #TODO: Scream burning water
                 else :
@@ -257,7 +264,7 @@ class Scheduler() :
         handle.close()
     #_processNameBatch
 
-    def _processSyntaxCheck(self, cmd, i):
+    def _processSyntaxCheck(self, cmd, i, flags):
         #TODO documentation
         """
             _processSyntaxCheck docstring
@@ -267,8 +274,13 @@ class Scheduler() :
         O = Output.Output(__file__, C.Output)
         P = Parser.Nomenclatureparser(O)
 
+        skip = self.__processFlags(O, flags)
         #Process
-        parsetree = P.parse(cmd)
+        if not skip:
+            parsetree = P.parse(cmd)
+        else:
+            parsetree = None
+
         if parsetree:
             result = "OK"
         else:
@@ -288,7 +300,7 @@ class Scheduler() :
         handle.close()
     #_processSyntaxCheck
 
-    def _processConversion(self, cmd, i, build):
+    def _processConversion(self, cmd, i, build, flags):
         #TODO documentation
         """
             _processConversion docstring
@@ -301,39 +313,38 @@ class Scheduler() :
         gName = ""
         cNames = [""]
 
-        try:
-            #process
-            converter = Mapper.Converter(build, C, O)
+        skip = self.__processFlags(O, flags)
+        if not skip:
+            try:
+                #process
+                converter = Mapper.Converter(build, C, O)
 
-            #Also accept chr accNo
-            variant = converter.correctChrVariant(variant)
+                #Also accept chr accNo
+                variant = converter.correctChrVariant(variant)
 
-            if not (":c." in variant or ":g." in variant):
-                #Bad name
-                P = Parser.Nomenclatureparser(O)
-                parsetree = P.parse(variant)
+                if not(":c." in variant or ":g." in variant):
+                    #Bad name
+                    P = Parser.Nomenclatureparser(O)
+                    parsetree = P.parse(variant)
             #if
 
-            if ":c." in variant:
-                # Do the c2chrom dance
-                variant = converter.c2chrom(variant)
-            if variant and ":g." in variant:
-                # Do the g2c dance
-                variants = converter.chrom2c(variant)
-                if variants:
-                    gName = variant #TODO clarify
-                    cNames = [cName for cName2 in variants.values() for cName in
-                            cName2]
-                #if
-            #if
-        #try
-        except Exception, e:
-            #Catch all exceptions related to the processing of cmd
-            O.addMessage(__file__, -1, "EBATCH",
-                    "Error during ConversionBatch. Input: %s" % `cmd`)
-            O.addMessage(__file__, 4, "EBATCHU",
-                    "Unexpected error occurred, dev-team notified")
-        #except
+                if ":c." in variant:
+                    # Do the c2chrom dance
+                    variant = converter.c2chrom(variant)
+                if variant and ":g." in variant:
+                    # Do the g2c dance
+                    variants = converter.chrom2c(variant)
+                    if variants:
+                        gName = variant #TODO clarify
+                        cNames = [cName for cName2 in variants.values() \
+                                for cName in cName2]
+            except Exception, e:
+                #Catch all exceptions related to the processing of cmd
+                O.addMessage(__file__, -1, "EBATCH",
+                        "Error during ConversionBatch. Input: %s" % `cmd`)
+                O.addMessage(__file__, 4, "EBATCHU",
+                        "Unexpected error occurred, dev-team notified")
+	    #except
 
         error = "%s" % "|".join(O.getBatchMessages(3))
 
@@ -368,7 +379,16 @@ class Scheduler() :
         jobID = self.__database.addJob(outputFilter, eMail,
                 fromHost, jobType, Arg1)
         for inputl in queue :
-            self.__database.addToQueue(jobID, inputl)
+            if inputl.startswith("~!"): #Dirty Escape
+                inputl = inputl[2:]
+                if inputl:
+                    flag = "S0"
+                else:
+                    flag = "S9"
+                    inputl = " " #Empty Line
+            else:
+                flag = None
+            self.__database.addToQueue(jobID, inputl, flag)
 
         # Spawn child
         p = subprocess.Popen(["MutalyzerBatch",

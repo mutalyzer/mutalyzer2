@@ -1284,7 +1284,7 @@ class Batch(Db) :
         return data
     #removeJob
 
-    def addToQueue(self, jobID, inputl):
+    def addToQueue(self, jobID, inputl, flag):
         """
             Add a request belonging to a certain job to the queue.
 
@@ -1300,7 +1300,7 @@ class Batch(Db) :
         statement = """
             INSERT INTO BatchQueue
               VALUES (%s, %s, %s, %s);
-        """, (None, jobID, inputl, None)
+        """, (None, jobID, inputl, flag)
 
         self.query(statement)
     #addToQueue

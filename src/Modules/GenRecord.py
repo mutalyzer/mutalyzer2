@@ -94,8 +94,6 @@ class Locus(object) :
         self.proteinRange = []
         self.locusTag = None
         self.link = None
-        self.transLongName = ""
-        self.protLongName = ""
         self.transcribe = False
         self.translate = False
         self.linkMethod = None

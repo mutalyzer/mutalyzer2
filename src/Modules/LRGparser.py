@@ -74,6 +74,8 @@ def createLrgRecord(data):
         transcriptName = tData.getAttribute("name").encode("utf8")[1:]
         transcription = [t for t in gene.transcriptList if t.name ==
                 transcriptName][0]
+        transcription.locusTag = transcriptName and "t"+transcriptName
+        transcription.linkMethod = "Locus Tag"
 
         transcription.location = \
           [int(tData.getAttribute("start")), int(tData.getAttribute("end"))]
@@ -171,14 +173,14 @@ def _emptyTranscripts(symbol, data):
 
 def _transcriptPopulator(trName, trData):
     transcript = GenRecord.Locus(trName)
-    transcript.longName = trData.get("transLongName")
+    transcript.transcriptProduct = trData.get("transLongName")
     if trData.has_key("transAttr"):
         tA = trData["transAttr"]
         transcript.transcriptID = tA.get("transcript_id")
         transcript.location = [tA.get("start"), tA.get("end")]
 
     if trData.has_key("proteinAttr"):
-        transcript.protLongName = trData.get("proteinLongName")
+        transcript.proteinProduct = trData.get("proteinLongName")
 
         pA = trData["proteinAttr"]
         transcript.proteinID = pA.get("accession")

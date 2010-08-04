@@ -51,12 +51,7 @@
   </div> <!-- help -->
   <br /><br />
 
-      <div tal:condition = "errors" id="errors">
-          <b>Errors:</b><br />
-        <div tal:repeat = "i errors"
-                  tal:replace = "structure string:${i}<br>">
-         </div>
-      </div>
+
 
       <table id="inputform">
           <form action = "" method = "post" enctype = "multipart/form-data">
@@ -116,6 +111,13 @@
     <script language="javascript" 
         tal:content="structure string:document.getElementById('batchType').selectedIndex = ${selected}; document.getElementById('batchRow').style.display = '${hideTypes}'; window.onload = initpage;">
         </script>
+
+      <div tal:condition = "errors" id="errors">
+          <b>Errors:</b><br />
+        <div tal:repeat = "i errors"
+                  tal:replace = "structure string:${i}<br>">
+              </div><br />
+     </div>
 
   <div tal:condition = "messages">
     <b>Messages</b><br>
