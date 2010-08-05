@@ -272,7 +272,7 @@ class Converter(object):
                     "The accession number: %s could not be "
                     "found in our database." % acc)
             self.__output.addOutput("LOVDERR",
-                    "Reference sequence version not found.")
+                    "Reference sequence not found.")
             return None     #Excplicit return of None in case of error
         else:
             if version in versions:

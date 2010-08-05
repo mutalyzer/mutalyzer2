@@ -21,6 +21,11 @@
       language="javascript" 
       src="interface.js">
     </script>
+    <script 
+      type="text/javascript" 
+      language="javascript" 
+      src="base/js/generator.js">
+    </script>
     <meta http-equiv="Content-Type" 
       content="text/html; charset=iso-8859-1">
     <title tal:content = "structure string:Mutalyzer ${version}"></title>
@@ -252,6 +257,22 @@
             onmouseout="navDeAct('base/images/bullitdonker.gif', 
                                  'positionConverter');" 
             class="vertnavsub">Position Converter</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_nameGenerator">
+        </td>
+        <td colspan="3">
+          <a id="page_nameGenerator" 
+            onclick="swapActive('nameGenerator');" 
+            href="nameGenerator" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'nameGenerator');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'nameGenerator');" 
+            class="vertnavsub">Name Generator</a>
         </td>
       </tr>
 

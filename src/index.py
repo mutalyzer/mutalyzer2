@@ -63,6 +63,11 @@ def index(req) :
     return W.tal("HTML", "templates/index.html", {})
 #index
 
+def nameGenerator(req):
+    W = Web.Web()
+    return W.tal("HTML", "templates/generator.html", {})
+#generator
+
 def check(req) :
     """
         The mutation checker page.
