@@ -44,6 +44,7 @@ def snp(req) :
         R = Retriever.Retriever(C.Retriever, O, None)
         R.snpConvert(rsId)
         O.addMessage(__file__, -1, "INFO", "Finished processing rs%s" % rsId)
+    #if
 
     args = {
         "snp"      : O.getOutput("snp"),
@@ -62,6 +63,16 @@ def index(req) :
     W = Web.Web()
     return W.tal("HTML", "templates/index.html", {})
 #index
+
+def help(req) :
+    W = Web.Web()
+    return W.tal("HTML", "templates/help.html", {})
+#about
+
+def about(req) :
+    W = Web.Web()
+    return W.tal("HTML", "templates/about.html", {})
+#about
 
 def nameGenerator(req):
     W = Web.Web()
@@ -113,11 +124,15 @@ def check(req) :
     else :
         reference += ".gb"
 
+    pe = O.getOutput("parseError")
+    if pe :
+        pe[0] = pe[0].replace('<', "&lt;")
+
     args = {
         "lastpost"           : name,
         "messages"           : O.getMessages(),
         "summary"            : summary,
-        "parseError"         : O.getOutput("parseError"),
+        "parseError"         : pe,
         "errors"             : errors,
         "genomicDescription" : W.urlEncode([O.getIndexedOutput(
                                    "genomicDescription", 0)])[0],
@@ -188,10 +203,15 @@ def syntaxCheck(req) :
         #else :
         #    args["messages"].append("The syntax of this variant is OK!")
     #if
+
+    pe = O.getOutput("parseError")
+    if pe :
+        pe[0] = pe[0].replace('<', "&lt;")
+
     args = {
         "variant"       : variant,
         "messages"      : O.getMessages(),
-        "parseError"    : O.getOutput("parseError"),
+        "parseError"    : pe,
         "debug"         : ""
     }
     ret = W.tal("HTML", "templates/parse.html", args)

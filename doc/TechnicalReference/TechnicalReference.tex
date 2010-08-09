@@ -644,8 +644,71 @@ transcription start, transcription stop and CDS stop, a function
 \newpage
 
 \section{Programs} \label{sec:programs}
+In this section we discuss a number of possible interconnections between the
+modules.
 
 \subsection{Mutalyzer} \label{subsec:mutalyzer}
+
+\subsubsection{Semantic checks}
+The main function of \texttt{Mutalyzer} program, is \emph{semantic name
+checking}. It uses the \texttt{Parser} module for syntactic checking and the
+generation of a parse tree, and applies the given description to a reference 
+sequence. This reference sequence is provided by either the \texttt{LRGparser}
+of \texttt{GBparser} module. By combining the variant description and the
+interpreted reference sequence file, semantic checking can be done.
+
+Semantic checks focus on several aspects of a variant description:
+\begin{itemize}
+\item Correctness of an intronic position notation.
+\item Disambiguation of a deletion or insertion.
+\item Minimising a description.
+\item Verifying optional arguments.
+\end{itemize}
+
+As an example of an intronic position check, we look at the position $25+4$. In
+this case, position $25$ must be a splice donor site.
+
+When a nucleotide is deleted from a stretch of nucleotides, the HGVS prescribes
+that the last one should be deleted. This disambiguation also applies for more
+complex structures; deleting \verb#GACTATTCCCTG# from a sequence
+\verb#ATGGACTATTCCCTGGCT# for example, should be corrected to the deletion of
+\verb#ACTATTCCCTGG#. Only deletions, insertions and duplications are sensitive
+to this kind of ambiguity.
+
+Every description can be written as a deletion/insertion (\emph{delins})
+operation, but using this representation is not necessarily the shortest one. A
+delins of one nucleotide, for example should be written as a substitution.
+Several checks are implemented to reduce one representation to an other. In 
+Table~\ref{tab:erosion} a list of possibly ``disguised'' variants is shown.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l}
+Variant type & Could be \\
+\hline
+delins & del, ins, dup, subst, inv \\
+ins    & dup \\
+inv    & subst 
+\end{tabular}
+\end{center}
+\caption{Disguised variants.} \label{tab:erosion}
+\end{table}
+
+Apart from this possible disguise, a variant can be described using too much
+nucleotides, or a range that is too large. A delins can include part of the
+flanking sequence of the real change. To prevent this, the \emph{longest common
+prefix} and \emph{longest common suffix} are pruned. Likewise, an inversion 
+can be too large when the \emph{reverse complement} of a prefix is a suffix.
+This is pruned in a similar way. Finally, a delins, subst or inv can have no
+effect at all.
+
+Any optional arguments must also be checked. If a length of a deletion is given
+for example, it must match the range of the deletion. If a stretch of
+nucleotides is given, this stretch must match the reference sequence.
+
+\subsubsection{Visualisation}
+
+\subsubsection{Effect prediction}
 
 \subsection{VarInfo} \label{subsec:varinfo}
 

@@ -42,8 +42,9 @@ class Web() :
                 version ; Here the displayed version is defined.
         """
 
-        self.version = "2.0&alpha;-5"
+        self.version = "2.0&beta;-1"
         self.nomenclatureVersion = "2.0"
+        self.releaseDate = "9 Aug 2010"
 
         C = Config.Config()
         self.email = C.Retriever.email
@@ -134,6 +135,7 @@ class Web() :
     
         context.addGlobal("version", self.version)
         context.addGlobal("nomenclatureVersion", self.nomenclatureVersion)
+        context.addGlobal("releaseDate", self.releaseDate)
         context.addGlobal("contactEmail", self.email)
         for i in args :
             context.addGlobal(i, args[i])

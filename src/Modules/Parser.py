@@ -70,7 +70,8 @@ class Nomenclatureparser() :
     ProtIso = Suppress("_i") + Number("ProtIso")
     GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
                  Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
-    GI = Suppress(Optional("GI") ^ Optional("GI:")) + Number("RefSeqAcc")
+    GI = Suppress(Optional("GI") ^ Optional("GI:") ^ Optional("gi") ^ 
+         Optional("gi:")) + Number("RefSeqAcc")
     Version = Suppress('.') + Number("Version")
     AccNo = NotAny("LRG_") + \
             Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \

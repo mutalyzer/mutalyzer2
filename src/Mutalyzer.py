@@ -269,6 +269,16 @@ def __cdsLen(splice_sites) :
     return l
 #__cdsLen
 
+def __checkDNA(arg) :
+    """
+    """
+
+    for i in str(arg) :
+        if not i in IUPAC.unambiguous_dna.letters :
+            return False
+    return True
+#__checkDNA
+
 def __checkOptArg(ref, p1, p2, arg, O) :
     """
     """
@@ -285,6 +295,10 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             #if
         #if
         else :
+            if not __checkDNA(arg) :
+                O.addMessage(__file__, 4, "ENODNA",
+                    "Invalid letters in argument.")
+                return False
             ref_slice = str(ref[p1 - 1:p2])
             if ref_slice != str(arg) : # FIXME more informative.
                 O.addMessage(__file__, 3, "EREF",
@@ -537,11 +551,15 @@ def _createBatchOutput(O):
 
 
     O.addOutput("batchDone", outputline)
+#_createBatchOutput
 
 def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
     """
     """
 
+    if not __checkDNA(Arg2) :
+        #O.addMessage(__file__, 4, "ENODNA", "Invalid letter in input")
+        return
     if Arg1 == Arg2 :
         O.addMessage(__file__, 3, "ENOVAR",
             "No mutation given (%c>%c) at position %i." % (
@@ -640,6 +658,14 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     if start_g + 1 != end_g :
         O.addMessage(__file__, 3, "EINSRANGE",
             "%i and %i are not consecutive positions." % (start_g, end_g))
+        return
+    #if
+    if not Arg1 or not __checkDNA(Arg1) :
+        O.addMessage(__file__, 3, "EUNKVAR", "Although the syntax of this " \
+            "variant is correct, the effect can not be analysed.")
+        return
+    #if
+
     MUU.insM(start_g, Arg1)
     insertionLength = len(Arg1)
     newStart = MUU.shiftpos(start_g)
@@ -674,6 +700,13 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
                                (roll[0] + shift - insertionLength, 0))
     #if
     else :
+        if shift :
+            O.addMessage(__file__, 2, "WROLL", "Insertion of %s at position " \
+                "%i_%i was given, however, the HGVS notation prescribes " \
+                "that it should be an insertion of %s at position %i_%i." % (
+                MUU.mutated[newStart:newStop], start_g, start_g + 1,
+                MUU.mutated[newStart + shift:newStop + shift], 
+                newStart + shift, newStart + shift + 1))
         GenRecordInstance.name(start_g, start_g + 1, "ins", 
             MUU.mutated[newStart + shift:newStop + shift] , "", 
             (roll[0], shift))
@@ -899,6 +932,9 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
 
 def __ppp(MUU, parts, GenRecordInstance, O) :
     if parts.RawVar or parts.SingleAlleleVarSet :
+        if parts.RefType == 'r' :
+            O.addMessage(__file__, 4, "ERNA", "Descriptions on RNA level " \
+                "are not supported.")
         if parts.RefType in ['c', 'n'] :
             GS, W = None, None
             goi, toi = O.getOutput("geneSymbol")[-1]
@@ -1194,6 +1230,7 @@ def process(cmd, C, O) :
                     fullDescr =\
                         "%st%s:%c.%s" % (reference, j.name, j.molType, descr)
                     O.addOutput("descriptions", fullDescr)
+                #if
                 else:
                     O.addOutput("descriptions", (i.name))
 
@@ -1203,12 +1240,14 @@ def process(cmd, C, O) :
                     fullpDescr = "%sp%s:%s" % (reference, j.name, pDescr)
                     O.addOutput("protDescriptions", fullpDescr)
                     cAcc, pAcc = j.transcriptID, j.proteinID
+                #if
 
                 O.addOutput("NewDescriptions", (
                     iName, jName, mType, cDescr, pDescr, gAcc,
                     cAcc, pAcc, fullDescr, fullpDescr))
-
-   #if
+            #for
+        #for
+    #if
     else :
         for i in GenRecordInstance.record.geneList :
             for j in sorted(i.transcriptList, key = attrgetter("name")) :
@@ -1232,11 +1271,13 @@ def process(cmd, C, O) :
                         reference, iName, jName, pDescr)
                     O.addOutput("protDescriptions", fullpDescr)
                     cAcc, pAcc = j.transcriptID, j.proteinID
+                #if
 
                 O.addOutput("NewDescriptions", (
                     iName, jName, mType, cDescr, pDescr, gAcc,
                     cAcc, pAcc, fullDescr, fullpDescr))
             #for
+        #for
     #else
 
 
