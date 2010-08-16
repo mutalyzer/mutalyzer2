@@ -34,12 +34,21 @@
                              style = "width:500px"></td>
               </tr>
               <tr>
-                  <td colspan="2"><input type="submit" value="Submit"></td>
+                  <td colspan="2">
+                    <input type="submit" value="Submit">
+                    <input type="button" value="Clear field" 
+                           onClick = "clearForm(this.form, 'variant');">
+                  </td>
+
               </tr>
           </form>
       </table> <!-- inputform -->
 
       <div tal:condition = "gName">
+        <br>
+        <br>
+        <h3>Output:</h3>
+        <br>
         <b>Chromosomal Variant:</b><br>
         <pre><div tal:replace = "structure string:${gName}<br>"></div></pre>
       </div>

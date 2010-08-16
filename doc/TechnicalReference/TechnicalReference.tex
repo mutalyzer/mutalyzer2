@@ -181,7 +181,7 @@ The \texttt{Db} module has the following derived classes:
 
 The \texttt{Mapping} class provides an interface for databases that contain
 mapping information. At the time of this writing, mapping information of
-human builds \emph{hg18} and \emph{hg19}~\cite{UCSC} are available. This class 
+human builds \emph{hg18} and \emph{hg19}~\cite{GN} are available. This class 
 provides functions to convert chromosomal positions into transcript oriented
 positions and vice versa. These conversions are needed for the mapping of 
 data in locus specific databases~\cite{LOVD} (from transcript level to
@@ -348,7 +348,7 @@ be used as the accession number. So uploading a known GenBank file for example
 can result in the function returning not an \texttt{UD} number, but a normal
 accession number.
 
-\subsubsection{The LargeRetriever class} \label{subsubsec:genbankretriever}
+\subsubsection{The LargeRetriever class} \label{subsubsec:lrgretriever}
 % TODO write this section.
 
 \subsection{The Mutator module} \label{subsec:mutator}
@@ -648,6 +648,10 @@ In this section we discuss a number of possible interconnections between the
 modules.
 
 \subsection{Mutalyzer} \label{subsec:mutalyzer}
+The \texttt{Mutalyzer} program (also known as the \texttt{name checker} perform
+several tasks; \emph{semantic checking}, \emph{position conversion},
+\emph{visualisation} and \emph{effect prediction} to some extent. 
+%TODO more
 
 \subsubsection{Semantic checks}
 The main function of \texttt{Mutalyzer} program, is \emph{semantic name
@@ -706,11 +710,77 @@ Any optional arguments must also be checked. If a length of a deletion is given
 for example, it must match the range of the deletion. If a stretch of
 nucleotides is given, this stretch must match the reference sequence.
 
-\subsubsection{Visualisation}
+\subsubsection{Effect prediction} \label{subsubsec:effect}
+The effect prediction is very limited. \texttt{Mutalyzer} is able to detect
+variants that hit a splice site and a start codon and issue a warning
+accordingly. From the generated variant description however, some effects can
+be deduced. A variant that is at position $x+2$ for example, has a high 
+probability of destroying a splice site.
 
-\subsubsection{Effect prediction}
+In case of a variant in the start codon, a warning is given, but in case the
+variant still has a valid start codon, the analysis continues.
+
+The most informative effect prediction is the \emph{protein description}. This
+is made by comparing the original protein and the mutated protein. If only one
+raw variant is present, a protein description is made.
+
+There are two major cases to distinguish:
+\begin{itemize}
+\item A variant that disrupts the reading frame.
+\item A variant that does not disrupt the reading frame.
+\end{itemize}
+
+To distinguish between these cases, a combination of the \texttt{CrossMap}
+and \texttt{Mutator} functions is used. 
+
+\begin{itemize} % FIXME Is this true? Not just CDS len?
+\item Take the original CDS stop variable, located in the \texttt{CrossMap} 
+      object.
+\item Convert this to a genomic position (also using the \texttt{CrossMap}
+      module.
+\item Use the \texttt{Mutator} module to get the location of the CDS stop 
+      variable in the new (mutated) coordinate system.
+\item Convert this new position back to a CDS oriented position.
+\end{itemize}
+
+If we now look whether this new position is dividable by three, the reading
+frame is not disrupted, otherwise it is.
+
+In case of a disrupted reading frame, we first calculate the \emph{longest
+common prefix}, and use the remainder of the mutated protein to generate
+a \emph{frame shift} notation. This is handled by the \texttt{findFrameShift()}
+function.
+
+If the reading frame is not disrupted, we first calculate the \emph{longest
+common prefix}, remove this from both the original and mutated protein and then
+by calculating and removing the \emph{longest common suffix}. The string that
+is left, is in general a delins, but can often be simplified by using a number
+of rules. These rules are applied in the \texttt{findInFrameDescription()} 
+function.
+
+Also, effects on restriction sites are reported, as described in 
+Section~\ref{subsec:mutator}
+
+Both of these functions are wrapped by the \texttt{\_\_toProtDescr()} function
+that decides which one to use as described above.
+
+Apart from returning a description, the position where both proteins start
+to differ (the \emph{lcp}) and the positions from which both proteins are equal
+again (the length of each sequence minus the \emph{lcs}) are returned. This is
+used later on for visualisation.
+
+\subsubsection{Visualisation} \label{subsubsec:visualisation}
+To aid in the analysis of both variants on DNA as well as the derived protein
+description, a number of visualisations are made. First of all, all raw
+variants are shown as described in Section~\ref{subsec:mutator}. 
+
+Apart from this, both the original and the mutated protein are shown and the
+differences between them are highlighted. This is done by using the positions
+returned by the \texttt{\_\_toProtDescr()} function as described in 
+Section~\ref{subsubsec:effect}.
 
 \subsection{VarInfo} \label{subsec:varinfo}
+
 
 \subsection{UCSC\_Update} \label{subsec:ucsc_update}
 
@@ -759,7 +829,7 @@ nucleotides is given, this stretch must match the reference sequence.
 
 \newpage
 
-\bibliography{bibliography}{}
+\bibliography{/home/jfjlaros/projects/bibliography}{}
 \bibliographystyle{plain}
 
 \end{document}

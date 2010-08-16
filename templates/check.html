@@ -29,10 +29,9 @@
             tal:attributes = "value lastpost"
             style = "width:100%"
           ><br>
-          <input 
-            type="submit" 
-            value="Submit"
-          >
+          <input type="submit" value="Submit">
+          <input type="button" value="Clear field" 
+                 onClick = "clearForm(this.form, 'mutationName');">  
         </form>
         <br>
       </div>
@@ -67,7 +66,13 @@
               <br>
             </div>
             <br>
-            <b>Genomic description:</b><br>
+            <div tal:condition = "genomicDNA">
+              <b>Genomic description:</b>
+            </div>
+            <div tal:condition = "not:genomicDNA">
+              <b>Description relative to transcription start:</b><br>
+              (Not for use in LSDBs in case of protein-coding transcripts).
+            </div>
             <br>
             <tt>
               <a tal:content = "genomicDescription/0"
@@ -125,11 +130,20 @@
                 </div>
                 <br>
                 <div tal:condition = "altStart">
-                  <b tal:content = "structure string:Alternative protein using 
-                                    start codon ${altStart}:"></b><br>
-                  <pre><div tal:repeat = "i altProtein"
-                         tal:replace = "structure string:${i}<br>">
-                    </div></pre>
+                  <b tal:content = "structure string:Alternative protein 
+                    using start codon ${altStart}:"></b><br>
+                  <div tal:condition = "altProtein">
+                    <pre><div tal:repeat = "i altProtein"
+                           tal:replace = "structure string:${i}<br>">
+                      </div></pre>
+                  </div>
+                  <div tal:condition = "not:altProtein">
+                    <br>
+                    No change: Predicted protein (not shown) equals reference
+                    protein. <br>
+                    <br>
+                  </div>
+                  <br>
                 </div>
               </div>
             </div>

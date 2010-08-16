@@ -244,6 +244,9 @@ class Converter(object):
         Fields["cdsEnd"] =\
             int(Fields["cdsEnd"])
 
+        for i in range(len(Fields["exonStarts"])) :
+            Fields["exonStarts"][i] += 1
+
         # Create Mutalyzer compatible exon list
         Fields["exons"] = []
         exons = zip(Fields["exonStarts"], Fields["exonEnds"])

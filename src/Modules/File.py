@@ -311,7 +311,7 @@ class File() :
                 if not any(job):    #Empty line
                     ret.append("~!")
                     continue
-                if line in lines:
+                if line in errlist:
                     inputl = "~!InputFields: "   #Dirty Escape BatchEntries
                 else:
                     inputl = ""

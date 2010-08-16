@@ -1,0 +1,82 @@
+\begin{thebibliography}{10}
+
+\bibitem{NOM5}
+S.E. Antonarakis and V.A. McKusick.
+\newblock Discussion on mutation nomenclature.
+\newblock {\em Human Mutation}, 4:166, 1994.
+
+\bibitem{NOM2}
+S.E. Antonarakis and {the Nomenclature Working Group}.
+\newblock Recommendations for a nomenclature system for human gene mutations.
+\newblock {\em Human Mutation}, 11:1--3, 1998.
+
+\bibitem{NOM3}
+A.L. Beaudet and {the Ad Hoc Committee on Mutation Nomenclature}.
+\newblock Update on nomenclature for human gene mutations.
+\newblock {\em Human Mutation}, 8:197--202, 1996.
+
+\bibitem{NOM6}
+A.L. Beaudet and L.C. Tsui.
+\newblock A suggested nomenclature for designating mutations.
+\newblock {\em Human Mutation}, 2:245, 1993.
+
+\bibitem{NOM7}
+E.~Beutler.
+\newblock The designation of mutations.
+\newblock {\em American Journal of Human Genetics}, 53:783--785, 1993.
+
+\bibitem{NOM4}
+E.~Beutler, V.A. McKusick, A.~Motulsky, C.R. Scriver, and F.~Hutchinson.
+\newblock Mutation nomenclature: nicknames, systematic names and unique
+  identifiers.
+\newblock {\em Human Mutation}, 8:203--206, 1996.
+
+\bibitem{BIOPYTHON}
+Biopython.
+\newblock \begin{small}\texttt{http://biopython.org/}\end{small}.
+
+\bibitem{BNF}
+A.~Blavier.
+\newblock {BNF for the HGVS nomenclature.}
+\newblock {\em Internal document}, ?
+
+\bibitem{NOM1}
+J.T. {den}~Dunnen and S.E. Antonarakis.
+\newblock Mutation nomenclature extensions and suggestions to describe complex
+  mutations: {A} discussion.
+\newblock {\em Human Mutation}, 15:7--12, 2000.
+
+\bibitem{LOVD}
+I.F.A.C Fokkema, J.T. {den}~Dunnen, and P.E.M. Taschner.
+\newblock {LOVD}: easy creation of a locus-specific sequence variation database
+  using an ``{LSDB-in-a-Box}'' approach.
+\newblock {\em Human Mutation}, 26(2):63--68, 2005.
+
+\bibitem{HGVS}
+{Human Genome Variation Society}.
+\newblock \begin{small}\texttt{http://www.hgvs.org/}\end{small}.
+
+\bibitem{API}
+J.F.J. Laros.
+\newblock Mutalyzer 2.0 {API} documentation.
+\newblock {\em Internal document}, 2010.
+
+\bibitem{NCBI}
+{National Center for Biotechnology Information}.
+\newblock \begin{small}\texttt{http://www.ncbi.nlm.nih.gov/}\end{small}.
+
+\bibitem{PYPARSING}
+Pyparsing.
+\newblock \begin{small}\texttt{http://pyparsing.wikispaces.com/}\end{small}.
+
+\bibitem{TAL}
+{SimpleTAL}.
+\newblock \begin{small}\texttt{http://www.owlfish.com/software/simpleTAL/}
+  \end{small}.
+
+\bibitem{GN}
+{UCSC Genome Bioinformatics}.
+\newblock \begin{small}\texttt{http://genome.ucsc.edu/}\end{small}, version
+  April 21, 2006 [retrieved June 1, 2010].
+
+\end{thebibliography}

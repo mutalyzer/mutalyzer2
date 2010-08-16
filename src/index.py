@@ -127,6 +127,10 @@ def check(req) :
     pe = O.getOutput("parseError")
     if pe :
         pe[0] = pe[0].replace('<', "&lt;")
+    
+    genomicDNA = True
+    if O.getIndexedOutput("molType", 0) == 'n' :
+        genomicDNA = False
 
     args = {
         "lastpost"           : name,
@@ -137,6 +141,7 @@ def check(req) :
         "genomicDescription" : W.urlEncode([O.getIndexedOutput(
                                    "genomicDescription", 0)])[0],
         "chromDescription"   : O.getIndexedOutput("genomicChromDescription", 0),
+        "genomicDNA"         : genomicDNA,
         "visualisation"      : O.getOutput("visualisation"),
         "descriptions"       : W.urlEncode(O.getOutput("descriptions")),
         "protDescriptions"   : O.getOutput("protDescriptions"),
@@ -194,7 +199,7 @@ def syntaxCheck(req) :
             O.addMessage(__file__, 2, "WCOMMASYNTAX",
                     "Comma's are not allowed in the syntax, autofixed")
             variant = variant.replace(',', '')
-            args["variant"]=variant
+            #args["variant"]=variant
         P = Parser.Nomenclatureparser(O)
         parsetree = P.parse(variant)
         #if not parsetree :

@@ -27,6 +27,8 @@
           type="submit" 
           value="Submit"
         >
+        <input type="button" value="Clear field" 
+               onClick = "clearForm(this.form, 'rsId');">
       </form>
       <div tal:condition = "lastpost">
         <br>

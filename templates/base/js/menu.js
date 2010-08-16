@@ -156,3 +156,11 @@ function resetAll() {
 
   navPartDeAct();
 }//resetAll
+
+function clearForm(form, elementName) {
+  for (i = 0; i < form.elements.length; i++) {
+    if (form.elements[i].name == elementName) {
+      form.elements[i].value = "";
+    }//if
+  }//for
+}//clearForm

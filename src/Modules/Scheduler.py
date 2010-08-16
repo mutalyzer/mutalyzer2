@@ -194,7 +194,7 @@ class Scheduler() :
                         self._processNameBatch(inputl, i, flags)
                     elif jobType == "SyntaxChecker":
                         self._processSyntaxCheck(inputl, i, flags)
-                    elif jobType == "ConversionChecker":
+                    elif jobType == "PositionConverter":
                         self._processConversion(inputl, i, arg1, flags)
                     else: #unknown jobType
                         pass #TODO: Scream burning water

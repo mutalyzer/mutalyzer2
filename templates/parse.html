@@ -25,6 +25,8 @@
         <input 
           type="submit" 
           value="Submit">
+        <input type="button" value="Clear field" 
+               onClick = "clearForm(this.form, 'variant');">
       </form><br>
       <div tal:condition = "variant">
         <h3>Output:</h3>
