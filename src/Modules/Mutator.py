@@ -328,9 +328,11 @@ class Mutator() :
         j = 0
         for i in sites :
             if (j % 2) :
-                ret.append(self.shiftpos(i + 1) - 1)
+                #ret.append(self.shiftpos(i + 1) - 1)
+                ret.append(self.shiftpos(i))
             else :
-                ret.append(self.shiftpos(i - 1) + 1)
+                #ret.append(self.shiftpos(i - 1) + 1)
+                ret.append(self.shiftpos(i))
             j += 1
         #for
 
