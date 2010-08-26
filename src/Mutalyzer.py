@@ -87,6 +87,7 @@ def __checkIntronPosition(main, offset, transcript) :
 
     if offset :
         #print main_g, offset, rnaList
+        offset *= transcript.CM.orientation     # Correct for minus strand.
         if main_g in rnaList :          # The main coordinate is a splice site.
             if rnaList.index(main_g) % 2 == 0 : # Splice donor.
                 if offset > 0 :                 # So the sign must be '+'.
@@ -972,7 +973,8 @@ def __normal2g(RawVar, transcript) :
     if RawVar.EndLoc :
         if not RawVar.EndLoc.PtLoc.Main.isdigit() : # For ? in a position.
             return None, None
-        end_g = int(RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
+        end_g = transcript.CM.main2int(
+            RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
     #if
 
 
