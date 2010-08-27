@@ -87,13 +87,13 @@ def __checkIntronPosition(main, offset, transcript) :
 
     if offset :
         #print main_g, offset, rnaList
-        offset *= transcript.CM.orientation     # Correct for minus strand.
+        orientedOffset = offset * transcript.CM.orientation
         if main_g in rnaList :          # The main coordinate is a splice site.
             if rnaList.index(main_g) % 2 == 0 : # Splice donor.
-                if offset > 0 :                 # So the sign must be '+'.
+                if orientedOffset > 0 :         # So the sign must be '+'.
                     return False
             else :                              # Splice acceptor.
-                if offset < 0 :                 # So the sign must be '-'.
+                if orientedOffset < 0 :         # So the sign must be '-'.
                     return False
         #if
         else :
@@ -299,6 +299,8 @@ def __PtLoc2offset(Loc) :
     """
 
     if Loc.Offset :
+        if Loc.Offset == '?' : # This is highly debatable.
+            return 0
         offset = int(Loc.Offset)
         if Loc.OffSgn == '-' :
             return -offset
