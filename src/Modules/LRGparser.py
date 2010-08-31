@@ -1,86 +1,147 @@
+"""
+    Module contains one public function createLrgRecord which returns a
+    mutalyzer GenRecord.Record populated with data from a LRG file.
+
+    A LRG file is an XML formatted file and consists of a fixed and
+    updatable section. The fixed section contains a DNA sequence
+    and for that sequence a number of transcripts.
+
+    The updatable region could contain all sorts of annotation for the
+    sequence and transcripts. It can also contain additional (partial)
+    transcripts and mapping information.
+
+    This module is based on the result of the minidom xml parser.
+    NOTE:
+        A strong alternative to the minidom parser would be ElementTree
+        http://docs.python.org/library/xml.etree.elementtree.html
+        which is added in python2.5
+        Its main strengths are speed and readability [pythonesque]
+"""
+
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Modules import GenRecord
 import xml.dom.minidom
-DEBUG = False
+from xml.parsers.expat import ExpatError    # Raised on invalid XML files
+
+__all__ = ["createLrgRecord"] # Only import createLrgRecord from this module
 
 def __debugParsedData(title, data):
-    if not DEBUG: return
-    import pprint
+    """
+        Output additional data to stdout. Used for debugging the
+        intermediate format used while parsing a LRG file.
+    """
+    import pprint       #Only imported when the debug flag is set
     print "#"*79+"\nDEBUG: Start of "+title+"\n"+"#"*79
     pprint.pprint(data)
     print "#"*79+"\nDEBUG: End of "+title+"\n"+"#"*79
+#__debugParsedData
 
 def _getContent(data, refname):
-    """Return string-content of an XML textnode"""
+    """
+        Return string-content of an XML textnode.
+
+        Arguments:
+            data    ; a minidom object
+            refname ; the name of a member of the minidom object
+
+        Returns:
+            String  ; The UTF-8 content of the textnode
+                      or an emtpy string
+    """
     temp = data.getElementsByTagName(refname)
     if temp:
         return temp[0].lastChild.data.encode("utf8")
     else:
         return ""
+#_getContent
 
 def _attr2dict(attr):
-    """Create a dictionary from the attributes of an XML node"""
+    """
+        Create a dictionary from the attributes of an XML node
+
+        Arguments:
+            attr    ; a minidom node
+
+        Returns:
+            Dict    ; A dictionary with pairing of node-attribute names
+                      and values. Integer string values are converted to
+                      integers. String values are converted to UTF-8
+    """
     ret = {}
     for key, value in attr.items():
         value = value.isdigit() and int(value) or value.encode("utf-8")
         ret[key.encode("utf-8")] = value
     return ret
-
-
+#_attr2dict
 
 def createLrgRecord(data):
     """
         Create a GenRecord.Record of a LRG <xml> formatted string
 
         Input:
-            data    :   String content of LRG file
+            data    ;   Content of LRG file [String]
 
         Output
-            record  :   GenRecord.Record instance
-
-
+            record  ;   GenRecord.Record instance
     """
+    # Initiate the GenRecord.Record
     record = GenRecord.Record()
     record._sourcetype = "LRG"
 
+    # Parse the xml data string and extract the fixed and updatable section
     data = xml.dom.minidom.parseString(data)
     fixed = data.getElementsByTagName("fixed_annotation")[0]
     updatable = data.getElementsByTagName("updatable_annotation")[0]
 
     # Get all raw information from updatable section into a nested dict
     updParsed = parseUpdatable(updatable)
-    __debugParsedData("Updatable Section",updParsed)
 
-    # Updatable Section get mapping and geneList
+    # NOTE: To get insight in the structure of the intermediate
+    # nested dictionary format please comment out the following line
+    #__debugParsedData("Updatable Section",updParsed)
+
+    # Get the genomic mapping from the Updatable Section -> LRG
+    # NOTE: The mapping is not yet used in the mutalyzer program
     record.mapping = getMapping(updParsed["LRG"]["mapping"])
+
+    # Get the geneList from the Updatable Section
     record.geneList = genesFromUpdatable(updParsed)
 
-    # Fixed Section get sequence
-    assert(_getContent(fixed, "mol_type") == "dna")
+    # At this point the GenRecord.Record instance contains all information
+    # from the updatable section.
+
+    # get sequence from Fixed Section
+    #assert(_getContent(fixed, "mol_type") == "dna")
     record.molType = 'g'
     record.seq = Seq(_getContent(fixed, "sequence"), IUPAC.unambiguous_dna)
 
-    # Get the genename of the fixed gene in the LRG and put that gene on top of
-    # the geneList. This is necessary because there is no way to otherwise
-    # identify the main gene in the LRG file.
+    # Get the genename of the fixed gene in the LRG
+    # and put that gene on top of the geneList.
     geneName = updParsed["LRG"]["genename"]
     gene = [gene for gene in record.geneList if gene.name == geneName][0]
     record.geneList.remove(gene)
     record.geneList.insert(0, gene)
+    # NOTE: This is necessary because there is no way to otherwise
+    # identify the main gene in the LRG file.
 
-    # Update the Gene object with transcripts from fixed section
+    # Update the Gene object in the Record
+    # Add transcripts information from the fixed section to the main gene.
     for tData in fixed.getElementsByTagName("transcript"):
+        # iterate over the transcripts in the fixed section.
+        # get the transcript from the updatable section and combine results
         transcriptName = tData.getAttribute("name").encode("utf8")[1:]
         transcription = [t for t in gene.transcriptList if t.name ==
-                transcriptName][0]
+                transcriptName][0]  #TODO?: swap with gene.findLocus
+
+        # Set the locusTag, linkMethod (used in the output) and the location
+        # LRG file transcripts can (for now) always be linked via the locustag
         transcription.locusTag = transcriptName and "t"+transcriptName
         transcription.linkMethod = "Locus Tag"
-
         transcription.location = \
           [int(tData.getAttribute("start")), int(tData.getAttribute("end"))]
 
-        #get Exons
+        #get the Exons of transcript and store them in a position list.
         exonPList = GenRecord.PList()
         for exon in tData.getElementsByTagName("exon"):
             co = exon.getElementsByTagName("lrg_coords")[0]
@@ -88,38 +149,51 @@ def createLrgRecord(data):
               [int(co.getAttribute("start")), int(co.getAttribute("end"))])
         exonPList.positionList.sort()
 
-        # get CDS, keep the possibility in mind 
-        # that multiple CDS regions are given
+        # get the CDS of the transcript and store them in a position list.
+        # NOTE: up until now all CDSlists only consisted of a starting end
+        # ending position, keep the possibility in mind that multiple CDS
+        # regions are given
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
             CDSPList.positionList.extend(\
             [int(CDS.getAttribute("start")), int(CDS.getAttribute("end"))])
         CDSPList.positionList.sort()
 
+        # If there is a CDS position List set the transcriptflag to True
         if CDSPList.positionList:
             transcription.molType = 'c'
             CDSPList.location = [CDSPList.positionList[0],
                                  CDSPList.positionList[-1]]
-            # if only 1 CDS is found clear the positionList 
-            # GenRecord.checkRecord will reconstruct it later on
+            # If we only got the flanking CDS positions, we clear it and let
+            # GenRecord.checkRecord reconstruct the correct CDS list
+            # from the mRNA list later on
             if len(CDSPList.positionList) == 2:
                 CDSPList.positionList = []
             transcription.translate = True
         else:
             transcription.molType = 'n'
 
+        # all transcripts in the fixed section are transcribable
         transcription.transcribe = True
 
+        # Store the exon and CDS position lists in the transcription
         transcription.exon = exonPList
         transcription.CDS = CDSPList
-
-
     #for
     return record
 #createLrgRecord
 
 def genesFromUpdatable(updParsed):
-    """Get the genes from the updatable section"""
+    """
+        populate GenRecord.Gene instances with updatable LRG node data
+
+        Input:
+            updParsed   ; Intermediate nested dict of updatable section
+
+        Output
+            genes       ; List of GenRecord.Gene instances, populated with
+                            the content of the updatable section
+    """
     genes = []
     for geneSymbol, geneData in updParsed["NCBI"].items():
         gene = GenRecord.Gene(geneSymbol)
@@ -130,38 +204,58 @@ def genesFromUpdatable(updParsed):
         # Get transcripts
         transcripts = transcriptsFromParsed(geneData["transcripts"])
         if not transcripts:
-            transcripts = _emptyTranscripts(geneSymbol, geneData)
+            transcripts = _emptyTranscripts(geneData)
         gene.transcriptList = transcripts
         genes.append(gene)
     #for
     for geneSymbol, geneData in updParsed["Ensembl"].items():
-        #add notation from gathered Ensembl annotation TODO
+        #TODO: add annotation from Ensembl section, what should we add?
         pass
     return genes
 #genesFromUpdatable
 
 def transcriptsFromParsed(parsedData):
-    """Get the transcripts for each gene from parsed Data"""
-    #parsedData contains the pre-parsed transcripts in dict format
+    """
+        populate GenRecord.Locus instances with updatable LRG node data
 
+        Input:
+            parsedData  ; Dict of transcript data. See getFeaturesAnnotation
+
+        Output
+            transcripts ; List of GenRecord.Locus instances, populated with
+                            the content of the parsed Data
+    """
     transcripts = []
 
-    # Store transcripts without a FixedID
+    # Temporary remove transcripts without a FixedID from the data
     nofixed = parsedData.pop("noFixedId")
 
-    # First the fixed transcripts
+    # First add the transcripts linked to the transcripts in the fixed section
     for trName, trData in parsedData.items():
         transcripts.append(_transcriptPopulator(trName, trData))
 
-    # Second the nonfixed transcripts
-    # FIXME: How to name these transcripts? 
+    # Second add the transcripts not linked
+    # FIXME: How to name these transcripts?
     for trData in nofixed:
         transcripts.append(_transcriptPopulator("", trData))
 
     return transcripts
 #transcriptsFromParsed
 
-def _emptyTranscripts(symbol, data):
+def _emptyTranscripts(data):
+    #TODO: This function can be moved to the GenRecord.checkRecord method
+    """
+        populate a GenRecord.Locus instance with minimal data to make the
+        gene compatible with mutalyzer. Data abstracted from the gene.
+
+        Input:
+            data    ; Data from the gene which is used to populate
+                        the create a minimal GenRecord.Locus instance.
+
+        Output
+            list    ; List with a single bogus GenRecord.Locus instance,
+                        in which location and mRNA are copied from the gene.
+    """
     transcript = GenRecord.Locus('')
     transcript.molType = 'n'
     mRNA = GenRecord.PList()
@@ -170,8 +264,20 @@ def _emptyTranscripts(symbol, data):
     mRNA.location = location
     transcript.mRNA = mRNA
     return [transcript,]
+#_emptyTranscripts
 
 def _transcriptPopulator(trName, trData):
+    """
+        populate GenRecord.Locus instance with updatable LRG node data
+
+        Input:
+            trName      ; Name of the transcript.
+            trData      ; Data associated with the transcript.
+
+        Output
+            transcript  ; GenRecord.Locus instance, populated with
+                            the content of the parsed Data
+    """
     transcript = GenRecord.Locus(trName)
     transcript.transcriptProduct = trData.get("transLongName")
     if trData.has_key("transAttr"):
@@ -186,34 +292,57 @@ def _transcriptPopulator(trName, trData):
         transcript.proteinID = pA.get("accession")
         CDS = GenRecord.PList()
         CDS.location = [pA.get("cds_start"), pA.get("cds_end")]
+        # If the CDS list is empty set it to None. This will be fixed by the
+        # GenRecord.checkRecord method
         if not any(CDS.location): CDS = None
         transcript.CDS = CDS
     else:
         transcript.molType = 'n'
 
-    # Check if the transcript has a name, if not; use transcriptid
-    # This is needed for the transcripts without a fixed ID
-    #if trName == "":
-    #    transcript.name = '1' #transcript.transcriptID
-
     return transcript
 #_transcriptPopulator
 
 def getMapping(rawMapData):
+    """
+        Collect all necessary info to map the current LRG sequence to the
+        genomic reference supplied by the file.
+
+        Input:
+            rawMapData  ;   A list of dictionaries with the raw mapping info
+
+        Output
+            dict        ;
+    """
     mapp, span, diffs = rawMapData
-    ret = { "assembly":     mapp.get("assembly"),
-            "chr_name":     mapp.get("chr_name"),
-            "chr_id":       mapp.get("chr_id"),
-            "chr_location": [int(span.get("start")),
-                             int(span.get("end"))],
-            "strand":       int(span.get("strand")),
-            "lrg_location": [int(span.get("lrg_start")),
-                             int(span.get("lrg_end"))],
-            "diffs":        diffs}
+    ret = { "assembly":     mapp.get("assembly"),       # Assembly Reference
+            "chr_name":     mapp.get("chr_name"),       # Chromosome name
+            "chr_id":       mapp.get("chr_id"),         # Chr. Reference NC
+            "chr_location": [int(span.get("start")),    # Start & End Position
+                             int(span.get("end"))],     #    of seq on the ref
+            "strand":       int(span.get("strand")),    # Forward:1 Reverse:-1
+            "lrg_location": [int(span.get("lrg_start")),# Start & End Position
+                             int(span.get("lrg_end"))], #    of seq on the LRG
+            "diffs":        diffs}                      # Unformatted Diffs
+    # NOTE: diffs contains the differences between the LRG and reference seq.
     return ret
 #getMapping
 
 def parseUpdatable(data):
+    """
+        Mediator function which transforms the minidom object to a nested dict
+        and filters information needed to construct the GenRecord.Record.
+
+        NOTE: an xml node has attributes and elements, this function squashes
+              this ambiguity and collects only the attributes and elements of
+              interest
+
+        Input:
+            data        ;   The LRG file's updatable section node
+
+        Output
+            nested dict ;   Contains the fields of interest of the LRG
+                            NCBI and Ensembl sections of the updatable node.
+    """
     ret = {"LRG":{}, "NCBI":{}, "Ensembl":{}}
     annotation_nodes = data.getElementsByTagName("annotation_set")
     for anno in annotation_nodes:
@@ -232,40 +361,78 @@ def parseUpdatable(data):
 #parseUpdatable
 
 def getLrgAnnotation(data):
-    ret = {"mapping": (), "genename":""}
+    """
+        Retrieves three parts of the LRG annotation:
+            - the mapping of this LRG file to a genomic reference
+            - a diference list between the LRG sequence and the ref seq
+            - the genename of the main gene annotated by this LRG file
 
+        Input:
+            data    ;   updatable section -> Annotations -> LRG node
+
+        Output
+            dict    ;   Contains the mapping [+ opt. diffs] and the genename
+    """
+    ret = {"mapping": (), "genename":""}
     # Get the mapping
     for mapp in data.getElementsByTagName("mapping"):
         mapattr = _attr2dict(mapp.attributes)
-
         # only the most recent mapping
         if not(mapattr.has_key("most_recent")): continue
-
         # check if span exists
         for span in mapp.getElementsByTagName("mapping_span"):
             spanattr = _attr2dict(span.attributes)
             break
         else: continue
-
         diffs = []
         for diff in span.getElementsByTagName("diff"):
             diffs.append(_attr2dict(diff.attributes))
         ret["mapping"] = (mapattr,spanattr,diffs)
     #for
-
     # Get the LRG Gene Name, this is the main gene in this LRG
     ret["genename"] = _getContent(data, "lrg_gene_name")
-
     return ret
 #getLrgAnnotation
 
 def getFeaturesAnnotation(data):
-    ret = {} # Get annotation per gene symbol {"COL1A1":{}}
+    """
+        Retrieves feature annotations from NCBI & Ensembl nodes.
+            - List of genes
+            - List of transcripts per gene
+            - Potential Product of a transcript
 
+        If a transcript can not be linked to a transcript from the fixed
+        section it is stored in the noFixedId list.
+
+        NOTE: an xml node has attributes and elements, this function squashes
+              this ambiguity and collects only the attributes and elements of
+              interest
+        Input:
+            data        ;   updatable section -> Annotations -> NCBI | Ensembl
+
+        Output
+            nested dict ;   toplevel contains the genesymbols as keys e.g:
+                            COL1A1 :
+                                geneAttr        : {}
+                                geneLongName    : ""
+                                transcripts     : {}
+                            geneAttr contains the start, end and strand info
+                            transcripts contains a list of transcripts that
+                                could not be linked to the fixed section AND
+                                it contains each linked transcript with the
+                                locustag as key e.g:
+                            1 :
+                                transAttr       : {}
+                                transLongName   : ""
+                                proteinAttr     : {}
+                                proteinLongName : ""
+                            transAttr & proteinAttr contain
+                                reference, start and end info
+    """
+    ret = {} # Get annotation per gene symbol {"COL1A1":{}}
     #Check if features exists
     if not data.getElementsByTagName("features"): return ret
     feature = data.getElementsByTagName("features")[0]
-
     for gene in feature.getElementsByTagName("gene"):
         geneAttr = _attr2dict(gene.attributes)
         geneLongName = _getContent(gene, "long_name")
@@ -273,7 +440,6 @@ def getFeaturesAnnotation(data):
         for transcript in gene.getElementsByTagName("transcript"):
             transAttr = _attr2dict(transcript.attributes)
             transLongName = _getContent(transcript, "long_name")
-
             # Check if the transcript has a protein product
             proteinProduct =\
                     transcript.getElementsByTagName("protein_product")

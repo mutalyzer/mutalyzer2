@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+#TODO: Check ODS, XLS compatibility
+
 """
     Module for parsing CSV files and spreadsheets.
 
@@ -83,7 +85,7 @@ class File() :
 
         # Open the file with func().
         ret = func(fileName)
-        # Apperantly apache will remove this file even when opened by the 
+        # Apperantly apache will remove this file even when opened by the
         # function *func
         os.remove(fileName)
 
@@ -117,7 +119,7 @@ class File() :
         description = MagicInstance.buffer(buf)
         del MagicInstance
         handle.seek(0)
-        
+
         return mimeType, description
     #getMimeType
 
@@ -229,9 +231,8 @@ class File() :
         """
             Check if a job is of the correct format.
             - Each row should consist of three elements.
-            - The first and the last element should be non-zero.
+            - The first and the last element should be non-empty.
             - The first line should be the header defined in the config file.
-            - Silently ignore all empty lines.
 
             Arguments:
                 job ; list of lists.
@@ -243,8 +244,7 @@ class File() :
                 list ; A sanitised list of lists (without a header or empty
                        lines).
         """
-        #remove empty lines (store original line numbers line 1 = job[0])
-        #jobl = [(l+1, row) for l, row in enumerate(job) if row and any(row)]
+        #store original line numbers line 1 = job[0]
         jobl = [(l+1, row) for l, row in enumerate(job)]
 
         #TODO:  Add more new style old style logic
@@ -254,7 +254,9 @@ class File() :
             notthree = []
             emptyfield = []
             for line, job in jobl[1:]:
-                if not any(job):    #Empty line
+
+                #Empty line
+                if not any(job):
                     ret.append("~!")
                     continue
 
@@ -262,6 +264,7 @@ class File() :
                 if len(job)!=3:     #Need three columns
                     notthree.append(line)
                 elif (not(job[0] and job[2])):
+                    # First and last column cant be empty
                     emptyfield.append(line)
                 else:
                     if job[1]:
@@ -273,7 +276,7 @@ class File() :
                         inputl = "%s:%s" % (job[0], job[2])
 
                 if not inputl:
-                    #try to make something out of it
+                    #TODO: try to make something out of it
                     inputl = "~!InputFields: " #start with the skip flag
                     inputl+= "|".join(job)
 
@@ -323,8 +326,8 @@ class File() :
         err = float(len(errlist))/len(ret)
         if err == 0:
             return ret
-        elif err < 0.05:
-            #allow a 5 percent threshold for errors in batchfiles
+        elif err < self.__config.threshold:
+            #allow a 5 (default) percent threshold for errors in batchfiles
             self.__output.addMessage(__file__, 3, "EBPARSE",
                     "There were errors in your batch entry file, they are "
                     "omitted and your batch is started.")
@@ -353,7 +356,7 @@ class File() :
             return self.__parseCsvFile(handle)
         if mimeType[0] == "application/vnd.ms-office" :
             return self.__parseXlsFile(handle)
-        if mimeType == ("application/octet-stream", 
+        if mimeType == ("application/octet-stream",
                         "OpenDocument Spreadsheet") :
             return self.__parseOdsFile(handle)
 

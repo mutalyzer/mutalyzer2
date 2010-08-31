@@ -12,7 +12,7 @@ import re                         # match
 import urllib                     # quote
 from cStringIO import StringIO    # StringIO() getvalue()
 from simpletal import simpleTALES # context(), addGlobal()
-from simpletal import simpleTAL   # compileHTMLTemplate, 
+from simpletal import simpleTAL   # compileHTMLTemplate,
                                   # compileXMLTemplate,
 import Config
 
@@ -67,8 +67,8 @@ class Web() :
         func(*args)
         reply = sys.stdout.getvalue()
         sys.stdout = old_stdout
-        
-        return reply 
+
+        return reply
     #run
 
     def tal_old(self, scheme, filename, args) :
@@ -77,7 +77,7 @@ class Web() :
             Compile a TAL template to HTML or XML.
 
             Arguments:
-                scheme   ; Either "HTML" or "XML", output will be in this 
+                scheme   ; Either "HTML" or "XML", output will be in this
                            format.
                 filename ; The filename of the template.
                 args     ; A dictionary with variables (whose name correspond
@@ -88,11 +88,11 @@ class Web() :
         """
 
         from simpletal import simpleTALES # context(), addGlobal()
-        from simpletal import simpleTAL   # compileHTMLTemplate, 
+        from simpletal import simpleTAL   # compileHTMLTemplate,
                                           # compileXMLTemplate,
 
         context = simpleTALES.Context()
-    
+
         for i in args :
             context.addGlobal(i, args[i])
 
@@ -100,7 +100,7 @@ class Web() :
         #macros = simpleTAL.compileHTMLTemplate(templateFile)
         #templateFile.close()
         #context.addGlobal("sitemacros", macros)
-    
+
         templateFile = open(filename, 'r')
 
         if scheme == "HTML" :
@@ -109,10 +109,10 @@ class Web() :
             template = simpleTAL.compileXMLTemplate(templateFile)
 
         templateFile.close()
-    
+
         string = StringIO()
         template.expand(context, string)
-    
+
         return string.getvalue()
     #tal
 
@@ -121,7 +121,7 @@ class Web() :
             Compile a TAL template to HTML or XML.
 
             Arguments:
-                scheme   ; Either "HTML" or "XML", output will be in this 
+                scheme   ; Either "HTML" or "XML", output will be in this
                            format.
                 filename ; The filename of the template.
                 args     ; A dictionary with variables (whose name correspond
@@ -132,7 +132,7 @@ class Web() :
         """
 
         context = simpleTALES.Context()
-    
+
         context.addGlobal("version", self.version)
         context.addGlobal("nomenclatureVersion", self.nomenclatureVersion)
         context.addGlobal("releaseDate", self.releaseDate)
@@ -145,7 +145,7 @@ class Web() :
             macros = simpleTAL.compileHTMLTemplate(templateFile)
             templateFile.close()
             context.addGlobal("sitemacros", macros)
-    
+
             templateFile = open("templates/menu.html", 'r')
             template = simpleTAL.compileHTMLTemplate(templateFile)
             templateFile.close()
@@ -155,10 +155,10 @@ class Web() :
             template = simpleTAL.compileHTMLTemplate(templateFile)
             templateFile.close()
         #else
-    
+
         string = StringIO()
         template.expand(context, string)
-    
+
         return string.getvalue()
     #tal
 
@@ -177,7 +177,7 @@ class Web() :
         handle = open(path + req.uri.split('/', 2)[2], "r")
         s = handle.read()
         handle.close
-    
+
         return s
     #read
 
@@ -186,7 +186,7 @@ class Web() :
         """
         """
 
-        if re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$", 
+        if re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$",
                     eMail) :
             return True
         return False

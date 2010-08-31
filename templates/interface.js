@@ -62,9 +62,10 @@ function getHTTPObject(){
 
 function updatePercentage() {
     if (!document.getElementById('jobID')){ return; };
-    id = document.getElementById('jobID').value;
-    total = document.getElementById('totalJobs').value;
+    var id = document.getElementById('jobID').value;
+    var total = document.getElementById('totalJobs').value;
     var url = 'progress?jobID='+id+'&totalJobs='+total+'&ajax=1';
+    var val = "";
 
     http = getHTTPObject();
     if (http == null){
@@ -99,7 +100,7 @@ function updatePercentage() {
 
 
 function linkify(text){
-    replacePattern = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.([-\*]?\d+((\+|-)[ud]?\d+)?)(_([-\*]?\d+((\+|-)[ud]?\d+)?))?(([delinsup]+[ACTGactg]*)|([ACTGactg].[ACTGactg])))/gim;
+    var replacePattern = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.([-\*]?\d+((\+|-)[ud]?\d+)?)(_([-\*]?\d+((\+|-)[ud]?\d+)?))?(([delinsup]+[ACTGactg]*)|([ACTGactg].[ACTGactg])))/gim;
     //reference = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.
     //substitut = [0-9]+[ACTGactg].[ACTGactg])
     //delinsdup = (\:[cgpn]\.(-?\d+((\+|-)\d+)?)(_(-?\d+((\+|-)\d+)?))?[delinsup]+[ACTGactg]*)

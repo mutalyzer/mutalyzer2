@@ -12,7 +12,7 @@ from Bio.Seq import reverse_complement # reverse_complement()
     transfered to the mutated coordinates with the aid of an internal shift
     list, which keeps track of the sizes of changes. Using the original
     coordinates greatly simplifies combined mutations in a variant. A
-    visualisation of each raw variant within a combined variant is made and 
+    visualisation of each raw variant within a combined variant is made and
     effects on restriction sites are also analysed.
 
     The original as well as the mutated string are stored here.
@@ -23,7 +23,7 @@ from Bio.Seq import reverse_complement # reverse_complement()
 
 class Mutator() :
     """
-        Mutate a string and register all shift points. For each mutation a 
+        Mutate a string and register all shift points. For each mutation a
         visualisation is made (on genomic level) and the addition or deletion
         of restriction sites is detected. Output for each raw variant is stored
         in the output object as 'visualisation', 'deletedRestrictionSites' and
@@ -31,45 +31,45 @@ class Mutator() :
 
         Private variables:
             __config           ; Configuration variables of this class:
-                                 
+
             __output           ; The output object.
             __shift            ; A sorted list of tuples (position, shiftsize)
                                  where the modifications in length are stored.
                                  Each first element of the tuples in this list
                                  is unique, each second element is non-zero.
-            __restrictionBatch ;                      
+            __restrictionBatch ;
 
         Public variables:
             orig    ; The original string.
             mutated ; The mutated string.
-        
+
         Special methods:
             __init__(orig) ; Initialise the class with the original string.
-        
+
         Private methods:
-            __sortins(tuple)      ; Insert a tuple in a sorted list, after 
+            __sortins(tuple)      ; Insert a tuple in a sorted list, after
                                     insertion the list stays sorted.
-            __makeRestrictionSet()                                    
+            __makeRestrictionSet()
             __mutate(pos1, pos2, ins) ; A general mutation function that does a
-                                        delins on interbase coordinates of the 
+                                        delins on interbase coordinates of the
                                         original string.
 
         Public methods:
-            shiftpos(position)       ; Calculate the position in the mutated 
-                                       string given the position in the 
+            shiftpos(position)       ; Calculate the position in the mutated
+                                       string given the position in the
                                        original string.
             newSplice(sites)         ; Generate a list of new splice sites.
-            delM(pos1, pos2)         ; Delete a range from non-interbase 
+            delM(pos1, pos2)         ; Delete a range from non-interbase
                                        position pos1 to pos2.
-            insM(pos, ins)           ; Insert a string at interbase position 
+            insM(pos, ins)           ; Insert a string at interbase position
                                        pos.
-            delimsM(pos1, pos2, ins) ; Delete a range from non-interbase 
+            delimsM(pos1, pos2, ins) ; Delete a range from non-interbase
                                        position pos1 to pos2 and insert ins.
             subM(pos, nuc)           ; Substitute a nucleotite at non-interbase
                                        position pos for nuc.
-            invM(pos1, pos2)         ; Invert a range from non-interbase 
+            invM(pos1, pos2)         ; Invert a range from non-interbase
                                        position pos1 to pos2.
-            dupM(pos1, pos2)         ; Duplicate a range from non-interbase 
+            dupM(pos1, pos2)         ; Duplicate a range from non-interbase
                                        position pos1 to pos2.
     """
 
@@ -83,7 +83,7 @@ class Mutator() :
                 output ; The output object.
 
             Private variables (altered):
-                __config           ; Initialised with the configuration 
+                __config           ; Initialised with the configuration
                                      variables.
                 __output           ; Initialised with the output object.
                 __shift            ; Initialised to the empty list.
@@ -103,7 +103,7 @@ class Mutator() :
         self.orig = orig
         self.mutated = orig
     #__init__
-    
+
     def __sortins(self, tuple) :
         """
             Insert a tuple in a sorted list, the list is sorted on the first
@@ -124,20 +124,20 @@ class Mutator() :
             return
 
         for i in range(len(self.__shift)) : # Look where to insert this tuple
-            if self.__shift[i][0] == tuple[0] : # If it already exists, 
+            if self.__shift[i][0] == tuple[0] : # If it already exists,
                 self.__shift[i][1] += tuple[1]  # alter it.
                 if not self.__shift[i][1] :     # If it results in a zero,
                     self.__shift.pop(i)         # remove it.
                 return
             #if
 
-            if self.__shift[i][0] > tuple[0] : # We found a successor, so 
+            if self.__shift[i][0] > tuple[0] : # We found a successor, so
                 self.__shift.insert(i, tuple)  # insert it before the successor.
                 return
             #if
         #for
-    
-        self.__shift.append(tuple) # If we couldn't find a successor, so this 
+
+        self.__shift.append(tuple) # If we couldn't find a successor, so this
                                    # entry will be the last one in the list.
     #__sortins
 
@@ -157,7 +157,7 @@ class Mutator() :
         """
 
         restrictionAnalysis = Restriction.Analysis(self.__restrictionBatch, seq)
-    
+
         d = restrictionAnalysis.with_sites()
         ret = []
 
@@ -190,16 +190,16 @@ class Mutator() :
 
         return ret
     #__restrictionDiff
-    
+
     def __mutate(self, pos1, pos2, ins) :
         """
-            A general mutation function that does a delins on interbase 
-            coordinates of the original string. The change in length (if any) 
+            A general mutation function that does a delins on interbase
+            coordinates of the original string. The change in length (if any)
             is stored by calling the __sortins() function.
             The coordinates are those of the original string, so we use the
             __shifsize() function to map them to the mutated string, on which
             we perform the alteration.
-            
+
             Arguments:
                 pos1 ; The first interbase position of the deletion.
                 pos2 ; The second interbase position of the deletion.
@@ -211,7 +211,7 @@ class Mutator() :
                 __output ; Visualisation information is added.
 
             Public variables (altered):
-                mutated ; This string will reflect the result of the given 
+                mutated ; This string will reflect the result of the given
                           delins.
         """
 
@@ -224,7 +224,7 @@ class Mutator() :
         delPart = self.orig[pos1:pos2]
         #odel = delPart
         #if len(odel) > self.__config.maxvissize :
-        #    odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize], 
+        #    odel = "%s [%ibp] %s" % (odel[:self.__config.flankclipsize],
         #        len(odel) - self.__config.flankclipsize * 2,
         #        odel[-self.__config.flankclipsize:])
         odel = self.visualiseLargeString(delPart)
@@ -242,10 +242,10 @@ class Mutator() :
         insvis = self.visualiseLargeString(ins)
         fill = abs(len(odel) - len(insvis))
         if len(odel) > len(ins) :
-            visualisation = ["%s %s %s" % (loflank, odel, roflank), 
+            visualisation = ["%s %s %s" % (loflank, odel, roflank),
                 "%s %s%s %s" % (lmflank, insvis, '-' * fill, rmflank)]
         else :
-            visualisation = ["%s %s%s %s" % (loflank, odel, '-' * fill, 
+            visualisation = ["%s %s%s %s" % (loflank, odel, '-' * fill,
                 roflank), "%s %s %s" % (lmflank, insvis, rmflank)]
 
         #
@@ -258,8 +258,8 @@ class Mutator() :
 
         list1 = self.__makeRestrictionList(loflank + delPart + roflank)
         list2 = self.__makeRestrictionList(lmflank + ins + rmflank)
-        self.__output.addOutput("restrictionSites", 
-            [self.__restrictionDiff(list2, list1), 
+        self.__output.addOutput("restrictionSites",
+            [self.__restrictionDiff(list2, list1),
              self.__restrictionDiff(list1, list2)])
             #[str(list(set1 - set2))[1:-1], str(list(set2 - set1))[1:-1]])
 
@@ -288,30 +288,30 @@ class Mutator() :
     def shiftpos(self, position) :
         """
             Calculate the position in the mutated string, given a position in
-            the original string. 
+            the original string.
 
             Arguments:
-                position ; The position in the original string for which we 
+                position ; The position in the original string for which we
                            want the shift size.
 
             Private variables:
                 __shift ; Used to calculate the shift.
-            
+
             Returns:
                 integer ; The position in the mutated string.
         """
         ret = position
-    
+
         for i in range(len(self.__shift)) :
             if self.__shift[i][0] > position :
                 return ret
 
             ret += self.__shift[i][1]
         #for
-    
+
         return ret
     #shiftpos
-    
+
     def newSplice(self, sites) :
         """
             Generate a list of new splice sites.
@@ -338,7 +338,7 @@ class Mutator() :
 
         return ret
     #newSplice
-    
+
     def delM(self, pos1, pos2) :
         """
             Delete a range from non-interbase position pos1 to pos2.
@@ -359,7 +359,7 @@ class Mutator() :
         visualisation.extend(self.__mutate(pos1 - 1, pos2, ''))
         self.__output.addOutput("visualisation", visualisation)
     #delM
-    
+
     def insM(self, pos, ins) :
         """
             Insert a string at interbase position pos.
@@ -377,10 +377,10 @@ class Mutator() :
         visualisation.extend(self.__mutate(pos, pos, ins))
         self.__output.addOutput("visualisation", visualisation)
     #insM
-    
+
     def delinsM(self, pos1, pos2, ins) :
         """
-            Delete a range from non-interbase position pos1 to pos2 and insert 
+            Delete a range from non-interbase position pos1 to pos2 and insert
             ins.
 
             Arguments:
@@ -393,7 +393,7 @@ class Mutator() :
         visualisation.extend(self.__mutate(pos1 - 1, pos2, ins))
         self.__output.addOutput("visualisation", visualisation)
     #delinsM
-    
+
     def subM(self, pos, nuc) :
         """
             Substitute a nucleotite at non-interbase position pos for nuc.
@@ -410,7 +410,7 @@ class Mutator() :
         visualisation.extend(self.__mutate(pos - 1, pos, nuc))
         self.__output.addOutput("visualisation", visualisation)
     #subM
-    
+
     def invM(self, pos1, pos2) :
         """
             Invert a range from non-interbase position pos1 to pos2.
@@ -442,7 +442,7 @@ class Mutator() :
         """
 
         visualisation = ["duplication from %i to %i" % (pos1, pos2)]
-        visualisation.extend(self.__mutate(pos2, pos2, 
+        visualisation.extend(self.__mutate(pos2, pos2,
                                            self.orig[pos1 - 1:pos2]))
         self.__output.addOutput("visualisation", visualisation)
     #dupM

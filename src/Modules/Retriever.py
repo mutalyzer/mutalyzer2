@@ -267,9 +267,9 @@ class Retriever(object) :
                 "valid dbSNP id.")
 
         # Query dbSNP for the SNP.
-        response = Entrez.efetch(db = "SNP", id = ID, rettype = "flt", 
+        response = Entrez.efetch(db = "SNP", id = ID, rettype = "flt",
             retmode = "xml")
-        
+
         # Parse the output.
         doc = xml.dom.minidom.parseString(response.read())
         for i in doc.getElementsByTagName("hgvs") :
@@ -628,7 +628,7 @@ class GenBankRetriever(Retriever):
                                 "Please upload this sequence again.")
                             filename = None
                     #if
-                    else :                  # This used to be a downloaded seq.
+                    else :                  # This used to be a downloaded seq
                         filename = self.downloadrecord(url) and filename
                 #if
                 else :                      # This used to be a slice.
@@ -639,7 +639,7 @@ class GenBankRetriever(Retriever):
             #else
         #if
 
-        # TODO: If filename is None an error occured
+        # If filename is None an error occured
         if filename is None:
             #Notify batch to skip all instance of identifier
             self._output.addOutput("BatchFlags", ("S1", identifier))
@@ -651,9 +651,14 @@ class GenBankRetriever(Retriever):
     #loadrecord
 #GenBankRetriever
 
-class LargeRetriever(Retriever):
-    #TODO documentation
+class LRGRetriever(Retriever):
     """
+        Retrieve a LRG record from either the cache or the web.
+
+        Public methods:
+            loadrecord(identifier) ; Load a record, store it in the
+                                     cache, manage the cache and return
+                                     the record.
     """
 
     def __init__(self, config, output, database):
@@ -668,11 +673,15 @@ class LargeRetriever(Retriever):
     #__init__
 
     def loadrecord(self, identifier):
-        #TODO documentation
         """
             Load and parse a LRG file based on the identifier
 
-            returns a GenRecord.Record instance on succes, None on failure
+            Arguments:
+                identifier  ; The name of the LRG file to read
+
+            Returns:
+                record      ; GenRecord.Record of LRG file
+                None        ; in case of failure
         """
 
         # Make a filename based upon the identifier.
@@ -697,18 +706,24 @@ class LargeRetriever(Retriever):
     #loadrecord
 
     def fetch(self, name):
-        #TODO documentation
         """
-            Fetch the LRG file from the ebi FTP domain
+            Fetch the LRG file and store in the cache directory. First try to
+            grab the file from the confirmed section, if this fails, get it
+            from the pending section.
 
-            first try to grab the file from the confirmed section, if this
-            fails, get it from the pending section.
+            Arguments:
+                name    ; The name of the LRG file to fetch
 
-            returns the full path to the file or None in case of an error
+            Inherited variables from Config.Retriever
+                lrgURL  ; The base url from where LRG files are fetched
+
+            Returns:
+                path    ; the full path to the file
+                None    ; in case of an error
         """
 
-        prefix = "ftp://ftp.ebi.ac.uk/pub/databases/lrgex/"
-        url =        prefix + "%s.xml"          % name
+        prefix = self._config.lrgURL
+        url        = prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
 
         try:
@@ -750,10 +765,7 @@ class LargeRetriever(Retriever):
 
         handle = urllib2.urlopen(url)
         info = handle.info()
-        if info["Content-Type"] == "application/xml" :
-
-            if not info.has_key("Content-length") : # FIXME
-                raise urllib2.URLError("hallo")
+        if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
 
             length = int(info["Content-Length"])
             if self._config.minDldSize < length < self._config.maxDldSize:
@@ -765,20 +777,20 @@ class LargeRetriever(Retriever):
                 md5db = self._database.getHash(lrgID)
                 if md5db is None:
                     self._database.insertLRG(lrgID, md5sum, url)
-                elif md5sum != md5db:           #hash has changed for the LRG ID
+                elif md5sum != md5db:       #hash has changed for the LRG ID
                     self._output.addMessage(__file__, -1, "WHASH",
                         "Warning: Hash of %s changed from %s to %s." % (
                         lrgID, md5db, md5sum))
                     self._database.updateHash(lrgID, md5sum)
-                else:                           #hash the same as in db
+                else:                       #hash the same as in db
                     pass
 
                 if not os.path.isfile(filename) :
                     return self.write(raw_data, lrgID)
                 else:
-                    # This can only occur if synchronus calls to mutalyzer are 
-                    # made to recover a file that did not exist. Still leaves a
-                    # window in between the check and the write.
+                    # This can only occur if synchronus calls to mutalyzer are
+                    # made to recover a file that did not exist. Still leaves
+					# a window in between the check and the write.
                     return filename
             #if
             else :
@@ -787,14 +799,14 @@ class LargeRetriever(Retriever):
         #if
         else :
             self._output.addMessage(__file__, 4, "ERECPARSE",
-                                     "This is not a LRG record.")
+                                     "This is not an LRG record.")
         handle.close()
     #downloadrecord
 
     def write(self, raw_data, filename) :
         """
             Write raw LRG data to a file. The data is parsed before writing,
-            if a parse error occurs an error is returned and the function exits.
+            if a parse error occurs None is returned.
 
             Arguments:
                 raw_data ; The data.
@@ -816,7 +828,7 @@ class LargeRetriever(Retriever):
 
         return self._write(raw_data, filename) #returns full path
     #write
-#LargeRetriever    
+#LargeRetriever
 
 if __name__ == "__main__" :
     pass

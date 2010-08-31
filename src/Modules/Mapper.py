@@ -23,124 +23,10 @@ from Modules import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
                                # offset2int(), info()
 from Modules import Parser     # Nomenclatureparser(), parse()
 from Modules import Output     # Output(), LogMsg()
-from ZSI.fault import Fault    # Fault()
-from ZSI import TC             # Struct()
+from Modules.Serializers import SoapMessage, Mapping, Transcript
 
 from Bio.Seq import reverse_complement
 from collections import defaultdict
-
-from soaplib.serializers.primitive import String, Integer, Array
-from soaplib.serializers.clazz import ClassSerializer
-
-#def debug(f):
-#    """Debug Wrapper for functions called from within the daemon"""
-#    def _tempf(*args):
-#        with open("/tmp/mapper.out", "a+") as of:
-#            try:
-#                of.write("\nFunction %s\n\targs: %s\n\t" % (`f`, `args`))
-#                ret = f(*args)
-#                of.write("Returns: %s" % `ret`)
-#                return ret
-#            except Exception, e:
-#                import traceback
-#                of.write("\nEXCEPTION:\n")
-#                traceback.print_exc(file=of)
-#    return _tempf
-
-class SoapMessage(ClassSerializer):
-    """Send info message over the soapline"""
-
-    class types():
-        errorcode = String
-        message = String
-
-    def __init__(self):
-        self.typecode = TC.Struct(SoapMessage, [
-            TC.String("errorcode"),
-            TC.String("message")], "SoapMessage")
-#SoapMessage
-
-class Mapping(ClassSerializer) :
-    """
-        Extended ClassSerializer object with mixed types of attributes
-
-        Attributes:
-            startmain ; Define the type of startmain.
-            startoffset ; Define the type of startoffset.
-            endmain ; Define the type of endmain value.
-            endoffset ; Define the type of endoffset value.
-            start_g ; Define the type of start_g value.
-            end_g ; Define the type of end_g value.
-            mutationType ; Define the type of mutation type
-    """
-
-    class types() :
-        """
-            Types are defined here for the soaplib module.
-        """
-
-        startmain = Integer
-        startoffset = Integer
-        endmain = Integer
-        endoffset = Integer
-        start_g = Integer
-        end_g = Integer
-        mutationType = String
-        errorcode = Integer
-        messages = Array(SoapMessage)
-    #types
-
-    def __init__(self) :
-        """
-            Types are defined here for the TC module.
-        """
-
-        self.typecode = TC.Struct(Mapping, [
-            TC.Integer('startmain'),
-            TC.Integer('startoffset'),
-            TC.Integer('endmain'),
-            TC.Integer('endoffset'),
-            TC.Integer('start_g'),
-            TC.Integer('end_g'),
-            TC.String('mutationType'),
-            TC.Integer("errorcode"),
-            TC.Array("SoapMessage", TC.Struct(SoapMessage, [
-                TC.String("errorcode"),
-                TC.String("message")], "SoapMessage"), "messages")
-            ], 'Mapping')
-    #__init__
-#Mapping
-
-class Transcript(ClassSerializer) :
-    """
-        Extended ClassSerializer object with mixed types of attributes
-
-        Attributes:
-            trans_start ; Define the type of trans_start
-            trans_stop  ; Define the type of trans_stop
-            CDS_stop    ; Define the type of CDS_stop
-    """
-
-    class types() :
-        """
-        """
-
-        trans_start = Integer
-        trans_stop = Integer
-        CDS_stop = Integer
-    #types
-
-    def __init__(self) :
-        """
-        """
-
-        self.typecode = TC.Struct(Transcript, [
-            TC.Integer('trans_start'),
-            TC.Integer('trans_stop'),
-            TC.Integer('CDS_stop')
-            ], 'Transcript')
-    #__init__
-#Transcript
 
 def _sl2il(l) :
     """
@@ -151,9 +37,7 @@ def _sl2il(l) :
         Returns: list ; A list of integers.
     """
 
-    for i in range(len(l)) :
-        l[i] = int(l[i])
-    return l
+    return [int(s) for s in l]
 #__sl2il
 
 def _getcoords(C, Loc, Type) :
@@ -205,8 +89,8 @@ class Converter(object):
             self.crossmap = None
             self.dbFields = {}
             self.build = build
-            self.__database = Db.Mappin(build, C.Db)
-    
+            self.__database = Db.Mapping(build, C.Db)
+
     def _reset(self):
         self.crossmap = None
         self.dbFields = {}
@@ -233,24 +117,21 @@ class Converter(object):
 
     def _populateFields(self, Fields):
         #TODO: ADD Error Messages, unlikely that CDS info is missing
-
-
         Fields["exonStarts"] =\
             _sl2il(Fields["exonStarts"].split(',')[:-1])
         Fields["exonEnds"] =\
             _sl2il(Fields["exonEnds"].split(',')[:-1])
-        Fields["cdsStart"] =\
-             int(Fields["cdsStart"])
-        Fields["cdsEnd"] =\
-            int(Fields["cdsEnd"])
+        assert(len(Fields["exonStarts"]) == len(Fields["exonEnds"]))
+
+        Fields["cdsStart"] = int(Fields["cdsStart"])
+        Fields["cdsEnd"]   = int(Fields["cdsEnd"])
 
         for i in range(len(Fields["exonStarts"])) :
             Fields["exonStarts"][i] += 1
 
         # Create Mutalyzer compatible exon list
         Fields["exons"] = []
-        exons = zip(Fields["exonStarts"], Fields["exonEnds"])
-        for exon in exons:
+        for exon in zip(Fields["exonStarts"], Fields["exonEnds"]):
             Fields["exons"].extend(exon)
 
         self.dbFields = Fields
@@ -309,10 +190,6 @@ class Converter(object):
     def makeCrossmap(self) :
         ''' Build the crossmapper
 
-            Arguments:
-                build   ; The human genome build
-                acc     ; The NM accession number, including version.
-
             Returns:
                 Cross ; A Crossmap object.
         '''
@@ -337,35 +214,39 @@ class Converter(object):
     #makeCrossmap
 
     def _coreMapping(self):
+        '''
+            Build the Mapping ClassSerializer
+
+            Returns:
+                Mapping ; A ClassSerializer object.
+        '''
         Cross = self.makeCrossmap()
         if not Cross: return None
 
         mutation = self.parseTree.RawVar
 
+        # Get the coordinates of the start position
         startmain, startoffset, start_g = \
                 _getcoords(Cross, mutation.StartLoc.PtLoc,
                             self.parseTree.RefType)
-
-        # Assume there is no end position given.
-        end_g = start_g
-        endmain = startmain
-        endoffset = startoffset
 
         # If there is an end position, calculate the coordinates.
         if mutation.EndLoc :
             endmain, endoffset, end_g = \
                 _getcoords(Cross, mutation.EndLoc.PtLoc,
                             self.parseTree.RefType)
+        else:
+            end_g, endmain, endoffset = start_g, startmain, startoffset
 
-        # Assign these values to the Mapping V types.
+        # Assign these values to the Mapping ClassSerializer
         V = Mapping()
-        V.startmain = startmain
-        V.startoffset = startoffset
-        V.endmain = endmain
-        V.endoffset = endoffset
-        V.start_g = start_g
-        V.end_g = end_g
-        V.mutationType = mutation.MutationType
+        V.startmain     = startmain
+        V.startoffset   = startoffset
+        V.endmain       = endmain
+        V.endoffset     = endoffset
+        V.start_g       = start_g
+        V.end_g         = end_g
+        V.mutationType  = mutation.MutationType
 
         return V
 
@@ -464,13 +345,16 @@ class Converter(object):
     #cTog
 
     def correctChrVariant(self, variant):
+        #Pre split check
+        if ':' not in variant:
+            self.__output.addMessage(__file__, 4, "EPARSE",
+                "The variant needs a colon")
+            return None
+
         #Remove whitespace
         variant = variant.replace(" ","")
+
         if variant.startswith("chr"):
-            if ':' not in variant:
-                self.__output.addMessage(__file__, 4, "EPARSE",
-                    "The variant needs a colon")
-                return None
             preco, postco = variant.split(":")
             chrom = self.__database.chromAcc(preco)
             if chrom is None:

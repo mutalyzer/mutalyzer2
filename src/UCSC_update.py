@@ -3,7 +3,7 @@
 """
     Get updates on mapping information from the UCSC.
 
-    This program is intended to be run daily from cron. 
+    This program is intended to be run daily from cron.
 """
 
 import sys # sys.argv
@@ -27,21 +27,21 @@ for i in C.Db.dbNames :
 
     LocalDb = Update(i, C.Db)
     LocalDb.load_Update()
-    
+
     count_Updates = LocalDb.count_Updates()
     if count_Updates :
         O.addMessage(__file__, -1, "INFO", "%i updates found" % count_Updates)
         LocalDb.backup_cdsUpdates()
         cds_Updates = LocalDb.count_cdsUpdates()
         if cds_Updates :
-            O.addMessage(__file__, -1, 
+            O.addMessage(__file__, -1,
                          "%i CDS updates found, backing up" % cds_Updates)
         LocalDb.merge_cdsUpdates()
     #if
     LocalDb.merge_Update()
 
     del LocalDb
-#for    
+#for
 
 O.addMessage(__file__, -1, "INFO", "UCSC mapping data update end")
 

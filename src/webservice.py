@@ -10,16 +10,15 @@
 from soaplib.wsgi_soap import SimpleWSGISoapApp
 from soaplib.service import soapmethod
 from soaplib.serializers.primitive import String, Integer, Array
-from soaplib.serializers.clazz import ClassSerializer
-from ZSI import TC
 from ZSI.fault import Fault
 
 from Modules import Web
-from Modules.Db import Mapping
+from Modules import Db
 from Modules import Output
 from Modules import Config
 from Modules import Parser
 from Modules import Mapper
+from Modules.Serializers import SoapMessage, Mapping, Transcript
 
 class MutalyzerService(SimpleWSGISoapApp) :
     """
@@ -162,7 +161,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      chrom, pos))
 
         self.__checkBuild(build, C.Db)
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
 
         self.__checkChrom(L, D, chrom)
         self.__checkPos(L, pos)
@@ -208,7 +207,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
         self.__checkBuild(build, C.Db)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
@@ -243,7 +242,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO",
                      "Received request getGeneName(%s %s)" % (build, accno))
 
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
         self.__checkBuild(build, C.Db)
 
         ret = D.get_GeneName(accno.split('.')[0])
@@ -256,7 +255,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #getGeneName
 
 
-    @soapmethod(String, String, String, String, _returns = Mapper.Mapping)
+    @soapmethod(String, String, String, String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
         """
             Search for an NM number in the MySQL database, if the version
@@ -302,21 +301,21 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L = Output.Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver,
-                     build, accNo, variant))
+                     "Reveived request mappingInfo(%s %s %s %s)" % (
+                        LOVD_ver, build, accNo, variant))
 
         conv = Mapper.Converter(build, C, L)
         result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing mappingInfo(%s %s %s %s)" % (
-                     LOVD_ver, build, accNo, variant))
+                        LOVD_ver, build, accNo, variant))
 
         del L, C
         return result
     #mappingInfo
 
-    @soapmethod(String, String, String, _returns = Mapper.Transcript)
+    @soapmethod(String, String, String, _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
         """
             Search for an NM number in the MySQL database, if the version
@@ -365,7 +364,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 string ; The accession number of a chromosome.
         """
         C = Config.Config() # Read the configuration file.
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -397,7 +396,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 string ; The name of a chromosome.
         """
         C = Config.Config() # Read the configuration file.
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -429,7 +428,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                 string ; The name of a chromosome.
         """
         C = Config.Config() # Read the configuration file.
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
         L = Output.Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -465,7 +464,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         """
 
         C = Config.Config() # Read the configuration file.
-        D = Mapping(build, C.Db)
+        D = Db.Mapping(build, C.Db)
         O = Output.Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (

@@ -101,7 +101,7 @@ def __checkIntronPosition(main, offset, transcript) :
     #if
 
     return True
-#__checkIntronPosition            
+#__checkIntronPosition
 
 def __roll(ref, start, stop) :
     """
@@ -116,15 +116,15 @@ def __roll(ref, start, stop) :
             stop  ; End position of the pattern in the reference sequence.
 
         Returns:
-            tuple: 
-                left  ; Amount of positions that the pattern can be shifted to 
+            tuple:
+                left  ; Amount of positions that the pattern can be shifted to
                         the left.
                 right ; Amount of positions that the pattern can be shifted to
                         the right.
     """
 
     pattern = ref[start - 1:stop] # Extract the pattern.
-    patternLength = len(pattern)  
+    patternLength = len(pattern)
 
     # Keep rolling to the left as long as a cyclic permutation matches.
     minimum = start - 2
@@ -150,7 +150,7 @@ def __palinsnoop(string) :
         Check a sequence for a reverse-complement-palindromic prefix (and
         suffix). If one is detected, return the length of this prefix. If the
         string equals its reverse complement, return -1.
-        
+
         Arguments:
             string ; A nucleotide sequence.
 
@@ -249,7 +249,7 @@ def __bprint2(s, pos1, pos2, O, where) :
 
     # The maximum length for positions is the 10_log of the length of the
     #   protein.
-    m = int(math.floor(math.log(len(s), 10)) + 1) 
+    m = int(math.floor(math.log(len(s), 10)) + 1)
     o = 1
     output = "%s " % str(o).rjust(m)     # Add the first position.
     for i in range(0, len(s), block) :   # Add the blocks.
@@ -288,7 +288,7 @@ def __PtLoc2main(Loc) :
 
 def __PtLoc2offset(Loc) :
     """
-        Convert the offset coordinate in a location (from the Parser) to an 
+        Convert the offset coordinate in a location (from the Parser) to an
         integer.
 
         Arguments:
@@ -369,8 +369,8 @@ def __cdsLen(splice_sites) :
         Arguments:
             splice_sites ; The coordinates of the CDS including internal splice
                            sites.
-                           
-        Returns:                           
+
+        Returns:
             integer ; Length of the CDS.
     """
 
@@ -522,25 +522,25 @@ def findInFrameDescription(str1, str2) :
         if lcp - inLen >= 0 and str1[lcp - inLen:lcp] == str2[lcp:str2_end] :
             if inLen == 1 :
                 return ("p.(%s%idup)" % (seq3(str1[lcp - inLen]),
-                    lcp - inLen + 1), 
+                    lcp - inLen + 1),
                         lcp, lcp, lcp + 1)
             return ("p.(%s%i_%s%idup)" % (seq3(str1[lcp - inLen]),
-                lcp - inLen + 1, seq3(str1[lcp - 1]), lcp), lcp, lcp, 
+                lcp - inLen + 1, seq3(str1[lcp - 1]), lcp), lcp, lcp,
                 lcp + inLen)
         #if
         return ("p.(%s%i_%s%iins%s)" % (seq3(str1[lcp - 1]), lcp,
-            seq3(str1[lcp]), lcp + 1, seq3(str2[lcp:str2_end])), lcp, lcp, 
+            seq3(str1[lcp]), lcp + 1, seq3(str2[lcp:str2_end])), lcp, lcp,
             str2_end)
     #if
 
     # Deletion / Inframe stop.
     if not str2_end - lcp :
         if len(str2) == lcp :
-            return ("p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1), 
+            return ("p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1),
                 0, 0, 0)
 
         if lcp + 1 == str1_end :
-            return ("p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1), 
+            return ("p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1),
                 lcp, lcp + 1, lcp)
         return ("p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1,
             seq3(str1[str1_end - 1]), str1_end), lcp, str1_end, lcp)
@@ -548,7 +548,7 @@ def findInFrameDescription(str1, str2) :
 
     # Substitution.
     if str1_end == str2_end and str1_end == lcp + 1 :
-        return ("p.(%s%i%s)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp])), 
+        return ("p.(%s%i%s)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp])),
             lcp, lcp + 1, lcp + 1)
 
     # InDel.
@@ -556,7 +556,7 @@ def findInFrameDescription(str1, str2) :
         return ("p.(%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
             seq3(str2[lcp:str2_end])), lcp, lcp + 1, str2_end)
     return ("p.(%s%i_%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
-        seq3(str1[str1_end - 1]), str1_end, seq3(str2[lcp:str2_end])), lcp, 
+        seq3(str1[str1_end - 1]), str1_end, seq3(str2[lcp:str2_end])), lcp,
         str1_end, str2_end)
 #findInFrameDescription
 
@@ -621,7 +621,7 @@ def __toProtDescr(CDSStop, orig, trans) :
 def __trim2(str1, str2) :
     """
         Given two strings, trim the lcp and the lcs.
-        
+
         Arguments:
             str1 ; A string.
             str2 ; An other string.
@@ -673,7 +673,7 @@ def _createBatchOutput(O):
     reference = O.getOutput("reference")[-1]
     recordType = O.getOutput("recordType")[0]
     descriptions = O.getOutput("NewDescriptions")
-        #iName, jName, mType, cDescr, pDescr, gAcc, cAcc, pAcc, 
+        #iName, jName, mType, cDescr, pDescr, gAcc, cAcc, pAcc,
         #fullDescr, fullpDescr
 
     if len(descriptions) == 0:
@@ -775,7 +775,7 @@ def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
 def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
                              GenRecordInstance, O) :
     """
-        Do a semantic check for a deletion or duplication, do the actual 
+        Do a semantic check for a deletion or duplication, do the actual
         deletion/duplication and give it a name.
 
         Arguments:
@@ -812,7 +812,7 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
             "the HGVS notation prescribes that it should be \"%s\" at " \
             "position %s." % (
             MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-            __formatRange(start_g, end_g), 
+            __formatRange(start_g, end_g),
             MUU.visualiseLargeString(str(MUU.orig[newStart - 1:newStop])),
             __formatRange(newStart, newStop)))
     #if
@@ -834,7 +834,7 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
             O.addMessage(__file__, 2, "WNOCHANGE",
                 "Sequence \"%s\" at position %i_%i is a palindrome " \
                 "(its own reverse complement)." % (
-                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])), 
+                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
                 start_g, end_g))
             return
         #if
@@ -905,7 +905,7 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
             "however, the HGVS notation prescribes that it should be a " \
             "duplication of %s at position %i_%i." % (
             MUU.mutated[newStart:newStop], start_g, start_g + 1,
-            MUU.mutated[newStart:newStop], start_g + shift, 
+            MUU.mutated[newStart:newStop], start_g + shift,
             start_g + shift + insertionLength - 1))
         end_g += shift - 1
         start_g = end_g - insertionLength + 1
@@ -918,10 +918,10 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
                 "%i_%i was given, however, the HGVS notation prescribes " \
                 "that it should be an insertion of %s at position %i_%i." % (
                 MUU.mutated[newStart:newStop], start_g, start_g + 1,
-                MUU.mutated[newStart + shift:newStop + shift], 
+                MUU.mutated[newStart + shift:newStop + shift],
                 newStart + shift, newStart + shift + 1))
-        GenRecordInstance.name(start_g, start_g + 1, "ins", 
-            MUU.mutated[newStart + shift:newStop + shift] , "", 
+        GenRecordInstance.name(start_g, start_g + 1, "ins",
+            MUU.mutated[newStart + shift:newStop + shift] , "",
             (roll[0], shift))
 #checkInsertion
 
@@ -1009,7 +1009,7 @@ def __normal2g(RawVar, transcript) :
     #if
 
     return start_g, end_g
-#__normal2g    
+#__normal2g
 
 def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     """
@@ -1022,7 +1022,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
 
     Arg1 = RawVar.Arg1
     Arg2 = RawVar.Arg2
-    
+
     if RawVar.EXLoc :
         start_g, end_g = __ex2g(RawVar.EXLoc, transcript)
         if not start_g :
@@ -1050,9 +1050,9 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                     start_g, end_g = end_g, start_g
             #if
         #if
-        else :        
+        else :
             if GenRecordInstance.record.molType != 'g' and \
-               (__intronicPosition(RawVar.StartLoc) or 
+               (__intronicPosition(RawVar.StartLoc) or
                 __intronicPosition(RawVar.EndLoc)) :
                 O.addMessage(__file__, 3, "ENOINTRON", "Intronic position " \
                     "given for a non-genomic reference sequence.")
@@ -1063,7 +1063,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                     "position given.")
                 return
         #else
-    #else            
+    #else
 
     if start_g < 1 :
         O.addMessage(__file__, 4, "ERANGE", "Position %i is out of range." %
@@ -1288,11 +1288,11 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                 print descr
                 O.addOutput("myProteinDescription", descr[0])
 
-                __bprint2(orig + '*', descr[1], descr[2], O, 
+                __bprint2(orig + '*', descr[1], descr[2], O,
                     "oldProteinFancy")
                 if str(orig) != str(trans) :
                     O.addOutput("newprotein", trans + '*')
-                    __bprint2(trans + '*', descr[1], descr[3], O, 
+                    __bprint2(trans + '*', descr[1], descr[3], O,
                         "newProteinFancy")
             #else
         #if
@@ -1318,7 +1318,7 @@ def process(cmd, C, O) :
         filetype = "LRG"
         RetrieveRecord = ParseObj.LrgAcc
         geneSymbol = ("", ParseObj.LRGTranscriptID)
-        retriever = Retriever.LargeRetriever(C.Retriever, O, D)
+        retriever = Retriever.LRGRetriever(C.Retriever, O, D)
     else :
         if ParseObj.Gene:
             geneSymbol = (ParseObj.Gene.GeneSymbol or "",
@@ -1372,11 +1372,11 @@ def process(cmd, C, O) :
         #if i.location :
         for j in i.transcriptList :
             if not ';' in j.description and j.CDS and j.translate :
-                cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)), 
+                cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)),
                           IUPAC.unambiguous_dna)
-                cdsm = Seq(str(__nsplice(MUU.mutated, 
-                                         MUU.newSplice(j.mRNA.positionList), 
-                                         MUU.newSplice(j.CDS.location), 
+                cdsm = Seq(str(__nsplice(MUU.mutated,
+                                         MUU.newSplice(j.mRNA.positionList),
+                                         MUU.newSplice(j.CDS.location),
                                          j.CM.orientation)),
                            IUPAC.unambiguous_dna)
                 if j.CM.orientation == -1 :
@@ -1385,19 +1385,19 @@ def process(cmd, C, O) :
                 #if
 
                 #if '*' in cds.translate()[:-1] :
-                #    O.addMessage(__file__, 3, "ESTOP", 
+                #    O.addMessage(__file__, 3, "ESTOP",
                 #                 "In frame stop codon found.")
                 #    return
                 ##if
 
                 if not len(cds) % 3 :
-                    orig = cds.translate(table = j.txTable, cds = True, 
+                    orig = cds.translate(table = j.txTable, cds = True,
                         to_stop = True)
-                    trans = cdsm.translate(table = j.txTable, 
+                    trans = cdsm.translate(table = j.txTable,
                         to_stop = True)
 
                     cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
-                    j.proteinDescription = __toProtDescr(cdsLen, orig, 
+                    j.proteinDescription = __toProtDescr(cdsLen, orig,
                         trans)[0]
                 #if
                 else :
@@ -1426,7 +1426,7 @@ def process(cmd, C, O) :
             chromDescr = GenRecordInstance.record.chromDescription
 
         O.addOutput("genomicChromDescription", "%s:%c.%s" % (
-            GenRecordInstance.record.recordId, 
+            GenRecordInstance.record.recordId,
             GenRecordInstance.record.molType, chromDescr))
     #if
 
@@ -1504,11 +1504,11 @@ def process(cmd, C, O) :
             if not j.name: continue #Exclude nameless transcripts
 
             O.addOutput("legends", ["%s_v%s" % (i.name, j.name),
-                        j.transcriptID, j.locusTag, 
+                        j.transcriptID, j.locusTag,
                         j.transcriptProduct, j.linkMethod])
             if j.translate :
                 O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
-                    j.proteinID, j.locusTag, 
+                    j.proteinID, j.locusTag,
                     j.proteinProduct, j.linkMethod])
         #for
 

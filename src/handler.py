@@ -74,7 +74,7 @@ def handler(req):
     if "downloads/" in req.uri :
         reqFile = req.uri.rsplit('/')[-1]
         req.headers_out["Content-Disposition"] = \
-            "attachment; filename = \"%s\"" % reqFile # To force downloading.
+            'attachment; filename="%s"' % reqFile # To force downloading.
         handle = open("templates/downloads/" + reqFile)
         C = Config.Config()
         F = File.File(C.File, None)
@@ -87,9 +87,9 @@ def handler(req):
     # Process the file with TAL and return the content as a downloadable file.
     if req.uri.endswith(".py") :
         reqFile = req.uri.split('/')[-1]
-        req.content_type = 'text/plain'
+        #req.content_type = 'application/octet-stream'
         req.headers_out["Content-Disposition"] = \
-            "attachment; filename = \"%s\"" % reqFile # To force downloading.
+            'attachment; filename="%s"' % reqFile # To force downloading.
         req.write(W.tal("TEXT", "templates/" + reqFile, {"path": reqPath}))
         return apache.OK
     #if
@@ -100,7 +100,7 @@ def handler(req):
         C = Config.Config()
         req.content_type = 'text/plain'
         req.headers_out["Content-Disposition"] = \
-            "attachment; filename = \"%s\"" % reqFile # To force downloading.
+            'attachment; filename="%s"' % reqFile # To force downloading.
         fh = open("%s/%s" % (C.Scheduler.resultsDir, reqFile))
         req.write(fh.read())
         fh.close()
@@ -117,7 +117,7 @@ def handler(req):
                                  "r")
             req.content_type = 'text/plain'
             req.headers_out["Content-Disposition"] = \
-                "attachment; filename = \"%s\"" % reqFile # Force downloading.
+                'attachment; filename="%s"' % reqFile # To force downloading.
             req.write(handle.read())
             handle.close()
             del C

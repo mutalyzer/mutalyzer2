@@ -20,7 +20,7 @@ import Db
 
 class PList(object) :
     """
-        A position list object, to store a general location and a list of 
+        A position list object, to store a general location and a list of
         specific splice sites (if available).
 
         These objects are used to describe either a list of mRNA splice sites
@@ -42,8 +42,8 @@ class PList(object) :
 
             Public variables (altered):
                 location ; A tuple of integers between which the object
-                           resides. 
-                list     ; A list (with an even amount of entries) of splice 
+                           resides.
+                list     ; A list (with an even amount of entries) of splice
                            sites.
         """
 
@@ -114,14 +114,14 @@ class Locus(object) :
 
 class Gene(object) :
     """
-        A Gene object, to store a list of Locus objects and the orientation of 
+        A Gene object, to store a list of Locus objects and the orientation of
         the gene.
-        
+
         Special methods:
             __init__() ; Initialise the class.
 
         Public variables:
-            orientation ; The orientation of the gene: 1 = forward, 
+            orientation ; The orientation of the gene: 1 = forward,
                                                       -1 = reverse.
             list        ; A list of Locus objects.
     """
@@ -180,12 +180,12 @@ class Gene(object) :
             if i.link == protAcc :
                 return i
         return None
-    #findCDS        
+    #findCDS
 #Gene
 
 class Record(object) :
     """
-        A Record object, to store a geneList and other additional 
+        A Record object, to store a geneList and other additional
         information.
 
         Special methods:
@@ -281,7 +281,7 @@ class Record(object) :
         if not self.chromOffset :
             return
         if self.chromDescription :
-            self.chromDescription = "%s;%s" % (self.chromDescription, 
+            self.chromDescription = "%s;%s" % (self.chromDescription,
                 rawVariant)
         else :
             self.chromDescription = rawVariant
@@ -308,27 +308,27 @@ class GenRecord() :
     def __constructCDS(self, mRNA, CDSpos) :
         """
         """
-    
+
         i = 1
         ret = [CDSpos[0]]
-    
+
         while CDSpos[0] > mRNA[i] :
             i += 2
-    
+
         j = i
         while CDSpos[1] > mRNA[j] :
             j += 2
-    
+
         ret.extend(mRNA[i:j])
         ret.append(CDSpos[1])
-    
+
         return ret
     #__constructCDS
 
     def __maybeInvert(self, gene, string) :
         """
         """
-    
+
         if gene.orientation == -1 :
             return Bio.Seq.reverse_complement(string)
         return string
@@ -341,7 +341,7 @@ class GenRecord() :
             update the mRNA PList with the exon and CDS data
         """
 
-        #TODO:  This function should really check 
+        #TODO:  This function should really check
         #       the record for minimal requirements.
         for i in self.record.geneList :
             """
@@ -416,7 +416,7 @@ class GenRecord() :
                         #self.__output.addMessage(__file__, 2, "WNOCDS",
                         #    "No CDS list found for gene %s, transcript " \
                         #    "variant %s in record, constructing " \
-                        #    "it from mRNA list and CDS location." % (i.name, 
+                        #    "it from mRNA list and CDS location." % (i.name,
                         #    j.name))
                         if j.mRNA.positionList :
                             j.CDS.positionList = self.__constructCDS(
@@ -424,20 +424,20 @@ class GenRecord() :
                         else :
                             j.CDS.positionList = self.__constructCDS(
                                 j.mRNA.location, j.CDS.location)
-                        j.transcribe = True                                
-                        j.translate = True                                
+                        j.transcribe = True
+                        j.translate = True
                     #if
-                    j.CM = Crossmap.Crossmap(j.mRNA.positionList, 
+                    j.CM = Crossmap.Crossmap(j.mRNA.positionList,
                                              j.CDS.location, i.orientation)
                 #if
                 else :
                     j.molType = 'n'
                     if j.mRNA.positionList :
-                        j.CM = Crossmap.Crossmap(j.mRNA.positionList, 
+                        j.CM = Crossmap.Crossmap(j.mRNA.positionList,
                                                  [], i.orientation)
                     else :
                         j.description = '?'
-                #else                                                 
+                #else
             #for
         #for
     #checkRecord
@@ -459,10 +459,10 @@ class GenRecord() :
 
         if varType != "subst" :
             if forwardStart != forwardStop :
-                self.record.addToDescription("%s_%s%s%s" % (forwardStart, 
+                self.record.addToDescription("%s_%s%s%s" % (forwardStart,
                     forwardStop, varType, arg1))
                 self.record.addToChromDescription("%s_%s%s%s" % (
-                    self.record.toChromPos(forwardStart), 
+                    self.record.toChromPos(forwardStart),
                     self.record.toChromPos(forwardStop), varType, arg1))
             #if
             else :
@@ -490,7 +490,7 @@ class GenRecord() :
                     # Check whether the variant hits CDS start.
                     if j.molType == 'c' and forwardStop >= j.CM.x2g(1, 0) \
                        and forwardStart <= j.CM.x2g(3, 0) :
-                        self.__output.addMessage(__file__, 2, "WSTART", 
+                        self.__output.addMessage(__file__, 2, "WSTART",
                             "Mutation in start codon of gene %s transcript " \
                             "%s." % (i.name, j.name))
 
@@ -506,14 +506,14 @@ class GenRecord() :
                         #if
                         else :
                             j.addToDescription("%s%s%s" % (
-                                j.CM.g2c(orientedStart), varType, 
+                                j.CM.g2c(orientedStart), varType,
                                 self.__maybeInvert(i, arg1)))
                             self.checkIntron(i, j, orientedStart)
                         #else
                     #if
                     else :
                         j.addToDescription("%s%c>%c" % (j.CM.g2c(orientedStart),
-                            self.__maybeInvert(i, arg1), 
+                            self.__maybeInvert(i, arg1),
                             self.__maybeInvert(i, arg2)))
                         self.checkIntron(i, j, orientedStart)
                     #else
@@ -527,13 +527,13 @@ class GenRecord() :
         intronPos = abs(transcript.CM.g2x(position)[1])
         if intronPos :
             if intronPos <= self.__config.spliceAlarm :
-                self.__output.addMessage(__file__, 2, "WSPLICE", 
+                self.__output.addMessage(__file__, 2, "WSPLICE",
                     "Mutation on splice site in gene %s transcript %s." % (
                     gene.name, transcript.name))
                 return
             #if
             if intronPos <= self.__config.spliceWarn :
-                self.__output.addMessage(__file__, 2, "WSPLICE", 
+                self.__output.addMessage(__file__, 2, "WSPLICE",
                     "Mutation near splice site in gene %s transcript %s." % (
                     gene.name, transcript.name))
                 return

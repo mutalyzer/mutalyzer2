@@ -21,16 +21,16 @@ class Nomenclatureparser() :
             __output ; The output object.
 
         Public variables:
-            All variables defined below, they are all context-free grammar 
+            All variables defined below, they are all context-free grammar
             rules.
-        
+
         Special methods:
             __init__() ; Initialise the class and enable packrat parsing.
 
         Public methods:
             parse(input) ; Parse the input string and return a parse tree.
     """
-    
+
     # New:
     # Nest -> `{' SimpleAlleleVarSet `}'
     SimpleAlleleVarSet = Forward()
@@ -44,9 +44,9 @@ class Nomenclatureparser() :
     # and
     # Nt -> `a' | `c' | `g' | `u'
     # Changed to:
-    # Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' | 
-    #       `m' | `s' | `w' | `b' | `d' | `h' | `v' | `i' | 
-    #       `n' | `A' | `C' | `G' | `T' | `U' 
+    # Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' |
+    #       `m' | `s' | `w' | `b' | `d' | `h' | `v' | `i' |
+    #       `n' | `A' | `C' | `G' | `T' | `U'
     Nt = Word("acgtuACGTU", exact = 1)
 
     # New:
@@ -64,13 +64,13 @@ class Nomenclatureparser() :
     # GeneSymbol -> `(' Name (TransVar | ProtVar)? `)'
     # GI         -> (`GI' | `GI:')? Number
     # Version    -> `.' Number
-    # AccNo      -> ([a-Z] Number `_')+ Version? 
+    # AccNo      -> ([a-Z] Number `_')+ Version?
     # UD         -> `UD_' [a-Z]+ (`_' Number)+
     TransVar = Suppress("_v") + Number("TransVar")
     ProtIso = Suppress("_i") + Number("ProtIso")
     GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
                  Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
-    GI = Suppress(Optional("GI") ^ Optional("GI:") ^ Optional("gi") ^ 
+    GI = Suppress(Optional("GI") ^ Optional("GI:") ^ Optional("gi") ^
          Optional("gi:")) + Number("RefSeqAcc")
     Version = Suppress('.') + Number("Version")
     AccNo = NotAny("LRG_") + \
@@ -134,7 +134,7 @@ class Nomenclatureparser() :
                  PtLoc("PtLoc"))("EndLoc")
     EXLoc = Group(Suppress("EX") + Number("EXNumberStart") + \
             Optional(Suppress('-') + Number("EXNumberStop")))("EXLoc")
-    Extent = RealExtent ^ EXLoc            
+    Extent = RealExtent ^ EXLoc
 
     # RangeLoc -> Extent | `(` Extent `)'
     # Loc -> PtLoc | RangeLoc
@@ -144,7 +144,7 @@ class Nomenclatureparser() :
 
     # FarLoc -> Ref Loc
     # Changed to:
-    # FarLoc -> (RefSeqAcc | GeneSymbol) (`:' RefType? Extent)? 
+    # FarLoc -> (RefSeqAcc | GeneSymbol) (`:' RefType? Extent)?
     FarLoc = (RefSeqAcc ^ GeneSymbol) + Optional(Suppress(':') + \
              Optional(RefType) + Extent)
 
@@ -166,7 +166,7 @@ class Nomenclatureparser() :
     # VarSSR -> PtLoc `(' Nt+ `)' Number `_' Number
     # Changed to:
     # AbrSSR -> PtLoc  Nt+ `(' Number `_' Number `)'
-    # VarSSR -> (PtLoc  Nt+ `[' Number `]') | (RangeLoc `[' Number `]') 
+    # VarSSR -> (PtLoc  Nt+ `[' Number `]') | (RangeLoc `[' Number `]')
     AbrSSR = PtLoc + NtString + Suppress('(') + Number + \
              Suppress('_') + Number + Suppress(')')
     VarSSR = (PtLoc + NtString + Suppress('[') + Number + \
@@ -180,10 +180,10 @@ class Nomenclatureparser() :
           ((NtString ^ Number)("Arg1") ^ RangeLoc ^ \
           FarLoc("OptRef")) + Optional(Nest)
 
-    # Indel -> RangeLoc `del' (Nt+ | Number)? 
+    # Indel -> RangeLoc `del' (Nt+ | Number)?
     #          `ins' (Nt+ | Number | RangeLoc | FarLoc)
     # Changed to:
-    # Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)? 
+    # Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)?
     #          `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
     Indel = (RangeLoc ^ Group(PtLoc("PtLoc"))("StartLoc")) + Literal("del") + \
         Optional(NtString ^ Number)("Arg1") + \
@@ -201,7 +201,7 @@ class Nomenclatureparser() :
     # Conv -> RangeLoc `con' FarLoc Nest?
     Conv = RangeLoc + Literal("con")("MutationType") + FarLoc + \
            Optional(Nest)
-    
+
     # ChromBand -> (`p' | `q') Number `.' Number
     # ChromCoords -> `(' Chrom `;' Chrom `)' `(' ChromBand `;' ChromBand `)'
     # TransLoc -> `t' ChromCoords `(' FarLoc `)'
@@ -253,7 +253,7 @@ class Nomenclatureparser() :
     # SingleAlleleVarSet -> `[` ExtendedRawVar (`;' ExtendedRawVar)+ `]'
     # UnkAlleleVars -> Ref `[` RawVar `(+)' RawVar `]'
     # Changed to:
-    # SingleAlleleVarSet -> (`[` ChimeronSet ((`;' | `^') ChimeronSet)* 
+    # SingleAlleleVarSet -> (`[` ChimeronSet ((`;' | `^') ChimeronSet)*
     #                        (`(;)' ChimeronSet)* `]') | ChimeronSet
     SingleAlleleVarSet = Group(Suppress('[') + ChimeronSet + \
                          ZeroOrMore((Suppress(';') ^ Suppress('^')) + \
@@ -276,8 +276,8 @@ class Nomenclatureparser() :
     # MultiVar -> SingleAlleleVars | MultiAlleleVars
     MultiVar = SingleAlleleVars ^ MultiAlleleVars
 
-    # MultiTranscriptVar -> Ref `[` ExtendedRawVar (`;' ExtendedRawVar)* 
-    #                       (`,' ExtendedRawVar (`;' ExtendedRawVar)*)+ `]' 
+    # MultiTranscriptVar -> Ref `[` ExtendedRawVar (`;' ExtendedRawVar)*
+    #                       (`,' ExtendedRawVar (`;' ExtendedRawVar)*)+ `]'
     MultiTranscriptVar = Ref + Suppress('[') + ExtendedRawVar + \
         ZeroOrMore(Suppress(';') + ExtendedRawVar) + \
         OneOrMore(Suppress(',') + ExtendedRawVar + ZeroOrMore(Suppress(';') + \
@@ -297,10 +297,10 @@ class Nomenclatureparser() :
     NoRNAVar = Ref + Suppress('0') + Optional(Suppress('?'))
 
     # DNAVar -> SingleVar | MultiVar
-    # RNAVar -> SingleVar | MultiVar | MultiTranscriptVar | 
+    # RNAVar -> SingleVar | MultiVar | MultiTranscriptVar |
     #           UnkEffectVar | NoRNAVar | SplicingVar
     # Changed to:
-    # Var -> SingleVar | MultiVar | MultiTranscriptVar | 
+    # Var -> SingleVar | MultiVar | MultiTranscriptVar |
     #        UnkEffectVar | NoRNAVar | SplicingVar
     Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
           UnkEffectVar ^ NoRNAVar ^ SplicingVar
@@ -323,9 +323,9 @@ class Nomenclatureparser() :
     def parse(self, variant) :
         """
             Parse the input string and return a parse tree if the parsing was
-            successful. Otherwise print the parse error and the position in 
+            successful. Otherwise print the parse error and the position in
             the input where the error occurred.
-            
+
             Arguments:
                 variant ; The input string that needs to be parsed.
 

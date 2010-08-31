@@ -124,7 +124,7 @@ class Output() :
         self.__outputData = {}
         self.__messages = []
         self.__instance = self.__niceName(instance)
-        self.__loghandle = open(self.__config.log, "a")
+        self.__loghandle = open(self.__config.log, "a+")
         self.__errors = 0
         self.__warnings = 0
     #__init__
@@ -255,18 +255,19 @@ class Output() :
     #getMessages
 
     def getSoapMessages(self):
-        """ 
-            Returns a list of SoapMessages for over the wire 
+        """
+            Returns a list of SoapMessages for over the wire
 
             Private variables:
                 __messages  ; The messages list.
                 __config    ; The variable outputlevel is used.
 
             Returns:
-                list ; 
+                list ;
         """
 
-        from Modules.Mapper import SoapMessage #TODO: MOVE to top if works
+        #TODO: MOVE to top if works
+        from Modules.Serializers import SoapMessage
 
         ret = []
         for i in self.__messages:
@@ -281,10 +282,10 @@ class Output() :
     #getSoapMessages
 
     def getBatchMessages(self, level):
-        """ 
+        """
             Returns a list of Messages with an errorlevel >= level
             and removes additional lines from a parseerror
-            
+
             Arguments:
                 level ;
 
@@ -300,7 +301,7 @@ class Output() :
         for i in self.__messages:
             if i.level >= level:
                 if lastorigin == "Parser": #Only one parse error
-                    continue 
+                    continue
                 lastorigin = i.origin
                 ret.append("(%s): %s" % (i.origin, i.description))
             #if

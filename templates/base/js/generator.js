@@ -4,10 +4,14 @@
  * © 2010 LUMC
  */
 
-// Regular expressions for Field Content Tests
-function isTranscript(x){ 
+// Regular expressions for Field Content
+function isNumber(x){
     var re = new RegExp("^[0-9]+$", "g");
     return re.test(x);
+}
+
+function isTranscript(x){ 
+    return isNumber(x);
 }
 
 function isSequenceType(s){
@@ -59,8 +63,37 @@ function isGeneSymbol(s){
     return re.test(s);
 }
 
-//Reference object 
-
+/* Reference Object
+ * ----------------
+ * Holds the information of five fields. 
+ *      Reference
+ *      Seqeuente Type
+ *      Gene Symbol
+ *      Transcript
+ *      Three Letter Code
+ *
+ * Each key has five members:
+ *      name    - The name used for that input field
+ *      len     - The requirements of that field
+ *                  e.g:    0   Not used
+ *                          1   Compulsory field of length 1
+ *                          +   Compulsory field
+ *                          *   Optional field
+ *      value   - The form value
+ *      ok      - boolean to store if check & len are both met
+ *      check   - reference to the function that checks the value
+ *      errStr  - The error string returned when the check fails.
+ *
+ * Helper Functions:
+ *      getType - Translate the sequence Type
+ *      getFlag - Get the flag of a member *len
+ *      getName - Get the Name of a member
+ *      getErr  - Get the errStr of a member
+ *      getCheck- Get the check function of member
+ *
+ * Main Function
+ *      getHGVS - Generate the pre-colon name
+ */
 var reference = {
 		'refe':	{'name'		: "Reference",
                  'len'   	: "+",
@@ -105,7 +138,7 @@ var reference = {
             var ret = this['refe'].value;
             var gs = ""
             if (isLRG(ret)){
-                gs = "t"+this['tVar'].value;
+                gs = this['tVar'].value ? "t"+this['tVar'].value : "";
                 this['gSym'].value = "";
             }
             if (this['gSym'].value!=""){
@@ -122,9 +155,17 @@ var reference = {
         }
 };
 
-var variants = new Array(); //global storage of the variants
 
-//Type of regex to use for each sequence Type
+/* seqTypes Object
+ * ---------------
+ *  Holds the references to the different field checks depending on 
+ *  the type of sequence that is selected.
+ *
+ * Each key has three members
+ *      pCheck  - The check function needed to verify a postition
+ *      sCheck  - The check function needed to verfiy a sequence
+ *      errorStr- The error string to display if a sequence check fails.
+ */
 var seqTypes = {
 		'cod'	: {	'pCheck' 	: isPosition,
 					'sCheck'	: isDNASequence,
@@ -159,11 +200,28 @@ var seqTypes = {
 					'errorStr'	: "must consist of the Three Letter AminoAcids Code"}
 }
 
-//Type of field options for each mutation Type
-//char 1 -> Position 1, char 2 -> Position 2
-//char 3 -> Sequence 1, char 4 -> Sequence 2
-//   + 	 -> Minimal 1	   *   -> optional
-//   0   -> Hidden		   1   -> 1 atomic length
+/* mutTypes Object
+ * ---------------
+ *  Holds the information needed to display and check 
+ *  the fields of selected mutation.
+ *
+ * Each key has three members:
+ *      flags   - This holds the len flags for the four input fields
+ *                  S1 = Sequence 1
+ *                  S2 = Sequence 2
+ *                  P1 = Position 1
+ *                  P2 = Position 2
+ *
+ *                The usage of the 0, 1, + and * is identical to 
+ *                that of the reference object
+ *      S1      - The partial name to display for the selected mutation
+ *                  in front of the first sequence field
+ *      S2      - The partial name to display for the selected mutation
+ *                  in front of the second sequence field
+ *
+ *  Helper Functions:
+ *      getType - Translate the mutation number to a mutationType
+ */
 var mutTypes = {
     "sub" : {
         "flags" : "+011",
@@ -191,12 +249,47 @@ var mutTypes = {
         "S2"    : ""},
 
     getType : function(i){
-        i = parseInt(i)-1;
+        i = parseInt(i, 10)-1;
         translate = ['sub','del','ins','dup','ind','inv'];
         return translate[i];
     }
 };
 
+/* variants Array
+ * --------------
+ *  Array holds the variants
+ */
+var variants = new Array(); //global storage of the variants
+
+/* VariantField Object
+ * -------------------
+ *  Holds the boilerplate for setting up a new variant and storing the 
+ *  values associated with that variant. The five fields that are stored
+ *  include Position 1 & 2, Sequence 1 & 2 and the mutation type.
+ *
+ *  Each key has four members:
+ *      value   - The form value
+ *      ok      - boolean to store if check & len are both met
+ *      check   - placeholder to make this object checkable by the 
+ *                  main CheckElement function
+ *      index   - int to fetch the correct len setings of a field, 
+ *                  which depends on the type of mutation that is set
+ *
+ *  This is a dynamic object, which means that the values of the members
+ *  are generated depending on set variables. In this case the mType.
+ *  The helper functions use the set mType to fetch the correct flag, name,
+ *  error and check values of a key.
+ *
+ *  Helper Functions:
+ *      getFlag - Get the flag for a specific field
+ *      getName - Get the name for a specific field
+ *      getErr  - Get the error string for a specific field
+ *                  this also depends on the sequence type
+ *      getCheck- Get the check function for a specific field
+ *
+ *  Main function:
+ *      getHGVS - Get the HGVS mutation description of this variant
+ */
 
 var VariantField = {
     'P1'  :   { 'value'   : "",
@@ -250,6 +343,10 @@ var VariantField = {
     }
 }
 
+/* clone function
+ * --------------
+ *  This is a helper function used to create a copy of the VariantField
+ */
 function clone(obj){
     if(obj == null || typeof(obj) != 'object')
         return obj;
@@ -259,6 +356,10 @@ function clone(obj){
     return temp;
 }
 
+/* newVariantField function
+ * ------------------------
+ *
+ */
 function newVariantField(mutType){
     var newVarField = clone(VariantField);
     newVarField.mType = mutType;
@@ -288,7 +389,7 @@ function checkElement(elem){
             IDt = key;
         else
             IDt = "V"+IDt+key;
-		obj.value = getValue(IDt);
+        //obj.value = getValue(IDt);
 
         var flag = elem.getFlag(key);
         var optional = (flag == "*") ? "*" : "";
@@ -368,29 +469,57 @@ function updateVariant(variant){
     variant.S2.value = form[V+"S2"].value;
     //Update Names and visible Fields TODO
     checkElement(variant);
+
+    //Additional variant checks
+    var IDt = "V"+variant["number"];
+    if ((variant.S1.value == variant.S2.value) && variant.S1.value != ""){
+		document.getElementById(IDt+"S2error").innerHTML +=
+            "Sequences can not be identical. <br />";
+    }
+    if (variant.mType == "ins" && variant.P1.value != ""){
+        if (variant.P1.value == variant.P2.value){
+		    document.getElementById(IDt+"P2error").innerHTML +=
+                "Interbase positions must be consecutive positions. <br />";
+        } else if (isNumber(variant.P1.value) && isNumber(variant.P2.value)){
+            var p1 = Number(variant.P1.value);
+            var p2 = Number(variant.P2.value);
+            if (p2-p1!=1){
+                document.getElementById(IDt+"P2error").innerHTML +=
+                    "Interbase positions must be consecutive positions. <br />";
+            }
+        }
+    } 
 }
 
 function updateReference(){
-    form = document.forms["mainform"];
+    var form = document.forms["mainform"];
     reference.refe.value = form.refe.value;
     reference.seqT.value = form.seqT.value;
     reference.gSym.value = form.gSym.value;
+    reference.tVar.value = form.tVar.value;
+
     if (!reference.gSym.value)
         hide("tVar");
     else
         show("tVar");
-    if (isLRG(reference.refe.value)){
+    
+    if(reference.seqT.value == "g"){
+        hide("gSym");
+        reference.gSym.value = "";
+        hide("tVar");
+        reference.tVar.value = "";
+    } else if (isLRG(reference.refe.value)){
         show("tVar");
         hide("gSym");
-    }
-    else{
+        reference.gSym.value = "";
+    } else {
         show("gSym");
     }
+
     if (form.seqT.value == "p")
         show("tlc");
     else
         hide("tlc");
-    reference.tVar.value = form.tVar.value;
     var tlc = (form.seqT.value == "p" && form.tlc[1].checked) ? 3 : 1;
     reference.tlc = tlc;
     //Update Visible Fields TODO
@@ -454,6 +583,8 @@ function getNormalHGVS(variant){
     var S2 = variant.S2.value;
     var P1 = variant.P1.value;
     var P2 = variant.P2.value;
+    if (P1 == P2)
+        P2 = "";
     var mutation = (P1 && P2) ? P1+"_"+P2 : P1;
     switch(variant.mType){
     case "sub":
@@ -516,121 +647,6 @@ function removeVariant(nmbr){
 	inside.removeChild(delvar);
     variants[nmbr].removed = true;
     update();
-}
-
-
-//###################
-
-function updateoutput(form){
-    updateform(form);
-    var errors = formvalidate(form);
-    var ref = form.reference.value;
-    var gs = "";
-    //gene Symbol
-    if (form.geneSymbol.value!=""){
-        if (form.transcript.value!=""){
-            gs = "("+form.geneSymbol.value+"_v"+pad(form.transcript.value,3)+")";
-        } else {
-            gs = "("+form.geneSymbol.value+")";
-        }
-    } 
-
-    //Sequence Type
-    var seqT = form.sequenceType.value;
-    var mutT = form.mutationType.value
-
-    //Start Position
-    var startP = form.startP.value;
-
-    //End Position
-    var endP = form.endP.value;
-
-    //Create Position
-    var loc = (startP && endP) ? startP+"_"+endP : startP;
-
-    //Old Sequence
-    var S1 = form.oldSequence.value;
-    var S2 = form.newSequence.value;
-
-    var mutation = "";
-
-    //Mutations
-
-    if(seqT=="p"){
-        switch(parseInt(mutT)){
-            case 1:
-              mutation = S1+loc+S2
-              break;
-            case 2:
-              if(endP)
-                mutation = S1+startP+"_"+S2+endP+"del";
-              else
-                mutation = S1+startP+"del";
-              break;
-            case 3:
-              //loc incomplete
-              mutation = loc+"ins"+S1;
-              break
-            case 4:
-              mutation = S1+startP+"dup";
-            case 5:
-            case 6:
-            case 7:
-            default:
-                break;
-        }
-    } else {
-        switch(parseInt(mutT)){
-            case 1:   //sub
-              mutation = S1+">"+S2;
-              break;
-            case 2:   //del
-              mutation = "del"+S1;
-              break;
-            case 3:   //ins
-              mutation = "ins"+S2;
-              break;
-            case 4:   //dup
-              mutation = "dup"+S1;
-              break;
-            case 5:   //delins
-              if (S1 && S2)
-                  mutation = "del"+S1+"ins"+S2;
-              else
-                  mutation = "delins"+S2;
-              break;
-            case 6:   //inv
-              mutation = "inv"+S1;
-              break;
-            case 7:   //frameshift
-              break;
-            case 8:   //microsat
-              break;
-            default:  //Impossible
-              break;
-        }
-    }
-
-
-    var refNot = ref+gs+":";
-    var vari = ""
-    switch(seqT){
-       case "e":
-           vari = loc+mutation;
-           break;
-       case "p":
-           vari = "p.("+mutation+")";
-           break;
-       default:
-           vari = seqT+"."+loc+mutation;
-    }
-    var encVar = encodeURIComponent(vari);
-    var url = "http://www.mutalyzer.nl/2.0/checkForward?mutationName="+refNot+encVar;
-    var link = refNot+vari;
-    var Output = "<a href=\""+url+"\">"+link+"</a>";
-
-    document.getElementById("output").innerHTML = Output;
-    return form;
 }
 
 

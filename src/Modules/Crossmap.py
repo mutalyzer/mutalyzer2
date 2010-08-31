@@ -13,7 +13,7 @@
 class Crossmap() :
     """
         Convert from g. to c. or n. notation or vice versa.
-        
+
         Private variables:
             __STOP         ; CDS stop in c. notation.
             __crossmapping ; A list that contains either c. or n. positions
@@ -26,12 +26,12 @@ class Crossmap() :
                                                              -1 = reverse.
 
         Special methods:
-            __init__(RNA, CDS, orientation) ; Initialise the class and do the 
-                                              cross mapping of the splice 
+            __init__(RNA, CDS, orientation) ; Initialise the class and do the
+                                              cross mapping of the splice
                                               sites.
 
         Private methods:
-            __plus(a, b)   ; A protected '+' that skips 0 if 
+            __plus(a, b)   ; A protected '+' that skips 0 if
                              a <= 0 and a + b >= 0.
             __minus(a, b)  ; A protected '-' that skips 0 if
                              a >= 0 and a - b <= 0.
@@ -58,7 +58,7 @@ class Crossmap() :
             Private variables (altered):
                 __STOP         ; CDS stop in c. notation.
                 __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA 
+                                 corresponding to the g. positions in the RNA
                                  list.
                 __trans_start  ; Transcription start site in c. notation.
                 __trans_end    ; Transcription end side in c. notation.
@@ -79,7 +79,7 @@ class Crossmap() :
         self.__crossmap_splice_sites()
 
         start = (orientation - 1) / 2
-        self.__trans_start = self.__crossmapping[start] 
+        self.__trans_start = self.__crossmapping[start]
         self.__trans_end = self.__crossmapping[start - self.orientation]
 
         if not self.__STOP :
@@ -89,17 +89,17 @@ class Crossmap() :
     def __plus(self, a, b) :
         """
             This method returns a + b unless a is smaller than zero and the
-            result is larger than zero, in that case it returns a + b + 1. 
+            result is larger than zero, in that case it returns a + b + 1.
             In effect the number 0 is skipped while adding.
-            
-            Arguments: 
+
+            Arguments:
                 a ; First argument of the addition.
                 b ; Second argument of the addition.
-            
+
             Returns:
                 integer ; a + b or a + b + 1.
         """
-        
+
         r = a + b
 
         if a <= 0 and r >= 0 :
@@ -111,13 +111,13 @@ class Crossmap() :
     def __minus(self, a, b) :
         """
             This method returns a - b unless a is larger than zero and the
-            result is smaller than zero, in that case it returns (a - b) - 1. 
+            result is smaller than zero, in that case it returns (a - b) - 1.
             In effect the number 0 is skipped while subtracting.
-            
-            Arguments: 
+
+            Arguments:
                 a ; First argument of the subtraction.
                 b ; Second argument of the subtraction.
-            
+
             Returns:
                 integer ; a - b or (a - b) - 1.
         """
@@ -133,13 +133,13 @@ class Crossmap() :
     def __minusr(self, a, b) :
         """
             This method returns a - b unless a is larger than zero and b is
-            smaller than zero, in that case it returns (a - b) - 1. 
+            smaller than zero, in that case it returns (a - b) - 1.
             In effect the number 0 is skipped while subtracting.
-            
-            Arguments: 
+
+            Arguments:
                 a ; First argument of the subtraction.
                 b ; Second argument of the subtraction.
-            
+
             Returns:
                 integer ; a - b or (a - b) - 1.
         """
@@ -159,12 +159,12 @@ class Crossmap() :
                  sites.
               2: The c. notation of the RNA splice sites.
               3: The n. notation of the RNA splice sites.
-            
+
             For option 1 only provide an list with CDS splice sites.
             For option 2 provide an list with RNA splice sites and one with
               the CDS start and stop.
             For option 3 only provide an list with RNA splice sites.
-            
+
             Examples:
             - Get the n. notation of the RNA splice sites. The input is in
               forward notation.
@@ -175,14 +175,14 @@ class Crossmap() :
             - Get the c. notation of the RNA splice sites. The input is in
               reverse complement.
             Crossmap(RNA, CDS, -1)
-            
+
             The output is straightforward, except for the c. notation of the
             downstream RNA splice sites. This is denoted by __STOP + the
             distance to the stop codon, as an alternative to the *-notation.
 
             Private variables (altered):
                 __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA 
+                                 corresponding to the g. positions in the RNA
                                  list.
 
             Private variables:
@@ -203,17 +203,17 @@ class Crossmap() :
         x = (-d - 1) / -2  # reverse complement.
         y = c * (RNAlen - 1)
 
-        if self.CDS : # If we both have mRNA and CDS, we have to search for 
+        if self.CDS : # If we both have mRNA and CDS, we have to search for
                       # CDS start.
             i = y - c
             # Find CDS start.
-            while d * (self.RNA[i] - ((i + 1) % 2)) < d * self.CDS[c] : 
+            while d * (self.RNA[i] - ((i + 1) % 2)) < d * self.CDS[c] :
                 i += d
-            cPos = d * (self.RNA[i] - self.CDS[c] + (d * 2)) # Get the right 
+            cPos = d * (self.RNA[i] - self.CDS[c] + (d * 2)) # Get the right
                                                              # boundary.
 
             while d * i > d * y :                      # Go back to exon 1.
-                cPos = self.__minus(cPos, d * 
+                cPos = self.__minus(cPos, d *
                        (self.RNA[i] - self.RNA[i - d] + d))
                 i -= d * 2
             #while
@@ -240,23 +240,23 @@ class Crossmap() :
             This function calculates either:
               1: The n. notation from a g. notation.
               2: The c. notation from a g. notation.
-            
+
             For option 1 only provide an array with mRNA splice sites and one
             with the c. notation of the splice sites.
             For option 2 provide an array with mRNA splice sites, one with the
             c. notation of the splice sites and an array with the CDS start and
             stop.
-            
+
             Examples:
             - Get the n. notation of a g. position i. The input is in forward
-              notation. 
+              notation.
             Crossmap(RNA, [], 1)
             g2x(i)
             - Get the c. notation of a g. position i. The input is in reverse
-              notation. 
+              notation.
             Crossmap(mRNA, CDS, -1);
             g2x(i);
-            
+
             The output is fully compatible with the HVGS nomenclature as
             defined on 01-07-2009.
 
@@ -265,7 +265,7 @@ class Crossmap() :
 
             Private variables:
                 __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA 
+                                 corresponding to the g. positions in the RNA
                                  list.
                 __STOP         ; A large number to indicate positions after CDS
                                  stop.
@@ -289,7 +289,7 @@ class Crossmap() :
         if d * a < d * self.RNA[y] : # A position before the first exon.
             return ((self.__crossmapping[y]), -d * (self.RNA[y] - a))
         if d * a > d * self.RNA[RNAlen - y - 1] : # After the last exon.
-            return (self.__crossmapping[RNAlen - y - 1], 
+            return (self.__crossmapping[RNAlen - y - 1],
                     d * (a - self.RNA[RNAlen - y - 1]))
 
         for i in xrange(RNAlen) : # A "normal" position.
@@ -297,15 +297,15 @@ class Crossmap() :
                 if self.RNA[i] < a and a < self.RNA[i + 1] : # Intron.
                     if d * (a - self.RNA[i]) > d * (self.RNA[i + 1] - a) :
                         # The position was closer to the next exon.
-                        return (self.__crossmapping[i + 1 - c], 
+                        return (self.__crossmapping[i + 1 - c],
                                 -d * (self.RNA[i + 1 - c] - a))
                     # The position was closer to the previous exon.
-                    return (self.__crossmapping[i + c], 
+                    return (self.__crossmapping[i + c],
                             d * (a - self.RNA[i + c]))
                 #if
             else :                # We're checking the exon positions.
                 if self.RNA[i] <= a and a <= self.RNA[i + 1] :
-                    return (self.__plus(self.__crossmapping[i + c], 
+                    return (self.__plus(self.__crossmapping[i + c],
                                         d * (a - self.RNA[i + c])), 0)
                 #if
         #for
@@ -316,10 +316,10 @@ class Crossmap() :
             This function calculates either:
               1: The g. notation from a n. notation.
               2: The g. notation from a c. notation.
-            
+
             Whether option 1 or 2 applies depends on the content of mRNAm.
-            
-            
+
+
             Examples:
             - Get the g. notation of a n. position i. The input is in forward
               notation.
@@ -329,21 +329,21 @@ class Crossmap() :
               is in reverse notation.
             Crossmap(mRNA, CDS, -1);
             x2g(i, j);
-            
-            Arguments: 
+
+            Arguments:
                 a ; The n. or c. position to be translated.
                 b ; The offset of position a.
 
             Private variables:
                 __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA 
+                                 corresponding to the g. positions in the RNA
                                  list.
 
             Public variables:
                 RNA         ; The list of RNA splice sites.
                 orientation ; The orientation of the transcript:  1 = forward
                                                                  -1 = reverse.
-            
+
             Returns:
                 integer ; A g. position.
         """
@@ -413,8 +413,8 @@ class Crossmap() :
 
     def int2offset(self, t) :
         """
-            Convert a tuple of integers to offset-notation. This adds a `+', 
-            and `u' or `d' to the offset when appropriate. The main value is 
+            Convert a tuple of integers to offset-notation. This adds a `+',
+            and `u' or `d' to the offset when appropriate. The main value is
             not returned.
 
             Arguments:
@@ -472,7 +472,7 @@ class Crossmap() :
 
             Arguments:
                 t ; A tuple (main, offset) in __STOP notation.
-                    
+
             Returns:
                 string ; The position in HGVS notation.
         """
@@ -525,20 +525,20 @@ class Crossmap() :
 #
 if __name__ == "__main__" :
     # Build a crossmapper for a hypothetical gene.
-    mRNAf = [5002, 5125, 27745, 27939, 58661, 58762, 74680, 74767, 103409, 
+    mRNAf = [5002, 5125, 27745, 27939, 58661, 58762, 74680, 74767, 103409,
              103528, 119465, 119537, 144687, 144810, 148418, 149215]
     CDSf = [27925, 74736]
     Cf = Crossmap(mRNAf, CDSf, 1)
 
     # Build a crossmapper for a hypothetical gene on the reverse strand.
-    mRNAr = [2000, 2797, 6405, 6528, 31678, 31750, 47687, 47806, 76448, 76535, 
+    mRNAr = [2000, 2797, 6405, 6528, 31678, 31750, 47687, 47806, 76448, 76535,
              92453, 92554, 123276, 123470, 146090, 146213]
     CDSr = [76479, 123290]
     Cr = Crossmap(mRNAr, CDSr, -1)
 
     # Check whether the gene on the forward strand has the right splice sites
     #   in c. notation.
-    if Cf._Crossmap__crossmapping != [-304, -181, -180, 15, 16, 117, 118, 205, 
+    if Cf._Crossmap__crossmapping != [-304, -181, -180, 15, 16, 117, 118, 205,
                                       206, 325, 326, 398, 399, 522, 523, 1320] :
         print "Crossmapping list not built correctly (c. notation)."
 
@@ -605,14 +605,14 @@ if __name__ == "__main__" :
 
     # Build a crossmapper for the hypothetical gene, missing the first exon and
     #   the last two exons.
-    mRNAf2 = [27745, 27939, 58661, 58762, 74680, 74767, 103409, 
+    mRNAf2 = [27745, 27939, 58661, 58762, 74680, 74767, 103409,
              103528, 119465, 119537]
     CDSf2 = [27925, 74736]
     Cf2 = Crossmap(mRNAf2, CDSf2, 1)
 
-    # Build a crossmapper for the hypothetical gene on the reverse strand, 
+    # Build a crossmapper for the hypothetical gene on the reverse strand,
     #   missing the first exon and the last two exons.
-    mRNAr2 = [31678, 31750, 47687, 47806, 76448, 76535, 
+    mRNAr2 = [31678, 31750, 47687, 47806, 76448, 76535,
               92453, 92554, 123276, 123470]
     CDSr2 = [76479, 123290]
     Cr2 = Crossmap(mRNAr2, CDSr2, -1)
@@ -628,14 +628,14 @@ if __name__ == "__main__" :
     # Build a crossmapper for the hypothetical gene, but now non-coding.
     Cf3 = Crossmap(mRNAf, [], 1)
 
-    # Build a crossmapper for the hypothetical gene on the reverse strand, but 
+    # Build a crossmapper for the hypothetical gene on the reverse strand, but
     #   now non-coding.
     Cr3 = Crossmap(mRNAr, [], -1)
 
     # Check whether the gene on the forward strand has the right splice sites
     #   in n. notation.
-    if Cf3._Crossmap__crossmapping != [1, 124, 125, 319, 320, 421, 422, 509, 
-                                       510, 629, 630, 702, 703, 826, 827, 
+    if Cf3._Crossmap__crossmapping != [1, 124, 125, 319, 320, 421, 422, 509,
+                                       510, 629, 630, 702, 703, 826, 827,
                                        1624] :
         print "Crossmapping list not built correctly (n. notation)."
 
@@ -688,7 +688,7 @@ if __name__ == "__main__" :
         print "g. to c. conversion failed in small CDS test."
     del T
 
-    # This is a test for a gene that has a CDS that starts on an exon splice 
+    # This is a test for a gene that has a CDS that starts on an exon splice
     # site.
     tm2 = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
            23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
@@ -699,7 +699,7 @@ if __name__ == "__main__" :
                                      509, 510, 583, 584, 708, 709, 1507] :
         print "Crossmapping list not built correctly (c. notation) in CDS " + \
               "start on splice site test."
-        
+
     if T2.x2g(1, 0) != 23777833 :
         print "c. to g. conversion failed in CDS start on splice site test."
     if T2.tuple2string(T2.g2x(2123)) != "-156-u23752936" or \

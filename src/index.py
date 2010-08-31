@@ -31,6 +31,9 @@ from Modules import Scheduler
 from Modules import Retriever
 from Modules import File
 
+class InputException(Exception):
+    pass
+
 def snp(req) :
     C = Config.Config()
     O = Output.Output(__file__, C.Output)
@@ -56,8 +59,6 @@ def snp(req) :
     return W.tal("HTML", "templates/snp.html", args)
 #snp
 
-class InputException(Exception):
-    pass
 
 def index(req) :
     W = Web.Web()
@@ -127,7 +128,7 @@ def check(req) :
     pe = O.getOutput("parseError")
     if pe :
         pe[0] = pe[0].replace('<', "&lt;")
-    
+
     genomicDNA = True
     if O.getIndexedOutput("molType", 0) == 'n' :
         genomicDNA = False
@@ -168,6 +169,58 @@ def check(req) :
     del W
     return ret
 #check
+
+def getGS(req):
+    """
+        LOVD bypass to get the correct GeneSymbol incl Transcript variant.
+
+        Used by LOVD to get the correct transcript variant out of a genomic
+        record. LOVD uses a genomic reference (NC_?) in combination with a gene
+        symbol to pass variant info to mutalyzer. Mutalyzer 1.0 was only using
+        the first transcript. LOVD supplies the NM of the transcript needed but
+        this was ignored. This helper allows LOVD to get the requested
+        transcript variant from a genomic reference.
+
+        Arguments:
+                req     ; The request:
+                            req.form['mutationName'] ; the mutationname without
+                            gene symbol
+                            re.form['variantRecord'] ; the NM reference of the
+                            variant
+                            re.form['forward'] ; if set this forwards the
+                            request to the name checker
+        Returns
+                string  ; The GeneSymbol with the variant notation
+                web     ; If forward is set the request is forwarded to check
+    """
+    W = Web.Web()
+    C = Config.Config()
+    O = Output.Output(__file__, C.Output)
+
+    if not req.form:
+        return "Error in input"
+    mutationName = req.form.get("mutationName", None)
+    variantRecord = req.form.get("variantRecord", None)
+    forward = req.form.get("forward", None)
+
+    # We are only interested in the legend
+    Mutalyzer.process(mutationName, C, O)
+
+    legends = O.getOutput("legends")
+
+    # Filter the transcript from the legend
+    legends = [l for l in legends if "_v" in l[0]]
+    for l in legends:
+        if l[1] == variantRecord:
+            if forward:
+                p,a = mutationName.split(':')
+                req.form["mutationName"] = p+'('+l[0]+'):'+a
+                return check(req)
+            else:
+                return l[0]
+    return "Transcript not found"#+`legends`
+#getGS
+
 
 def checkForward(req) :
     session = Session.Session(req)

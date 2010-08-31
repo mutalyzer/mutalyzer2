@@ -20,7 +20,7 @@ class tempGene() :
         self.rnaList = []
         self.cdsList = []
     #__init__
-#tempGene    
+#tempGene
 
 class GBparser() :
     """
@@ -94,7 +94,7 @@ class GBparser() :
 
     def __transcriptToProtein(self, transcriptAcc) :
         """
-            Try to find the protein linked to a transcript id. 
+            Try to find the protein linked to a transcript id.
 
             First look in our database, if a link can not be found, try to
             retrieve it via the NCBI. Store the result in our database.
@@ -102,7 +102,7 @@ class GBparser() :
             Arguments:
                 transcriptAcc ; Accession number of the transcript for which we
                                 want to find the protein.
-            
+
             Returns:
                 string ; Accession number of a protein or None if nothing can
                          be found.
@@ -145,7 +145,7 @@ class GBparser() :
 
             If direction equals 1, search for the first word.
             If direction equals -1, search for the last word.
-               
+
             Arguments:
                 productList ; A list of sentences.
                 direction   ; The direction in which to search.
@@ -190,11 +190,11 @@ class GBparser() :
     def __tagLocus(self, locusList) :
         """
             Enrich a list of locus objects (mRNA or CDS) with information used
-            for linking (locus_tag, proteinLink and productTag). Also 
+            for linking (locus_tag, proteinLink and productTag). Also
             transfer the variables transcript_id, protein_id, gene and product
             to each of the locus objects. If these variables do not exist, set
             them to the empty string.
-            
+
             Arguments:
                 locusList ; A list of locus objects.
         """
@@ -216,7 +216,7 @@ class GBparser() :
             if not i.transcript_id :
                 if i.protein_id : # Tag a CDS with the protein id.
                     i.proteinLink = i.protein_id.split('.')[0]
-            #if                    
+            #if
             else :                # Tag an mRNA with the protein id too.
                 i.proteinLink = \
                     self.__transcriptToProtein(i.transcript_id.split('.')[0])
@@ -314,11 +314,11 @@ class GBparser() :
 
     def link(self, rnaList, cdsList) :
         """
-            Link mRNA loci to CDS loci (all belonging to one gene). 
+            Link mRNA loci to CDS loci (all belonging to one gene).
 
             First of all, the range of the CDS must be a sub range of that of
             the mRNA. If this is true, then we try to link both loci. The first
-            method is by looking at the locus_tag, if this fails, we try to 
+            method is by looking at the locus_tag, if this fails, we try to
             match the proteinLink tags, if this also fails, we try the
             productTag.
             If no link could be found, but there is only one possibility left,
@@ -509,7 +509,7 @@ class GBparser() :
                             myTranscript.proteinProduct = i.link.product
                             if i.link.qualifiers.has_key("transl_table") :
                                 myTranscript.txTable = \
-                                    int(i.qualifiers["transl_table"][0]) 
+                                    int(i.qualifiers["transl_table"][0])
                         #if
                         myRealGene.transcriptList.append(myTranscript)
                     #if
@@ -528,7 +528,7 @@ class GBparser() :
                         myTranscript.proteinProduct = i.product
                         if i.qualifiers.has_key("transl_table") :
                             myTranscript.txTable = \
-                                int(i.qualifiers["transl_table"][0]) 
+                                int(i.qualifiers["transl_table"][0])
                         myRealGene.transcriptList.append(myTranscript)
                         #if
                     #if
@@ -559,7 +559,7 @@ class GBparser() :
                     myTranscript.transcribe = True
                     if myCDS.qualifiers.has_key("transl_table") :
                         myTranscript.txTable = \
-                            int(i.qualifiers["transl_table"][0]) 
+                            int(i.qualifiers["transl_table"][0])
                     myRealGene.transcriptList.append(myTranscript)
                 #if
             #if

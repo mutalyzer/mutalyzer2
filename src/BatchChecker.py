@@ -40,7 +40,7 @@ pidfile.write(`os.getpid()`)
 # Populate signal map
 sigmap ={signal.SIGUSR1: sigusr1_daemon_notified}
 stdout = sys.stdout
-DaemonInst = daemon.DaemonContext(signal_map = sigmap, 
+DaemonInst = daemon.DaemonContext(signal_map = sigmap,
                 files_preserve = [ pidfile ], working_directory = cwd)
 DaemonInst.__enter__()
 # stdout = stdout, stderr = stdout

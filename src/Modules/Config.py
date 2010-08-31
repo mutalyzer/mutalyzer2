@@ -23,20 +23,21 @@ class Config() :
             GBparser  ; Container for the File configuration variables.
 
         Special Methods:
-            __init__ ; Read the configuration file and initialise the 
+            __init__ ; Read the configuration file and initialise the
                        subclasses.
     """
 
     class Retriever() :
         """
             Container class for the Retriever configuration variables.
-            
+
             Public variables:
                 email      ; Email address used for Entrez.
                 cache      ; Location of the cache directory.
                 cachesize  ; Maximum size of the cache directory in bytes.
                 maxDldSize ; Maximum size of a GenBank record in bytes.
                 minDldSize ; Minimum size of a GenBank record in bytes.
+                lrgURL     ; base URL of LRG files
         """
 
         pass
@@ -45,7 +46,7 @@ class Config() :
     class Db() :
         """
             Container class for the Db configuration variables.
-            
+
             Public variables:
                 internalDb      ; Name of the internal database.
                 dbNames         ; Name of the mapping databases
@@ -63,7 +64,7 @@ class Config() :
     class Output() :
         """
             Container class for the Output configuration variables.
-            
+
             Public variables:
                 log         ; Name and location of the logfile.
                 datestring  ; Prefix for log messages.
@@ -77,11 +78,11 @@ class Config() :
     class Mutator() :
         """
             Container class for the Mutator configuration variables.
-            
+
             Public variables:
-                flanksize     ; Length of the flanking sequences in the 
+                flanksize     ; Length of the flanking sequences in the
                                 visualisation.
-                maxvissize    ; Maximum length of the variation in the 
+                maxvissize    ; Maximum length of the variation in the
                                 visualisation.
                 flankclipsize ; Length of the inserted/deleted flanks.
         """
@@ -92,7 +93,7 @@ class Config() :
     class Scheduler() :
         """
             Container class for the Scheduler configuration variables.
-            
+
             Public variables:
                 processName ; Name of the scheduler in the process list.
                 mailFrom    ; Return e-mail address.
@@ -118,12 +119,14 @@ class Config() :
     class File() :
         """
             Container class for the File configuration variables.
-            
+
             Public variables:
-                bufSize ; Amount of bytes to be read for determining the file 
+                bufSize ; Amount of bytes to be read for determining the file
                           type.
                 header  ; The obligatory header in batch request files.
                 tempDir ; Directory for temporary files.
+                threshold ; The threshold under which the percentage of errors
+                            is allowed in a batchfile
         """
 
         pass
@@ -132,11 +135,11 @@ class Config() :
     class GBparser() :
         """
             Container class for the GBparser configuration variables.
-            
+
             Public variables:
-            upstream   ; Number of upstream nucleotides when searching for a 
+            upstream   ; Number of upstream nucleotides when searching for a
                          transcript.
-            downstream ; Number of downstream nucleotides when searching for a 
+            downstream ; Number of downstream nucleotides when searching for a
                          transcript.
         """
 
@@ -148,7 +151,7 @@ class Config() :
 
     def __init__(self) :
         """
-            Initialise the class with variables read from the configuration 
+            Initialise the class with variables read from the configuration
             file. In principle, this is the only place in the code where a
             hard coded constant is used (the name and path to the configuration
             file).
@@ -170,6 +173,7 @@ class Config() :
         self.Retriever.cachesize = int(config["cachesize"]) * 1048576
         self.Retriever.maxDldSize = int(config["maxDldSize"]) * 1048576
         self.Retriever.minDldSize = int(config["minDldSize"])
+        self.Retriever.lrgURL = config["lrgurl"]
 
         # Set the variables needed by the Db module.
         self.Db.internalDb = config["internalDb"]
@@ -209,6 +213,7 @@ class Config() :
         self.File.bufSize = int(config["bufSize"])
         self.File.header = config["header"]
         self.File.tempDir = config["tempDir"]
+        self.File.threshold = float(config["threshold"])
 
         # Set the variables needed by the GBparser module.
         self.GBparser.email = config["email"]

@@ -120,7 +120,12 @@ def main(LOVD_ver, build, acc, var) :
             return
 
     if not getattr(ret, "startmain", None) :
-        print O.getOutput("LOVDERR")[0]
+        output = O.getOutput("LOVDERR")
+        if output:
+            print output[0]
+        else:
+            #print "\n".join(O.getMessages())
+            print "Unknown error occured"
         return
 
     O.addMessage(__file__, -1, "INFO",
