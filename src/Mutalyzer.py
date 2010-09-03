@@ -1158,7 +1158,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                     W = GS.findLocus(toi)
                     if not W:
                         O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "Transcripts found for gene %s. Please " \
+                            "Multiple transcripts found for gene %s. Please " \
                             "choose from: %s" %(GS.name,
                                 ", ".join(GS.listLoci())))
                 else:                       # No transcript id given
@@ -1196,7 +1196,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                         W = GS.transcriptList[0]
                     else:
                         O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "Transcripts found for gene %s. Please " \
+                            "Multiple transcripts found for gene %s. Please " \
                             "choose from: %s" %(GS.name,
                             ", ".join(GS.listLoci())))
             #else
@@ -1258,7 +1258,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                 cdsm = Bio.Seq.reverse_complement(cdsm)
             #if
 
-            if '*' in cds.translate()[:-1] :
+            if '*' in cds.translate(table = W.txTable)[:-1] :
                 O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
                 return
             #if

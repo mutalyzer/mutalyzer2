@@ -481,7 +481,7 @@ class GBparser() :
                 #if
             #if
         #for
-        if record.molType == 'g' :
+        if record.molType in ['g', 'm'] :
             for j in geneDict.keys() :
                 myGene = geneDict[j]
                 self.link(myGene.rnaList, myGene.cdsList)
@@ -515,7 +515,8 @@ class GBparser() :
                     #if
                 #for
                 for i in myGene.cdsList :
-                    if not i.linked and i.usable :
+                    if not i.linked and \
+                       (i.usable or not geneDict[myGene.name].rnaList) :
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
                             myTranscript = Locus(i.locus_tag[-3:])

@@ -379,7 +379,7 @@ class GenRecord() :
                             #if
                             else :
                                 j.mRNA = j.CDS
-                                j.linkMethod = "construction"
+                            j.linkMethod = "construction"
                             j.transcribe = True
                             j.translate = True
                         #if
