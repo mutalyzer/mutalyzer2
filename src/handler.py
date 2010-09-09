@@ -64,10 +64,28 @@ def handler(req):
     #if
 
     # Return raw content (for includes from an HTML file).
-    if req.uri.endswith(".js") or "base" in req.uri :
-        #req.content_type = 'text/html'
-        req.write(W.read("templates/", req))
+    if "base/" in req.uri :
+        reqFile = req.uri.rsplit('/')[-1]
+        handle = open("templates/" + req.uri.split('/', 2)[2], "r")
+
+        if "style.css" not in req.uri :
+            C = Config.Config()
+            F = File.File(C.File, None)
+            req.content_type = F.getMimeType(handle)[0]
+        #if
+        else :
+            req.content_type = 'text/css'
+
+        req.write(handle.read())
+        handle.close()
         return apache.OK
+    #if
+    
+    # Return raw content (for includes from an HTML file).
+    #if req.uri.endswith(".js") or in req.uri :
+    #    #req.content_type = 'text/html'
+    #    req.write(W.read("templates/", req))
+    ##    return apache.OK
     #if
 
     # Make all txt files in downloads directory downloadable

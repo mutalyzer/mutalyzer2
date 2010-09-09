@@ -34,7 +34,7 @@ for i in C.Db.dbNames :
         LocalDb.backup_cdsUpdates()
         cds_Updates = LocalDb.count_cdsUpdates()
         if cds_Updates :
-            O.addMessage(__file__, -1,
+            O.addMessage(__file__, -1, "INFO",
                          "%i CDS updates found, backing up" % cds_Updates)
         LocalDb.merge_cdsUpdates()
     #if

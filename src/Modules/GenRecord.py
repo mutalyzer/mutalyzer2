@@ -305,6 +305,31 @@ class GenRecord() :
         self.record = None
     #__init__
 
+    def __checkExonList(self, exonList, CDSpos) :
+        """
+        """
+
+        if not exonList :
+            return False
+        if not CDSpos :
+            return True
+
+        e = exonList.positionList
+        c = CDSpos.location
+
+        seen = 0
+        for i in range(0, len(e), 2) :
+            if e[i] <= c[0] and e[i + 1] >= c[0] :
+                seen += 1
+            if e[i] <= c[1] and e[i + 1] >= c[1] :
+                seen += 1
+        #for
+
+        if seen == 2 :
+            return True
+        return False
+    #__checkExonList
+            
     def __constructCDS(self, mRNA, CDSpos) :
         """
         """
@@ -359,12 +384,21 @@ class GenRecord() :
             """
             for j in i.transcriptList :
                 if not j.mRNA :
-                    if not j.exon:
+                    usableExonList = self.__checkExonList(j.exon, j.CDS)
+                    if not j.exon or not usableExonList :
                         if self.record.molType == 'g' :
                             self.__output.addMessage(__file__, 2, "WNOMRNA",
                                 "No mRNA field found for gene %s, transcript " \
                                 "variant %s in record, constructing " \
                                 "it from CDS. Please note that descriptions "\
+                                "exceeding CDS boundaries are invalid." % (
+                                i.name, j.name))
+                        if j.exon and j.exon.positionList and \
+                           not usableExonList :
+                            self.__output.addMessage(__file__, 2, "WNOMRNA",
+                                "Exons were found for gene %s, transcript " \
+                                "variant %s but were not usable. " \
+                                "Please note that descriptions "\
                                 "exceeding CDS boundaries are invalid." % (
                                 i.name, j.name))
                         if j.CDS :
