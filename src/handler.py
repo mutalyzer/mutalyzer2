@@ -76,6 +76,8 @@ def handler(req):
         else :
             req.content_type = 'text/css'
 
+        #req.headers_out["Cache-Control"] = \
+        #    "public,max-age=3600"
         req.write(handle.read())
         handle.close()
         return apache.OK

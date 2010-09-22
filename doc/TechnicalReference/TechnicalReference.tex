@@ -780,7 +780,49 @@ returned by the \texttt{\_\_toProtDescr()} function as described in
 Section~\ref{subsubsec:effect}.
 
 \subsection{VarInfo} \label{subsec:varinfo}
-The VarInfo interface is a (soon to be deprecated) interface for LOVD~\cite{LOVDD}
+The VarInfo interface is a (soon to be deprecated) interface for
+LOVD~\cite{LOVDD}. It uses accumulated data from the UCSC~\cite{UCSC} database
+to map variants in transcripts to a chromosome and vice versa. At the moment of
+this writing, only human builds hg18 and hg19 are supported. Updating of this
+local database is describe in Section~\ref{subsec:ucsc_update} and the
+structure is described in Appendix~\ref{subsec:dbtables}.
+
+This interface can either be called from the command line or via the web
+interface (see Section~\ref{subsec:webinterface}). The interface can be used
+in two ways; to get general information about a transcript, and to map a
+variant.
+
+By supplying the human build, an accession number and a variant, the interface
+will use the local database to generate the values shown in
+Table~\ref{tab:varinfomap}.
+
+\begin{table}[H]
+\begin{tabular}{l|p{9cm}}
+name                   & description\\
+\hline
+\texttt{start\_main}   & The ``main'' coordinate in c. notation of the start
+                         position.\\
+\texttt{start\_offset} & The ``offset'' coordinate in c. notation of the start
+                         position.\\
+\texttt{end\_main}     & The ``main'' coordinate in c. notation of the end
+                         position.\\
+\texttt{end\_offset}   & The ``offset'' coordinate in c. notation of the end
+                         position.\\
+\texttt{start\_g}      & The g. coordinate of the start position.\\
+\texttt{end\_g}        & The g. coordinate of the end position.\\
+\texttt{type}          & The mutation type.\\
+\end{tabular}
+\caption{Mapping output of the VarInfo interface} \label{tab:varinfomap}
+\end{table}
+
+If we map a variant \texttt{NM\_002001.2:c.55+30del}, the output will be:
+% 55
+% 30
+% 55
+% 35
+% 159272239
+% 159272244
+% del
 
 \subsection{UCSC\_Update} \label{subsec:ucsc_update}
 

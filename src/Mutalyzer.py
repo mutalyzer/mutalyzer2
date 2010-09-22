@@ -542,7 +542,7 @@ def findInFrameDescription(str1, str2) :
         if lcp + 1 == str1_end :
             return ("p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1),
                 lcp, lcp + 1, lcp)
-        return ("p.(%s%i_%s%idel)" % (seq3(str1[lcp - 1]), lcp + 1,
+        return ("p.(%s%i_%s%idel)" % (seq3(str1[lcp]), lcp + 1,
             seq3(str1[str1_end - 1]), str1_end), lcp, str1_end, lcp)
     #if
 
