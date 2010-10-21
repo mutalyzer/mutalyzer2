@@ -904,8 +904,8 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
             "Insertion of %s at position %i_%i was given, " \
             "however, the HGVS notation prescribes that it should be a " \
             "duplication of %s at position %i_%i." % (
-            MUU.mutated[newStart:newStop], start_g, start_g + 1,
-            MUU.mutated[newStart:newStop], start_g + shift,
+            Arg1, start_g, start_g + 1,
+            MUU.mutated[newStart + shift:newStop + shift], start_g + shift,
             start_g + shift + insertionLength - 1))
         end_g += shift - 1
         start_g = end_g - insertionLength + 1
@@ -917,7 +917,7 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
             O.addMessage(__file__, 2, "WROLL", "Insertion of %s at position " \
                 "%i_%i was given, however, the HGVS notation prescribes " \
                 "that it should be an insertion of %s at position %i_%i." % (
-                MUU.mutated[newStart:newStop], start_g, start_g + 1,
+                Arg1, start_g, start_g + 1,
                 MUU.mutated[newStart + shift:newStop + shift],
                 newStart + shift, newStart + shift + 1))
         GenRecordInstance.name(start_g, start_g + 1, "ins",
