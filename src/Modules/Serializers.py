@@ -107,3 +107,28 @@ class Transcript(ClassSerializer) :
     #__init__
 #Transcript
 
+class MutalyzerOutput(ClassSerializer) :
+    """
+        Extended ClassSerializer object with mixed types of attributes
+
+        Attributes:
+    """
+
+    class types() :
+        """
+        """
+
+        original = String
+        mutated = String
+    #types
+
+    def __init__(self) :
+        """
+        """
+
+        self.typecode = TC.Struct(MutalyzerOutput, [
+            TC.String('original'),
+            TC.String('mutated')
+            ], 'MutalyzerOutput')
+    #__init__
+#MutalyzerOutput

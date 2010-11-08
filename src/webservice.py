@@ -12,13 +12,15 @@ from soaplib.service import soapmethod
 from soaplib.serializers.primitive import String, Integer, Array
 from ZSI.fault import Fault
 
+import Mutalyzer                                
 from Modules import Web
 from Modules import Db
 from Modules import Output
 from Modules import Config
 from Modules import Parser
 from Modules import Mapper
-from Modules.Serializers import SoapMessage, Mapping, Transcript
+from Modules.Serializers import SoapMessage, Mapping, Transcript, \
+                                MutalyzerOutput
 
 class MutalyzerService(SimpleWSGISoapApp) :
     """
@@ -511,5 +513,20 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         del L
         return result
-   #checkSyntax
+    #checkSyntax
+    
+    @soapmethod(String, _returns = MutalyzerOutput)
+    def runMutalyzer(self, variant) :
+        C = Config.Config() # Read the configuration file.
+        L = Output.Output(__file__, C.Output)
+        L.addMessage(__file__, -1, "INFO",
+                     "Received request runMutalyzer(%s)" % (variant))
+        Mutalyzer.process(variant, C, L)                     
+        M = MutalyzerOutput()
+        M.original = L.getOutput("original")[0]
+        M.mutated = L.getOutput("mutated")[0]
+        L.addMessage(__file__, -1, "INFO",
+                     "Finished processing runMutalyzer(%s)" % (variant))
+        return M
+    #runMutalyzer
 #MutalyzerService

@@ -975,8 +975,9 @@ def __normal2g(RawVar, transcript) :
     if RawVar.EndLoc :
         if not RawVar.EndLoc.PtLoc.Main.isdigit() : # For ? in a position.
             return None, None
-        end_g = transcript.CM.main2int(
-            RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
+        #end_g = transcript.CM.main2int(
+        #    RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
+        end_g = int(RawVar.EndLoc.PtLoc.Main)
     #if
 
 
@@ -1520,6 +1521,8 @@ def process(cmd, C, O) :
 
     _createBatchOutput(O)
 
+    O.addOutput("original", str(MUU.orig))
+    O.addOutput("mutated", str(MUU.mutated))
     del MUU
 
     return GenRecordInstance

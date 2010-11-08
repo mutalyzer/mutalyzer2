@@ -61,7 +61,7 @@ class Nomenclatureparser() :
     # Changed to:
     # TransVar   -> `_v' Number
     # ProtIso    -> `_i' Number
-    # GeneSymbol -> `(' Name (TransVar | ProtVar)? `)'
+    # GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
     # GI         -> (`GI' | `GI:')? Number
     # Version    -> `.' Number
     # AccNo      -> ([a-Z] Number `_')+ Version?

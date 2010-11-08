@@ -440,7 +440,8 @@ class GBparser() :
             if i.qualifiers :
                 if i.type == "source" :
                     if i.qualifiers.has_key("mol_type") :
-                        if i.qualifiers["mol_type"][0] == "mRNA" :
+                        if i.qualifiers["mol_type"][0] == "mRNA" or \
+                           i.qualifiers["mol_type"][0] == "transcribed RNA" :
                             record.molType = 'n'
                         else :
                             record.molType = 'g'
@@ -540,27 +541,36 @@ class GBparser() :
             if geneDict :
                 myGene = geneDict[geneDict.keys()[0]]
                 myRealGene = record.geneList[0]
-                myCDS = myGene.cdsList[0]
-                self.__tagByDict(myCDS, "protein_id")
-                self.__tagByDict(myCDS, "product")
+                if myGene.cdsList :
+                    myCDS = myGene.cdsList[0]
+                    self.__tagByDict(myCDS, "protein_id")
+                    self.__tagByDict(myCDS, "product")
+                #if
+                else :
+                    myCDS = None
                 myTranscript = Locus("001")
                 myTranscript.exon = PList()
                 if exonList :
                     myTranscript.exon.positionList = exonList
                 else :
                     myTranscript.exon.location = myRealGene.location
-                myTranscript.CDS = PList()
-                myTranscript.CDS.location = self.__location2pos(myCDS.location)
+                if myCDS :
+                    myTranscript.CDS = PList()
+                    myTranscript.CDS.location = \
+                        self.__location2pos(myCDS.location)
+                #if
                 if exonList or myRealGene.location or \
                    myTranscript.CDS.location :
                     myTranscript.transcriptID = biorecord.id
-                    myTranscript.proteinID = myCDS.protein_id
-                    myTranscript.proteinProduct = myCDS.product
-                    myTranscript.linkMethod = "exhaustion"
-                    myTranscript.transcribe = True
-                    if myCDS.qualifiers.has_key("transl_table") :
-                        myTranscript.txTable = \
-                            int(i.qualifiers["transl_table"][0])
+                    if myCDS :
+                        myTranscript.proteinID = myCDS.protein_id
+                        myTranscript.proteinProduct = myCDS.product
+                        myTranscript.linkMethod = "exhaustion"
+                        myTranscript.transcribe = True
+                        if myCDS.qualifiers.has_key("transl_table") :
+                            myTranscript.txTable = \
+                                int(i.qualifiers["transl_table"][0])
+                    #if
                     myRealGene.transcriptList.append(myTranscript)
                 #if
             #if

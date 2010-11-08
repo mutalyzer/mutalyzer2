@@ -105,7 +105,7 @@
         the most recent version of that record. In case of outdated versions,
         Mutalyzer will issue a warning. Alternatively, the unique 
         <i>GenInfo identifier</i> (gi) of the reference sequence (e.g.,
-        4506864) can be used with or without the letters &#8220;gi&#8221;.
+        4506864) can be used with or without the letters ''gi'';.
         Mutalyzer does not accept GenBank records containing no sequence (e.g.
         chromosomal reference sequence identifiers referring to contig
         accession numbers) or files larger than 10 MB. Mutalyzer also accepts
@@ -145,7 +145,7 @@
         the separate components necessary to construct variant descriptions.
       </p>
       <p>
-        These components, which are discussed in more detail below are:\
+        These components, which are discussed in more detail below are:
       </p>
       <p>
         1) <a href="#Position">Position numbering scheme (Sequence Type)</a>
@@ -220,7 +220,7 @@
       <p>
         The value 1 is assigned to to the first base of the transcript in the
         record and all the exonic bases are counted from there. Intronic bases
-        are numbered x+1, x+2, x+3 &#8230; y-3, y-2, y-1 where x is the value
+        are numbered x+1, x+2, x+3, ... y-3, y-2, y-1 where x is the value
         of the last exonic base upstream of the intron, y is the value of the
         first exonic base downstream of the intron and x and y are consecutive
         numbers. Intronic position numbers are always counted from the closest
@@ -250,19 +250,19 @@
         are numbered -1, -2, -3 and so on.<br> 
         3' untranslated region: Exonic bases downstream of (i.e. behind) the
         stop codon are numbered *1, *2, *3 and so on.<br>
-        Intronic bases in the Coding sequence are numbered x+1, x+2, x+3
-        &#8230; y-3, y-2, y-1 where x is the value of the last exonic base
+        Intronic bases in the Coding sequence are numbered x+1, x+2, x+3, ... 
+        y-3, y-2, y-1 where x is the value of the last exonic base
         upstream of the intron, y is the value of the first exonic base
         downstream of the intron and x and y are consecutive numbers. Intronic
         position numbers are always counted from the closest exonic base. In
         case of a tie, the upstream base is used.<br>
         In case of: a 5' untranslated region split over two or more exons:
-        Intronic bases are numbered -x+1, -x+2, -x+3 &#8230; -y-3, -y-2, -y-1
+        Intronic bases are numbered -x+1, -x+2, -x+3, ... -y-3, -y-2, -y-1
         where -x is the value of the last exonic base upstream of the intron,
         -y is the value of the first exonic base downstream of the intron and x
         and y are consecutive numbers.<br>
         In case of: a 3' untranslated region split over two or more exons:
-        Intronic bases are numbered *x+1, *x+2, *x+3 &#8230; *y-3, *y-2, *y-1
+        Intronic bases are numbered *x+1, *x+2, *x+3, ... *y-3, *y-2, *y-1
         where *x is the value of the last exonic base upstream of the intron,
         *y is the value of the first exonic base downstream of the intron and y
         are consecutive numbers.
@@ -515,7 +515,7 @@
         Examples: <br>
         AB026906:c.3_4inG<br>
         AB026906.1:c.35_36ins<br>
-        LRG_1t1:c.266G&lt;T
+        LRG_1t1:c.266G&gt;T
       </p>
       
       <hr>
@@ -944,7 +944,7 @@
       </p>
       
       <p>
-        Last modified: August 6, 2010
+        Last modified: November 5, 2010
       </p>
       <a href="mailto:Mutalyzer@humgen.nl">
         <address>mutalyzer@humgen.nl</address></a>

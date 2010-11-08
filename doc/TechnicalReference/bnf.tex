@@ -1,24 +1,32 @@
 \begin{longtable}{llp{7cm}}
 name     & $\rightarrow$ & ([a--z][A--Z][0--9])$^+$\\
-Nt       & $\rightarrow$ & `a' $|$ `c' $|$ `g' $|$ `t' $|$ `u' $|$ `r' $|$ 
-                           `y' $|$ `k' $|$ `m' $|$ `s' $|$ `w' $|$ `b' $|$ 
-                           `d' $|$ `h' $|$ `v' $|$ `i' $|$ `n' $|$ `A' $|$ 
+Nt       & $\rightarrow$ & `a' $|$ `c' $|$ `g' $|$ `t' $|$ `u' $|$ `A' $|$ 
                            `C' $|$ `G' $|$ `T' $|$ `U'\\
 NtString & $\rightarrow$ & (Nt)$^+$\\
 Number & $\rightarrow$ & ([0--9])$^+$\\
 TransVar   & $\rightarrow$ & `\_v' Number\\
 ProtIso    & $\rightarrow$ & `\_i' Number\\
-GeneSymbol & $\rightarrow$ & `(' name (TransVar $|$ ProtVar)? `)'\\
+GeneSymbol & $\rightarrow$ & `(' name (TransVar $|$ ProtIso)? `)'\\
 GI         & $\rightarrow$ & (`GI' $|$ `GI:')? Number\\
 Version    & $\rightarrow$ & `.' Number\\
 AccNo      & $\rightarrow$ & `ish.'? ([a--Z] Number `\_')$^+$ Version? \\
-RefSeqAcc  & $\rightarrow$ & (GI $|$ AccNo) (`(' GeneSymbol `)')?\\
+UD         & $\rightarrow$ & `UD\_' name (`\_' Number)$^+$\\
+LRGTranscriptID & $\rightarrow$ & `t' ([0-9])$^+$\\
+LRGProteinID    & $\rightarrow$ & `p' ([0-9])$^+$\\
+LRG             & $\rightarrow$ & `LRG' ([0-9])$^+$ (`\_' (LRGTranscriptID $|$ 
+                  LRGProteinID))?\\
+GenBankRef  & $\rightarrow$ & (GI $|$ AccNo $|$ UD) (`(' GeneSymbol `)')?\\
+RefSeqAcc & $\rightarrow$ & GenBankRef $|$ LRG\\
 Chrom & $\rightarrow$ & name\\
 Offset & $\rightarrow$ & (`+' $|$ `-') (`u' $|$ `d')? (Number $|$ `?')\\
-PtLoc & $\rightarrow$ & ((`-' $|$ `*')? Number Offset?) $|$ `?'\\
+RealPtLoc & $\rightarrow$ & ((`-' $|$ `*')? Number Offset?) $|$ `?'\\
+IVSLoc & $\rightarrow$ & `IVS' Number (`+' $|$ `-') Number\\
+PtLoc  & $\rightarrow$ & IVSLoc $|$ RealPtLoc\\
 RefType & $\rightarrow$ & (`c' $|$ `g' $|$ `m' $|$ `n' $|$ `r') `.'\\
 Ref & $\rightarrow$ & ((RefSeqAcc $|$ GeneSymbol) `:')? RefType?\\
-Extent & $\rightarrow$ & PtLoc `\_' (`o'? (RefSeqAcc $|$ GeneSymbol) `:')? PtLoc\\
+RealExtent & $\rightarrow$ & PtLoc `\_' (`o'? (RefSeqAcc $|$ GeneSymbol) `:')? PtLoc\\
+EXLoc & $\rightarrow$ & `EX' Number (`-' Number)?\\
+Extent & $\rightarrow$ & RealExtent $|$ EXLoc\\
 RangeLoc & $\rightarrow$ & Extent $|$ `(` Extent `)'\\
 Loc & $\rightarrow$ & PtLoc $|$ RangeLoc\\
 FarLoc & $\rightarrow$ & (RefSeqAcc $|$ GeneSymbol) (`:' RefType? Extent)? \\
@@ -37,7 +45,9 @@ TransLoc & $\rightarrow$ & `t' ChromCoords `(' FarLoc `)'\\
 RawVar & $\rightarrow$ & Subst $|$ Del $|$ Dup $|$ VarSSR $|$ Ins $|$ Indel $|$ Inv $|$ Conv\\
 SingleVar & $\rightarrow$ & Ref RawVar $|$ TransLoc\\
 ExtendedRawVar & $\rightarrow$ & RawVar $|$ `=' $|$ `?'\\
-SimpleAlleleVarSet & $\rightarrow$ & (`[' ExtendedRawVar (`;' ExtendedRawVar)$^*$ `]') $|$ ExtendedRawVar\\ 
+CAlleleVarSet & $\rightarrow$ & ExtendedRawVar (`;' ExtendedRawVar)$^*$\\
+UAlleleVarSet & $\rightarrow$ & (CAlleleVarSet $|$ (`(' CAlleleVarSet `)')) `?'?\\
+SimpleAlleleVarSet & $\rightarrow$ & (`[' UAlleleVarSet `]') $|$ ExtendedRawVar\\
 MosaicSet & $\rightarrow$ & (`[' SimpleAlleleVarSet (`/' SimpleAlleleVarSet)$^*$ `]') $|$ SimpleAlleleVarSet\\
 ChimeronSet & $\rightarrow$ & (`[' MosaicSet (`//' MosaicSet)$^*$ `]') $|$ MosaicSet\\
 SingleAlleleVarSet & $\rightarrow$ & (`[' ChimeronSet ((`;' $|$ `\verb#^#') ChimeronSet)$^*$ (`(;)' ChimeronSet)$^*$ `]') $|$ ChimeronSet\\
