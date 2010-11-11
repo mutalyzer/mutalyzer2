@@ -469,6 +469,7 @@ class GenRecord() :
                     if j.mRNA.positionList :
                         j.CM = Crossmap.Crossmap(j.mRNA.positionList,
                                                  [], i.orientation)
+                        j.transcribe = True
                     else :
                         j.description = '?'
                 #else

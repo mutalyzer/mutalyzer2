@@ -440,8 +440,8 @@ class GBparser() :
             if i.qualifiers :
                 if i.type == "source" :
                     if i.qualifiers.has_key("mol_type") :
-                        if i.qualifiers["mol_type"][0] == "mRNA" or \
-                           i.qualifiers["mol_type"][0] == "transcribed RNA" :
+                        if i.qualifiers["mol_type"][0] in ["mRNA", \
+                           "transcribed RNA"] :
                             record.molType = 'n'
                         else :
                             record.molType = 'g'
@@ -470,7 +470,8 @@ class GBparser() :
                             geneDict[geneName] = tempGene(geneName)
                     #if
 
-                    if i.type == "mRNA" :
+                    if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA", 
+                       "tmRNA"] :
                         geneDict[geneName].rnaList.append(i)
                     if i.type == "CDS" :
                         geneDict[geneName].cdsList.append(i)
