@@ -1065,6 +1065,11 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                 return
         #else
     #else
+    if end_g < start_g :
+        O.addMessage(__file__, 3, "ERANGE", "End position is smaller than " \
+                    "the begin position.")
+        return
+    #if
 
     if start_g < 1 :
         O.addMessage(__file__, 4, "ERANGE", "Position %i is out of range." %
