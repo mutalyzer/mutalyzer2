@@ -42,9 +42,9 @@ class Web() :
                 version ; Here the displayed version is defined.
         """
 
-        self.version = "2.0&nbsp;&beta;-3"
+        self.version = "2.0&nbsp;&beta;-4"
         self.nomenclatureVersion = "2.0"
-        self.releaseDate = "12 Nov 2010"
+        self.releaseDate = "16 Nov 2010"
 
         C = Config.Config()
         self.email = C.Retriever.email
