@@ -523,8 +523,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request runMutalyzer(%s)" % (variant))
         Mutalyzer.process(variant, C, L)                     
         M = MutalyzerOutput()
-        M.original = L.getOutput("original")[0]
-        M.mutated = L.getOutput("mutated")[0]
+        M.original = L.getIndexedOutput("original", 0)
+        M.mutated = L.getIndexedOutput("mutated", 0)
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing runMutalyzer(%s)" % (variant))
         return M

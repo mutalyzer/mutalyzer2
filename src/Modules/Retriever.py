@@ -318,14 +318,21 @@ class GenBankRetriever(Retriever):
                         1 ; (id, GI)
 
         """
+
+        if raw_data == "\nNothing has been found\n" :
+            self._output.addMessage(__file__, 4, "ENORECORD",
+                "The record could not be retrieved.")
+            return None, None
+        #if
+
         fakehandle = StringIO.StringIO() # Unfortunately, BioPython needs a
         fakehandle.write(raw_data)       # file handle.
         fakehandle.seek(0)
         try :
             record = SeqIO.read(fakehandle, "genbank")
         except (ValueError, AttributeError):  # An error occured while parsing.
-            self._output.addMessage(__file__, 2, "ENOPARSE",
-                    "The file could not be parsed.")
+            self._output.addMessage(__file__, 4, "ENOPARSE",
+                "The file could not be parsed.")
             fakehandle.close()
             return None, None
         #except

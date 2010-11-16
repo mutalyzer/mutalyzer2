@@ -613,7 +613,7 @@ def __toProtDescr(CDSStop, orig, trans) :
         ret = findFrameShift(str(orig), str(trans))
     else :
         ret = findInFrameDescription(str(orig), str(trans))
-    if str(orig[0]) != str(trans[0]) :         # Mutation in start codon.
+    if not trans or str(orig[0]) != str(trans[0]) : # Mutation in start codon.
         return ("p.?", ret[1], ret[2], ret[3])
     return ret
 #__toProtDescr
@@ -1143,10 +1143,18 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                            GenRecordInstance, O)
             return
         #if
+        if len(Arg2) != len(ins_part) :
+            O.addMessage(__file__, 2, "WNOTMINIMAL", 
+                "Sequence \"%s\" at position %i_%i has the same prefix or " \
+                "suffix as the inserted sequence \"%s\". The HGVS notation " \
+                "prescribes that it should be \"%s\" at position %i_%i." % (
+                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])), 
+                start_g, end_g, Arg2, ins_part, start_g + lcp, end_g - lcs))
 
         MUU.delinsM(start_g + lcp, end_g - lcs, ins_part)
 
-        GenRecordInstance.name(start_g, end_g, "delins", ins_part, "", None)
+        GenRecordInstance.name(start_g + lcp, end_g - lcs, "delins", ins_part,
+            "", None)
     #if
 #__rv
 
