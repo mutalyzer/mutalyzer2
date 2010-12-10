@@ -113,6 +113,8 @@ def main(LOVD_ver, build, acc, var) :
     #   CDS stop in c. notation.
     if var :
         ret = Converter.mainMapping(acc, var)
+        #for i in Converter.crossmap.RNA :
+        #    print i, Converter.crossmap.g2c(i)
     else :
         ret = Converter.giveInfo(acc)
         if ret:

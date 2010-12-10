@@ -1,0 +1,114 @@
+% LUMC presentation template by J. F. J. Laros.
+% Last alteration on 15-10-2009.
+%
+% The packages texlive-latex-recommended, texlive-latex-base and
+%   texlive-latex-extra should be installed.
+%
+
+% Alter these four lines for a new presentation.
+\providecommand{\me}{Jeroen F. J. Laros}
+\providecommand{\myTitle}{Testing LaTeX slides}
+\providecommand{\myConference}{Work discussion}
+\providecommand{\myDate}{Tuesday, 7 July 2009}
+
+% Now go to %%% BEGIN PRESENTATION %%%
+
+\documentclass[a4, portrait]{seminar}
+
+\usepackage{semcolor} % For coloured text.
+\usepackage{slidesec} % For section headings.
+\usepackage{newcent}  % This is a better font for presentations.
+\input{seminar.bug}
+
+\usepackage{graphicx} % For pictures.
+\usepackage{fancybox} % For the background picture.
+
+\definecolor{Blue}{rgb}{0.,0.11372,0.37647} % Custom LUMC color
+
+\renewcommand{\labelitemi}{\textcolor{white}{$\bullet$}} % Make the bullets for
+\renewcommand{\labelitemii}{\textcolor{white}{--}}       % itemising white.
+\renewcommand{\labelitemiii}{\textcolor{white}{$\ast$}}
+\renewcommand{\labelitemiv}{\textcolor{white}{$\circ$}}
+\renewcommand{\labelenumi}{\textcolor{white}{\arabic{enumi}.}}
+
+\newslideframe{TITLE}{ % Template for the title.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg}}
+  }{#1}
+}
+
+\newslideframe{PRES}{ % Template for the body.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg2}}
+  }{
+    \textcolor{Blue}{
+    \rput[l]{90}(8.57, -1.5){\scriptsize{\myConference}} 
+    \rput[c]{90}(8.57, 5.35){\scriptsize{\theslide/\pageref{LastPage}}}
+    \rput[r]{90}(8.57, 12.2){\scriptsize{\myDate}}
+    }
+    \white #1
+  }
+}
+
+\renewcommand{\makeslideheading}[1]{ % Put the slide headings on top.
+  \rput[l](0.2, .40){
+      \textbf{
+        \textcolor{Blue}{#1}
+    }
+  }
+  \newline
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\slideframe{TITLE} % Use the title template.
+
+\begin{slide}
+  \setcounter{slide}{0}
+  \vspace*{1.5cm}
+  \begin{center}
+    {\bf\Large{\myTitle}}\\
+    \vfill
+    \textcolor{Blue}{
+      {\bf
+        \small{\me}\\
+        \small{Department of Human Genetics}\\
+        \small{Center for Human and Clinical Genetics}
+      }
+    }
+    \vspace{1.1cm}
+  \end{center}
+\end{slide}
+
+\slideframe{PRES} % Use the body template.
+
+%%% BEGIN PRESENTATION %%%
+
+\begin{slide}
+  \slideheading{Topic 1}
+  Text goes here...
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Topic 1}
+  And more text..
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Topic 2}
+  And yet more text..
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \rput(11.4,0.6){\includegraphics[scale=0.1]{Gen2Phen}}
+  \slideheading{Questions?}
+  \vfill
+  \label{LastPage}
+\end{slide}
+
+\end{document}

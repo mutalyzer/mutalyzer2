@@ -1,0 +1,29 @@
+## Installation ##
+#
+The packages texlive-base-bin, texlive-latex-base, texlive-latex-recommended, 
+texlive-latex-extra, texlive-fonts-recommended and ghostscript should be
+installed.
+
+We assume that you have a directory where you want to make your presentations,
+in this directory the template directory `skel' should contain all the template
+files.
+
+
+## Making a new presentation ##
+#
+To make a new presentation, create an empty directory in the presentations
+directory, let's say newpresentation. Now do:
+---
+cd newpresentation
+sh ../skel/mkpres.sh
+---
+
+## Compiling ##
+#
+Edit presentation.tex..
+
+To make a postscript file, type `make'.
+For a pdf, type `make release' (this will also throw away all temporary files).
+To clean everything except the ps and pdf files, type `make clean'.
+To clean everything, type `make distclean' (of course the source will not be
+  thrown away).

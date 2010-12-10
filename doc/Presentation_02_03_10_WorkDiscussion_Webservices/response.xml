@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope 
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <sayHelloResponse id="o91eecf0" xsi:type="xsd:string">
+      Hello MyName Hello MyName Hello MyName Hello MyName Hello MyName Hello MyName Hello MyName Hello MyName Hello MyName Hello MyName  
+    </sayHelloResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

@@ -34,7 +34,7 @@ Subst & $\rightarrow$ & PtLoc Nt `$>$' Nt\\
 Del & $\rightarrow$ & Loc `del' (Nt$^+$ $|$ Number)?\\
 Dup & $\rightarrow$ & Loc `dup' (Nt$^+$ $|$ Number)? Nest?\\
 AbrSSR & $\rightarrow$ & PtLoc  Nt$^+$ `(' Number `\_' Number `)'\\
-VarSSR & $\rightarrow$ & (PtLoc  Nt$^+$ `[' Number `]') $|$ (RangeLoc `[' Number `]') \\
+VarSSR & $\rightarrow$ & (PtLoc  Nt$^+$ `[' Number `]') $|$ (RangeLoc `[' Number `]') $|$ AbrSSR\\
 Ins & $\rightarrow$ & RangeLoc `ins' (Nt$^+$ $|$ Number $|$ RangeLoc $|$ FarLoc) Nest?\\
 Indel & $\rightarrow$ & RangeLoc `del' (Nt$^+$ $|$ Number)? `ins' (Nt$^+$ $|$ Number $|$ RangeLoc $|$ FarLoc) Nest?\\
 Inv & $\rightarrow$ & RangeLoc `inv' (Nt$^+$ $|$ Number)? Nest?\\

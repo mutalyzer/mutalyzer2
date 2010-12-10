@@ -482,7 +482,7 @@ class Scheduler() :
                 # other affected coding variants.
                 if variant and ":g." in variant:
                     # Do the chrom2c dance
-                    variants = converter.chrom2c(variant)
+                    variants = converter.chrom2c(variant, "dict")
                     if variants:
                         gName = variant
                         # Due to the cyclic behavior of the Position Converter

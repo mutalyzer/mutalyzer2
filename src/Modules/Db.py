@@ -310,6 +310,36 @@ class Mapping(Db) :
         return self.query(statement)
     #get_Transcripts
 
+    def get_TranscriptsByGeneName(self, geneName) :
+        """
+            Get a list of transcripts, given a gene name.
+
+            Arguments:
+                geneName ; Name of a gene.
+
+            SQL tables from dbNames:
+                map ; Accumulated mapping info.
+
+            Returns:
+                list ; A list of transcripts.
+        """
+
+        statement = """
+            SELECT acc, version
+                FROM map
+                WHERE geneName = %s;
+        """, geneName
+
+        ret = self.query(statement)
+        if ret :
+            l = []
+            for i in ret :
+                l.append(i[0] + '.' + str(i[1]))
+            return l
+        #if
+        return []
+    #get_TranscriptsByGeneName
+
     def get_GeneName(self, mrnaAcc) :
         """
             Get the name of a gene, given a transcript identifier (NM number).

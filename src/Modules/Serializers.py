@@ -120,6 +120,20 @@ class MutalyzerOutput(ClassSerializer) :
 
         original = String
         mutated = String
+
+        origMRNA = String
+        mutatedMRNA= String
+
+        origCDS = String
+        newCDS= String
+
+        origProtein = String
+        newProtein = String
+        altProtein = String
+
+        errors = Integer
+        warnings = Integer
+        summary = String
     #types
 
     def __init__(self) :
@@ -128,7 +142,21 @@ class MutalyzerOutput(ClassSerializer) :
 
         self.typecode = TC.Struct(MutalyzerOutput, [
             TC.String('original'),
-            TC.String('mutated')
+            TC.String('mutated'),
+
+            TC.String('origMRNA'),
+            TC.String('mutatedMRNA'),
+
+            TC.String('origCDS'),
+            TC.String('newCDS'),
+
+            TC.String('origProtein'),
+            TC.String('newProtein'),
+            TC.String('altProtein'),
+
+            TC.Integer('errors'),
+            TC.Integer('warnings'),
+            TC.String('summary')
             ], 'MutalyzerOutput')
     #__init__
 #MutalyzerOutput

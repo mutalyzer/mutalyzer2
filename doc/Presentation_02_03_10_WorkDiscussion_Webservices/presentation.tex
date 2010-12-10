@@ -1,0 +1,311 @@
+% LUMC presentation template by J. F. J. Laros.
+% Last alteration on 15-10-2009.
+%
+% The packages texlive-latex-recommended, texlive-latex-base and
+%   texlive-latex-extra should be installed.
+%
+
+% Alter these four lines for a new presentation.
+\providecommand{\me}{Jeroen F. J. Laros}
+\providecommand{\myTitle}{Mutalyzer webservices}
+\providecommand{\myConference}{Work discussion}
+\providecommand{\myDate}{Tuesday, 2 March 2010}
+
+% Now go to %%% BEGIN PRESENTATION %%%
+
+\documentclass[a4, portrait]{seminar}
+
+\usepackage{semcolor} % For coloured text.
+\usepackage{slidesec} % For section headings.
+\usepackage{newcent}  % This is a better font for presentations.
+\input{seminar.bug}
+
+\usepackage{graphicx} % For pictures.
+\usepackage{fancybox} % For the background picture.
+
+\definecolor{Blue}{rgb}{0.,0.11372,0.37647} % Custom LUMC color
+
+\renewcommand{\labelitemi}{\textcolor{white}{$\bullet$}} % Make the bullets for
+\renewcommand{\labelitemii}{\textcolor{white}{--}}       % itemising white.
+\renewcommand{\labelitemiii}{\textcolor{white}{$\ast$}}
+\renewcommand{\labelitemiv}{\textcolor{white}{$\circ$}}
+
+\newslideframe{TITLE}{ % Template for the title.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg}}
+  }{#1}
+}
+
+\newslideframe{PRES}{ % Template for the body.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg2}}
+  }{
+    \textcolor{Blue}{
+    \rput[l]{90}(8.57, -1.5){\scriptsize{\myConference}} 
+    \rput[c]{90}(8.57, 5.35){\scriptsize{\theslide/\pageref{LastPage}}}
+    \rput[r]{90}(8.57, 12.2){\scriptsize{\myDate}}
+    }
+    \white #1
+  }
+}
+
+\renewcommand{\makeslideheading}[1]{ % Put the slide headings on top.
+  \rput[l](0.2, .40){
+      \textbf{
+        \textcolor{Blue}{#1}
+    }
+  }
+  \newline
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\slideframe{TITLE} % Use the title template.
+
+\begin{slide}
+\setcounter{slide}{0}
+\vspace*{1.5cm}
+\begin{center}
+{\bf\Large{\myTitle}}\\
+\vfill
+\textcolor{Blue}{
+  {\bf
+    \small{\me}\\
+    \small{Department of Human Genetics}\\
+    \small{Center for Human and Clinical Genetics}
+  }
+}
+\vspace{1.1cm}
+\end{center}
+\end{slide}
+
+\slideframe{PRES} % Use the body template.
+
+%%% BEGIN PRESENTATION %%%
+
+\begin{slide}
+\slideheading{Mutalyzer 2.0$\alpha$}
+Short description of the Mutalyzer suite.
+\vspace{1cm}
+\begin{itemize}
+\item Mutation nomenclature checker.
+\item Both syntactically as well as semantically.
+\item Syntactic checking is completed (context free parser).
+\item Semantic checking is almost completed for single mutation variants.
+\item For semantic checking, the reference sequence must be examined to see if
+     the variant description makes sense.
+\end{itemize}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Mutalyzer 2.0$\alpha$}
+The Mutalyzer project consists of a number of core modules (most of them are
+finished and fully documented).
+
+\begin{tabular}{l|l}
+Name      & Description\\
+\hline
+Config    & Interface to the configuration variables.\\
+Crossmap  & Convert genomic coordinates to CDS orientated ones.\\
+Db        & Interface to the gathered mapping data from the UCSC.\\
+GenRecord & GenBank file parser.\\
+Mutator   & Sequence mutator (keeps track of shifts of positions).\\
+Output    & Output and logging.\\
+Parser    & The nomenclature parser.\\
+Retriever & Interface for retrieving GenBank files and caching them.\\
+Web       & General functions used for web development.\\
+\end{tabular}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Mutalyzer 2.0$\alpha$}
+The modules can be combined to make different applications:
+
+\vspace{.5cm}
+\begin{tabular}{l|l}
+Program       & Built from\\
+\hline
+Mutalyzer     & Uses all modules.\\
+UCSC\_update  & Config, Db, Output.\\
+Variant\_info & Config, Db, Output, Crossmap, Parser.\\
+\end{tabular}
+
+\vspace{1cm}
+The {\tt UCSC\_update} program gathers mapping information from the UCSC and
+combines it with previously gathered information.
+
+The {\tt Variant\_info} program extracts positions from a variant description 
+and converts the positions to genomic locations and vice versa.
+
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Mutalyzer 2.0$\alpha$}
+There are several interfaces for the modules, most of them are complete
+programs with one specific purpose. Webservices form an exception.
+
+\vspace{.5cm}
+\begin{itemize}
+\item Command line.
+\item Web interface ({\tt Variant\_info} and {\tt Mutalyzer}).
+\item Webservices.
+\end{itemize}
+
+\vspace{1cm}
+Command line interfaces consist of unit tests for the modules, as well as 
+shell versions of the web interfaces (for development and testing).
+
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Life without webservices}
+Example: Get the first hit in google:
+\begin{itemize}
+\item Figure out what the server expects.
+\item {\tt http://www.google.com/\#q=test}
+\item Parse the resulting HTML file.
+\end{itemize}
+
+Disadvantages:
+\begin{itemize}
+\item The communication variables can change ({\tt q} changes to {\tt query}).
+\item The resulting HTML file can change.
+\end{itemize}
+
+Conclusions:
+\begin{itemize}
+\item Requires quite some expertise to set up.
+\item Requires a lot of maintenance.
+\end{itemize}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{SOAP webservices}
+Characteristics of the SOAP webservice:
+
+\begin{itemize}
+\item Communication XML/RPC over HTTP (not necessarily over port 80).
+\item Description of the interface is machine readable.
+\end{itemize}
+
+Communication over HTTP is essential for us (firewall etc.).
+
+\vspace{.5cm}
+Because the description of the interface is machine readable: 
+\begin{itemize}
+\item The communication protocol can be abstracted.
+\begin{itemize}
+\item The actual communication can change without the client being aware of it.
+\item Functions can be added without a need for the client to update.
+\end{itemize}
+\end{itemize}
+
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{SOAP webservices}
+\scalebox{0.55}{
+\hspace{1.4cm} \input{setup.pstex_t}
+}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{SOAP webservices}
+\vspace{1.5cm}
+\begin{itemize}
+\item The transport/communications layer is completely hidden from both the
+      client as well as the server.
+\item Exported functions are normal local functions on the server side (makes
+      testing easy).
+\item The client sees the functions as local functions (not different from
+      functions included from a library).
+\end{itemize}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{An example}
+Server side:
+\begin{verbatim}
+@soapmethod(String, Integer, _returns = String)
+def sayHello(name, times) :
+    return ("Hello " + name + ' ') * times
+\end{verbatim}
+
+Client side:
+\begin{verbatim}
+from SOAPpy import WSDL
+service = WSDL.Proxy("http://path_to_wsdl.wsdl")
+print service.sayHello("MyName", 10)
+\end{verbatim}
+
+\vspace{.5cm}
+Local function (for comparison):
+\begin{verbatim}
+from Bio import pairwise2
+print pairwise2.align("AAAATT", "AATAA")
+\end{verbatim}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Demo}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Discovery}
+\begin{itemize}
+\item The client object has a standard function that gives a list of function
+      names and a description of the parameters.
+\item The WSDL file also contains full documentation (defined on the server). 
+\item We also generate documentation from the source code on the website.
+\item Tools for viewing the WSDL are also available.
+\end{itemize}
+
+\vspace{.5cm}
+\begin{verbatim}
+from SOAPpy import WSDL
+service = WSDL.Proxy("http://path_to_wsdl.wsdl")
+print service.show_methods()
+\end{verbatim}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Implemented services}
+\vspace{1cm}
+
+\begin{tabular}{lp{7.5cm}}
+getTranscripts      & Get a list of transcripts, given a chromosome and a 
+                      position.\\
+getTranscriptsRange & Get a list of transcripts, given a chromosome and a 
+                      range.\\
+getGeneName         & Get the gene name of a transcript.\\
+varInfo             & LOVD interface.\\
+\end{tabular}
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Demo}
+\vfill
+\end{slide}
+
+\begin{slide}
+\rput(11.4,0.6){\includegraphics[scale=0.1]{Gen2Phen}}
+\slideheading{Questions?}
+\vfill
+\label{LastPage}
+\end{slide}
+
+\end{document}

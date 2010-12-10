@@ -1034,40 +1034,47 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             start_g, end_g = end_g, start_g
     #if
     else :
-        if RawVar.StartLoc.IVSLoc :
-            if GenRecordInstance.record.molType != 'g' :
-                O.addMessage(__file__, 3, "ENOINTRON", "Intronic position " \
-                    "given for a non-genomic reference sequence.")
-                return
-            start_g = __ivs2g(RawVar.StartLoc.IVSLoc, transcript)
-            if not start_g :
-                O.addMessage(__file__, 3, "EPOS", "Invalid IVS position given.")
-                return
+        if RawVar.StartLoc :
+            if RawVar.StartLoc.IVSLoc :
+                if GenRecordInstance.record.molType != 'g' :
+                    O.addMessage(__file__, 3, "ENOINTRON", "Intronic " \
+                        "position given for a non-genomic reference sequence.")
+                    return
+                start_g = __ivs2g(RawVar.StartLoc.IVSLoc, transcript)
+                if not start_g :
+                    O.addMessage(__file__, 3, "EPOS", 
+                        "Invalid IVS position given.")
+                    return
+                #if
+                end_g = start_g
+                if RawVar.EndLoc and RawVar.EndLoc.IVSLoc : # FIXME
+                    end_g = __ivs2g(RawVar.EndLoc.IVSLoc, transcript)
+                    if end_g < start_g :
+                        start_g, end_g = end_g, start_g
+                #if
             #if
-            end_g = start_g
-            if RawVar.EndLoc and RawVar.EndLoc.IVSLoc : # FIXME
-                end_g = __ivs2g(RawVar.EndLoc.IVSLoc, transcript)
-                if end_g < start_g :
-                    start_g, end_g = end_g, start_g
-            #if
+            else :
+                if GenRecordInstance.record.molType != 'g' and \
+                   (__intronicPosition(RawVar.StartLoc) or
+                    __intronicPosition(RawVar.EndLoc)) :
+                    O.addMessage(__file__, 3, "ENOINTRON", "Intronic " \
+                        "position given for a non-genomic reference sequence.")
+                    return
+                start_g, end_g = __normal2g(RawVar, transcript)
+                if not start_g :
+                    O.addMessage(__file__, 3, "ESPLICE", "Invalid intronic " \
+                        "position given.")
+                    return
+            #else
         #if
         else :
-            if GenRecordInstance.record.molType != 'g' and \
-               (__intronicPosition(RawVar.StartLoc) or
-                __intronicPosition(RawVar.EndLoc)) :
-                O.addMessage(__file__, 3, "ENOINTRON", "Intronic position " \
-                    "given for a non-genomic reference sequence.")
-                return
-            start_g, end_g = __normal2g(RawVar, transcript)
-            if not start_g :
-                O.addMessage(__file__, 3, "ESPLICE", "Invalid intronic " \
-                    "position given.")
-                return
+            O.addMessage(__file__, 4, "EUNKNOWN", "An unknown error occurred.")
+            return
         #else
     #else
     if end_g < start_g :
         O.addMessage(__file__, 3, "ERANGE", "End position is smaller than " \
-                    "the begin position.")
+                     "the begin position.")
         return
     #if
 
@@ -1259,6 +1266,13 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         if W.transcribe :
             O.addOutput("myTranscriptDescription", W.description)
 
+            O.addOutput("origMRNA", 
+                str(__splice(MUU.orig, W.mRNA.positionList)))
+            O.addOutput("mutatedMRNA", 
+                str(__splice(MUU.mutated, MUU.newSplice(W.mRNA.positionList))))
+        #if
+
+
         if W.translate :
             cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)),
                       IUPAC.unambiguous_dna)
@@ -1267,6 +1281,8 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                                      MUU.newSplice(W.CDS.location),
                                      W.CM.orientation)),
                        IUPAC.unambiguous_dna)
+            O.addOutput("origCDS", cds)
+
             if W.CM.orientation == -1 :
                 cds = Bio.Seq.reverse_complement(cds)
                 cdsm = Bio.Seq.reverse_complement(cdsm)
@@ -1279,6 +1295,7 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
             orig = cds.translate(table = W.txTable, to_stop = True)
             O.addOutput("oldprotein", orig + '*')
             trans = cdsm.translate(table = W.txTable, to_stop = True)
+            O.addOutput("newCDS", cdsm[:(len(str(trans)) + 1) * 3])
 
             if not trans or trans[0] != 'M' :
                 __bprint(orig + '*', O, "oldProteinFancy")
@@ -1405,8 +1422,13 @@ def process(cmd, C, O) :
                 ##if
 
                 if not len(cds) % 3 :
-                    orig = cds.translate(table = j.txTable, cds = True,
-                        to_stop = True)
+                    try : # FIXME this is a bit of a rancid fix.
+                        orig = cds.translate(table = j.txTable, cds = True,
+                            to_stop = True)
+                    except Bio.Data.CodonTable.TranslationError :
+                        O.addMessage(__file__, 4, "ETRANS", "Original " \
+                            "CDS could not be translated.")
+                        return GenRecordInstance
                     trans = cdsm.translate(table = j.txTable,
                         to_stop = True)
 

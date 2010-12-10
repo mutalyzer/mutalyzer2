@@ -221,9 +221,13 @@ class Converter(object):
                 Mapping ; A ClassSerializer object.
         '''
         Cross = self.makeCrossmap()
-        if not Cross: return None
+        if not Cross : 
+            return None
 
         mutation = self.parseTree.RawVar
+
+        if not mutation.StartLoc :
+            return None
 
         # Get the coordinates of the start position
         startmain, startoffset, start_g = \
@@ -366,7 +370,7 @@ class Converter(object):
                 variant = "%s:%s" % (chrom, postco)
         return variant
 
-    def chrom2c(self, variant):
+    def chrom2c(self, variant, rt):
         if not self._parseInput(variant):
              return None
 
@@ -391,6 +395,7 @@ class Converter(object):
                 chrom, loc-5000, loc2+5000, 1)
 
         HGVS_notatations = defaultdict(list)
+        NM_list = []
         for transcript in transcripts:
             self._reset()
             self._FieldsFromValues(transcript)
@@ -425,8 +430,11 @@ class Converter(object):
 
             variant = "%s:%c.%s%s" % (accNo, mtype, loca, change)
             HGVS_notatations[geneName].append(variant)
+            NM_list.append(variant)
+        #for
+        if rt == "list" :
+            return NM_list
         return HGVS_notatations
-
     #chrom2c
 
     def _constructChange(self, revc=False):

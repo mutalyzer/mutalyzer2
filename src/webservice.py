@@ -19,6 +19,7 @@ from Modules import Output
 from Modules import Config
 from Modules import Parser
 from Modules import Mapper
+from Modules import Retriever
 from Modules.Serializers import SoapMessage, Mapping, Transcript, \
                                 MutalyzerOutput
 
@@ -181,6 +182,30 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del D, L, C
         return [ret]
     #getTranscripts
+
+    @soapmethod(String, String, _returns = Array(String))
+    def getTranscriptsByGeneName(self, build, name) :
+        """
+            blabla
+        """
+
+        C = Config.Config()
+        L = Output.Output(__file__, C.Output)
+
+        L.addMessage(__file__, -1, "INFO",
+                     "Received request getTranscriptsByGene(%s %s)" % (build,
+                     name))
+
+        self.__checkBuild(build, C.Db)
+        D = Db.Mapping(build, C.Db)
+
+        ret = D.get_TranscriptsByGeneName(name)
+
+        L.addMessage(__file__, -1, "INFO",
+                     "Finished processing getTranscriptsByGene(%s %s)" % (
+                     build, name))
+        return [ret]
+    #getTranscriptsByGene
 
     @soapmethod(String, String, Integer, Integer, Integer,
                 _returns = Array(String))
@@ -477,7 +502,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         if "c." in variant :
             result = [converter.c2chrom(variant)]
         elif "g." in variant :
-            result = converter.chrom2c(variant)
+            result = converter.chrom2c(variant, "list")
         else:
             result = [""]
 
@@ -523,10 +548,40 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request runMutalyzer(%s)" % (variant))
         Mutalyzer.process(variant, C, L)                     
         M = MutalyzerOutput()
+
         M.original = L.getIndexedOutput("original", 0)
         M.mutated = L.getIndexedOutput("mutated", 0)
+
+        M.origMRNA = L.getIndexedOutput("origMRNA", 0)
+        M.mutatedMRNA = L.getIndexedOutput("mutatedMRNA", 0)
+
+        M.origCDS = L.getIndexedOutput("origCDS", 0)
+        M.newCDS = L.getIndexedOutput("newCDS", 0)
+
+        M.origProtein = L.getIndexedOutput("oldprotein", 0)
+        M.newProtein = L.getIndexedOutput("newprotein", 0)
+        M.altProtein = L.getIndexedOutput("altProtein", 0)
+
+        M.errors, M.warnings, M.summary = L.Summary()
+
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing runMutalyzer(%s)" % (variant))
         return M
     #runMutalyzer
+
+    @soapmethod(String, String, _returns = String)
+    def getGeneAndTranscipt(self, genomicReference, transcriptReference) :
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        D = Db.Cache(C.Db)
+
+        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        record = retriever.loadrecord(genomicReference)
+
+        for i in record.geneList :
+            for j in i.transcriptList :
+                if j.transcriptID == transcriptReference :
+                    return "%s_v%s" % (i.name, j.name)
+        return None
+    #getGeneAndTranscipt
 #MutalyzerService

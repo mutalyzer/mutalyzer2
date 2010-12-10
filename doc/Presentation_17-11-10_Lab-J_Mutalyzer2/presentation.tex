@@ -1,0 +1,559 @@
+% LUMC presentation template by J. F. J. Laros.
+% Last alteration on 15-10-2009.
+%
+% The packages texlive-latex-recommended, texlive-latex-base and
+%   texlive-latex-extra should be installed.
+%
+
+% Alter these four lines for a new presentation.
+\providecommand{\me}{Jeroen F. J. Laros}
+\providecommand{\myTitle}{Mutalyzer 2.0}
+\providecommand{\myConference}{Work discussion}
+\providecommand{\myDate}{Wednesday, 17 November 2010}
+
+% Now go to %%% BEGIN PRESENTATION %%%
+
+\documentclass[a4, portrait]{seminar}
+
+\usepackage{semcolor} % For coloured text.
+\usepackage{slidesec} % For section headings.
+\usepackage{newcent}  % This is a better font for presentations.
+\input{seminar.bug}
+
+\usepackage{graphicx} % For pictures.
+\usepackage{fancybox} % For the background picture.
+
+\definecolor{Blue}{rgb}{0.,0.11372,0.37647} % Custom LUMC color
+
+\renewcommand{\labelitemi}{\textcolor{white}{$\bullet$}} % Make the bullets for
+\renewcommand{\labelitemii}{\textcolor{white}{--}}       % itemising white.
+\renewcommand{\labelitemiii}{\textcolor{white}{$\ast$}}
+\renewcommand{\labelitemiv}{\textcolor{white}{$\circ$}}
+\renewcommand{\labelenumi}{\textcolor{white}{\arabic{enumi}.}}
+
+\newslideframe{TITLE}{ % Template for the title.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg}}
+  }{#1}
+}
+
+\newslideframe{PRES}{ % Template for the body.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg2}}
+  }{
+    \textcolor{Blue}{
+      \rput[l]{90}(8.57, -1.5){\scriptsize{\myConference}} 
+      \rput[c]{90}(8.57, 5.35){\scriptsize{\theslide/\pageref{LastPage}}}
+      \rput[r]{90}(8.57, 12.2){\scriptsize{\myDate}}
+    }
+    \white #1
+  }
+}
+
+\renewcommand{\makeslideheading}[1]{ % Put the slide headings on top.
+  \rput[l](0.2, .40){
+      \textbf{
+        \textcolor{Blue}{#1}
+    }
+  }
+  \newline
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\slideframe{TITLE} % Use the title template.
+
+\begin{slide}
+  \setcounter{slide}{0}
+  \vspace*{1.5cm}
+  \begin{center}
+  {\bf\Large{\myTitle}}\\
+  \vfill
+  \textcolor{Blue}{
+    {\bf
+      \small{\me}\\
+      \small{Department of Human Genetics}\\
+      \small{Center for Human and Clinical Genetics}
+    }
+  }
+  \vspace{1.1cm}
+  \end{center}
+\end{slide}
+
+\slideframe{PRES} % Use the body template.
+
+%%% BEGIN PRESENTATION %%%
+
+\begin{slide}
+  \slideheading{Introduction}
+  
+  A curational tool for \emph{Locus Specific Mutation Databases} (LSDBs).
+  
+  \bigskip
+  \begin{itemize}
+    \item Variant nomenclature checker applying \emph{Human Genome Variation
+          Society} (HGVS) guidelines.
+    \item Position conversion.
+    \begin{itemize}
+      \item Genomic to transcript coordinates and vice versa.
+      \item World Wide Querying Service in LOVD~2.0.
+      \item Descriptions on multiple transcripts in LOVD~3.0.
+    \end{itemize}
+    \item Gives information about affected proteins.
+    \item \ldots
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature}
+
+    Genomic orientated:
+    \begin{center}
+      \texttt{AL449423.14:g.[65449\_65463del;65564\yellow T\white 
+              >\yellow C\white]}
+    \end{center}
+    \bigskip
+    Transcript orientated:
+    \begin{center}
+      \texttt{AL449423.14(CDKN2A\_v001):c.[5\yellow A\white >\yellow G\white
+              ;106\_120del]}
+    \end{center}
+    \bigskip
+    \begin{itemize}
+      \item \texttt{AL449423.14} -- reference sequence.
+      \item \texttt{CDKN2A\_v001}$\;$ -- transcript variant $1$ of gene CDKN2A.
+      \item \texttt{c.[5\yellow A\white >\yellow G\white ;106\_120del]} 
+      \begin{itemize}
+        \item A \emph{substitution} at position $5$ counting from the start
+              codon.
+        \item A \emph{deletion} from position $106$ to position $120$.
+      \end{itemize}
+    \end{itemize}
+  
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: disambiguation}
+  
+  We observe a change from \texttt{ggatcatcg} to \texttt{ggatcatcatcg}.
+
+  \begin{center}
+    \texttt{\,123456789}
+    \vspace{-0.3cm}
+
+    \texttt{ggatcatcg}
+
+    \begin{picture}(0, 0)(0, 0)
+      \put(-15.6, 5){\vector(0, 1){10}}
+      % \put(-9.5, 5){\vector(0, 1){10}}
+      % \put(-3.7, 5){\vector(0, 1){10}}
+      \put(2.5, 5){\vector(0, 1){10}}
+      % \put(8.8, 5){\vector(0, 1){10}}
+      % \put(15.1, 5){\vector(0, 1){10}}
+      \put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  Which can be described as an insertion of \texttt{atc} at three places:
+  \begin{itemize}
+    \item \texttt{g.2\_3ins\yellow atc\white}
+    \item \texttt{g.5\_6ins\yellow atc\white}
+    \item \texttt{g.8\_9ins\yellow atc\white}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: disambiguation}
+  
+  We observe a change from \texttt{ggatcatcg} to \texttt{ggatcatcatcg}.
+
+  \begin{center}
+    \texttt{\,123456789}
+    \vspace{-0.3cm}
+
+    \texttt{ggatcatcg}
+
+    \begin{picture}(0, 0)(0, 0)
+      % \put(-15.6, 5){\vector(0, 1){10}}
+      \put(-9.5, 5){\vector(0, 1){10}}
+      % \put(-3.7, 5){\vector(0, 1){10}}
+      % \put(2.5, 5){\vector(0, 1){10}}
+      \put(8.8, 5){\vector(0, 1){10}}
+      % \put(15.1, 5){\vector(0, 1){10}}
+      % \put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  \ldots or an insertion of \texttt{tca} at two places:
+  \begin{itemize}
+    \item \texttt{g.3\_4ins\yellow tca\white}
+    \item \texttt{g.6\_7ins\yellow tca\white}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: disambiguation}
+  
+  We observe a change from \texttt{ggatcatcg} to \texttt{ggatcatcatcg}.
+
+  \begin{center}
+    \texttt{\,123456789}
+    \vspace{-0.3cm}
+
+    \texttt{ggatcatcg}
+
+    \begin{picture}(0, 0)(0, 0)
+      % \put(-15.6, 5){\vector(0, 1){10}}
+      % \put(-9.5, 5){\vector(0, 1){10}}
+      \put(-3.7, 5){\vector(0, 1){10}}
+      % \put(2.5, 5){\vector(0, 1){10}}
+      % \put(8.8, 5){\vector(0, 1){10}}
+      \put(15.1, 5){\vector(0, 1){10}}
+      %\put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  \ldots or an insertion of \texttt{cat} at two places:
+  \begin{itemize}
+    \item \texttt{g.4\_5ins\yellow cat\white}
+    \item \texttt{g.7\_8ins\yellow cat\white}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: disambiguation}
+  
+  We observe a change from \texttt{ggatcatcg} to \texttt{ggatcatcatcg}.
+
+  \begin{center}
+    \texttt{\,123456789}
+    \vspace{-0.3cm}
+
+    \texttt{ggatcatcg}
+
+    \begin{picture}(0, 0)(0, 0)
+      % \put(-15.6, 5){\vector(0, 1){10}}
+      % \put(-9.5, 5){\vector(0, 1){10}}
+      % \put(-3.7, 5){\vector(0, 1){10}}
+      % \put(2.5, 5){\vector(0, 1){10}}
+      % \put(8.8, 5){\vector(0, 1){10}}
+      % \put(15.1, 5){\vector(0, 1){10}}
+      \put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  The only correct one is the one on the 5' end.
+  \begin{itemize}
+    \item \texttt{g.8\_9ins\yellow atc\white}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: disambiguation}
+  
+  We observe a change from \texttt{gctccggccagg} to \texttt{gctggccggagg}.
+
+  \begin{center}
+    \texttt{\,\ \ \ \ \ \ \ \ \ 111}
+    \vspace{-0.3cm}
+
+    \texttt{\,\,123456789012}
+    \vspace{-0.3cm}
+
+    \texttt{g\yellow \underline{ctccggccag}\white g}
+  \end{center}
+
+  We can describe it as follows:
+  \begin{itemize}
+    \item \texttt{g.2\_11inv}
+    \item \texttt{g.4\_9delins\yellow GGCCGG\white}
+  \end{itemize}
+  \begin{center}
+    \texttt{\,\ \ \ \ \ \ \ \ \ 111}
+    \vspace{-0.3cm}
+
+    \texttt{\,\,123456789012}
+    \vspace{-0.3cm}
+
+    \texttt{gct\yellow \underline{ccggcc}\white agg}
+  \end{center}
+
+  But the correct way is:
+  \begin{itemize}
+    \item \texttt{g.4\_9inv}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: correction}
+
+  Other pitfalls:
+  \begin{itemize}
+    \item A deletion-insertion can actually be:
+    \begin{tabular}{llll}
+      --\, An inversion & \texttt{2\_3del\yellow AC\white ins\yellow GT\white}
+        & $\Rightarrow$ & \texttt{2\_3inv}\\
+      --\, An insertion & \texttt{2del\yellow T\white ins\yellow TAA\white}
+        & $\Rightarrow$ & \texttt{2\_3ins\yellow AA\white}\\
+      --\, A substitution & \texttt{2del\yellow A\white ins\yellow T\white} 
+        & $\Rightarrow$ & \texttt{2\yellow A\white >\yellow T\white}\\
+      --\, A deletion & \texttt{2\_3del\yellow TA\white ins\yellow A\white}
+        & $\Rightarrow$ & \texttt{2del}\\
+    \end{tabular}
+    \item An inversion can actually be a substitution.
+    \item An insertion can actually be a duplication.
+    \item A variant can have no effect (\texttt{2\_5inv\yellow ACGT\white},
+          \texttt{2\yellow A\white >\yellow A\white}, etc.).
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: workflow}
+
+  \begin{center}
+    \texttt{NM\_002001.2:c.[12\_14del;102\yellow G\white >\yellow T\white]}
+  \end{center}
+  \begin{enumerate}
+    \item Parse the variant description (previous presentation).
+    \begin{itemize}
+      \item Reference sequence e.g., \texttt{NM\_002001.2}.
+      \item Coordinate system (\texttt{c.}, \texttt{g.}, \texttt{n.}, \ldots).
+      \item List of variants (\texttt{12\_14del}, 
+            \texttt{102\yellow G\white >\yellow T\white}).
+    \end{itemize}
+    \item Download the reference sequence.
+    \item Check the variants to the reference sequence.
+    \begin{itemize}
+      \item Is there an \texttt{G} at position \texttt{c.102}?
+    \end{itemize}
+    \item Mutate the reference sequence.
+    \item Predict the variant protein when applicable.
+    \item \ldots
+  \end{enumerate}
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Name checker}
+
+  After a description is checked, other useful information is returned.
+  \begin{itemize}
+    \item Overview of the change on DNA level.
+    \item A genomic description.
+    \item A description on all affected transcripts.
+    \item Description of affected proteins.
+    \item Visualisation of the original and affected protein with changes 
+          highlighted.
+    \item Exon and CDS start / stop information.
+    \item Effects on restriction sites.
+  \end{itemize}
+
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Name checker: demo}
+
+  \bigskip
+  \bigskip
+  \bigskip
+  \bigskip
+  \bigskip
+  \begin{center}
+    \texttt{AL449423.14(CDKN2A\_v001):c.247\_250delinsCTTT}
+
+    \bigskip
+    \texttt{http://www.mutalyzer.nl/2.0/check}
+  \end{center}
+  \vfill
+\end{slide}
+
+  
+\begin{slide}
+  \slideheading{Position converter}
+
+  In Next Generation Sequencing we often encounter chromosomal coordinates.
+
+  LSDB's usually use transcripts.
+
+  The position converter:
+  \begin{itemize}
+    \item Works on both hg18 (NCBI Build 36.1) and hg19 (GRCh37).
+    \item Works in both ways:
+    \begin{itemize}
+      \item \texttt{NM\_003002.2:c.274\yellow G\white >\yellow T\white} to
+            \texttt{NC\_000011.9:g.111959695\yellow G\white >\yellow T\white}.
+      \item \texttt{chr11:g.111959695\yellow G\white >\yellow T\white} to 
+            \texttt{NM\_003002.2:c.274\yellow G\white >\yellow T\white}.
+    \end{itemize}
+    \item Can be used to \emph{lift over} from hg18 to hg19 and vice versa.
+  \end{itemize}
+
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Other functionalities}
+  
+  Other functionalities of Mutalyzer 2.0 include:
+  \begin{itemize}
+    \item Syntax checking.
+    \item SNP conversion (from dbSNP rsId to HGVS notation).
+    \item Name generator (to help people that don't use the HGVS notation that
+          often).
+    \item GenBank uploader (to make your own reference sequences).
+    \begin{itemize}
+      \item Automatically uses the correct strand when a HGNC gene symbol is
+            used.
+    \end{itemize}
+    \item Recently added functionality for the LRG (Locus Reference Genomic)
+          reference files.
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Other functionalities}
+
+  For a large number of checks, there are other interfaces.
+  \begin{itemize}
+    \item Batch interfaces (upload a table, receive the result by mail):
+    \begin{itemize}
+      \item Name checker.
+      \item Syntax checker.
+      \item Position converter.
+    \end{itemize}
+    \item Programmatic acces via a SOAP webservice (use from your own scripts).
+    \begin{itemize}
+      \item Currently 11 functions available.
+      \begin{itemize}
+        \item Position conversion.
+        \item Mutate a reference sequence.
+        \item Retrieve all transcripts in a range of a chromosome.
+        \item \ldots
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Comparison to the old version (1.0.4)}
+
+  \renewcommand{\arraystretch}{0.99}
+  \begin{tabular}{l|c|c}
+                                  & Mutalyzer 1.0.4 & Mutalyzer 2.0\\
+    \hline
+    Disambiguation                & $\pm$           & $++$\\
+    Complex variants              & $--$            & $++$\\
+    Protein description           & $\pm$           & $+$\\
+    Up / downstream descriptions  & $--$            & $++$\\
+    Comprehensible error messages & $-$             & $++$\\
+    Using a protein reference     & $\pm$           & $--$\\
+    Batch checkers                & $\pm$           & $++$\\
+    GenBank uploader              & $+$             & $++$\\
+    Position conversion           & $--$            & $++$\\
+    Programmatic access           & $--$            & $++$\\
+    Other organisms / organelles  & $\pm$           & $++$\\
+  \end{tabular}
+
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Comparison to the old version (1.0.4): runtime}
+  \begin{center}
+    \colorbox{white} {
+      \includegraphics[scale = 0.65]{genes}
+    }
+  \end{center}
+  A $229\times$ speedup was measured (from almost $12min$ to about $3s$).
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Comparison to the old version (1.0.4): code}
+
+  \begin{tabular}{l|r|r}
+                               & Mutalyzer 1.0.4   & Mutalyzer 2.0\\
+    \hline
+    Total (lines)              &   $7,\!752$       &  $11,\!396$\\
+    Total (bytes)              & $365,\!736$       & $390,\!316$\\
+    Minimised (lines)          &   $5,\!102$       &   $4,\!320$\\
+    Minimised (bytes)          & $232,\!611$       & $156,\!803$\\
+    Percentage of code (lines) &    $66\%$         &    $38\%$\\
+    Percentage of code (bytes) &    $64\%$         &    $42\%$
+  \end{tabular}
+  \bigskip
+  \bigskip
+
+  The total amount of \emph{source code} in Mutalyzer~2.0 is $107\%$ of that in
+  Mutalyzer~1.0.4, but the amount of \emph{program code} is only $67\%$.
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Scalability: runtime with increasing complexity}
+  \begin{center}
+    \colorbox{white} {
+      \includegraphics[scale = 0.65]{allele}
+    }
+  \end{center}
+  The overhead ($\pm 2.5s$) is due to loading the reference sequence.
+  \vfill
+\end{slide}
+
+
+\begin{slide}
+  \slideheading{Conclusions and further research}
+
+  \begin{itemize}
+    \item Connection to LOVD via webservices.
+    \item Development of a batch interface for the SNP converter.
+    \item Using protein reference sequences.
+    \item Connection to SVEP.
+    \begin{itemize}
+      \item Splice prediction.
+      \item Alternative start.
+      \item Branch sites.
+      \item Transcription factors binding sites.
+      \item Protein effect prediction.
+      \item \ldots
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \rput(11.4,0.6){\includegraphics[scale=0.1]{Gen2Phen}}
+  \slideheading{Questions?}
+  \begin{center}
+    Acknowledgements
+    \bigskip
+    \bigskip
+    
+    Gerben Stouten\\
+    Gerard Schaafsma\\
+    Ivo Fokkema\\
+    Jacopo Celli\\
+    Johan den Dunnen\\
+    Peter Taschner
+    \bigskip
+    
+    \texttt{http://www.mutalyzer.nl/}
+  \end{center}
+  \vfill
+  \label{LastPage}
+\end{slide}
+
+\end{document}

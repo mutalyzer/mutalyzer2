@@ -1,0 +1,93 @@
+% LUMC presentation template by J. F. J. Laros.
+% Last alteration on 15-10-2009.
+%
+% The packages texlive-latex-recommended, texlive-latex-base and
+%   texlive-latex-extra should be installed.
+%
+
+% Alter these four lines for a new presentation.
+\providecommand{\me}{Jeroen F. J. Laros}
+\providecommand{\myFooter}{5th GA Meeting, Aveiro 11-12 January 2010}
+\providecommand{\myTitle}{Testing LaTeX slides}
+
+% Now go to %%% BEGIN PRESENTATION %%%
+
+\documentclass[a4, portrait]{seminar}
+
+\usepackage{semcolor} % For coloured text.
+\usepackage{slidesec} % For section headings.
+\usepackage{newcent}  % This is a better font for presentations.
+\input{seminar.bug}
+
+\usepackage{graphicx} % For pictures.
+\usepackage{fancybox} % For the background picture.
+
+\newslideframe{PRES}{ % Template for the body.
+  \boxput{
+    \rput(-0.24, 0){\includegraphics[angle=90, scale=.485]{bg}}
+  }{
+    \rput[l]{90}(8.57, -1.3){\scriptsize{\theslide/\pageref{LastPage}}}
+    \rput[r]{90}(8.57, 12.0){\scriptsize{\myFooter}}
+    #1
+  }
+}
+
+\renewcommand{\makeslideheading}[1]{ % Put the slide headings on top.
+  \rput[l](-1.6, .90){
+      \textbf{
+        \textcolor{white}{#1}
+    }
+  }
+  \newline
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\slideframe{PRES}
+
+\begin{slide}
+%\setcounter{slide}{0}
+\vspace*{1.5cm}
+\begin{center}
+{\bf\Large{\myTitle}}\\
+\vfill
+{\bf
+  \small{\me}\\
+  \small{Department of Human Genetics}\\
+  \small{Center for Human and Clinical Genetics}
+  \small{LUMC}
+}
+\vspace{1.1cm}
+\end{center}
+\end{slide}
+
+
+%%% BEGIN PRESENTATION %%%
+
+\begin{slide}
+\slideheading{Topic 1}
+Text goes here...
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Topic 1}
+And more text..
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Topic 2}
+And yet more text..
+\vfill
+\end{slide}
+
+\begin{slide}
+\slideheading{Questions?}
+\vfill
+\label{LastPage}
+\end{slide}
+
+\end{document}

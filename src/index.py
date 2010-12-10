@@ -321,7 +321,7 @@ def positionConverter(req):
                 variant = converter.c2chrom(variant)
             if variant and ":g." in variant:
                 # Do the g2c dance
-                variants = converter.chrom2c(variant)
+                variants = converter.chrom2c(variant, "dict")
                 if variants:
                     attr["gName"] = variant
                     output = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\

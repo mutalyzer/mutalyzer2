@@ -38,6 +38,19 @@ print o.numberConversion(build = "hg19", variant = "NM_002001.2:c.1del")
 m = o.transcriptInfo(LOVD_ver = "123", build = "hg19", accNo = "NM_002001.2")
 print m.CDS_stop
 
+for i in o.getTranscriptsByGeneName(build = "hg19", name = "DMD") :
+    print i
+
 mutalyzerOutput = o.runMutalyzer(variant = "NM_002001.2:g.1del")
 print mutalyzerOutput.original
 print mutalyzerOutput.mutated
+print mutalyzerOutput.origMRNA
+print mutalyzerOutput.mutatedMRNA
+print mutalyzerOutput.origCDS
+print mutalyzerOutput.newCDS
+print mutalyzerOutput.origProtein
+print mutalyzerOutput.newProtein
+print mutalyzerOutput.altProtein
+print mutalyzerOutput.errors
+print mutalyzerOutput.warnings
+print mutalyzerOutput.summary
