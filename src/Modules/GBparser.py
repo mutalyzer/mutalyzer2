@@ -85,8 +85,10 @@ class GBparser() :
                 break
             #if
             temp = self.__location2pos(i.location)
-            ret.append(temp[0])
-            ret.append(temp[1])
+            if temp :
+                ret.append(temp[0])
+                ret.append(temp[1])
+            #if
         #for
 
         return ret
