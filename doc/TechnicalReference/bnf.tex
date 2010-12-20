@@ -1,8 +1,8 @@
 \begin{longtable}{llp{7cm}}
-name     & $\rightarrow$ & ([a--z][A--Z][0--9])$^+$\\
+name     & $\rightarrow$ & ([a--z] $|$ [A--Z] $|$ [0--9])$^+$\\
 Nt       & $\rightarrow$ & `a' $|$ `c' $|$ `g' $|$ `t' $|$ `u' $|$ `A' $|$ 
                            `C' $|$ `G' $|$ `T' $|$ `U'\\
-NtString & $\rightarrow$ & (Nt)$^+$\\
+NtString & $\rightarrow$ & Nt$^+$\\
 Number & $\rightarrow$ & ([0--9])$^+$\\
 TransVar   & $\rightarrow$ & `\_v' Number\\
 ProtIso    & $\rightarrow$ & `\_i' Number\\

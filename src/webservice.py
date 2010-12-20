@@ -575,13 +575,21 @@ class MutalyzerService(SimpleWSGISoapApp) :
         O = Output.Output(__file__, C.Output)
         D = Db.Cache(C.Db)
 
+        O.addMessage(__file__, -1, "INFO",
+            "Received request getGeneAndTranscipt(%s, %s)" % (genomicReference,
+            transcriptReference))
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
 
+        ret = None
         for i in record.geneList :
             for j in i.transcriptList :
                 if j.transcriptID == transcriptReference :
-                    return "%s_v%s" % (i.name, j.name)
-        return None
+                    ret = "%s_v%s" % (i.name, j.name)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Finished processing getGeneAndTranscipt(%s, %s)" % (
+            genomicReference, transcriptReference))
+        return ret
     #getGeneAndTranscipt
 #MutalyzerService

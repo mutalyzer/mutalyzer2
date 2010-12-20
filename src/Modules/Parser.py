@@ -37,7 +37,7 @@ class Nomenclatureparser() :
     Nest = Suppress('{') + Group(SimpleAlleleVarSet)("Nest") + Suppress('}')
 
     # New:
-    # Name -> ([a-z][a-Z][0-9])*
+    # Name -> ([a-z] | [a-Z] | [0-9])+
     Name = Word(alphanums, min = 1)
 
     # Nt -> `A' | `C' | `G' | `T'
