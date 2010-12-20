@@ -1,4 +1,16 @@
 #!/usr/bin/python
+
+"""
+@requires: os
+@requires: sys
+@requires: daemon
+@requires: signal
+@requires: fcntl
+@requires: ftplib
+@requires: Modules.Config
+@requires: Modules.Db.Batch
+@requires: Modules.Scheduler
+"""
 import os
 import sys
 import daemon
@@ -10,7 +22,9 @@ from Modules.Db import Batch
 from Modules import Scheduler
 
 def sigusr1_daemon_notified(*args):
-    """Stop the Daemon with SIGUSR1 signal: kill -10 PID"""
+    """
+    Stop the Daemon with SIGUSR1 signal: kill -10 PID
+    """
     sys.exit()
 
 # Change dir

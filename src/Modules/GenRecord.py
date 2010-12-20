@@ -1,50 +1,55 @@
 #!/usr/bin/python
 
+"""
+Module to convert a GenBank record to a nested dictionary consisting of
+a list of genes, which itself consists of a list of loci. This structure
+makes it possible to iterate over genes and transcripts without having to
+search for them each time.
+
+@requires: Crossmap
+@requires: Bio
+@requires: Db
+"""
+# Public classes:
+#     - PList     ; Store a general location and a list of splice sites.
+#     - Locus     ; Store data about the mRNA and CDS splice sites.
+#     - Gene      ; Store a list of Locus objects and the orientation.
+#     - Record    ; Store a geneList and other additional information.
+#     - GenRecord ; Convert a GenBank record to a nested dictionary.
+
+
 import Crossmap
 import Bio
 import Db
 
-"""
-    Module to convert a GenBank record to a nested dictionary consisting of
-    a list of genes, which itself consists of a list of loci. This structure
-    makes it possible to iterate over genes and transcripts without having to
-    search for them each time.
-
-    Public classes:
-        PList     ; Store a general location and a list of splice sites.
-        Locus     ; Store data about the mRNA and CDS splice sites.
-        Gene      ; Store a list of Locus objects and the orientation.
-        Record    ; Store a geneList and other additional information.
-        GenRecord ; Convert a GenBank record to a nested dictionary.
-"""
 
 class PList(object) :
     """
-        A position list object, to store a general location and a list of
-        specific splice sites (if available).
+    A position list object, to store a general location and a list of
+    specific splice sites (if available).
 
-        These objects are used to describe either a list of mRNA splice sites
-        or a list of CDS splice sites. These splice sites are stored in the
-        list element. The location element is a fallback in case the splice
-        sites are not available.
+    These objects are used to describe either a list of mRNA splice sites
+    or a list of CDS splice sites. These splice sites are stored in the
+    list element. The location element is a fallback in case the splice
+    sites are not available.
 
-        Special methods:
-            __init__() ; Initialise the class.
+    Special methods:
+        - __init__() ; Initialise the class.
 
-        Public variables:
-            location ; A tuple of integers between which the object resides.
-            list     ; A list (with an even amount of entries) of splice sites.
+    Public variables:
+        - location ; A tuple of integers between which the object resides.
+        - list     ; A list (with an even amount of entries) of splice sites.
     """
 
     def __init__(self) :
         """
-            Initialise the class.
+        Initialise the class.
 
-            Public variables (altered):
-                location ; A tuple of integers between which the object
-                           resides.
-                list     ; A list (with an even amount of entries) of splice
-                           sites.
+        Public variables (altered):
+            - location     ; A tuple of integers between which the object
+                             resides.
+            - POSITIONlist ; A list (with an even amount of entries) of splice
+                             sites.
         """
 
         self.location = []
@@ -54,28 +59,31 @@ class PList(object) :
 
 class Locus(object) :
     """
-        A Locus object, to store data about the mRNA and CDS splice sites.
+    A Locus object, to store data about the mRNA and CDS splice sites.
 
-        Special methods:
-            __init__() ; Initialise the class.
+    Special methods:
+        - __init__() ; Initialise the class.
 
-        Public variables:
-            mRNA ; A position list object.
-            CDS  ; A position list object.
-            exon ; A position list object.
+    Public variables:
+        - mRNA ; A position list object.
+        - CDS  ; A position list object.
+        - exon ; A position list object.
     """
 
     def __init__(self, name) :
         """
-            Initialise the class.
+        Initialise the class.
 
-            Public variables (altered):
-                mRNA     ; A position list object.
-                CDS      ; A position list object.
-                location ;
-                exon     ; A position list object.
-                txTable  ; The translation table.
-                CM       ; A Crossmap object.
+        Public variables (altered):
+            - mRNA     ; A position list object.
+            - CDS      ; A position list object.
+            - location ;
+            - exon     ; A position list object.
+            - txTable  ; The translation table.
+            - CM       ; A Crossmap object.
+            
+        @arg name: identifier of the locus
+        @type name: string
         """
 
         self.name = name
@@ -103,6 +111,10 @@ class Locus(object) :
 
     def addToDescription(self, rawVariant) :
         """
+        Expands the DNA description with a new raw variant.
+        
+        @arg rawVariant: description of a single mutation
+        @type rawVariant: string
         """
 
         if self.description :
@@ -114,25 +126,32 @@ class Locus(object) :
 
 class Gene(object) :
     """
-        A Gene object, to store a list of Locus objects and the orientation of
-        the gene.
+    A Gene object, to store a list of Locus objects and the orientation of
+    the gene.
 
-        Special methods:
-            __init__() ; Initialise the class.
+    Special methods:
+        - __init__() ; Initialise the class.
 
-        Public variables:
-            orientation ; The orientation of the gene: 1 = forward,
-                                                      -1 = reverse.
-            list        ; A list of Locus objects.
+    Public variables:
+        - orientation; The orientation of the gene: 1 = forward, -1 = reverse.
+        - TRANSCRIPTSlist; A list of Locus objects.
     """
 
     def __init__(self, name) :
         """
-            Initialise the class.
+        Initialise the class.
 
-            Public variables (altered):
-                orientation ; The orientation of the gene.
-                list        ; A list of Locus objects.
+        Public variables (altered):
+            - name
+            - orientation    ; The orientation of the gene.
+            - transcriptList ; A list of transcripts
+            - location ;
+            - longName ;
+        Private variables (altered):
+            - __locusTag ;
+            
+        @arg name: gene name
+        @type name: string
         """
 
         self.name = name
@@ -145,6 +164,10 @@ class Gene(object) :
 
     def newLocusTag(self) :
         """
+        Generates a new Locus tag.
+        
+        @return: Locus tag
+        @rtype: integer (3 digits, if < 100 preceeded with 0's)
         """
 
         self.__locusTag = "%03i" % (int(self.__locusTag) + 1)
@@ -154,6 +177,13 @@ class Gene(object) :
 
     def findLocus(self, name) :
         """
+        Find a transcript, given its name.
+        
+        @arg name: transcript variant number
+        @type name: string
+        
+        @return: transcript
+        @rtype: object
         """
 
         for i in self.transcriptList :
@@ -164,6 +194,10 @@ class Gene(object) :
 
     def listLoci(self) :
         """
+        Provides a list of transcript variant numbers
+        
+        @return: list of transcript variant numbers
+        @rtype: list
         """
 
         ret = []
@@ -174,50 +208,57 @@ class Gene(object) :
 
     def findLink(self, protAcc) :
         """
+        Look in the list of transcripts for a given protein accession number.
+        
+        @arg protAcc: protein accession number
+        @type protAcc: string
+        
+        @return: transcript
+        @rtype: object
         """
 
         for i in self.transcriptList :
             if i.link == protAcc :
                 return i
         return None
-    #findCDS
+    #findLink
 #Gene
 
 class Record(object) :
     """
-        A Record object, to store a geneList and other additional
-        information.
+    A Record object, to store a geneList and other additional
+    information.
 
-        Special methods:
-            __init__() ; Initialise the class.
+    Special methods:
+        - __init__() ; Initialise the class.
 
-        Public variables:
-            geneList  ; List of Gene objects.
-            mol_type  ; Variable to indicate the sequence type (DNA, RNA, ...)
-            organelle ; Variable to indicate whether the sequence is from the
-                        nucleus or from an onganelle (if so, also from which
-                        one).
-            source    ; A fake gene that can be used when no gene information
-                        is present.
+    Public variables:
+        - geneList  ; List of Gene objects.
+        - mol_type  ; Variable to indicate the sequence type (DNA, RNA, ...)
+        - organelle ; Variable to indicate whether the sequence is from the
+                      nucleus or from an organelle (if so, also from which
+                      one).
+        - source    ; A fake gene that can be used when no gene information
+                      is present.
     """
 
     def __init__(self) :
         """
-            Initialise the class.
+        Initialise the class.
 
 
-            Public variables (altered):
-                geneList  ; List of Gene objects.
-                molType   ; Variable to indicate the sequence type (DNA, RNA,
-                            ...)
-                seq       ; The reference sequence
-                mapping   ; The mapping of the reference sequence to the genome
-                            include a list of differences between the sequences
-                organelle ; Variable to indicate whether the sequence is from
-                            the nucleus or from an onganelle (if so, also from
-                            which one).
-                source    ; A fake gene that can be used when no gene
-                            information is present.
+        Public variables (altered):
+            - geneList  ; List of Gene objects.
+            - molType   ; Variable to indicate the sequence type (DNA, RNA,
+                          ...)
+            - seq       ; The reference sequence
+            - mapping   ; The mapping of the reference sequence to the genome
+                          include a list of differences between the sequences
+            - organelle ; Variable to indicate whether the sequence is from
+                          the nucleus or from an organelle (if so, also from
+                          which one).
+            - source    ; A fake gene that can be used when no gene
+                          information is present.
         """
 
         self.geneList = []
@@ -237,6 +278,13 @@ class Record(object) :
 
     def findGene(self, name) :
         """
+        Returns a Gene object, given its name.
+        
+        @arg name: Gene name
+        @type name: string
+        
+        @return: Gene object
+        @rtype: object
         """
 
         for i in self.geneList :
@@ -247,6 +295,11 @@ class Record(object) :
 
     def listGenes(self) :
         """
+        List the names of all genes found in this record.
+        
+        @return: Genes list
+        @rtype: list
+        
         """
 
         ret = []
@@ -257,6 +310,10 @@ class Record(object) :
 
     def addToDescription(self, rawVariant) :
         """
+        Expands the DNA description with a new raw variant.
+        
+        @arg rawVariant: description of a single mutation
+        @type rawVariant: string
         """
 
         if self.description :
@@ -267,6 +324,14 @@ class Record(object) :
 
     def toChromPos(self, i) :
         """
+        Converts a g. position (relative to the start of the record) to a
+        chromosomal g. position 
+        
+        @arg i: g. position (relative to the start of the record)
+        @type i: integer
+        
+        @return: chromosomal g. position
+        @rtype: integer
         """
 
         if self.orientation == 1 :
@@ -276,6 +341,7 @@ class Record(object) :
 
     def addToChromDescription(self, rawVariant) :
         """
+        @todo document me
         """
 
         if not self.chromOffset :
@@ -290,14 +356,23 @@ class Record(object) :
 
 class GenRecord() :
     """
-        Convert a GenBank record to a nested dictionary.
+    Convert a GenBank record to a nested dictionary.
 
-        Public methods:
-            checkRecord()   ;   Check and repair self.record
+    Public methods:
+        - checkRecord()   ;   Check and repair self.record.
     """
 
     def __init__(self, output, config) :
         """
+        Initialise the class.
+        
+        Public variable:
+            - record    ; A record object
+        
+        @arg output: an output object
+        @type output: object
+        @arg config: a config object
+        @type config: object
         """
 
         self.__output = output
@@ -307,6 +382,15 @@ class GenRecord() :
 
     def __checkExonList(self, exonList, CDSpos) :
         """
+        @todo document me
+        
+        @arg exonList: list of splice sites
+        @type exonList: list (object)
+        @arg CDSpos: location of the CDS
+        @type CDSpos: object
+        
+        @return: 
+        @rtype: boolean
         """
 
         if not exonList :
@@ -332,6 +416,16 @@ class GenRecord() :
             
     def __constructCDS(self, mRNA, CDSpos) :
         """
+        Construct a list of coordinates that contains CDS start and stop and 
+        the internal splice sites.
+        
+        @arg mRNA: mRNA positions/coordinates list
+        @type mRNA: list (integer)
+        @arg CDSpos: coding DNA positions/coordinates
+        @type CDSpos: list (integer)
+
+        @return: CDS positions plus internal splice sites
+        @rtype: list (integer)
         """
 
         i = 1
@@ -352,6 +446,17 @@ class GenRecord() :
 
     def __maybeInvert(self, gene, string) :
         """
+        Return the reverse-complement of a DNA sequence if the gene is in
+        the reverse orientation.
+        
+        @arg gene: Gene 
+        @type gene: object
+        @arg string: DNA sequence
+        @type string: string
+        
+        @return: reverse-complement (if applicable), otherwise return the
+            original.
+        @rtype: string
         """
 
         if gene.orientation == -1 :
@@ -361,9 +466,11 @@ class GenRecord() :
 
     def checkRecord(self) :
         """
-            Check if the record in self.record is compatible with mutalyzer
-
-            update the mRNA PList with the exon and CDS data
+        Check if the record in self.record is compatible with mutalyzer.
+        Update the mRNA PList with the exon and CDS data.
+        
+        @todo: This function should really check the record for minimal
+        requirements
         """
 
         #TODO:  This function should really check
@@ -479,6 +586,21 @@ class GenRecord() :
 
     def name(self, start_g, stop_g, varType, arg1, arg2, roll) :
         """
+        Generate variant descriptions for all genes, transcripts, etc.
+        
+        @arg start_g: start position
+        @type start_g: integer
+        @arg stop_g: stop position
+        @type stop_g: integer
+        @arg varType: variant type
+        @type varType: string
+        @arg arg1: argument 1 of a raw variant
+        @type arg1: string
+        @arg arg2: argument 2 of a raw variant
+        @type arg2: string
+        @arg roll: ???
+        @type roll: tuple (integer, integer)
+        
         """
 
         forwardStart = start_g
@@ -558,6 +680,19 @@ class GenRecord() :
     #name
 
     def checkIntron(self, gene, transcript, position) :
+        """
+        Checks if a position is on or near a splice site
+        
+        @arg gene: Gene
+        @type gene: object
+        @arg transcript: transcript
+        @type transcript: object
+        @arg position: g. position
+        @type position: integer
+        
+        @return:
+        @todo: Also check a range properly.
+        """
         # TODO Also check a range properly.
         intronPos = abs(transcript.CM.g2x(position)[1])
         if intronPos :

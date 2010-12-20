@@ -1,34 +1,36 @@
 #!/usr/bin/python
 
 """
-    Module for parting a variant described using the HGVS nomenclature.
+Module for parsing a variant described using the HGVS nomenclature.
 
-    A context-free parser is defined here, the nomenclature rules are specified
-    in BNF, which is used (with some minor modifications) as source of this
-    module.
+A context-free parser is defined here, the nomenclature rules are specified
+in Backus-Naur Form (BNF), which is used (with some minor modifications) as source of this
+module.
 
-    Public classes:
-        Nomenclatureparser ; Parse an input string.
+@requires: pyparsing
 """
+# Public classes:
+#     - Nomenclatureparser ; Parse an input string.
+
 
 from pyparsing import *
 
 class Nomenclatureparser() :
     """
-        Parse an input string.
+    Parse an input string.
 
-        Private variables:
-            __output ; The output object.
+    Private variables:
+        - __output ; The output object.
 
-        Public variables:
-            All variables defined below, they are all context-free grammar
-            rules.
+    Public variables:
+        - All variables defined below, they are all context-free grammar
+        rules.
 
-        Special methods:
-            __init__() ; Initialise the class and enable packrat parsing.
+    Special methods:
+        - __init__() ; Initialise the class and enable packrat parsing.
 
-        Public methods:
-            parse(input) ; Parse the input string and return a parse tree.
+    Public methods:
+        - parse(input) ; Parse the input string and return a parse tree.
     """
 
     # New:
@@ -307,13 +309,13 @@ class Nomenclatureparser() :
 
     def __init__(self, output) :
         """
-            Initialise the class and enable packrat parsing.
+        Initialise the class and enable packrat parsing.
 
-            Arguments:
-                output ; The output object.
+        Private variables (altered):
+            - __output ; Set to the output object.
 
-            Private variables (altered):
-                __output ; Set to the output object.
+        @arg output: The output object
+        @type output: object
         """
 
         self.__output = output
@@ -322,21 +324,21 @@ class Nomenclatureparser() :
 
     def parse(self, variant) :
         """
-            Parse the input string and return a parse tree if the parsing was
-            successful. Otherwise print the parse error and the position in
-            the input where the error occurred.
+        Parse the input string and return a parse tree if the parsing was
+        successful. Otherwise print the parse error and the position in
+        the input where the error occurred.
 
-            Arguments:
-                variant ; The input string that needs to be parsed.
+        Private variables:
+            - __output ; The output object.
 
-            Private variables:
-                __output ; The output object.
+        Public variables:
+            - Var ; The top-level rule of our parser.
 
-            Public variables:
-                Var ; The top-level rule of our parser.
+        @arg variant: The input string that needs to be parsed
+        @type variant: string
 
-            Returns:
-                Object ; The parse tree containing the parse results.
+        @return: The parse tree containing the parse results
+        @rtype: object
         """
 
         try :

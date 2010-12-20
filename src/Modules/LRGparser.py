@@ -1,21 +1,27 @@
+#!/usr/bin/python
+
 """
-    Module contains one public function createLrgRecord which returns a
-    mutalyzer GenRecord.Record populated with data from a LRG file.
+Module contains one public function createLrgRecord which returns a
+mutalyzer GenRecord.Record populated with data from a LRG file.
 
-    A LRG file is an XML formatted file and consists of a fixed and
-    updatable section. The fixed section contains a DNA sequence
-    and for that sequence a number of transcripts.
+A LRG file is an XML formatted file and consists of a fixed and
+updatable section. The fixed section contains a DNA sequence
+and for that sequence a number of transcripts.
 
-    The updatable region could contain all sorts of annotation for the
-    sequence and transcripts. It can also contain additional (partial)
-    transcripts and mapping information.
+The updatable region could contain all sorts of annotation for the
+sequence and transcripts. It can also contain additional (partial)
+transcripts and mapping information.
 
-    This module is based on the result of the minidom xml parser.
-    NOTE:
-        A strong alternative to the minidom parser would be ElementTree
-        http://docs.python.org/library/xml.etree.elementtree.html
-        which is added in python2.5
-        Its main strengths are speed and readability [pythonesque]
+This module is based on the result of the minidom xml parser.
+
+NOTE: A strong alternative to the minidom parser would be ElementTree which is
+added in python2.5. Its main strengths are speed and readability [pythonesque].
+(http://docs.python.org/library/xml.etree.elementtree.html)
+
+@requires: xml.dom.minidom
+@requires: xml.parsers.expat.ExpatError
+@requires: Bio.Seq.Seq
+@requires: Bio.Alphabet.IUPAC
 """
 
 from Bio.Seq import Seq
@@ -28,8 +34,15 @@ __all__ = ["createLrgRecord"] # Only import createLrgRecord from this module
 
 def __debugParsedData(title, data):
     """
-        Output additional data to stdout. Used for debugging the
-        intermediate format used while parsing a LRG file.
+    Output additional data to stdout. Used for debugging the
+    intermediate format used while parsing a LRG file.
+    
+    @requires: pprint
+    
+    @arg title: 
+    @type title: string
+    @arg data: minidom object
+    @type data: object
     """
     import pprint       #Only imported when the debug flag is set
     print "#"*79+"\nDEBUG: Start of "+title+"\n"+"#"*79
@@ -39,15 +52,15 @@ def __debugParsedData(title, data):
 
 def _getContent(data, refname):
     """
-        Return string-content of an XML textnode.
+    Return string-content of an XML textnode.
 
-        Arguments:
-            data    ; a minidom object
-            refname ; the name of a member of the minidom object
+    @arg data:     a minidom object
+    @type data:    object
+    @arg refname:  the name of a member of the minidom object
+    @type refname: string
 
-        Returns:
-            String  ; The UTF-8 content of the textnode
-                      or an emtpy string
+    @return: The UTF-8 content of the textnode or an emtpy string
+    @rtype: string
     """
     temp = data.getElementsByTagName(refname)
     if temp:
@@ -58,15 +71,15 @@ def _getContent(data, refname):
 
 def _attr2dict(attr):
     """
-        Create a dictionary from the attributes of an XML node
+    Create a dictionary from the attributes of an XML node
 
-        Arguments:
-            attr    ; a minidom node
+    @arg attr: a minidom node
+    @type attr: object
 
-        Returns:
-            Dict    ; A dictionary with pairing of node-attribute names
-                      and values. Integer string values are converted to
-                      integers. String values are converted to UTF-8
+    @return: A dictionary with pairing of node-attribute names and values.
+    Integer string values are converted to integers. String values are converted
+    to UTF-8
+    @rtype: dictionary
     """
     ret = {}
     for key, value in attr.items():
@@ -77,13 +90,13 @@ def _attr2dict(attr):
 
 def createLrgRecord(data):
     """
-        Create a GenRecord.Record of a LRG <xml> formatted string
+    Create a GenRecord.Record of a LRG <xml> formatted string.
 
-        Input:
-            data    ;   Content of LRG file [String]
+    @arg data: Content of LRG file
+    @type data: string
 
-        Output
-            record  ;   GenRecord.Record instance
+    @return: GenRecord.Record instance
+    @rtype: object
     """
     # Initiate the GenRecord.Record
     record = GenRecord.Record()
@@ -185,14 +198,14 @@ def createLrgRecord(data):
 
 def genesFromUpdatable(updParsed):
     """
-        populate GenRecord.Gene instances with updatable LRG node data
+    Populate GenRecord.Gene instances with updatable LRG node data.
 
-        Input:
-            updParsed   ; Intermediate nested dict of updatable section
+    @arg updParsed: Intermediate nested dict of updatable section
+    @type updParsed: dictionary
 
-        Output
-            genes       ; List of GenRecord.Gene instances, populated with
-                            the content of the updatable section
+    @return: genes ; List of GenRecord.Gene instances, populated with the
+    content of the updatable section
+    @rtype: list
     """
     genes = []
     for geneSymbol, geneData in updParsed["NCBI"].items():
@@ -216,14 +229,14 @@ def genesFromUpdatable(updParsed):
 
 def transcriptsFromParsed(parsedData):
     """
-        populate GenRecord.Locus instances with updatable LRG node data
+    Populate GenRecord.Locus instances with updatable LRG node data
 
-        Input:
-            parsedData  ; Dict of transcript data. See getFeaturesAnnotation
+    @arg parsedData: Dictionary of transcript data. See getFeaturesAnnotation
+    @type parsedData: dictionary
 
-        Output
-            transcripts ; List of GenRecord.Locus instances, populated with
-                            the content of the parsed Data
+    @return: transcripts ; List of GenRecord.Locus instances, populated with the
+    content of the parsed Data
+    @rtype: list
     """
     transcripts = []
 
@@ -245,16 +258,18 @@ def transcriptsFromParsed(parsedData):
 def _emptyTranscripts(data):
     #TODO: This function can be moved to the GenRecord.checkRecord method
     """
-        populate a GenRecord.Locus instance with minimal data to make the
-        gene compatible with mutalyzer. Data abstracted from the gene.
+    Populate a GenRecord.Locus instance with minimal data to make the
+    gene compatible with mutalyzer. Data abstracted from the gene.
+    
+    @todo: This function can be moved to the GenRecord.checkRecord method.
 
-        Input:
-            data    ; Data from the gene which is used to populate
-                        the create a minimal GenRecord.Locus instance.
+    @arg data: Data from the gene which is used to populate the create a minimal
+    GenRecord.Locus instance
+    @type data: dictionary
 
-        Output
-            list    ; List with a single bogus GenRecord.Locus instance,
-                        in which location and mRNA are copied from the gene.
+    @return: List with a single bogus GenRecord.Locus instance, in which
+    location and mRNA are copied from the gene
+    @rtype: list
     """
     transcript = GenRecord.Locus('')
     transcript.molType = 'n'
@@ -268,15 +283,16 @@ def _emptyTranscripts(data):
 
 def _transcriptPopulator(trName, trData):
     """
-        populate GenRecord.Locus instance with updatable LRG node data
+    Populate GenRecord.Locus instance with updatable LRG node data.
 
-        Input:
-            trName      ; Name of the transcript.
-            trData      ; Data associated with the transcript.
-
-        Output
-            transcript  ; GenRecord.Locus instance, populated with
-                            the content of the parsed Data
+    @arg trName: Name of the transcript
+    @type trName: string
+    @arg trData: Data associated with the transcript
+    @type trData: dictionary
+    
+    @return: transcript  ; GenRecord.Locus instance, populated with the content
+    of the parsed Data
+    @rtype: object
     """
     transcript = GenRecord.Locus(trName)
     transcript.transcriptProduct = trData.get("transLongName")
@@ -304,15 +320,16 @@ def _transcriptPopulator(trName, trData):
 
 def getMapping(rawMapData):
     """
-        Collect all necessary info to map the current LRG sequence to the
-        genomic reference supplied by the file.
+    Collect all necessary info to map the current LRG sequence to the
+    genomic reference supplied by the file.
 
-        Input:
-            rawMapData  ;   A list of dictionaries with the raw mapping info
+    @arg rawMapData: A list of dictionaries with the raw mapping info
+    @type rawMapData: list
 
-        Output
-            dict        ;
+    @return: dictionary with the mapping info
+    @rtype: dictionary
     """
+
     mapp, span, diffs = rawMapData
     ret = { "assembly":     mapp.get("assembly"),       # Assembly Reference
             "chr_name":     mapp.get("chr_name"),       # Chromosome name
@@ -329,19 +346,18 @@ def getMapping(rawMapData):
 
 def parseUpdatable(data):
     """
-        Mediator function which transforms the minidom object to a nested dict
-        and filters information needed to construct the GenRecord.Record.
+    Mediator function which transforms the minidom object to a nested dict
+    and filters information needed to construct the GenRecord.Record.
 
-        NOTE: an xml node has attributes and elements, this function squashes
-              this ambiguity and collects only the attributes and elements of
-              interest
+    NOTE: an xml node has attributes and elements, this function squashes this
+    ambiguity and collects only the attributes and elements of interest
 
-        Input:
-            data        ;   The LRG file's updatable section node
+    @arg data: The LRG file's updatable section node
+    @type data: dictionary
 
-        Output
-            nested dict ;   Contains the fields of interest of the LRG
-                            NCBI and Ensembl sections of the updatable node.
+    @return: Contains the fields of interest of the LRG NCBI and Ensembl
+    sections of the updatable node
+    @rtype: dictionary
     """
     ret = {"LRG":{}, "NCBI":{}, "Ensembl":{}}
     annotation_nodes = data.getElementsByTagName("annotation_set")
@@ -362,16 +378,16 @@ def parseUpdatable(data):
 
 def getLrgAnnotation(data):
     """
-        Retrieves three parts of the LRG annotation:
-            - the mapping of this LRG file to a genomic reference
-            - a diference list between the LRG sequence and the ref seq
-            - the genename of the main gene annotated by this LRG file
+    Retrieves three parts of the LRG annotation:
+        - the mapping of this LRG file to a genomic reference
+        - a diference list between the LRG sequence and the ref seq
+        - the genename of the main gene annotated by this LRG file
 
-        Input:
-            data    ;   updatable section -> Annotations -> LRG node
+    @arg data: updatable section -> Annotations -> LRG node
+    @type data:  dictionary
 
-        Output
-            dict    ;   Contains the mapping [+ opt. diffs] and the genename
+    @return: Contains the mapping [+ opt. diffs] and the genename
+    @rtype: dictionary
     """
     ret = {"mapping": (), "genename":""}
     # Get the mapping
@@ -396,38 +412,38 @@ def getLrgAnnotation(data):
 
 def getFeaturesAnnotation(data):
     """
-        Retrieves feature annotations from NCBI & Ensembl nodes.
-            - List of genes
-            - List of transcripts per gene
-            - Potential Product of a transcript
+    Retrieves feature annotations from NCBI & Ensembl nodes.
+        - List of genes
+        - List of transcripts per gene
+        - Potential Product of a transcript
 
-        If a transcript can not be linked to a transcript from the fixed
-        section it is stored in the noFixedId list.
+    If a transcript can not be linked to a transcript from the fixed section it
+    is stored in the noFixedId list.
 
-        NOTE: an xml node has attributes and elements, this function squashes
-              this ambiguity and collects only the attributes and elements of
-              interest
-        Input:
-            data        ;   updatable section -> Annotations -> NCBI | Ensembl
+    NOTE: an xml node has attributes and elements, this function squashes this
+    ambiguity and collects only the attributes and elements of interest
+          
+    @todo: check documentation
+    
+    @arg data: updatable section -> Annotations -> NCBI | Ensembl
+    @type data: dictionary
 
-        Output
-            nested dict ;   toplevel contains the genesymbols as keys e.g:
-                            COL1A1 :
-                                geneAttr        : {}
-                                geneLongName    : ""
-                                transcripts     : {}
-                            geneAttr contains the start, end and strand info
-                            transcripts contains a list of transcripts that
-                                could not be linked to the fixed section AND
-                                it contains each linked transcript with the
-                                locustag as key e.g:
-                            1 :
-                                transAttr       : {}
-                                transLongName   : ""
-                                proteinAttr     : {}
-                                proteinLongName : ""
-                            transAttr & proteinAttr contain
-                                reference, start and end info
+    @return: nested dict ; toplevel contains the genesymbols as keys e.g:
+        - COL1A1 :
+            - geneAttr        : {}
+            - geneLongName    : ""
+            - transcripts     : {}
+        - geneAttr contains the start, end and strand info
+        - transcripts contains a list of transcripts that could not be linked to
+        the fixed section AND it contains each linked transcript with the
+        locustag as key e.g:
+            - 1 :
+                - transAttr       : {}
+                - transLongName   : ""
+                - proteinAttr     : {}
+                - proteinLongName : ""
+            - transAttr & proteinAttr contain reference, start and end info
+    @rtype: dictionary
     """
     ret = {} # Get annotation per gene symbol {"COL1A1":{}}
     #Check if features exists

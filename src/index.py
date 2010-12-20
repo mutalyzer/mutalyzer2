@@ -1,14 +1,34 @@
 #!/usr/bin/python
 
 """
-    The HTML publisher.
+The HTML publisher.
 
-    These functions appear as HTML pages on the web server.
+These functions appear as HTML pages on the web server.
 
-    Public methods:
-        index(req)        ; The mutation checker page.
-        Variant_info(req) ; The g. to c. and vice versa interface for LOVD.
-        download(req)     ; The download page.
+Public methods:
+    - index(req)        ; The mutation checker page.
+    - Variant_info(req) ; The I{g.} to I{c.} and vice versa interface for LOVD.
+    - download(req)     ; The download page.
+
+@requires: Mutalyzer
+@requires: VarInfo
+@requires: pydoc
+@requires: webservice
+@requires: string
+
+@requires: mod_python import apache
+@requires: mod_python import Session
+@requires: mod_python import util
+
+@requires: Modules.Parser
+@requires: Modules.Mapper
+@requires: Modules.Web
+@requires: Modules.Config
+@requires: Modules.Output
+@requires: Modules.Db
+@requires: Modules.Scheduler
+@requires: Modules.Retriever
+@requires: Modules.File
 """
 
 import Mutalyzer
@@ -32,9 +52,20 @@ from Modules import Retriever
 from Modules import File
 
 class InputException(Exception):
+    """
+    @todo: documentation
+    """
     pass
 
 def snp(req) :
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
     C = Config.Config()
     O = Output.Output(__file__, C.Output)
     W = Web.Web()
@@ -61,39 +92,70 @@ def snp(req) :
 
 
 def index(req) :
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
     W = Web.Web()
     return W.tal("HTML", "templates/index.html", {})
 #index
 
 def help(req) :
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
     W = Web.Web()
     return W.tal("HTML", "templates/help.html", {})
 #about
 
 def about(req) :
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
     W = Web.Web()
     return W.tal("HTML", "templates/about.html", {})
 #about
 
 def nameGenerator(req):
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
     W = Web.Web()
     return W.tal("HTML", "templates/generator.html", {})
 #generator
 
 def check(req) :
     """
-        The mutation checker page.
+    The mutation checker page.
 
-        If the incoming request has a form, run Mutalyzer. The output of
-        Mutalyzer is used together with a version and the last posted value
-        to make an HTML page from a TAL template.
+    If the incoming request has a form, run Mutalyzer. The output of
+    Mutalyzer is used together with a version and the last posted value
+    to make an HTML page from a TAL template.
 
-        Arguments:
-            req ; The request:
-                  req.form['mutationName'] ; A description of a variant.
+    @arg req: The request: req.form['mutationName'] ; A description of a variant
+    @type req: object
 
-        Returns:
-            string ; An HTML page containing the results of Mutalyzer.
+    @return: a compiled TAL template containing the results of Mutalyzer
+    @rtype: object
     """
 
     W = Web.Web()
@@ -172,26 +234,25 @@ def check(req) :
 
 def getGS(req):
     """
-        LOVD bypass to get the correct GeneSymbol incl Transcript variant.
+    LOVD bypass to get the correct GeneSymbol incl Transcript variant.
 
-        Used by LOVD to get the correct transcript variant out of a genomic
-        record. LOVD uses a genomic reference (NC_?) in combination with a gene
-        symbol to pass variant info to mutalyzer. Mutalyzer 1.0 was only using
-        the first transcript. LOVD supplies the NM of the transcript needed but
-        this was ignored. This helper allows LOVD to get the requested
-        transcript variant from a genomic reference.
+    Used by LOVD to get the correct transcript variant out of a genomic
+    record. LOVD uses a genomic reference (NC_?) in combination with a gene
+    symbol to pass variant info to mutalyzer. Mutalyzer 1.0 was only using
+    the first transcript. LOVD supplies the NM of the transcript needed but
+    this was ignored. This helper allows LOVD to get the requested
+    transcript variant from a genomic reference.
 
-        Arguments:
-                req     ; The request:
-                            req.form['mutationName'] ; the mutationname without
-                            gene symbol
-                            re.form['variantRecord'] ; the NM reference of the
-                            variant
-                            re.form['forward'] ; if set this forwards the
-                            request to the name checker
-        Returns
-                string  ; The GeneSymbol with the variant notation
-                web     ; If forward is set the request is forwarded to check
+    @arg req: The request:
+        - req.form['mutationName'] ; the mutationname without gene symbol
+        - re.form['variantRecord'] ; the NM reference of the variant
+        - re.form['forward']       ; if set this forwards the request to the name
+                                     checker
+    @type req:
+    
+    @return:
+        - string ; The GeneSymbol with the variant notation
+        - web    ; If forward is set the request is forwarded to check
     """
     W = Web.Web()
     C = Config.Config()
@@ -223,6 +284,12 @@ def getGS(req):
 
 
 def checkForward(req) :
+    """
+    @arg req:
+    @type req:
+    
+    @todo: documentation
+    """
     session = Session.Session(req)
     session['mut'] = req.form.get("mutationName", None)
     session.save()
@@ -232,15 +299,15 @@ def checkForward(req) :
 
 def syntaxCheck(req) :
     """
-        Checks the syntax of a variant
+    Checks the syntax of a variant
 
-        Arguments:
-            req ; The request:
-                  req.form['variant']  ; A description of the variant.
+    @arg req: The request:
+              req.form['variant']  ; A description of the variant
+    @type req: object
 
-        Returns:
-            string ; An HTML page containing the remark if the variant syntax
-                     is OK or not
+    @return: An HTML page containing the remark if the variant syntax is OK or
+             not
+    @rtype: string
     """
 
     W = Web.Web()
@@ -278,6 +345,12 @@ def syntaxCheck(req) :
 #checkingSyntax
 
 def positionConverter(req):
+    """
+    @arg req:
+    @type req:
+    
+    @todo: documentation
+    """
     W = Web.Web()
     C = Config.Config()
     O = Output.Output(__file__, C.Output)
@@ -337,17 +410,17 @@ def positionConverter(req):
 
 def Variant_info(req) :
     """
-        The g. to c. and vice versa interface for LOVD.
+    The I{g.} to I{c.} and vice versa interface for LOVD.
 
-        Arguments:
-            req ; The request:
-                  req.form['LOVD_ver'] ; The version of the calling LOVD.
-                  req.form['build']    ; The human genome build (hg19 assumed).
-                  req.form['acc']      ; The accession number (NM number).
-                  req.form['var']      ; A description of the variant.
+    @arg req: The request:
+      - req.form['LOVD_ver'] ; The version of the calling LOVD
+      - req.form['build']    ; The human genome build (hg19 assumed)
+      - req.form['acc']      ; The accession number (NM number)
+      - req.form['var']      ; A description of the variant
+    @type req: object
 
-        Returns:
-            string ; An HTML page containing the results of Variant_info.
+    @return: An HTML page containing the results of Variant_info
+    @rtype: string
     """
 
     W = Web.Web()
@@ -369,13 +442,13 @@ def Variant_info(req) :
 
 def webservices(req) :
     """
-        The download page.
+    The download page.
 
-        Arguments:
-            req ; The request.
+    @arg req: The request
+    @type req: object
 
-        Returns:
-            string ; An HTML page.
+    @return: An HTML page
+    @rtype: object
     """
 
     W = Web.Web()
@@ -386,6 +459,14 @@ def webservices(req) :
 #download
 
 def __checkInt(inpv, refname):
+    """
+    @arg inpv:
+    @type inpv:
+    @arg refname:
+    @type refname:
+    
+    @todo: documentation
+    """
     #remove , . and -
     inpv = inpv.replace(',','').replace('.','').replace('-','')
     try:
@@ -395,6 +476,13 @@ def __checkInt(inpv, refname):
 
 def upload(req) :
     """
+    @arg req:
+    @type req:
+    
+    @return:
+    @rtype:
+    
+    @todo: documentation
     """
 
     C = Config.Config()
@@ -469,7 +557,15 @@ def upload(req) :
 
 def progress(req):
     """
-        Progress page for batch runs
+    Progress page for batch runs
+
+    @arg req:
+    @type req:
+    
+    @return:
+    @rtype:
+    
+    @todo: documentation
     """
     W = Web.Web()
     C = Config.Config()
@@ -499,7 +595,18 @@ def progress(req):
 
 def batch(req, batchType=None):
     """
-        Batch function to add batch jobs to the Database
+    Batch function to add batch jobs to the Database
+
+    @arg batchType: Type of the batch job
+    @type batchType: string
+    
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    
+    @todo: documentation
     """
     W = Web.Web()
     C = Config.Config()
@@ -560,15 +667,41 @@ def batch(req, batchType=None):
 #batch
 
 def disclaimer(req) :
+    """
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    
+    @todo: documentation
+    """
     W = Web.Web()
     return W.tal("HTML", "templates/disclaimer.html", [])
 #disclaimer
 
 def batchNameChecker(req):
+    """
+    @arg req:
+    @type req:
+    
+    @return:
+    @rtype:
+    
+    @todo: documentation
+    """
     return batch(req, "NameChecker")
 #batchCheck
 
 def batchPositionConverter(req):
+    """
+    @arg req:
+    @type req:
+    
+    @return:
+    @rtype:
+    
+    @todo: documentation
+    """
     return batch(req, "PositionConverter")
 #batchConvert
 
@@ -578,13 +711,13 @@ def batchSyntaxChecker(req):
 
 def documentation(req) :
     """
-        Generate documentation for the webservice.
+    Generate documentation for the webservice.
 
-        Arguments:
-            req ; The request.
+    @arg req: The HTTP request
+    @type req: object
 
-        Returns:
-            string ; An HTML page.
+    @return: An HTML page
+    @rtype: string
     """
 
     htmldoc = pydoc.HTMLDoc()
@@ -594,6 +727,15 @@ def documentation(req) :
 
 #TODO: taltest.html does not exist
 def taltest(req) :
+    """
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    
+    @todo: taltest.html does not exist
+    @todo: documentation
+    """
     W = Web.Web()
     C = Config.Config()
     variant = ""

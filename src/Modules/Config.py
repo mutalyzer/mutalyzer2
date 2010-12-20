@@ -1,43 +1,40 @@
 #!/usr/bin/python
 
 """
-    Module for reading the config file and splitting up the variables into
-    subclasses. Each of these subclasses are used to configure a specific
-    module.
-
-    Public classes:
-        Config ; Read the configuration file and store the data in subclasses.
+Module for reading the config file and splitting up the variables into
+subclasses. Each of these subclasses are used to configure a specific
+module.
 """
 
 class Config() :
     """
-        Read the configuration file and store the data in subclasses.
+    Read the configuration file and store the data in subclasses.
 
-        Public subclasses:
-            Retriever ; Container for the Retriever configuration variables.
-            Db        ; Container for the Db configuration variables.
-            Output    ; Container for the Output configuration variables.
-            Mutator   ; Container for the Mutator configuration variables.
-            Scheduler ; Container for the Scheduler configuration variables.
-            File      ; Container for the File configuration variables.
-            GBparser  ; Container for the File configuration variables.
-
-        Special Methods:
-            __init__ ; Read the configuration file and initialise the
-                       subclasses.
+    Special Methods:
+        - __init__ ; Read the configuration file and initialise the
+                     subclasses.
     """
+    # Public subclasses:
+    #     - Retriever ; Container for the Retriever configuration variables.
+    #     - Db        ; Container for the Db configuration variables.
+    #     - Output    ; Container for the Output configuration variables.
+    #     - Mutator   ; Container for the Mutator configuration variables.
+    #     - Scheduler ; Container for the Scheduler configuration variables.
+    #     - File      ; Container for the File configuration variables.
+    #     - GBparser  ; Container for the File configuration variables.
+
 
     class Retriever() :
         """
-            Container class for the Retriever configuration variables.
+        Container class for the Retriever configuration variables.
 
-            Public variables:
-                email      ; Email address used for Entrez.
-                cache      ; Location of the cache directory.
-                cachesize  ; Maximum size of the cache directory in bytes.
-                maxDldSize ; Maximum size of a GenBank record in bytes.
-                minDldSize ; Minimum size of a GenBank record in bytes.
-                lrgURL     ; base URL of LRG files
+        Public variables:
+            - email      ; Email address used for Entrez.
+            - cache      ; Location of the cache directory.
+            - cachesize  ; Maximum size of the cache directory in bytes.
+            - maxDldSize ; Maximum size of a GenBank record in bytes.
+            - minDldSize ; Minimum size of a GenBank record in bytes.
+            - lrgURL     ; base URL of LRG files.
         """
 
         pass
@@ -45,31 +42,31 @@ class Config() :
 
     class Db() :
         """
-            Container class for the Db configuration variables.
+        Container class for the Db configuration variables.
 
-            Public variables:
-                internalDb      ; Name of the internal database.
-                dbNames         ; Name of the mapping databases
-                LocalMySQLuser  ; Username for the local databases.
-                LocalMySQLhost  ; Hostname of the local databases.
+        Public variables:
+            - internalDb      ; Name of the internal database.
+            - dbNames         ; Name of the mapping databases
+            - LocalMySQLuser  ; Username for the local databases.
+            - LocalMySQLhost  ; Hostname of the local databases.
 
-                RemoteMySQLuser ; Username for the remote UCSC database.
-                RemoteMySQLhost ; Hostname of the UCSC database server.
-                UpdateInterval  ; Time window (in days) to search for
-                                  updates.
-                TempFile        ; Location for downloaded updates.
+            - RemoteMySQLuser ; Username for the remote UCSC database.
+            - RemoteMySQLhost ; Hostname of the UCSC database server.
+            - UpdateInterval  ; Time window (in days) to search for
+                                updates.
+            - TempFile        ; Location for downloaded updates.
             """
     #Db
 
     class Output() :
         """
-            Container class for the Output configuration variables.
+        Container class for the Output configuration variables.
 
-            Public variables:
-                log         ; Name and location of the logfile.
-                datestring  ; Prefix for log messages.
-                loglevel    ; Default level for logging.
-                outputlevel ; Default level for output.
+        Public variables:
+            - log         ; Name and location of the logfile.
+            - datestring  ; Prefix for log messages.
+            - loglevel    ; Default level for logging.
+            - outputlevel ; Default level for output.
         """
 
         pass
@@ -77,14 +74,14 @@ class Config() :
 
     class Mutator() :
         """
-            Container class for the Mutator configuration variables.
+        Container class for the Mutator configuration variables.
 
-            Public variables:
-                flanksize     ; Length of the flanking sequences in the
-                                visualisation.
-                maxvissize    ; Maximum length of the variation in the
-                                visualisation.
-                flankclipsize ; Length of the inserted/deleted flanks.
+        Public variables:
+            - flanksize     ; Length of the flanking sequences in the
+                              visualisation.
+            - maxvissize    ; Maximum length of the variation in the
+                              visualisation.
+            - flankclipsize ; Length of the inserted/deleted flanks.
         """
 
         pass
@@ -92,14 +89,14 @@ class Config() :
 
     class Scheduler() :
         """
-            Container class for the Scheduler configuration variables.
+        Container class for the Scheduler configuration variables.
 
-            Public variables:
-                processName ; Name of the scheduler in the process list.
-                mailFrom    ; Return e-mail address.
-                mailMessage ; Template e-mail.
-                mailSubject ; Subject of the  e-mail.
-                resultsDir  ; Location of the results.
+        Public variables:
+            - processName ; Name of the scheduler in the process list.
+            - mailFrom    ; Return e-mail address.
+            - mailMessage ; Template e-mail.
+            - mailSubject ; Subject of the  e-mail.
+            - resultsDir  ; Location of the results.
         """
 
         pass
@@ -107,10 +104,10 @@ class Config() :
 
     class Batch() :
         """
-            Container class for the Scheduler configuration variables.
+        Container class for the Scheduler configuration variables.
 
-            Public variables:
-                PIDfile     ; Location of the PID file
+        Public variables:
+            - PIDfile     ; Location of the PID file.
         """
 
         pass
@@ -118,15 +115,15 @@ class Config() :
 
     class File() :
         """
-            Container class for the File configuration variables.
+        Container class for the File configuration variables.
 
-            Public variables:
-                bufSize ; Amount of bytes to be read for determining the file
+        Public variables:
+            - bufSize   ; Amount of bytes to be read for determining the file
                           type.
-                header  ; The obligatory header in batch request files.
-                tempDir ; Directory for temporary files.
-                threshold ; The threshold under which the percentage of errors
-                            is allowed in a batchfile
+            - header    ; The obligatory header in batch request files.
+            - tempDir   ; Directory for temporary files.
+            - threshold ; The threshold under which the percentage of errors
+                          is allowed in a batchfile.
         """
 
         pass
@@ -134,34 +131,36 @@ class Config() :
 
     class GBparser() :
         """
-            Container class for the GBparser configuration variables.
+        Container class for the GBparser configuration variables.
 
-            Public variables:
-            upstream   ; Number of upstream nucleotides when searching for a
-                         transcript.
-            downstream ; Number of downstream nucleotides when searching for a
-                         transcript.
+        Public variables:
+            - upstream   ; Number of upstream nucleotides when searching for a
+                           transcript.
+            - downstream ; Number of downstream nucleotides when searching for a
+                           transcript.
         """
 
         pass
-    #File
+    #GBparser
 
     class GenRecord() :
         pass
 
     def __init__(self) :
         """
-            Initialise the class with variables read from the configuration
-            file. In principle, this is the only place in the code where a
-            hard coded constant is used (the name and path to the configuration
-            file).
+        Initialise the class with variables read from the configuration
+        file. In principle, this is the only place in the code where a
+        hard coded constant is used (the name and path to the configuration
+        file).
 
-            Public subclasses (altered):
-                Retriever ; Initialised with Retriever configuration variables.
-                Db        ; Initialised with Db configuration variables.
-                Output    ; Initialised with Output configuration variables.
-                Mutator   ; Initialised with Mutator configuration variables.
-                Scheduler ; Initialised with Scheduler configuration variables.
+        Public subclasses (altered):
+            - Retriever ; Initialised with Retriever configuration variables.
+            - Db        ; Initialised with Db configuration variables.
+            - Output    ; Initialised with Output configuration variables.
+            - Mutator   ; Initialised with Mutator configuration variables.
+            - Scheduler ; Initialised with Scheduler configuration variables.
+        
+        @requires: ConfigObj
         """
         from configobj import ConfigObj # ConfigObj()
 

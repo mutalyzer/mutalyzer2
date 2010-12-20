@@ -1,98 +1,104 @@
 #!/usr/bin/python
 
+"""
+Module for mutating a string.
+
+Mutations are described in the original coordinates. These coordinates are
+transfered to the mutated coordinates with the aid of an internal shift
+list, which keeps track of the sizes of changes. Using the original
+coordinates greatly simplifies combined mutations in a variant. A
+visualisation of each raw variant within a combined variant is made and
+effects on restriction sites are also analysed.
+
+The original as well as the mutated string are stored here.
+
+@requires: Bio.Restriction
+@requires: Bio.Seq.Seq
+@requires: Bio.Alphabet.IUPAC.IUPACAmbiguousDNA
+@requires: Bio.Seq.reverse_complement
+"""
+# Public classes:
+#     - Mutator ; Mutate a string and register all shift points.
+
+
 from Bio import Restriction
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
 from Bio.Seq import reverse_complement # reverse_complement()
 
-"""
-    Module for mutating a string.
-
-    Mutations are described in the original coordinates. These coordinates are
-    transfered to the mutated coordinates with the aid of an internal shift
-    list, which keeps track of the sizes of changes. Using the original
-    coordinates greatly simplifies combined mutations in a variant. A
-    visualisation of each raw variant within a combined variant is made and
-    effects on restriction sites are also analysed.
-
-    The original as well as the mutated string are stored here.
-
-    Public classes:
-        Mutator ; Mutate a string and register all shift points.
-"""
-
 class Mutator() :
     """
-        Mutate a string and register all shift points. For each mutation a
-        visualisation is made (on genomic level) and the addition or deletion
-        of restriction sites is detected. Output for each raw variant is stored
-        in the output object as 'visualisation', 'deletedRestrictionSites' and
-        'addedRestrictionSites' respectively.
+    Mutate a string and register all shift points. For each mutation a
+    visualisation is made (on genomic level) and the addition or deletion
+    of restriction sites is detected. Output for each raw variant is stored
+    in the output object as 'visualisation', 'deletedRestrictionSites' and
+    'addedRestrictionSites' respectively.
 
-        Private variables:
-            __config           ; Configuration variables of this class:
+    Private variables:
+        - __config           ; Configuration variables of this class.
+        - __output           ; The output object.
+        - __shift            ; A sorted list of tuples (position, shiftsize)
+                               where the modifications in length are stored.
+                               Each first element of the tuples in this list
+                               is unique, each second element is non-zero.
+        - __restrictionBatch ;
 
-            __output           ; The output object.
-            __shift            ; A sorted list of tuples (position, shiftsize)
-                                 where the modifications in length are stored.
-                                 Each first element of the tuples in this list
-                                 is unique, each second element is non-zero.
-            __restrictionBatch ;
+    Public variables:
+        - orig    ; The original string.
+        - mutated ; The mutated string.
 
-        Public variables:
-            orig    ; The original string.
-            mutated ; The mutated string.
+    Special methods:
+        - __init__(orig) ; Initialise the class with the original string.
 
-        Special methods:
-            __init__(orig) ; Initialise the class with the original string.
+    Private methods:
+        - __sortins(tuple)      ; Insert a tuple in a sorted list, after
+                                  insertion the list stays sorted.
+        - __makeRestrictionSet()
+        - __mutate(pos1, pos2, ins) ; A general mutation function that does a
+                                      delins on interbase coordinates of the
+                                      original string.
 
-        Private methods:
-            __sortins(tuple)      ; Insert a tuple in a sorted list, after
-                                    insertion the list stays sorted.
-            __makeRestrictionSet()
-            __mutate(pos1, pos2, ins) ; A general mutation function that does a
-                                        delins on interbase coordinates of the
-                                        original string.
-
-        Public methods:
-            shiftpos(position)       ; Calculate the position in the mutated
-                                       string given the position in the
-                                       original string.
-            newSplice(sites)         ; Generate a list of new splice sites.
-            delM(pos1, pos2)         ; Delete a range from non-interbase
-                                       position pos1 to pos2.
-            insM(pos, ins)           ; Insert a string at interbase position
-                                       pos.
-            delimsM(pos1, pos2, ins) ; Delete a range from non-interbase
-                                       position pos1 to pos2 and insert ins.
-            subM(pos, nuc)           ; Substitute a nucleotite at non-interbase
-                                       position pos for nuc.
-            invM(pos1, pos2)         ; Invert a range from non-interbase
-                                       position pos1 to pos2.
-            dupM(pos1, pos2)         ; Duplicate a range from non-interbase
-                                       position pos1 to pos2.
+    Public methods:
+        - shiftpos(position)       ; Calculate the position in the mutated
+                                     string given the position in the
+                                     original string.
+        - newSplice(sites)         ; Generate a list of new splice sites.
+        - delM(pos1, pos2)         ; Delete a range from non-interbase
+                                     position pos1 to pos2.
+        - insM(pos, ins)           ; Insert a string at interbase position
+                                     pos.
+        - delimsM(pos1, pos2, ins) ; Delete a range from non-interbase
+                                     position pos1 to pos2 and insert ins.
+        - subM(pos, nuc)           ; Substitute a nucleotite at non-interbase
+                                     position pos for nuc.
+        - invM(pos1, pos2)         ; Invert a range from non-interbase
+                                     position pos1 to pos2.
+        - dupM(pos1, pos2)         ; Duplicate a range from non-interbase
+                                     position pos1 to pos2.
     """
 
     def __init__(self, orig, config, output) :
         """
-            Initialise the class with the original string.
+        Initialise the class with the original string.
 
-            Arguments:
-                orig   ; The original string before mutation.
-                config ; Configuration variables.
-                output ; The output object.
+        Private variables (altered):
+            - __config           ; Initialised with the configuration
+                                   variables.
+            - __output           ; Initialised with the output object.
+            - __shift            ; Initialised to the empty list.
+            - __restrictionBatch ; Initialised to a default set of
+                                   restriction enzymes.
 
-            Private variables (altered):
-                __config           ; Initialised with the configuration
-                                     variables.
-                __output           ; Initialised with the output object.
-                __shift            ; Initialised to the empty list.
-                __restrictionBatch ; Initialised to a default set of
-                                     restriction enzymes.
+        Public variables (altered):
+            - orig    ; Initialised to the parameter orig.
+            - mutated ; Initialised to the parameter orig.
 
-            Public variables (altered):
-                orig    ; Initialised to the parameter orig.
-                mutated ; Initialised to the parameter orig.
+        @arg orig:   The original string before mutation
+        @type orig: string
+        @arg config: Configuration variables
+        @type config: object
+        @arg output: The output object
+        @type output: object
         """
 
         self.__config = config
@@ -106,20 +112,21 @@ class Mutator() :
 
     def __sortins(self, tuple) :
         """
-            Insert a tuple in a sorted list, the list is sorted on the first
-            element of the tuples. After insertion the list stays sorted.
-            If a tuple is inserted where tuple[0] already exists, this entry
-            is altered.
-            If an altered entry has zero as its second element, the entry is
-            removed.
+        Insert a tuple in a sorted list, the list is sorted on the first
+        element of the tuples. After insertion the list stays sorted.
+        If a tuple is inserted where tuple[0] already exists, this entry
+        is altered.
+        If an altered entry has zero as its second element, the entry is
+        removed.
 
-            Arguments:
-                tuple ; An ordered pair where tuple[0] denotes a position and
-                        tuple[1] denotes the change in shift at this position.
+        Private variables (altered):
+            - __shift ; A tuple can be added, removed or altered.
 
-            Private variables (altered):
-                __shift ; A tuple can be added, removed or altered.
+        @arg tuple: An ordered pair where tuple[0] denotes a position and
+                    tuple[1] denotes the change in shift at this position
+        @type tuple: tuple (integer)
         """
+
         if not tuple[1] : # Only non-zero shift sizes are relevant.
             return
 
@@ -143,17 +150,17 @@ class Mutator() :
 
     def __makeRestrictionList(self, seq) :
         """
-            Return a set of restriction enzymes that can bind in a certain
-            sequence.
+        Return a set of restriction enzymes that can bind in a certain
+        sequence.
 
-            Arguments:
-                seq ; The sequence to be analysed.
+        Private variables:
+            - __restrictionBatch ; A RestrictionBatch object.
 
-            Returns:
-                list ; A list of restriction enzymes.
+        @arg seq: The sequence to be analysed
+        @type seq: string
 
-            Private variables:
-                __restrictionBatch ; A RestrictionBatch object.
+        @return: A list of restriction enzymes
+        @rtype: list
         """
 
         restrictionAnalysis = Restriction.Analysis(self.__restrictionBatch, seq)
@@ -169,8 +176,18 @@ class Mutator() :
     #__makeRestrictionSet
 
     def __restrictionDiff(self, list1, list2) :
-        #TODO documentation
         """
+        Compare two lists, and count those elements which are only present
+        in list1.
+        
+        @arg list1: some list
+        @type list1: list
+        @arg list2: some (other) list
+        @type list2: list
+        
+        @return: the elements only present in list 1, together with the number
+        of occurrences, if more than once present
+        @rtype: list
         """
 
         tempList = list(list1)
@@ -193,26 +210,31 @@ class Mutator() :
 
     def __mutate(self, pos1, pos2, ins) :
         """
-            A general mutation function that does a delins on interbase
-            coordinates of the original string. The change in length (if any)
-            is stored by calling the __sortins() function.
-            The coordinates are those of the original string, so we use the
-            __shifsize() function to map them to the mutated string, on which
-            we perform the alteration.
+        A general mutation function that does a delins on interbase
+        coordinates of the original string. The change in length (if any)
+        is stored by calling the __sortins() function.
+        The coordinates are those of the original string, so we use the
+        __shifsize() function to map them to the mutated string, on which
+        we perform the alteration.
 
-            Arguments:
-                pos1 ; The first interbase position of the deletion.
-                pos2 ; The second interbase position of the deletion.
-                ins  ; The insertion.
+        Private variables:
+            - __config ; The variables maxvissize, flanksize and flankclipsize
+                         are used in the visualisation.
+            - __output ; Visualisation information is added.
 
-            Private variables:
-                __config ; The variables maxvissize, flanksize and flankclipsize
-                           are used in the visualisation.
-                __output ; Visualisation information is added.
+        Public variables (altered):
+            - mutated ; This string will reflect the result of the given
+                        delins.
 
-            Public variables (altered):
-                mutated ; This string will reflect the result of the given
-                          delins.
+        @arg pos1:  The first interbase position of the deletion
+        @type pos1: integer
+        @arg pos2:  The second interbase position of the deletion
+        @type pos2: integer
+        @arg ins:   The insertion
+        @type ins:  string
+        
+        @return: visualisation
+        @rtype: string
         """
 
         #
@@ -276,6 +298,14 @@ class Mutator() :
 
     def visualiseLargeString(self, string) :
         """
+        If the length of a sequence is larger than a certain maxvissize, the
+        string is clipped; otherwise the string is just returned.
+        
+        @arg string: DNA sequence
+        @type string: string
+        
+        @return: either the original sequence, or an abbreviation of it
+        @rtype:  string
         """
 
         if len(string) > self.__config.maxvissize :
@@ -287,18 +317,18 @@ class Mutator() :
 
     def shiftpos(self, position) :
         """
-            Calculate the position in the mutated string, given a position in
-            the original string.
+        Calculate the position in the mutated string, given a position in
+        the original string.
 
-            Arguments:
-                position ; The position in the original string for which we
-                           want the shift size.
+        Private variables:
+            - __shift ; Used to calculate the shift.
 
-            Private variables:
-                __shift ; Used to calculate the shift.
+        @arg position:  The position in the original string for which we want the
+                        shift size
+        @type position: integer
 
-            Returns:
-                integer ; The position in the mutated string.
+        @return: The position in the mutated string
+        @rtype:  integer
         """
         ret = position
 
@@ -314,13 +344,13 @@ class Mutator() :
 
     def newSplice(self, sites) :
         """
-            Generate a list of new splice sites.
+        Generate a list of new splice sites.
 
-            Arguments:
-                sites ; A list of old splice sites.
+        @arg sites:  A list of old splice sites
+        @type sites: list
 
-            Returns:
-                list ; A list of new splice sites.
+        @return: A list of new splice sites
+        @rtype:  list
         """
 
         ret = []
@@ -341,14 +371,15 @@ class Mutator() :
 
     def delM(self, pos1, pos2) :
         """
-            Delete a range from non-interbase position pos1 to pos2.
+        Delete a range from non-interbase position pos1 to pos2.
 
-            Arguments:
-                pos1 ; The first nucleotide of the range to be deleted.
-                pos2 ; The last nucleotide of the range to be deleted.
+        Private variables:
+            - __output ; Visualisation information is added.
 
-            Private variables:
-                __output ; Visualisation information is added.
+        @arg pos1:  The first nucleotide of the range to be deleted
+        @type pos1: integer
+        @arg pos2:  The last nucleotide of the range to be deleted
+        @type pos2: integer
         """
 
         if pos1 == pos2 :
@@ -362,15 +393,15 @@ class Mutator() :
 
     def insM(self, pos, ins) :
         """
-            Insert a string at interbase position pos.
+        Insert a string at interbase position pos.
 
-            Arguments:
-                pos ; The interbase position where the insertion should take
-                      place.
-                ins ; The insertion, a string.
+        Private variables:
+           -  __output ; Visualisation information is added.
 
-            Private variables:
-                __output ; Visualisation information is added.
+        @arg pos:  The interbase position where the insertion should take place
+        @type pos: integer
+        @arg ins:  The insertion
+        @type ins: string
         """
 
         visualisation = ["insertion between %i and %i" % (pos, pos + 1)]
@@ -380,13 +411,15 @@ class Mutator() :
 
     def delinsM(self, pos1, pos2, ins) :
         """
-            Delete a range from non-interbase position pos1 to pos2 and insert
-            ins.
+        Delete a range from non-interbase position pos1 to pos2 and insert
+        ins.
 
-            Arguments:
-                pos1 ; The first nucleotide of the range to be deleted.
-                pos2 ; The last nucleotide of the range to be deleted.
-                ins  ; The insertion, a string.
+        @arg pos1:  The first nucleotide of the range to be deleted
+        @type pos1: integer
+        @arg pos2:  The last nucleotide of the range to be deleted.
+        @type pos2: integer
+        @arg ins:   The insertion
+        @type ins:  string
         """
 
         visualisation = ["delins from %i to %i" % (pos1, pos2)]
@@ -396,14 +429,15 @@ class Mutator() :
 
     def subM(self, pos, nuc) :
         """
-            Substitute a nucleotite at non-interbase position pos for nuc.
+        Substitute a nucleotide at non-interbase position pos for nuc.
 
-            Arguments:
-                pos ; The position where the substitution should take place.
-                nuc ; The new nucleotide.
+        Private variables:
+            - __output ; Visualisation information is added.
 
-            Private variables:
-                __output ; Visualisation information is added.
+       @arg pos:  The position where the substitution should take place
+       @type pos: integer
+       @arg nuc:  The new nucleotide
+       @type nuc: string
         """
 
         visualisation = ["substitution at %i" % pos]
@@ -413,14 +447,15 @@ class Mutator() :
 
     def invM(self, pos1, pos2) :
         """
-            Invert a range from non-interbase position pos1 to pos2.
+        Invert a range from non-interbase position pos1 to pos2.
 
-            Arguments:
-                pos1 ; The first nucleotide of the range to be inverted.
-                pos2 ; The last nucleotide of the range to be inverted.
+        Public variables:
+            - orig ; The original string.
 
-            Public variables:
-                orig ; The original string.
+        @arg pos1:  The first nucleotide of the range to be inverted
+        @type pos1: integer
+        @arg pos2:  The last nucleotide of the range to be inverted
+        @type pos2: integer
         """
 
         visualisation = ["inversion between %i and %i" % (pos1, pos2)]
@@ -431,14 +466,15 @@ class Mutator() :
 
     def dupM(self, pos1, pos2) :
         """
-            Duplicate a range from non-interbase position pos1 to pos2.
+        Duplicate a range from non-interbase position pos1 to pos2.
 
-            Arguments:
-                pos1 ; The first nucleotide of the range to be duplicated.
-                pos2 ; The last nucleotide of the range to be duplicated.
+        Public variables:
+            - orig ; The original string.
 
-            Public variables:
-                orig ; The original string.
+        @arg pos1:  The first nucleotide of the range to be duplicated
+        @type pos1: integer
+        @arg pos2:  The last nucleotide of the range to be duplicated
+        @type pos2: integer
         """
 
         visualisation = ["duplication from %i to %i" % (pos1, pos2)]

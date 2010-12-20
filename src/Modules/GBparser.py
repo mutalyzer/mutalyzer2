@@ -1,19 +1,48 @@
-from Bio import SeqIO, Entrez  # read()
-import bz2                     # BZ2Compressor(), BZ2File()
-from GenRecord import PList, Locus, Gene, Record, GenRecord
-import Db
+#!/usr/bin/python
 
 """
-    Module contains one public function createGBRecord which returns a
-    mutalyzer GenRecord.Record populated with data from a GenBank file.
+Module contains one public function createGBRecord which returns a
+mutalyzer GenRecord. Record populated with data from a GenBank file.
+
+@requires: bz2
+@requires: Db
+@requires: Bio.SeqIO
+@requires: Bio.Entrez
+@requires: GenRecord.PList
+@requires: GenRecord.Locus
+@requires: GenRecord.Gene
+@requires: GenRecord.Record
+@requires: GenRecord.GenRecord
 """
+
+import bz2                     # BZ2Compressor(), BZ2File()
+import Db
+
+from Bio import SeqIO, Entrez  # read()
+from GenRecord import PList, Locus, Gene, Record, GenRecord
 
 class tempGene() :
     """
+    Container class for a given gene name.
+
+    Special methods:
+        - __init__(name) ; Initialise the class.
+
+    Public variables:
+        - rnaList ; List of splice sites.
+        - cdsList ; CDS list (including internal splice sites).
     """
 
     def __init__(self, name) :
         """
+        Initialise the class for a given gene name.
+        
+        Public variables:
+            - rnaList ; List of splice sites.
+            - cdsList ; CDS list (including internal splice sites).
+        
+        @arg name: Gene name
+        @type name: string
         """
 
         self.name = name
@@ -24,10 +53,20 @@ class tempGene() :
 
 class GBparser() :
     """
+    @todo: documentation
     """
 
     def __init__(self) :
         """
+        Initialise the class
+        
+        Public variables:
+            - config ; Config object.
+            
+        Private variables:
+            - __database ; Db.Cache object
+        
+        @requires: Config
         """
 
         import Config
@@ -38,13 +77,13 @@ class GBparser() :
 
     def __location2pos(self, location) :
         """
-            Convert a location object to a tuple of integers.
+        Convert a location object to a tuple of integers.
 
-            Arguments:
-                location ; A location object (see the BioPython documentation).
+        @arg location: A location object (see the BioPython documentation)
+        @type location: location object
 
-            Returns:
-                List ; A tuple of integers.
+        @return: A tuple of integers
+        @rtype: list
         """
 
         ret = []
@@ -62,14 +101,13 @@ class GBparser() :
 
     def __locationList2posList(self, locationList) :
         """
-            Convert a list of locations to a list of integers.
+        Convert a list of locations to a list of integers.
 
-            Arguments:
-                locationList ; A list of locations
-                                (see the BioPython documentation).
+        @arg locationList: A list of locations (see the BioPython documentation)
+        @type locationList: list (location objects)
 
-            Returns:
-                List ; A list (of even length) of integers.
+        @return: A list (of even length) of integers
+        @rtype: list (integers)
         """
 
         ret = []
@@ -96,18 +134,17 @@ class GBparser() :
 
     def __transcriptToProtein(self, transcriptAcc) :
         """
-            Try to find the protein linked to a transcript id.
+        Try to find the protein linked to a transcript id.
 
-            First look in our database, if a link can not be found, try to
-            retrieve it via the NCBI. Store the result in our database.
+        First look in our database, if a link can not be found, try to
+        retrieve it via the NCBI. Store the result in our database.
 
-            Arguments:
-                transcriptAcc ; Accession number of the transcript for which we
-                                want to find the protein.
-
-            Returns:
-                string ; Accession number of a protein or None if nothing can
-                         be found.
+        @arg transcriptAcc: Accession number of the transcript for which we
+                            want to find the protein
+        @type transcriptAcc: string
+        
+        @return: Accession number of a protein or None if nothing can be found
+        @rtype: string
         """
 
         proteinAcc = self.__database.getProtAcc(transcriptAcc)
@@ -142,19 +179,19 @@ class GBparser() :
 
     def __findMismatch(self, productList, direction) :
         """
-            Find the index of the first or last word that distinguishes one
-            sentence from an other.
+        Find the index of the first or last word that distinguishes one
+        sentence from an other.
 
-            If direction equals 1, search for the first word.
-            If direction equals -1, search for the last word.
+        If direction equals 1, search for the first word.
+        If direction equals -1, search for the last word.
 
-            Arguments:
-                productList ; A list of sentences.
-                direction   ; The direction in which to search.
-
-            Returns:
-                integer ; The index of the word where sentences start to
-                          differ.
+        @arg productList: A list of sentences
+        @type productList: list of strings
+        @arg direction: The direction in which to search
+        @type direction: integer (1 or -1)
+        
+        @return: The index of the word where sentences start to differ
+        @rtype: integer
         """
 
         i = 0
@@ -174,13 +211,13 @@ class GBparser() :
 
     def __tagByDict(self, locus, key) :
         """
-            Transfer a variable in the qualifiers dictionary to the locus
-            object. If the variable does not exist, set it to the empty string.
+        Transfer a variable in the qualifiers dictionary to the locus
+        object. If the variable does not exist, set it to the empty string.
 
-            Arguments:
-                locus ; The locus object on which the transfer should be
-                        performed.
-                key   ; The name of the variable that should be transferred.
+        @arg locus: The locus object on which the transfer should be performed
+        @type locus: locus object
+        @arg key: The name of the variable that should be transferred
+        @type key: string
         """
 
         if locus.qualifiers.has_key(key) :
@@ -191,14 +228,14 @@ class GBparser() :
 
     def __tagLocus(self, locusList) :
         """
-            Enrich a list of locus objects (mRNA or CDS) with information used
-            for linking (locus_tag, proteinLink and productTag). Also
-            transfer the variables transcript_id, protein_id, gene and product
-            to each of the locus objects. If these variables do not exist, set
-            them to the empty string.
+        Enrich a list of locus objects (mRNA or CDS) with information used
+        for linking (locus_tag, proteinLink and productTag). Also
+        transfer the variables transcript_id, protein_id, gene and product
+        to each of the locus objects. If these variables do not exist, set
+        them to the empty string.
 
-            Arguments:
-                locusList ; A list of locus objects.
+        @arg locusList: A list of locus objects
+        @type locusList: list
         """
 
         productList = []
@@ -247,12 +284,13 @@ class GBparser() :
 
     def __checkTags(self, locusList, tagName) :
         """
-            Check whether all tags in a locus list are unique. Prune all the
-            non unique tags.
+        Check whether all tags in a locus list are unique. Prune all the
+        non unique tags.
 
-            Arguments:
-                locusList ; A list of loci.
-                tagName   ; Name of the tag to be checked.
+        @arg locusList: A list of loci
+        @type locusList: list
+        @arg tagName: Name of the tag to be checked
+        @type tagName: string
         """
 
         tags = []
@@ -275,17 +313,19 @@ class GBparser() :
 
     def __matchByRange(self, mrna, cds) :
         """
-            Match the mRNA list to the CDS list.
+        Match the mRNA list to the CDS list.
 
-            Arguments:
-                mrnaList ; List of splice sites.
-                cdsList  ; CDS list (including internal splice sites).
+        @arg mrna: List of splice sites
+        @type mrna: list
+        @arg cds: CDS list (including internal splice sites)
+        @type cds: list
 
-            Returns:
-                integer ; -1 : False.
-                           0 : Don't know.
-                           1 : Maybe true.
-                           2 : Probably true.
+        @return:
+            - E{-}1 : False
+            - 0 : Don't know
+            - 1 : Maybe true
+            - 2 : Probably true
+        @rtype: integer
         """
 
         if not cds or not mrna :
@@ -316,26 +356,29 @@ class GBparser() :
 
     def link(self, rnaList, cdsList) :
         """
-            Link mRNA loci to CDS loci (all belonging to one gene).
+        Link mRNA loci to CDS loci (all belonging to one gene).
 
-            First of all, the range of the CDS must be a sub range of that of
-            the mRNA. If this is true, then we try to link both loci. The first
-            method is by looking at the locus_tag, if this fails, we try to
-            match the proteinLink tags, if this also fails, we try the
-            productTag.
-            If no link could be found, but there is only one possibility left,
-            the loci are linked too.
-            The method that was used to link the loci, is put in the linkmethod
-            variable of the transcript locus. The link variable of the
-            transcript locus is a pointer to the CDS locus. Furthermore, the
-            linked variable of the CDS locus is set to indicate that this locus
-            is no longer available for linking.
+        First of all, the range of the CDS must be a subrange of that of
+        the mRNA. If this is true, then we try to link both loci. The first
+        method is by looking at the locus_tag, if this fails, we try to
+        match the proteinLink tags, if this also fails, we try the
+        productTag.
+        
+        If no link could be found, but there is only one possibility left,
+        the loci are linked too.
+        
+        The method that was used to link the loci, is put in the linkmethod
+        variable of the transcript locus. The link variable of the
+        transcript locus is a pointer to the CDS locus. Furthermore, the
+        linked variable of the CDS locus is set to indicate that this locus
+        is no longer available for linking.
 
-            Available link methods are: locus, protein, product and exhaustion.
+        Available link methods are: locus, protein, product and exhaustion.
 
-            Arguments:
-                rnaList ; A list of mRNA loci.
-                cdsList ; A list of CDS loci.
+        @arg rnaList: A list of mRNA loci
+        @type rnaList: list
+        @arg cdsList: A list of CDS loci
+        @type cdsList: list
         """
 
         # Enrich the lists with as much information we can find.
@@ -407,11 +450,11 @@ class GBparser() :
         """
             Create a GenRecord.Record from a GenBank file
 
-            Arguments:
-                filename    ; The full path to the compresed GenBank file
+            @arg filename: The full path to the compressed GenBank file
+            @type filename: string
 
-            Returns:
-                record      ; A GenRecord.Record instance
+            @return: A GenRecord.Record instance
+            @rtype: object (record)
         """
 
         # first create an intermediate genbank record with BioPython

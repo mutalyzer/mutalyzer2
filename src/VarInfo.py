@@ -1,20 +1,28 @@
 #!/usr/bin/python
 
 """
-    Search for an NM number in the MySQL database, if the version number
-    matches, get the start and end positions in a variant and translate these
-    positions to g. notation if the variant is in c. notation and vice versa.
-
+Search for an NM number in the MySQL database, if the version number
+matches, get the start and end positions in a variant and translate these
+positions to I{g.} notation if the variant is in I{c.} notation and vice versa.
     - If no end position is present, the start position is assumed to be the
       end position.
     - If the version number is not found in the database, an error message is
       generated and a suggestion for an other version is given.
     - If the reference sequence is not found at all, an error is returned.
     - If no variant is present, the transcription start and end and CDS end
-      in c. notation is returned.
+      in I{c.} notation is returned.
     - If the variant is not accepted by the nomenclature parser, a parse error
       will be printed.
 
+@requires: sys
+@requires: Modules.Db
+@requires: Modules.Crossmap
+@requires: Modules.Parser
+@requires: Modules.Output
+@requires: Modules.Config
+@requires: Modules.Mapper
+
+@todo: documentation
 """
 
 import sys                   # argv
@@ -28,11 +36,13 @@ from Modules import Mapper
 
 def __sl2il(l) :
     """
-        Convert a list of strings to a list of integers.
+    Convert a list of strings to a list of integers.
+    
+    @arg l: A list of strings
+    @type l: list
 
-        Arguments: l ; A list of strings.
-
-        Returns: list ; A list of integers.
+    @return: A list of integers
+    @rtype: list
     """
 
     for i in range(len(l)) :
@@ -42,18 +52,21 @@ def __sl2il(l) :
 
 def __getcoords(C, Loc, Type) :
     """
-        Return main, offset and g positions given either a position in
-        c. or in g. notation.
+    Return main, offset and g positions given either a position in
+    I{c.} or in I{g.} notation.
 
-        Arguments:
-            C    ; A crossmapper.
-            Loc  ; Either a location in g. or c. notation.
-            Type ; The reference type.
-        Returns:
-            triple:
-                0 ; Main coordinate in c. notation.
-                1 ; Offset coordinate in c. notation.
-                2 ; Position in g. notation.
+    @arg C: A crossmapper
+    @type C: object
+    @arg Loc: Either a location in I{g.} or I{c.} notation
+    @type Loc: object
+    @arg Type: The reference type
+    @type Type: character
+    
+    @return: triple:
+        - 0 ; Main coordinate in I{c.} notation
+        - 1 ; Offset coordinate in I{c.} notation
+        - 2 ; Position in I{g.} notation
+    @rtype: triple (integer, integer, integer)
     """
 
     if Type == 'c' :
@@ -71,31 +84,37 @@ def __getcoords(C, Loc, Type) :
 
 def main(LOVD_ver, build, acc, var) :
     """
-        The entry point (called by the HTML publisher).
+    The entry point (called by the HTML publisher).
 
-        Arguments:
-            LOVD_ver ; The LOVD version (ignored for now).
-            build    ; The human genome build.
-            acc      ; The NM accession number and version.
-            var      ; The variant, or empty.
+    Returns:
+      - start_main   ; The main coordinate of the start position in I{c.}
+                       (non-star) notation.
+      - start_offset ; The offset coordinate of the start position in I{c.}
+                       notation (intronic position).
+      - end_main     ; The main coordinate of the end position in I{c.}
+                       (non-star) notation.
+      - end_offset   ; The offset coordinate of the end position in I{c.}
+                       notation (intronic position).
+      - start_g      ; The I{g.} notation of the start position.
+      - end_g        ; The I{g.} notation of the end position.
+      - type         ; The mutation type.
 
-        Returns:
-            start_main   ; The main coordinate of the start position in c.
-                           (non-star) notation.
-            start_offset ; The offset coordinate of the start position in c.
-                           notation (intronic position).
-            end_main     ; The main coordinate of the end position in c.
-                           (non-star) notation.
-            end_offset   ; The offset coordinate of the end position in c.
-                           notation (intronic position).
-            start_g      ; The g. notation of the start position.
-            end_g        ; The g. notation of the end position.
-            type         ; The mutation type.
+    Returns (alternative):
+      - trans_start  ; Transcription start in I{c.} notation.
+      - trans_stop   ; Transcription stop in I{c.} notation.
+      - CDS_stop     ; CDS stop in I{c.} notation.
 
-        Returns (alternative):
-            trans_start  ; Transcription start in c. notation.
-            trans_stop   ; Transcription stop in c. notation.
-            CDS_stop     ; CDS stop in c. notation.
+    @arg LOVD_ver: The LOVD version (ignored for now)
+    @type LOVD_ver: string
+    @arg build: The human genome build
+    @type build: string
+    @arg acc: The NM accession number and version
+    @type acc: string
+    @arg var: The variant, or empty
+    @type var: string
+    
+    @return: 
+    @rtype: 
     """
 
     C = Config.Config()

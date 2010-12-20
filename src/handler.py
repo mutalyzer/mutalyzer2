@@ -1,13 +1,24 @@
 #!/usr/bin/python
 
 """
-    General handler for mod_python.
+General handler for mod_python.
 
-    This handler calls the webservices handler, the HTML publisher or handles
-    a request itself, depending on keywords in the URI of the request.
+This handler calls the webservices handler, the HTML publisher or handles
+a request itself, depending on keywords in the URI of the request.
 
-    Public methods:
-        handler(req) ; The handler.
+Public methods:
+   -  handler(req) ; The handler.
+   
+@requires: os
+@requires: bz2
+@requires: ZSI.dispatch
+@requires: soaplib.client.make_service_client
+@requires: mod_python.apache
+@requires: mod_python.publisher
+@requires: Modules.Web
+@requires: Modules.Config
+@requires: Modules.File
+@requires: webservice
 """
 
 import os
@@ -24,28 +35,28 @@ import webservice
 
 def handler(req):
     """
-        Handle a request passed to us by mod_python.
+    Handle a request passed to us by mod_python.
 
-        Keywords in the URI of the request are used to decide what to do:
-            "services" ; Dispatch the webservices handler.
-            ".js"      ; Return the raw content of the file (to include
-                         JavaScript from an HTML file).
-            ".py"      ; Return the content as a downloadable file after it has
-                         been processed by TAL (to generate webservice client
-                         files).
-            ".wsdl"    ; Return the content of the file after it has been
-                         processed by TAL (to generate a WSDL file that refers
-                         to the correct server).
-        By default, the HTML publisher is used for normal HTML files and other
-        unhandled requests.
+    Keywords in the URI of the request are used to decide what to do:
+        - "services" ; Dispatch the webservices handler.
+        - ".js"      ; Return the raw content of the file (to include JavaScript
+                       from an HTML file).
+        - ".py"      ; Return the content as a downloadable file after it has
+                       been processed by TAL (to generate webservice client
+                       files).
+        - ".wsdl"    ; Return the content of the file after it has been
+                       processed by TAL (to generate a WSDL file that refers to
+                       the correct server).
 
-        Arguments:
-            req ; The request.
+    By default, the HTML publisher is used for normal HTML files and other
+    unhandled requests.
 
-        Returns:
-            int ; An apache return code, either generated in this function
-                  itself, or by the publisher handler which handles normal HTML
-                  requests.
+    @arg req: The request
+    @type req: string
+
+    @return: An apache return code, either generated in this function
+    itself, or by the publisher handler which handles normal HTML requests
+    @rtype: integer
     """
 
     # Figure out where this program is located and go to the parent directory.

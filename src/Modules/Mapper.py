@@ -1,21 +1,33 @@
 #!/usr/bin/python
 
 """
-    Search for an NM number in the MySQL database, if the version number
-    matches, get the start and end positions in a variant and translate these
-    positions to g. notation if the variant is in c. notation and vice versa.
+Search for an NM number in the MySQL database, if the version number
+matches, get the start and end positions in a variant. Translate these
+positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
 
-    - If no end position is present, the start position is assumed to be the
-      end position.
+    - If no end position is present, the start position is assumed to be the end
+    position.
     - If the version number is not found in the database, an error message is
-      generated and a suggestion for an other version is given.
+    generated and a suggestion for an other version is given.
     - If the reference sequence is not found at all, an error is returned.
-    - If no variant is present, the transcription start and end and CDS end
-      in c. notation is returned.
+    - If no variant is present, the transcription start and end and CDS end in
+    I{c.} notation is returned.
     - If the variant is not accepted by the nomenclature parser, a parse error
-      will be printed.
+    will be printed.
 
+@requires: sys
+@requires: Modules.Config 
+@requires: Modules.Db 
+@requires: Modules.Crossmap
+@requires: Modules.Parser
+@requires: Modules.Output
+@requires: Modules.Serializers.SoapMessage
+@requires: Modules.Serializers.Mapping
+@requires: Modules.Serializers.Transcript
+@requires: Bio.Seq.reverse_complement
+@requires: collections.defaultdict
 """
+
 import sys                     # argv
 from Modules import Config     # Config()
 from Modules import Db         # Db(), get_NM_version(), get_NM_info()
@@ -30,11 +42,13 @@ from collections import defaultdict
 
 def _sl2il(l) :
     """
-        Convert a list of strings to a list of integers.
+    Convert a list of strings to a list of integers.
 
-        Arguments: l ; A list of strings.
+    @arg l: A list of strings
+    @type l: list
 
-        Returns: list ; A list of integers.
+    @returns: A list of integers
+    @rtype: list
     """
 
     return [int(s) for s in l]
@@ -42,18 +56,20 @@ def _sl2il(l) :
 
 def _getcoords(C, Loc, Type) :
     """
-        Return main, offset and g positions given either a position in
-        c. or in g. notation.
+    Return main, offset and g positions given either a position in
+    I{c.} or in I{g.} notation.
 
-        Arguments:
-            C    ; A crossmapper.
-            Loc  ; Either a location in g. or c. notation.
-            Type ; The reference type.
-        Returns:
-            triple:
-                0 ; Main coordinate in c. notation.
-                1 ; Offset coordinate in c. notation.
-                2 ; Position in g. notation.
+    @arg C: A crossmapper
+    @type C: object
+    @arg Loc: A location in either I{g.} or I{c.} notation
+    @type Loc: object
+    @arg Type: The reference type
+    @type Type: string
+    @returns: triple:
+        0. Main coordinate in I{c.} notation
+        1. Offset coordinate in I{c.} notation
+        2. Position in I{g.} notation
+    @rtype: triple (integer, integer, integer)
     """
 
     if Type == 'c' :
@@ -69,11 +85,24 @@ def _getcoords(C, Loc, Type) :
     return (main, offset, g)
 #__getcoords
 
-class Converter(object):
+class Converter(object) :
     """
-        Converter object docstring
+    Converter object docstring
     """
-    def __init__(self, build, C, O):
+
+    def __init__(self, build, C, O) :
+        """
+        Initialise the class.
+        
+        @arg build: the genome build version of the organism (e.g. hg19 for
+        human genome build version 19)
+        @type build: string
+        @arg C: crossmapper object
+        @type C: object
+        @arg O: output object
+        @type O: object        
+        """
+
         self.build = None
         self.__output = O
         self.__config = C
@@ -83,40 +112,79 @@ class Converter(object):
         self.parseTree = None
         self.crossmap = None
         self.dbFields = {}
+    #__init__
 
-    def _changeBuild(self, build):
-        if self.build != build:
+    def _changeBuild(self, build) :
+        """
+        @todo document me (figure out what is does)
+        Change the build if it different from the one previously set?????.
+        
+        @arg build: the genome build version of the organism (e.g. hg19 for
+        human genome build version 19)
+        @type build: string
+        """
+
+        if self.build != build :
             self.crossmap = None
             self.dbFields = {}
             self.build = build
             self.__database = Db.Mapping(build, C.Db)
+        #if
+    #_changeBuild
 
-    def _reset(self):
+    def _reset(self) :
         self.crossmap = None
         self.dbFields = {}
+    #_reset
 
-    def _parseInput(self, variant):
+    def _parseInput(self, variant) :
+        """
+        Parse a variant.
+        
+        @arg variant: variant description
+        @type variant: string
+        
+        @return: parsetree object
+        @rtype: object
+        """
+
         P = Parser.Nomenclatureparser(self.__output)
         parseTree = P.parse(variant)
-        if not parseTree:
+        if not parseTree :
             self.__output.addMessage(__file__, 4, "EPARSE",
                     "Could not parse the given variant")
             return None
-        if parseTree.SingleAlleleVarSet:
+        #if
+        if parseTree.SingleAlleleVarSet :
             #Only simple mutations
             self.__output.addMessage(__file__, 4, "EPARSE",
                     "Can not process multiple mutation variant")
             return None
+        #if
         if not parseTree.RefSeqAcc: #In case of LRG for example
             self.__output.addMessage(__file__, 4, "EONLYGB",
                 "Currently we only support GenBank Records")
             return None
+        #if
         self.parseTree = parseTree
         return parseTree
     #_parseInput
 
-    def _populateFields(self, Fields):
+    def _populateFields(self, Fields) :
         #TODO: ADD Error Messages, unlikely that CDS info is missing
+        """
+        Create a Mutalyzer compatible exon list.
+        
+        @todo: ADD Error Messages, unlikely that CDS info is missing.
+        
+        @arg Fields: dictionary with exon start and end positions taken from the
+        MySQL database
+        @type Fields: dictionary
+        
+        @return: Exon list
+        @rtype: list
+        """
+
         Fields["exonStarts"] =\
             _sl2il(Fields["exonStarts"].split(',')[:-1])
         Fields["exonEnds"] =\
@@ -131,42 +199,66 @@ class Converter(object):
 
         # Create Mutalyzer compatible exon list
         Fields["exons"] = []
-        for exon in zip(Fields["exonStarts"], Fields["exonEnds"]):
+        for exon in zip(Fields["exonStarts"], Fields["exonEnds"]) :
             Fields["exons"].extend(exon)
 
         self.dbFields = Fields
         return Fields
+    #_populateFields
 
-    def _FieldsFromValues(self, values):
+    def _FieldsFromValues(self, values) :
+        """
+        Combines labels with the given values to a dictionary.
+        (zip returns a list of tuples, where the i-th tuple contains the i-th
+        element from each of the argument sequences or iterables.
+        dict(arg) creates a new data dictionary, with items taken from arg.)
+        
+        @arg values: list of values take from the MySQL database
+        @type values: list
+        
+        @return: dictionary with values taken from the MySQL database
+        @rtype: dictionary
+        """
+
         Fields = dict(zip(
             ("acc", "txStart", "txEnd", "cdsStart", "cdsEnd",
              "exonStarts", "exonEnds", "geneName",
              "chrom", "strand", "protAcc", "version"),
             values))
         return self._populateFields(Fields)
+    #_FieldsFromValues
 
-    def _FieldsFromDb(self, acc, version):
-        """Get data from database and populate dbFields dict"""
-        if not version:
+    def _FieldsFromDb(self, acc, version) :
+        """
+        Get data from database and populate dbFields dict.
+        
+        @arg acc: NM_ accession number (without version)
+        @type acc: string
+        @arg version: version number
+        @type version: integer
+        """
+
+        if not version :
             version = 0
         version = int(version)
         versions = self.__database.get_NM_version(acc)
-        if not versions:
+        if not versions :
             self.__output.addMessage(__file__, 4, "EACCNOTINDB",
                     "The accession number: %s could not be "
                     "found in our database." % acc)
             self.__output.addOutput("LOVDERR",
                     "Reference sequence not found.")
-            return None     #Excplicit return of None in case of error
-        else:
-            if version in versions:
+            return None     #Explicit return of None in case of error
+        #if
+        else :
+            if version in versions :
                 Values = self.__database.getAllFields(acc, version)
                 return self._FieldsFromValues(Values)
-
-            if not version:
+            #if
+            if not version :
                 self.__output.addMessage(__file__, 4, "ENOVERSION",
                     "Version number missing for %s" % acc)
-            else:
+            else :
                 self.__output.addMessage(__file__, 4, "EACCNOTINDB",
                     "The accession number: %s version %s "
                     "could not be found in our database." %
@@ -186,18 +278,24 @@ class Converter(object):
             #        "Reference sequence version not found. "
             #        "Available: %s.%s" % (acc, sorted(versions)[-1]))
             return None
+        #else
+    #_FieldsFromDb
 
     def makeCrossmap(self) :
-        ''' Build the crossmapper
+        """ 
+        Build the crossmapper.
+        
+        @todo: ADD Error Messages
 
-            Returns:
-                Cross ; A Crossmap object.
-        '''
+        @return: Cross ; A Crossmap object
+        @rtype: object
+        """
+
         #TODO: ADD Error Messages
         if not self.dbFields: return None
 
         CDS = []
-        if self.dbFields["cdsStart"] != self.dbFields["cdsEnd"]:
+        if self.dbFields["cdsStart"] != self.dbFields["cdsEnd"] :
             #The counting from 0 conversion.
             CDS = [self.dbFields["cdsStart"] + 1, self.dbFields["cdsEnd"]]
 
@@ -213,13 +311,14 @@ class Converter(object):
         return self.crossmap
     #makeCrossmap
 
-    def _coreMapping(self):
-        '''
-            Build the Mapping ClassSerializer
+    def _coreMapping(self) :
+        """
+        Build the Mapping ClassSerializer.
 
-            Returns:
-                Mapping ; A ClassSerializer object.
-        '''
+        @return: Mapping ; A ClassSerializer object
+        @rtype: object
+        """
+
         Cross = self.makeCrossmap()
         if not Cross : 
             return None
@@ -239,7 +338,7 @@ class Converter(object):
             endmain, endoffset, end_g = \
                 _getcoords(Cross, mutation.EndLoc.PtLoc,
                             self.parseTree.RefType)
-        else:
+        else :
             end_g, endmain, endoffset = start_g, startmain, startoffset
 
         # Assign these values to the Mapping ClassSerializer
@@ -253,32 +352,47 @@ class Converter(object):
         V.mutationType  = mutation.MutationType
 
         return V
+    #_coreMapping
 
     def giveInfo(self, accNo) :
-        if '.' not in accNo:
+        """
+        Returns transcription start, transcription end and CDS stop, if
+        available.
+        
+        @arg accNo: transcript (NM_) accession number (with or without version)
+        @type accNo: string
+        
+        @return: transcription start, transcription end and CDS stop
+        @rtype: triple
+        """
+
+        if '.' not in accNo :
             acc, ver = accNo, None
-        else:
+        else :
             acc, ver = accNo.split('.')
         self._FieldsFromDb(acc, ver)
         CM = self.makeCrossmap()
-        if CM: return CM.info()
+        if CM : 
+            return CM.info()
+    #giveInfo
 
-    def mainTranscript(self, accNo):
+    def mainTranscript(self, accNo) :
         """
-            One of the entry points (called by the HTML publisher).
+        One of the entry points (called by the HTML publisher).
 
-            Arguments:
-                acc     ; The full NM accession number (including version).
+        @arg accNo: The full NM accession number (including version)
+        @type accNo: string
 
-            Returns:
-                T       ; ClassSerializer object with the types trans_start,
-                          trans_stop and CDS_stop.
+        @return: T ; ClassSerializer object with the types trans_start,
+        trans_stop and CDS_stop
+        @rtype: object
 
         """
+
         # Initiate ClassSerializer object
         info = self.giveInfo(accNo)
         T = Transcript()
-        if info:
+        if info :
             T.trans_start = info[0]
             T.trans_stop  = info[1]
             T.CDS_stop    = info[2]
@@ -287,10 +401,19 @@ class Converter(object):
 
     def mainMapping(self, accNo, mutation) :
         """
-            One of the entry points (called by the HTML publisher).
+        One of the entry points (called by the HTML publisher).
+        
+        @arg accNo: transcript (NM_) accession number (with version?)
+        @type accNo: string
+        @arg mutation: the 'mutation' (e.g. c.123C>T)
+        @type mutation: string
+        
+        @return: ClassSerializer object
+        @rtype: object
         """
+
         variant = "%s:%s" % (accNo, mutation)
-        if self._parseInput(variant):
+        if self._parseInput(variant) :
             acc = self.parseTree.RefSeqAcc
             version = self.parseTree.Version
             self._FieldsFromDb(acc, version)
@@ -298,59 +421,69 @@ class Converter(object):
         mapping = self._coreMapping()
         soaperrors = self.__output.getSoapMessages()
 
-        if mapping is None:         # Something went wrong
+        if mapping is None :         # Something went wrong
             mapping = Mapping()
             mapping.errorcode = len(soaperrors)
-        else:
+        else :
             mapping.errorcode = 0
 
         mapping.messages = soaperrors
 
         return mapping
-
     #main_Mapping
 
     def c2chrom(self, variant) :
         """
-           Converts a complete HGVS c. notation into a chromosomal notation
+        Converts a complete HGVS I{c.} notation into a chromosomal notation.
 
-           Arguments:
-               variant  ; The variant in HGVS c.notation.
+        @arg variant: The variant in HGVS I{c.} notation
+        @type variant: string
 
-           Returns:
-               var_in_g ; The variant in HGVS g. notation (string).
-
+        @return: var_in_g ; The variant in HGVS I{g.} notation
+        @rtype: string
         """
-        if self._parseInput(variant):
+
+        if self._parseInput(variant) :
             acc = self.parseTree.RefSeqAcc
             version = self.parseTree.Version
             self._FieldsFromDb(acc, version)
+        #if
         M = self._coreMapping()
-        if M is None: return None
+        if M is None : 
+            return None
 
         # construct the variant description
         chromAcc = self.__database.chromAcc(self.dbFields["chrom"])
         f_change = self._constructChange(False)
         r_change = self._constructChange(True)
-        if self.dbFields["strand"] == "+":
+        if self.dbFields["strand"] == "+" :
             change = f_change
-        else:
+        else :
             change = r_change
 
-        if M.start_g != M.end_g:
+        if M.start_g != M.end_g :
             if self.dbFields["strand"] == '+' :
                 var_in_g = "g.%s_%s%s" % (M.start_g, M.end_g, change)
             else :
                 var_in_g = "g.%s_%s%s" % (M.end_g, M.start_g, change)
+        #if
         else :
             var_in_g = "g.%s%s" % (M.start_g, change)
 
         return "%s:%s" % (chromAcc, var_in_g)
-    #cTog
+    #c2chrom
 
-    def correctChrVariant(self, variant):
+    def correctChrVariant(self, variant) :
+        """
+        @arg variant:
+        @type variant: string
+        
+        @return: variant ; 
+        @rtype: string
+        """
+
         #Pre split check
-        if ':' not in variant:
+        if ':' not in variant :
             self.__output.addMessage(__file__, 4, "EPARSE",
                 "The variant needs a colon")
             return None
@@ -358,49 +491,63 @@ class Converter(object):
         #Remove whitespace
         variant = variant.replace(" ","")
 
-        if variant.startswith("chr"):
+        if variant.startswith("chr") :
             preco, postco = variant.split(":")
             chrom = self.__database.chromAcc(preco)
-            if chrom is None:
+            if chrom is None :
                 self.__output.addMessage(__file__, 4, "ENOTINDB",
                     "Chromosome %s could not be found in our database" %
                     preco)
                 return None
-            else:
+            #if
+            else :
                 variant = "%s:%s" % (chrom, postco)
+        #if
         return variant
+    #correctChrVariant
 
-    def chrom2c(self, variant, rt):
-        if not self._parseInput(variant):
+    def chrom2c(self, variant, rt) :
+        """
+        @arg variant: a variant description
+        @type variant: string
+        @arg rt: the return type
+        @type rt: string
+        
+        @return: HGVS_notatations ; 
+        @rtype: dictionary or list
+        """
+
+        if not self._parseInput(variant) :
              return None
 
         acc = self.parseTree.RefSeqAcc
         version = self.parseTree.Version
         chrom = self.__database.chromName("%s.%s" % (acc, version))
-        if not chrom:
+        if not chrom :
             self.__output.addMessage(__file__, 4, "ENOTINDB",
                     "Accession number: %s could not be found in our database" %
                 acc)
             return None
+        #if
         f_change = self._constructChange(False)
         r_change = self._constructChange(True)
 
         #FIXME This should be a proper conversion.
         loc = int(self.parseTree.RawVar.StartLoc.PtLoc.Main)
-        if self.parseTree.RawVar.EndLoc:
+        if self.parseTree.RawVar.EndLoc :
             loc2 = int(self.parseTree.RawVar.EndLoc.PtLoc.Main)
-        else:
+        else :
             loc2 = loc
         transcripts = self.__database.get_Transcripts(\
                 chrom, loc-5000, loc2+5000, 1)
 
         HGVS_notatations = defaultdict(list)
         NM_list = []
-        for transcript in transcripts:
+        for transcript in transcripts :
             self._reset()
             self._FieldsFromValues(transcript)
             M = self._coreMapping()
-            if M is None:
+            if M is None :
                 #balen
                 continue
             # construct the variant description
@@ -410,22 +557,22 @@ class Converter(object):
             startp = self.crossmap.tuple2string((M.startmain, M.startoffset))
             endp = self.crossmap.tuple2string((M.endmain, M.endoffset))
 
-            if strand:
+            if strand :
                 change = f_change
-            else:
+            else :
                 change = r_change
                 startp, endp = endp, startp
 
             #Check if n or c type
             info = self.crossmap.info()
-            if info[0] == '1' and info[1] == info[2]:
+            if info[0] == '1' and info[1] == info[2] :
                 mtype = 'n'
-            else:
+            else :
                 mtype = 'c'
 
-            if M.start_g != M.end_g:
+            if M.start_g != M.end_g :
                 loca = "%s_%s" % (startp, endp)
-            else:
+            else :
                 loca = "%s" % startp
 
             variant = "%s:%c.%s%s" % (accNo, mtype, loca, change)
@@ -437,25 +584,35 @@ class Converter(object):
         return HGVS_notatations
     #chrom2c
 
-    def _constructChange(self, revc=False):
+    def _constructChange(self, revc = False) :
+        """
+        @todo document me
+
+        @arg revc:
+        @type revc:
+        
+        @return:
+        @rtype: string
+        """
+
         p = self.parseTree
-        if not p or p.SingleAlleleVarSet:
+        if not p or p.SingleAlleleVarSet :
             return None
         var = p.RawVar
 
-        if revc:
+        if revc :
             arg1 = reverse_complement(var.Arg1 or "") #imported from Bio.Seq
             arg2 = reverse_complement(var.Arg2 or "")
-        else:
+        #if
+        else :
             arg1 = var.Arg1
             arg2 = var.Arg2
+        #else
 
-        if var.MutationType == "subst":
+        if var.MutationType == "subst" :
             change = "%s>%s" % (arg1, arg2)
-        else:
+        else :
             change = "%s%s" % (var.MutationType, arg1 or arg2 or "")
         return change
     #_constructChange
-
-
-
+#Converter

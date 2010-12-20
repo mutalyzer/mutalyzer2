@@ -1,11 +1,29 @@
 #!/usr/bin/python
 
 """
-    Mutalyzer webservices.
+Mutalyzer webservices.
 
-    Public classes:
-        MutalyzerService ; Mutalyzer webservices.
+@requires: soaplib.wsgi_soap.SimpleWSGISoapApp
+@requires: soaplib.service.soapmethod
+@requires: soaplib.serializers.primitive.String
+@requires: soaplib.serializers.primitive.Integer
+@requires: soaplib.serializers.primitive.Array
+@requires: ZSI.fault.Fault
+
+@requires: Modules.Web
+@requires: Modules.Db
+@requires: Modules.Output
+@requires: Modules.Config
+@requires: Modules.Parser
+@requires: Modules.Mapper
+
+@requires: Modules.Serializers.SoapMessage
+@requires: Modules.Serializers.Mapping
+@requires: Modules.Serializers.Transcript
 """
+# Public classes:
+#     - MutalyzerService ; Mutalyzer webservices.
+
 
 from soaplib.wsgi_soap import SimpleWSGISoapApp
 from soaplib.service import soapmethod
@@ -25,48 +43,46 @@ from Modules.Serializers import SoapMessage, Mapping, Transcript, \
 
 class MutalyzerService(SimpleWSGISoapApp) :
     """
-        Mutalyzer webservices.
+    Mutalyzer webservices.
 
-        These methods are made public via a SOAP interface.
+    These methods are made public via a SOAP interface.
 
-        Private methods:
-            __checkBuild(L, D, build) ; Check if the build is supported.
-            __checkChrom(L, D, chrom) ; Check if the chromosome is in our
-                                        database.
-            __checkPos(L, pos)        ; Check if the position is valid.
+    Private methods:
+      - __checkBuild(L, D, build) ; Check if the build is supported.
+      - __checkChrom(L, D, chrom) ; Check if the chromosome is in our
+                                    database.
+      - __checkPos(L, pos)        ; Check if the position is valid.
 
-        Public methods:
-            getTranscripts(build, chrom, ; Get all transcripts that overlap
-                           pos)            with a chromosomal position.
-            getTranscriptsRange(build,   ; Get all transcripts that overlap
-                                chrom,     with a range on a chromosome.
-                                pos1,
-                                pos2,
-                                method)
-            getGeneName(build, accno)    ; Find the gene name associated with a
-                                           transcript.
-            mappingInfo(LOVD_ver, build, ; Convert a transcript coordinate to a
-                        accNo, variant)    chromosomal one, or vice versa.
-            transcriptInfo(LOVD_ver,     ; Find transcription start and end,
-                           build,          and CDS end (in c. notation) for a
-                           accNo)          given transcript.
-            cTogConversion(self, build,  ; Convert c. to g.
-                           variant)
-            gTocConversion(self, build,  ; Convert g. to c.
-                           variant)
+    Public methods:
+      - getTranscripts(build, chrom,  pos); Get all transcripts that overlap
+        with a chromosomal position.
+      - getTranscriptsRange(build, chrom, pos1, pos2, method) ; Get all
+        transcripts that overlap with a range on a chromosome.
+      - getGeneName(build, accno)    ; Find the gene name associated with a
+        transcript.
+      - mappingInfo(LOVD_ver, build, accNo, variant) ; Convert a transcript
+        coordinate to a chromosomal one, or vice versa.
+      - transcriptInfo(LOVD_ver, build, accNo) ; Find transcription start and
+        end, and CDS end (in I{c.} notation) for a given transcript.
+      - cTogConversion(self, build, variant) ; Convert I{c.} to I{g.}
+      - gTocConversion(self, build,  variant) ; Convert I{g.} to I{c.}
+                      
     """
 
-    def __checkBuild(self, build, config) :
+    def __checkBuild(self, L, build, config) :
         """
-            Check if the build is supported (hg18 or hg19).
+        Check if the build is supported (hg18 or hg19).
 
-            Arguments:
-                L     ; An output object for logging.
-                D     ; A handle to the database.
-                build ; The build name that needs to be checked.
 
-            Returns:
-                Nothing (but raises an EARG exception).
+        Returns:
+            - Nothing (but raises an EARG exception).
+
+        @arg L: an output object for logging
+        @type L: object
+        @arg build: The human genome build name that needs to be checked
+        @type build: string
+        @arg config: configuration object of the Db module
+        @type config: object
         """
 
         if not build in config.dbNames :
@@ -79,15 +95,17 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
     def __checkChrom(self, L, D, chrom) :
         """
-            Check if the chromosome is in our database.
+        Check if the chromosome is in our database.
 
-            Arguments:
-                L     ; An output object for logging.
-                D     ; A handle to the database.
-                chrom ; The name of the chromosome.
+        Returns:
+            - Nothing (but raises an EARG exception).
 
-            Returns:
-                Nothing (but raises an EARG exception).
+        @arg L: An output object for logging
+        @type L: object
+        @arg D: A handle to the database.
+        @type D: object
+        @arg chrom: The name of the chromosome
+        @type chrom: string
         """
 
         if not D.isChrom(chrom) :
@@ -100,14 +118,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
     def __checkPos(self, L, pos) :
         """
-            Check if the position is valid.
+        Check if the position is valid.
 
-            Arguments:
-                L   ; An output object for logging.
-                pos ; The position.
+        Returns:
+            - Nothing (but raises an ERANGE exception).
 
-            Returns:
-                Nothing (but raises an ERANGE exception).
+        @arg L: An output object for logging
+        @type L: object
+        @arg pos: The position
+        @type pos: integer
         """
 
         if pos < 1 :
@@ -119,14 +138,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
     def __checkVariant(self, L, variant) :
         """
-            Check if a variant is provided.
+        Check if a variant is provided.
 
-            Arguments:
-                L       ; An output object for logging.
-                variant ; The variant.
+        Returns:
+            - Nothing (but raises an EARG exception).
 
-            Returns:
-                Nothing (but raises an EARG exception).
+        @arg L: An output object for logging
+        @type L: object
+        @arg variant: The variant
+        @type variant: string
         """
 
         if not variant :
@@ -139,21 +159,23 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, Integer, _returns = Array(String))
     def getTranscripts(self, build, chrom, pos) :
         """
-            Get all the transcripts that overlap with a chromosomal position.
+        Get all the transcripts that overlap with a chromosomal position.
 
-            Arguments:
-                string build ; The build name encoded as "hg18" or "hg19".
-                string chrom ; A chromosome encoded as "chr1", ..., "chrY".
-                int    pos   ; A postion on the chromosome.
+        On error an exception is raised:
+          - detail       ; Human readable description of the error.
+          - faultstring: ; A code to indicate the type of error.
+              - EARG   ; The argument was not valid.
+              - ERANGE ; An invalid range was given.
 
-            Returns:
-                string ; A list of transcripts.
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY"
+        @type chrom: string
+        @arg pos: A position on the chromosome
+        @type pos: integer
 
-            On error an exception is raised:
-                detail       ; Human readable description of the error.
-                faultstring: ; A code to indicate the type of error.
-                    EARG   ; The argument was not valid.
-                    ERANGE ; An invalid range was given.
+        @return: A list of transcripts
+        @rtype: list
         """
 
         C = Config.Config()
@@ -163,7 +185,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
 
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
         D = Db.Mapping(build, C.Db)
 
         self.__checkChrom(L, D, chrom)
@@ -196,7 +218,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request getTranscriptsByGene(%s %s)" % (build,
                      name))
 
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
         D = Db.Mapping(build, C.Db)
 
         ret = D.get_TranscriptsByGeneName(name)
@@ -208,23 +230,26 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #getTranscriptsByGene
 
     @soapmethod(String, String, Integer, Integer, Integer,
-                _returns = Array(String))
+        _returns = Array(String))
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """
-            Get all the transcripts that overlap with a range on a chromosome.
+        Get all the transcripts that overlap with a range on a chromosome.
 
-            Arguments:
-                string build ; The build name encoded as "hg18" or "hg19".
-                string chrom  ; A chromosome encoded as "chr1", ..., "chrY".
-                int    pos1   ; The first postion of the range.
-                int    pos2   ; The last postion of the range.
-                int    method ; The method of determining overlap:
-                                0 ; Return only the transcripts that completely
-                                    fall in the range [pos1, pos2].
-                                1 ; Return all hit transcripts.
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY"
+        @type chrom: string
+        @arg pos1: The first postion of the range
+        @type pos1: integer
+        @arg pos2: The last postion of the range
+        @type pos2: integer
+        @arg method: The method of determining overlap:
+            - 0 ; Return only the transcripts that completely fall in the range
+                  [pos1, pos2].
+            - 1 ; Return all hit transcripts
 
-            Returns:
-                string ; A list of transcripts.
+        @return: A list of transcripts
+        @rtype: list
         """
 
         C = Config.Config()
@@ -235,7 +260,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
             chrom, pos1, pos2, method))
 
         D = Db.Mapping(build, C.Db)
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
 
@@ -253,14 +278,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, _returns = String)
     def getGeneName(self, build, accno) :
         """
-            Find the gene name associated with a transcript.
+        Find the gene name associated with a transcript.
 
-            Arguments:
-                string build ; The build name encoded as "hg18" or "hg19".
-                string accno ; The identifier of a transcript.
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg accno: The identifier of a transcript
+        @type accno: string
 
-            Returns:
-                string ; The name of the associated gene.
+        @return: The name of the associated gene
+        @rtype: string
         """
 
         C = Config.Config()
@@ -270,7 +296,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Received request getGeneName(%s %s)" % (build, accno))
 
         D = Db.Mapping(build, C.Db)
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
 
         ret = D.get_GeneName(accno.split('.')[0])
 
@@ -285,43 +311,42 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, String, String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
         """
-            Search for an NM number in the MySQL database, if the version
-            number matches, get the start and end positions in a variant and
-            translate these positions to g. notation if the variant is in c.
-            notation and vice versa.
+        Search for an NM number in the MySQL database, if the version
+        number matches, get the start and end positions in a variant and
+        translate these positions to I{g.} notation if the variant is in I{c.}
+        notation and vice versa.
 
-            - If no end position is present, the start position is assumed to
-              be the end position.
-            - If the version number is not found in the database, an error
-              message is generated and a suggestion for an other version is
-              given.
-            - If the reference sequence is not found at all, an error is
-              returned.
-            - If no variant is present, an error is returned.
-            - If the variant is not accepted by the nomenclature parser, a
-              parse error will be printed.
+          - If no end position is present, the start position is assumed to be
+            the end position.
+          - If the version number is not found in the database, an error message
+            is generated and a suggestion for an other version is given.
+          - If the reference sequence is not found at all, an error is returned.
+          - If no variant is present, an error is returned.
+          - If the variant is not accepted by the nomenclature parser, a parse
+            error will be printed.
 
+        @arg LOVD_ver: The LOVD version
+        @type LOVD_ver: string
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg accNo: The NM accession number and version
+        @type accNo: string
+        @arg variant: The variant
+        @type variant: string
 
-            Arguments (all strings):
-                LOVD_ver ; The LOVD version.
-                build ; The human genome build (hg19 or hg18).
-                accNo ; The NM accession number and version.
-                variant ; The variant.
-
-            Returns:
-                complex object:
-                    start_main   ; The main coordinate of the start position
-                                   in c. (non-star) notation.
-                    start_offset ; The offset coordinate of the start position
-                                   in c. notation (intronic position).
-                    end_main     ; The main coordinate of the end position in
-                                   c. (non-star) notation.
-                    end_offset   ; The offset coordinate of the end position in
-                                   c. notation (intronic position).
-                    start_g      ; The g. notation of the start position.
-                    end_g        ; The g. notation of the end position.
-                    type         ; The mutation type.
-
+        @return: complex object:
+          - start_main   ; The main coordinate of the start position
+                           in I{c.} (non-star) notation.
+          - start_offset ; The offset coordinate of the start position
+                           in I{c.} notation (intronic position).
+          - end_main     ; The main coordinate of the end position in
+                           I{c.} (non-star) notation.
+          - end_offset   ; The offset coordinate of the end position in
+                           I{c.} notation (intronic position).
+          - start_g      ; The I{g.} notation of the start position.
+          - end_g        ; The I{g.} notation of the end position.
+          - type         ; The mutation type.
+        @rtype: object
         """
 
         C = Config.Config()
@@ -345,21 +370,22 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, String, _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
         """
-            Search for an NM number in the MySQL database, if the version
-            number matches, the transcription start and end and CDS end
-            in c. notation is returned.
+        Search for an NM number in the MySQL database, if the version
+        number matches, the transcription start and end and CDS end
+        in I{c.} notation is returned.
 
+        @arg LOVD_ver: The LOVD version
+        @type LOVD_ver: string
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg accNo: The NM accession number and version
+        @type accNo: string
 
-            Arguments (all strings:
-                LOVD_ver ; The LOVD version.
-                build ; The human genome build (hg19 or hg18).
-                accNo ; The NM accession number and version.
-
-            Returns:
-                complex object:
-                    trans_start  ; Transcription start in c. notation.
-                    trans_stop   ; Transcription stop in c. notation.
-                    CDS_stop     ; CDS stop in c. notation.
+        @return: complex object:
+          - trans_start  ; Transcription start in I{c.} notation.
+          - trans_stop   ; Transcription stop in I{c.} notation.
+          - CDS_stop     ; CDS stop in I{c.} notation.
+        @rtype: object
         """
 
         C = Config.Config()
@@ -381,14 +407,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, _returns = String)
     def chromAccession(self, build, name) :
         """
-            Get the accession number of a chromosome, given a name.
+        Get the accession number of a chromosome, given a name.
 
-            Arguments:
-                build   ; The human genome build.
-                name    ; The name of a chromosome.
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg name: The name of a chromosome (e.g. chr1)
+        @type name: string
 
-            Returns:
-                string ; The accession number of a chromosome.
+        @return: The accession number of a chromosome
+        @rtype: string
         """
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
@@ -397,7 +424,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromAccession(%s %s)" % (build, name))
 
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
         self.__checkChrom(L, D, name)
 
         result = D.chromAcc(name)
@@ -413,14 +440,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, _returns = String)
     def chromosomeName(self, build, accNo) :
         """
-            Get the name of a chromosome, given a chromosome accession number.
+        Get the name of a chromosome, given a chromosome accession number.
 
-            Arguments:
-                build   ; The human genome build.
-                accNo    ; The accession number of a chromosome (NC_...).
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg accNo: The accession number of a chromosome (NC_...)
+        @type accNo: string
 
-            Returns:
-                string ; The name of a chromosome.
+        @return: The name of a chromosome
+        @rtype: string
         """
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
@@ -429,7 +457,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromName(%s %s)" % (build, accNo))
 
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
 #        self.__checkChrom(L, D, name)
 
         result = D.chromName(accNo)
@@ -445,14 +473,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, _returns = String)
     def getchromName(self, build, acc) :
         """
-            Get the chromosome name, given a transcript identifier (NM number).
+        Get the chromosome name, given a transcript identifier (NM number).
 
-            Arguments:
-                build ; The human genome build.
-                acc   ; The NM accession number (version NOT included)
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg acc: The NM accession number (version NOT included)
+        @type acc: string
 
-            Returns:
-                string ; The name of a chromosome.
+        @return: The name of a chromosome
+        @rtype: string
         """
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
@@ -461,7 +490,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO",
                      "Received request getchromName(%s %s)" % (build, acc))
 
-        self.__checkBuild(build, C.Db)
+        self.__checkBuild(L, build, C.Db)
 #        self.__checkChrom(L, D, name)
 
         result = D.get_chromName(acc)
@@ -477,17 +506,17 @@ class MutalyzerService(SimpleWSGISoapApp) :
     @soapmethod(String, String, _returns = Array(String))
     def numberConversion(self, build, variant) :
         """
-            Converts c. to g. notation or vice versa
+        Converts I{c.} to I{g.} notation or vice versa
 
 
-            Arguments (all strings:
-                build   ; The human genome build (hg19 or hg18).
-                variant ; The variant in either c. or g. notation, full HGVS
-                          notation, including NM_ or NC_ accession number.
+        @arg build: The human genome build (hg19 or hg18)
+        @type build: string
+        @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
+        notation, including NM_ or NC_ accession number
+        @type variant: string
 
-            Returns:
-                string; The variant in either g. or c. notation.
-
+        @return: The variant in either I{g.} or I{c.} notation
+        @rtype: string
         """
 
         C = Config.Config() # Read the configuration file.
@@ -513,8 +542,15 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #numberConversion
 
     @soapmethod(String, _returns = String)
-    def checkSyntax(self, variant) :
+    def checkSyntax(self, variant):
         """
+        Checks the syntax of a variant.
+        
+        @arg variant: the variant to check
+        @type variant: string
+        
+        @return: message
+        @rtype: string
         """
         C = Config.Config() # Read the configuration file.
         L = Output.Output(__file__, C.Output)

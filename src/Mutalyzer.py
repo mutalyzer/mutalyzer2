@@ -1,7 +1,29 @@
 #!/usr/bin/python
 
 """
-    The nomenclature checker.
+The nomenclature checker.
+
+@requires: sys
+@requires: math
+@requires: types
+@requires: Bio
+@requires: Bio.Seq
+@requires: Bio.Seq.Seq
+@requires: Bio.Alphabet.IUPAC
+@requires: Bio.SeqUtils.seq3
+@requires: Bio.Restriction
+@requires: Modules.Retriever
+@requires: Modules.GenRecord
+@requires: Modules.Crossmap
+@requires: Modules.Parser
+@requires: Modules.Db
+@requires: Modules.Mutator
+@requires: Modules.Output
+@requires: Modules.Config
+@requires: operator.itemgetter
+@requires: operator.attrgetter
+
+@todo: SET TO FALSE DEBUG FLAG
 """
 
 import sys
@@ -31,14 +53,15 @@ DEBUG = False
 
 def __formatRange(pos1, pos2) :
     """
-        Simplify a range to one position when applicable.
+    Simplify a range to one position when applicable.
 
-        Arguments:
-            pos1 ; First coordinate of a range.
-            pos2 ; Second coordinate of a range.
+    @arg pos1: First coordinate of a range
+    @type pos1: integer
+    @arg pos2: Second coordinate of a range
+    @type pos2: integer
 
-        Returns:
-            string ; pos1_pos2 in case of a real range, pos1 otherwise.
+    @return: pos1_pos2 in case of a real range, pos1 otherwise
+    @rtype: string
     """
 
     if pos1 == pos2 :
@@ -48,13 +71,13 @@ def __formatRange(pos1, pos2) :
 
 def __intronicPosition(Loc) :
     """
-        Check whether a location is intronic.
+    Check whether a location is intronic.
 
-        Arguments:
-            Loc ; A location from the Parser module.
+    @arg Loc: A location from the Parser module
+    @type Loc: 
 
-        Returns:
-            boolean ; True if the location is intronic, False otherwise.
+    @return: True if the location is intronic, False otherwise
+    @rtype: boolean
     """
 
     if not Loc :
@@ -68,18 +91,20 @@ def __intronicPosition(Loc) :
 
 def __checkIntronPosition(main, offset, transcript) :
     """
-        Check whether a c. position is really in an intron: The main coordinate
-        must be a splice site and the offset coordinate must have the correct
-        sign.
+    Check whether a c. position is really in an intron: The main coordinate
+    must be a splice site and the offset coordinate must have the correct
+    sign.
 
-        Arguments:
-            main       ; Main coordinate of the position.
-            offset     ; Offset coordinate of the position.
-            transcript ; Transcript under scrutiny.
+    @arg main: Main coordinate of the position
+    @type main: integer
+    @arg offset: Offset coordinate of the position
+    @type offset: integer
+    @arg transcript: Transcript under scrutiny
+    @type transcript: object
 
-        Returns:
-            boolean ; True if the combination (main, offset) is valid for this
-                      transcript. False otherwise.
+    @return: True if the combination (main, offset) is valid for this
+             transcript, False otherwise
+    @rtype: boolean
     """
 
     main_g = transcript.CM.x2g(main, 0)
@@ -105,22 +130,23 @@ def __checkIntronPosition(main, offset, transcript) :
 
 def __roll(ref, start, stop) :
     """
-        Determine the variability of a variant by looking at cyclic
-        permutations. Not all cyclic permutations are tested at each time, it
-        is sufficient to check ``aW'' if ``Wa'' matches (with ``a'' a letter,
-        ``W'' a word) when rolling to the left for example.
+    Determine the variability of a variant by looking at cyclic
+    permutations. Not all cyclic permutations are tested at each time, it
+    is sufficient to check ``aW'' if ``Wa'' matches (with ``a'' a letter,
+    ``W'' a word) when rolling to the left for example.
 
-        Arguments:
-            ref   ; A reference sequence.
-            start ; Start position of the pattern in the reference sequence.
-            stop  ; End position of the pattern in the reference sequence.
+    @arg ref: A reference sequence
+    @type ref: string
+    @arg start: Start position of the pattern in the reference sequence
+    @type start: integer
+    @arg stop: End position of the pattern in the reference sequence.
+    @type stop: integer
 
-        Returns:
-            tuple:
-                left  ; Amount of positions that the pattern can be shifted to
-                        the left.
-                right ; Amount of positions that the pattern can be shifted to
-                        the right.
+    @return: tuple:
+        - left  ; Amount of positions that the pattern can be shifted to the left
+        - right ; Amount of positions that the pattern can be shifted to the
+                  right
+    @rtype: tuple (integer, integer)
     """
 
     pattern = ref[start - 1:stop] # Extract the pattern.
@@ -147,16 +173,16 @@ def __roll(ref, start, stop) :
 
 def __palinsnoop(string) :
     """
-        Check a sequence for a reverse-complement-palindromic prefix (and
-        suffix). If one is detected, return the length of this prefix. If the
-        string equals its reverse complement, return -1.
+    Check a sequence for a reverse-complement-palindromic prefix (and
+    suffix). If one is detected, return the length of this prefix. If the
+    string equals its reverse complement, return -1.
 
-        Arguments:
-            string ; A nucleotide sequence.
+    @arg string: A nucleotide sequence
+    @type string: string
 
-        Returns:
-            integer ; The number of elements that are palindromic or -1 if the
-                      string is a ``palindrome''.
+    @return: The number of elements that are palindromic or -1 if the string is
+             a "palindrome".
+    @rtype: string
     """
 
     revcomp = Bio.Seq.reverse_complement(string)
@@ -170,6 +196,7 @@ def __palinsnoop(string) :
 def __bprint(s, O, where) :
     # FIXME obsoleted function (replaced by __bprint2()), but still used.
     """
+    @todo: FIXME obsoleted function (replaced by __bprint2()), but still used.
     """
 
     if not s :
@@ -194,21 +221,25 @@ def __bprint(s, O, where) :
 
 def __insertTag(s, pos1, pos2, tag1, tag2) :
     """
-        Insert two tags (tag1 and tag2) in string s at positions pos1 and pos2
-        respectively if the positions are within the length of s. If not,
-        either insert one tag or do nothing. If pos1 equals pos2, don't do
-        anything either.
+    Insert two tags (tag1 and tag2) in string s at positions pos1 and pos2
+    respectively if the positions are within the length of s. If not,
+    either insert one tag or do nothing. If pos1 equals pos2, don't do
+    anything either.
 
-        Arguments:
-            s    ; A sequence.
-            pos1 ; Position of tag1.
-            pos2 ; Position of tag2.
-            tag1 ; Content of tag1.
-            tag2 ; Content of tag2.
+    @arg s: A sequence
+    @type s:
+    @arg pos1: Position of tag1
+    @type pos1:
+    @arg pos2: Position of tag2
+    @type pos2:
+    @arg tag1: Content of tag1
+    @type tag1:
+    @arg tag2: Content of tag2
+    @type tag2:
 
-        Returns:
-            string ; The original sequence, or a sequence with eiter tag1,
-                     tag2 or both tags inserted.
+    @return: The original sequence, or a sequence with eiter tag1, tag2 or both
+             tags inserted.
+    @rtype: string
     """
 
     output = s
@@ -227,15 +258,19 @@ def __insertTag(s, pos1, pos2, tag1, tag2) :
 
 def __bprint2(s, pos1, pos2, O, where) :
     """
-        Make a fancy representation of a protein and put it in the Output
-        object under the name ``where''.
+    Make a fancy representation of a protein and put it in the Output
+    object under the name "where".
 
-        Arguments:
-            s     ; A protein sequence.
-            pos1  ; First position to highlight.
-            pos2  ; Last position to highlight.
-            O     ; The Output object.
-            where ; Location in the Output object to store the representation.
+    @arg s: A protein sequence
+    @type s: string
+    @arg pos1: First position to highlight
+    @type pos1:
+    @arg pos2: Last position to highlight
+    @type pos2:
+    @arg O: The Output object
+    @type O: object
+    @arg where: Location in the Output object to store the representation
+    @type where: 
     """
 
     if not s :
@@ -269,14 +304,14 @@ def __bprint2(s, pos1, pos2, O, where) :
 
 def __PtLoc2main(Loc) :
     """
-        Convert the main coordinate in a location (from the Parser) to an
-        integer.
+    Convert the main coordinate in a location (from the Parser) to an
+    integer.
 
-        Arguments:
-            Loc ; A location.
+    @arg Loc: A location
+    @type Loc: object
 
-        Returns:
-            integer ; Integer representation of the main coordinate.
+    @return: Integer representation of the main coordinate
+    @rtype: integer
     """
 
     main = int(Loc.Main)
@@ -288,14 +323,14 @@ def __PtLoc2main(Loc) :
 
 def __PtLoc2offset(Loc) :
     """
-        Convert the offset coordinate in a location (from the Parser) to an
-        integer.
+    Convert the offset coordinate in a location (from the Parser) to an
+    integer.
 
-        Arguments:
-            Loc ; A location.
+    @arg Loc: A location.
+    @type Loc: object
 
-        Returns;
-            integer ; Integer representation of the offset coordinate.
+    @return: Integer representation of the offset coordinate
+    @rtype: integer
     """
 
     if Loc.Offset :
@@ -312,16 +347,17 @@ def __PtLoc2offset(Loc) :
 
 def __splice(string, splice_sites) :
     """
-        Construct the transcript or the coding sequence from a record and
-        a list of splice sites.
+    Construct the transcript or the coding sequence from a record and
+    a list of splice sites.
 
-        Arguments:
-            record       ; A GenBank record (see the BioPython documentation).
-            splice_sites ; A list of even length of integers.
+    @arg string: a DNA sequence
+    @type string: string
+    @arg splice_sites: A list of even length of integers.
+    @type splice_sites: list
 
-        Returns:
-            String ; The concatenation of slices from the sequence that is
-                     present in the GenBank record.
+    @return: The concatenation of slices from the sequence that is present in
+             the GenBank record
+    @rtype: string
     """
 
     transcript = ""
@@ -335,6 +371,7 @@ def __splice(string, splice_sites) :
 def __nsplice(string, splice_sites, CDS, orientation) :
     #FIXME document this.
     """
+    @todo: documentation
     """
 
     transcript = ""
@@ -364,14 +401,14 @@ def __nsplice(string, splice_sites, CDS, orientation) :
 
 def __cdsLen(splice_sites) :
     """
-        Calculate the length of a CDS.
+    Calculate the length of a CDS.
 
-        Arguments:
-            splice_sites ; The coordinates of the CDS including internal splice
-                           sites.
+    @arg splice_sites: The coordinates of the CDS including internal splice
+                       sites.
+    @type splice_sites: list
 
-        Returns:
-            integer ; Length of the CDS.
+    @return: Length of the CDS
+    @rtype: integer
     """
 
     l = 0
@@ -383,13 +420,13 @@ def __cdsLen(splice_sites) :
 
 def __checkDNA(arg) :
     """
-        Check whether a string is a DNA string.
+    Check whether a string is a DNA string.
 
-        Arguments:
-            arg ; Any string.
+    @arg arg: Any string
+    @type arg: string
 
-        Returns:
-            boolean ; True if the string is a DNA string, False otherwise.
+    @return: True if the string is a DNA string, False otherwise
+    @rtype: boolean
     """
 
     for i in str(arg) :
@@ -400,18 +437,22 @@ def __checkDNA(arg) :
 
 def __checkOptArg(ref, p1, p2, arg, O) :
     """
-        Do several checks for the optional argument of a variant.
+    Do several checks for the optional argument of a variant.
 
 
-        Arguments:
-            ref ; The reference sequence.
-            p1  ; Start position of the variant.
-            p2  ; End position of the variant.
-            arg ; The optional argument.
-            O   ; The Output object.
+    @arg ref: The reference sequence
+    @type ref: string
+    @arg p1: Start position of the variant
+    @type p1: integer
+    @arg p2: End position of the variant
+    @type p2: integer
+    @arg arg: The optional argument
+    @type arg: 
+    @arg O: The Output object
+    @type O: object
 
-        Returns:
-            boolean ; True if the optional argument is correct, False otherwise.
+    @return: True if the optional argument is correct, False otherwise.
+    @rtype: boolean
     """
 
     if arg : # The argument is optional, if it is not present, it is correct.
@@ -446,14 +487,15 @@ def __checkOptArg(ref, p1, p2, arg, O) :
 
 def __lcp(str1, str2) :
     """
-        Calculate the length of the longest common prefix of two strings.
+    Calculate the length of the longest common prefix of two strings.
 
-        Arguments:
-            str1 ; The first string.
-            str2 ; The second string.
+    @arg str1: The first string
+    @type str1: string
+    @arg str2: The second string
+    @type str2: string
 
-        Returns:
-            integer ; The length of the longest common prefix of str1 and str2.
+    @return: The length of the longest common prefix of str1 and str2
+    @rtype: integer
     """
 
     pos = 0
@@ -468,14 +510,15 @@ def __lcp(str1, str2) :
 
 def __lcs(str1, str2) :
     """
-        Calculate the length of the longest common suffix of two strings.
+    Calculate the length of the longest common suffix of two strings.
 
-        Arguments:
-            str1 ; The first string.
-            str2 ; The second string.
+    @arg str1: The first string
+    @type str1: string
+    @arg str2: The second string
+    @type str2: string
 
-        Returns:
-            integer ; The length of the longest common suffix of str1 and str2.
+    @return: The length of the longest common suffix of str1 and str2
+    @rtype: integer
     """
 
     t1 = str1[::-1] # Invert str1.
@@ -487,20 +530,21 @@ def __lcs(str1, str2) :
 
 def findInFrameDescription(str1, str2) :
     """
-        Give a description of an inframe difference of two proteins. Also give
-        the position at which the proteins start to differ and the positions at
-        which they are the same again.
+    Give a description of an inframe difference of two proteins. Also give
+    the position at which the proteins start to differ and the positions at
+    which they are the same again.
 
-        Arguments:
-            str1 ; The original protein.
-            str2 ; The mutated protein.
+    @arg str1: The original protein
+    @type str1: string
+    @arg str2: The mutated protein
+    @type str2: string
 
-        Retuns:
-            vector:
-                string  ; Protein description of the change.
-                integer ; Start position of the change.
-                integer ; End position of the change in the first protein.
-                integer ; End position of the change in the second protein.
+    @return: vector:
+        - string  ; Protein description of the change
+        - integer ; Start position of the change
+        - integer ; End position of the change in the first protein
+        - integer ; End position of the change in the second protein
+    @rtype: string
     """
 
     # Nothing happened.
@@ -562,22 +606,23 @@ def findInFrameDescription(str1, str2) :
 
 def findFrameShift(str1, str2) :
     """
-        Give the description of an out of frame difference between two
-        proteins. Give a description of an inframe difference of two proteins.
-        Also give the position at which the proteins start to differ and the
-        end positions (to be compatible with the findInFrameDescription()
-        function).
+    Give the description of an out of frame difference between two
+    proteins. Give a description of an inframe difference of two proteins.
+    Also give the position at which the proteins start to differ and the
+    end positions (to be compatible with the findInFrameDescription()
+    function).
 
-        Arguments:
-            str1 ; The original protein.
-            str2 ; The mutated protein.
+    @arg str1: The original protein
+    @type str1: string
+    @arg str2: The mutated protein
+    @type str2: string
 
-        Retuns:
-            vector:
-                string  ; Protein description of the change.
-                integer ; Start position of the change.
-                integer ; End position of the first protein.
-                integer ; End position of the second protein.
+    @return: vector:
+        - string  ; Protein description of the change.
+        - integer ; Start position of the change.
+        - integer ; End position of the first protein.
+        - integer ; End position of the second protein.
+    @rtype: string
     """
 
     lcp = __lcp(str1, str2)
@@ -593,20 +638,22 @@ def findFrameShift(str1, str2) :
 
 def __toProtDescr(CDSStop, orig, trans) :
     """
-        Wrapper function for the findInFrameDescription() and findFrameShift()
-        functions. It uses the value CDSStop to decide which one to call.
+    Wrapper function for the findInFrameDescription() and findFrameShift()
+    functions. It uses the value CDSStop to decide which one to call.
 
-        Arguments:
-            CDSStop ; Position of the stop codon in c. notation (CDS length).
-            orig    ; The original protein.
-            trans   ; The mutated protein.
+    @arg CDSStop: Position of the stop codon in c. notation (CDS length)
+    @type CDSStop: integer
+    @arg orig: The original protein
+    @type orig: string
+    @arg trans: The mutated protein
+    @type trans: string
 
-        Retuns:
-            vector:
-                string  ; Protein description of the change.
-                integer ; Start position of the change.
-                integer ; End position of the change in the first protein.
-                integer ; End position of the change in the second protein.
+    @return: vector:
+        - string  ; Protein description of the change.
+        - integer ; Start position of the change.
+        - integer ; End position of the change in the first protein.
+        - integer ; End position of the change in the second protein.
+    @rtype: tuple (string, integer, integer, integer)
     """
 
     if CDSStop % 3 :
@@ -620,16 +667,16 @@ def __toProtDescr(CDSStop, orig, trans) :
 
 def __trim2(str1, str2) :
     """
-        Given two strings, trim the lcp and the lcs.
+    Given two strings, trim the lcp and the lcs.
 
-        Arguments:
-            str1 ; A string.
-            str2 ; An other string.
+    @arg str1: A string
+    @type str1: string
+    @arg str2: An other string
+    @type str2: string
 
-        Returns:
-            tuple:
-                string ; Trimmed version of str1.
-                string ; Trimmed version of str2.
+    @return: tuple:
+        - string: Trimmed version of str1.
+        - string: Trimmed version of str2.
     """
 
     lcp = __lcp(str1, str2)
@@ -640,17 +687,18 @@ def __trim2(str1, str2) :
 def __rangeToC(M, g1, g2) :
     # FIXME apparently obsolete.
     """
-        Convert a genomic range to a CDS oriented range.
+    Convert a genomic range to a CDS oriented range.
 
-        Arguments:
-            M  ;
-            g1 ;
-            g2 ;
+    @arg M:
+    @type M:
+    @arg g1:
+    @type g1:
+    @arg g2:
+    @type g2:
 
-        Returns:
-            tuple:
-                string ;
-                string ;
+    @return: tuple (string, string)
+    @rtype: tuple
+    @todo: FIXME apparently obsolete.
     """
 
     if M.orientation == -1 :
@@ -661,10 +709,14 @@ def __rangeToC(M, g1, g2) :
 def _createBatchOutput(O):
     #TODO More documentation.
     """
-        Format the results to a batch output.
+    Format the results to a batch output.
 
-        Filter the mutalyzer output
+    Filter the mutalyzer output
+    
+    @arg O:
+    @type O:
 
+    @todo: More documentation.
     """
     goi, toi = O.getOutput("geneSymbol")[-1] # Two strings [can be empty]
     tList   = []                             # Temporary List
@@ -750,13 +802,18 @@ def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
         Do a semantic check for substitutions, do the actual substitution
         and give it a name.
 
-        Arguments:
-            start_g           ; Genomic location of the substitution.
-            Arg1              ; Nucleotide in the reference sequence.
-            Arg2              ; Nucleotide in the mutated sequence.
-            MUU               ; A Mutator object.
-            GenRecordInstance ; A GenRecord object.
-            O                 ; The Output object.
+        @arg start_g: Genomic location of the substitution
+        @type start_g: integer
+        @arg Arg1: Nucleotide in the reference sequence.
+        @type Arg1: string
+        @arg Arg2: Nucleotide in the mutated sequence.
+        @type Arg2: string
+        @arg MUU: A Mutator object.
+        @type MUU: object
+        @arg GenRecordInstance: A GenRecord object.
+        @type GenRecordInstance: object
+        @arg O: The Output object.
+        @type O: object
     """
 
     if not __checkDNA(Arg2) : # It must be DNA.
@@ -775,16 +832,21 @@ def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
 def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
                              GenRecordInstance, O) :
     """
-        Do a semantic check for a deletion or duplication, do the actual
-        deletion/duplication and give it a name.
+    Do a semantic check for a deletion or duplication, do the actual
+    deletion/duplication and give it a name.
 
-        Arguments:
-            start_g           ; Genomic start position of the del/dup.
-            end_g             ; Genomic end position of the del/dup.
-            mutationType      ; The type (del or dup).
-            MUU               ; A Mutator object.
-            GenRecordInstance ; A GenRecord object.
-            O                 ; The Output object.
+    @arg start_g : Genomic start position of the del/dup
+    @type start_g: integer
+    @arg end_g: Genomic end position of the del/dup
+    @type end_g: integer
+    @arg mutationType: The type (del or dup)
+    @type mutationType: string
+    @arg MUU: A Mutator object
+    @type MUU: object
+    @arg GenRecordInstance: A GenRecord object
+    @type GenRecordInstance: object
+    @arg O: The Output object
+    @type O: object
     """
 
     roll = __roll(MUU.orig, start_g, end_g)
@@ -826,6 +888,7 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
 
 def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
     """
+    @todo: documentation
     """
 
     snoop = __palinsnoop(MUU.orig[start_g - 1:end_g])
@@ -866,6 +929,7 @@ def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
 
 def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     """
+    @todo: documentation
     """
 
     if start_g + 1 != end_g :
@@ -927,6 +991,7 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
 
 def __ivs2g(location, transcript) :
     """
+    @todo: documentation
     """
 
     ivsNumber = int(location.IVSNumber)
@@ -943,6 +1008,7 @@ def __ivs2g(location, transcript) :
 
 def __ex2g(location, transcript) :
     """
+    @todo: documentation
     """
 
     numberOfExons = transcript.CM.numberOfExons()
@@ -965,6 +1031,7 @@ def __ex2g(location, transcript) :
 
 def __normal2g(RawVar, transcript) :
     """
+    @todo: documentation
     """
 
     if not RawVar.StartLoc.PtLoc.Main.isdigit() :
@@ -1014,6 +1081,7 @@ def __normal2g(RawVar, transcript) :
 
 def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     """
+    @todo: documentation
     """
 
     # FIXME check this
@@ -1166,6 +1234,9 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
 #__rv
 
 def __ppp(MUU, parts, GenRecordInstance, O) :
+    """
+    @todo: documentation
+    """
     if parts.RawVar or parts.SingleAlleleVarSet :
         if parts.RefType == 'r' :
             O.addMessage(__file__, 4, "ERNA", "Descriptions on RNA level " \
@@ -1331,6 +1402,9 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
 #__ppp
 
 def process(cmd, C, O) :
+    """
+    @todo: documentation
+    """
     parser = Parser.Nomenclatureparser(O)
     O.addOutput("inputvariant", cmd)
     ParseObj = parser.parse(cmd)
@@ -1565,6 +1639,9 @@ def process(cmd, C, O) :
 #process
 
 def main(cmd) :
+    """
+    @todo: documentation
+    """
     C = Config.Config()
     O = Output.Output(__file__, C.Output)
 

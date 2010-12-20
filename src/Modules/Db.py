@@ -1,20 +1,26 @@
 #!/usr/bin/python
 
 """
-    Module for database access.
-    The Db class is a superclass of the rest of the classes and should not be
-    used as such. The superclass mainly consists of a wrapper for SQL
-    statements.
+Module for database access.
+The Db class is a superclass of the rest of the classes and should not be
+used as such. The superclass mainly consists of a wrapper for SQL
+statements.
 
-
-    Public classes:
-        Db      ; Log in to a database and keep it open for queries.
-        Mapping ; Mapping of transcripts and genes.
-        Remote  ; Retrieving updates for the mapping databases.
-        Update  ; Updating the mapping databases.
-        Cache   ; Cache administration.
-        Batch   ; Batch checker.
+@requires: MySQLdb
+@requires: types
+@requires: time
+@requires: os
+@requires: Modules.Misc
 """
+
+#Public classes:
+#    - Db      ; Log in to a database and keep it open for queries.
+#    - Mapping ; Mapping of transcripts and genes.
+#    - Remote  ; Retrieving updates for the mapping databases.
+#    - Update  ; Updating the mapping databases.
+#    - Cache   ; Cache administration.
+#    - Batch   ; Batch checker.
+
 
 import MySQLdb # connect(), escape_string()
 import types   # TupleType
@@ -32,29 +38,31 @@ from Modules import Misc # ID()
 
 class Db() :
     """
-        Log in to a database and keep it open for queries.
+    Log in to a database and keep it open for queries.
 
-        Private variables:
-            __db ; Interface to the database.
+    Private variables:
+        - __db ; Interface to the database.
 
-        Special methods:
-            __init__(dbName, mySqlUser, mySqlHost) ; Do the login.
+    Special methods:
+        - __init__(dbName, mySqlUser, mySqlHost) ; Do the login.
 
-        Public methods:
-            query(statement) ; General query function.
+    Public methods:
+        - query(statement) ; General query function.
     """
 
     def __init__(self, dbName, mySqlUser, mySqlHost) :
         """
-            Log in to the database.
+        Log in to the database.
 
-            Arguments:
-                dbName    ; The name of the database to use.
-                mySqlUser ; User name for the database.
-                mySqlHost ; Host name for the database.
+        Private variables (altered):
+            - __db ; The interface to the database.
 
-            Private variables (altered):
-                __db       ; The interface to the database.
+        @arg dbName: The name of the database to use
+        @type dbName: string
+        @arg mySqlUser: User name for the database
+        @type mySqlUser: string
+        @arg mySqlHost: Host name for the database
+        @type mySqlHost: string
         """
 
         self.__db = MySQLdb.connect(user = mySqlUser, db = dbName,
@@ -63,17 +71,16 @@ class Db() :
 
     def query(self, statement) :
         """
-            Query the database.
+        Query the database.
 
-            Arguments:
-                statement ; The statement that is to be queried, consists of
-                            a tuple: (string, (args)).
+        Private variables:
+            - __db ; Interface to the database.
 
-            Returns:
-                list ; The result of the query.
+        @arg statement: The statement that is to be queried
+        @type statement: tuple (string, (args))
 
-            Private variables:
-                __db ; Interface to the database.
+        @return: The result of the query
+        @rtype: list
         """
 
         # Convert the arguments to a tuple.
@@ -107,38 +114,38 @@ class Db() :
 
 class Mapping(Db) :
     """
-        Database functions for mapping of transcripts and genes.
+    Database functions for mapping of transcripts and genes.
 
-        Special methods:
-            __init__(build, config) ; Initialise the class.
+    Special methods:
+        - __init__(build, config) ; Initialise the class.
 
-        Public methods:
-            get_protAcc(mrnaAcc)      ; Query the database for a protein ID.
-            get_NM_info(mrnaAcc)      ; Retrieve various data for an NM number.
-            get_NM_version(mrnaAcc)   ; Get the version number of an accession
-                                        number.
-            get_Transcripts(chrom,    ; Get a list of transcripts, given a
-                            position,   chromosome and a range.
-                            overlap)
-            get_GeneName(mrnaAcc)     ; Get the gene name, given an NM number.
-            isChrom(name)             ; Check whether we know this name to be
-                                        a chromosome name.
+    Public methods:
+        - get_protAcc(mrnaAcc)      ; Query the database for a protein ID.
+        - get_NM_info(mrnaAcc)      ; Retrieve various data for an NM number.
+        - get_NM_version(mrnaAcc)   ; Get the version number of an accession
+                                      number.
+        - get_Transcripts(chrom, p1, p2, overlap) ; Get a list of transcripts,
+                                      given a chromosome and a range.
+        - get_GeneName(mrnaAcc)     ; Get the gene name, given an NM number.
+        - isChrom(name)             ; Check whether we know this name to be
+                                      a chromosome name.
 
-        Inherited methods from Db:
-            query(statement) ; General query function.
+    Inherited methods from Db:
+        - query(statement) ; General query function.
 
-        SQL tables from dbNames:
-            map ; Accumulated mapping info.
+    SQL tables from dbNames:
+        - map ; Accumulated mapping info.
     """
 
     def __init__(self, build, config) :
         """
-            Initialise the Db parent class. Use the local database for a
-            certain build.
+        Initialise the Db parent class. Use the local database for a certain
+        build.
 
-            Arguments:
-                build  ; The version of the mapping database.
-                config ; Configuration variables.
+        @arg build: The version of the mapping database
+        @type build: string
+        @arg config: Configuration variables
+        @type config: class instance
         """
 
         Db.__init__(self, build, config.LocalMySQLuser, config.LocalMySQLhost)
@@ -146,16 +153,16 @@ class Mapping(Db) :
 
     def get_protAcc(self, mrnaAcc) :
         """
-            Query the database for a protein ID given an mRNA ID.
+        Query the database for a protein ID given an mRNA ID.
 
-            Arguments:
-                mrnaAcc ; The ID of an mRNA.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string
 
-            Returns:
-                string ; The protein ID .
+        @return: The protein ID
+        @rtype: string
         """
 
         statement = """
@@ -167,25 +174,28 @@ class Mapping(Db) :
         return self.query(statement)[0][0]
     #get_protAcc
 
-    def get_NM_info(self, mrnaAcc, version=None) :
+    def get_NM_info(self, mrnaAcc, version = None) :
         """
-            Retrieve various data for an NM number.
+        Retrieve various data for an NM number.
 
-            Arguments:
-                mrnaAcc ; The ID of an mRNA.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string
+        @arg version: version number of the accession number (not used)
+        @type version: integer
 
-            Returns:
-                list:
-                    exonStarts ; List of exon start sites.
-                    exonEnds   ; List of exon end sites.
-                    cdsStart   ; Position of the start codon.
-                    cdsEnd     ; Position of the end codon.
-                    strand     ; The orientation of the gene (+ = forward,
-                                                              - = reverse).
+        @return: 
+                 - exonStarts ; List of exon start sites.
+                 - exonEnds   ; List of exon end sites.
+                 - cdsStart   ; Position of the start codon.
+                 - cdsEnd     ; Position of the end codon.
+                 - strand     ; Orientation of the gene (+ = forward,
+                                                         - = reverse)
+        @rtype: list
         """
+
         statement = """
             SELECT exonStarts, exonEnds, cdsStart, cdsEnd, strand
               FROM map
@@ -197,16 +207,16 @@ class Mapping(Db) :
 
     def get_NM_version(self, mrnaAcc) :
         """
-            Get the version number of an accession number.
+        Get the version number of an accession number.
 
-            Arguments:
-                mrnaAcc ; The ID of an mRNA.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string
 
-            Returns:
-                integer ; The version number.
+        @return: The version number
+        @rtype: integer
         """
 
         statement = """
@@ -220,18 +230,19 @@ class Mapping(Db) :
 
     def getAllFields(self, mrnaAcc, version):
         """
-            Get all Fields of an accession number and version number.
-            If the version number is None, use the "newest" version number
+        Get all Fields of an accession number and version number.
+        If the version number is None, use the "newest" version number.
 
-            Arguments:
-                mrnaAcc ; The ID of an mRNA.
-                version ; The version number
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string
+        @arg version: The version number
+        @type version: integer
 
-            Returns:
-                integer ; The version number.
+        @return: The version number
+        @rtype: integer
         """
 
         q = """
@@ -260,26 +271,29 @@ class Mapping(Db) :
 
     def get_Transcripts(self, chrom, p1, p2, overlap) :
         """
-            Get a list of transcripts, given a chromosome and a range. If
-            all transcripts that are hit should be returned, set overlap to 1,
-            if only the transcripts that completely reside within a range
-            should be returned, set overlap to 0.
+        Get a list of transcripts, given a chromosome and a range. If
+        all transcripts that are hit should be returned, set overlap to 1,
+        if only the transcripts that completely reside within a range
+        should be returned, set overlap to 0.
 
-            Arguments:
-                chrom   ; The chromosome (coded as "chr1", ..., "chrY").
-                p1      ; The position relative to the start of the chromosome.
-                p2      ; The position relative to the start of the chromosome.
-                overlap ; Specify the behaviour of the selection:
-                          0 ; Return only the transcripts that completely fall
-                              in the range [p1, p2].
-                          1 ; Return all hit transcripts.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg chrom: The chromosome (coded as "chr1", ..., "chrY")
+        @type chrom: string
+        @arg p1: The position relative to the start of the chromosome
+        @type p1: integer
+        @arg p2: The position relative to the start of the chromosome
+        @type p2: integer
+        @arg overlap: Specify the behaviour of the selection:
+          - 0 ; Return only the transcripts that completely fall in the
+                range [p1, p2]
+          - 1 ; Return all hit transcripts
+        @type overlap: boolean 
 
-            Returns:
-                list ; All accession numbers that are hit according to the
-                       overlap criterium.
+        @return: All accession numbers that are hit according to the overlap
+        criterium
+        @rtype: list
         """
         q = """
                 select  acc,
@@ -342,16 +356,16 @@ class Mapping(Db) :
 
     def get_GeneName(self, mrnaAcc) :
         """
-            Get the name of a gene, given a transcript identifier (NM number).
+        Get the name of a gene, given a transcript identifier (NM number).
 
-            Arguments:
-                mrnaAcc ; The ID of an mRNA.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string
 
-            Returns:
-                string ; The gene name.
+        @return: The gene name
+        @rtype: string
         """
 
         statement = """
@@ -368,17 +382,17 @@ class Mapping(Db) :
 
     def isChrom(self, name) :
         """
-            Check if the given name is a valid chromosome name.
+        Check if the given name is a valid chromosome name.
 
-            Arguments:
-                name ; The name to be tested.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        @arg name: The name to be tested
+        @type name: string
 
-            Returns:
-                boolean ; True if the name is found to be a chromosome name,
-                          False otherwise.
+        @return: True if the name is found to be a chromosome name, False
+        otherwise
+        @rtype: boolean
         """
 
         statement = """
@@ -394,16 +408,16 @@ class Mapping(Db) :
 
     def chromName(self, accNo) :
         """
-            Get the name of a chromosome, given an accession number.
+        Get the name of a chromosome, given an accession number.
 
-            Arguments:
-                accNo ; The accession number of a chromosome.
+        SQL tables from dbNames:
+            - ChrName ; Assembly release notes.
 
-            SQL tables from dbNames:
-                ChrName ; Assembly release notes.
+        @arg accNo: The accession number of a chromosome
+        @type accNo: string
 
-            Returns:
-                string ; The name of a chromosome.
+        @return: The name of a chromosome
+        @rtype: string
         """
 
         statement = """
@@ -420,16 +434,16 @@ class Mapping(Db) :
 
     def chromAcc(self, name) :
         """
-            Get the accession number of a chromosome, given a name.
+        Get the accession number of a chromosome, given a name.
 
-            Arguments:
-                name ; The name of a chromosome.
+        SQL tables from dbNames:
+            - ChrName ; Assembly release notes.
 
-            SQL tables from dbNames:
-                ChrName ; Assembly release notes.
+        @arg name: The name of a chromosome
+        @type name: string
 
-            Returns:
-                string ; The accession number of a chromosome.
+        @return: The accession number of a chromosome
+        @rtype: string
         """
 
         statement = """
@@ -446,17 +460,16 @@ class Mapping(Db) :
 
     def get_chromName(self, acc) :
         """
-            Get the chromosome name, given a transcript identifier (NM number).
+        Get the chromosome name, given a transcript identifier (NM number).
 
-            Arguments:
-                acc ; The NM accession number (version NOT included)
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
 
-            SQL tables from dbNames:
-                map ; .
+        @arg acc: The NM accession number (version NOT included)
+        @type acc: string
 
-            Returns:
-                string  ; The chromosome name (e.g. chr1)
-
+        @return: The chromosome name (e.g. chr1)
+        @rtype: string
         """
 
         statement = """
@@ -474,37 +487,38 @@ class Mapping(Db) :
 
 class Remote(Db) :
     """
-        Database functions for retrieving updates for the mapping databases.
+    Database functions for retrieving updates for the mapping databases.
 
-        Special methods:
-            __init__(config) ; Initialise the class.
+    Special methods:
+        - __init__(config) ; Initialise the class.
 
-        Public methods:
-            get_Update()        ; Retrieve new mapping info from the UCSC.
+    Public methods:
+        - get_Update()        ; Retrieve new mapping info from the UCSC.
 
-        Inherited methods from Db:
-            query(statement) ; General query function.
+    Inherited methods from Db:
+        - query(statement) ; General query function.
 
-        SQL tables from dbNames:
-            gbStatus ; acc -> version mapping (NM to NM + version),
-                       type, modDate
-            refGene  ; name -> geneName mapping (NM to gene name),
-                       txStart, txEnd, cdsStart, cdsEnd, exonStarts,
-                       exonEnds, chrom, strand.
-            refLink  ; mrnaAcc -> protAcc mapping (NM to NP).
+    SQL tables from dbNames:
+        - gbStatus ; acc -> version mapping (NM to NM + version),
+                     type, modDate
+        - refGene  ; name -> geneName mapping (NM to gene name),
+                     txStart, txEnd, cdsStart, cdsEnd, exonStarts,
+                     exonEnds, chrom, strand.
+        - refLink  ; mrnaAcc -> protAcc mapping (NM to NP).
     """
 
     def __init__(self, build, config) :
         """
-            Initialise the Db parent class. Use the remote database for a
-            certain build.
+        Initialise the Db parent class. Use the remote database for a
+        certain build.
 
-            Arguments:
-                build  ; The version of the mapping database.
-                config ; Configuration variables.
+        Private variables (altered):
+            - __config ; Configuration variables.
 
-            Private variables (altered):
-                __config ; Configuration variables.
+        @arg build: The version of the mapping database
+        @type build: string
+        @arg config: Configuration variables
+        @type config: class instance
         """
 
         self.__config = config
@@ -513,22 +527,22 @@ class Remote(Db) :
 
     def get_Update(self) :
         """
-            Retrieve all mapping updates from the UCSC within a certain time
-            window (defined in the configuration file) and gather the results
-            into one mapping table.
+        Retrieve all mapping updates from the UCSC within a certain time
+        window (defined in the configuration file) and gather the results
+        into one mapping table.
 
-            The results will be written to a temporary file (also defined in
-            the configuration file) to be imported in the local database with
-            the load_Update() function.
+        The results will be written to a temporary file (also defined in
+        the configuration file) to be imported in the local database with
+        the load_Update() function.
 
 
-            SQL tables from dbNames:
-                gbStatus ; acc -> version mapping (NM to NM + version),
-                           type, modDate
-                refGene  ; name -> geneName mapping (NM to gene name),
-                           txStart, txEnd, cdsStart, cdsEnd, exonStarts,
-                           exonEnds, chrom, strand.
-                refLink  ; mrnaAcc -> protAcc mapping (NM to NP).
+        SQL tables from dbNames:
+            - gbStatus ; acc -> version mapping (NM to NM + version),
+                         type, modDate
+            - refGene  ; name -> geneName mapping (NM to gene name),
+                         txStart, txEnd, cdsStart, cdsEnd, exonStarts,
+                         exonEnds, chrom, strand.
+            - refLink  ; mrnaAcc -> protAcc mapping (NM to NP).
         """
 
         statement = """
@@ -557,44 +571,45 @@ class Remote(Db) :
 
 class Update(Db) :
     """
-        Database functions for updating the mapping databases.
+    Database functions for updating the mapping databases.
 
-        Public methods:
-            load_Update()       ; Load new mapping info into the local database.
-            count_Updates()     ; Count the number of entries in the new
-                                  mapping info table.
-            backup_cdsUpdates() ; Make a backup of updates that overwrite the
-                                  old mapping info.
-            count_cdsUpdates()  ; Count the number of updates that overwrite
-                                  the old mapping info.
-            merge_cdsUpdates()  ; Merge the backup of old mapping info with the
-                                  other old info.
-            merge_Update()      ; Merge the new mapping info from the UCSC with
-                                  what we already have.
+    Public methods:
+        - load_Update()       ; Load new mapping info into the local database.
+        - count_Updates()     ; Count the number of entries in the new
+                                mapping info table.
+        - backup_cdsUpdates() ; Make a backup of updates that overwrite the
+                                old mapping info.
+        - count_cdsUpdates()  ; Count the number of updates that overwrite
+                                the old mapping info.
+        - merge_cdsUpdates()  ; Merge the backup of old mapping info with the
+                                other old info.
+        - merge_Update()      ; Merge the new mapping info from the UCSC with
+                                what we already have.
 
-        Inherited methods from Db:
-            query(statement) ; General query function.
+    Inherited methods from Db:
+        - query(statement) ; General query function.
 
-        SQL tables from dbNames:
-            map                ; Accumulated mapping info.
-            map_temp           ; Newly found data.
-            map_new            ; Merge of map_temp and map.
-            map_cdsBackup_temp ; Entries that were updated without an increment
-                                 of the version number.
-            map_cdsBackup      ; Merge of map_cdsBackup_temp and itself.
+    SQL tables from dbNames:
+        - map                ; Accumulated mapping info.
+        - map_temp           ; Newly found data.
+        - map_new            ; Merge of map_temp and map.
+        - map_cdsBackup_temp ; Entries that were updated without an increment
+                               of the version number.
+        - map_cdsBackup      ; Merge of map_cdsBackup_temp and itself.
     """
 
     def __init__(self, build, config) :
         """
-            Initialise the Db parent class. Use the remote database for a
-            certain build.
+        Initialise the Db parent class. Use the remote database for a
+        certain build.
 
-            Arguments:
-                build  ; The version of the mapping database.
-                config ; Configuration variables.
+        Private variables (altered):
+            - __config ; Configuration variables.
 
-            Private variables (altered):
-                __config ; Configuration variables.
+        @arg build: The version of the mapping database
+        @type build: string
+        @arg config: Configuration variables
+        @type config: class instance
         """
 
         self.__config = config
@@ -603,15 +618,15 @@ class Update(Db) :
 
     def load_Update(self) :
         """
-            Load the updates from the temporary file (defined in the
-            configuration file) created by the get_Update() function and import
-            it in the local database.
+        Load the updates from the temporary file (defined in the
+        configuration file) created by the get_Update() function and import
+        it in the local database.
 
-            SQL tables from dbNames (altered):
-                map_temp ; Created and loaded with data from TempFile.
+        SQL tables from dbNames (altered):
+            - map_temp ; Created and loaded with data from TempFile.
 
-            SQL tables from dbNames:
-                map ; Accumulated mapping info.
+        SQL tables from dbNames:
+            - map ; Accumulated mapping info.
         """
 
         # The statements in this function may be combined when MYSQL_BUG is
@@ -633,15 +648,14 @@ class Update(Db) :
 
     def count_Updates(self) :
         """
-            Count the number of updates. This function will only work if it
-            is preceeded by the load_Update() function. Otherwise the map_temp
-            table may not exist. This function can not be used after the
-            merge_Update() function has been executed, since it drops the
-            map_temp table.
+        Count the number of updates. This function will only work if it
+        is preceeded by the load_Update() function. Otherwise the map_temp
+        table may not exist. This function can not be used after the
+        merge_Update() function has been executed, since it drops the
+        map_temp table.
 
-            Returns:
-                int ; The number of entries in the table of updated mapping
-                      info.
+        @return: The number of entries in the table of updated mapping info
+        @rtype: integer
         """
 
         statement = """
@@ -654,19 +668,19 @@ class Update(Db) :
 
     def backup_cdsUpdates(self) :
         """
-            Copy all mapping entries where there was an update, but no
-            increment in the version number, to a backup table. Note that
-            we use acc, version, txStart as the primary key because members
-            of a gene family are mapped multiple times.
+        Copy all mapping entries where there was an update, but no
+        increment in the version number, to a backup table. Note that
+        we use acc, version, txStart as the primary key because members
+        of a gene family are mapped multiple times.
 
-            SQL tables from dbNames (altered):
-                map_cdsBackup_temp ; Created and filled with entries that
-                                     were updated without an increment of the
-                                     version number.
+        SQL tables from dbNames (altered):
+            - map_cdsBackup_temp ; Created and filled with entries that
+                                   were updated without an increment of the
+                                   version number.
 
-            SQL tables from dbNames:
-                map      ; Accumulated mapping info.
-                map_temp ; Freshly downloaded mapping info.
+        SQL tables from dbNames:
+            - map      ; Accumulated mapping info.
+            - map_temp ; Freshly downloaded mapping info.
         """
 
         statement = """
@@ -687,18 +701,18 @@ class Update(Db) :
 
     def count_cdsUpdates(self) :
         """
-            Count the number of mapping entries that have changed without an
-            increment in the version number. This function can only be called
-            after backup_cdsUpdates() has been executed and before
-            merge_cdsUpdates has been executed.
+        Count the number of mapping entries that have changed without an
+        increment in the version number. This function can only be called
+        after backup_cdsUpdates() has been executed and before
+        merge_cdsUpdates has been executed.
 
-            SQL tables from dbNames:
-                map_cdsBackup_temp ; Entries that wre updated without an
-                                     increment of the version number.
+        SQL tables from dbNames:
+            - map_cdsBackup_temp ; Entries that wre updated without an
+                                   increment of the version number.
 
-            Returns:
-                int ; The number of mapping entries that have changed without
-                      an increment in the version number.
+        @return: The number of mapping entries that have changed without an
+        increment in the version number
+        @rtype: integer
         """
 
         statement = """
@@ -711,14 +725,14 @@ class Update(Db) :
 
     def merge_cdsUpdates(self) :
         """
-            Merge the mapping entries that have changed without an increment in
-            the version number with a table that contains backups of these
-            entries.
+        Merge the mapping entries that have changed without an increment in
+        the version number with a table that contains backups of these
+        entries.
 
-            SQL tables from dbNames (altered):
-                map_cdsBackup      ; Extended with the entries in
-                                     map_cdsBackup_temp.
-                map_cdsBackup_temp ; Dropped.
+        SQL tables from dbNames (altered):
+            - map_cdsBackup      ; Extended with the entries in
+                                   map_cdsBackup_temp.
+            - map_cdsBackup_temp ; Dropped.
         """
 
         # The statements in this function may be combined when MYSQL_BUG is
@@ -739,13 +753,13 @@ class Update(Db) :
 
     def merge_Update(self) :
         """
-            Merge the new mapping data with the old ones.
+        Merge the new mapping data with the old ones.
 
-            SQL tables from dbNames (altered):
-                map_new  ; Created and filled with the merge of map_temp and
-                           map. Dropped after use.
-                map_temp ; Merged with map to form map_new. Dropped after use.
-                map      ; Overwritten with the merged info in map_new.
+        SQL tables from dbNames (altered):
+            - map_new  ; Created and filled with the merge of map_temp and map.
+                         Dropped after use.
+            - map_temp ; Merged with map to form map_new. Dropped after use.
+            - map      ; Overwritten with the merged info in map_new.
         """
 
         # The statements in this function may be combined when MYSQL_BUG is
@@ -791,46 +805,38 @@ class Update(Db) :
 
 class Cache(Db) :
     """
-        Database functions for cache administration.
+    Database functions for cache administration.
 
-        Special methods:
-            __init__(config) ; Initialise the class.
+    Special methods:
+        - __init__(config) ; Initialise the class.
 
-        Public methods:
-            insertGB(accNo, GI,       ; Insert info about a GenBank record.
-                     fileHash,
-                     ChrAccVer,
-                     ChrStart,
-                     ChrStop,
-                     orientation,
-                     url)
-            updateHash(accNo,         ; Update the hash of an accession number.
-                       fileHash)
-            getGBFromLoc(ChrAccVer,   ; Get the accession number from slicing
-                         ChrStart,      information.
-                         ChrStop,
-                         orientation)
-            getGBFromHash(fileHash)   ; Get the accession number from its hash.
-            getGBFromGI(GI)           ; Get the accession number from its GI
-                                        number.
-            getLoc(accNo)             ; Get the slicing information of an
-                                        accession number.
-            getHash(accNo)            ; Get the hash of a GenBank record.
-            getUrl(accNo)             ; Get the URL of an accession number.
+    Public methods:
+        - insertGB(accNo, GI, fileHash, ChrAccVer, ChrStart, ChrStop,
+          orientation, url) ; Insert info about a GenBank record.
+        - updateHash(accNo, fileHash) ; Update the hash of an accession number.
+        - getGBFromLoc(ChrAccVer, ChrStart, ChrStop, orientation) ; Get the
+                                    accession number from slicing information.
+        - getGBFromHash(fileHash) ; Get the accession number from its hash.
+        - getGBFromGI(GI)         ; Get the accession number from its GI
+                                    number.
+        - getLoc(accNo)           ; Get the slicing information of an
+                                    accession number.
+        - getHash(accNo)          ; Get the hash of a GenBank record.
+        - getUrl(accNo)           ; Get the URL of an accession number.
 
-        Inherited methods from Db:
-            query(statement) ; General query function.
+    Inherited methods from Db:
+        - query(statement) ; General query function.
 
-        SQL tables from internalDb:
-            GBInfo ; Information about cached and uploaded GenBank files.
+    SQL tables from internalDb:
+        - GBInfo ; Information about cached and uploaded GenBank files.
     """
 
     def __init__(self, config) :
         """
-            Initialise the Db parent class. Use the internalDb.
+        Initialise the Db parent class. Use the internalDb.
 
-            Arguments:
-                config ; Configuration variables.
+        @arg config: Configuration variables
+        @type config: class instance
         """
 
         Db.__init__(self, config.internalDb, config.LocalMySQLuser,
@@ -840,35 +846,41 @@ class Cache(Db) :
     def insertGB(self, accNo, GI, fileHash, ChrAccVer, ChrStart,
                  ChrStop, orientation, url) :
         """
-            Insert information about a GenBank record in the internal database.
+        Insert information about a GenBank record in the internal database.
 
-            The accNo and fileHash arguments are mandatory.
+        The accNo and fileHash arguments are mandatory.
             - If the record is a normal RefSeq, then the GI number should be
-              provided.
-            - If the record is a chromosome slice, then the ChrAccVer,
-              ChrStart, ChrStop and orientation variables should be specified.
-            - If the record is downloaded from the internet, the url should
-              be provided.
-            - If all fields except the mandatory ones are empty, the record
-              is assumed to be uploaded.
+            provided.
+            - If the record is a chromosome slice, then the ChrAccVer, ChrStart,
+            ChrStop and orientation variables should be specified.
+            - If the record is downloaded from the internet, the url should be
+            provided.
+            - If all fields except the mandatory ones are empty, the record is
+            assumed to be uploaded.
 
-            Arguments:
-                accNo       ; The name associated with this record.
-                GI          ; The GI number (if available).
-                fileHash    ; The hash of the content of the record.
-                ChrAccVer   ; The accession number of the chromosome (if
-                              available).
-                ChrStart    ; The start of the record in chromosomal
-                              coordinates (if available).
-                ChrStop     ; The end of the record in chromosomal coordinates
-                              (if available).
-                orientation ; The orientation of the record relative to the
-                              chromosome (if available) (1 = forward,
-                              2 = reverse complement).
-                url         ; The originating URL (if available).
+        SQL tables from internalDb (altered):
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb (altered):
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg accNo: The name associated with this record
+        @type accNo: string
+        @arg GI: The GI number (if available)
+        @type GI: string
+        @arg fileHash: The hash of the content of the record
+        @type fileHash: string
+        @arg ChrAccVer: The accession number of the chromosome (if available)
+        @type ChrAccVer: string
+        @arg ChrStart: The start of the record in chromosomal
+                          coordinates (if available)
+        @type ChrStart: integer
+        @arg ChrStop: The end of the record in chromosomal coordinates
+                      (if available)
+        @type ChrStop: integer
+        @arg orientation: The orientation of the record relative to the
+                          chromosome (if available) (1 = forward,
+                          2 = reverse complement)
+        @type orientation: integer
+        @arg url: The originating URL (if available)
+        @type url: string
         """
 
         statement = """
@@ -882,8 +894,18 @@ class Cache(Db) :
 
     def insertLRG(self, accNo, fileHash, url):
         """
-        Insert information about a LRG record in the internal database
+        Insert information about a LRG record in the internal database.
+        
+        See insertGB() for more information.
+        
+        @arg accNo: The name associated with this record
+        @type accNo: string
+        @arg fileHash: The hash of the content of the record
+        @type fileHash: string
+        @arg url:  The originating URL (if available)
+        @type url: string
         """
+
         statement = """
             INSERT INTO GBInfo
               VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
@@ -895,14 +917,15 @@ class Cache(Db) :
 
     def updateHash(self, accNo, fileHash) :
         """
-            Update the hash of an accession number.
+        Update the hash of an accession number.
 
-            Arguments:
-                accNo     ; The accession number of a GenBank record.
-                fileHash  ; The hash of a GenBank record.
+        SQL tables from internalDb (altered):
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb (altered):
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg accNo: The accession number of a GenBank record
+        @type accNo: string
+        @arg fileHash: The hash of a GenBank record
+        @type fileHash: string
         """
 
         statement = """
@@ -916,22 +939,25 @@ class Cache(Db) :
 
     def getGBFromLoc(self, ChrAccVer, ChrStart, ChrStop, orientation) :
         """
-            Get the accession number from a chromosomic location, used
-            to make a slice, typically this only affects UD-numbers.
+        Get the accession number from a chromosomic location, used
+        to make a slice, typically this only affects UD-numbers.
 
-            Arguments:
-                ChrAccVer   ; The accession number of the chromosome.
-                ChrStart    ; Start position of the slice.
-                ChrStop     ; End position of the slice.
-                orientation ; Orientation of the slice:
-                              1  ; Forward.
-                              2 ; Reverse complement.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg ChrAccVer: The accession number of the chromosome
+        @type ChrAccVer: string
+        @arg ChrStart: Start position of the slice
+        @type ChrStart: integer
+        @arg ChrStop: End position of the slice
+        @type ChrStop: integer
+        @arg orientation: Orientation of the slice:
+                          1. Forward
+                          2. Reverse complement
+        @type orientation: integer
 
-            Returns:
-                string ; The accession number.
+        @return: The accession number
+        @rtype: string
         """
 
         statement = """
@@ -951,16 +977,16 @@ class Cache(Db) :
 
     def getGBFromHash(self, fileHash) :
         """
-            Get the accession number from its hash.
+        Get the accession number from its hash.
 
-            Arguments:
-                fileHash ; The hash of a GenBank record.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg fileHash: The hash of a GenBank record
+        @type fileHash: string
 
-            Returns:
-                string ; The accession number.
+        @return: The accession number
+        @rtype: string
         """
 
         statement = """
@@ -977,17 +1003,17 @@ class Cache(Db) :
 
     def getGBFromGI(self, GI) :
         """
-            Get the accession number from its GI number, typically this only
-            affects RefSeq sequences.
+        Get the accession number from its GI number, typically this only
+        affects RefSeq sequences.
 
-            Arguments:
-                GI ; The GI number of a GenBank record.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg GI: The GI number of a GenBank record
+        @type GI: string
 
-            Returns:
-                string ; The accession number.
+        @return: The accession number
+        @rtype: string
         """
 
         statement = """
@@ -1004,22 +1030,22 @@ class Cache(Db) :
 
     def getLoc(self, accNo) :
         """
-            Get the slicing information of an accession number, typically this
-            only affects UD numbers.
+        Get the slicing information of an accession number, typically this
+        only affects UD numbers.
 
-            Arguments:
-                accNo ; The accession number of a genbank record.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg accNo: The accession number of a genbank record
+        @type accNo: string
 
-            Returns:
-                list ; The slicing information:
-                       ChrAccVer   ; Accession number of the chromosome.
-                       ChrStart    ; Start position of the slice.
-                       ChrStop     ; End position of the slice.
-                       orientation ; Orientation of the slice (1 = forward,
-                                     2 = reverse complement).
+        @return: The slicing information:
+                   - ChrAccVer   ; Accession number of the chromosome
+                   - ChrStart    ; Start position of the slice
+                   - ChrStop     ; End position of the slice
+                   - orientation ; Orientation of the slice (1 = forward,
+                                   2 = reverse complement)
+        @rtype: list
         """
 
         statement = """
@@ -1036,16 +1062,16 @@ class Cache(Db) :
 
     def getHash(self, accNo) :
         """
-            Get the hash of a GenBank record identified by an accession number.
+        Get the hash of a GenBank record identified by an accession number.
 
-            Arguments:
-                accNo ; The accession number of a genbank record.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg accNo: The accession number of a genbank record
+        @type accNo: string
 
-            Returns:
-                string ; The hash of the GenBank record.
+        @return: The hash of the GenBank record
+        @rtype: string
         """
 
         statement = """
@@ -1062,17 +1088,17 @@ class Cache(Db) :
 
     def getUrl(self, accNo) :
         """
-            Get the URL of an accession number, typically this only affects
-            uploaded UD numbers.
+        Get the URL of an accession number, typically this only affects
+        uploaded UD numbers.
 
-            Arguments:
-                accNo ; The accession number of a genbank record.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg accNo: The accession number of a genbank record
+        @type accNo: string
 
-            Returns:
-                string ; The URL of the GenBank record.
+        @return: The URL of the GenBank record
+        @rtype: string
         """
 
         statement = """
@@ -1089,13 +1115,16 @@ class Cache(Db) :
 
     def getGI(self, accNo) :
         """
-            Get the GI number that is connected to the accession number.
+        Get the GI number that is connected to the accession number.
 
-            Arguments:
-                accNo ; The accession number.
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
 
-            SQL tables from internalDb:
-                GBInfo ; Information about cached and uploaded GenBank files.
+        @arg accNo: The accession number
+        @type accNo: string
+        
+        @return: GI number
+        @rtype: string
         """
 
         statement = """
@@ -1112,6 +1141,17 @@ class Cache(Db) :
 
     def getProtAcc(self, mrnaAcc) :
         """
+        Gets the protein accession number for the given mRNA accession
+        number.
+        
+        SQL tables from internalDb:
+            - Link ; mRNA and associated protein IDs.
+        
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string
+        
+        @return: The protein accession number
+        @rtype: string
         """
 
         statement = """
@@ -1128,6 +1168,16 @@ class Cache(Db) :
 
     def getmrnaAcc(self, protAcc) :
         """
+        Gets the mRNA accession number for a given protein accession number.
+        
+        SQL tables from internalDb:
+            - Link ; mRNA and associated protein IDs.
+        
+        @arg protAcc: The protein ID
+        @type protAcc: string
+        
+        @return: The mRNA accession number
+        @rtype: string
         """
 
         statement = """
@@ -1145,6 +1195,16 @@ class Cache(Db) :
 
     def insertLink(self, mrnaAcc, protAcc) :
         """
+        Inserts the given mRNA and protein accession numbers into the Link
+        table.
+        
+        SQL tables from internalDb:
+            - Link ; mRNA and associated protein IDs.
+        
+        @arg protAcc: The protein ID
+        @type protAcc: string
+        @arg mrnaAcc: The ID of an mRNA
+        @type mrnaAcc: string        
         """
 
         statement = """
@@ -1158,40 +1218,37 @@ class Cache(Db) :
 
 class Batch(Db) :
     """
-        Database functions for the batch checker.
+    Database functions for the batch checker.
 
-        Special methods:
-            __init__(config) ; Initialise the class.
+    Special methods:
+        - __init__(config) ; Initialise the class.
 
-        Public methods:
-            isJobListEmpty()     ; See if there are active jobs.
-            addJob(outputFilter, ; Add a job and give it a unique ID.
-                   email,
-                   fromHost)
-            getJobs()            ; Get a list of active jobs.
-            removeJob(jobID)     ; Remove a job and return information about
-                                   the job submitter.
-            addToQueue(jobID,    ; Add a request belonging to a certain job to
-                       accNo,      the queue.
-                       gene,
-                       variant)
-            getFromQueue(jobID)  ; Get a request belonging to a certain job
-                                   from the queue.
+    Public methods:
+        - isJobListEmpty()     ; See if there are active jobs.
+        - addJob(outputFilter, email, fromHost); Add a job and give it a unique
+                                                 ID.
+        - getJobs()            ; Get a list of active jobs.
+        - removeJob(jobID)     ; Remove a job and return information about
+                                 the job submitter.
+        - addToQueue(jobID, accNo, gene, variant) ; Add a request belonging to a
+                                                    certain job to the queue.
+        - getFromQueue(jobID)  ; Get a request belonging to a certain job
+                                 from the queue.
 
-        Inherited methods from Db:
-            query(statement) ; General query function.
+    Inherited methods from Db:
+        - query(statement) ; General query function.
 
-        SQL tables from internalDb:
-            BatchJob   ; Job information.
-            BatchQueue ; Requests.
+    SQL tables from internalDb:
+        - BatchJob   ; Job information.
+        - BatchQueue ; Requests.
     """
 
     def __init__(self, config) :
         """
-            Initialise the Db parent class. Use the internalDb.
+        Initialise the Db parent class. Use the internalDb.
 
-            Arguments:
-                config ; Configuration variables.
+        @arg config: Configuration variables
+        @type config: class instance
         """
 
         Db.__init__(self, config.internalDb, config.LocalMySQLuser,
@@ -1200,13 +1257,13 @@ class Batch(Db) :
 
     def isJobListEmpty(self) :
         """
-            See if there are active jobs.
+        See if there are active jobs.
 
-            SQL tables from internalDb:
-                BatchJob ; Job information.
+        SQL tables from internalDb:
+            - BatchJob ; Job information.
 
-            Returns:
-                boolean ; False if there are active jobs, True otherwise.
+        @return: False if there are active jobs, True otherwise
+        @rtype: boolean
         """
 
         statement = """
@@ -1221,16 +1278,16 @@ class Batch(Db) :
 
     def entriesLeftForJob(self, jobID):
         """
-            Count the number of entries of a job that are still to be processed
+        Count the number of entries of a job that are still to be processed
 
-            Arguments:
-                jobID       ; The JobID of interest
+        SQL tables from internalDB:
+            - BatchQueue  ; Queue information
 
-            SQL tables from internalDB:
-                BatchQueue  ; Queue information
+        @arg jobID: The JobID of interest
+        @type jobID: string
 
-            Returns:
-                int         ; The number of entries
+        @return: The number of entries
+        @rtype: integer
         """
         statement = """
             SELECT COUNT(*)
@@ -1244,18 +1301,20 @@ class Batch(Db) :
 
     def addJob(self, outputFilter, email, fromHost, jobType, Arg1) :
         """
-            Add a job and give it a unique ID.
+        Add a job and give it a unique ID.
 
-            Arguments:
-                outputFilter ; Output settings for all requests in this job.
-                email        ; Contact information of the submitter.
-                jobType      ; The type of batch job
+        SQL tables from internalDb (altered):
+            - BatchJob ; Job information.
 
-            SQL tables from internalDb (altered):
-                BatchJob ; Job information.
+        @arg outputFilter: Output settings for all requests in this job
+        @type outputFilter: string
+        @arg email: Contact information of the submitter
+        @type email: string
+        @arg jobType: The type of batch job
+        @type jobType: string
 
-            Returns:
-                int ; A job ID.
+        @return: A job ID
+        @rtype: integer
         """
 
         M = Misc.Misc()
@@ -1272,13 +1331,13 @@ class Batch(Db) :
 
     def getJobs(self) :
         """
-            Get a list of active jobs.
+        Get a list of active jobs.
 
-            SQL tables from internalDb:
-                BatchJob ; Job information.
+        SQL tables from internalDb:
+            - BatchJob ; Job information.
 
-            Returns:
-                list ; List of tuples (job ID, job Type).
+        @return: List of tuples (job ID, job Type)
+        @rtype: list
         """
 
         statement = """
@@ -1294,14 +1353,14 @@ class Batch(Db) :
             Remove a job (because the queue for this job is empty) and return
             information needed to alert the job submitter.
 
-            Arguments:
-                jobID   ; Identifier of a job.
-
             SQL tables from internalDb (altered):
-                BatchJob ; Job information.
+                - BatchJob ; Job information.
 
-            Returns:
-                triple ; Data for the job submitter.
+            @arg jobID: Identifier of a job
+            @type jobID: string
+
+            @return: Data for the job submitter
+            @rtype: triple
         """
 
         # First retrieve all information about this job.
@@ -1325,14 +1384,15 @@ class Batch(Db) :
 
     def addToQueue(self, jobID, inputl, flag):
         """
-            Add a request belonging to a certain job to the queue.
+        Add a request belonging to a certain job to the queue.
 
-            Arguments:
-                jobID   ; Identifier of a job.
-                inputl  ; The input line of an entry
+        SQL tables from internalDb (altered):
+            - BatchQueue ; Requests.
 
-            SQL tables from internalDb (altered):
-                BatchQueue ; Requests.
+        @arg jobID: Identifier of a job
+        @type jobID: string
+        @arg inputl: The input line of an entry
+        @type inputl: string
         """
 
         # The first value (QueueID) will be auto increased by MySQL.
@@ -1346,23 +1406,27 @@ class Batch(Db) :
 
     def updateBatchDb(self, jobID, old, new, flag, whereNot):
         """
-            Update the Entries of a BatchJob. This is used to alter
-            batch entries that would otherwise take a long time to process.
-            e.g. a batch job with a lot of the same accession numbers without
-            version numbers would take a long time because mutalyzer would
-            fetch the file from the NCBI for each entry. A database update
-            over all entries with the same accession number speeds up the
-            job considerably.
+        Update the Entries of a BatchJob. This is used to alter
+        batch entries that would otherwise take a long time to process.
+        e.g. a batch job with a lot of the same accession numbers without
+        version numbers would take a long time because mutalyzer would
+        fetch the file from the NCBI for each entry. A database update
+        over all entries with the same accession number speeds up the
+        job considerably.
 
-            Arguments:
-                jobID   ; Identifier of a job.
-                old     ; String to be replaced
-                new     ; String to replace old with
-                flag    ; The reason of subsitution
-                whereNot; A negative selector to prevent false positives
+        SQL tables from internalDb (altered):
+            - BatchQueue ; Requests.
 
-            SQL tables from internalDb (altered):
-                BatchQueue ; Requests.
+        @arg jobID: Identifier of a job
+        @type jobID: string
+        @arg old: String to be replaced
+        @type old: string
+        @arg new: String to replace old with
+        @type new: string
+        @arg flag: The reason of subsitution
+        @type flag: string
+        @arg whereNot: A negative selector to prevent false positives
+        @type whereNot: string
         """
         #update whereNot to escape parenthesis
         whereNot = whereNot.replace("(","[(]").replace(")","[)]")
@@ -1378,16 +1442,18 @@ class Batch(Db) :
 
     def skipBatchDb(self, jobID, where, flag):
         """
-            Flag batch entries to be skipped. This is used if it is certain
-            that an entry will cause an error, or that its output is ambiguous.
+        Flag batch entries to be skipped. This is used if it is certain
+        that an entry will cause an error, or that its output is ambiguous.
 
-            Arguments:
-                jobID   ; Identifier of a job
-                where   ; Look for occurencus of this string
-                flag    ; The reason of skipping
+        SQL tables from internalDB (alterd):
+            - BatchQueue  ; Requests
 
-            SQL tables from internalDB (alterd):
-                BatchQueue  ; Requests
+        @arg jobID: Identifier of a job
+        @type jobID: string
+        @arg where: Look for occurencus of this string
+        @type where: string
+        @arg flag: The reason of skipping
+        @type flag: string
         """
         #update where to escape parenthesis
         where = where.replace("(","[(]").replace(")","[)]")
@@ -1404,21 +1470,21 @@ class Batch(Db) :
 
     def getFromQueue(self, jobID) :
         """
-            Get a request belonging to a certain job from the queue. If a
-            request is found, remove it from the queue and return it. Otherwise
-            return nothing.
+        Get a request belonging to a certain job from the queue. If a
+        request is found, remove it from the queue and return it. Otherwise
+        return nothing.
 
-            Arguments:
-                jobID ; Identifier of a job.
+        SQL tables from internalDb (altered):
+            - BatchQueue ; Requests.
 
-            SQL tables from internalDb (altered):
-                BatchQueue ; Requests.
+        @arg jobID: Identifier of a job
+        @type jobID: string
 
-            Returns:
-                triple:
-                    accNo   ; The accession number of a request.
-                    gene    ; The gene and transcript variant information.
-                    variant ; The variant.
+        @return:
+            - accNo   ; The accession number of a request
+            - gene    ; The gene and transcript variant information
+            - variant ; The variant
+        @rtype: triple
         """
 
         statement = """
@@ -1431,7 +1497,7 @@ class Batch(Db) :
 
         results = self.query(statement)
         if results :
-            queueID, inputl,flags = results[0]
+            queueID, inputl, flags = results[0]
         else :
             return None, None
 

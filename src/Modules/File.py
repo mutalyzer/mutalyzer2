@@ -1,13 +1,21 @@
 #!/usr/bin/python
 
-#TODO: Check ODS, XLS compatibility
-
 """
-    Module for parsing CSV files and spreadsheets.
+Module for parsing CSV files and spreadsheets.
 
-    Public classes:
-        File ; Parse CSV files and spreadsheets.
+@todo: Check ODS, XLS compatibility
+@requires: magic
+@requires: csv
+@requires: xlrd
+@requires: zipfile
+@requires: xml.dom.minidom
+@requires: os
+@requires: types
+@requires: Modules.Misc
 """
+# Public classes:
+#     - File ; Parse CSV files and spreadsheets.
+
 
 import magic           # open(), MAGIC_MIME, MAGIC_NONE
 import csv             # Sniffer(), reader(), Error
@@ -21,55 +29,60 @@ from Modules import Misc
 
 class File() :
     """
-        Parse CSV files and spreadsheets.
+    Parse CSV files and spreadsheets.
 
-        Private variables:
-                __config ; Configuration variables.
-                __output ; The Output object.
+    Private variables:
+        - __config ; Configuration variables.
+        - __output ; The Output object.
 
-        Special methods:
-            __init__(config, output) ; Initialse the class.
+    Special methods:
+        - __init__(config, output) ; Initialise the class.
 
-        Private methods:
-            __tempFileWrapper(func,   ; Call func() with a filename.
-                              handle)
-            __getMimeType(handle)     ; Get the mime type of a stream.
-            __parseCsvFile(handle)    ; Parse a CSV file.
-            __parseXlsFile(handle)    ; Parse an Excel file.
-            __parseOdsFile(handle)    ; Parse an OpenDocument Spreadsheet file.
-            __checkBatchFormat(job)   ; Check a batch job and sanitize it.
+    Private methods:
+        - __tempFileWrapper(func, handle) ; Call func() with a filename.
+        - __parseCsvFile(handle)    ; Parse a CSV file.
+        - __parseXlsFile(handle)    ; Parse an Excel file.
+        - __parseOdsFile(handle)    ; Parse an OpenDocument Spreadsheet file.
+        - __checkBatchFormat(job)   ; Check a batch job and sanitize it.
 
-        Public methods:
-            parseFileRaw(handle)   ; Parse a stream with the appropriate parser.
-            parseBatchFile(handle) ; Parse a stream with the appropriate parser
-                                     and sanitize the output.
+    Public methods:
+        - getMimeType(handle)    ; Get the mime type of a stream.
+        - parseFileRaw(handle)   ; Parse a stream with the appropriate parser.
+        - parseBatchFile(handle) ; Parse a stream with the appropriate parser
+                                   and sanitize the output.
     """
 
     def __init__(self, config, output) :
         """
-            Initialise the class.
+        Initialise the class.
 
-            Private variables (altered):
-                __config ; Initialised with configuration variables.
-                __output ; Set to the Output object.
+        Private variables (altered):
+            - __config ; Initialised with configuration variables.
+            - __output ; Set to the Output object.
+        
+        @arg config: Configuration variables
+        @type config: class instance
+        @arg output: Output object
+        @type output: class instance
         """
 
         self.__config = config
-        self.__output = output
+        self.__output = output #: The Output object
     #__init__
 
     def __tempFileWrapper(self, func, handle) :
         """
-            Make a temporary file, put the content of a stream in it and pass
-            the filename to a general function. Return whatever this function
-            returns.
+        Make a temporary file, put the content of a stream in it and pass
+        the filename to a general function. Return whatever this function
+        returns.
 
-            Arguments:
-                func   ; A general function that needs a file name as argument.
-                handle ; A stream.
+        @arg func: general function that needs a file name as argument
+        @type func: function
+        @arg handle: A stream
+        @type handle: stream
 
-            Returns:
-                unknown ; The output of func().
+        @return: unknown; the output of func().
+        @rtype: ?
         """
 
         # Generate an unique filename in the tempDir directory.
@@ -92,50 +105,19 @@ class File() :
         return ret
     #__tempFileWrapper
 
-    def getMimeType(self, handle) :
-        """
-            Get the mime type of a stream by inspecting a fixed number of bytes.
-            The stream is rewinded after use.
-
-            Arguments:
-                handle ; A handle to a stream.
-
-            Private variables:
-                __config ; The bufSize configuration variables.
-
-            Returns:
-                string ; The mime type of a file.
-        """
-
-        handle.seek(0)
-        buf = handle.read(self.__config.bufSize)
-
-        MagicInstance = magic.open(magic.MAGIC_MIME)
-        MagicInstance.load()
-        mimeType = MagicInstance.buffer(buf).split(';')[0]
-        MagicInstance.close()
-        MagicInstance = magic.open(magic.MAGIC_NONE)
-        MagicInstance.load()
-        description = MagicInstance.buffer(buf)
-        del MagicInstance
-        handle.seek(0)
-
-        return mimeType, description
-    #getMimeType
-
     def __parseCsvFile(self, handle) :
         """
-            Parse a CSV file.
-            The stream is not rewinded after use.
+        Parse a CSV file.
+        The stream is not rewinded after use.
 
-            Arguments:
-                handle ; A handle to a stream.
+        Private variables:
+            - __config ; The bufSize configuration variables.
 
-            Private variables:
-                __config ; The bufSize configuration variables.
+        @arg handle: A handle to a stream
+        @type handle: stream
 
-            Returns:
-                list ; A list of lists.
+        @return: list of lists
+        @rtype: list
         """
 
         handle.seek(0)
@@ -164,14 +146,14 @@ class File() :
 
     def __parseXlsFile(self, handle) :
         """
-            Parse an Excel file.
-            The stream is not rewinded after use.
+        Parse an Excel file.
+        The stream is not rewinded after use.
 
-            Arguments:
-                handle ; A handle to a stream.
+        @arg handle: A handle to a stream
+        @type handle: stream
 
-            Returns:
-                list ; A list of lists.
+        @return: A list of lists
+        @rtype: list
         """
 
         workBook = self.__tempFileWrapper(xlrd.open_workbook, handle)
@@ -196,15 +178,14 @@ class File() :
 
     def __parseOdsFile(self, handle) :
         """
-            Parse an OpenDocument Spreadsheet file.
-            The stream is not rewinded after use.
+        Parse an OpenDocument Spreadsheet file.
+        The stream is not rewinded after use.
 
-            Arguments:
-                handle ; A handle to a stream.
+        @arg handle: A handle to a stream
+        @type handle: stream
 
-            Returns:
-                list ; A list of lists.
-
+        @return: A list of lists
+        @rtype: list
         """
 
         #zipFile = self.__tempFileWrapper(zipfile.ZipFile, handle)
@@ -229,20 +210,22 @@ class File() :
 
     def __checkBatchFormat(self, job) :
         """
-            Check if a job is of the correct format.
-            - Each row should consist of three elements.
-            - The first and the last element should be non-empty.
-            - The first line should be the header defined in the config file.
+        Check if a job is of the correct format.
+           - Each row should consist of three elements.
+           - The first and the last element should be non-empty.
+           - The first line should be the header defined in the config file.
 
-            Arguments:
-                job ; list of lists.
+        Private variables:
+            - __config ; The header configuration variable.
+        
+        @todo: Add more new style old style logic
+        @todo: if not inputl: try to make something out of it
 
-            Private variables:
-                __config ; The header configuration variable.
+        @arg job: list of lists
+        @type job: list
 
-            Returns:
-                list ; A sanitised list of lists (without a header or empty
-                       lines).
+        @return: A sanitised list of lists (without a header or empty lines)
+        @rtype: list
         """
         #store original line numbers line 1 = job[0]
         jobl = [(l+1, row) for l, row in enumerate(job)]
@@ -339,16 +322,48 @@ class File() :
             return None
     #__checkBatchFormat
 
+    def getMimeType(self, handle) :
+        """
+        Get the mime type of a stream by inspecting a fixed number of bytes.
+        The stream is rewinded after use.
+
+        Private variables:
+            - __config: The bufSize configuration variables.
+
+        @arg handle: A handle to a stream
+        @type handle: stream
+
+        @return: The mime type of a file
+        @rtype: string
+        """
+
+        handle.seek(0)
+        buf = handle.read(self.__config.bufSize) #: The bufSize configuration variables.
+
+
+        MagicInstance = magic.open(magic.MAGIC_MIME)
+        MagicInstance.load()
+        mimeType = MagicInstance.buffer(buf).split(';')[0]
+        MagicInstance.close()
+        MagicInstance = magic.open(magic.MAGIC_NONE)
+        MagicInstance.load()
+        description = MagicInstance.buffer(buf)
+        del MagicInstance
+        handle.seek(0)
+
+        return mimeType, description
+    #getMimeType
+
     def parseFileRaw(self, handle) :
         """
-            Check which format a stream has and parse it with the appropriate
-            parser if the stream is recognised.
+        Check which format a stream has and parse it with the appropriate
+        parser if the stream is recognised.
 
-            Arguments:
-                handle ; A handle to a stream.
+        @arg handle: A handle to a stream
+        @type handle: stream
 
-            Returns:
-                list ; A list of lists, None if an error occured.
+        @return: A list of lists, None if an error occured
+        @rtype: list
         """
 
         mimeType = self.getMimeType(handle)
@@ -365,15 +380,15 @@ class File() :
 
     def parseBatchFile(self, handle) :
         """
-            Check which format a stream has and parse it with the appropriate
-            parser if the stream is recognised.
+        Check which format a stream has and parse it with the appropriate
+        parser if the stream is recognised.
 
-            Arguments:
-                handle ; A handle to a stream.
+        @arg handle: A handle to a stream
+        @type handle: stream
 
-            Returns:
-                list ; A sanitised list of lists (without a header or empty
-                       lines), or None if an error occured.
+        @return: A sanitised list of lists (without a header or empty lines),
+        or None if an error occured
+        @rtype: list
         """
 
         job = self.parseFileRaw(handle)
@@ -384,8 +399,20 @@ class File() :
 #File
 
 def makeList(l, maxlen=10):
+    """
+    Converts a list of lines to a string to be used in output messages for
+    incompatible fields.
+
+    @arg l: list of lines
+    @type l: list
+    @arg maxlen: maximum length of the string you want to return
+    @type maxlen: integer
+    @return: a list converted to a string with comma's and spaces
+    @rtype: string
+    """
     ret = ", ".join(str(i) for i in l[:maxlen])
     if len(l)>maxlen:
         return ret+", ..."
     else:
         return ret
+#makeList

@@ -1,74 +1,86 @@
 #!/usr/bin/python
 
 """
-    Module for conversion from genomic coordinates to coding sequence
-    orientated coordinates and vice versa.
-    The conversions are done based upon a list of splice sites, the CDS start
-    and stop and the orientation of a transcript.
+Module for conversion from genomic coordinates to coding sequence
+orientated coordinates and vice versa.
+The conversions are done based upon a list of splice sites, the CDS start
+and stop and the orientation of a transcript.
 
-    Public classes:
-        Crossmap ; Convert from g. to c. or n. notation or vice versa.
 """
+#Public classes:
+#    - Crossmap ; Convert from g. to c. or n. notation or vice versa.
 
 class Crossmap() :
     """
-        Convert from g. to c. or n. notation or vice versa.
+    Convert from I{g.} to I{c.} or I{n.} notation or vice versa.
+    
+    Private variables:
+        - __STOP         ; CDS stop in I{c.} notation.
+        - __crossmapping ; A list that contains either I{c.} or I{n.} positions
+                           corresponding to the I{g.} positions in the RNA list.
 
-        Private variables:
-            __STOP         ; CDS stop in c. notation.
-            __crossmapping ; A list that contains either c. or n. positions
-                             corresponding to the g. positions in the RNA list.
+    Public variables:
+        - RNA         ; The list of RNA splice sites.
+        - CDS         ; CDS start and stop (if present).
+        - orientation ; The orientation of the transcript:  1 = forward
+                                                           -1 = reverse.
 
-        Public variables:
-            RNA         ; The list of RNA splice sites.
-            CDS         ; CDS start and stop (if present).
-            orientation ; The orientation of the transcript:  1 = forward
-                                                             -1 = reverse.
+    Special methods:
+        - __init__(RNA, CDS, orientation) ; Initialise the class and do the
+                                            cross mapping of the splice sites.
 
-        Special methods:
-            __init__(RNA, CDS, orientation) ; Initialise the class and do the
-                                              cross mapping of the splice
-                                              sites.
+    Private methods:
+        - __plus(a, b)              ; A protected '+' that skips 0 if
+                                      a <= 0 and a + b >= 0.
+        - __minus(a, b)             ; A protected '-' that skips 0 if
+                                      a >= 0 and a - b <= 0.
+        - __minusr(a, b)            ; A protected '-' that skips 0 if
+                                      a > 0 and b < 0.
+        - __crossmap_splice_sites() ; Calculate the __crossmapping list.
 
-        Private methods:
-            __plus(a, b)   ; A protected '+' that skips 0 if
-                             a <= 0 and a + b >= 0.
-            __minus(a, b)  ; A protected '-' that skips 0 if
-                             a >= 0 and a - b <= 0.
-            __minusr(a, b) ; A protected '-' that skips 0 if
-                             a > 0 and b < 0.
-            __crossmap_splice_sites() ; Calculate the __crossmapping list.
-
-        Public methods:
-            int2main(a)    ; Translate from __STOP to '*' notation.
-            main2int(s)    ; Translate from '*' to __STOP notation.
-            g2x(a)    ; Translate from g. notation to c. or n. notation.
-            x2g(a, b) ; Translate c. or n. notation to g. notation.
+    Public methods:
+        - int2main(a) ; Translate from __STOP to '*' notation.
+        - main2int(s) ; Translate from '*' to __STOP notation.
+        - g2x(a) ; Translate from I{g.} notation to I{c.} or I{n.} notation.
+        - x2g(a, b) ; Translate I{c.} or I{n.} notation to I{g.} notation.
+        - int2offset(t) ; Convert a tuple of integers to offset-notation.
+        - offset2int(s) ; Convert an offset in HGVS notation to an integer.
+        - tuple2string(t) ; Convert a tuple (main, offset) in __STOP notation
+            to I{c.} notation.
+        - g2c(a) ; Uses both g2x() and tuple2string() to translate a genomic
+            position to __STOP notation to I{c.} notation.
+        - info() ; Return transcription start, transcription end and CDS stop.
+        - getSpliceSite(number) ; Return the coordinate of a splice site.
+        - numberOfIntrons() ; Returns the number of introns.
+        - numberOfExons() ; Returns the number of exons.
     """
 
     def __init__(self, RNA, CDS, orientation) :
         """
-            Initialise the class and do the cross mapping of the splice sites.
+        Initialise the class and do the cross mapping of the splice sites.
 
-            Arguments:
-                RNA         ; The list of RNA splice sites.
-                CDS         ; CDS start and stop (may be empty).
-                orientation ; The orientation of the transcript.
+        Private variables (altered):
+            - __STOP         ; CDS stop in I{c.} notation.
+            - __crossmapping ; A list that contains either I{c.} or I{n.}
+                               positions corresponding to the I{g.} positions in
+                               the RNA list.
+            - __trans_start  ; Transcription start site in I{c.} notation.
+            - __trans_end    ; Transcription end side in I{c.} notation.
 
-            Private variables (altered):
-                __STOP         ; CDS stop in c. notation.
-                __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA
-                                 list.
-                __trans_start  ; Transcription start site in c. notation.
-                __trans_end    ; Transcription end side in c. notation.
-
-            Public variables (altered):
-                RNA         ; The list of RNA splice sites.
-                CDS         ; CDS start and stop (if present).
-                orientation ; The orientation of the transcript:  1 = forward
-                                                                 -1 = reverse.
+        @arg RNA: The list of RNA splice sites
+        @type RNA: list
+        @arg CDS: CDS start and stop (if present, may be empty)
+        @type CDS: list
+        @arg orientation: The orientation of the transcript
+            - 1 = forward
+            - E{-}1 = reverse
+        @type orientation: integer
         """
+#        Public variables (altered):
+#            - RNA         ; The list of RNA splice sites.
+#            - CDS         ; CDS start and stop (if present).
+#            - orientation ; The orientation of the transcript:  1 = forward
+#                                                             -1 = reverse.
 
         self.__STOP = None
         self.__crossmapping = len(RNA) * [None]
@@ -88,16 +100,17 @@ class Crossmap() :
 
     def __plus(self, a, b) :
         """
-            This method returns a + b unless a is smaller than zero and the
-            result is larger than zero, in that case it returns a + b + 1.
-            In effect the number 0 is skipped while adding.
+        This method returns a + b unless a is smaller than zero and the
+        result is larger than zero, in that case it returns a + b + 1.
+        In effect the number 0 is skipped while adding.
 
-            Arguments:
-                a ; First argument of the addition.
-                b ; Second argument of the addition.
+        @arg a: First argument of the addition
+        @type a: integer
+        @arg b: Second argument of the addition
+        @type b: integer
 
-            Returns:
-                integer ; a + b or a + b + 1.
+        @return: a + b or a + b + 1
+        @rtype: integer
         """
 
         r = a + b
@@ -110,16 +123,17 @@ class Crossmap() :
 
     def __minus(self, a, b) :
         """
-            This method returns a - b unless a is larger than zero and the
-            result is smaller than zero, in that case it returns (a - b) - 1.
-            In effect the number 0 is skipped while subtracting.
+        This method returns a - b unless a is larger than zero and the
+        result is smaller than zero, in that case it returns (a - b) - 1.
+        In effect the number 0 is skipped while subtracting.
 
-            Arguments:
-                a ; First argument of the subtraction.
-                b ; Second argument of the subtraction.
+        @arg a: First argument of the subtraction
+        @type a: integer
+        @arg b: Second argument of the subtraction
+        @type b: integer
 
-            Returns:
-                integer ; a - b or (a - b) - 1.
+        @return: a - b or (a - b) - 1
+        @rtype: integer
         """
 
         r = a - b
@@ -132,16 +146,17 @@ class Crossmap() :
 
     def __minusr(self, a, b) :
         """
-            This method returns a - b unless a is larger than zero and b is
-            smaller than zero, in that case it returns (a - b) - 1.
-            In effect the number 0 is skipped while subtracting.
+        This method returns a - b unless a is larger than zero and b is
+        smaller than zero, in that case it returns (a - b) - 1.
+        In effect the number 0 is skipped while subtracting.
 
-            Arguments:
-                a ; First argument of the subtraction.
-                b ; Second argument of the subtraction.
+        @arg a: First argument of the subtraction
+        @type a: integer
+        @arg b: Second argument of the subtraction
+        @type b: integer
 
-            Returns:
-                integer ; a - b or (a - b) - 1.
+        @return: a - b or (a - b) - 1
+        @rtype: integer
         """
 
         r = a - b
@@ -154,46 +169,50 @@ class Crossmap() :
 
     def __crossmap_splice_sites(self) :
         """
-            This method calculates either:
-              1: The c. notation of the CDS start and stop, including splice
-                 sites.
-              2: The c. notation of the RNA splice sites.
-              3: The n. notation of the RNA splice sites.
+        This method calculates either:
+            1. The I{c.} notation of the CDS start and stop, including splice
+               sites.
+            2. The I{c.} notation of the RNA splice sites.
+            3. The I{n.} notation of the RNA splice sites.
 
-            For option 1 only provide an list with CDS splice sites.
-            For option 2 provide an list with RNA splice sites and one with
-              the CDS start and stop.
-            For option 3 only provide an list with RNA splice sites.
+        For option 1 only provide an list with CDS splice sites.
+        For option 2 provide an list with RNA splice sites and one with
+        the CDS start and stop.
+        For option 3 only provide an list with RNA splice sites.
 
-            Examples:
-            - Get the n. notation of the RNA splice sites. The input is in
+        Examples:
+        
+        Crossmap(RNA, [], 1)
+            - Get the I{n.} notation of the RNA splice sites. The input is in
               forward notation.
-            Crossmap(RNA, [], 1)
-            - Get the c. notation of the CDS start and stop, and the internal
+        
+        Crossmap(CDS, [], 1)
+            - Get the I{c.} notation of the CDS start and stop, and the internal
               splice sites. The input is in forward notation.
-            Crossmap(CDS, [], 1)
-            - Get the c. notation of the RNA splice sites. The input is in
+        
+        Crossmap(RNA, CDS, -1)
+            - Get the I{c.} notation of the RNA splice sites. The input is in
               reverse complement.
-            Crossmap(RNA, CDS, -1)
+        
 
-            The output is straightforward, except for the c. notation of the
-            downstream RNA splice sites. This is denoted by __STOP + the
-            distance to the stop codon, as an alternative to the *-notation.
+        The output is straightforward, except for the I{c.} notation of the
+        downstream RNA splice sites. This is denoted by __STOP + the
+        distance to the stop codon, as an alternative to the *-notation.
 
-            Private variables (altered):
-                __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA
-                                 list.
+        Private variables (altered):
+            - __crossmapping ; A list that contains either I{c.} or I{n.} positions
+                               corresponding to the I{g.} positions in the RNA
+                               list.
 
-            Private variables:
-                __STOP         ; A large number to indicate positions after CDS
-                                 stop.
+        Private variables:
+            - __STOP         ; A large number to indicate positions after CDS
+                               stop.
 
-            Public variables:
-                RNA         ; The list of RNA splice sites.
-                CDS         ; CDS start and stop (if present).
-                orientation ; The orientation of the transcript:  1 = forward
-                                                                 -1 = reverse.
+        Public variables:
+            - RNA         ; The list of RNA splice sites.
+            - CDS         ; CDS start and stop (if present).
+            - orientation ; The orientation of the transcript:  1 = forward,
+                                                               -1 = reverse.
         """
 
         RNAlen = len(self.RNA)
@@ -237,47 +256,49 @@ class Crossmap() :
 
     def g2x(self, a) :
         """
-            This function calculates either:
-              1: The n. notation from a g. notation.
-              2: The c. notation from a g. notation.
+        This function calculates either:
+            1. The I{n.} notation from a I{g.} notation.
+            2. The I{c.} notation from a I{g.} notation.
 
-            For option 1 only provide an array with mRNA splice sites and one
-            with the c. notation of the splice sites.
-            For option 2 provide an array with mRNA splice sites, one with the
-            c. notation of the splice sites and an array with the CDS start and
-            stop.
+        For option 1 only provide an array with mRNA splice sites and one
+        with the I{c.} notation of the splice sites.
+        For option 2 provide an array with mRNA splice sites, one with the
+        I{c.} notation of the splice sites and an array with the CDS start and
+        stop.
 
-            Examples:
-            - Get the n. notation of a g. position i. The input is in forward
+        Examples:
+        
+        Crossmap(RNA, [], 1)
+        g2x(i)
+            - Get the I{n.} notation of a I{g.} position i. The input is in forward
+            notation.
+
+        Crossmap(mRNA, CDS, -1);
+        g2x(i);
+            - Get the I{c.} notation of a I{g.} position i. The input is in reverse
               notation.
-            Crossmap(RNA, [], 1)
-            g2x(i)
-            - Get the c. notation of a g. position i. The input is in reverse
-              notation.
-            Crossmap(mRNA, CDS, -1);
-            g2x(i);
 
-            The output is fully compatible with the HVGS nomenclature as
-            defined on 01-07-2009.
+        The output is fully compatible with the HVGS nomenclature as defined
+        on 01-07-2009.
 
-            Arguments:
-                a ; The genomic position that must be translated.
+        Private variables:
+            - __crossmapping ; A list that contains either I{c.} or I{n.} positions
+                               corresponding to the I{g.} positions in the RNA
+                               list.
+            - __STOP         ; A large number to indicate positions after CDS
+                               stop.
 
-            Private variables:
-                __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA
-                                 list.
-                __STOP         ; A large number to indicate positions after CDS
-                                 stop.
+        Public variables:
+            - RNA         ; The list of RNA splice sites.
+            - CDS         ; CDS start and stop (if present).
+            - orientation ; The orientation of the transcript:  1 = forward,
+                                                               -1 = reverse.
 
-            Public variables:
-                RNA         ; The list of RNA splice sites.
-                CDS         ; CDS start and stop (if present).
-                orientation ; The orientation of the transcript:  1 = forward
-                                                                 -1 = reverse.
+        @arg a: The genomic position that must be translated
+        @type a: integer
 
-            Returns:
-                string ; The c. or n. notation of position a.
+        @return: The I{c.} or I{n.} notation of position a
+        @rtype: string
         """
         # TODO update documentation.
 
@@ -313,39 +334,42 @@ class Crossmap() :
 
     def x2g(self, a, b) :
         """
-            This function calculates either:
-              1: The g. notation from a n. notation.
-              2: The g. notation from a c. notation.
+        This function calculates either:
+            1. The I{g.} notation from a I{n.} notation.
+            2. The I{g.} notation from a I{c.} notation.
 
-            Whether option 1 or 2 applies depends on the content of mRNAm.
+        Whether option 1 or 2 applies depends on the content of mRNAm.
 
 
-            Examples:
-            - Get the g. notation of a n. position i. The input is in forward
-              notation.
-            Crossmap(RNA, [], 1)
-            x2g(i)
-            - Get the g. notation of a c. position i with offset j. The input
-              is in reverse notation.
-            Crossmap(mRNA, CDS, -1);
-            x2g(i, j);
+        Examples:
 
-            Arguments:
-                a ; The n. or c. position to be translated.
-                b ; The offset of position a.
+        Crossmap(RNA, [], 1)
+        x2g(i)
+            - Get the I{g.} notation of a I{n.} position i. The input is in forward 
+            notation.
 
-            Private variables:
-                __crossmapping ; A list that contains either c. or n. positions
-                                 corresponding to the g. positions in the RNA
-                                 list.
+        Crossmap(mRNA, CDS, -1);
+        x2g(i, j);
+            - Get the I{g.} notation of a I{c.} position i with offset j. The input 
+            is in reverse notation.
 
-            Public variables:
-                RNA         ; The list of RNA splice sites.
-                orientation ; The orientation of the transcript:  1 = forward
-                                                                 -1 = reverse.
+        Private variables:
+            - __crossmapping ; A list that contains either I{c.} or I{n.} positions
+                             corresponding to the I{g.} positions in the RNA
+                             list.
 
-            Returns:
-                integer ; A g. position.
+        Public variables:
+            - RNA         ; The list of RNA splice sites.
+            - orientation ; The orientation of the transcript:  1 = forward
+                                                             -1 = reverse.
+
+        @arg a: The I{n.} or I{c.} position to be translated
+        @type a: integer
+        @arg b: The offset of position a
+        @type b: integer
+
+        @return: A I{g.} position
+        @rtype: integer
         """
 
         d = self.orientation
@@ -373,16 +397,16 @@ class Crossmap() :
 
     def int2main(self, a) :
         """
-            This method converts the __STOP notation to the '*' notation.
+        This method converts the __STOP notation to the '*' notation.
 
-            Arguments:
-                a ; An integer in __STOP notation.
+        Private variables:
+            - __STOP ; CDS stop in I{c.} notation.
 
-            Private variables:
-                __STOP ; CDS stop in c. notation.
+        @arg a: An integer in __STOP notation
+        @type a: integer
 
-            Returns:
-                string ; The converted notation (may be unaltered).
+        @return: The converted notation (may be unaltered)
+        @rtype: string
         """
 
         if a > self.__STOP :
@@ -393,16 +417,16 @@ class Crossmap() :
 
     def main2int(self, s) :
         """
-            This method converts the '*' notation to the __STOP notation.
+        This method converts the '*' notation to the __STOP notation.
 
-            Arguments:
-                s ; A string in '*' notation.
+        Private variables:
+            - __STOP ; CDS stop in I{c.} notation.
 
-            Private variables:
-                __STOP ; CDS stop in c. notation.
+        @arg s: A string in '*' notation
+        @type s: string
 
-            Returns:
-                integer ; The converted notation (may be unaltered).
+        @return: The converted notation (may be unaltered)
+        @rtype: integer
         """
 
         if s[0] == '*' :
@@ -413,15 +437,15 @@ class Crossmap() :
 
     def int2offset(self, t) :
         """
-            Convert a tuple of integers to offset-notation. This adds a `+',
-            and `u' or `d' to the offset when appropriate. The main value is
-            not returned.
+        Convert a tuple of integers to offset-notation. This adds a `+',
+        and `u' or `d' to the offset when appropriate. The main value is
+        not returned.
 
-            Arguments:
-                t ; A tuple of integers: (main, offset) in __STOP notation.
+        @arg t: A tuple of integers: (main, offset) in __STOP notation
+        @type t: tuple
 
-            Returns:
-                string ; The offset in HGVS notation.
+        @return: The offset in HGVS notation
+        @rtype: string
         """
 
         if t[1] > 0 :                      # The exon boundary is downstream.
@@ -439,15 +463,15 @@ class Crossmap() :
 
     def offset2int(self, s) :
         """
-            Convert an offset in HGVS notation to an integer. This removes
-            `+', `u' and `d' when present. It also converts a `?' to something
-            sensible.
+        Convert an offset in HGVS notation to an integer. This removes
+        `+', `u' and `d' when present. It also converts a `?' to something
+        sensible.
 
-            Arguments:
-                s ; An offset in HGVS notation.
+        @arg s: An offset in HGVS notation
+        @type s: string
 
-            Returns:
-                int ; The offset as an integer.
+        @return: The offset as an integer
+        @rtype: integer
         """
 
         if not s :    # No offset given.
@@ -468,36 +492,52 @@ class Crossmap() :
 
     def tuple2string(self, t) :
         """
-            Convert a tuple (main, offset) in __STOP notation to c. notation.
+        Convert a tuple (main, offset) in __STOP notation to I{c.} notation.
 
-            Arguments:
-                t ; A tuple (main, offset) in __STOP notation.
+        @arg t: A tuple (main, offset) in __STOP notation
+        @type t: tuple
 
-            Returns:
-                string ; The position in HGVS notation.
+        @return: The position in HGVS notation
+        @rtype: string
         """
 
         return str(self.int2main(t[0])) + str(self.int2offset(t))
     #tuple2string
 
     def g2c(self, a) :
+        """
+        Uses both g2x() and tuple2string() to translate a genomic position
+        to __STOP notation to I{c.} notation.
+
+        @arg a: The genomic position that must be translated
+        @type a: integer
+
+        @return: The position in HGVS notation
+        @rtype: string
+        """
         return self.tuple2string(self.g2x(a))
     #g2c
 
     def info(self) :
         """
-            Return transcription start, transcription end and CDS stop.
+        Return transcription start, transcription end and CDS stop.
 
-            Returns:
-                triple ; (trans_start, trans_stop, CDS_stop)
+        @return: (trans_start, trans_stop, CDS_stop)
+        @rtype: triple
         """
 
         return (self.__trans_start, self.__trans_end, self.__STOP)
     #info
 
     def getSpliceSite(self, number) :
-        #TODO documentation
         """
+        Return the coordinate of a splice site.
+        
+        @arg number: the number of the RNA splice site counting from
+            transcription start.
+        @type number: integer
+        @return: coordinate of the RNA splice site.
+        @rtype: integer
         """
 
         if self.orientation == 1 :
@@ -506,15 +546,21 @@ class Crossmap() :
     #getSpliceSite
 
     def numberOfIntrons(self) :
-        #TODO documentation
         """
+        Returns the number of introns.
+        
+        @return: number of introns
+        @rtype: integer
         """
 
         return len(self.RNA) / 2 - 1
 
     def numberOfExons(self) :
-        #TODO documentation
         """
+        Returns the number of exons.
+        
+        @return: number of exons
+        @rtype: integer
         """
 
         return len(self.RNA) / 2

@@ -1,9 +1,17 @@
 #!/usr/bin/python
 
 """
-    Get updates on mapping information from the UCSC.
+Get updates on mapping information from the UCSC.
 
-    This program is intended to be run daily from cron.
+This program is intended to be run daily from cron.
+
+@requires: sys
+@requires: os
+
+@requires: Modules.Config
+@requires: Modules.Output
+@requires: Modules.Remote
+@requires: Modules.Update
 """
 
 import sys # sys.argv

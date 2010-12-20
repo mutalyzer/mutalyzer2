@@ -1,11 +1,19 @@
 #!/usr/bin/python
 
 """
-    Module that provides general functions used by the web interfaces.
+Module that provides general functions used by the web interfaces.
 
-    Public classes:
-        Web ; General functions used by the web interfaces.
+@requires: sys
+@requires: re
+@requires: urllib 
+@requires: cStringIO.StringIO
+@requires: simpletal.simpleTALES
+@requires: simpletal.simpleTAL
+@requires: Config
 """
+# Public classes:
+#     - Web ; General functions used by the web interfaces.
+
 
 import sys                        # sys.stdout
 import re                         # match
@@ -19,27 +27,27 @@ import Config
 
 class Web() :
     """
-        General functions used by the web interfaces.
+    General functions used by the web interfaces.
 
-        Public variables:
-            version ; This is the version that is displayed on the web pages,
-                      WSDL files, etc.
+    Public variables:
+        - version ; This is the version that is displayed on the web pages,
+                    WSDL files, etc.
 
-        Special methods:
-            __init__() ; Initialise the class.
+    Special methods:
+        - __init__() ; Initialise the class.
 
-        Public methods:
-            run(func, *args)            ; Run func(*args) and return stdout.
-            tal(scheme, filename, args) ; Compile a TAL template to HTML or XML.
-            read(path, req)             ; Read a file and return the content.
+    Public methods:
+        - run(func, *args)            ; Run func(*args) and return stdout.
+        - tal(scheme, filename, args) ; Compile a TAL template to HTML or XML.
+        - read(path, req)             ; Read a file and return the content.
     """
 
     def __init__(self) :
         """
-            Initialise the class.
+        Initialise the class.
 
-            Public variables (altered):
-                version ; Here the displayed version is defined.
+        Public variables (altered):
+            - version ; Here the displayed version is defined.
         """
 
         self.version = "2.0&nbsp;&beta;-5"
@@ -52,14 +60,15 @@ class Web() :
 
     def run(self, func, *args) :
         """
-            Run any function and return standard output as a string.
+        Run any function and return standard output as a string.
 
-            Arguments:
-                func  ; The function that has to be called.
-                *args ; The arguments of func.
+        @arg func: The function that has to be called
+        @type func: function
+        @arg args: arguments for the function to call
+        @type args: list
 
-            Returns:
-                string ; Everything that func(*args) writes to standard output.
+        @return: Everything that func(*args) writes to standard output
+        @rtype: string
         """
 
         old_stdout = sys.stdout
@@ -74,17 +83,20 @@ class Web() :
     def tal_old(self, scheme, filename, args) :
         #TODO merge this function with 'tal' (below).
         """
-            Compile a TAL template to HTML or XML.
+        Compile a TAL template to HTML or XML.
+        
+        @todo: merge this function with 'tal'
 
-            Arguments:
-                scheme   ; Either "HTML" or "XML", output will be in this
-                           format.
-                filename ; The filename of the template.
-                args     ; A dictionary with variables (whose name correspond
-                           to the ones in the template) and their values.
+        @arg scheme:    Either "HTML" or "XML", output will be in this format
+        @type scheme:   string
+        @arg filename:  The filename of the template
+        @type filename: string
+        @arg args:      A dictionary with variables (whose name correspond to
+                        the ones in the template) and their values
+        @type args:     dictionary
 
-            Returns:
-                string ; An HTML or XML file.
+        @return: An HTML or XML file
+        @rtype:  string
         """
 
         from simpletal import simpleTALES # context(), addGlobal()
@@ -118,17 +130,18 @@ class Web() :
 
     def tal(self, scheme, filename, args) :
         """
-            Compile a TAL template to HTML or XML.
+        Compile a TAL template to HTML or XML.
 
-            Arguments:
-                scheme   ; Either "HTML" or "XML", output will be in this
-                           format.
-                filename ; The filename of the template.
-                args     ; A dictionary with variables (whose name correspond
-                           to the ones in the template) and their values.
+        @arg scheme:    Either "HTML" or "XML", output will be in this format
+        @type scheme:   string
+        @arg filename:  The filename of the template
+        @type filename: string
+        @arg args:      A dictionary with variables (whose name correspond to
+                        the ones in the template) and their values
+        @type args:     dictionary
 
-            Returns:
-                string ; An HTML or XML file.
+        @return: An HTML or XML file
+        @rtype: string
         """
 
         context = simpleTALES.Context()
@@ -164,14 +177,15 @@ class Web() :
 
     def read(self, path, req) :
         """
-            Read a file and return its content.
+        Read a file and return its content.
 
-            Arguments:
-                path ; Path to the file.
-                req  ; HTTP request (used to extract the filename).
+        @arg path: Path to the file
+        @type path: string
+        @arg req: HTTP request (used to extract the filename)
+        @type req: string
 
-            Returns:
-                string ; The content of the file.
+        @return: The content of the file
+        @rtype: string
         """
 
         handle = open(path + req.uri.split('/', 2)[2], "r")
@@ -184,6 +198,13 @@ class Web() :
     def isEMail(self, eMail) :
         #TODO documentation
         """
+        Check if argument is a valid email address.
+        
+        @arg eMail: email address to check
+        @type eMail: string
+        
+        @return: True or False
+        @rtype: boolean
         """
 
         if re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$",
@@ -195,6 +216,11 @@ class Web() :
     def urlEncode(self, descriptions) :
         #TODO documentation
         """
+        @arg descriptions:
+        @type descriptions: list
+        
+        @return: urlEncode descriptions???????????????
+        @rtype: list
         """
 
         newDescr = []

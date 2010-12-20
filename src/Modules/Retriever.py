@@ -1,15 +1,30 @@
 #!/usr/bin/python
 
 """
-    Module for retrieving files from either the cache or the NCBI.
+Module for retrieving files from either the cache or the NCBI.
 
-    A hash of every retrieved file is stored in the internal database. If a
-    requested file is not found, but its hash is, we use additional information
-    to re-download the file.
+A hash of every retrieved file is stored in the internal database. If a
+requested file is not found, but its hash is, we use additional information
+to re-download the file.
 
-    Public classes:
-        Retriever ; Retrieve a record from either the cache or the NCBI.
+@requires: os
+@requires: bz2
+@requires: hashlib
+@requires: urllib2
+@requires: StringIO
+@requires: ftplib
+@requires: Bio.SeqIO
+@requires: Bio.Entrez
+@requires: Bio.Seq.UnknownSeq
+@requires: Modules.Misc
+@requires: Modules.LRGparser
+@requires: Modules.GBparser
+@requires: xml.dom.DOMException
+@requires: xml.dom.minidom
 """
+# Public classes:
+#     - Retriever ; Retrieve a record from either the cache or the NCBI.
+
 
 import os              # path.isfile(), link() path.isdir(), path.mkdir(),
                        # walk(), path.getsize(), path.join(), stat(), remove()
@@ -30,58 +45,58 @@ import xml.dom.minidom
 
 class Retriever(object) :
     """
-        Retrieve a record from either the cache or the NCBI.
+    Retrieve a record from either the cache or the NCBI.
 
-        Inherited variables from Db.Output.Config:
-            email     ; The email address which we give to the NCBI.
-            cache     ; The directory where the records are stored.
-            cachesize ; Maximum size of the cache.
+    Inherited variables from Db.Output.Config:
+        - email     ; The email address which we give to the NCBI.
+        - cache     ; The directory where the records are stored.
+        - cachesize ; Maximum size of the cache.
 
-        Special methods:
-            __init__(config,   ; Use variables from the configuration file to
-                     output,     initialise the class private variables.
-                     database)
+    Special methods:
+        - __init__(config, output, database) ; Use variables from the
+        configuration file to initialise the class private variables.
+                 
 
 
-        Private methods:
-            _foldersize(folder) ; Return the size of a folder.
-            _cleancache()       ; Keep the cache at a maximum size.
-            _nametofile(name)   ; Convert a name to a filename.
-            _write(raw_data,    ; Write a record to a file.
-                    filename,
-                    extract)
-            _calcHash(content)  ; Calculate the md5sum of 'content'.
-            _newUD()            ; Generate a new UD number.
+    Private methods:
+        - _foldersize(folder) ; Return the size of a folder.
+        - _cleancache()       ; Keep the cache at a maximum size.
+        - _nametofile(name)   ; Convert a name to a filename.
+        - _write(raw_data, filename, extract) ; Write a record to a file.
+        - _calcHash(content)  ; Calculate the md5sum of 'content'.
+        - _newUD()            ; Generate a new UD number.
 
-        Public methods:
-            retrieveslice(accno,   ; Retrieve a chromosome slice from the NCBI.
-                          start,
-                          stop,
-                          orientation)
-            retrievegene(gene,     ; Retrieve a gene from the NCBI.
-                         organism,
-                         upstream,
-                         downstream)
-            downloadrecord(url)    ; Download a GenBank file.
-            uploadrecord(raw_data) ; Let someone upload a GenBank file.
-            loadrecord(identifier) ; Load a record, store it in the
-                                     cache, manage the cache and return
-                                     the record.
+    Public methods:
+        - retrieveslice(accno, start, stop, orientation) ; Retrieve a chromosome
+        slice from the NCBI.
+        - retrievegene(gene, organism, upstream, downstream) ; Retrieve a gene
+        from the NCBI.
+        - downloadrecord(url)    ; Download a GenBank file.
+        - uploadrecord(raw_data) ; Let someone upload a GenBank file.
+        - loadrecord(identifier) ; Load a record, store it in the cache, manage
+        the cache and return the record.
 
-        Inherited methods from Db.Output:
-            WarningMsg(filename, message) ; Print a warning message.
-            ErrorMsg(filename, message)   ; Print an error message and log it.
-            LogMsg(filename, message)     ; Log a message.
+    Inherited methods from Db.Output:
+        - WarningMsg(filename, message) ; Print a warning message.
+        - ErrorMsg(filename, message)   ; Print an error message and log it.
+        - LogMsg(filename, message)     ; Log a message.
     """
 
     def __init__(self, config, output, database) :
         """
-            Use variables from  the configuration file for some simple
-            settings. Make the cache directory if it does not exist yet.
+        Use variables from the configuration file for some simple
+        settings. Make the cache directory if it does not exist yet.
 
-            Inherited variables from Db.Output.Config:
-                email     ; The email address which we give to the NCBI.
-                cache     ; The directory where the records are stored.
+        Inherited variables from Db.Output.Config:
+            - email     ; The email address which we give to the NCBI.
+            - cache     ; The directory where the records are stored.
+            
+        @arg config:
+        @type config:
+        @arg output:
+        @type output:
+        @arg database:
+        @type database:
         """
 
         self._config = config
@@ -95,13 +110,13 @@ class Retriever(object) :
 
     def _foldersize(self, folder) :
         """
-            Return the size of a folder in bytes.
+        Return the size of a folder in bytes.
 
-            Arguments:
-                folder ; Name of a directory.
-
-            Returns:
-                integer ; The size of the directory.
+        @arg folder: Name of a directory
+        @type folder: string
+        
+        @return: The size of the directory
+        @rtype: integer
         """
 
         folder_size = 0
@@ -114,15 +129,15 @@ class Retriever(object) :
 
     def _cleancache(self) :
         """
-            Keep removing files until the size of the cache is less than the
-            maximum size.
-            First, the cache checked for its size, if it exceeds the maximum
-            size the ``oldest'' files are deleted. Note that accessing a file
-            makes it ``new''.
+        Keep removing files until the size of the cache is less than the
+        maximum size.
+        First, the cache checked for its size, if it exceeds the maximum
+        size the ``oldest'' files are deleted. Note that accessing a file
+        makes it ``new''.
 
-            Inherited variables from Db.Output.Config:
-                cache     ; Directory under scrutiny.
-                cachesize ; Maximum size of the cache.
+        Inherited variables from Db.Output.Config:
+            - cache     ; Directory under scrutiny.
+            - cachesize ; Maximum size of the cache.
         """
 
         if self._foldersize(self._config.cache) < self._config.cachesize:
@@ -147,16 +162,16 @@ class Retriever(object) :
 
     def _nametofile(self, name) :
         """
-            Convert an accession number to a filename.
+        Convert an accession number to a filename.
 
-            Arguments:
-                name ; The accession number.
+        Inherited variables from Db.Output.Config:
+            - cache     ; Name of the cache directory.
 
-            Inherited variables from Db.Output.Config:
-                cache     ; Name of the cache directory.
+        @arg name: The accession number
+        @type name: string
 
-            Returns:
-                string ; A filename.
+        @return: A filename
+        @rtype: string
         """
 
         return self._config.cache + '/' + name + "." + self.fileType + ".bz2"
@@ -164,14 +179,15 @@ class Retriever(object) :
 
     def _write(self, raw_data, filename) :
         """
-            Write raw data to a compressed file.
+        Write raw data to a compressed file.
 
-            Arguments:
-                raw_data    ; The raw_data to be compressed and written
-                filename    ; The intended name of the outfile
+        @arg raw_data: The raw_data to be compressed and written
+        @type raw_data: string
+        @arg filename: The intended name of the outfile
+        @type filename: string
 
-            Returns:
-                outfile     ; The full paht and name of the file written
+        @return: outfile ; The full path and name of the file written
+        @rtype: string
         """
         # Compress the data to save disk space.
         comp = bz2.BZ2Compressor()
@@ -189,13 +205,13 @@ class Retriever(object) :
 
     def _calcHash(self, content) :
         """
-            Calculate the md5sum of a piece of text.
+        Calculate the md5sum of a piece of text.
 
-            Arguments:
-                content ; Arbitrary text.
+        @arg content: Arbitrary text
+        @type content: string
 
-            Returns:
-                string ; The md5sum of 'content'.
+        @return: The md5sum of 'content'
+        @rtype: string
         """
 
         hashfunc = hashlib.md5()
@@ -208,10 +224,10 @@ class Retriever(object) :
 
     def _newUD(self) :
         """
-            Make a new UD number based on the current time (seconds since 1970).
+        Make a new UD number based on the current time (seconds since 1970).
 
-            Returns:
-                string ; A new UD number.
+        @return: A new UD number
+        @rtype: string
         """
 
         M = Misc.Misc()
@@ -223,13 +239,17 @@ class Retriever(object) :
     def _updateDBmd5(self, raw_data, name, GI):
         #TODO documentation
         """
-            Arguments:
-                raw_data ;
-                name     ;
-                GI       ;
+        @todo: documentation
+        
+        @arg raw_data:
+        @type raw_data:
+        @arg name:
+        @type name:
+        @arg GI:
+        @type GI:
 
-            Returns:
-                string ;
+        @return: filename
+        @rtype: string
         """
 
         currentmd5sum = self._database.getHash(name)
@@ -250,14 +270,14 @@ class Retriever(object) :
 
     def snpConvert(self, rsId) :
         """
-            Search an rsId in dbSNP and return all annotated HGVS notations of
-            it.
+        Search an rsId in dbSNP and return all annotated HGVS notations of
+        it.
 
-            Arguments:
-                rsId ; The id of the SNP.
+        @arg rsId: The id of the SNP
+        @type rsId: string
 
-            Returns:
-                list ; A list of HGVS notations.
+        @return: A list of HGVS notations
+        @rtype: list
         """
 
         # A simple input check.
@@ -295,28 +315,29 @@ class GenBankRetriever(Retriever):
 
     def write(self, raw_data, filename, extract) :
         """
-            Write raw data to a file. The data is parsed before writing, if a
-            parse error occurs an error is returned and the function exits.
-            If 'filename' is set and 'extract' is set to 0, then 'filename' is
-            used for output.
-            If 'extract' is set to 1, then the filename is constructed from the
-            id of the GenBank record. Additionally the id and GI number are
-            returned for further processing (putting them in the internal
-            database).
+        Write raw data to a file. The data is parsed before writing, if a
+        parse error occurs an error is returned and the function exits.
+        If 'filename' is set and 'extract' is set to 0, then 'filename' is
+        used for output.
+        If 'extract' is set to 1, then the filename is constructed from the
+        id of the GenBank record. Additionally the id and GI number are
+        returned for further processing (putting them in the internal
+        database).
 
-            Arguments:
-                raw_data ; The data.
-                filename ; The intended name of the file.
-                extract  ; Flag that indicates whether to extract the record ID
-                           and GI number:
-                           0 ; Do not extract, use 'filename'.
-                           1 ; Extract.
+        @arg raw_data: The data
+        @type raw_data: string
+        @arg filename: The intended name of the file.
+        @type filename: string
+        @arg extract: Flag that indicates whether to extract the record ID and
+        GI number:
+            - 0 ; Do not extract, use 'filename'
+            - 1 ; Extract
+        @type extract: integer
 
-            Returns:
-                tuple ; Depending on the value of 'extract':
-                        0 ; ('filename', None)
-                        1 ; (id, GI)
-
+        @return: tuple ; Depending on the value of 'extract':
+            - 0 ; ('filename', None)
+            - 1 ; (id, GI)
+        @rtype: tuple (string, string)
         """
 
         if raw_data == "\nNothing has been found\n" :
@@ -394,30 +415,34 @@ class GenBankRetriever(Retriever):
 
     def retrieveslice(self, accno, start, stop, orientation) :
         """
-            Retrieve a slice of a chromosome.
-            If the arguments are recognised (found in the internal database),
-            we look if the associated file is still present and if so: return
-            its UD number.
-            If the arguments are recognised but no file was found, we download
-            the new slice and update the hash (and log if the hash changes).
-            If the arguments are not recognised, we download the new slice and
-            make a new UD number.
-            The content of the slice is placed in the cache with the UD number
-            as filename.
+        Retrieve a slice of a chromosome.
+        If the arguments are recognised (found in the internal database),
+        we look if the associated file is still present and if so: return
+        its UD number.
+        If the arguments are recognised but no file was found, we download
+        the new slice and update the hash (and log if the hash changes).
+        If the arguments are not recognised, we download the new slice and
+        make a new UD number.
+        The content of the slice is placed in the cache with the UD number
+        as filename.
 
-            Arguments:
-                accno       ; The accession number of the chromosome.
-                start       ; Start position of the slice.
-                stop        ; End position of the slice.
-                orientation ; Orientatiion of the slice:
-                              1 ; Forward.
-                              2 ; Reverse complement.
+        Inherited variables from Db.Output.Config:
+            - maxDldSize ; Maximum size of the slice.
 
-            Inherited variables from Db.Output.Config:
-                maxDldSize ; Maximum size of the slice.
-
-            Returns:
-                string ; An UD number.
+        @arg accno: The accession number of the chromosome
+        @type accno: string
+        @arg start: Start position of the slice
+        @type start: integer
+        @arg stop: End position of the slice.
+        @type stop: integer
+        @arg orientation:
+        Orientation of the slice:
+            - 1 ; Forward
+            - 2 ; Reverse complement
+        @type orientation: integer
+        
+        @return: An UD number
+        @rtype: string
         """
 
         # Not a valid slice.
@@ -463,16 +488,20 @@ class GenBankRetriever(Retriever):
 
     def retrievegene(self, gene, organism, upstream, downstream) :
         """
-            Query the NCBI for the chromosomal location of a gene and make a
-            slice if the gene can be found.
+        Query the NCBI for the chromosomal location of a gene and make a
+        slice if the gene can be found.
 
-            Arguments:
-                gene       ; Name of the gene.
-                organism   ; The organism in which we search.
-                upstream   ; Number of upstream nucleotides for the slice.
-                downstream ; Number of downstream nucleotides for the slice.
+        @arg gene: Name of the gene
+        @type gene: string
+        @arg organism: The organism in which we search.
+        @type organism: string
+        @arg upstream: Number of upstream nucleotides for the slice.
+        @type upstream: integer
+        @arg downstream: Number of downstream nucleotides for the slice.
+        @type downstream: integer
 
-            Returns:
+        @return: slice
+        @rtype:
         """
 
         # Search the NCBI for a specific gene in an organism.
@@ -532,16 +561,19 @@ class GenBankRetriever(Retriever):
 
     def downloadrecord(self, url) :
         """
-            Download a GenBank record from a URL.
-            If the downloaded file is recognised by its hash, the old UD number
-            is used.
+        Download a GenBank record from a URL.
+        If the downloaded file is recognised by its hash, the old UD number
+        is used.
 
-            Arguments:
-                url ; Location of a GenBank record.
+        Inherited variables from Db.Output.Config:
+            - maxDldSize ; Maximum size of the file.
+            - minDldSize ; Minimum size of the file.
 
-            Inherited variables from Db.Output.Config:
-                maxDldSize ; Maximum size of the file.
-                minDldSize ; Minimum size of the file.
+        @arg url: Location of a GenBank record
+        @type url: string
+        
+        @return: UD or None
+        @rtype: string
         """
 
         handle = urllib2.urlopen(url)
@@ -580,12 +612,15 @@ class GenBankRetriever(Retriever):
 
     def uploadrecord(self, raw_data) :
         """
-            Write an uploaded record to a file.
-            If the downloaded file is recognised by its hash, the old UD number
-            is used.
+        Write an uploaded record to a file.
+        If the downloaded file is recognised by its hash, the old UD number
+        is used.
 
-            Arguments:
-                raw_data ; A GenBank record.
+        @arg raw_data: A GenBank record
+        @type raw_data: string
+        
+        @return: 
+        @rtype: string?????
         """
 
         md5sum = self._calcHash(raw_data)
@@ -603,15 +638,15 @@ class GenBankRetriever(Retriever):
 
     def loadrecord(self, identifier) :
         """
-            Load a record and return it.
-            If the filename associated with the accession number is not found
-            in the cache, try to re-download it.
+        Load a record and return it.
+        If the filename associated with the accession number is not found
+        in the cache, try to re-download it.
 
-            Arguments:
-                identifier ; An accession number.
+        @arg identifier: An accession number
+        @type identifier: string
 
-            Returns:
-                record ; A GenBank.Record record
+        @return: A GenBank.Record record
+        @rtype: object
         """
         if (identifier[0].isdigit()) : # This is a GI identifier.
             name = self._database.getGBFromGI(identifier)
@@ -660,17 +695,25 @@ class GenBankRetriever(Retriever):
 
 class LRGRetriever(Retriever):
     """
-        Retrieve a LRG record from either the cache or the web.
+    Retrieve a LRG record from either the cache or the web.
 
-        Public methods:
-            loadrecord(identifier) ; Load a record, store it in the
-                                     cache, manage the cache and return
-                                     the record.
+    Public methods:
+        - loadrecord(identifier) ; Load a record, store it in the cache, manage
+                                   the cache and return the record.
     """
 
     def __init__(self, config, output, database):
         #TODO documentation
         """
+        Initialize the class.
+        
+        @todo: documentation
+        @arg  config: 
+        @type  config: 
+        @arg  output: 
+        @type  output: 
+        @arg  database: 
+        @type  database: 
         """
 
         # Recall init of parent
@@ -681,14 +724,14 @@ class LRGRetriever(Retriever):
 
     def loadrecord(self, identifier):
         """
-            Load and parse a LRG file based on the identifier
+        Load and parse a LRG file based on the identifier
 
-            Arguments:
-                identifier  ; The name of the LRG file to read
+        @arg identifier: The name of the LRG file to read
+        @type identifier: string
 
-            Returns:
-                record      ; GenRecord.Record of LRG file
-                None        ; in case of failure
+        @return: record ; GenRecord.Record of LRG file
+                   None ; in case of failure
+        @rtype:
         """
 
         # Make a filename based upon the identifier.
@@ -714,19 +757,18 @@ class LRGRetriever(Retriever):
 
     def fetch(self, name):
         """
-            Fetch the LRG file and store in the cache directory. First try to
-            grab the file from the confirmed section, if this fails, get it
-            from the pending section.
+        Fetch the LRG file and store in the cache directory. First try to
+        grab the file from the confirmed section, if this fails, get it
+        from the pending section.
 
-            Arguments:
-                name    ; The name of the LRG file to fetch
+        Inherited variables from Config.Retriever
+            - lrgURL  ; The base url from where LRG files are fetched
 
-            Inherited variables from Config.Retriever
-                lrgURL  ; The base url from where LRG files are fetched
+        @arg name: The name of the LRG file to fetch
+        @type name: string
 
-            Returns:
-                path    ; the full path to the file
-                None    ; in case of an error
+        @return: the full path to the file; None in case of an error
+        @rtype: string
         """
 
         prefix = self._config.lrgURL
@@ -751,18 +793,19 @@ class LRGRetriever(Retriever):
 
     def downloadrecord(self, url, name = None) :
         """
-            Download an LRG record from an URL.
+        Download an LRG record from an URL.
 
-            Arguments:
-                url ; Location of the LRG record.
+        Inherited variables from Db.Output.Config:
+            - maxDldSize  ; Maximum size of the file.
+            - minDldSize  ; Minimum size of the file.
 
-            Inherited variables from Db.Output.Config:
-                maxDldSize  ; Maximum size of the file.
-                minDldSize  ; Minimum size of the file.
+        @arg url: Location of the LRG record
+        @type url: string
 
-            Returns:
-                filename    ; The full path to the file
-                None        ; in case of failure
+        @return:
+            - filename    ; The full path to the file
+            - None        ; in case of failure
+        @rtype: string
         """
 
         lrgID = name or os.path.splitext(os.path.split(url)[1])[0]
@@ -812,17 +855,18 @@ class LRGRetriever(Retriever):
 
     def write(self, raw_data, filename) :
         """
-            Write raw LRG data to a file. The data is parsed before writing,
-            if a parse error occurs None is returned.
+        Write raw LRG data to a file. The data is parsed before writing,
+        if a parse error occurs None is returned.
 
-            Arguments:
-                raw_data ; The data.
-                filename ; The intended name of the file.
+        @arg raw_data: The data
+        @type raw_data: string
+        @arg filename: The intended name of the file
+        @type filename: string
 
-            Returns:
-                filename ; The full path and name of the file written
-                None     ; In case of an error
-
+        @return:
+            - filename ; The full path and name of the file written
+            - None     ; In case of an error
+        @rtype: string
         """
         # Dirty way to test if a file is valid,
         # Parse the file to see if it's a real LRG file.
