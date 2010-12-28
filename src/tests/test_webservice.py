@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging; logging.raiseExceptions = 0
-from suds.client import Client, WebFault
+from suds.client import Client
+from suds import WebFault
 import unittest
 
 class TestWebservice(unittest.TestCase):
