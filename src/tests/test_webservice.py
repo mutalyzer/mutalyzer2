@@ -11,6 +11,9 @@ class TestWebservice(unittest.TestCase):
     def setUp(self):
         """
         Initialize webservice entrypoint.
+
+        @todo: Start the standalone server and stop it in self.tearDown
+        instead of depending on some running instance at a fixed address.
         """
         self.client = Client('http://mutalyzer2service/mutalyzer2service?wsdl')
 
