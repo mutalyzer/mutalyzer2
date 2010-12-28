@@ -7,15 +7,11 @@ Collection of Serilizable Objects used by the webservice
 @requires: soaplib.serializers.primitive.Integer
 @requires: soaplib.serializers.primitive.Array
 @requires: soaplib.serializers.clazz.ClassSerializer
-@requires: ZSI.TC
-@requires: ZSI.fault.Fault
 
 @todo: documentation
 """
 from soaplib.serializers.primitive import String, Integer, Array
 from soaplib.serializers.clazz import ClassSerializer
-from ZSI import TC
-from ZSI.fault import Fault
 
 class SoapMessage(ClassSerializer):
     """
@@ -29,11 +25,7 @@ class SoapMessage(ClassSerializer):
     class types():
         errorcode = String
         message = String
-
-    def __init__(self):
-        self.typecode = TC.Struct(SoapMessage, [
-            TC.String("errorcode"),
-            TC.String("message")], "SoapMessage")
+    #types
 #SoapMessage
 
 class Mapping(ClassSerializer) :
@@ -65,26 +57,6 @@ class Mapping(ClassSerializer) :
         errorcode = Integer
         messages = Array(SoapMessage)
     #types
-
-    def __init__(self) :
-        """
-        Types are defined here for the TC module.
-        """
-
-        self.typecode = TC.Struct(Mapping, [
-            TC.Integer('startmain'),
-            TC.Integer('startoffset'),
-            TC.Integer('endmain'),
-            TC.Integer('endoffset'),
-            TC.Integer('start_g'),
-            TC.Integer('end_g'),
-            TC.String('mutationType'),
-            TC.Integer("errorcode"),
-            TC.Array("SoapMessage", TC.Struct(SoapMessage, [
-                TC.String("errorcode"),
-                TC.String("message")], "SoapMessage"), "messages")
-            ], 'Mapping')
-    #__init__
 #Mapping
 
 class Transcript(ClassSerializer) :
@@ -105,17 +77,6 @@ class Transcript(ClassSerializer) :
         trans_stop = Integer
         CDS_stop = Integer
     #types
-
-    def __init__(self) :
-        """
-        """
-
-        self.typecode = TC.Struct(Transcript, [
-            TC.Integer('trans_start'),
-            TC.Integer('trans_stop'),
-            TC.Integer('CDS_stop')
-            ], 'Transcript')
-    #__init__
 #Transcript
 
 class MutalyzerOutput(ClassSerializer) :
@@ -146,28 +107,4 @@ class MutalyzerOutput(ClassSerializer) :
         warnings = Integer
         summary = String
     #types
-
-    def __init__(self) :
-        """
-        """
-
-        self.typecode = TC.Struct(MutalyzerOutput, [
-            TC.String('original'),
-            TC.String('mutated'),
-
-            TC.String('origMRNA'),
-            TC.String('mutatedMRNA'),
-
-            TC.String('origCDS'),
-            TC.String('newCDS'),
-
-            TC.String('origProtein'),
-            TC.String('newProtein'),
-            TC.String('altProtein'),
-
-            TC.Integer('errors'),
-            TC.Integer('warnings'),
-            TC.String('summary')
-            ], 'MutalyzerOutput')
-    #__init__
 #MutalyzerOutput

@@ -8,7 +8,7 @@ Mutalyzer webservices.
 @requires: soaplib.serializers.primitive.String
 @requires: soaplib.serializers.primitive.Integer
 @requires: soaplib.serializers.primitive.Array
-@requires: ZSI.fault.Fault
+@requires: soaplib.serializers.primitive.Fault
 
 @requires: Modules.Web
 @requires: Modules.Db
@@ -24,13 +24,52 @@ Mutalyzer webservices.
 # Public classes:
 #     - MutalyzerService ; Mutalyzer webservices.
 
+# Patch lxml.etree.cleanup_namespaces to not do anything:
+# soaplib calls this function, but it removes namespaces we need (see
+# wsgi_soap.py in the soaplib library).
+# Current versions of soaplib don't have this bug.
+# https://github.com/soaplib/soaplib
+# https://github.com/arskom/rpclib (forked soaplib)
+import lxml.etree; lxml.etree.cleanup_namespaces = lambda _: None
+
+# todo: If we use Array(String) in a Soap method signature, soaplib generates
+# the following type declaration for it:
+#
+#   <xs:complexType name="stringArray">
+#     <xs:sequence>
+#       <xs:element minOccurs="0" maxOccurs="unbounded"
+#          type="tns:string" name="string" />
+#     </xs:sequence>
+#   </xs:complexType>
+#
+# However, tns:string does not exist. This should be:
+#
+#   <xs:complexType name="stringArray">
+#     <xs:sequence>
+#       <xs:element minOccurs="0" maxOccurs="unbounded"
+#          type="xs:string" name="string" />
+#     </xs:sequence>
+#   </xs:complexType>
+#
+# This affects the wsdl tool, Mono's Web Service Proxy Generator. If we fix
+# it, the webservice functions correctly with a Mono client.
 
 from soaplib.wsgi_soap import SimpleWSGISoapApp
 from soaplib.service import soapmethod
-from soaplib.serializers.primitive import String, Integer, Array
-from ZSI.fault import Fault
+from soaplib.serializers.primitive import String, Integer, Array, Fault
 
-import Mutalyzer                                
+# Unfortunately, Mutalyzer assumes a working directory at some points, but
+# it is not there if we use Apache/mod_wsgi
+# todo: instead of this patch we should fix Mutalyzer
+import os
+os.chdir(os.path.split(os.path.dirname(__file__))[0])
+
+# Same goes for the Python module path
+# todo: instead of this patch we should fix Mutalyzer
+import sys
+sys.path.append(os.path.dirname(__file__))
+
+import Mutalyzer
 from Modules import Web
 from Modules import Db
 from Modules import Output
@@ -66,7 +105,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         end, and CDS end (in I{c.} notation) for a given transcript.
       - cTogConversion(self, build, variant) ; Convert I{c.} to I{g.}
       - gTocConversion(self, build,  variant) ; Convert I{g.} to I{c.}
-                      
+
     """
 
     def __checkBuild(self, L, build, config) :
@@ -87,9 +126,9 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if not build in config.dbNames :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
-            raise Fault(Fault.Client, "EARG",
-                detail = "The build argument (%s) was not a valid " \
-                         "build name." % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                        "build name." % build)
         #if
     #__checkBuild
 
@@ -110,9 +149,9 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if not D.isChrom(chrom) :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
-            raise Fault(Fault.Client, "EARG",
-                detail = "The chrom argument (%s) was not a valid " \
-                         "chromosome name." % chrom)
+            raise Fault("EARG",
+                        "The chrom argument (%s) was not a valid " \
+                        "chromosome name." % chrom)
         #if
     #__checkChrom
 
@@ -131,8 +170,8 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if pos < 1 :
             L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
-            raise Fault(Fault.Client, "ERANGE",
-                detail = "The pos argument (%i) is out of range." % pos)
+            raise Fault("ERANGE",
+                        "The pos argument (%i) is out of range." % pos)
         #if
     #__checkPos
 
@@ -151,8 +190,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
 
         if not variant :
             L.addMessage(__file__, 4, "EARG", "EARG no variant")
-            raise Fault(Fault.Client, "EARG",
-                detail = "The variant argument is not provided.")
+            raise Fault("EARG", "The variant argument is not provided.")
         #if
     #__checkVariant
 
@@ -545,10 +583,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
     def checkSyntax(self, variant):
         """
         Checks the syntax of a variant.
-        
+
         @arg variant: the variant to check
         @type variant: string
-        
+
         @return: message
         @rtype: string
         """
@@ -575,14 +613,14 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del L
         return result
     #checkSyntax
-    
+
     @soapmethod(String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
         C = Config.Config() # Read the configuration file.
         L = Output.Output(__file__, C.Output)
         L.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
-        Mutalyzer.process(variant, C, L)                     
+        Mutalyzer.process(variant, C, L)
         M = MutalyzerOutput()
 
         M.original = L.getIndexedOutput("original", 0)
@@ -629,3 +667,13 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return ret
     #getGeneAndTranscipt
 #MutalyzerService
+
+# WSGI application for use with e.g. Apache/mod_wsgi
+application = MutalyzerService()
+
+# We can also use the built-in webserver by executing this file directly
+if __name__ == '__main__':
+    from wsgiref.simple_server import make_server
+    print 'Listening to http://localhost:8080/'
+    print 'WDSL file is at http://localhost:8080/?wsdl'
+    make_server('localhost', 8080, application).serve_forever()

@@ -11,42 +11,31 @@ Public methods:
    
 @requires: os
 @requires: bz2
-@requires: ZSI.dispatch
-@requires: soaplib.client.make_service_client
 @requires: mod_python.apache
 @requires: mod_python.publisher
 @requires: Modules.Web
 @requires: Modules.Config
 @requires: Modules.File
-@requires: webservice
 """
 
 import os
 import bz2
-from ZSI import dispatch
-from soaplib.client import make_service_client
 from mod_python import apache, publisher
 
 from Modules import Web
 from Modules import Config
 from Modules import File
 
-import webservice
-
 def handler(req):
     """
     Handle a request passed to us by mod_python.
 
     Keywords in the URI of the request are used to decide what to do:
-        - "services" ; Dispatch the webservices handler.
         - ".js"      ; Return the raw content of the file (to include JavaScript
                        from an HTML file).
         - ".py"      ; Return the content as a downloadable file after it has
                        been processed by TAL (to generate webservice client
                        files).
-        - ".wsdl"    ; Return the content of the file after it has been
-                       processed by TAL (to generate a WSDL file that refers to
-                       the correct server).
 
     By default, the HTML publisher is used for normal HTML files and other
     unhandled requests.
@@ -66,13 +55,6 @@ def handler(req):
     reqPath = req.hostname + req.uri.rsplit('/', 1)[0]
 
     W = Web.Web()
-
-    # Dispatch the webservices handler.
-    if "/services" in req.uri :
-        Export = webservice.MutalyzerService()
-        dispatch.AsHandler(modules=(Export,), request=req, rpc=True)
-        return apache.OK
-    #if
 
     # Return raw content (for includes from an HTML file).
     if "base/" in req.uri :
@@ -156,15 +138,6 @@ def handler(req):
         else :
             #raise fileName
             return apache.HTTP_FORBIDDEN
-        return apache.OK
-    #if
-
-    # Generate the WSDL file from the MutalyzerService class.
-    if req.uri.endswith(".wsdl"):
-        servicepath = "http://" + reqPath + "/services"
-        client = make_service_client(servicepath, webservice.MutalyzerService())
-        req.content_type = 'text/xml'
-        req.write(client.server.wsdl(servicepath))
         return apache.OK
     #if
 
