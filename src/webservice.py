@@ -32,7 +32,7 @@ Mutalyzer webservices.
 # Install soaplib:
 #   $ sudo python setup.py install
 
-#import logging; logging.basicConfig()
+import logging; logging.basicConfig()
 
 import soaplib
 from soaplib.service import soap
@@ -608,18 +608,23 @@ class MutalyzerService(DefinitionBase) :
         Mutalyzer.process(variant, C, L)
         M = MutalyzerOutput()
 
-        M.original = L.getIndexedOutput("original", 0)
-        M.mutated = L.getIndexedOutput("mutated", 0)
+        # We force the results to strings here, because some results
+        # may be of type Bio.Seq.Seq which soaplib doesn't like.
+        #
+        # todo: We might have to also do this elsewhere.
 
-        M.origMRNA = L.getIndexedOutput("origMRNA", 0)
-        M.mutatedMRNA = L.getIndexedOutput("mutatedMRNA", 0)
+        M.original = str(L.getIndexedOutput("original", 0))
+        M.mutated = str(L.getIndexedOutput("mutated", 0))
 
-        M.origCDS = L.getIndexedOutput("origCDS", 0)
-        M.newCDS = L.getIndexedOutput("newCDS", 0)
+        M.origMRNA = str(L.getIndexedOutput("origMRNA", 0))
+        M.mutatedMRNA = str(L.getIndexedOutput("mutatedMRNA", 0))
 
-        M.origProtein = L.getIndexedOutput("oldprotein", 0)
-        M.newProtein = L.getIndexedOutput("newprotein", 0)
-        M.altProtein = L.getIndexedOutput("altProtein", 0)
+        M.origCDS = str(L.getIndexedOutput("origCDS", 0))
+        M.newCDS = str(L.getIndexedOutput("newCDS", 0))
+
+        M.origProtein = str(L.getIndexedOutput("oldprotein", 0))
+        M.newProtein = str(L.getIndexedOutput("newprotein", 0))
+        M.altProtein = str(L.getIndexedOutput("altProtein", 0))
 
         M.errors, M.warnings, M.summary = L.Summary()
 
