@@ -183,9 +183,9 @@ def check(req) :
     recordType = O.getIndexedOutput("recordType",0)
     reference = O.getIndexedOutput("reference", 0)
     if recordType == "LRG" :
-        reference += ".xml"
+        reference = reference + ".xml" if reference else ""
     else :
-        reference += ".gb"
+        reference = reference + ".gb" if reference else ""
 
     pe = O.getOutput("parseError")
     if pe :
@@ -195,14 +195,15 @@ def check(req) :
     if O.getIndexedOutput("molType", 0) == 'n' :
         genomicDNA = False
 
+    genomicDescription = O.getIndexedOutput("genomicDescription", 0)
+
     args = {
         "lastpost"           : name,
         "messages"           : O.getMessages(),
         "summary"            : summary,
         "parseError"         : pe,
         "errors"             : errors,
-        "genomicDescription" : W.urlEncode([O.getIndexedOutput(
-                                   "genomicDescription", 0)])[0],
+        "genomicDescription" : W.urlEncode([genomicDescription])[0] if genomicDescription else "",
         "chromDescription"   : O.getIndexedOutput("genomicChromDescription", 0),
         "genomicDNA"         : genomicDNA,
         "visualisation"      : O.getOutput("visualisation"),

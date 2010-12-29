@@ -23,39 +23,16 @@ Mutalyzer webservices.
 #     - MutalyzerService ; Mutalyzer webservices.
 
 # We now use very current soaplib:
-#   git clone https://github.com/soaplib/soaplib.git
-#   cd soaplib
-#   sudo python setup.py install
-
-# todo: If we use Array(String) in a Soap method signature, soaplib generates
-# the following type declaration for it:
-#
-#   <xs:complexType name="stringArray">
-#     <xs:sequence>
-#       <xs:element minOccurs="0" maxOccurs="unbounded"
-#          type="tns:string" name="string" />
-#     </xs:sequence>
-#   </xs:complexType>
-#
-# However, tns:string does not exist. This should be:
-#
-#   <xs:complexType name="stringArray">
-#     <xs:sequence>
-#       <xs:element minOccurs="0" maxOccurs="unbounded"
-#          type="xs:string" name="string" />
-#     </xs:sequence>
-#   </xs:complexType>
-#
-# This affects the wsdl tool, Mono's Web Service Proxy Generator. If we fix
-# it, the webservice functions correctly with a Mono client.
-
-import logging
-logging.basicConfig()
-
-# We need (in current soaplib):
-#   soaplib/wsdl.py:282
+#   $ git clone https://github.com/soaplib/soaplib.git
+#   $ cd soaplib
+# Patch soaplib:
+#   src/soaplib/wsdl.py:282
 #   -  ser.get('name'),
 #   +  service.get_service_class_name(),
+# Install soaplib:
+#   $ sudo python setup.py install
+
+#import logging; logging.basicConfig()
 
 import soaplib
 from soaplib.service import soap
@@ -68,8 +45,7 @@ from soaplib.server import wsgi
 # it is not there if we use Apache/mod_wsgi
 # todo: instead of this patch we should fix Mutalyzer
 import os
-#print 'Hier: %s' % os.path.dirname(__file__)
-#os.chdir(os.path.split(os.path.dirname(__file__))[0])
+os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
 # Same goes for the Python module path
 # todo: instead of this patch we should fix Mutalyzer
@@ -678,17 +654,14 @@ class MutalyzerService(DefinitionBase) :
 #MutalyzerService
 
 # WSGI application for use with e.g. Apache/mod_wsgi
-#application = MutalyzerService()
+soap_application = soaplib.Application([MutalyzerService],
+                                       'tns',
+                                       'MutalyzerService')
+application = wsgi.Application(soap_application)
 
 # We can also use the built-in webserver by executing this file directly
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
-    soap_application = soaplib.Application([MutalyzerService], 'tns')
-
-    # For mod_wsgi, make this a module variable 'application'
-    wsgi_application = wsgi.Application(soap_application)
-
-    from wsgiref.simple_server import make_server
     print 'Listening to http://localhost:8081/'
     print 'WDSL file is at http://localhost:8081/?wsdl'
-    make_server('localhost', 8081, wsgi_application).serve_forever()
+    make_server('localhost', 8081, application).serve_forever()
