@@ -3,7 +3,7 @@
 import logging; logging.basicConfig()
 from suds.client import Client
 
-url = 'http://<tal tal:replace = "path"></tal>/service/?wsdl'
+url = '<tal tal:replace = "path"></tal>/service/?wsdl'
 c = Client(url)
 o = c.service
 

@@ -3,7 +3,7 @@
 import logging; logging.basicConfig()
 from SOAPpy import WSDL
 
-url = 'http://<tal tal:replace = "path"></tal>/service/?wsdl'
+url = '<tal tal:replace = "path"></tal>/service/?wsdl'
 o = WSDL.Proxy(url)
 
 # Get all transcripts that are hit when we look at position 159272155 on
