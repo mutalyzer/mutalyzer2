@@ -318,7 +318,7 @@ class Output() :
         """
         Return an element of a list, the list is called 'name' in de
         __outputData dictionary. If either the list or the element does not
-        exist, return an empty list.
+        exist, return None.
 
         @arg name:  Name of the list.
         @arg index: Index of the element to be retuned.
@@ -326,14 +326,14 @@ class Output() :
         Private variables:
             - __outputData ; The output dictionary.
 
-        @return: The requested element
-        @rtype: list
+        @return: The requested element or None
+        @rtype: any type
         """
 
         if self.__outputData.has_key(name) :
             if 0 <= index < len(self.__outputData[name]) :
                 return self.__outputData[name][index]
-        return []
+        return None
     #getFirst
 
     def getMessagesWithErrorCode(self, errorcode):

@@ -7,7 +7,6 @@ Mutalyzer webservices.
 @requires: soaplib.service.soapmethod
 @requires: soaplib.serializers.primitive.String
 @requires: soaplib.serializers.primitive.Integer
-@requires: soaplib.serializers.primitive.Array
 @requires: soaplib.serializers.primitive.Fault
 
 @requires: Modules.Web
@@ -17,20 +16,16 @@ Mutalyzer webservices.
 @requires: Modules.Parser
 @requires: Modules.Mapper
 
-@requires: Modules.Serializers.SoapMessage
 @requires: Modules.Serializers.Mapping
 @requires: Modules.Serializers.Transcript
 """
 # Public classes:
 #     - MutalyzerService ; Mutalyzer webservices.
 
-# Patch lxml.etree.cleanup_namespaces to not do anything:
-# soaplib calls this function, but it removes namespaces we need (see
-# wsgi_soap.py in the soaplib library).
-# Current versions of soaplib don't have this bug.
-# https://github.com/soaplib/soaplib
-# https://github.com/arskom/rpclib (forked soaplib)
-import lxml.etree; lxml.etree.cleanup_namespaces = lambda _: None
+# We now use very current soaplib:
+#   git clone https://github.com/soaplib/soaplib.git
+#   cd soaplib
+#   sudo python setup.py install
 
 # todo: If we use Array(String) in a Soap method signature, soaplib generates
 # the following type declaration for it:
@@ -54,15 +49,27 @@ import lxml.etree; lxml.etree.cleanup_namespaces = lambda _: None
 # This affects the wsdl tool, Mono's Web Service Proxy Generator. If we fix
 # it, the webservice functions correctly with a Mono client.
 
-from soaplib.wsgi_soap import SimpleWSGISoapApp
-from soaplib.service import soapmethod
-from soaplib.serializers.primitive import String, Integer, Array, Fault
+import logging
+logging.basicConfig()
+
+# We need (in current soaplib):
+#   soaplib/wsdl.py:282
+#   -  ser.get('name'),
+#   +  service.get_service_class_name(),
+
+import soaplib
+from soaplib.service import soap
+from soaplib.service import DefinitionBase
+from soaplib.model.primitive import String, Integer
+from soaplib.model.exception import Fault
+from soaplib.server import wsgi
 
 # Unfortunately, Mutalyzer assumes a working directory at some points, but
 # it is not there if we use Apache/mod_wsgi
 # todo: instead of this patch we should fix Mutalyzer
 import os
-os.chdir(os.path.split(os.path.dirname(__file__))[0])
+#print 'Hier: %s' % os.path.dirname(__file__)
+#os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
 # Same goes for the Python module path
 # todo: instead of this patch we should fix Mutalyzer
@@ -77,10 +84,9 @@ from Modules import Config
 from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
-from Modules.Serializers import SoapMessage, Mapping, Transcript, \
-                                MutalyzerOutput
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput
 
-class MutalyzerService(SimpleWSGISoapApp) :
+class MutalyzerService(DefinitionBase) :
     """
     Mutalyzer webservices.
 
@@ -194,7 +200,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         #if
     #__checkVariant
 
-    @soapmethod(String, String, Integer, _returns = Array(String))
+    @soap(String, String, Integer, _returns = String(max_occurs="unbounded"))
     def getTranscripts(self, build, chrom, pos) :
         """
         Get all the transcripts that overlap with a chromosomal position.
@@ -239,11 +245,14 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Finished processing getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
 
+        L.addMessage(__file__, -1, "INFO",
+                     "We return %s" % ret)
+
         del D, L, C
-        return [ret]
+        return ret
     #getTranscripts
 
-    @soapmethod(String, String, _returns = Array(String))
+    @soap(String, String, _returns = String(max_occurs="unbounded"))
     def getTranscriptsByGeneName(self, build, name) :
         """
             blabla
@@ -264,11 +273,11 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscriptsByGene(%s %s)" % (
                      build, name))
-        return [ret]
+        return ret
     #getTranscriptsByGene
 
-    @soapmethod(String, String, Integer, Integer, Integer,
-        _returns = Array(String))
+    @soap(String, String, Integer, Integer, Integer,
+        _returns = String(max_occurs="unbounded"))
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """
         Get all the transcripts that overlap with a range on a chromosome.
@@ -310,10 +319,10 @@ class MutalyzerService(SimpleWSGISoapApp) :
             build, chrom, pos1, pos2, method))
 
         del D, L, C
-        return [ret]
+        return ret
     #getTranscriptsRange
 
-    @soapmethod(String, String, _returns = String)
+    @soap(String, String, _returns = String)
     def getGeneName(self, build, accno) :
         """
         Find the gene name associated with a transcript.
@@ -346,7 +355,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #getGeneName
 
 
-    @soapmethod(String, String, String, String, _returns = Mapping)
+    @soap(String, String, String, String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
         """
         Search for an NM number in the MySQL database, if the version
@@ -405,7 +414,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #mappingInfo
 
-    @soapmethod(String, String, String, _returns = Transcript)
+    @soap(String, String, String, _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
         """
         Search for an NM number in the MySQL database, if the version
@@ -442,7 +451,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return T
     #transcriptInfo
 
-    @soapmethod(String, String, _returns = String)
+    @soap(String, String, _returns = String)
     def chromAccession(self, build, name) :
         """
         Get the accession number of a chromosome, given a name.
@@ -475,7 +484,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromAccession
 
-    @soapmethod(String, String, _returns = String)
+    @soap(String, String, _returns = String)
     def chromosomeName(self, build, accNo) :
         """
         Get the name of a chromosome, given a chromosome accession number.
@@ -508,7 +517,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromosomeName
 
-    @soapmethod(String, String, _returns = String)
+    @soap(String, String, _returns = String)
     def getchromName(self, build, acc) :
         """
         Get the chromosome name, given a transcript identifier (NM number).
@@ -541,7 +550,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromosomeName
 
-    @soapmethod(String, String, _returns = Array(String))
+    @soap(String, String, _returns = String(max_occurs="unbounded"))
     def numberConversion(self, build, variant) :
         """
         Converts I{c.} to I{g.} notation or vice versa
@@ -579,7 +588,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #numberConversion
 
-    @soapmethod(String, _returns = String)
+    @soap(String, _returns = String)
     def checkSyntax(self, variant):
         """
         Checks the syntax of a variant.
@@ -614,7 +623,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #checkSyntax
 
-    @soapmethod(String, _returns = MutalyzerOutput)
+    @soap(String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
         C = Config.Config() # Read the configuration file.
         L = Output.Output(__file__, C.Output)
@@ -643,7 +652,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return M
     #runMutalyzer
 
-    @soapmethod(String, String, _returns = String)
+    @soap(String, String, _returns = String)
     def getGeneAndTranscipt(self, genomicReference, transcriptReference) :
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
@@ -669,11 +678,17 @@ class MutalyzerService(SimpleWSGISoapApp) :
 #MutalyzerService
 
 # WSGI application for use with e.g. Apache/mod_wsgi
-application = MutalyzerService()
+#application = MutalyzerService()
 
 # We can also use the built-in webserver by executing this file directly
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
-    print 'Listening to http://localhost:8080/'
-    print 'WDSL file is at http://localhost:8080/?wsdl'
-    make_server('localhost', 8080, application).serve_forever()
+    soap_application = soaplib.Application([MutalyzerService], 'tns')
+
+    # For mod_wsgi, make this a module variable 'application'
+    wsgi_application = wsgi.Application(soap_application)
+
+    from wsgiref.simple_server import make_server
+    print 'Listening to http://localhost:8081/'
+    print 'WDSL file is at http://localhost:8081/?wsdl'
+    make_server('localhost', 8081, wsgi_application).serve_forever()

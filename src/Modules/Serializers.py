@@ -10,10 +10,11 @@ Collection of Serilizable Objects used by the webservice
 
 @todo: documentation
 """
-from soaplib.serializers.primitive import String, Integer, Array
-from soaplib.serializers.clazz import ClassSerializer
+from soaplib.model.primitive import String, Integer
+from soaplib.model.clazz import ClassModel
 
-class SoapMessage(ClassSerializer):
+
+class SoapMessage(ClassModel):
     """
     Send info message over the soapline
 
@@ -22,13 +23,13 @@ class SoapMessage(ClassSerializer):
         - message     ; The error message
     """
 
-    class types():
-        errorcode = String
-        message = String
-    #types
+    __namespace__ = 'soapmessage'
+
+    errorcode = String
+    message = String
 #SoapMessage
 
-class Mapping(ClassSerializer) :
+class Mapping(ClassModel) :
     """
     Extended ClassSerializer object with mixed types of attributes
 
@@ -42,24 +43,20 @@ class Mapping(ClassSerializer) :
         - mutationType ; Define the type of mutation type
     """
 
-    class types() :
-        """
-        Types are defined here for the soaplib module.
-        """
+    __namespace__ = 'mapping'
 
-        startmain = Integer
-        startoffset = Integer
-        endmain = Integer
-        endoffset = Integer
-        start_g = Integer
-        end_g = Integer
-        mutationType = String
-        errorcode = Integer
-        messages = Array(SoapMessage)
-    #types
+    startmain = Integer
+    startoffset = Integer
+    endmain = Integer
+    endoffset = Integer
+    start_g = Integer
+    end_g = Integer
+    mutationType = String
+    errorcode = Integer
+    messages = SoapMessage(max_occurs="unbounded")
 #Mapping
 
-class Transcript(ClassSerializer) :
+class Transcript(ClassModel) :
     """
     Extended ClassSerializer object with mixed types of attributes
 
@@ -69,42 +66,36 @@ class Transcript(ClassSerializer) :
         - CDS_stop    ; Define the type of CDS_stop
     """
 
-    class types() :
-        """
-        """
+    __namespace__ = 'transcript'
 
-        trans_start = Integer
-        trans_stop = Integer
-        CDS_stop = Integer
-    #types
+    trans_start = Integer
+    trans_stop = Integer
+    CDS_stop = Integer
 #Transcript
 
-class MutalyzerOutput(ClassSerializer) :
+class MutalyzerOutput(ClassModel) :
     """
         Extended ClassSerializer object with mixed types of attributes
 
         Attributes:
     """
 
-    class types() :
-        """
-        """
+    __namespace__ = 'mutalyzeroutput'
 
-        original = String
-        mutated = String
+    original = String
+    mutated = String
 
-        origMRNA = String
-        mutatedMRNA= String
+    origMRNA = String
+    mutatedMRNA= String
 
-        origCDS = String
-        newCDS= String
+    origCDS = String
+    newCDS= String
 
-        origProtein = String
-        newProtein = String
-        altProtein = String
+    origProtein = String
+    newProtein = String
+    altProtein = String
 
-        errors = Integer
-        warnings = Integer
-        summary = String
-    #types
+    errors = Integer
+    warnings = Integer
+    summary = String
 #MutalyzerOutput
