@@ -8,16 +8,18 @@
       <h3>Webservices page</h3>
     </center>
     <br>
-    The following programs are example scripts for the webservice. In order
-    for them to function, you need to have <tt>python-soappy</tt> installed.<br>
-    All these scripts use the following 
-    <tt><a href = "service.wsdl">service.wsdl</a></tt> file.<br>
-    <br>
-    The <tt><a href = "sp.py">sp.py</a></tt> test client. This client retrieves
-    a list of transcripts, given a chromosome and a genomic position. Of each
-    of these transcripts, the corresponding gene name is given.<br>
-    <br>
-    Also see the <a href = "documentation">documentation</a> page for a full 
+    Most Mutalyzer functionality is available trough a SOAP webservice.
+    A <a href="service/?wsdl">WSDL description</a> is available
+    for easy generation of client programs in many languages.
+    <h3>Example clients</h3>
+    The following are some example client programs for the webservice.
+    <ul>
+      <li>Python client using the suds library: <a href="client-suds.py"><tt>client-suds.py</tt></a>
+      <li>Python client using the soappy library: <a href="client-soappy.py"><tt>client-soappy.py</tt></a>
+      <li>Mono client in C#: <a href="client-mono.cs"><tt>client-mono.cs</tt></a>
+    </ul>
+    <h3>Documentation</h3>
+    Also see the <a href = "documentation">documentation</a> page for a full
     description of the webservice.
   </div>
   </body>

@@ -34,7 +34,7 @@ def handler(req):
         - ".js"      ; Return the raw content of the file (to include JavaScript
                        from an HTML file).
         - ".py"      ; Return the content as a downloadable file after it has
-                       been processed by TAL (to generate webservice client
+          ".cs"        been processed by TAL (to generate webservice client
                        files).
 
     By default, the HTML publisher is used for normal HTML files and other
@@ -98,7 +98,7 @@ def handler(req):
     #if
 
     # Process the file with TAL and return the content as a downloadable file.
-    if req.uri.endswith(".py") :
+    if req.uri.endswith(".py") or req.uri.endswith(".cs") :
         reqFile = req.uri.split('/')[-1]
         #req.content_type = 'application/octet-stream'
         req.headers_out["Content-Disposition"] = \
