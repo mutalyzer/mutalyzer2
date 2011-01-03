@@ -40,17 +40,14 @@ from soaplib.service import DefinitionBase
 from soaplib.model.primitive import String, Integer
 from soaplib.model.exception import Fault
 from soaplib.server import wsgi
-
-# Unfortunately, Mutalyzer assumes a working directory at some points, but
-# it is not there if we use Apache/mod_wsgi
-# todo: instead of this patch we should fix Mutalyzer
 import os
-os.chdir(os.path.split(os.path.dirname(__file__))[0])
+import site
 
-# Same goes for the Python module path
-# todo: instead of this patch we should fix Mutalyzer
-import sys
-sys.path.append(os.path.dirname(__file__))
+# Add /src to Python path
+site.addsitedir(os.path.dirname(__file__))
+
+# todo: fix Mutalyzer to not depend on working directory
+os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
 import Mutalyzer
 from Modules import Web

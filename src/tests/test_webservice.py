@@ -16,8 +16,7 @@ class TestWebservice(unittest.TestCase):
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        #self.client = Client('http://mutalyzer2service/mutalyzer2service?wsdl')
-        self.client = Client('http://localhost:8081/?wsdl')
+        self.client = Client('http://mutwsgi/service/?wsdl')
 
     def test_checksyntax_valid(self):
         """
