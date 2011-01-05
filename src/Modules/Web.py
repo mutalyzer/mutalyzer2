@@ -29,6 +29,8 @@ class Web() :
     """
     General functions used by the web interfaces.
 
+    @todo: We should probably get rid of this class.
+
     Public variables:
         - version ; This is the version that is displayed on the web pages,
                     WSDL files, etc.
@@ -62,6 +64,8 @@ class Web() :
         """
         Run any function and return standard output as a string.
 
+        @todo: This is used only once (index.py)
+
         @arg func: The function that has to be called
         @type func: function
         @arg args: arguments for the function to call
@@ -80,91 +84,53 @@ class Web() :
         return reply
     #run
 
-    def tal_old(self, scheme, filename, args) :
-        #TODO merge this function with 'tal' (below).
-        """
-        Compile a TAL template to HTML or XML.
-        
-        @todo: merge this function with 'tal'
-
-        @arg scheme:    Either "HTML" or "XML", output will be in this format
-        @type scheme:   string
-        @arg filename:  The filename of the template
-        @type filename: string
-        @arg args:      A dictionary with variables (whose name correspond to
-                        the ones in the template) and their values
-        @type args:     dictionary
-
-        @return: An HTML or XML file
-        @rtype:  string
-        """
-
-        from simpletal import simpleTALES # context(), addGlobal()
-        from simpletal import simpleTAL   # compileHTMLTemplate,
-                                          # compileXMLTemplate,
-
-        context = simpleTALES.Context()
-
-        for i in args :
-            context.addGlobal(i, args[i])
-
-        #templateFile = open("templates/menu.html", 'r')
-        #macros = simpleTAL.compileHTMLTemplate(templateFile)
-        #templateFile.close()
-        #context.addGlobal("sitemacros", macros)
-
-        templateFile = open(filename, 'r')
-
-        if scheme == "HTML" :
-            template = simpleTAL.compileHTMLTemplate(templateFile)
-        else :
-            template = simpleTAL.compileXMLTemplate(templateFile)
-
-        templateFile.close()
-
-        string = StringIO()
-        template.expand(context, string)
-
-        return string.getvalue()
-    #tal
-
-    def tal(self, scheme, filename, args) :
+    def tal(self, filename, args={}, scheme="SITE") :
         """
         Compile a TAL template to HTML or XML.
 
-        @arg scheme:    Either "HTML" or "XML", output will be in this format
-        @type scheme:   string
         @arg filename:  The filename of the template
         @type filename: string
-        @arg args:      A dictionary with variables (whose name correspond to
+        @kwarg args:    A dictionary with variables (whose name correspond to
                         the ones in the template) and their values
         @type args:     dictionary
+        @kwarg scheme:  Either 'SITE', 'NONINTERACTIVE', or 'TEXT'. Output
+                        will be in this format (other schemes can be added in
+                        the future).
+        @type scheme:   string
 
-        @return: An HTML or XML file
+        @return: An HTML or other type of string
         @rtype: string
         """
 
         context = simpleTALES.Context()
 
-        context.addGlobal("version", self.version)
-        context.addGlobal("nomenclatureVersion", self.nomenclatureVersion)
-        context.addGlobal("releaseDate", self.releaseDate)
-        context.addGlobal("contactEmail", self.email)
         for i in args :
             context.addGlobal(i, args[i])
 
-        if scheme == "HTML" :
+        if scheme == "NONINTERACTIVE" :
+            context.addGlobal("interactive", False)
+            templateFile = open(filename, 'r')
+            template = simpleTAL.compileHTMLTemplate(templateFile)
+            templateFile.close()
+        #if
+        elif scheme == "TEXT" :
+            templateFile = open(filename, 'r')
+            template = simpleTAL.compileHTMLTemplate(templateFile)
+            templateFile.close()
+        #elif
+        else : # scheme == 'SITE'
+            context.addGlobal("interactive", True)
+            context.addGlobal("version", self.version)
+            context.addGlobal("nomenclatureVersion", self.nomenclatureVersion)
+            context.addGlobal("releaseDate", self.releaseDate)
+            context.addGlobal("contactEmail", self.email)
+
             templateFile = open(filename, 'r')
             macros = simpleTAL.compileHTMLTemplate(templateFile)
             templateFile.close()
             context.addGlobal("sitemacros", macros)
 
             templateFile = open("templates/menu.html", 'r')
-            template = simpleTAL.compileHTMLTemplate(templateFile)
-            templateFile.close()
-        #if
-        else :
-            templateFile = open(filename, 'r')
             template = simpleTAL.compileHTMLTemplate(templateFile)
             templateFile.close()
         #else
@@ -178,6 +144,8 @@ class Web() :
     def read(self, path, req) :
         """
         Read a file and return its content.
+
+        @todo: This is not used.
 
         @arg path: Path to the file
         @type path: string
@@ -199,6 +167,8 @@ class Web() :
         #TODO documentation
         """
         Check if argument is a valid email address.
+
+        @todo: This is only used once (index.py) and bogus anyway.
         
         @arg eMail: email address to check
         @type eMail: string
@@ -216,6 +186,8 @@ class Web() :
     def urlEncode(self, descriptions) :
         #TODO documentation
         """
+        @todo: This should probably be done in the template.
+
         @arg descriptions:
         @type descriptions: list
         

@@ -3,8 +3,8 @@
 """
 General WSGI interface.
 
-This handler calls the webservices handler, the HTML publisher or handles
-a request itself, depending on keywords in the URI of the request.
+@todo: Remove handler.py and index.py
+@todo: Integrate webservice.py
 
 Public fields:
    -  application ; The WSGI application
@@ -15,17 +15,85 @@ import bz2
 import web
 import site
 
+from cStringIO import StringIO
+from simpletal import simpleTALES
+from simpletal import simpleTAL
+
+import logging; logging.basicConfig()
+
 # Add /src to Python path
 site.addsitedir(os.path.dirname(__file__))
 
+root_dir = os.path.split(os.path.dirname(__file__))[0]
 # todo: fix Mutalyzer to not depend on working directory
-os.chdir(os.path.split(os.path.dirname(__file__))[0])
+os.chdir(root_dir)
 
 import Mutalyzer
 from Modules import Web
 from Modules import Config
 from Modules import Output
 from Modules import Parser
+
+
+C = Config.Config()
+
+
+class render_tal:
+    """
+    Rendering interface to TAL templates.
+
+    Example:
+
+        render = render_tal('templates')
+        render.hello('alice')
+    """
+    def __init__(self, path, globals={}):
+        self.path = path
+        self.globals = globals
+
+    def __getattr__(self, name):
+
+        filename = name
+
+        def template(args={}, scheme='html', standalone=False):
+            """
+            @arg args: Arguments for template.
+            @kwarg scheme: One of 'html', 'file'.
+            @kwarg standalone: Includes HTML site layout and sets interactive
+                               argument for template.
+            """
+            file = filename
+            if scheme == 'html':
+                file += '.html'
+            path = os.path.join(self.path, file)
+
+            context = simpleTALES.Context()
+
+            context.addGlobal("interactive", not standalone)
+
+            for name, value in self.globals.items():
+                context.addGlobal(name, value)
+
+            for name, value in args.items():
+                context.addGlobal(name, value)
+
+            templateFile = open(path, 'r')
+            template = simpleTAL.compileHTMLTemplate(templateFile)
+            templateFile.close()
+
+            # Wrap in site layout
+            if scheme == 'html' and not standalone:
+                context.addGlobal('sitemacros', template)
+                templateFile = open(os.path.join(self.path, 'menu.html'), 'r')
+                template = simpleTAL.compileHTMLTemplate(templateFile)
+                templateFile.close()
+
+            io = StringIO()
+            template.expand(context, io)
+            return io.getvalue()
+
+        return template
+
 
 urls = (
     '/(?:index)?',                'Index',
@@ -35,18 +103,31 @@ urls = (
     '/webservices',               'Webservices',
     '/check',                     'Check',
     '/syntaxCheck',               'SyntaxCheck',
+    '/checkForward',              'CheckForward',
     '/download/(.*\.(?:py|cs))',  'Download',
     '/Reference/(.*)',            'Reference'
 )
 
+
+render = render_tal(os.path.join(root_dir, 'templates'),
+                    globals={'version': '2.0&nbsp;&beta;-5',
+                             'nomenclatureVersion': '2.0',
+                             'releaseDate': '10 Dec 2010',
+                             'contactEmail': C.Retriever.email})
 app = web.application(urls, globals(), autoreload=False)
+session = web.session.Session(app,
+                              web.session.DiskStore(os.path.join(root_dir, 'var', 'sessions')),
+                              initializer={'variant': None})
 
 # todo: we should probably get rid of Web alltogether
 W = Web.Web()
-C = Config.Config()
 #O = Output.Output(__file__, C.Output)
 
+
 class Download:
+    """
+    @todo: This is a potential security hole.
+    """
     def GET(self, file):
         # Process the file with TAL and return the content as a downloadable file.
         #file = web.ctx.path.split('/')[-1]
@@ -55,7 +136,8 @@ class Download:
         #req.content_type = 'application/octet-stream'
         # Force downloading.
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
-        return W.tal("TEXT", "templates/" + file, {'path': web.ctx.homedomain + web.ctx.homepath})
+        return getattr(render, file)({'path': web.ctx.homedomain + web.ctx.homepath},
+                                     scheme='file')
 
 class Reference:
     def GET(self, file):
@@ -75,7 +157,7 @@ class SyntaxCheck:
             "parseError"    : None,
             "debug"         : ""
         }
-        return W.tal("HTML", "templates/parse.html", args)
+        return render.parse(args)
     def POST(self):
         O = Output.Output(__file__, C.Output)
         i = web.input()
@@ -95,47 +177,35 @@ class SyntaxCheck:
             "debug"         : ""
         }
         del O
-        return W.tal("HTML", "templates/parse.html", args)
+        return render.parse(args)
 
 class Check:
+    """
+    @todo: These handlers need some documentation.
+    """
     def GET(self):
-        args = {
-            "lastpost"           : None,
-            "messages"           : [],
-            "summary"            : '',
-            "parseError"         : None,
-            "errors"             : [],
-            "genomicDescription" : '',
-            "chromDescription"   : '',
-            "genomicDNA"         : '',
-            "visualisation"      : '',
-            "descriptions"       : '',
-            "protDescriptions"   : '',
-            "oldProtein"         : '',
-            "altStart"           : '',
-            "altProtein"         : '',
-            "newProtein"         : '',
-            "exonInfo"           : '',
-            "cdsStart_g"         : '',
-            "cdsStart_c"         : '',
-            "cdsStop_g"          : '',
-            "cdsStop_c"          : '',
-            "restrictionSites"   : '',
-            "legends"            : '',
-            "reference"          : ''
-        }
-        args["interactive"] = True
-        return W.tal("HTML", "templates/check.html", args)
+        interactive = True
+        i = web.input(mutationName=None)
+        if i.mutationName:
+            interactive = False
+            variant = i.mutationName
+        else:
+            variant = session.variant
+            session.variant = None
+        return self.check(variant, interactive=interactive)
 
     def POST(self):
+        i = web.input(mutationName=None)
+        return self.check(i.mutationName)
+
+    def check(self, name=None, interactive=True):
         O = Output.Output(__file__, C.Output)
-        i = web.input()
-        name = i.mutationName
-        # todo: load from session
-        O.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
-        RD = Mutalyzer.process(name, C, O)
-        O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
-                     name)
+
+        if name:
+            O.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
+            RD = Mutalyzer.process(name, C, O)
+            O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
+                         name)
 
         errors, warnings, summary = O.Summary()
         recordType = O.getIndexedOutput("recordType",0)
@@ -184,31 +254,36 @@ class Check:
         # todo: this shouldn't really be necessary
         del O
 
-        # todo: there was support for non-interactive usage?? (by GET)
-        args["interactive"] = True
-        return W.tal("HTML", "templates/check.html", args)
+        return render.check(args, standalone=not interactive)
+
+
+class CheckForward:
+    def GET(self):
+        i = web.input()
+        session.variant = i.mutationName
+        raise web.seeother('check')
 
 # todo: merge the static pages below
 
 class Index:
     def GET(self):
-        return W.tal("HTML", "templates/index.html", {})
+        return render.index()
 
 class About:
     def GET(self):
-        return W.tal("HTML", "templates/about.html", {})
+        return render.about()
 
 class Help:
     def GET(self):
-        return W.tal("HTML", "templates/help.html", {})
+        return render.help()
 
 class Generator:
     def GET(self):
-        return W.tal("HTML", "templates/generator.html", {})
+        return render.generator()
 
 class Webservices:
     def GET(self):
-        return W.tal("HTML", "templates/webservices.html", {})
+        return render.webservices()
 
 # todo:
 #   "downloads/" in req.uri
