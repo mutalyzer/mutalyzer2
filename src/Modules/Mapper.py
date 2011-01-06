@@ -601,6 +601,7 @@ class Converter(object) :
         var = p.RawVar
 
         if revc :
+            # todo: if var.Arg1 is unicode, this crashes
             arg1 = reverse_complement(var.Arg1 or "") #imported from Bio.Seq
             arg2 = reverse_complement(var.Arg2 or "")
         #if

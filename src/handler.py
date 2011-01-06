@@ -56,33 +56,6 @@ def handler(req):
 
     W = Web.Web()
 
-    # Return raw content (for includes from an HTML file).
-    if "base/" in req.uri :
-        reqFile = req.uri.rsplit('/')[-1]
-        handle = open("templates/" + req.uri.split('/', 2)[2], "r")
-
-        if "style.css" not in req.uri :
-            C = Config.Config()
-            F = File.File(C.File, None)
-            req.content_type = F.getMimeType(handle)[0]
-        #if
-        else :
-            req.content_type = 'text/css'
-
-        #req.headers_out["Cache-Control"] = \
-        #    "public,max-age=3600"
-        req.write(handle.read())
-        handle.close()
-        return apache.OK
-    #if
-    
-    # Return raw content (for includes from an HTML file).
-    #if req.uri.endswith(".js") or in req.uri :
-    #    #req.content_type = 'text/html'
-    #    req.write(W.read("templates/", req))
-    ##    return apache.OK
-    #if
-
     # Make all txt files in downloads directory downloadable
     if "downloads/" in req.uri :
         reqFile = req.uri.rsplit('/')[-1]
@@ -96,52 +69,3 @@ def handler(req):
         handle.close()
         return apache.OK
     #if
-
-    # Process the file with TAL and return the content as a downloadable file.
-    if req.uri.endswith(".py") or req.uri.endswith(".cs") :
-        reqFile = req.uri.split('/')[-1]
-        #req.content_type = 'application/octet-stream'
-        req.headers_out["Content-Disposition"] = \
-            'attachment; filename="%s"' % reqFile # To force downloading.
-        req.write(W.tal("TEXT", "templates/" + reqFile, {"path": reqPath}))
-        return apache.OK
-    #if
-
-    # Return raw content (for batch checker results).
-    if "Results" in req.uri:
-        reqFile = req.uri.split('/')[-1]
-        C = Config.Config()
-        req.content_type = 'text/plain'
-        req.headers_out["Content-Disposition"] = \
-            'attachment; filename="%s"' % reqFile # To force downloading.
-        fh = open("%s/%s" % (C.Scheduler.resultsDir, reqFile))
-        req.write(fh.read())
-        fh.close()
-        return apache.OK
-    #if
-
-    # Return uncompressed reference sequence files from the cache.
-    if "Reference" in req.uri:
-        reqFile = req.uri.split('/')[-1]
-        C = Config.Config()
-        fileName = "%s/%s.bz2" % (C.Retriever.cache, reqFile)
-        if os.path.isfile(fileName) :
-            handle = bz2.BZ2File("%s/%s.bz2" % (C.Retriever.cache, reqFile),
-                                 "r")
-            req.content_type = 'text/plain'
-            req.headers_out["Content-Disposition"] = \
-                'attachment; filename="%s"' % reqFile # To force downloading.
-            req.write(handle.read())
-            handle.close()
-            del C
-        #if
-        else :
-            #raise fileName
-            return apache.HTTP_FORBIDDEN
-        return apache.OK
-    #if
-
-    # By default, use the HTML publisher.
-    req.filename = myPath + "/" + req.filename.split('/')[-1]
-    return publisher.handler(req)
-#handler

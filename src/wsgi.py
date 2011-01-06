@@ -37,6 +37,7 @@ from Modules import Web
 from Modules import Config
 from Modules import Output
 from Modules import Parser
+from Modules import Mapper
 from Modules import Db
 from Modules import Scheduler
 from Modules import File
@@ -109,6 +110,7 @@ urls = (
     '/nameGenerator',             'Generator',
     '/webservices',               'Webservices',
     '/documentation',             'Documentation',
+    '/positionConverter',         'PositionConverter',
     '/check',                     'Check',
     '/syntaxCheck',               'SyntaxCheck',
     '/checkForward',              'CheckForward',
@@ -132,7 +134,6 @@ session = web.session.Session(app,
 
 # todo: we should probably get rid of Web alltogether
 W = Web.Web()
-#O = Output.Output(__file__, C.Output)
 
 
 class Download:
@@ -189,6 +190,78 @@ class SyntaxCheck:
         }
         del O
         return render.parse(args)
+
+
+class PositionConverter:
+    """
+    @todo: Some documentation.
+    """
+    def GET(self):
+        return self.position_converter()
+
+    def POST(self):
+        i = web.input(build='', variant='')
+        # We stringify the variant, because a unicode string crashes
+        # Bio.Seq.reverse_complement in Mapper.py:607.
+        return self.position_converter(i.build, str(i.variant))
+
+    def position_converter(self, build='', variant=''):
+        """
+        @arg req:
+        @type req:
+    
+        @todo: documentation
+        """
+        O = Output.Output(__file__, C.Output)
+
+        avail_builds = C.Db.dbNames[::-1]
+
+        if build :
+            avail_builds.remove(build)
+            avail_builds.insert(0, build)
+        #if
+
+        attr = {
+            "avail_builds" : avail_builds,
+            "variant"      : variant,
+            "gName"        : "",
+            "cNames"       : [],
+            "messages"     : [],
+            "errors"       : [],
+            "debug"        : []
+        }
+
+        if build and variant:
+            converter = Mapper.Converter(build, C, O)
+
+            #Conver chr accNo to NC number
+            variant = converter.correctChrVariant(variant)
+
+            if variant :
+                if not(":c." in variant or ":g." in variant):
+                    #Bad name
+                    P = Parser.Nomenclatureparser(O)
+                    parsetree = P.parse(variant)
+                #if
+
+                if ":c." in variant:
+                    # Do the c2chrom dance
+                    variant = converter.c2chrom(variant)
+                if variant and ":g." in variant:
+                    # Do the g2c dance
+                    variants = converter.chrom2c(variant, "dict")
+                    if variants:
+                        attr["gName"] = variant
+                        output = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\
+                                  for key, value in variants.items()]
+                        attr["cNames"].extend(output)
+                    #if
+                #if
+            #if
+
+            attr["errors"].extend(O.getMessages())
+        return render.converter(attr)
+
 
 class Check:
     """
@@ -444,7 +517,6 @@ class Webservices:
 
 # todo:
 #   "downloads/" in req.uri
-#   "Results" in req.uri:
 #   publisher -> index.py
 #   everything in index
 
