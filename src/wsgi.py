@@ -40,6 +40,7 @@ from Modules import Parser
 from Modules import Mapper
 from Modules import Db
 from Modules import Scheduler
+from Modules import Retriever
 from Modules import File
 
 
@@ -110,6 +111,7 @@ urls = (
     '/nameGenerator',             'Generator',
     '/webservices',               'Webservices',
     '/documentation',             'Documentation',
+    '/snp',                       'Snp',
     '/positionConverter',         'PositionConverter',
     '/check',                     'Check',
     '/syntaxCheck',               'SyntaxCheck',
@@ -192,6 +194,45 @@ class SyntaxCheck:
         return render.parse(args)
 
 
+class Snp:
+    """
+    @todo: Some documentation.
+    """
+    def GET(self):
+        return self.snp()
+
+    def POST(self):
+        i = web.input(rsId=None)
+        return self.snp(i.rsId)
+
+    def snp(self, rsId=None):
+        """
+        @todo: documentation
+
+        @arg req: the HTTP request
+        @type req: object
+        @return: compiled TAL template
+        @rtype: object
+        """
+        O = Output.Output(__file__, C.Output)
+
+        if rsId :
+            O.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
+            R = Retriever.Retriever(C.Retriever, O, None)
+            R.snpConvert(rsId)
+            O.addMessage(__file__, -1, "INFO", "Finished processing rs%s" % rsId)
+        #if
+
+        args = {
+            "snp"      : O.getOutput("snp"),
+            "messages" : O.getMessages(),
+            "summary"  : O.Summary()[2],
+            "lastpost" : rsId
+        }
+
+        return render.snp(args)
+
+
 class PositionConverter:
     """
     @todo: Some documentation.
@@ -209,7 +250,7 @@ class PositionConverter:
         """
         @arg req:
         @type req:
-    
+
         @todo: documentation
         """
         O = Output.Output(__file__, C.Output)
