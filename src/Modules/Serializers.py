@@ -14,6 +14,37 @@ from soaplib.model.primitive import String, Integer
 from soaplib.model.clazz import ClassModel
 
 
+# Default attributes for soaplib models:
+#   nillable = True
+#   min_occurs = 0
+#   max_occurs = 1
+#
+# Additional attributes values for String model:
+#   min_len = 0
+#   max_len = "unbounded"
+#   pattern = None
+
+
+class Mandatory(object):
+    """
+    This is soaplib.model.primitive.Mandatory, but without min_length=1 for
+    the String model.
+    """
+    String = String(min_occurs=1, nillable=False)
+    Integer = Integer(min_occurs=1, nillable=False)
+
+
+class List(object):
+    """
+    Unbounded (in number of occurrences) versions of models.
+    """
+    String = String(nillable=False, max_occurs="unbounded")
+    Integer = Integer(nillable=False, max_occurs="unbounded")
+
+
+# Todo: use Mandatory.* models in the classmodels below?
+
+
 class SoapMessage(ClassModel):
     """
     Send info message over the soapline
@@ -25,8 +56,8 @@ class SoapMessage(ClassModel):
 
     __namespace__ = 'soapmessage'
 
-    errorcode = String
-    message = String
+    errorcode = Mandatory.String
+    message = Mandatory.String
 #SoapMessage
 
 class Mapping(ClassModel) :

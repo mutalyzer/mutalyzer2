@@ -13,8 +13,10 @@ Public fields:
 import os
 import bz2
 import web
+import urllib2
+from lxml import etree
 import site
-import pydoc
+#import pydoc
 
 from cStringIO import StringIO
 from simpletal import simpleTALES
@@ -30,7 +32,7 @@ root_dir = os.path.split(os.path.dirname(__file__))[0]
 os.chdir(root_dir)
 
 import Mutalyzer
-import webservice
+#import webservice
 from Modules import Web
 from Modules import Config
 from Modules import Output
@@ -389,10 +391,33 @@ class BatchResult:
 class Documentation:
     def GET(self):
         """
-        @todo: Use Epydoc.
+        HTML documentation for the webservice.
+
+        Generate the documentation by a XSL transform of the WSDL document.
+        The XSL transformation used is from Tomi Vanek:
+
+          http://tomi.vanek.sk/index.php?page=wsdl-viewer
+
+        We apply a small patch to this transformation to show newlines in
+        the SOAP method docstrings:
+
+          Around line 1195, the description <div>, replace
+          '<div class="value">' by '<div class="value documentation">'.
+
+          In the style sheet, add:
+            .documentation { white-space: pre-line; }
+
+        @todo: Use some configuration setting for the location of the
+               webservice.
+        @todo: Cache this transformation.
         """
-        htmldoc = pydoc.HTMLDoc()
-        return '<html><body>%s</body></html>' % htmldoc.docmodule(webservice)
+        wsdl_url = web.ctx.homedomain + web.ctx.homepath + '/service?wsdl'
+        wsdl_handle = urllib2.urlopen(wsdl_url)
+        xsl_handle = open('wsdl-viewer.xsl', 'r')
+        wsdl_doc = etree.parse(wsdl_handle)
+        xsl_doc = etree.parse(xsl_handle)
+        transform = etree.XSLT(xsl_doc)
+        return str(transform(wsdl_doc))
 
 
 # todo: merge the static pages below

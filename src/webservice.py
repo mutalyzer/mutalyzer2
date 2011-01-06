@@ -57,7 +57,8 @@ from Modules import Config
 from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
-from Modules.Serializers import Mapping, Transcript, MutalyzerOutput
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, List
+
 
 class MutalyzerService(DefinitionBase) :
     """
@@ -85,6 +86,10 @@ class MutalyzerService(DefinitionBase) :
       - cTogConversion(self, build, variant) ; Convert I{c.} to I{g.}
       - gTocConversion(self, build,  variant) ; Convert I{g.} to I{c.}
 
+    Note: Don't use leading newline in the docstrings of SOAP methods. These
+    are visible in the generated documentation.
+
+    @todo: For some reason, the server exposes its location including ?wsdl.
     """
 
     def __checkBuild(self, L, build, config) :
@@ -173,10 +178,9 @@ class MutalyzerService(DefinitionBase) :
         #if
     #__checkVariant
 
-    @soap(String, String, Integer, _returns = String(max_occurs="unbounded"))
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, _returns = List.String)
     def getTranscripts(self, build, chrom, pos) :
-        """
-        Get all the transcripts that overlap with a chromosomal position.
+        """Get all the transcripts that overlap with a chromosomal position.
 
         On error an exception is raised:
           - detail       ; Human readable description of the error.
@@ -225,10 +229,9 @@ class MutalyzerService(DefinitionBase) :
         return ret
     #getTranscripts
 
-    @soap(String, String, _returns = String(max_occurs="unbounded"))
+    @soap(Mandatory.String, Mandatory.String, _returns = List.String)
     def getTranscriptsByGeneName(self, build, name) :
-        """
-            blabla
+        """blabla
         """
 
         C = Config.Config()
@@ -249,11 +252,10 @@ class MutalyzerService(DefinitionBase) :
         return ret
     #getTranscriptsByGene
 
-    @soap(String, String, Integer, Integer, Integer,
-        _returns = String(max_occurs="unbounded"))
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, Mandatory.Integer, Mandatory.Integer,
+        _returns = List.String)
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
-        """
-        Get all the transcripts that overlap with a range on a chromosome.
+        """Get all the transcripts that overlap with a range on a chromosome.
 
         @arg build: The human genome build (hg19 or hg18)
         @type build: string
@@ -295,10 +297,9 @@ class MutalyzerService(DefinitionBase) :
         return ret
     #getTranscriptsRange
 
-    @soap(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneName(self, build, accno) :
-        """
-        Find the gene name associated with a transcript.
+        """Find the gene name associated with a transcript.
 
         @arg build: The human genome build (hg19 or hg18)
         @type build: string
@@ -328,10 +329,9 @@ class MutalyzerService(DefinitionBase) :
     #getGeneName
 
 
-    @soap(String, String, String, String, _returns = Mapping)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String, Mandatory.String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
-        """
-        Search for an NM number in the MySQL database, if the version
+        """Search for an NM number in the MySQL database, if the version
         number matches, get the start and end positions in a variant and
         translate these positions to I{g.} notation if the variant is in I{c.}
         notation and vice versa.
@@ -387,10 +387,9 @@ class MutalyzerService(DefinitionBase) :
         return result
     #mappingInfo
 
-    @soap(String, String, String, _returns = Transcript)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String, _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
-        """
-        Search for an NM number in the MySQL database, if the version
+        """Search for an NM number in the MySQL database, if the version
         number matches, the transcription start and end and CDS end
         in I{c.} notation is returned.
 
@@ -424,10 +423,9 @@ class MutalyzerService(DefinitionBase) :
         return T
     #transcriptInfo
 
-    @soap(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def chromAccession(self, build, name) :
-        """
-        Get the accession number of a chromosome, given a name.
+        """Get the accession number of a chromosome, given a name.
 
         @arg build: The human genome build (hg19 or hg18)
         @type build: string
@@ -457,10 +455,9 @@ class MutalyzerService(DefinitionBase) :
         return result
     #chromAccession
 
-    @soap(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def chromosomeName(self, build, accNo) :
-        """
-        Get the name of a chromosome, given a chromosome accession number.
+        """Get the name of a chromosome, given a chromosome accession number.
 
         @arg build: The human genome build (hg19 or hg18)
         @type build: string
@@ -490,10 +487,9 @@ class MutalyzerService(DefinitionBase) :
         return result
     #chromosomeName
 
-    @soap(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getchromName(self, build, acc) :
-        """
-        Get the chromosome name, given a transcript identifier (NM number).
+        """Get the chromosome name, given a transcript identifier (NM number).
 
         @arg build: The human genome build (hg19 or hg18)
         @type build: string
@@ -523,10 +519,9 @@ class MutalyzerService(DefinitionBase) :
         return result
     #chromosomeName
 
-    @soap(String, String, _returns = String(max_occurs="unbounded"))
+    @soap(Mandatory.String, Mandatory.String, _returns = List.String)
     def numberConversion(self, build, variant) :
-        """
-        Converts I{c.} to I{g.} notation or vice versa
+        """Converts I{c.} to I{g.} notation or vice versa
 
 
         @arg build: The human genome build (hg19 or hg18)
@@ -535,8 +530,8 @@ class MutalyzerService(DefinitionBase) :
         notation, including NM_ or NC_ accession number
         @type variant: string
 
-        @return: The variant in either I{g.} or I{c.} notation
-        @rtype: string
+        @return: The variant(s) in either I{g.} or I{c.} notation
+        @rtype: list
         """
 
         C = Config.Config() # Read the configuration file.
@@ -561,10 +556,9 @@ class MutalyzerService(DefinitionBase) :
         return result
     #numberConversion
 
-    @soap(String, _returns = String)
+    @soap(Mandatory.String, _returns = Mandatory.String)
     def checkSyntax(self, variant):
-        """
-        Checks the syntax of a variant.
+        """Checks the syntax of a variant.
 
         @arg variant: the variant to check
         @type variant: string
@@ -596,8 +590,10 @@ class MutalyzerService(DefinitionBase) :
         return result
     #checkSyntax
 
-    @soap(String, _returns = MutalyzerOutput)
+    @soap(Mandatory.String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
+        """Todo: documentation.
+        """
         C = Config.Config() # Read the configuration file.
         L = Output.Output(__file__, C.Output)
         L.addMessage(__file__, -1, "INFO",
@@ -630,8 +626,10 @@ class MutalyzerService(DefinitionBase) :
         return M
     #runMutalyzer
 
-    @soap(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneAndTranscipt(self, genomicReference, transcriptReference) :
+        """Todo: documentation.
+        """
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         D = Db.Cache(C.Db)
@@ -657,7 +655,7 @@ class MutalyzerService(DefinitionBase) :
 
 # WSGI application for use with e.g. Apache/mod_wsgi
 soap_application = soaplib.Application([MutalyzerService],
-                                       'tns',
+                                       'http://mutalyzer.nl/2.0/service', # namespace
                                        'MutalyzerService')
 application = wsgi.Application(soap_application)
 
