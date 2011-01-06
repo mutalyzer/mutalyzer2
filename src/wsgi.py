@@ -14,6 +14,7 @@ import os
 import bz2
 import web
 import site
+import pydoc
 
 from cStringIO import StringIO
 from simpletal import simpleTALES
@@ -29,10 +30,14 @@ root_dir = os.path.split(os.path.dirname(__file__))[0]
 os.chdir(root_dir)
 
 import Mutalyzer
+import webservice
 from Modules import Web
 from Modules import Config
 from Modules import Output
 from Modules import Parser
+from Modules import Db
+from Modules import Scheduler
+from Modules import File
 
 
 C = Config.Config()
@@ -101,9 +106,13 @@ urls = (
     '/help',                      'Help',
     '/nameGenerator',             'Generator',
     '/webservices',               'Webservices',
+    '/documentation',             'Documentation',
     '/check',                     'Check',
     '/syntaxCheck',               'SyntaxCheck',
     '/checkForward',              'CheckForward',
+    '/batch([a-zA-Z]+)?',         'BatchChecker',
+    '/progress',                  'BatchProgress',
+    '/Results_(\d+)\.txt',        'BatchResult',
     '/download/(.*\.(?:py|cs))',  'Download',
     '/Reference/(.*)',            'Reference'
 )
@@ -262,6 +271,129 @@ class CheckForward:
         i = web.input()
         session.variant = i.mutationName
         raise web.seeother('check')
+
+
+class BatchProgress:
+    def GET(self):
+        """
+        Progress page for batch runs
+        @todo: documentation
+        """
+        O = Output.Output(__file__, C.Output)
+
+        attr = {"percentage"    : 0}
+
+        i = web.input(ajax=None)
+        try:
+            jobID = int(i.jobID)
+            total = int(i.totalJobs)
+        except Exception, e:
+            return
+        D = Db.Batch(C.Db)
+        left = D.entriesLeftForJob(jobID)
+        percentage = int(100 - (100 * left / float(total)))
+        if i.ajax:
+            if percentage == 100:
+                #download url, check if file still exists
+                ret = "OK"
+            else:
+                ret = percentage
+            return ret
+        else:
+            #Return progress html page
+            return render.progress(attr)
+
+
+class BatchChecker:
+    def GET(self, batchType=None):
+        return self.batch(batchType=batchType)
+
+    def POST(self, bt=None):
+        i = web.input(batchEmail=None, batchFile={}, arg1='',
+                      batchType=None)
+        return self.batch(email=i.batchEmail, inFile=i.batchFile, arg1=i.arg1,
+                          batchType=i.batchType)
+
+    def batch(self, email=None, inFile=None, arg1='', batchType=None):
+        """
+        Batch function to add batch jobs to the Database
+
+        @arg batchType: Type of the batch job
+        @type batchType: string
+        """
+        O = Output.Output(__file__, C.Output)
+
+        attr = {"messages"      : [],
+                "errors"        : [],
+                "debug"         : [],
+                "batchTypes"    : ["NameChecker",
+                                   "SyntaxChecker",
+                                   "PositionConverter"],
+                "hideTypes"     : batchType and 'none' or '',
+                "selected"      : "0",
+                "batchType"     : batchType or "",
+                "avail_builds"  : C.Db.dbNames[::-1],
+                "jobID"         : None,
+                "totalJobs"     : None
+        }
+
+        #Make sure the correct page is displayed for an entrypoint
+        if not batchType: batchType = 'NameChecker'
+
+        if batchType in attr["batchTypes"]:
+            attr["selected"] = str(attr["batchTypes"].index(batchType))
+
+        # Note: A FieldStorage instance (like inFile) seems to always test
+        # to the truth value False, so 'if inFile: ...' is not useful.
+
+        if email and W.isEMail(email) and not inFile == None and inFile.file:
+            D = Db.Batch(C.Db)
+            S = Scheduler.Scheduler(C.Scheduler, D)
+            FileInstance = File.File(C.File, O)
+
+            # Generate the fromhost URL from which the results can be fetched
+            fromHost = web.ctx.homedomain + web.ctx.homepath + '/'
+            #fromHost = "http://%s%s" % (
+            #    req.hostname, req.uri.rsplit("/", 1)[0]+"/")
+
+            job = FileInstance.parseBatchFile(inFile.file)
+            if job is None:
+                O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
+                             " file, please check your file format.")
+            else:
+                #TODO: Add Binair Switches to toggle some events
+                attr["jobID"] =\
+                              S.addJob("BINSWITHCES", email, job, fromHost, batchType, arg1)
+                attr["totalJobs"] = len(job) or 1
+                attr["messages"].append("Your file has been parsed and the job"
+                                        " is scheduled, you will receive an email when the job is "
+                                        "finished.")
+
+            attr["errors"].extend(O.getMessages())
+
+        return render.batch(attr)
+
+
+class BatchResult:
+    def GET(self, result):
+        """
+        Return raw content (for batch checker results).
+        """
+        file = 'Results_%s.txt' % result
+        handle = open(os.path.join(C.Scheduler.resultsDir, file))
+        web.header('Content-Type', 'text/plain')
+        web.header('Content-Disposition', 'attachment; filename="%s"' % file)
+        return handle.read()
+
+
+class Documentation:
+    def GET(self):
+        """
+        @todo: Use Epydoc.
+        """
+        htmldoc = pydoc.HTMLDoc()
+        return '<html><body>%s</body></html>' % htmldoc.docmodule(webservice)
+
 
 # todo: merge the static pages below
 
