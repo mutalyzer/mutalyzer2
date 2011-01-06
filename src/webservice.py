@@ -627,7 +627,7 @@ class MutalyzerService(DefinitionBase) :
     #runMutalyzer
 
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
-    def getGeneAndTranscipt(self, genomicReference, transcriptReference) :
+    def getGeneAndTranscript(self, genomicReference, transcriptReference) :
         """Todo: documentation.
         """
         C = Config.Config()
@@ -635,7 +635,7 @@ class MutalyzerService(DefinitionBase) :
         D = Db.Cache(C.Db)
 
         O.addMessage(__file__, -1, "INFO",
-            "Received request getGeneAndTranscipt(%s, %s)" % (genomicReference,
+            "Received request getGeneAndTranscript(%s, %s)" % (genomicReference,
             transcriptReference))
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
@@ -647,10 +647,10 @@ class MutalyzerService(DefinitionBase) :
                     ret = "%s_v%s" % (i.name, j.name)
 
         O.addMessage(__file__, -1, "INFO",
-            "Finished processing getGeneAndTranscipt(%s, %s)" % (
+            "Finished processing getGeneAndTranscript(%s, %s)" % (
             genomicReference, transcriptReference))
         return ret
-    #getGeneAndTranscipt
+    #getGeneAndTranscript
 #MutalyzerService
 
 # WSGI application for use with e.g. Apache/mod_wsgi
