@@ -100,6 +100,8 @@ urls = (
     '/progress',                  'BatchProgress',
     '/Results_(\d+)\.txt',        'BatchResult',
     '/download/(.*\.(?:py|cs))',  'Download',
+    '/downloads/(.+)',            'Downloads',
+    '/upload',                    'Uploader',
     '/Reference/(.*)',            'Reference'
 )
 
@@ -197,14 +199,6 @@ session = web.session.Session(app,
                               initializer={'variant': None})
 
 
-class InputException(Exception):
-    """
-    This exception is raised by Upload.
-    """
-    pass
-#InputException
-
-
 class Download:
     """
     Download file from template directory, processing it with TAL first.
@@ -225,6 +219,26 @@ class Download:
         return getattr(render, file)({'path': web.ctx.homedomain + web.ctx.homepath},
                                      scheme='file')
 #Download
+
+
+class Downloads:
+    """
+    Download plain text files from /templates/downloads directory.
+
+    @todo: This is a potential security hole.
+    """
+    def GET(self, file):
+        """
+        @arg file: Filename to download.
+        """
+        if not os.path.isfile("templates/downloads/" + file):
+            raise web.notfound()
+        handle = open("templates/downloads/" + file)
+        F = File.File(C.File, None)
+        web.header('Content-Type', F.getMimeType(handle)[0])
+        web.header('Content-Disposition', 'attachment; filename="%s"' % file)
+        return handle.read()
+#Downloads
 
 
 class Reference:
@@ -785,6 +799,160 @@ class BatchResult:
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
 #BatchResult
+
+
+def _checkInt(inpv, refname):
+    """
+    Remove [,.-] from inpv and try to convert the result to an integer value.
+    Raise InputException if the conversion fails.
+
+    This private function is used by Uploader.
+
+    @arg inpv: Input value to convert.
+    @arg refname: Name of input value.
+
+    @return: Input value converted to an integer value.
+
+    @raise InputException: If the converting to an integer value fails.
+    """
+    inpv = inpv.replace(',','').replace('.','').replace('-','')
+    try:
+        return int(inpv)
+    except ValueError, e:
+        raise InputException("Expected an integer in field: %s" % refname)
+#_checkInt
+
+
+class InputException(Exception):
+    """
+    This exception is raised by Uploader.
+    """
+    pass
+#InputException
+
+
+class Uploader:
+    """
+    Reference sequence uploader.
+
+    Upload or retrieve a reference sequence.
+
+    @todo: Test this class.
+    """
+    def GET(self):
+        """
+        Render reference sequence uploader form.
+        """
+        maxUploadSize = C.Retriever.maxDldSize
+        UD, errors = "", []
+        args = {
+            "UD"      : UD,
+            "maxSize" : float(maxUploadSize) / 1048576,
+            "errors"  : errors
+        }
+        return render.gbupload(args)
+
+    def POST(self):
+        """
+        Render reference sequence uploader form and handle a reference
+        sequence upload or retrieval.
+
+        This handler has four methods:
+        1. The reference sequence file is a local file.
+        2. The reference sequence file can be found at the following URL.
+        3. Retrieve part of the reference genome for a (HGNC) gene symbol.
+        4. Retrieve a range of a chromosome.
+
+        Parameters:
+        - invoermethode: Input method. One of 'file', 'url', 'gene', 'chr'.
+
+        Depending on the input method, additional parameters are expected.
+
+        Parameters (method 'file'):
+        - bestandsveld: Reference sequence file to upload.
+
+        Parameters (method 'url'):
+        - urlveld: URL of reference sequence file to upload.
+
+        Parameters (method 'gene'):
+        - genesymbol: Gene symbol.
+        - organism: Organism.
+        - fiveutr: Number of 5' flanking nucleotides.
+        - threeutr: Number of 3' flanking nucleotides.
+
+        Parameters (method 'chr'):
+        - chracc: Chromosome Accession Number.
+        - start: Start position.
+        - stop: Stop position.
+        - orientation: Orientation.
+        """
+        maxUploadSize = C.Retriever.maxDldSize
+
+        O = Output.Output(__file__, C.Output)
+        D = Db.Cache(C.Db)
+        R = Retriever.GenBankRetriever(C.Retriever, O, D)
+
+        UD, errors = "", []
+
+        i = web.input(invoermethode='', bestandsveld={}, urlveld='',
+                      genesymbol='', organism='', fiveutr='', threeutr='',
+                      chracc='', start='', stop='', orientation='')
+
+        try:
+            if i.invoermethode == "file" :
+                if not 'Content-Length' in web.ctx.environ:
+                    web.ctx.status = '411 Length required'
+                    return 'Content length required.'
+                #if
+                if int(web.ctx.environ['Content-Length']) > maxUploadSize :
+                    web.ctx.status = '413 Request entity too large'
+                    return 'Upload limit exceeded.'
+                #if
+                if not i.bestandsveld == None and i.bestandsveld.file:
+                    UD = R.uploadrecord(i.bestandsveld.file.read())
+                else:
+                    raise web.badrequest()
+            #if
+            elif i.invoermethode == "url" :
+                UD = R.downloadrecord(i.urlveld)
+            #if
+            elif i.invoermethode == "gene" :
+                geneName = i.genesymbol
+                organism = i.organism
+                upStream = _checkInt(i.fiveutr,
+                        "5' flanking nucleotides")
+                downStream = _checkInt(i.threeutr,
+                        "3' flanking nucleotides")
+                UD = R.retrievegene(geneName, organism, upStream, downStream)
+            #if
+            elif i.invoermethode == "chr" :
+                accNo = i.chracc
+                start = _checkInt(i.start,
+                        "Start position")
+                stop = _checkInt(i.stop,
+                        "Stop position")
+                orientation = int(i.orientation)
+                UD = R.retrieveslice(accNo, start, stop, orientation)
+            #if
+            else:
+                #unknown "invoermethode"
+                raise InputException("Wrong method selected")
+        except InputException, e:
+            #DUMB USERS
+            errors.append(e)
+        finally:
+            if not UD:
+                #Something went wrong
+                errors += ["The request could not be completed"]
+                errors.extend(O.getMessages())
+
+        args = {
+            "UD"      : UD,
+            "maxSize" : float(maxUploadSize) / 1048576,
+            "errors"  : errors
+        }
+        return render.gbupload(args)
+#Uploader
 
 
 class Documentation:
