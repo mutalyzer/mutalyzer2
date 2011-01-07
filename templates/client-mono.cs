@@ -1,9 +1,13 @@
 /*
 Compilation instructions:
 
-wsdl '<tal tal:replace = "path"></tal>/service/?wsdl'
-gmcs /target:library MutalyzerService.cs -r:System.Web.Services
-gmcs /r:MutalyzerService.dll client-mono.cs
+  wsdl '<tal tal:replace = "path"></tal>/service/?wsdl'
+  gmcs /target:library MutalyzerService.cs -r:System.Web.Services
+  gmcs /r:MutalyzerService.dll client-mono.cs
+
+Usage:
+
+  ./client-mono.exe 'NM_002001.2:c.1del'
 */
 
 using System;

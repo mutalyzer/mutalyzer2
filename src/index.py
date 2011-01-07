@@ -51,45 +51,6 @@ from Modules import Scheduler
 from Modules import Retriever
 from Modules import File
 
-class InputException(Exception):
-    """
-    @todo: documentation
-    """
-    pass
-
-def snp(req) :
-    """
-    @todo: documentation
-    
-    @arg req: the HTTP request
-    @type req: object
-    @return: compiled TAL template
-    @rtype: object
-    """
-    C = Config.Config()
-    O = Output.Output(__file__, C.Output)
-    W = Web.Web()
-
-    rsId = None
-    if req.form :
-        rsId = req.form.get('rsId', None)
-    if rsId :
-        O.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
-        R = Retriever.Retriever(C.Retriever, O, None)
-        R.snpConvert(rsId)
-        O.addMessage(__file__, -1, "INFO", "Finished processing rs%s" % rsId)
-    #if
-
-    args = {
-        "snp"      : O.getOutput("snp"),
-        "messages" : O.getMessages(),
-        "summary"  : O.Summary()[2],
-        "lastpost" : rsId
-    }
-
-    return W.tal("HTML", "templates/snp.html", args)
-#snp
-
 def getGS(req):
     """
     LOVD bypass to get the correct GeneSymbol incl Transcript variant.
@@ -139,39 +100,6 @@ def getGS(req):
                 return l[0]
     return "Transcript not found"#+`legends`
 #getGS
-
-def Variant_info(req) :
-    """
-    The I{g.} to I{c.} and vice versa interface for LOVD.
-
-    @arg req: The request:
-      - req.form['LOVD_ver'] ; The version of the calling LOVD
-      - req.form['build']    ; The human genome build (hg19 assumed)
-      - req.form['acc']      ; The accession number (NM number)
-      - req.form['var']      ; A description of the variant
-    @type req: object
-
-    @return: An HTML page containing the results of Variant_info
-    @rtype: string
-    """
-
-    W = Web.Web()
-
-    LOVD_ver = req.form['LOVD_ver']
-    build = req.form['build']
-    acc = req.form['acc']
-    var = req.form.get("var", "")
-
-    result = W.run(VarInfo.main, LOVD_ver, build, acc, var)
-
-    if LOVD_ver == "2.0-23" : # Obsoleted error messages, remove when possible.
-        import re
-
-        return re.sub("^Error \(.*\):", "Error:", result)
-    #if
-    return result
-#Variant_info
-
 
 def __checkInt(inpv, refname):
     """

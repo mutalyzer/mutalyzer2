@@ -3,36 +3,66 @@
 """
 General WSGI interface.
 
-@todo: Remove handler.py and index.py
-@todo: Integrate webservice.py
+The WSGI interface is exposed through the module variable 'application'.
+Static files are not handled by this interface and should be served through
+the '/base' url prefix separately.
 
-Public fields:
-   -  application ; The WSGI application
+Example Apache/mod_wsgi configuration:
+
+  WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
+  Alias /base /var/www/mutalyzer/templates/base
+
+You can also use the built-in HTTP server by running this file directly.
+Note, however, that static files are not served by this server. A common
+pattern is to use Nginx as a proxy and static file server.
+
+Example Nginx configuration (assumes the built-in HTTP server is running on
+port 8080):
+
+  server {
+    listen 80;
+    location /base/ {
+      root /var/www/mutalyzer/templates/base;
+      if (-f $request_filename) {
+        rewrite ^/base/(.*)$  /base/$1 break;
+      }
+    }
+    location / {
+      proxy_read_timeout 300;  # 5 minutes
+      proxy_pass http://127.0.0.1:8080;
+    }
+  }
+
+@todo: Remove handler.py and index.py after porting to WSGI.
+@todo: Integrate webservice.py (http://webpy.org/cookbook/webservice/).
+@todo: Move /templates/base to /static for web.py compatibility.
+@todo: "downloads/" in req.uri
 """
+
+# Log exceptions to stdout
+import logging; logging.basicConfig()
 
 import os
 import bz2
 import web
 import urllib2
-from lxml import etree
 import site
-#import pydoc
 
+from lxml import etree
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
 
-import logging; logging.basicConfig()
-
 # Add /src to Python path
 site.addsitedir(os.path.dirname(__file__))
 
+# Todo: Get this from the configuration file
 root_dir = os.path.split(os.path.dirname(__file__))[0]
-# todo: fix Mutalyzer to not depend on working directory
+# Todo: Fix Mutalyzer to not depend on working directory
 os.chdir(root_dir)
 
 import Mutalyzer
-#import webservice
+import VarInfo
 from Modules import Web
 from Modules import Config
 from Modules import Output
@@ -44,32 +74,78 @@ from Modules import Retriever
 from Modules import File
 
 
+# Load configuration from configuration file
 C = Config.Config()
+
+# Todo: we should probably get rid of Web alltogether
+W = Web.Web()
+
+
+# URL dispatch table
+urls = (
+    '/(?:index)?',                'Index',
+    '/about',                     'About',
+    '/help',                      'Help',
+    '/nameGenerator',             'Generator',
+    '/webservices',               'Webservices',
+    '/documentation',             'Documentation',
+    '/snp',                       'Snp',
+    '/positionConverter',         'PositionConverter',
+    '/Variant_info',              'VariantInfo',
+    '/getGS',                     'GetGS',
+    '/check',                     'Check',
+    '/syntaxCheck',               'SyntaxCheck',
+    '/checkForward',              'CheckForward',
+    '/batch([a-zA-Z]+)?',         'BatchChecker',
+    '/progress',                  'BatchProgress',
+    '/Results_(\d+)\.txt',        'BatchResult',
+    '/download/(.*\.(?:py|cs))',  'Download',
+    '/Reference/(.*)',            'Reference'
+)
 
 
 class render_tal:
     """
-    Rendering interface to TAL templates.
+    Render interface to TAL templates.
 
-    Example:
+    Example to render /templates/hello.html with parameter 'alice':
 
         render = render_tal('templates')
         render.hello('alice')
     """
     def __init__(self, path, globals={}):
+        """
+        @arg path: Path to templates directory.
+        @kwarg globals: Dictionary of global template variables.
+        """
         self.path = path
         self.globals = globals
 
     def __getattr__(self, name):
+        """
+        Returns a template. Call the template to get a render.
 
+        @arg name: Template name (usually a HTML filename without '.html').
+        @return: Template render function.
+        """
         filename = name
 
         def template(args={}, scheme='html', standalone=False):
             """
+            Template render function.
+
+            If a scheme of 'html' is choosen, the template name is assumed
+            to be a filename without its '.html' suffix. Otherwise it is
+            assumed to be a full filename.
+
+            The render of the template is wrapped in the HTML site layout
+            with menu if scheme is 'html' and standalone is False.
+
             @arg args: Arguments for template.
             @kwarg scheme: One of 'html', 'file'.
             @kwarg standalone: Includes HTML site layout and sets interactive
                                argument for template.
+            @return: Render of template.
             """
             file = filename
             if scheme == 'html':
@@ -90,7 +166,7 @@ class render_tal:
             template = simpleTAL.compileHTMLTemplate(templateFile)
             templateFile.close()
 
-            # Wrap in site layout
+            # Wrap in site layout with menu
             if scheme == 'html' and not standalone:
                 context.addGlobal('sitemacros', template)
                 templateFile = open(os.path.join(self.path, 'menu.html'), 'r')
@@ -102,47 +178,43 @@ class render_tal:
             return io.getvalue()
 
         return template
+#render_tal
 
 
-urls = (
-    '/(?:index)?',                'Index',
-    '/about',                     'About',
-    '/help',                      'Help',
-    '/nameGenerator',             'Generator',
-    '/webservices',               'Webservices',
-    '/documentation',             'Documentation',
-    '/snp',                       'Snp',
-    '/positionConverter',         'PositionConverter',
-    '/check',                     'Check',
-    '/syntaxCheck',               'SyntaxCheck',
-    '/checkForward',              'CheckForward',
-    '/batch([a-zA-Z]+)?',         'BatchChecker',
-    '/progress',                  'BatchProgress',
-    '/Results_(\d+)\.txt',        'BatchResult',
-    '/download/(.*\.(?:py|cs))',  'Download',
-    '/Reference/(.*)',            'Reference'
-)
-
-
+# TAL template render
 render = render_tal(os.path.join(root_dir, 'templates'),
                     globals={'version': '2.0&nbsp;&beta;-5',
                              'nomenclatureVersion': '2.0',
                              'releaseDate': '10 Dec 2010',
                              'contactEmail': C.Retriever.email})
+
+# web.py application
 app = web.application(urls, globals(), autoreload=False)
+
+# Sessions are only used by CheckForward (as a hack)
 session = web.session.Session(app,
                               web.session.DiskStore(os.path.join(root_dir, 'var', 'sessions')),
                               initializer={'variant': None})
 
-# todo: we should probably get rid of Web alltogether
-W = Web.Web()
+
+class InputException(Exception):
+    """
+    This exception is raised by Upload.
+    """
+    pass
+#InputException
 
 
 class Download:
     """
+    Download file from template directory, processing it with TAL first.
+
     @todo: This is a potential security hole.
     """
     def GET(self, file):
+        """
+        @arg file: Filename to download.
+        """
         # Process the file with TAL and return the content as a downloadable file.
         #file = web.ctx.path.split('/')[-1]
         if not os.path.isfile("templates/" + file):
@@ -152,9 +224,17 @@ class Download:
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return getattr(render, file)({'path': web.ctx.homedomain + web.ctx.homepath},
                                      scheme='file')
+#Download
+
 
 class Reference:
+    """
+    Download reference file from cache.
+    """
     def GET(self, file):
+        """
+        @arg file: Filename to download from cache.
+        """
         fileName = "%s/%s.bz2" % (C.Retriever.cache, file)
         if not os.path.isfile(fileName):
             raise web.notfound()
@@ -162,9 +242,65 @@ class Reference:
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
+#Reference
+
+
+class GetGS:
+    """
+    LOVD bypass to get the correct GeneSymbol incl Transcript variant.
+
+    Used by LOVD to get the correct transcript variant out of a genomic
+    record. LOVD uses a genomic reference (NC_?) in combination with a gene
+    symbol to pass variant info to mutalyzer. Mutalyzer 1.0 was only using
+    the first transcript. LOVD supplies the NM of the transcript needed but
+    this was ignored. This helper allows LOVD to get the requested
+    transcript variant from a genomic reference.
+
+    @todo: Test this.
+    """
+    def GET(self):
+        """
+        Parameters:
+        - mutationName: The mutationname without gene symbol.
+        - variantRecord: The NM reference of the variant.
+        - forward: If set this forwards the request to the name checker.
+
+        @return: Output of name checker if forward is set, otherwise the
+                 GeneSymbol with the variant notation as string.
+        """
+        O = Output.Output(__file__, C.Output)
+
+        i = web.input(mutationName=None, variantRecord=None, forward=None)
+
+        # We are only interested in the legend
+        Mutalyzer.process(i.mutationName, C, O)
+
+        legends = O.getOutput("legends")
+
+        # Filter the transcript from the legend
+        legends = [l for l in legends if "_v" in l[0]]
+        for l in legends:
+            if l[1] == i.variantRecord:
+                if i.forward:
+                    p,a = i.mutationName.split(':')
+                    return Check.check(p+'('+l[0]+'):'+a)
+                else:
+                    web.header('Content-Type', 'text/plain')
+                    return l[0]
+
+        web.header('Content-Type', 'text/plain')
+        return "Transcript not found"#+`legends`
+#GetGS
+
 
 class SyntaxCheck:
+    """
+    Syntax checker.
+    """
     def GET(self):
+        """
+        Render syntax checker HTML form.
+        """
         args = {
             "variant"       : '',
             "messages"      : [],
@@ -172,7 +308,14 @@ class SyntaxCheck:
             "debug"         : ""
         }
         return render.parse(args)
+
     def POST(self):
+        """
+        Parse the given variant and render the syntax checker HTML form.
+
+        Parameters:
+        - variant: Variant name to check.
+        """
         O = Output.Output(__file__, C.Output)
         i = web.input()
         variant = i.variant
@@ -192,27 +335,37 @@ class SyntaxCheck:
         }
         del O
         return render.parse(args)
+#SyntaxCheck
 
 
 class Snp:
     """
-    @todo: Some documentation.
+    SNP converter.
+
+    Convert a dbSNP rs number to HGVS description(s) of the SNP specified on
+    the reference sequence(s) used by dbSNP.
     """
     def GET(self):
+        """
+        Render SNP converter HTML form.
+        """
         return self.snp()
 
     def POST(self):
+        """
+        Convert to HGVS description(s) and render SNP converter HTML form.
+
+        Parameters:
+        - rsId: The dbSNP rs number.
+        """
         i = web.input(rsId=None)
         return self.snp(i.rsId)
 
     def snp(self, rsId=None):
         """
-        @todo: documentation
+        Convert to HGVS description(s) and render SNP converter HTML form.
 
-        @arg req: the HTTP request
-        @type req: object
-        @return: compiled TAL template
-        @rtype: object
+        @kwarg rsId: The dbSNP rs number.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -231,16 +384,27 @@ class Snp:
         }
 
         return render.snp(args)
+#Snp
 
 
 class PositionConverter:
     """
-    @todo: Some documentation.
+    Convert a variant between genomic and coding positions.
     """
     def GET(self):
+        """
+        Render position converter HTML form.
+        """
         return self.position_converter()
 
     def POST(self):
+        """
+        Convert a variant and render position converter HTML form.
+
+        Parameters:
+        - build: Human genome build (currently 'hg18' or 'hg19').
+        - variant: Variant to convert.
+        """
         i = web.input(build='', variant='')
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in Mapper.py:607.
@@ -248,10 +412,10 @@ class PositionConverter:
 
     def position_converter(self, build='', variant=''):
         """
-        @arg req:
-        @type req:
+        Convert a variant and render position converter HTML form.
 
-        @todo: documentation
+        @kwarg build: Human genome build (currently 'hg18' or 'hg19').
+        @kwarg variant: Variant to convert.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -302,28 +466,90 @@ class PositionConverter:
 
             attr["errors"].extend(O.getMessages())
         return render.converter(attr)
+#PositionConverter
+
+
+class VariantInfo:
+    """
+    The I{g.} to I{c.} and vice versa interface for LOVD.
+    """
+    def GET(self):
+        """
+        Run VarInfo and return the result as plain text.
+
+        Parameters:
+        - LOVD_ver: The version of the calling LOVD.
+        - build: The human genome build (hg19 assumed).
+        - acc: The accession number (NM number).
+        - var: A description of the variant.
+        """
+        i = web.input(var='')
+        LOVD_ver = i.LOVD_ver
+        build = i.build
+        acc = i.acc
+        var = i.var
+
+        result = VarInfo.main(LOVD_ver, build, acc, var)
+
+        web.header('Content-Type', 'text/plain')
+
+        if LOVD_ver == "2.0-23" : # Obsoleted error messages, remove when possible.
+            import re
+            return re.sub("^Error \(.*\):", "Error:", result)
+        #if
+        return result
+#VariantInfo
 
 
 class Check:
     """
-    @todo: These handlers need some documentation.
+    The variant checker.
     """
     def GET(self):
+        """
+        Render the variant checker HTML form.
+
+        There are two modes of invoking the checker with a GET request:
+        1. Provide the 'mutationName' parameter. In this case, the checker is
+           called non-interactively, meaning the result is rendered without
+           the HTML form, site layout, and menu.
+        2. By having a 'variant' value in the session. The value is removed.
+
+        Parameters:
+        - mutationName: Variant to check.
+        """
         interactive = True
         i = web.input(mutationName=None)
         if i.mutationName:
+            # Run checker non-interactively
             interactive = False
             variant = i.mutationName
         else:
+            # Run checker if session.variant is not None
             variant = session.variant
             session.variant = None
         return self.check(variant, interactive=interactive)
 
     def POST(self):
+        """
+        Run the name checker and render the variant checker HTML form.
+
+        Parameters:
+        - mutationName: Variant to check.
+        """
         i = web.input(mutationName=None)
         return self.check(i.mutationName)
 
-    def check(self, name=None, interactive=True):
+    @staticmethod
+    def check(name=None, interactive=True):
+        """
+        Render the variant checker HTML form. If the name argument is given,
+        run the name checker.
+
+        @kwarg name: Variant to check.
+        @kwarg interactive: Run interactively, meaning we wrap the result in
+                            the site layout and include the HTML form.
+        """
         O = Output.Output(__file__, C.Output)
 
         if name:
@@ -376,24 +602,48 @@ class Check:
             "reference"          : reference
         }
 
-        # todo: this shouldn't really be necessary
+        # Todo: This shouldn't really be necessary
         del O
 
         return render.check(args, standalone=not interactive)
+#Check
 
 
 class CheckForward:
+    """
+    Set the given variant in the session and redirect to the name checker.
+    """
     def GET(self):
-        i = web.input()
+        """
+        Set the 'variant' session value to the given variant and redirect
+        to the name checker (where we will arrive by a GET request).
+
+        Parameters:
+        - mutationName: Variant to set in the session.
+        """
+        i = web.input(mutationName=None)
         session.variant = i.mutationName
         raise web.seeother('check')
+#CheckForward
 
 
 class BatchProgress:
+    """
+    Batch jobs progress viewer.
+
+    Used from the 'batch' template by AJAX to get the progress of a batch
+    job.
+    """
     def GET(self):
         """
-        Progress page for batch runs
-        @todo: documentation
+        Progress for a batch job.
+
+        @todo: The 'progress' template does not exist.
+
+        Parameters:
+        - jobID: ID of the job to return progress for.
+        - totalJobs: Total number of entries in this job.
+        - ajax: If set, return plain text result.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -418,13 +668,35 @@ class BatchProgress:
         else:
             #Return progress html page
             return render.progress(attr)
+#BatchProgress
 
 
 class BatchChecker:
+    """
+    Run batch jobs.
+    """
     def GET(self, batchType=None):
+        """
+        Render batch checker HTML form.
+
+        @kwarg batchType: Type of batch job.
+        """
         return self.batch(batchType=batchType)
 
     def POST(self, bt=None):
+        """
+        Run batch jobs and render batch checker HTML form.
+
+        @kwarg bt: Not used, batch type in URL.
+
+        Parameters:
+        - batchEmail: Email address to mail results to.
+        - batchFile: Uploaded file with batch job entries.
+        - arg1: Additional argument. Currently only used if batchType is
+                'PositionConverter', denoting the human genome build.
+        - batchType: Type of batch job to run. One of 'NameChecker' (default),
+                     'SyntaxChecker', or 'PositionChecker'.
+        """
         i = web.input(batchEmail=None, batchFile={}, arg1='',
                       batchType=None)
         return self.batch(email=i.batchEmail, inFile=i.batchFile, arg1=i.arg1,
@@ -432,10 +704,16 @@ class BatchChecker:
 
     def batch(self, email=None, inFile=None, arg1='', batchType=None):
         """
-        Batch function to add batch jobs to the Database
+        Run batch jobs and render batch checker HTML form. The batch jobs are
+        added to the database by the scheduler and ran by the BatchChecker
+        daemon.
 
-        @arg batchType: Type of the batch job
-        @type batchType: string
+        @kwarg email: Email address to mail results to.
+        @kwarg inFile: Uploaded file with batch job entries.
+        @kwarg arg1: Additional argument. Currently only used if batchType is
+                     'PositionConverter', denoting the human genome build.
+        @kwarg batchType: Type of batch job to run. One of 'NameChecker'
+                          (default), 'SyntaxChecker', or 'PositionChecker'.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -488,18 +766,25 @@ class BatchChecker:
             attr["errors"].extend(O.getMessages())
 
         return render.batch(attr)
+#BatchChecker
 
 
 class BatchResult:
+    """
+    Download result from the batch checker.
+    """
     def GET(self, result):
         """
         Return raw content (for batch checker results).
+
+        @arg result: Result identifier.
         """
         file = 'Results_%s.txt' % result
         handle = open(os.path.join(C.Scheduler.resultsDir, file))
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
+#BatchResult
 
 
 class Documentation:
@@ -523,42 +808,49 @@ class Documentation:
 
         @todo: Use some configuration setting for the location of the
                webservice.
+        @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """
         wsdl_url = web.ctx.homedomain + web.ctx.homepath + '/service?wsdl'
         wsdl_handle = urllib2.urlopen(wsdl_url)
-        xsl_handle = open('wsdl-viewer.xsl', 'r')
+        xsl_handle = open('templates/wsdl-viewer.xsl', 'r')
         wsdl_doc = etree.parse(wsdl_handle)
         xsl_doc = etree.parse(xsl_handle)
         transform = etree.XSLT(xsl_doc)
         return str(transform(wsdl_doc))
+#Documentation
 
-
-# todo: merge the static pages below
 
 class Index:
     def GET(self):
         return render.index()
 
+
 class About:
     def GET(self):
         return render.about()
+
 
 class Help:
     def GET(self):
         return render.help()
 
+
 class Generator:
     def GET(self):
         return render.generator()
+
 
 class Webservices:
     def GET(self):
         return render.webservices()
 
-# todo:
-#   "downloads/" in req.uri
-#   publisher -> index.py
-#   everything in index
 
-application = app.wsgifunc()
+if __name__ == '__main__':
+    # Todo: Setting the working directory probably doesn't work
+    # Usage:
+    #   ./src/wsgi.py [port]
+    app.run()
+else:
+    # WSGI application
+    application = app.wsgifunc()
