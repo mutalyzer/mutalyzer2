@@ -1,0 +1,146 @@
+From ddunnen@HumGen.nl  Mon Oct 18 09:49:02 2010
+Received: from mail-fe5.lumc.nl ([10.14.3.150]) by mailh.lumcnet.prod.intern with Microsoft SMTPSVC(6.0.3790.4675);
+	 Mon, 18 Oct 2010 09:48:29 +0200
+Received: from [127.0.0.1] ([10.160.6.81]) by mail-fe5.lumc.nl with Microsoft SMTPSVC(6.0.3790.4675);
+	 Mon, 18 Oct 2010 09:48:28 +0200
+Message-ID: <4CBBFBCC.7030102@HumGen.nl>
+Date: Mon, 18 Oct 2010 09:48:28 +0200
+From: Johan T den Dunnen <ddunnen@HumGen.nl>
+Reply-To: ddunnen@HumGen.nl
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.2.9) Gecko/20100915 Thunderbird/3.1.4
+MIME-Version: 1.0
+To: Peter Taschner <P.E.M.Taschner@lumc.nl>
+CC: Jeroen Laros <J.F.J.Laros@lumc.nl>
+Subject: Fwd: Re: HGVS nomenclature question
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-Path: ddunnen@HumGen.nl
+X-OriginalArrivalTime: 18 Oct 2010 07:48:28.0534 (UTC) FILETIME=[DA376960:01CB6E98]
+Status: RO
+Content-Length: 3641
+Lines: 123
+
+Beste Peter,
+
+dit weekeinde heb ik Mutalyzer 2.0 gebruikt in LOVD, een geweldige 
+verbetering, mijn complimenten, veel sneelr en duidelijker. Toch enkele 
+kleine opmerkingen;
+
+* ik zou een regel over RNA toevoegen; assuming you have not analysed 
+RNA, the predicted effect on RNA level can best be described as r.(?)
+NOTE r.(?) indicates RNA was not analysed but there is no reason to 
+suggest that the consequences are other then those on DNA level.
+
+Voor varianten op posities +1, +2, -2, -1;
+assuming you have not analysed RNA, the predicted effect on RNA level 
+can best be described as r.spl?
+NOTE r.spl? indicates RNA was not analysed but that it is highly likely 
+that the change directly affects RNA splicing
+
+Voor varianten op posities +3 to +6 en -30 to -3
+assuming you have not analysed RNA, the predicted effect on RNA level 
+can best be described as r.(spl?)
+NOTE r.(spl?) indicates RNA was not analysed but that it can not be 
+excluded that the change affects RNA splicing
+
+Voor varianten op posities +7 to -31
+assuming you have not analysed RNA, the predicted effect on RNA level 
+can best be described as r.(=)
+NOTE r.(=) indicates RNA was not analysed but that it is not likely that 
+the change affects RNA splicing
+
+
+Idem, voor alle varianten op protein level deze tussen haakjes geven met 
+de opmerking;
+assuming you have not analysed RNA, the predicted effect on protein 
+level is given between brackets to indicate that it is a prediction only.
+
+Met vriendelijke groet,
+
+	Johan
+
+
+
+-------- Original Message --------
+Subject: Re: HGVS nomenclature question
+Date: Mon, 18 Oct 2010 08:53:29 +0200
+From: Johan T den Dunnen <ddunnen@HumGen.nl>
+Reply-To: ddunnen@HumGen.nl
+To: Javier García Planells <javier.garcia@imegen.es>
+CC: Jeroen Laros <J.F.J.Laros@lumc.nl>,  Peter Taschner 
+<P.E.M.Taschner@lumc.nl>
+
+Dear Javier,
+
+according to the HGVS recommendations the predicted consequence of
+c.18_19insGAA is p.(Glu7dup). I do not n=know why Mutalyzer gives
+another suggestions, probably because it is not perfect and not yet
+tackling all possibilities correctly (which is rather difficult to do).
+It might have suggested p.(Lys6_Glu7insGlu), missing that this is in
+fact a duplication of Glu7 but I do not know why it predicts the
+incorrect indel p.(Arg8delinsGluArg).
+
+With this I have forwarded your request to Jeroen Laros and Peter
+Taschner, responsible for Mutalyzer.
+
+Best regards,
+
+	Johan
+
+
+
+On 15-10-2010 13:19, Javier García Planells wrote:
+> Dear Johan
+>
+> We have a practical question regarding the HGVS nomenclature and Mutalyzer.
+>
+> In this case:
+>
+> NM_000059.3:c.18_19insGAA
+>
+> The Mutalyzer output is:
+>
+> NP_000050.2:p.Arg8delinsGluArg
+>
+> *Location:*       245
+>
+> *Reference:*ggtaaaaatgcctattggatccaaa*---*gagaggccaacattttttgaaattt
+>
+> *Mutation: *ggtaaaaatgcctattggatccaaa*GAA*gagaggccaacattttttgaaattt
+>
+> We think that according to the HGVS the protein nomenclature should be:
+>
+> p.Lys6_Glu7insGlu
+>
+> If we are wrong, what’s the reason?
+>
+> Other question:
+>
+> What does mean the following Mutalyzer output?
+>
+>
+>
+> Following proteins were affected:
+>
+> ln 595: You did not specify the AA value for old; None
+>
+> Thank you very much for your time
+>
+> Best regards
+>
+> Javier
+>
+> ------------------------------------------------------------------------
+>
+> Javier Garcia- Planells, PhD
+> Scientific Director
+> Instituto of Medical Genomics, IMEGEN
+> Science Park. University of Valencia
+> c/Catedratico Agustin Escardino, 9
+> E46980 Paterna (Valencia). SPAIN
+> Tel.: +34 963212340_
+> _www.imegen.es <http://www.imegen.es/>
+>
+> ------------------------------------------------------------------------
+>
+

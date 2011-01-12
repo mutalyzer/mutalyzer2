@@ -1,0 +1,63 @@
+From P.E.M.Taschner@lumc.nl  Tue Sep 14 13:42:02 2010
+X-MimeOLE: Produced By Microsoft Exchange V6.5
+Received: by mailh.lumcnet.prod.intern 
+	id <01CB5401.D73A4D06@mailh.lumcnet.prod.intern>; Tue, 14 Sep 2010 13:41:59 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-class: urn:content-classes:message
+Subject: FW: mutalyzer v2 test
+Date: Tue, 14 Sep 2010 13:41:59 +0200
+Message-ID: <1FE362630FC8FA4EBE5B48CB301588AAA3E5D3@mailh.lumcnet.prod.intern>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: mutalyzer v2 test
+Thread-Index: Acs+6GCtdPetym6NQrWXxjol1EzmNgVGXH5g
+From: "Taschner, P.E.M. \(HG\)" <P.E.M.Taschner@lumc.nl>
+To: "Laros, J.F.J. \(HG\)" <J.F.J.Laros@lumc.nl>
+Status: RO
+Content-Length: 1170
+Lines: 40
+
+=20
+
+-----Original Message-----
+From: David Baux [mailto:david.baux@inserm.fr]=20
+Sent: woensdag 18 augustus 2010 17:16
+To: mutalyzer@humgen.nl
+Subject: mutalyzer v2 test
+
+Dear colleague,
+
+thank you for your email and giving me the opportunity to test the new
+version of mutalyzer. I found it really faster.
+However I have a suggestion that could improve this new version.
+The software provides a table of exon positions in the results page when
+searching for intragenic variations.
+Something really nice would be to map directly variant X to exon or
+intron Y, such as the user could quickly know in which part of the gene
+the variant is located.
+In addition, I don't know if you plan some day to convert variations
+provided in HGVS nomenclature into dbsnp rsld, but this would also be
+helpful.
+
+I hope that you will find these suggestions interesting.
+
+Best regards,
+
+david baux
+
+
+--
+Baux David
+bioinformatics engineer
+Laboratory of Molecular Genetics - University Hospital Inserm U827 IURC,
+Institut Universitaire de Recherche Clinique UFR Medecine Site NORD
+UPM/IURC
+641 Avenue du Doyen Giraud
+34093 MONTPELLIER Cedex 5
+FRANCE
+david.baux@inserm.fr
+0033 4 67 41 53 83
+

@@ -606,7 +606,7 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #runMutalyzer
 
     @soapmethod(String, String, _returns = String)
-    def getGeneAndTranscipt(self, genomicReference, transcriptReference) :
+    def getGeneAndTranscript(self, genomicReference, transcriptReference) :
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         D = Db.Cache(C.Db)
@@ -627,5 +627,5 @@ class MutalyzerService(SimpleWSGISoapApp) :
             "Finished processing getGeneAndTranscipt(%s, %s)" % (
             genomicReference, transcriptReference))
         return ret
-    #getGeneAndTranscipt
+    #getGeneAndTranscript
 #MutalyzerService

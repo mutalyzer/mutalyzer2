@@ -68,6 +68,20 @@ mysql -u mutalyzer -D hg19 < refLink.sql
 zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
 
 ---
+
+Combine the mapping info into one table.
+---
+CREATE TABLE map
+  SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd,
+                  exonStarts, exonEnds, name2 AS geneName, chrom,
+                  strand, protAcc
+    FROM gbStatus, refGene, refLink
+    WHERE type = "mRNA"
+    AND refGene.name = acc
+    AND acc = mrnaAcc;
+---
+
+
 For Variant_info:
 ---
 mysql -u mutalyzer -D hg19 < gbStatus.sql
