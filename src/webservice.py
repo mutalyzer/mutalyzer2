@@ -15,6 +15,11 @@ Be sure to have this line first if you also define a / alias, like this:
    WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
 
 @todo: Do we really use namespaces correctly?
+@todo: For some reason, the server exposes its location including ?wsdl.
+@todo: More thourough input checking. The @soap decorator does not do any
+       kind of strictness checks on the input. For example, in
+       transcriptInfo, the build argument must really be present. (Hint:
+       use __checkBuild.)
 """
 
 import logging; logging.basicConfig()
@@ -40,7 +45,7 @@ import site
 # Add /src to Python path
 site.addsitedir(os.path.dirname(__file__))
 
-# todo: fix Mutalyzer to not depend on working directory
+# Todo: fix Mutalyzer to not depend on working directory
 os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
 import Mutalyzer
@@ -62,8 +67,6 @@ class MutalyzerService(DefinitionBase) :
 
     Note: Don't use leading newline in the docstrings of SOAP methods. These
     are visible in the generated documentation.
-
-    @todo: For some reason, the server exposes its location including ?wsdl.
     """
 
     def __checkBuild(self, L, build, config) :
@@ -73,11 +76,11 @@ class MutalyzerService(DefinitionBase) :
         Returns:
             - Nothing (but raises an EARG exception).
 
-        @arg L: an output object for logging
+        @arg L: An output object for logging.
         @type L: object
-        @arg build: The human genome build name that needs to be checked
+        @arg build: The human genome build name that needs to be checked.
         @type build: string
-        @arg config: configuration object of the Db module
+        @arg config: Configuration object of the Db module.
         @type config: object
         """
 
@@ -96,11 +99,11 @@ class MutalyzerService(DefinitionBase) :
         Returns:
             - Nothing (but raises an EARG exception).
 
-        @arg L: An output object for logging
+        @arg L: An output object for logging.
         @type L: object
         @arg D: A handle to the database.
         @type D: object
-        @arg chrom: The name of the chromosome
+        @arg chrom: The name of the chromosome.
         @type chrom: string
         """
 
@@ -119,9 +122,9 @@ class MutalyzerService(DefinitionBase) :
         Returns:
             - Nothing (but raises an ERANGE exception).
 
-        @arg L: An output object for logging
+        @arg L: An output object for logging.
         @type L: object
-        @arg pos: The position
+        @arg pos: The position.
         @type pos: integer
         """
 
@@ -139,9 +142,9 @@ class MutalyzerService(DefinitionBase) :
         Returns:
             - Nothing (but raises an EARG exception).
 
-        @arg L: An output object for logging
+        @arg L: An output object for logging.
         @type L: object
-        @arg variant: The variant
+        @arg variant: The variant.
         @type variant: string
         """
 
@@ -161,14 +164,14 @@ class MutalyzerService(DefinitionBase) :
               - EARG   ; The argument was not valid.
               - ERANGE ; An invalid range was given.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg chrom: A chromosome encoded as "chr1", ..., "chrY"
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
-        @arg pos: A position on the chromosome
+        @arg pos: A position on the chromosome.
         @type pos: integer
 
-        @return: A list of transcripts
+        @return: A list of transcripts.
         @rtype: list
         """
 
@@ -204,7 +207,7 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = List.String)
     def getTranscriptsByGeneName(self, build, name) :
-        """blabla
+        """Todo: documentation.
         """
 
         C = Config.Config()
@@ -230,20 +233,20 @@ class MutalyzerService(DefinitionBase) :
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """Get all the transcripts that overlap with a range on a chromosome.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg chrom: A chromosome encoded as "chr1", ..., "chrY"
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
-        @arg pos1: The first postion of the range
+        @arg pos1: The first postion of the range.
         @type pos1: integer
-        @arg pos2: The last postion of the range
+        @arg pos2: The last postion of the range.
         @type pos2: integer
         @arg method: The method of determining overlap:
             - 0 ; Return only the transcripts that completely fall in the range
                   [pos1, pos2].
-            - 1 ; Return all hit transcripts
+            - 1 ; Return all hit transcripts.
 
-        @return: A list of transcripts
+        @return: A list of transcripts.
         @rtype: list
         """
 
@@ -274,12 +277,12 @@ class MutalyzerService(DefinitionBase) :
     def getGeneName(self, build, accno) :
         """Find the gene name associated with a transcript.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accno: The identifier of a transcript
+        @arg accno: The identifier of a transcript.
         @type accno: string
 
-        @return: The name of the associated gene
+        @return: The name of the associated gene.
         @rtype: string
         """
 
@@ -318,16 +321,16 @@ class MutalyzerService(DefinitionBase) :
           - If the variant is not accepted by the nomenclature parser, a parse
             error will be printed.
 
-        @arg LOVD_ver: The LOVD version
+        @arg LOVD_ver: The LOVD version.
         @type LOVD_ver: string
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accNo: The NM accession number and version
+        @arg accNo: The NM accession number and version.
         @type accNo: string
-        @arg variant: The variant
+        @arg variant: The variant.
         @type variant: string
 
-        @return: complex object:
+        @return: Complex object:
           - start_main   ; The main coordinate of the start position
                            in I{c.} (non-star) notation.
           - start_offset ; The offset coordinate of the start position
@@ -366,14 +369,14 @@ class MutalyzerService(DefinitionBase) :
         number matches, the transcription start and end and CDS end
         in I{c.} notation is returned.
 
-        @arg LOVD_ver: The LOVD version
+        @arg LOVD_ver: The LOVD version.
         @type LOVD_ver: string
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accNo: The NM accession number and version
+        @arg accNo: The NM accession number and version.
         @type accNo: string
 
-        @return: complex object:
+        @return: Complex object:
           - trans_start  ; Transcription start in I{c.} notation.
           - trans_stop   ; Transcription stop in I{c.} notation.
           - CDS_stop     ; CDS stop in I{c.} notation.
@@ -400,12 +403,12 @@ class MutalyzerService(DefinitionBase) :
     def chromAccession(self, build, name) :
         """Get the accession number of a chromosome, given a name.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg name: The name of a chromosome (e.g. chr1)
+        @arg name: The name of a chromosome (e.g. chr1).
         @type name: string
 
-        @return: The accession number of a chromosome
+        @return: The accession number of a chromosome.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -432,12 +435,12 @@ class MutalyzerService(DefinitionBase) :
     def chromosomeName(self, build, accNo) :
         """Get the name of a chromosome, given a chromosome accession number.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accNo: The accession number of a chromosome (NC_...)
+        @arg accNo: The accession number of a chromosome (NC_...).
         @type accNo: string
 
-        @return: The name of a chromosome
+        @return: The name of a chromosome.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -464,12 +467,12 @@ class MutalyzerService(DefinitionBase) :
     def getchromName(self, build, acc) :
         """Get the chromosome name, given a transcript identifier (NM number).
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg acc: The NM accession number (version NOT included)
+        @arg acc: The NM accession number (version NOT included).
         @type acc: string
 
-        @return: The name of a chromosome
+        @return: The name of a chromosome.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -497,13 +500,13 @@ class MutalyzerService(DefinitionBase) :
         """Converts I{c.} to I{g.} notation or vice versa
 
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
         @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
-        notation, including NM_ or NC_ accession number
+                      notation, including NM_ or NC_ accession number.
         @type variant: string
 
-        @return: The variant(s) in either I{g.} or I{c.} notation
+        @return: The variant(s) in either I{g.} or I{c.} notation.
         @rtype: list
         """
 
@@ -533,10 +536,10 @@ class MutalyzerService(DefinitionBase) :
     def checkSyntax(self, variant):
         """Checks the syntax of a variant.
 
-        @arg variant: the variant to check
+        @arg variant: The variant to check.
         @type variant: string
 
-        @return: message
+        @return: Message stating OK or not OK.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.

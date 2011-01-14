@@ -37,7 +37,60 @@ class TestWebservice(unittest.TestCase):
         """
         Running checkSyntax with no variant name should raise exception.
         """
-        self.assertRaises(WebFault, self.client.service.checkSyntax, '')
+        try:
+            self.client.service.checkSyntax()
+            self.fail('Expected WebFault exception')
+        except WebFault, e:
+            self.assertEqual(e.fault.faultstring,
+                             'The variant argument is not provided.')
+
+    def test_transcriptinfo_valid(self):
+        """
+        Running transcriptInfo with valid arguments should get us a Transcript
+        object.
+        """
+        r = self.client.service.transcriptInfo(LOVD_ver='123', build='hg19',
+                                               accNo='NM_002001.2')
+        self.assertEqual(r.trans_start, -99)
+        self.assertEqual(r.trans_stop, 1066)
+        self.assertEqual(r.CDS_stop, 774)
+
+    def test_numberconversion_gtoc_valid(self):
+        """
+        Running numberConversion with valid g variant should give a list of
+        c variant names.
+        """
+        r = self.client.service.numberConversion(build='hg19',
+                                                 variant='NC_000001.10:g.159272155del')
+        self.assertEqual(type(r), list)
+        self.assertTrue('NM_002001.2:c.1del' in r)
+
+    def test_numberconversion_ctog_valid(self):
+        """
+        Running numberConversion with valid c variant should give a list of
+        g variant names.
+        """
+        r = self.client.service.numberConversion(build='hg19',
+                                                 variant='NM_002001.2:c.1del')
+        self.assertEqual(type(r), list)
+        self.assertTrue('NC_000001.10:g.159272155del' in r)
+
+    def test_gettranscriptsbygenename_valid(self):
+        """
+        Running getTranscriptsByGeneName with valid gene name should give a
+        list of transcripts.
+        """
+        r = self.client.service.getTranscriptsByGeneName(build='hg19',
+                                                         name='DMD')
+        self.assertEqual(type(r), list)
+        for t in ['NM_004006.2',
+                  'NM_000109.3',
+                  'NM_004021.2',
+                  'NM_004009.3',
+                  'NM_004007.2',
+                  'NM_004018.2',
+                  'NM_004022.2']:
+            self.assertTrue(t in r)
 
 if __name__ == '__main__':
     unittest.main()
