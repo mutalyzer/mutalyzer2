@@ -3,43 +3,37 @@
 """
 Mutalyzer webservices.
 
-@requires: soaplib.wsgi_soap.SimpleWSGISoapApp
-@requires: soaplib.service.soapmethod
-@requires: soaplib.serializers.primitive.String
-@requires: soaplib.serializers.primitive.Integer
-@requires: soaplib.serializers.primitive.Fault
+The SOAP webservice is exposed through a WSGI interface.
 
-@requires: Modules.Web
-@requires: Modules.Db
-@requires: Modules.Output
-@requires: Modules.Config
-@requires: Modules.Parser
-@requires: Modules.Mapper
+Example Apache/mod_wsgi configuration:
 
-@requires: Modules.Serializers.Mapping
-@requires: Modules.Serializers.Transcript
+   WSGIScriptAlias /service /var/www/mutalyzer/src/webservice.py
+
+Be sure to have this line first if you also define a / alias, like this:
+
+   WSGIScriptAlias /service /var/www/mutalyzer/src/webservice.py
+   WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
+
+@todo: Do we really use namespaces correctly?
 """
-# Public classes:
-#     - MutalyzerService ; Mutalyzer webservices.
+
+import logging; logging.basicConfig()
 
 # We now use very current soaplib:
 #   $ git clone https://github.com/soaplib/soaplib.git
 #   $ cd soaplib
-# Patch soaplib:
-#   src/soaplib/wsdl.py:282
-#   -  ser.get('name'),
-#   +  service.get_service_class_name(),
-# Install soaplib:
 #   $ sudo python setup.py install
 
-import logging; logging.basicConfig()
+# Other tree:
+# https://github.com/cuker/soaplib/
+# https://github.com/cuker/soaplib/commit/1a248ba1421c57738c6d30333036114c3ed42022
 
-import soaplib
-from soaplib.service import soap
-from soaplib.service import DefinitionBase
-from soaplib.model.primitive import String, Integer
-from soaplib.model.exception import Fault
-from soaplib.server import wsgi
+from soaplib.core import Application
+from soaplib.core.service import soap
+from soaplib.core.service import DefinitionBase
+from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.exception import Fault
+from soaplib.core.server import wsgi
 import os
 import site
 
@@ -66,26 +60,6 @@ class MutalyzerService(DefinitionBase) :
 
     These methods are made public via a SOAP interface.
 
-    Private methods:
-      - __checkBuild(L, D, build) ; Check if the build is supported.
-      - __checkChrom(L, D, chrom) ; Check if the chromosome is in our
-                                    database.
-      - __checkPos(L, pos)        ; Check if the position is valid.
-
-    Public methods:
-      - getTranscripts(build, chrom,  pos); Get all transcripts that overlap
-        with a chromosomal position.
-      - getTranscriptsRange(build, chrom, pos1, pos2, method) ; Get all
-        transcripts that overlap with a range on a chromosome.
-      - getGeneName(build, accno)    ; Find the gene name associated with a
-        transcript.
-      - mappingInfo(LOVD_ver, build, accNo, variant) ; Convert a transcript
-        coordinate to a chromosomal one, or vice versa.
-      - transcriptInfo(LOVD_ver, build, accNo) ; Find transcription start and
-        end, and CDS end (in I{c.} notation) for a given transcript.
-      - cTogConversion(self, build, variant) ; Convert I{c.} to I{g.}
-      - gTocConversion(self, build,  variant) ; Convert I{g.} to I{c.}
-
     Note: Don't use leading newline in the docstrings of SOAP methods. These
     are visible in the generated documentation.
 
@@ -95,7 +69,6 @@ class MutalyzerService(DefinitionBase) :
     def __checkBuild(self, L, build, config) :
         """
         Check if the build is supported (hg18 or hg19).
-
 
         Returns:
             - Nothing (but raises an EARG exception).
@@ -654,9 +627,9 @@ class MutalyzerService(DefinitionBase) :
 #MutalyzerService
 
 # WSGI application for use with e.g. Apache/mod_wsgi
-soap_application = soaplib.Application([MutalyzerService],
-                                       'http://mutalyzer.nl/2.0/service', # namespace
-                                       'MutalyzerService')
+soap_application = Application([MutalyzerService],
+                               'http://mutalyzer.nl/2.0/service', # namespace
+                               'MutalyzerService')
 application = wsgi.Application(soap_application)
 
 # We can also use the built-in webserver by executing this file directly

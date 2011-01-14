@@ -10,8 +10,8 @@ Collection of Serilizable Objects used by the webservice
 
 @todo: documentation
 """
-from soaplib.model.primitive import String, Integer
-from soaplib.model.clazz import ClassModel
+from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.clazz import ClassModel
 
 
 # Default attributes for soaplib models:
@@ -54,7 +54,7 @@ class SoapMessage(ClassModel):
         - message     ; The error message
     """
 
-    __namespace__ = 'soapmessage'
+    __namespace__ = 'http://mutalyzer.nl/2.0/service/soapmessage'
 
     errorcode = Mandatory.String
     message = Mandatory.String
@@ -97,7 +97,7 @@ class Transcript(ClassModel) :
         - CDS_stop    ; Define the type of CDS_stop
     """
 
-    __namespace__ = 'transcript'
+    __namespace__ = 'http://mutalyzer.nl/2.0/service/transcript'
 
     trans_start = Integer
     trans_stop = Integer
@@ -111,7 +111,7 @@ class MutalyzerOutput(ClassModel) :
         Attributes:
     """
 
-    __namespace__ = 'mutalyzeroutput'
+    __namespace__ = 'http://mutalyzer.nl/2.0/service/mutalyzeroutput'
 
     original = String
     mutated = String

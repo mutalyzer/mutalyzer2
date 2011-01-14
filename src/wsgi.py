@@ -33,7 +33,6 @@ port 8080):
     }
   }
 
-@todo: Remove handler.py and index.py after porting to WSGI.
 @todo: Integrate webservice.py (http://webpy.org/cookbook/webservice/).
 @todo: Move /templates/base to /static for web.py compatibility.
 @todo: "downloads/" in req.uri
