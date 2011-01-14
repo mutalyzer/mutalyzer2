@@ -263,7 +263,7 @@ class GBparser() :
             i.location = self.__location2pos(i.location) #FIXME
             #if not i.positionList : # FIXME ???
             #    i.positionList = i.location
-            if i.positionList :
+            if i.positionList or i.location :
                 i.usable = True
             else :
                 i.usable = False

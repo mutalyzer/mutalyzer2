@@ -528,6 +528,34 @@ def __lcs(str1, str2) :
     return __lcp(t1, t2)
 #__lcs
 
+def __overSplice(pos1, pos2, sites) :
+    """
+    Check wheter a genomic range (pos1_pos2) hits a splice site.
+
+    @arg pos1: The first coordinate of the range in g. notation.
+    @type pos1: integer
+    @arg pos2: The first coordinate of the range in g. notation.
+    @type pos2: integer
+    @arg sites: A list of splice sites in g. notation.
+    @type sites: list(integer)
+
+    @return: True if one or more splice sites are hit, False otherwise.
+    @rtype: boolean
+    """
+
+    for i in range(len(sites)) :
+        if i % 2 :
+            if (pos1 <= sites[i] and pos2 > sites[i]) :
+                return True
+        else :
+            if (pos1 < sites[i] and pos2 >= sites[i]) :
+                return True
+    #for
+
+    return False
+#__overSplice
+
+
 def findInFrameDescription(str1, str2) :
     """
     Give a description of an inframe difference of two proteins. Also give
@@ -1160,6 +1188,10 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     if transcript and transcript.CM.orientation == -1 :
         Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
         Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
+
+    if transcript and __overSplice(start_g, end_g, transcript.CM.RNA) :
+        O.addMessage(__file__, 2, "WOVERSPLICE",
+            "Variant hits one or more splice sites.")
 
     if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
         __checkOptArg(MUU.orig, start_g, end_g, Arg1, O)

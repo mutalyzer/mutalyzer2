@@ -1,0 +1,75 @@
+Bugs still not fixed in Mutalyzer 2.0 version 22 September 2010
+
+==========================
+Reported 12 June 2008
+
+NG_007405.1(COL1A2):c.226-17_279+12del
+
+This is a simple deletion of the last 17 bases of intron 5, all of exon 6, and the first 12 bases of inton 6. Hence it deletes
+the exon 6 entirely. The splice sites at both ends of exon 6 are in phase 0 so the deletion is predicted to result in all the
+amino acids encoded in exon 6 being deleted i.e. p.(Asn76_Met93del).
+
+However, Mutalyzer 2.0 predicts p.(Asn76_Phe1365delinsSerArgMetArg) and that's clearly wrong.
+
+==========================
+Reported 15 December 2008
+
+NG_007400.1:c.1516-44_1767+100del
+
+The deletion endpoints lie in introns 22 and 25 of COL1A1 and exons 23 to 25 are deleted. These exons encode amino acids 506 to
+589 with the intron boundaries in phase 0 at both ends so the deletion is predicted to result in all the amino acids encoded in
+exons 23 to 25 being deleted i.e. p.(Gly506_Ala589del).
+
+However, Mutalyzer 2.0 predicts p.(Gly506_Phe1463delinsAsnLeuValLeuLeuAlaAlaLysGluThrLeuValLeuArgGluSer) and that's clearly wrong.
+
+==========================
+Reported 13 March 2009
+
+NG_007400.1(COL1A1):c.392_543+8delinsT
+
+The deletion begins in exon 5 and ends in intron 6, resulting in the skipping of exons 5 and 6 from the spliced mRNA because the
+donor site at the end of exon 4 is spliced to the acceptor site at the start of exon 7. The splice sites are in phase 0 so the
+predicted amino acid deletion is p.(Gly124_Met181del) and this has been verified experimentally
+
+However, Mutalyzer 2.0 predicts p.(Gly124Argfs*1308) and that's clearly wrong.
+
+For what it's worth, Alaumut reports p.Asp132Serfs*25 which is exactly what Mutalyzer 1.0 reports.
+
+==========================
+Reported 13 March 2009
+
+NG_007400.1(COL1A1):c.1516-44_1767+100del
+
+This is a multiexon deletion taking out exons 23 to 25 with the end points lying in introns 22 and 25. Exons 23 to 25 precisely
+encode amino acids 506 to 589 and the exon/intron boundaries are in phase 0. Consequently, the predicted protein alteration is
+p.Gly506_Ala589del.
+
+However, Mutalyzer 2.0 predicts p.(Gly506_Phe1463delinsAsnLeuValLeuLeuAlaAlaLysGluThrLeuValLeuArgGluSer) and that's clearly wrong.
+
+==========================
+Reported 13 March 2009
+
+NG_007400.1(COL1A1):c.2335_2451+60del
+
+This is a deletion that begins in exon 33/34 and ends in intron 36. The producesan mRNA lacking exons 33/34 to 36 and the predicted
+protein alteration is p.Gly746_Pro817del.
+
+However, Mutalyzer 2.0 predicts p.(Gly746Valfs*16) and that's clearly wrong.
+
+For what it's worth Alamut reports p.(Asp780_Gly818del).
+
+==========================
+Reported 5 August 2010
+
+NG_007400.1:c.4238_4248dup
+
+This is a simple duplication of the last 11 bases of exon 51 of COL1A1 that ought to result in a frameshift,
+but Mutalyzer does not generate the frameshift description correctly.
+
+However, Mutalyzer 2.0 predicts p.(=) and that's clearly wrong.
+
+Alamut reports the frameshift to be p.(Ser1417Metfs*14)
+
+==========================
+
+

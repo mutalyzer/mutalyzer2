@@ -333,7 +333,7 @@ class Mutator() :
         ret = position
 
         for i in range(len(self.__shift)) :
-            if self.__shift[i][0] > position :
+            if self.__shift[i][0] >= position :
                 return ret
 
             ret += self.__shift[i][1]
@@ -358,11 +358,11 @@ class Mutator() :
         j = 0
         for i in sites :
             if (j % 2) :
-                #ret.append(self.shiftpos(i + 1) - 1)
-                ret.append(self.shiftpos(i))
+                ret.append(self.shiftpos(i + 1) - 1)
+                #ret.append(self.shiftpos(i))
             else :
-                #ret.append(self.shiftpos(i - 1) + 1)
-                ret.append(self.shiftpos(i))
+                ret.append(self.shiftpos(i - 1) + 1)
+                #ret.append(self.shiftpos(i))
             j += 1
         #for
 
