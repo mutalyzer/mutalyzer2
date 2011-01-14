@@ -174,6 +174,9 @@ class render_tal:
                 template = simpleTAL.compileHTMLTemplate(templateFile)
                 templateFile.close()
 
+            if scheme == 'html':
+                web.header('Content-Type', 'text/html')
+
             io = StringIO()
             template.expand(context, io)
             return io.getvalue()

@@ -1,8 +1,17 @@
 #!/usr/bin/env python
+
+"""
+Tests for the SOAP interface to Mutalyzer.
+
+@todo: Test availability of the WSDL file.
+"""
+
 import logging; logging.raiseExceptions = 0
 from suds.client import Client
 from suds import WebFault
 import unittest
+
+WSDL_URL = 'http://mutwsgi/service/?wsdl'
 
 class TestWebservice(unittest.TestCase):
     """
@@ -16,7 +25,7 @@ class TestWebservice(unittest.TestCase):
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client('http://mutwsgi/service/?wsdl')
+        self.client = Client(WSDL_URL)
 
     def test_checksyntax_valid(self):
         """
