@@ -52,7 +52,7 @@ class Web() :
 
         self.version = "2.0&nbsp;&beta;-6"
         self.nomenclatureVersion = "2.0"
-        self.releaseDate = "12 Jan 2011"
+        self.releaseDate = "14 Jan 2011"
 
         C = Config.Config()
         self.email = C.Retriever.email
