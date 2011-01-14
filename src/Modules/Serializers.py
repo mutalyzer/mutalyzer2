@@ -74,7 +74,7 @@ class Mapping(ClassModel) :
         - mutationType ; Define the type of mutation type
     """
 
-    __namespace__ = 'mapping'
+    __namespace__ = 'http://mutalyzer.nl/2.0/service/mapping'
 
     startmain = Integer
     startoffset = Integer

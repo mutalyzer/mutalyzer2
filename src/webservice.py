@@ -634,6 +634,7 @@ application = wsgi.Application(soap_application)
 
 # We can also use the built-in webserver by executing this file directly
 if __name__ == '__main__':
+    # Todo: Setting the working directory probably doesn't work
     from wsgiref.simple_server import make_server
     print 'Listening to http://localhost:8081/'
     print 'WDSL file is at http://localhost:8081/?wsdl'
