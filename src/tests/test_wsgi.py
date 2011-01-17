@@ -61,7 +61,7 @@ class TestWSGI(unittest.TestCase):
                 continue
             if not href.startswith('/'):
                 href = '/' + href
-            r = self.app.get(href)
+            self.app.get(href)
 
     def test_checksyntax(self):
         """

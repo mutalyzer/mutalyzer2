@@ -49,7 +49,6 @@ site.addsitedir(os.path.dirname(__file__))
 os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
 import Mutalyzer
-from Modules import Web
 from Modules import Db
 from Modules import Output
 from Modules import Config

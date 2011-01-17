@@ -35,12 +35,18 @@ port 8080):
 
 @todo: Integrate webservice.py (http://webpy.org/cookbook/webservice/).
 @todo: Move /templates/base to /static for web.py compatibility.
-@todo: "downloads/" in req.uri
 """
+
+
+VERSION = '2.0&nbsp;&beta;-6'
+NOMENCLATURE_VERSION = '2.0'
+RELEASE_DATE = '12 Jan 2011'
+
 
 # Log exceptions to stdout
 import logging; logging.basicConfig()
 
+import re
 import os
 import bz2
 import web
@@ -62,7 +68,6 @@ os.chdir(root_dir)
 
 import Mutalyzer
 import VarInfo
-from Modules import Web
 from Modules import Config
 from Modules import Output
 from Modules import Parser
@@ -75,9 +80,6 @@ from Modules import File
 
 # Load configuration from configuration file
 C = Config.Config()
-
-# Todo: we should probably get rid of Web alltogether
-W = Web.Web()
 
 
 # URL dispatch table
@@ -187,9 +189,9 @@ class render_tal:
 
 # TAL template render
 render = render_tal(os.path.join(root_dir, 'templates'),
-                    globals={'version': '2.0&nbsp;&beta;-5',
-                             'nomenclatureVersion': '2.0',
-                             'releaseDate': '10 Dec 2010',
+                    globals={'version': VERSION,
+                             'nomenclatureVersion': NOMENCLATURE_VERSION,
+                             'releaseDate': RELEASE_DATE,
                              'contactEmail': C.Retriever.email})
 
 # web.py application
@@ -592,17 +594,32 @@ class Check:
 
         genomicDescription = O.getIndexedOutput("genomicDescription", 0)
 
+        def urlEncode(descriptions):
+            """
+            @todo: This should probably be done in the template.
+
+            @arg descriptions:
+            @type descriptions: list
+
+            @return: urlEncode descriptions???????????????
+            @rtype: list
+            """
+            newDescr = []
+            for i in descriptions :
+                newDescr.append([i, urllib.quote(i)])
+            return newDescr
+
         args = {
             "lastpost"           : name,
             "messages"           : O.getMessages(),
             "summary"            : summary,
             "parseError"         : pe,
             "errors"             : errors,
-            "genomicDescription" : W.urlEncode([genomicDescription])[0] if genomicDescription else "",
+            "genomicDescription" : urlEncode([genomicDescription])[0] if genomicDescription else "",
             "chromDescription"   : O.getIndexedOutput("genomicChromDescription", 0),
             "genomicDNA"         : genomicDNA,
             "visualisation"      : O.getOutput("visualisation"),
-            "descriptions"       : W.urlEncode(O.getOutput("descriptions")),
+            "descriptions"       : urlEncode(O.getOutput("descriptions")),
             "protDescriptions"   : O.getOutput("protDescriptions"),
             "oldProtein"         : O.getOutput("oldProteinFancy"),
             "altStart"           : O.getIndexedOutput("altStart", 0),
@@ -730,6 +747,8 @@ class BatchChecker:
                      'PositionConverter', denoting the human genome build.
         @kwarg batchType: Type of batch job to run. One of 'NameChecker'
                           (default), 'SyntaxChecker', or 'PositionChecker'.
+
+        @todo: Test.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -753,10 +772,16 @@ class BatchChecker:
         if batchType in attr["batchTypes"]:
             attr["selected"] = str(attr["batchTypes"].index(batchType))
 
+        # Todo: I think this test is kindof bogus
+        def isEMail(a):
+            return bool(
+                re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$",
+                         a))
+
         # Note: A FieldStorage instance (like inFile) seems to always test
         # to the truth value False, so 'if inFile: ...' is not useful.
 
-        if email and W.isEMail(email) and not inFile == None and inFile.file:
+        if email and isEMail(email) and not inFile == None and inFile.file:
             D = Db.Batch(C.Db)
             S = Scheduler.Scheduler(C.Scheduler, D)
             FileInstance = File.File(C.File, O)
