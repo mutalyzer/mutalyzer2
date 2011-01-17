@@ -88,6 +88,8 @@ urls = (
     '/(?:index)?',                'Index',
     '/about',                     'About',
     '/help',                      'Help',
+    '/faq',                       'Faq',
+    '/exercise',                  'Exercise',
     '/nameGenerator',             'Generator',
     '/webservices',               'Webservices',
     '/documentation',             'Documentation',
@@ -1030,6 +1032,16 @@ class About:
 class Help:
     def GET(self):
         return render.help()
+
+
+class Faq:
+    def GET(self):
+        return render.FAQ()
+
+
+class Exercise:
+    def GET(self):
+        return render.exercise()
 
 
 class Generator:

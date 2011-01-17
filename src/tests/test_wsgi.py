@@ -51,7 +51,6 @@ class TestWSGI(unittest.TestCase):
         Test all links in the main menu.
         """
         ignore = ['external',   # Todo: should not be a link
-                  'exercise',   # Todo: add this page
                   'disclaimer', # Todo: add this page
                   'bugtracker']
         r = self.app.get('/')
