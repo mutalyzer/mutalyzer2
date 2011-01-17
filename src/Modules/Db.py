@@ -553,7 +553,7 @@ class Remote(Db) :
               WHERE type = "mRNA"
               AND refGene.name = acc
               AND acc = mrnaAcc
-              AND modDate >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
+              AND time >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """, self.__config.UpdateInterval
 
         handle = open(self.__config.TempFile, "w")
