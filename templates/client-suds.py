@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import logging; logging.basicConfig()
 from suds.client import Client

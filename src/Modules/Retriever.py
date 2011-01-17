@@ -284,7 +284,7 @@ class Retriever(object) :
         ID = rsId[2:]
         if rsId[:2] != "rs" or not ID.isdigit() :
             self._output.addMessage(__file__, 4, "ESNPID", "This is not a" \
-                "valid dbSNP id.")
+                " valid dbSNP id.")
 
         # Query dbSNP for the SNP.
         response = Entrez.efetch(db = "SNP", id = ID, rettype = "flt",

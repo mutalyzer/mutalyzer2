@@ -103,8 +103,8 @@ urls = (
     '/batch([a-zA-Z]+)?',         'BatchChecker',
     '/progress',                  'BatchProgress',
     '/Results_(\d+)\.txt',        'BatchResult',
-    '/download/(.*\.(?:py|cs))',  'Download',
-    '/downloads/(.+)',            'Downloads',
+    '/download/([a-zA-Z-]+\.(?:py|cs))',  'Download',
+    '/downloads/([a-zA-Z\._-]+)', 'Downloads',
     '/upload',                    'Uploader',
     '/Reference/(.*)',            'Reference'
 )
@@ -217,11 +217,10 @@ class Download:
         @arg file: Filename to download.
         """
         # Process the file with TAL and return the content as a downloadable file.
-        #file = web.ctx.path.split('/')[-1]
         if not os.path.isfile("templates/" + file):
             raise web.notfound()
-        #req.content_type = 'application/octet-stream'
-        # Force downloading.
+        # Force downloading
+        web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return getattr(render, file)({'path': web.ctx.homedomain + web.ctx.homepath},
                                      scheme='file')
@@ -493,6 +492,8 @@ class PositionConverter:
 class VariantInfo:
     """
     The I{g.} to I{c.} and vice versa interface for LOVD.
+
+    @todo: Tests.
     """
     def GET(self):
         """
@@ -669,6 +670,8 @@ class BatchProgress:
 
     Used from the 'batch' template by AJAX to get the progress of a batch
     job.
+
+    @todo: Tests.
     """
     def GET(self):
         """
@@ -710,6 +713,8 @@ class BatchProgress:
 class BatchChecker:
     """
     Run batch jobs.
+
+    @todo: Tests.
     """
     def GET(self, batchType=None):
         """
@@ -816,6 +821,8 @@ class BatchChecker:
 class BatchResult:
     """
     Download result from the batch checker.
+
+    @todo: Tests.
     """
     def GET(self, result):
         """
