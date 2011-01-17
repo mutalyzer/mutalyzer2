@@ -65,7 +65,8 @@ site.addsitedir(os.path.dirname(__file__))
 # Todo: Get this from the configuration file
 root_dir = os.path.split(os.path.dirname(__file__))[0]
 # Todo: Fix Mutalyzer to not depend on working directory
-os.chdir(root_dir)
+if not __name__ == '__main__':
+    os.chdir(root_dir)
 
 import Mutalyzer
 import VarInfo
