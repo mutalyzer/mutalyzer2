@@ -50,6 +50,7 @@ import re
 import os
 import bz2
 import web
+import urllib
 import urllib2
 import site
 
