@@ -1012,7 +1012,7 @@ class Documentation:
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """
-        wsdl_url = web.ctx.homedomain + web.ctx.homepath + '/service?wsdl'
+        wsdl_url = web.ctx.homedomain + web.ctx.homepath + '/services?wsdl'
         wsdl_handle = urllib2.urlopen(wsdl_url)
         xsl_handle = open('templates/wsdl-viewer.xsl', 'r')
         wsdl_doc = etree.parse(wsdl_handle)

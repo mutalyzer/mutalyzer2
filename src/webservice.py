@@ -7,11 +7,11 @@ The SOAP webservice is exposed through a WSGI interface.
 
 Example Apache/mod_wsgi configuration:
 
-   WSGIScriptAlias /service /var/www/mutalyzer/src/webservice.py
+   WSGIScriptAlias /services /var/www/mutalyzer/src/webservice.py
 
 Be sure to have this line first if you also define a / alias, like this:
 
-   WSGIScriptAlias /service /var/www/mutalyzer/src/webservice.py
+   WSGIScriptAlias /services /var/www/mutalyzer/src/webservice.py
    WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
 
 @todo: Do we really use namespaces correctly?
@@ -630,7 +630,7 @@ class MutalyzerService(DefinitionBase) :
 
 # WSGI application for use with e.g. Apache/mod_wsgi
 soap_application = Application([MutalyzerService],
-                               'http://mutalyzer.nl/2.0/service', # namespace
+                               'http://mutalyzer.nl/2.0/services', # namespace
                                'MutalyzerService')
 application = wsgi.Application(soap_application)
 

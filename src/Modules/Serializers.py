@@ -54,7 +54,7 @@ class SoapMessage(ClassModel):
         - message     ; The error message
     """
 
-    __namespace__ = 'http://mutalyzer.nl/2.0/service/soapmessage'
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/soapmessage'
 
     errorcode = Mandatory.String
     message = Mandatory.String
@@ -74,7 +74,7 @@ class Mapping(ClassModel) :
         - mutationType ; Define the type of mutation type
     """
 
-    __namespace__ = 'http://mutalyzer.nl/2.0/service/mapping'
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/mapping'
 
     startmain = Integer
     startoffset = Integer
@@ -97,7 +97,7 @@ class Transcript(ClassModel) :
         - CDS_stop    ; Define the type of CDS_stop
     """
 
-    __namespace__ = 'http://mutalyzer.nl/2.0/service/transcript'
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/transcript'
 
     trans_start = Integer
     trans_stop = Integer
@@ -111,7 +111,7 @@ class MutalyzerOutput(ClassModel) :
         Attributes:
     """
 
-    __namespace__ = 'http://mutalyzer.nl/2.0/service/mutalyzeroutput'
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/mutalyzeroutput'
 
     original = String
     mutated = String

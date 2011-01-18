@@ -11,7 +11,7 @@ from suds.client import Client
 from suds import WebFault
 import unittest
 
-WSDL_URL = 'http://mutwsgi/service/?wsdl'
+WSDL_URL = 'http://mutwsgi/services/?wsdl'
 
 class TestWebservice(unittest.TestCase):
     """

@@ -1,7 +1,7 @@
 /*
 Compilation instructions:
 
-  wsdl '<tal tal:replace = "path"></tal>/service/?wsdl'
+  wsdl '<tal tal:replace = "path"></tal>/services/?wsdl'
   gmcs /target:library MutalyzerService.cs -r:System.Web.Services
   gmcs /r:MutalyzerService.dll client-mono.cs
 
