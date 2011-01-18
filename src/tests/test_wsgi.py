@@ -3,13 +3,15 @@
 """
 Tests for the WSGI interface to Mutalyzer.
 
-See:
+Uses WebTest, see:
   http://pythonpaste.org/webtest/
   http://blog.ianbicking.org/2010/04/02/webtest-http-testing/
 
 I just installed webtest by 'easy_install webtest'.
 """
 
+import re
+import time
 import unittest
 from webtest import TestApp
 
@@ -181,6 +183,71 @@ class TestWSGI(unittest.TestCase):
         form['variant'] = 'NC_000011.9:g.111959625C>T'
         r = form.submit()
         r.mustcontain('NM_003002.2:c.204C>T')
+
+    def _batch(self, batch_type='NameChecker', arg1=None, variants=[],
+               header=''):
+        """
+        Submit a batch form.
+
+        @kwarg batch_type: Type of batch job to test. One of NameChecker,
+                           SyntaxChecker, PositionConverter.
+        @kwarg arg1: Optional extra argument for the batch job.
+        @kwarg variants: Variants to use as input for the batch job.
+        @kwarg header: Message that must be found in the batch job result.
+        """
+        r = self.app.get('/batch')
+        form = r.forms[0]
+        if arg1:
+            form['arg1'] = arg1
+        form['batchType'] = batch_type
+        form['batchEmail'] = 'm.vermaat.hg@lumc.nl'
+        form.set('batchFile', ('test_%s.txt' % batch_type,
+                               '\n'.join(variants)))
+        r = form.submit()
+        id = r.lxml.cssselect('#jobID')[0].get('value')
+        max_tries = 60
+        for i in range(max_tries):
+            r = self.app.get('/progress?jobID=' + id + '&totalJobs=3&ajax=1')
+            self.assertEqual(r.content_type, 'text/plain')
+            #print '%s: %s' % (batch_type, r.body)
+            if r.body == 'OK': break
+            self.assertTrue(re.match('[0-9]+', r.body))
+            time.sleep(5)
+        self.assertEqual(r.body, 'OK')
+        r = self.app.get('/Results_' + id + '.txt')
+        self.assertEqual(r.content_type, 'text/plain')
+        r.mustcontain(header)
+        self.assertTrue(len(r.body.strip().split('\n')) == len(variants) + 1)
+
+    def test_batch_namechecker(self):
+        """
+        Submit the batch name checker form.
+        """
+        self._batch('NameChecker',
+                    variants=['AB026906.1(SDHD):g.7872G>T',
+                              'NM_003002.1:c.3_4insG',
+                              'AL449423.14(CDKN2A_v002):c.5_400del'],
+                    header='Input\tErrors | Messages')
+
+    def test_batch_syntaxchecker(self):
+        """
+        Submit the batch syntax checker form.
+        """
+        self._batch('SyntaxChecker',
+                    variants = ['AB026906.1(SDHD):g.7872G>T',
+                                'NM_003002.1:c.3_4insG',
+                                'AL449423.14(CDKN2A_v002):c.5_400del'],
+                    header='Input\tStatus')
+
+    def test_batch_positionconverter(self):
+        """
+        Submit the batch position converter form.
+        """
+        self._batch('PositionConverter',
+                    arg1='hg19',
+                    variants = ['NM_003002.2:c.204C>T',
+                                'NC_000011.9:g.111959625C>T'],
+                    header='Input Variant')
 
     def test_download_py(self):
         """

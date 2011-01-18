@@ -671,8 +671,6 @@ class BatchProgress:
 
     Used from the 'batch' template by AJAX to get the progress of a batch
     job.
-
-    @todo: Tests.
     """
     def GET(self):
         """
@@ -704,6 +702,7 @@ class BatchProgress:
                 ret = "OK"
             else:
                 ret = percentage
+            web.header('Content-Type', 'text/plain')
             return ret
         else:
             #Return progress html page
@@ -714,8 +713,6 @@ class BatchProgress:
 class BatchChecker:
     """
     Run batch jobs.
-
-    @todo: Tests.
     """
     def GET(self, batchType=None):
         """
@@ -822,8 +819,6 @@ class BatchChecker:
 class BatchResult:
     """
     Download result from the batch checker.
-
-    @todo: Tests.
     """
     def GET(self, result):
         """
