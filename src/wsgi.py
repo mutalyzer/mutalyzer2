@@ -91,6 +91,7 @@ urls = (
     '/help',                      'Help',
     '/faq',                       'Faq',
     '/exercise',                  'Exercise',
+    '/disclaimer',                'Disclaimer',
     '/nameGenerator',             'Generator',
     '/webservices',               'Webservices',
     '/documentation',             'Documentation',
@@ -1045,6 +1046,11 @@ class Faq:
 class Exercise:
     def GET(self):
         return render.exercise()
+
+
+class Disclaimer:
+    def GET(self):
+        return render.disclaimer()
 
 
 class Generator:
