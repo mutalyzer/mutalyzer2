@@ -2,38 +2,35 @@ This program depends on the following packages:
 - mysql-server     >= 5.0.0
 - python           >= 2.5.2
 - python-mysqldb   >= 1.2.2
-- python-biopython >= 1.43
+- python-biopython >= 1.54
 - python-pyparsing >= 1.5.0
 - python-configobj >= 4.4.0
 - python-simpletal >= 4.1-6
-- python-zsi       >= 2.0-2
-- python-soaplib   >= 0.8.1-2
+- python-soaplib   >= 2.0.0-alpha1
 - python-soappy    >= 0.12.0-2
-- python-soaplib   >= 0.8.1
 - python-magic     >= 5.04-2
 - python-psutil    >= 0.1.3-1
 - python-xlrd      >= 0.6.1-2
 - python-daemon	   >= 1.5.5
+- python-webpy     >= 0.33
+- python-webtest   >= 1.2.3
 
-The web interface depends on the following packages:
+The web and SOAP interfaces depend on the following packages:
 - apache2               >= 2.2.11
-- libapache2-mod-python >= 3.3.1
+- libapache2-mod-wsgi   >= 2.8
 
-Install and configure these packages before continuing.
-a2enmod python
-a2enmod rewrite
-
-Edit /etc/apache2/mods-available/python.load (change the path 
-/var/www/mutalyzer2 when appropriate):
+Add Apache configuration for Mutalyzer. For example, add the following to
+the file /etc/apache2/sites-available/mutalyzer (change the path 
+/var/www/mutalyzer2 when appropriate) and run 'a2ensite mutalyzer'.
 ---
-LoadModule python_module /usr/lib/apache2/modules/mod_python.so
+<VirtualHost *:80>
+    ServerName mutalyzer.nl
 
-<Directory /var/www/mutalyzer2> 
-  SetHandler mod_python
-  PythonHandler src/Interfaces/handler
-  PythonPath "sys.path + ['/var/www/mutalyzer2/src']"
-  #PythonDebug On
-</Directory>
+    WSGIScriptAlias /services /var/www/mutalyzer2/src/webservice.py
+    WSGIScriptAlias / /var/www/mutalyzer2/src/wsgi.py
+
+    Alias /base /var/www/mutalyzer2/templates/base
+</VirtualHost>
 ---
 
 After installing MySQL, create a database named ``hg19'', owned by the
