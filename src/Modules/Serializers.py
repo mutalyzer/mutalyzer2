@@ -7,17 +7,45 @@ Collection of Serilizable Objects used by the webservice
 @requires: soaplib.serializers.primitive.Integer
 @requires: soaplib.serializers.primitive.Array
 @requires: soaplib.serializers.clazz.ClassSerializer
-@requires: ZSI.TC
-@requires: ZSI.fault.Fault
 
 @todo: documentation
 """
-from soaplib.serializers.primitive import String, Integer, Array
-from soaplib.serializers.clazz import ClassSerializer
-from ZSI import TC
-from ZSI.fault import Fault
+from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.clazz import ClassModel
 
-class SoapMessage(ClassSerializer):
+
+# Default attributes for soaplib models:
+#   nillable = True
+#   min_occurs = 0
+#   max_occurs = 1
+#
+# Additional attributes values for String model:
+#   min_len = 0
+#   max_len = "unbounded"
+#   pattern = None
+
+
+class Mandatory(object):
+    """
+    This is soaplib.model.primitive.Mandatory, but without min_length=1 for
+    the String model.
+    """
+    String = String(min_occurs=1, nillable=False)
+    Integer = Integer(min_occurs=1, nillable=False)
+
+
+class List(object):
+    """
+    Unbounded (in number of occurrences) versions of models.
+    """
+    String = String(nillable=False, max_occurs="unbounded")
+    Integer = Integer(nillable=False, max_occurs="unbounded")
+
+
+# Todo: use Mandatory.* models in the classmodels below?
+
+
+class SoapMessage(ClassModel):
     """
     Send info message over the soapline
 
@@ -26,17 +54,13 @@ class SoapMessage(ClassSerializer):
         - message     ; The error message
     """
 
-    class types():
-        errorcode = String
-        message = String
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/soapmessage'
 
-    def __init__(self):
-        self.typecode = TC.Struct(SoapMessage, [
-            TC.String("errorcode"),
-            TC.String("message")], "SoapMessage")
+    errorcode = Mandatory.String
+    message = Mandatory.String
 #SoapMessage
 
-class Mapping(ClassSerializer) :
+class Mapping(ClassModel) :
     """
     Extended ClassSerializer object with mixed types of attributes
 
@@ -50,44 +74,20 @@ class Mapping(ClassSerializer) :
         - mutationType ; Define the type of mutation type
     """
 
-    class types() :
-        """
-        Types are defined here for the soaplib module.
-        """
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/mapping'
 
-        startmain = Integer
-        startoffset = Integer
-        endmain = Integer
-        endoffset = Integer
-        start_g = Integer
-        end_g = Integer
-        mutationType = String
-        errorcode = Integer
-        messages = Array(SoapMessage)
-    #types
-
-    def __init__(self) :
-        """
-        Types are defined here for the TC module.
-        """
-
-        self.typecode = TC.Struct(Mapping, [
-            TC.Integer('startmain'),
-            TC.Integer('startoffset'),
-            TC.Integer('endmain'),
-            TC.Integer('endoffset'),
-            TC.Integer('start_g'),
-            TC.Integer('end_g'),
-            TC.String('mutationType'),
-            TC.Integer("errorcode"),
-            TC.Array("SoapMessage", TC.Struct(SoapMessage, [
-                TC.String("errorcode"),
-                TC.String("message")], "SoapMessage"), "messages")
-            ], 'Mapping')
-    #__init__
+    startmain = Integer
+    startoffset = Integer
+    endmain = Integer
+    endoffset = Integer
+    start_g = Integer
+    end_g = Integer
+    mutationType = String
+    errorcode = Integer
+    messages = SoapMessage(max_occurs="unbounded")
 #Mapping
 
-class Transcript(ClassSerializer) :
+class Transcript(ClassModel) :
     """
     Extended ClassSerializer object with mixed types of attributes
 
@@ -97,77 +97,36 @@ class Transcript(ClassSerializer) :
         - CDS_stop    ; Define the type of CDS_stop
     """
 
-    class types() :
-        """
-        """
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/transcript'
 
-        trans_start = Integer
-        trans_stop = Integer
-        CDS_stop = Integer
-    #types
-
-    def __init__(self) :
-        """
-        """
-
-        self.typecode = TC.Struct(Transcript, [
-            TC.Integer('trans_start'),
-            TC.Integer('trans_stop'),
-            TC.Integer('CDS_stop')
-            ], 'Transcript')
-    #__init__
+    trans_start = Integer
+    trans_stop = Integer
+    CDS_stop = Integer
 #Transcript
 
-class MutalyzerOutput(ClassSerializer) :
+class MutalyzerOutput(ClassModel) :
     """
         Extended ClassSerializer object with mixed types of attributes
 
         Attributes:
     """
 
-    class types() :
-        """
-        """
+    __namespace__ = 'http://mutalyzer.nl/2.0/services/mutalyzeroutput'
 
-        original = String
-        mutated = String
+    original = String
+    mutated = String
 
-        origMRNA = String
-        mutatedMRNA= String
+    origMRNA = String
+    mutatedMRNA= String
 
-        origCDS = String
-        newCDS= String
+    origCDS = String
+    newCDS= String
 
-        origProtein = String
-        newProtein = String
-        altProtein = String
+    origProtein = String
+    newProtein = String
+    altProtein = String
 
-        errors = Integer
-        warnings = Integer
-        summary = String
-    #types
-
-    def __init__(self) :
-        """
-        """
-
-        self.typecode = TC.Struct(MutalyzerOutput, [
-            TC.String('original'),
-            TC.String('mutated'),
-
-            TC.String('origMRNA'),
-            TC.String('mutatedMRNA'),
-
-            TC.String('origCDS'),
-            TC.String('newCDS'),
-
-            TC.String('origProtein'),
-            TC.String('newProtein'),
-            TC.String('altProtein'),
-
-            TC.Integer('errors'),
-            TC.Integer('warnings'),
-            TC.String('summary')
-            ], 'MutalyzerOutput')
-    #__init__
+    errors = Integer
+    warnings = Integer
+    summary = String
 #MutalyzerOutput

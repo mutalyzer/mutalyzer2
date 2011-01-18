@@ -13,4 +13,3 @@
 #     - Parser    ;
 #     - Retriever ;
 #     - Scheduler ;
-#     - Web       ;

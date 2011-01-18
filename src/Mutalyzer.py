@@ -1419,7 +1419,6 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
             else :
                 cdsLen = __cdsLen(MUU.newSplice(W.CDS.positionList))
                 descr = __toProtDescr(cdsLen, orig, trans)
-                print descr
                 O.addOutput("myProteinDescription", descr[0])
 
                 __bprint2(orig + '*', descr[1], descr[2], O,

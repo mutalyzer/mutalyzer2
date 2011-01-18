@@ -510,24 +510,6 @@ spliceWarn  &
 \subsubsection{The LRGparser class} \label{subsubsec:lrgparser}
 % TODO write this section.
 
-\subsection{The Web module} \label{subsec:web}
-The \texttt{Web} module provides a class that is designed for interaction with
-a webserver. This class contains two variables that are not configurable from
-the configuration file. These variables are \texttt{version} and
-\texttt{nomenclatureVersion}. The reason that they are not configurable is 
-because these version numbers are deeply intertwined with the source code and
-independent of any system settings.
-
-The most important function in this class is the \texttt{tal()} function. This
-function compiles a \emph{Template Attribute Language}~\cite{TAL} (\emph{TAL}
-for short) template to a HTML or XML file. % FIXME describe menu.
-
-The TAL templates are discussed further in Section~\ref{subsubsec:templates}.
-
-Other functions of this class include a function that checks whether a string
-is an e-mail address, one that returns the content of a file as a string, a
-function that HTML-encodes a string and so on.
-
 \subsection{The Parser module} \label{subsec:parser}
 The \texttt{Parser} module provides the \texttt{Nomenclatureparser} class. This
 class has only one public function, the \texttt{parse()} function.
@@ -834,12 +816,27 @@ If we map a variant \texttt{NM\_002001.2:c.55+30del}, the output will be:
 \subsection{Web} \label{subsec:webinterface}
 % index.py
 
-\subsubsection{TAL} \label{subsubsec:templates}
-% templates/
+The web interface is implemented as a \texttt{WSGI} using the
+\texttt{web.py}~\cite{WEBPY} framework. It can be accessed through Apache
+using the \texttt{mod\_wsgi} module, or through the built-in webserver by
+running \texttt{src/wsgi.py} from the command line.
+
+\emph{Template Attribute Language}~\cite{TAL} (\emph{TAL} for short) is used
+to compile template files to HTML files. % FIXME describe menu.
 
 \subsection{Webservices} \label{subsec:webservinterface}
-
 % webservice.py
+
+Much of the Mutalyzer functionality is also available trough a \texttt{SOAP}
+webservice, implemented using the Python \texttt{soaplib} library. This
+webservice has a separate entrypoint, different from the web interface, which
+can be used through Apache/\texttt{mod\_wsgi}, or through its built-in
+webserver by running \texttt{src/webservice.py} from the command line.
+
+Client programs can read the \texttt{WSDL} description of the webservice by
+a \texttt{GET} request with a \texttt{?wsdl} querystring (e.g.
+\texttt{http://mutalyzer.nl/2.0/service?wsdl}).
+
 \subsection{Command line} \label{subsec:commandline}
 
 \newpage

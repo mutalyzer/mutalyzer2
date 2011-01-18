@@ -3,93 +3,91 @@
 """
 Mutalyzer webservices.
 
-@requires: soaplib.wsgi_soap.SimpleWSGISoapApp
-@requires: soaplib.service.soapmethod
-@requires: soaplib.serializers.primitive.String
-@requires: soaplib.serializers.primitive.Integer
-@requires: soaplib.serializers.primitive.Array
-@requires: ZSI.fault.Fault
+The SOAP webservice is exposed through a WSGI interface.
 
-@requires: Modules.Web
-@requires: Modules.Db
-@requires: Modules.Output
-@requires: Modules.Config
-@requires: Modules.Parser
-@requires: Modules.Mapper
+Example Apache/mod_wsgi configuration:
 
-@requires: Modules.Serializers.SoapMessage
-@requires: Modules.Serializers.Mapping
-@requires: Modules.Serializers.Transcript
+   WSGIScriptAlias /services /var/www/mutalyzer/src/webservice.py
+
+Be sure to have this line first if you also define a / alias, like this:
+
+   WSGIScriptAlias /services /var/www/mutalyzer/src/webservice.py
+   WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
+
+@todo: Do we really use namespaces correctly?
+@todo: For some reason, the server exposes its location including ?wsdl.
+@todo: More thourough input checking. The @soap decorator does not do any
+       kind of strictness checks on the input. For example, in
+       transcriptInfo, the build argument must really be present. (Hint:
+       use __checkBuild.)
 """
-# Public classes:
-#     - MutalyzerService ; Mutalyzer webservices.
 
+import logging; logging.basicConfig()
 
-from soaplib.wsgi_soap import SimpleWSGISoapApp
-from soaplib.service import soapmethod
-from soaplib.serializers.primitive import String, Integer, Array
-from ZSI.fault import Fault
+# We now use very current soaplib:
+#   $ git clone https://github.com/soaplib/soaplib.git
+#   $ cd soaplib
+#   $ sudo python setup.py install
 
-import Mutalyzer                                
-from Modules import Web
+# Other tree:
+# https://github.com/cuker/soaplib/
+# https://github.com/cuker/soaplib/commit/1a248ba1421c57738c6d30333036114c3ed42022
+
+from soaplib.core import Application
+from soaplib.core.service import soap
+from soaplib.core.service import DefinitionBase
+from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.exception import Fault
+from soaplib.core.server import wsgi
+import os
+import site
+
+# Add /src to Python path
+site.addsitedir(os.path.dirname(__file__))
+
+# Todo: fix Mutalyzer to not depend on working directory
+os.chdir(os.path.split(os.path.dirname(__file__))[0])
+
+import Mutalyzer
 from Modules import Db
 from Modules import Output
 from Modules import Config
 from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
-from Modules.Serializers import SoapMessage, Mapping, Transcript, \
-                                MutalyzerOutput
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, List
 
-class MutalyzerService(SimpleWSGISoapApp) :
+
+class MutalyzerService(DefinitionBase) :
     """
     Mutalyzer webservices.
 
     These methods are made public via a SOAP interface.
 
-    Private methods:
-      - __checkBuild(L, D, build) ; Check if the build is supported.
-      - __checkChrom(L, D, chrom) ; Check if the chromosome is in our
-                                    database.
-      - __checkPos(L, pos)        ; Check if the position is valid.
-
-    Public methods:
-      - getTranscripts(build, chrom,  pos); Get all transcripts that overlap
-        with a chromosomal position.
-      - getTranscriptsRange(build, chrom, pos1, pos2, method) ; Get all
-        transcripts that overlap with a range on a chromosome.
-      - getGeneName(build, accno)    ; Find the gene name associated with a
-        transcript.
-      - mappingInfo(LOVD_ver, build, accNo, variant) ; Convert a transcript
-        coordinate to a chromosomal one, or vice versa.
-      - transcriptInfo(LOVD_ver, build, accNo) ; Find transcription start and
-        end, and CDS end (in I{c.} notation) for a given transcript.
-      - cTogConversion(self, build, variant) ; Convert I{c.} to I{g.}
-      - gTocConversion(self, build,  variant) ; Convert I{g.} to I{c.}
-                      
+    Note: Don't use leading newline in the docstrings of SOAP methods. These
+    are visible in the generated documentation.
     """
 
     def __checkBuild(self, L, build, config) :
         """
         Check if the build is supported (hg18 or hg19).
 
-
         Returns:
             - Nothing (but raises an EARG exception).
 
-        @arg L: an output object for logging
+        @arg L: An output object for logging.
         @type L: object
-        @arg build: The human genome build name that needs to be checked
+        @arg build: The human genome build name that needs to be checked.
         @type build: string
-        @arg config: configuration object of the Db module
+        @arg config: Configuration object of the Db module.
         @type config: object
         """
 
         if not build in config.dbNames :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
-            raise Fault(Fault.Client, "EARG",
-                detail = "The build argument (%s) was not a valid " \
-                         "build name." % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                        "build name." % build)
         #if
     #__checkBuild
 
@@ -100,19 +98,19 @@ class MutalyzerService(SimpleWSGISoapApp) :
         Returns:
             - Nothing (but raises an EARG exception).
 
-        @arg L: An output object for logging
+        @arg L: An output object for logging.
         @type L: object
         @arg D: A handle to the database.
         @type D: object
-        @arg chrom: The name of the chromosome
+        @arg chrom: The name of the chromosome.
         @type chrom: string
         """
 
         if not D.isChrom(chrom) :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
-            raise Fault(Fault.Client, "EARG",
-                detail = "The chrom argument (%s) was not a valid " \
-                         "chromosome name." % chrom)
+            raise Fault("EARG",
+                        "The chrom argument (%s) was not a valid " \
+                        "chromosome name." % chrom)
         #if
     #__checkChrom
 
@@ -123,16 +121,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
         Returns:
             - Nothing (but raises an ERANGE exception).
 
-        @arg L: An output object for logging
+        @arg L: An output object for logging.
         @type L: object
-        @arg pos: The position
+        @arg pos: The position.
         @type pos: integer
         """
 
         if pos < 1 :
             L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
-            raise Fault(Fault.Client, "ERANGE",
-                detail = "The pos argument (%i) is out of range." % pos)
+            raise Fault("ERANGE",
+                        "The pos argument (%i) is out of range." % pos)
         #if
     #__checkPos
 
@@ -143,23 +141,21 @@ class MutalyzerService(SimpleWSGISoapApp) :
         Returns:
             - Nothing (but raises an EARG exception).
 
-        @arg L: An output object for logging
+        @arg L: An output object for logging.
         @type L: object
-        @arg variant: The variant
+        @arg variant: The variant.
         @type variant: string
         """
 
         if not variant :
             L.addMessage(__file__, 4, "EARG", "EARG no variant")
-            raise Fault(Fault.Client, "EARG",
-                detail = "The variant argument is not provided.")
+            raise Fault("EARG", "The variant argument is not provided.")
         #if
     #__checkVariant
 
-    @soapmethod(String, String, Integer, _returns = Array(String))
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, _returns = List.String)
     def getTranscripts(self, build, chrom, pos) :
-        """
-        Get all the transcripts that overlap with a chromosomal position.
+        """Get all the transcripts that overlap with a chromosomal position.
 
         On error an exception is raised:
           - detail       ; Human readable description of the error.
@@ -167,14 +163,14 @@ class MutalyzerService(SimpleWSGISoapApp) :
               - EARG   ; The argument was not valid.
               - ERANGE ; An invalid range was given.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg chrom: A chromosome encoded as "chr1", ..., "chrY"
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
-        @arg pos: A position on the chromosome
+        @arg pos: A position on the chromosome.
         @type pos: integer
 
-        @return: A list of transcripts
+        @return: A list of transcripts.
         @rtype: list
         """
 
@@ -201,14 +197,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
                      "Finished processing getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
 
+        L.addMessage(__file__, -1, "INFO",
+                     "We return %s" % ret)
+
         del D, L, C
-        return [ret]
+        return ret
     #getTranscripts
 
-    @soapmethod(String, String, _returns = Array(String))
+    @soap(Mandatory.String, Mandatory.String, _returns = List.String)
     def getTranscriptsByGeneName(self, build, name) :
-        """
-            blabla
+        """Todo: documentation.
         """
 
         C = Config.Config()
@@ -226,29 +224,28 @@ class MutalyzerService(SimpleWSGISoapApp) :
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscriptsByGene(%s %s)" % (
                      build, name))
-        return [ret]
+        return ret
     #getTranscriptsByGene
 
-    @soapmethod(String, String, Integer, Integer, Integer,
-        _returns = Array(String))
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, Mandatory.Integer, Mandatory.Integer,
+        _returns = List.String)
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
-        """
-        Get all the transcripts that overlap with a range on a chromosome.
+        """Get all the transcripts that overlap with a range on a chromosome.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg chrom: A chromosome encoded as "chr1", ..., "chrY"
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
-        @arg pos1: The first postion of the range
+        @arg pos1: The first postion of the range.
         @type pos1: integer
-        @arg pos2: The last postion of the range
+        @arg pos2: The last postion of the range.
         @type pos2: integer
         @arg method: The method of determining overlap:
             - 0 ; Return only the transcripts that completely fall in the range
                   [pos1, pos2].
-            - 1 ; Return all hit transcripts
+            - 1 ; Return all hit transcripts.
 
-        @return: A list of transcripts
+        @return: A list of transcripts.
         @rtype: list
         """
 
@@ -272,20 +269,19 @@ class MutalyzerService(SimpleWSGISoapApp) :
             build, chrom, pos1, pos2, method))
 
         del D, L, C
-        return [ret]
+        return ret
     #getTranscriptsRange
 
-    @soapmethod(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneName(self, build, accno) :
-        """
-        Find the gene name associated with a transcript.
+        """Find the gene name associated with a transcript.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accno: The identifier of a transcript
+        @arg accno: The identifier of a transcript.
         @type accno: string
 
-        @return: The name of the associated gene
+        @return: The name of the associated gene.
         @rtype: string
         """
 
@@ -308,10 +304,9 @@ class MutalyzerService(SimpleWSGISoapApp) :
     #getGeneName
 
 
-    @soapmethod(String, String, String, String, _returns = Mapping)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String, Mandatory.String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
-        """
-        Search for an NM number in the MySQL database, if the version
+        """Search for an NM number in the MySQL database, if the version
         number matches, get the start and end positions in a variant and
         translate these positions to I{g.} notation if the variant is in I{c.}
         notation and vice versa.
@@ -325,16 +320,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
           - If the variant is not accepted by the nomenclature parser, a parse
             error will be printed.
 
-        @arg LOVD_ver: The LOVD version
+        @arg LOVD_ver: The LOVD version.
         @type LOVD_ver: string
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accNo: The NM accession number and version
+        @arg accNo: The NM accession number and version.
         @type accNo: string
-        @arg variant: The variant
+        @arg variant: The variant.
         @type variant: string
 
-        @return: complex object:
+        @return: Complex object:
           - start_main   ; The main coordinate of the start position
                            in I{c.} (non-star) notation.
           - start_offset ; The offset coordinate of the start position
@@ -367,21 +362,20 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #mappingInfo
 
-    @soapmethod(String, String, String, _returns = Transcript)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String, _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
-        """
-        Search for an NM number in the MySQL database, if the version
+        """Search for an NM number in the MySQL database, if the version
         number matches, the transcription start and end and CDS end
         in I{c.} notation is returned.
 
-        @arg LOVD_ver: The LOVD version
+        @arg LOVD_ver: The LOVD version.
         @type LOVD_ver: string
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accNo: The NM accession number and version
+        @arg accNo: The NM accession number and version.
         @type accNo: string
 
-        @return: complex object:
+        @return: Complex object:
           - trans_start  ; Transcription start in I{c.} notation.
           - trans_stop   ; Transcription stop in I{c.} notation.
           - CDS_stop     ; CDS stop in I{c.} notation.
@@ -404,17 +398,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return T
     #transcriptInfo
 
-    @soapmethod(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def chromAccession(self, build, name) :
-        """
-        Get the accession number of a chromosome, given a name.
+        """Get the accession number of a chromosome, given a name.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg name: The name of a chromosome (e.g. chr1)
+        @arg name: The name of a chromosome (e.g. chr1).
         @type name: string
 
-        @return: The accession number of a chromosome
+        @return: The accession number of a chromosome.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -437,17 +430,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromAccession
 
-    @soapmethod(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def chromosomeName(self, build, accNo) :
-        """
-        Get the name of a chromosome, given a chromosome accession number.
+        """Get the name of a chromosome, given a chromosome accession number.
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg accNo: The accession number of a chromosome (NC_...)
+        @arg accNo: The accession number of a chromosome (NC_...).
         @type accNo: string
 
-        @return: The name of a chromosome
+        @return: The name of a chromosome.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -470,17 +462,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromosomeName
 
-    @soapmethod(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getchromName(self, build, acc) :
-        """
-        Get the chromosome name, given a transcript identifier (NM number).
+        """Get the chromosome name, given a transcript identifier (NM number).
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
-        @arg acc: The NM accession number (version NOT included)
+        @arg acc: The NM accession number (version NOT included).
         @type acc: string
 
-        @return: The name of a chromosome
+        @return: The name of a chromosome.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -503,20 +494,19 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #chromosomeName
 
-    @soapmethod(String, String, _returns = Array(String))
+    @soap(Mandatory.String, Mandatory.String, _returns = List.String)
     def numberConversion(self, build, variant) :
-        """
-        Converts I{c.} to I{g.} notation or vice versa
+        """Converts I{c.} to I{g.} notation or vice versa
 
 
-        @arg build: The human genome build (hg19 or hg18)
+        @arg build: The human genome build (hg19 or hg18).
         @type build: string
         @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
-        notation, including NM_ or NC_ accession number
+                      notation, including NM_ or NC_ accession number.
         @type variant: string
 
-        @return: The variant in either I{g.} or I{c.} notation
-        @rtype: string
+        @return: The variant(s) in either I{g.} or I{c.} notation.
+        @rtype: list
         """
 
         C = Config.Config() # Read the configuration file.
@@ -541,15 +531,14 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return result
     #numberConversion
 
-    @soapmethod(String, _returns = String)
+    @soap(Mandatory.String, _returns = Mandatory.String)
     def checkSyntax(self, variant):
-        """
-        Checks the syntax of a variant.
-        
-        @arg variant: the variant to check
+        """Checks the syntax of a variant.
+
+        @arg variant: The variant to check.
         @type variant: string
-        
-        @return: message
+
+        @return: Message stating OK or not OK.
         @rtype: string
         """
         C = Config.Config() # Read the configuration file.
@@ -575,28 +564,35 @@ class MutalyzerService(SimpleWSGISoapApp) :
         del L
         return result
     #checkSyntax
-    
-    @soapmethod(String, _returns = MutalyzerOutput)
+
+    @soap(Mandatory.String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
+        """Todo: documentation.
+        """
         C = Config.Config() # Read the configuration file.
         L = Output.Output(__file__, C.Output)
         L.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
-        Mutalyzer.process(variant, C, L)                     
+        Mutalyzer.process(variant, C, L)
         M = MutalyzerOutput()
 
-        M.original = L.getIndexedOutput("original", 0)
-        M.mutated = L.getIndexedOutput("mutated", 0)
+        # We force the results to strings here, because some results
+        # may be of type Bio.Seq.Seq which soaplib doesn't like.
+        #
+        # todo: We might have to also do this elsewhere.
 
-        M.origMRNA = L.getIndexedOutput("origMRNA", 0)
-        M.mutatedMRNA = L.getIndexedOutput("mutatedMRNA", 0)
+        M.original = str(L.getIndexedOutput("original", 0))
+        M.mutated = str(L.getIndexedOutput("mutated", 0))
 
-        M.origCDS = L.getIndexedOutput("origCDS", 0)
-        M.newCDS = L.getIndexedOutput("newCDS", 0)
+        M.origMRNA = str(L.getIndexedOutput("origMRNA", 0))
+        M.mutatedMRNA = str(L.getIndexedOutput("mutatedMRNA", 0))
 
-        M.origProtein = L.getIndexedOutput("oldprotein", 0)
-        M.newProtein = L.getIndexedOutput("newprotein", 0)
-        M.altProtein = L.getIndexedOutput("altProtein", 0)
+        M.origCDS = str(L.getIndexedOutput("origCDS", 0))
+        M.newCDS = str(L.getIndexedOutput("newCDS", 0))
+
+        M.origProtein = str(L.getIndexedOutput("oldprotein", 0))
+        M.newProtein = str(L.getIndexedOutput("newprotein", 0))
+        M.altProtein = str(L.getIndexedOutput("altProtein", 0))
 
         M.errors, M.warnings, M.summary = L.Summary()
 
@@ -605,14 +601,16 @@ class MutalyzerService(SimpleWSGISoapApp) :
         return M
     #runMutalyzer
 
-    @soapmethod(String, String, _returns = String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneAndTranscript(self, genomicReference, transcriptReference) :
+        """Todo: documentation.
+        """
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         D = Db.Cache(C.Db)
 
         O.addMessage(__file__, -1, "INFO",
-            "Received request getGeneAndTranscipt(%s, %s)" % (genomicReference,
+            "Received request getGeneAndTranscript(%s, %s)" % (genomicReference,
             transcriptReference))
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
@@ -624,8 +622,22 @@ class MutalyzerService(SimpleWSGISoapApp) :
                     ret = "%s_v%s" % (i.name, j.name)
 
         O.addMessage(__file__, -1, "INFO",
-            "Finished processing getGeneAndTranscipt(%s, %s)" % (
+            "Finished processing getGeneAndTranscript(%s, %s)" % (
             genomicReference, transcriptReference))
         return ret
     #getGeneAndTranscript
 #MutalyzerService
+
+# WSGI application for use with e.g. Apache/mod_wsgi
+soap_application = Application([MutalyzerService],
+                               'http://mutalyzer.nl/2.0/services', # namespace
+                               'MutalyzerService')
+application = wsgi.Application(soap_application)
+
+# We can also use the built-in webserver by executing this file directly
+if __name__ == '__main__':
+    # Todo: Setting the working directory probably doesn't work
+    from wsgiref.simple_server import make_server
+    print 'Listening to http://localhost:8081/'
+    print 'WDSL file is at http://localhost:8081/?wsdl'
+    make_server('localhost', 8081, application).serve_forever()

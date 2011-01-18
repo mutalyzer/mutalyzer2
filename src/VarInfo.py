@@ -137,27 +137,25 @@ def main(LOVD_ver, build, acc, var) :
     else :
         ret = Converter.giveInfo(acc)
         if ret:
-            print "%i\n%i\n%i" % ret
-            return
+            return "%i\n%i\n%i" % ret
 
     if not getattr(ret, "startmain", None) :
         output = O.getOutput("LOVDERR")
         if output:
-            print output[0]
+            return output[0]
         else:
             #print "\n".join(O.getMessages())
-            print "Unknown error occured"
-        return
+            return "Unknown error occured"
 
     O.addMessage(__file__, -1, "INFO",
                  "Finished processing %s:%s (LOVD_ver %s, build %s)" % (acc,
                  var, LOVD_ver, build))
     del O, C
     # And return the output.
-    print "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (ret.startmain, ret.startoffset,
+    return "%i\n%i\n%i\n%i\n%i\n%i\n%s" % (ret.startmain, ret.startoffset,
         ret.endmain, ret.endoffset, ret.start_g, ret.end_g, ret.mutationType)
 
 #main
 
 if __name__ == "__main__" :
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    print main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
