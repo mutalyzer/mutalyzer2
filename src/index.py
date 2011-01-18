@@ -115,7 +115,33 @@ def help(req) :
     """
     W = Web.Web()
     return W.tal("HTML", "templates/help.html", {})
-#about
+#help
+
+def faq(req) :
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
+    W = Web.Web()
+    return W.tal("HTML", "templates/FAQ.html", {})
+#faq
+
+def exercise(req) :
+    """
+    @todo: documentation
+    
+    @arg req: the HTTP request
+    @type req: object
+    @return: compiled TAL template
+    @rtype: object
+    """
+    W = Web.Web()
+    return W.tal("HTML", "templates/exercise.html", {})
+#exercise
 
 def about(req) :
     """
