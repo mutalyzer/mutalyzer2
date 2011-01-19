@@ -133,6 +133,12 @@ class TestWSGI(unittest.TestCase):
         r = self.app.get('/checkForward?mutationName=NM_002001.2:g.1del')
         self.assertEqual(r.status, '303 See Other')
         self.assertTrue(r.location.endswith('/check'))
+        r = r.follow()
+        r.mustcontain('0 Errors',
+                      '0 Warnings',
+                      'Raw variant 1: deletion of 1',
+                      '<a href="#bottom" class="hornav">go to bottom</a>',
+                      '<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">')
 
     def test_snp_converter_valid(self):
         """
