@@ -68,6 +68,7 @@ root_dir = os.path.split(os.path.dirname(__file__))[0]
 if not __name__ == '__main__':
     os.chdir(root_dir)
 
+import webservice
 import Mutalyzer
 import VarInfo
 from Modules import Config
@@ -80,35 +81,38 @@ from Modules import Retriever
 from Modules import File
 
 
+web.config.debug = True
+
+
 # Load configuration from configuration file
 C = Config.Config()
 
 
 # URL dispatch table
 urls = (
-    '/(?:index)?',                'Index',
-    '/about',                     'About',
-    '/help',                      'Help',
-    '/faq',                       'Faq',
-    '/exercise',                  'Exercise',
-    '/disclaimer',                'Disclaimer',
-    '/nameGenerator',             'Generator',
-    '/webservices',               'Webservices',
-    '/documentation',             'Documentation',
-    '/snp',                       'Snp',
-    '/positionConverter',         'PositionConverter',
-    '/Variant_info',              'VariantInfo',
-    '/getGS',                     'GetGS',
-    '/check',                     'Check',
-    '/syntaxCheck',               'SyntaxCheck',
-    '/checkForward',              'CheckForward',
-    '/batch([a-zA-Z]+)?',         'BatchChecker',
-    '/progress',                  'BatchProgress',
-    '/Results_(\d+)\.txt',        'BatchResult',
+    '/(index)?',            'Static',
+    '/(about)',             'Static',
+    '/(help)',              'Static',
+    '/(faq)',               'Static',
+    '/(exercise)',          'Static',
+    '/(disclaimer)',        'Static',
+    '/(nameGenerator)',     'Static',
+    '/(webservices)',       'Static',
+    '/documentation',       'Documentation',
+    '/snp',                 'Snp',
+    '/positionConverter',   'PositionConverter',
+    '/Variant_info',        'VariantInfo',
+    '/getGS',               'GetGS',
+    '/check',               'Check',
+    '/syntaxCheck',         'SyntaxCheck',
+    '/checkForward',        'CheckForward',
+    '/batch([a-zA-Z]+)?',   'BatchChecker',
+    '/progress',            'BatchProgress',
+    '/Results_(\d+)\.txt',  'BatchResult',
     '/download/([a-zA-Z-]+\.(?:py|cs))',  'Download',
-    '/downloads/([a-zA-Z\._-]+)', 'Downloads',
-    '/upload',                    'Uploader',
-    '/Reference/(.*)',            'Reference'
+    '/downloads/([a-zA-Z\._-]+)',         'Downloads',
+    '/upload',              'Uploader',
+    '/Reference/(.*)',      'Reference'
 )
 
 
@@ -754,8 +758,6 @@ class BatchChecker:
                      'PositionConverter', denoting the human genome build.
         @kwarg batchType: Type of batch job to run. One of 'NameChecker'
                           (default), 'SyntaxChecker', or 'PositionChecker'.
-
-        @todo: Test.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -1013,54 +1015,33 @@ class Documentation:
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """
-        wsdl_url = web.ctx.homedomain + web.ctx.homepath + '/services?wsdl'
-        wsdl_handle = urllib2.urlopen(wsdl_url)
+        url = web.ctx.homedomain + web.ctx.homepath + '/services'
+        wsdl_handle = StringIO(webservice.soap_application.get_wsdl(url))
         xsl_handle = open('templates/wsdl-viewer.xsl', 'r')
         wsdl_doc = etree.parse(wsdl_handle)
         xsl_doc = etree.parse(xsl_handle)
         transform = etree.XSLT(xsl_doc)
+        web.header('Content-Type', 'text/html')
         return str(transform(wsdl_doc))
 #Documentation
 
 
-class Index:
-    def GET(self):
-        return render.index()
+class Static:
+    """
+    Static page, just render a TAL template on GET.
+    """
+    def GET(self, page=None):
+        """
+        Render a TAL template as HTML.
 
-
-class About:
-    def GET(self):
-        return render.about()
-
-
-class Help:
-    def GET(self):
-        return render.help()
-
-
-class Faq:
-    def GET(self):
-        return render.FAQ()
-
-
-class Exercise:
-    def GET(self):
-        return render.exercise()
-
-
-class Disclaimer:
-    def GET(self):
-        return render.disclaimer()
-
-
-class Generator:
-    def GET(self):
-        return render.generator()
-
-
-class Webservices:
-    def GET(self):
-        return render.webservices()
+        @kwarg page: Page name to render. A TAL template with this name must
+                     exist. Special case is a page of None, having the same
+                     effect as 'index'.
+        @type page: string
+        """
+        if not page:
+            page = 'index'
+        return getattr(render, page)()
 
 
 if __name__ == '__main__':

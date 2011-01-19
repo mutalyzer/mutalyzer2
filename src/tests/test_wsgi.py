@@ -284,14 +284,10 @@ class TestWSGI(unittest.TestCase):
     def test_soap_documentation(self):
         """
         Test the SOAP documentation generated from the WSDL.
-
-        @todo: The way this is implemented (the app makes a request to the
-               webservice), we cannot test it directly.
        """
-        #r = self.app.get('/documentation')
-        #self.assertEqual(r.content_type, 'text/html')
-        #r.mustcontain('Web Service: MutalyzerService')
-        pass
+        r = self.app.get('/documentation')
+        self.assertEqual(r.content_type, 'text/html')
+        r.mustcontain('Web Service: MutalyzerService')
 
 if __name__ == '__main__':
     unittest.main()
