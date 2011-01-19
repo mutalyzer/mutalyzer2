@@ -2,16 +2,27 @@
 
 """
 Tests for the SOAP interface to Mutalyzer.
-
-@todo: Test availability of the WSDL file.
 """
 
 import logging; logging.raiseExceptions = 0
+import urllib2
 from suds.client import Client
 from suds import WebFault
 import unittest
 
 WSDL_URL = 'http://mutalyzer.martijn/services/?wsdl'
+
+class TestWSDL(unittest.TestCase):
+    """
+    Test the Mutalyzer SOAP interface WSDL description.
+    """
+    def test_wsdl(self):
+        """
+        Test if the WSDL is available and looks somewhat sensible.
+        """
+        wsdl = urllib2.urlopen(WSDL_URL).read()
+        self.assertTrue(wsdl.startswith("<?xml version='1.0' encoding='UTF-8'?>"))
+        self.assertTrue('name="Mutalyzer"' in wsdl)
 
 class TestWebservice(unittest.TestCase):
     """

@@ -8,6 +8,8 @@ Uses WebTest, see:
   http://blog.ianbicking.org/2010/04/02/webtest-http-testing/
 
 I just installed webtest by 'easy_install webtest'.
+
+@todo: Tests for /upload, /getGS, and /Variant_info.
 """
 
 import re
@@ -293,7 +295,7 @@ class TestWSGI(unittest.TestCase):
        """
         r = self.app.get('/documentation')
         self.assertEqual(r.content_type, 'text/html')
-        r.mustcontain('Web Service: MutalyzerService')
+        r.mustcontain('Web Service: Mutalyzer')
 
 if __name__ == '__main__':
     unittest.main()

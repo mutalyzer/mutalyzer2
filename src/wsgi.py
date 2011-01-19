@@ -41,6 +41,8 @@ port 8080):
 VERSION = '2.0&nbsp;&beta;-6'
 NOMENCLATURE_VERSION = '2.0'
 RELEASE_DATE = '12 Jan 2011'
+WEBSERVICE_LOCATION = '/services'
+WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 
 
 # Log exceptions to stdout
@@ -51,7 +53,6 @@ import os
 import bz2
 import web
 import urllib
-import urllib2
 import site
 
 from lxml import etree
@@ -111,8 +112,8 @@ urls = (
     '/Results_(\d+)\.txt',  'BatchResult',
     '/download/([a-zA-Z-]+\.(?:py|cs))',  'Download',
     '/downloads/([a-zA-Z\._-]+)',         'Downloads',
-    '/upload',              'Uploader',
-    '/Reference/(.*)',      'Reference'
+    '/Reference/([\da-zA-Z\._-]+)',       'Reference',
+    '/upload',              'Uploader'
 )
 
 
@@ -215,12 +216,18 @@ session = web.session.Session(app,
 class Download:
     """
     Download file from template directory, processing it with TAL first.
-
-    @todo: This is a potential security hole.
     """
     def GET(self, file):
         """
         @arg file: Filename to download.
+        @type file: string
+
+        Be very careful to not call this with anything but an ordinary
+        filename. A possible security issue is allowing this method to be
+        called with file='../mutalyzer.conf' for example.
+
+        The url routing currently makes sure to only call this with filenames
+        of the form [a-zA-Z-]+\.(?:py|cs).
         """
         # Process the file with TAL and return the content as a downloadable file.
         if not os.path.isfile("templates/" + file):
@@ -236,12 +243,18 @@ class Download:
 class Downloads:
     """
     Download plain text files from /templates/downloads directory.
-
-    @todo: This is a potential security hole.
     """
     def GET(self, file):
         """
         @arg file: Filename to download.
+        @type file: string
+
+        Be very careful to not call this with anything but an ordinary
+        filename. A possible security issue is allowing this method to be
+        called with file='../../mutalyzer.conf' for example.
+
+        The url routing currently makes sure to only call this with filenames
+        of the form [a-zA-Z\._-]+.
         """
         if not os.path.isfile("templates/downloads/" + file):
             raise web.notfound()
@@ -260,6 +273,14 @@ class Reference:
     def GET(self, file):
         """
         @arg file: Filename to download from cache.
+        @type file: string
+
+        Be very careful to not call this with anything but an ordinary
+        filename. A possible security issue is allowing this method to be
+        called with file='../../mutalyzer.conf' for example.
+
+        The url routing currently makes sure to only call this with filenames
+        of the form [a-zA-Z\._-]+.
         """
         fileName = "%s/%s.bz2" % (C.Retriever.cache, file)
         if not os.path.isfile(fileName):
@@ -346,7 +367,8 @@ class SyntaxCheck:
         i = web.input()
         variant = i.variant
         if variant.find(',') >= 0:
-            O.addMessage(__file__, 2, "WCOMMASYNTAX", "Comma's are not allowed in the syntax, autofixed")
+            O.addMessage(__file__, 2, "WCOMMASYNTAX",
+                         "Comma's are not allowed in the syntax, autofixed")
             variant = variant.replace(',', '')
             #args["variant"]=variant
         P = Parser.Nomenclatureparser(O)
@@ -399,7 +421,8 @@ class Snp:
             O.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
             R = Retriever.Retriever(C.Retriever, O, None)
             R.snpConvert(rsId)
-            O.addMessage(__file__, -1, "INFO", "Finished processing rs%s" % rsId)
+            O.addMessage(__file__, -1, "INFO",
+                         "Finished processing rs%s" % rsId)
         #if
 
         args = {
@@ -655,6 +678,8 @@ class Check:
 class CheckForward:
     """
     Set the given variant in the session and redirect to the name checker.
+
+    @todo: Cleaner solution (one without using a session variable).
     """
     def GET(self):
         """
@@ -681,16 +706,16 @@ class BatchProgress:
         """
         Progress for a batch job.
 
-        @todo: The 'progress' template does not exist.
-
         Parameters:
         - jobID: ID of the job to return progress for.
         - totalJobs: Total number of entries in this job.
         - ajax: If set, return plain text result.
+
+        @todo: The 'progress' template does not exist.
         """
         O = Output.Output(__file__, C.Output)
 
-        attr = {"percentage"    : 0}
+        attr = {"percentage": 0}
 
         i = web.input(ajax=None)
         try:
@@ -828,6 +853,14 @@ class BatchResult:
         Return raw content (for batch checker results).
 
         @arg result: Result identifier.
+        @type result: string
+
+        Be very careful to not call this with anything but an ordinary
+        filename. A possible security issue is allowing this method to be
+        called with file='../../mutalyzer.conf' for example.
+
+        The url routing currently makes sure to only call this with filenames
+        of the form \d+.
         """
         file = 'Results_%s.txt' % result
         handle = open(os.path.join(C.Scheduler.resultsDir, file))
@@ -1015,9 +1048,9 @@ class Documentation:
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """
-        url = web.ctx.homedomain + web.ctx.homepath + '/services'
+        url = web.ctx.homedomain + web.ctx.homepath + WEBSERVICE_LOCATION
         wsdl_handle = StringIO(webservice.soap_application.get_wsdl(url))
-        xsl_handle = open('templates/wsdl-viewer.xsl', 'r')
+        xsl_handle = open(WSDL_VIEWER, 'r')
         wsdl_doc = etree.parse(wsdl_handle)
         xsl_doc = etree.parse(xsl_handle)
         transform = etree.XSLT(xsl_doc)
@@ -1038,6 +1071,10 @@ class Static:
                      exist. Special case is a page of None, having the same
                      effect as 'index'.
         @type page: string
+
+        Be careful to only call this method with an argument that is a simple
+        template name. For example, make sure this is not called with page
+        value '../forbidden'. This check is implemented in the url routing.
         """
         if not page:
             page = 'index'

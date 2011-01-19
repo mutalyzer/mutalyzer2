@@ -29,10 +29,6 @@ import logging; logging.basicConfig()
 #   $ cd soaplib
 #   $ sudo python setup.py install
 
-# Other tree:
-# https://github.com/cuker/soaplib/
-# https://github.com/cuker/soaplib/commit/1a248ba1421c57738c6d30333036114c3ed42022
-
 from soaplib.core import Application
 from soaplib.core.service import soap
 from soaplib.core.service import DefinitionBase
@@ -227,8 +223,8 @@ class MutalyzerService(DefinitionBase) :
         return ret
     #getTranscriptsByGene
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, Mandatory.Integer, Mandatory.Integer,
-        _returns = List.String)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+          Mandatory.Integer, Mandatory.Integer, _returns = List.String)
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """Get all the transcripts that overlap with a range on a chromosome.
 
@@ -304,7 +300,8 @@ class MutalyzerService(DefinitionBase) :
     #getGeneName
 
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.String, Mandatory.String, _returns = Mapping)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String,
+          Mandatory.String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
         """Search for an NM number in the MySQL database, if the version
         number matches, get the start and end positions in a variant and
@@ -631,7 +628,7 @@ class MutalyzerService(DefinitionBase) :
 # WSGI application for use with e.g. Apache/mod_wsgi
 soap_application = Application([MutalyzerService],
                                'http://mutalyzer.nl/2.0/services', # namespace
-                               'MutalyzerService')
+                               'Mutalyzer')
 application = wsgi.Application(soap_application)
 
 # We can also use the built-in webserver by executing this file directly

@@ -2,8 +2,8 @@
 Compilation instructions:
 
   wsdl '<tal tal:replace = "path"></tal>/services/?wsdl'
-  gmcs /target:library MutalyzerService.cs -r:System.Web.Services
-  gmcs /r:MutalyzerService.dll client-mono.cs
+  gmcs /target:library Mutalyzer.cs -r:System.Web.Services
+  gmcs /r:Mutalyzer.dll client-mono.cs
 
 Usage:
 
@@ -12,7 +12,7 @@ Usage:
 
 using System;
 
-class Mutalyzer {
+class MutalyzerClient {
 
     public static void Main(string [] args) {
 
@@ -21,7 +21,7 @@ class Mutalyzer {
 
         Console.WriteLine("Checking " + c.variant);
 
-        MutalyzerService mutalyzer = new MutalyzerService();
+        Mutalyzer mutalyzer = new Mutalyzer();
 
         checkSyntaxResponse result = mutalyzer.checkSyntax(c);
 
