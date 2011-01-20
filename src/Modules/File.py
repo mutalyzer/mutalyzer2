@@ -123,16 +123,24 @@ class File() :
         handle.seek(0)
         buf = handle.read(self.__config.bufSize)
 
+        # Default dialect
+        dialect = 'excel'
+
+        # The idea is that for new-style batch input files we have only
+        # one column and the sniffer cannot find a delimiter.
+
         try :
-            dialect = csv.Sniffer().sniff(buf)
+            # Todo: delimiters in config file
+            dialect = csv.Sniffer().sniff(buf, delimiters="\t ;|,")
         except csv.Error, e :
-            self.__output.addMessage(__file__, 4, "EBPARSE", e)
-            return None
+            #self.__output.addMessage(__file__, 4, "EBPARSE", e)
+            #return None
+            pass
         #except
 
         #Watch out for : delimiter FIXME and for the . delimiter
-        if dialect.delimiter == ":":
-            dialect.delimiter = "\t"
+#        if dialect.delimiter == ":":
+#            dialect.delimiter = "\t"
 
         handle.seek(0)
         reader = csv.reader(handle, dialect)

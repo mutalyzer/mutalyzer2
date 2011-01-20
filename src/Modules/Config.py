@@ -204,6 +204,7 @@ class Config() :
         self.Scheduler.nameCheckOutHeader = config["nameCheckOutHeader"]
         self.Scheduler.syntaxCheckOutHeader= config["syntaxCheckOutHeader"]
         self.Scheduler.positionConverterOutHeader= config["positionConverterOutHeader"]
+        self.Scheduler.snpConverterOutHeader= config["snpConverterOutHeader"]
 
         # Set thte variables neede for the Batch module.
         self.Batch.PIDfile = config["PIDfile"]

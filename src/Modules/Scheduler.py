@@ -27,6 +27,7 @@ from Modules import Config              # Config.Config
 from Modules import Output              # Output.Output
 from Modules import Parser              # Parser.Nomenclatureparser
 from Modules import Mapper              # Mapper.Converter
+from Modules import Retriever           # Retriever.Retriever
 
 import Mutalyzer                        # Mutalyzer.process
 
@@ -333,6 +334,8 @@ class Scheduler() :
                         self._processSyntaxCheck(inputl, i, flags)
                     elif jobType == "PositionConverter" :
                         self._processConversion(inputl, i, arg1, flags)
+                    elif jobType == "SnpConverter" :
+                        self._processSNP(inputl, i, flags)
                     else: #unknown jobType
                         pass #TODO: Scream burning water and remove from Queue
                 else :
@@ -565,6 +568,61 @@ class Scheduler() :
             "Finisehd PositionCoverter batchvariant " + cmd)
     #_processConversion
 
+
+    def _processSNP(self, cmd, i, flags) :
+        """
+        Process an entry from the SNP converter Batch, write the results
+        to the job-file. If an Exception is raised, catch and continue.
+
+        Side-effect:
+            - Output written to outputfile.
+
+        @arg cmd: The SNP converter input
+        @type cmd:
+        @arg i: The JobID
+        @type i:
+        @arg flags: Flags of the current entry
+        @type flags:
+        """
+
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        O.addMessage(__file__, -1, "INFO",
+            "Received SNP converter batch rs" + cmd)
+
+        #Read out the flags
+        # Todo: Do something with the flags?
+        skip = self.__processFlags(O, flags)
+
+        if not skip :
+            R = Retriever.Retriever(C.Retriever, O, None)
+            R.snpConvert(cmd)
+
+        # Todo: Is output ok?
+        outputline =  "%s\t" % cmd
+        outputline += "%s\t" % "|".join(O.getOutput('snp'))
+        outputline += "%s\t" % "|".join(O.getBatchMessages(3))
+
+        outputline += "\n"
+
+        #Output
+        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
+        if not os.path.exists(filename) :
+            # If the file does not yet exist, create it with the correct
+            # header above it. The header is read from the config file as
+            # a list. We need a tab delimited string.
+            header = self.__config.snpConverterOutHeader
+            handle = open(filename, 'a')
+            handle.write("%s\n" % "\t".join(header))
+        #if
+        else :
+            handle = open(filename, 'a')
+
+        handle.write(outputline)
+        handle.close()
+        O.addMessage(__file__, -1, "INFO",
+                     "Finished SNP converter batch rs%s" % cmd)
+    #_processSNP
 
 
     def addJob(self, outputFilter, eMail, queue, fromHost, jobType, Arg1) :

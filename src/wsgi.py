@@ -768,7 +768,7 @@ class BatchChecker:
         - arg1: Additional argument. Currently only used if batchType is
                 'PositionConverter', denoting the human genome build.
         - batchType: Type of batch job to run. One of 'NameChecker' (default),
-                     'SyntaxChecker', or 'PositionChecker'.
+                     'SyntaxChecker', 'PositionConverter', or 'SnpConverter'.
         """
         i = web.input(batchEmail=None, batchFile={}, arg1='',
                       batchType=None)
@@ -786,7 +786,8 @@ class BatchChecker:
         @kwarg arg1: Additional argument. Currently only used if batchType is
                      'PositionConverter', denoting the human genome build.
         @kwarg batchType: Type of batch job to run. One of 'NameChecker'
-                          (default), 'SyntaxChecker', or 'PositionChecker'.
+                          (default), 'SyntaxChecker', 'PositionConverter', or
+                          'SnpConverter'.
         """
         O = Output.Output(__file__, C.Output)
 
@@ -795,7 +796,8 @@ class BatchChecker:
                 "debug"         : [],
                 "batchTypes"    : ["NameChecker",
                                    "SyntaxChecker",
-                                   "PositionConverter"],
+                                   "PositionConverter",
+                                   "SnpConverter"],
                 "hideTypes"     : batchType and 'none' or '',
                 "selected"      : "0",
                 "batchType"     : batchType or "",
