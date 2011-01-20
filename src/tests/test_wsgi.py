@@ -101,6 +101,17 @@ class TestWSGI(unittest.TestCase):
                       '<a href="#bottom" class="hornav">go to bottom</a>',
                       '<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">')
 
+    def test_check_more_valid(self):
+        """
+        Test the name checker for some more variants.
+        """
+        def check_name(name):
+            r = self.app.post('/check', {'mutationName': name})
+            r.mustcontain('0 Errors')
+        names = ['NG_012337.1:g.7055C>T']
+        for name in names:
+            check_name(name)
+
     def test_check_invalid(self):
         """
         Submit the name checker form with an invalid variant.
@@ -298,4 +309,6 @@ class TestWSGI(unittest.TestCase):
         r.mustcontain('Web Service: Mutalyzer')
 
 if __name__ == '__main__':
+    # Usage:
+    #   ./test_wsgi.py -v
     unittest.main()

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 General WSGI interface.
@@ -455,6 +455,7 @@ class PositionConverter:
         - variant: Variant to convert.
         """
         i = web.input(build='', variant='')
+        # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in Mapper.py:607.
         return self.position_converter(i.build, str(i.variant))
@@ -605,7 +606,10 @@ class Check:
 
         if name:
             O.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
-            RD = Mutalyzer.process(name, C, O)
+            # Todo: The following is probably a problem elsewhere too.
+            # We stringify the variant, because a unicode string crashes
+            # Bio.Seq.reverse_complement in Mapper.py:607.
+            RD = Mutalyzer.process(str(name), C, O)
             O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
                          name)
 

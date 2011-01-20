@@ -113,4 +113,6 @@ class TestWebservice(unittest.TestCase):
             self.assertTrue(t in r)
 
 if __name__ == '__main__':
+    # Usage:
+    #   ./test_webservice.py -v
     unittest.main()
