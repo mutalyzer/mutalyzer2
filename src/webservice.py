@@ -149,7 +149,8 @@ class MutalyzerService(DefinitionBase) :
         #if
     #__checkVariant
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, _returns = List.String)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, 
+        _returns = List.String)
     def getTranscripts(self, build, chrom, pos) :
         """Get all the transcripts that overlap with a chromosomal position.
 
@@ -224,7 +225,7 @@ class MutalyzerService(DefinitionBase) :
     #getTranscriptsByGene
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
-          Mandatory.Integer, Mandatory.Integer, _returns = List.String)
+        Mandatory.Integer, Mandatory.Integer, _returns = List.String)
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """Get all the transcripts that overlap with a range on a chromosome.
 
@@ -301,7 +302,7 @@ class MutalyzerService(DefinitionBase) :
 
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.String,
-          Mandatory.String, _returns = Mapping)
+        Mandatory.String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
         """Search for an NM number in the MySQL database, if the version
         number matches, get the start and end positions in a variant and
@@ -359,7 +360,8 @@ class MutalyzerService(DefinitionBase) :
         return result
     #mappingInfo
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.String, _returns = Transcript)
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String, 
+        _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
         """Search for an NM number in the MySQL database, if the version
         number matches, the transcription start and end and CDS end
@@ -623,6 +625,47 @@ class MutalyzerService(DefinitionBase) :
             genomicReference, transcriptReference))
         return ret
     #getGeneAndTranscript
+
+    @soap(Mandatory.String, _returns = Mandatory.String)
+    def upLoadGenBankLocalFile(self, content) :
+        pass
+    #upLoadGenBankLocalFile
+
+    @soap(Mandatory.String, _returns = Mandatory.String)
+    def upLoadGenBankRemoteFile(self, url) :
+        pass
+    #upLoadGenBankLocalFile
+
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+        Mandatory.Integer, _returns = Mandatory.String)
+    def sliceChromosomeByGene(self, geneSymbol, organism, upStream, 
+        downStream) :
+        """
+        Todo: documentation, error handling, argument checking.
+        """
+
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        D = Db.Cache(C.Db)
+        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Received request sliceChromosomeByGene(%s, %s, %s, %s)" % (
+            geneSymbol, organism, upStream, downStream))
+        
+        UD = retriever.retrievegene(geneSymbol, organism, upStream, downStream)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Finished processing sliceChromosomeByGene(%s, %s, %s, %s)" % (
+            geneSymbol, organism, upStream, downStream))
+
+        return UD
+    #sliceChromosomeByGene
+
+    @soap(Mandatory.String, _returns = Mandatory.String)
+    def sliceChromosome(self, chromAccNo, start, end, orientation) :
+        pass
+    #sliceChromosome
 #MutalyzerService
 
 # WSGI application for use with e.g. Apache/mod_wsgi

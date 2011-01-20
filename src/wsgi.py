@@ -38,9 +38,9 @@ port 8080):
 """
 
 
-VERSION = '2.0&nbsp;&beta;-6'
+VERSION = '2.0&nbsp;&beta;-7'
 NOMENCLATURE_VERSION = '2.0'
-RELEASE_DATE = '12 Jan 2011'
+RELEASE_DATE = '18 Jan 2011'
 WEBSERVICE_LOCATION = '/services'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 

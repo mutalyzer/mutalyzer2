@@ -1022,7 +1022,7 @@ h3 {
          </big>
          <xsl:if test="$ENABLE-LINK">
 		          <xsl:if test="$ENABLE-OPERATIONS-PARAGRAPH">
-               <a class="local" href="{concat('#', $OPERATIONS-PREFIX, generate-id(.))}">Detail</a>
+               <a class="local" href="{concat('#', $OPERATIONS-PREFIX, @name)}">Detail</a>
             </xsl:if>
             <xsl:call-template name="render.source-code-link"/>
          </xsl:if>
@@ -1183,7 +1183,7 @@ h3 {
          </xsl:if>
          <big>
             <b>
-               <a name="{concat($OPERATIONS-PREFIX, generate-id(.))}">
+               <a name="{concat($OPERATIONS-PREFIX, @name)}">
                   <xsl:value-of select="@name"/>
                </a>
             </b>

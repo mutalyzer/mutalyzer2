@@ -14,6 +14,7 @@ This program depends on the following packages:
 - python-daemon	   >= 1.5.5
 - python-webpy     >= 0.33
 - python-webtest   >= 1.2.3
+- python-suds      >= 0.3.9-1
 
 The web and SOAP interfaces depend on the following packages:
 - apache2               >= 2.2.11
