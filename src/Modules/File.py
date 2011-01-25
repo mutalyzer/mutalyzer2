@@ -120,6 +120,26 @@ class File() :
         @rtype: list
         """
 
+        # If we naively assume the input file uses \n characters as
+        # newlines, the CSV parser can trip over e.g. Windows style
+        # newlines. It will probably complain with a message like:
+        #
+        #   new-line character seen in unquoted field - do you need to open
+        #   the file in universal-newline mode?
+        #
+        # Here we try to support multiplatform newline modes in the input
+        # file, so \n, \r, \r\n are all recognized as a newline.
+        #
+        # This can be done by opening the file in 'U' mode, but in this case
+        # we already have an opened file (probably, if the call originated
+        # from a web request, opened by the web.py input handler, which uses
+        # the Python cgi module for opening uploaded files).
+        #
+        # The fix is to get the handle's file descriptor and create a new
+        # handle for it, using 'U' mode.
+        handle = os.fdopen(handle.fileno(), 'rU')
+
+        # I don't think the .seek(0) is needed now we created a new handle
         handle.seek(0)
         buf = handle.read(self.__config.bufSize)
 
