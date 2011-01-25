@@ -99,6 +99,7 @@ urls = (
     '/(disclaimer)',        'Static',
     '/(nameGenerator)',     'Static',
     '/(webservices)',       'Static',
+    '/(webservdoc)',        'Static',
     '/documentation',       'Documentation',
     '/snp',                 'Snp',
     '/positionConverter',   'PositionConverter',

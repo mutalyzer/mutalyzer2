@@ -130,3 +130,13 @@ class MutalyzerOutput(ClassModel) :
     warnings = Integer
     summary = String
 #MutalyzerOutput
+
+class TranscriptNameInfo(ClassModel) :
+    """
+    """
+
+    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+
+    transcriptName = String
+    productName = String
+#TranscriptNameInfo

@@ -51,7 +51,7 @@ from Modules import Config
 from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
-from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, List
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, List, TranscriptNameInfo
 
 
 class MutalyzerService(DefinitionBase) :
@@ -600,7 +600,7 @@ class MutalyzerService(DefinitionBase) :
         return M
     #runMutalyzer
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    @soap(Mandatory.String, Mandatory.String, _returns = TranscriptNameInfo)
     def getGeneAndTranscript(self, genomicReference, transcriptReference) :
         """Todo: documentation.
         """
@@ -614,11 +614,13 @@ class MutalyzerService(DefinitionBase) :
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
 
-        ret = None
+        ret = TranscriptNameInfo()
         for i in record.geneList :
             for j in i.transcriptList :
                 if j.transcriptID == transcriptReference :
-                    ret = "%s_v%s" % (i.name, j.name)
+                    ret.transcriptName = "%s_v%s" % (i.name, j.name)
+                    ret.productName = j.transcriptProduct
+                #if
 
         O.addMessage(__file__, -1, "INFO",
             "Finished processing getGeneAndTranscript(%s, %s)" % (

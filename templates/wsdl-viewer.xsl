@@ -176,7 +176,7 @@
 <xsl:param name="ENABLE-SERVICE-PARAGRAPH" select="true()"/>
    <xsl:param name="ENABLE-OPERATIONS-PARAGRAPH" select="true()"/>
    <xsl:param name="ENABLE-SRC-CODE-PARAGRAPH" select="true()"/>
-   <xsl:param name="ENABLE-ABOUT-PARAGRAPH" select="true()"/>
+   <xsl:param name="ENABLE-ABOUT-PARAGRAPH" select="false()"/>
    <xsl:param name="ENABLE-OPERATIONS-TYPE" select="true()"/>
    <xsl:param name="ENABLE-LINK" select="true()"/>
    <xsl:param name="ENABLE-INOUTFAULT" select="true()"/>
@@ -235,7 +235,7 @@
 =========================================
 */
 html {
-	background-color: teal;
+	/** background-color: teal; */
 }
 
 body {
@@ -243,7 +243,7 @@ body {
 	padding: 0;
 	height: auto;
 	color: white;
-	background-color: teal;
+	/** background-color: teal; */
 	font: normal 80%/120% Arial, Helvetica, sans-serif;
 }
 
@@ -255,7 +255,7 @@ body {
 	width: auto;
 	background-color: white;
 	color: black;
-	border: 1px solid navy;
+	/** border: 1px solid navy; */
 }
 
 /**
@@ -2279,7 +2279,9 @@ h3 {
       <body id="operations">
          <div id="outer_box">
             <div id="inner_box" onload="pagingInit()">
+                <!--
 	              <xsl:call-template name="title.render"/>
+                -->
 
 
                <!-- TODO: pages with tabs for selecting some aspect of the WSDL
