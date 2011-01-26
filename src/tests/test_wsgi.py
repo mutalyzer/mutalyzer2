@@ -12,6 +12,7 @@ I just installed webtest by 'easy_install webtest'.
 @todo: Tests for /upload, /getGS, and /Variant_info.
 """
 
+#import logging; logging.basicConfig()
 import re
 import time
 import unittest
@@ -54,8 +55,7 @@ class TestWSGI(unittest.TestCase):
         """
         Test all links in the main menu.
         """
-        ignore = ['external',   # Todo: should not be a link
-                  'bugtracker']
+        ignore = []  # This could contain relative links we want to skip
         r = self.app.get('/')
         for link in r.lxml.cssselect('#menu a'):
             href = link.get('href')
@@ -202,7 +202,7 @@ class TestWSGI(unittest.TestCase):
         r = form.submit()
         r.mustcontain('NM_003002.2:c.204C>T')
 
-    def _batch(self, batch_type='NameChecker', arg1=None, variants=[],
+    def _batch(self, batch_type='NameChecker', arg1=None, file="", size=0,
                header=''):
         """
         Submit a batch form.
@@ -210,7 +210,8 @@ class TestWSGI(unittest.TestCase):
         @kwarg batch_type: Type of batch job to test. One of NameChecker,
                            SyntaxChecker, PositionConverter.
         @kwarg arg1: Optional extra argument for the batch job.
-        @kwarg variants: Variants to use as input for the batch job.
+        @kwarg file: String with variants to use as input for the batch job.
+        @kwarg size: Number of variants in input.
         @kwarg header: Message that must be found in the batch job result.
         """
         r = self.app.get('/batch')
@@ -220,52 +221,145 @@ class TestWSGI(unittest.TestCase):
         form['batchType'] = batch_type
         form['batchEmail'] = 'm.vermaat.hg@lumc.nl'
         form.set('batchFile', ('test_%s.txt' % batch_type,
-                               '\n'.join(variants)))
+                               file))
         r = form.submit()
         id = r.lxml.cssselect('#jobID')[0].get('value')
         max_tries = 60
         for i in range(max_tries):
-            r = self.app.get('/progress?jobID=' + id + '&totalJobs=3&ajax=1')
+            r = self.app.get('/progress?jobID=' + id + '&totalJobs=' + str(size) + '&ajax=1')
             self.assertEqual(r.content_type, 'text/plain')
             #print '%s: %s' % (batch_type, r.body)
             if r.body == 'OK': break
             self.assertTrue(re.match('[0-9]+', r.body))
-            time.sleep(5)
+            time.sleep(2)
         self.assertEqual(r.body, 'OK')
         r = self.app.get('/Results_' + id + '.txt')
         self.assertEqual(r.content_type, 'text/plain')
         r.mustcontain(header)
-        self.assertTrue(len(r.body.strip().split('\n')) == len(variants) + 1)
+        self.assertTrue(len(r.body.strip().split('\n')) == size + 1)
 
     def test_batch_namechecker(self):
         """
         Submit the batch name checker form.
         """
+        variants=['AB026906.1(SDHD):g.7872G>T',
+                  'NM_003002.1:c.3_4insG',
+                  'AL449423.14(CDKN2A_v002):c.5_400del']
         self._batch('NameChecker',
-                    variants=['AB026906.1(SDHD):g.7872G>T',
-                              'NM_003002.1:c.3_4insG',
-                              'AL449423.14(CDKN2A_v002):c.5_400del'],
+                    file='\n'.join(variants),
+                    size=len(variants),
                     header='Input\tErrors | Messages')
 
     def test_batch_syntaxchecker(self):
         """
         Submit the batch syntax checker form.
         """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.1:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
         self._batch('SyntaxChecker',
-                    variants = ['AB026906.1(SDHD):g.7872G>T',
-                                'NM_003002.1:c.3_4insG',
-                                'AL449423.14(CDKN2A_v002):c.5_400del'],
+                    file='\n'.join(variants),
+                    size=len(variants),
                     header='Input\tStatus')
 
     def test_batch_positionconverter(self):
         """
         Submit the batch position converter form.
         """
+        variants = ['NM_003002.2:c.204C>T',
+                    'NC_000011.9:g.111959625C>T']
         self._batch('PositionConverter',
                     arg1='hg19',
-                    variants = ['NM_003002.2:c.204C>T',
-                                'NC_000011.9:g.111959625C>T'],
+                    file='\n'.join(variants),
+                    size=len(variants),
                     header='Input Variant')
+
+    def test_batch_syntaxchecker_newlines_unix(self):
+        """
+        Submit the batch syntax checker form with unix line endings.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.1:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        self._batch('SyntaxChecker',
+                    file='\n'.join(variants),
+                    size=len(variants),
+                    header='Input\tStatus')
+
+    def test_batch_syntaxchecker_newlines_mac(self):
+        """
+        Submit the batch syntax checker form with mac line endings.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.1:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        self._batch('SyntaxChecker',
+                    file='\r'.join(variants),
+                    size=len(variants),
+                    header='Input\tStatus')
+
+    def test_batch_syntaxchecker_newlines_windows(self):
+        """
+        Submit the batch syntax checker form with windows line endings.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.1:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        self._batch('SyntaxChecker',
+                    file='\r\n'.join(variants),
+                    size=len(variants),
+                    header='Input\tStatus')
+
+    def test_batch_syntaxchecker_newlines_big_unix(self):
+        """
+        Submit the batch syntax checker form with unix line ending
+        styles and a big input file.
+        """
+        samples = ['AB026906.1(SDHD):g.7872G>T',
+                   'NM_003002.1:c.3_4insG',
+                   'AL449423.14(CDKN2A_v002):c.5_400del']
+        variants = []
+        # Create 240 variants out of 3 samples
+        for i in range(80):
+            variants.extend(samples)
+        self._batch('SyntaxChecker',
+                    file='\n'.join(variants),
+                    size=len(variants),
+                    header='Input\tStatus')
+
+    def test_batch_syntaxchecker_newlines_big_mac(self):
+        """
+        Submit the batch syntax checker form with mac line ending
+        styles and a big input file.
+        """
+        samples = ['AB026906.1(SDHD):g.7872G>T',
+                   'NM_003002.1:c.3_4insG',
+                   'AL449423.14(CDKN2A_v002):c.5_400del']
+        variants = []
+        # Create 240 variants out of 3 samples
+        for i in range(80):
+            variants.extend(samples)
+        self._batch('SyntaxChecker',
+                    file='\r'.join(variants),
+                    size=len(variants),
+                    header='Input\tStatus')
+
+    def test_batch_syntaxchecker_newlines_big_windows(self):
+        """
+        Submit the batch syntax checker form with windows line ending
+        styles and a big input file.
+        """
+        samples = ['AB026906.1(SDHD):g.7872G>T',
+                   'NM_003002.1:c.3_4insG',
+                   'AL449423.14(CDKN2A_v002):c.5_400del']
+        variants = []
+        # Create 240 variants out of 3 samples
+        for i in range(80):
+            variants.extend(samples)
+        self._batch('SyntaxChecker',
+                    file='\r\n'.join(variants),
+                    size=len(variants),
+                    header='Input\tStatus')
 
     def test_download_py(self):
         """

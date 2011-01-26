@@ -149,7 +149,7 @@ class MutalyzerService(DefinitionBase) :
         #if
     #__checkVariant
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, 
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
         _returns = List.String)
     def getTranscripts(self, build, chrom, pos) :
         """Get all the transcripts that overlap with a chromosomal position.
@@ -360,7 +360,7 @@ class MutalyzerService(DefinitionBase) :
         return result
     #mappingInfo
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.String, 
+    @soap(Mandatory.String, Mandatory.String, Mandatory.String,
         _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
         """Search for an NM number in the MySQL database, if the version
@@ -640,10 +640,10 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
         Mandatory.Integer, _returns = Mandatory.String)
-    def sliceChromosomeByGene(self, geneSymbol, organism, upStream, 
+    def sliceChromosomeByGene(self, geneSymbol, organism, upStream,
         downStream) :
         """
-        Todo: documentation, error handling, argument checking.
+        Todo: documentation, error handling, argument checking, tests.
         """
 
         C = Config.Config()
@@ -654,7 +654,7 @@ class MutalyzerService(DefinitionBase) :
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosomeByGene(%s, %s, %s, %s)" % (
             geneSymbol, organism, upStream, downStream))
-        
+
         UD = retriever.retrievegene(geneSymbol, organism, upStream, downStream)
 
         O.addMessage(__file__, -1, "INFO",

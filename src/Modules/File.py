@@ -24,6 +24,7 @@ import zipfile         # ZipFile()
 import xml.dom.minidom # parseString()
 import os              # remove()
 import types           # UnicodeType
+from cStringIO import StringIO
 
 from Modules import Misc
 
@@ -137,11 +138,41 @@ class File() :
         #
         # The fix is to get the handle's file descriptor and create a new
         # handle for it, using 'U' mode.
-        handle = os.fdopen(handle.fileno(), 'rU')
+        #
+        # However, sometimes our handler has no .fileno(), for example when
+        # the input file is quite small (< 1kb). In that case, the cgi
+        # module seems to optimize things and use a StringIO for the file,
+        # which of course has no .fileno().
+        #
+        # So our solution is:
+        # - We have .fileno(): Create a new handle, using 'U' mode.
+        # - We have no .fileno(): Replace all newlines by \n (in-memory)
+        #   and wrap the result in a new StringIO.
+
+        if hasattr(handle, 'fileno'):
+            # Todo: We get the following error in our logs (exact origin
+            # unknown):
+            #
+            #   close failed in file object destructor:
+            #   IOError: [Errno 9] Bad file descriptor
+            #
+            # I am unable to find the reason for this. Everything seems to
+            # be working though.
+            new_handle = os.fdopen(handle.fileno(), 'rU')
+        elif hasattr(handle, 'getvalue'):
+            data = handle.getvalue()
+            data = data.replace('\r\n', '\n').replace('\r', '\n')
+            new_handle = StringIO(data)
+        else:
+            self.__output.addMessage(__file__, 4, "EBPARSE",
+                                     "Fatal error parsing input file, please"
+                                     " report this as a bug including the"
+                                     " input file.")
+            return None
 
         # I don't think the .seek(0) is needed now we created a new handle
-        handle.seek(0)
-        buf = handle.read(self.__config.bufSize)
+        new_handle.seek(0)
+        buf = new_handle.read(self.__config.bufSize)
 
         # Default dialect
         dialect = 'excel'
@@ -162,13 +193,14 @@ class File() :
 #        if dialect.delimiter == ":":
 #            dialect.delimiter = "\t"
 
-        handle.seek(0)
-        reader = csv.reader(handle, dialect)
+        new_handle.seek(0)
+        reader = csv.reader(new_handle, dialect)
 
         ret = []
         for i in reader :
             ret.append(i)
 
+        new_handle.close()
         return ret
     #__parseCsvFile
 

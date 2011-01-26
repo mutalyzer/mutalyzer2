@@ -263,6 +263,10 @@ ul {
 	z-index : 10;
 }
 
+#menu td {
+	color : #002E65;
+}
+
 .Interface {
 	color : #FFCC00;
 	background-color : #333333;
