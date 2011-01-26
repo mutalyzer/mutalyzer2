@@ -792,9 +792,12 @@ class BatchChecker:
         """
         O = Output.Output(__file__, C.Output)
 
+        maxUploadSize = C.Batch.batchInputMaxSize
+
         attr = {"messages"      : [],
                 "errors"        : [],
                 "debug"         : [],
+                "maxSize"       : float(maxUploadSize) / 1048576,
                 "batchTypes"    : ["NameChecker",
                                    "SyntaxChecker",
                                    "PositionConverter",
@@ -823,6 +826,17 @@ class BatchChecker:
         # to the truth value False, so 'if inFile: ...' is not useful.
 
         if email and isEMail(email) and not inFile == None and inFile.file:
+
+            # Todo: These error messages could be delivered trough a template
+            if not 'CONTENT_LENGTH' in web.ctx.environ.keys():
+                web.header('Content-Type', 'text/plain')
+                web.ctx.status = '411 Length required'
+                return 'Content length required'
+            if int(web.ctx.environ.get('CONTENT_LENGTH')) > maxUploadSize:
+                web.header('Content-Type', 'text/plain')
+                web.ctx.status = '413 Request entity too large'
+                return 'Sorry, only files up to %s megabytes are accepted.' % (float(maxUploadSize) / 1048576)
+
             D = Db.Batch(C.Db)
             S = Scheduler.Scheduler(C.Scheduler, D)
             FileInstance = File.File(C.File, O)
@@ -976,11 +990,13 @@ class Uploader:
 
         try:
             if i.invoermethode == "file" :
-                if not 'Content-Length' in web.ctx.environ:
+                if not 'CONTENT_LENGTH' in web.ctx.environ.keys():
+                    web.header('Content-Type', 'text/plain')
                     web.ctx.status = '411 Length required'
                     return 'Content length required.'
                 #if
-                if int(web.ctx.environ['Content-Length']) > maxUploadSize :
+                if int(web.ctx.environ.get('CONTENT_LENGTH')) > maxUploadSize :
+                    web.header('Content-Type', 'text/plain')
                     web.ctx.status = '413 Request entity too large'
                     return 'Upload limit exceeded.'
                 #if

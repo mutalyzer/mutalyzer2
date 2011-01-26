@@ -361,6 +361,45 @@ class TestWSGI(unittest.TestCase):
                     size=len(variants),
                     header='Input\tStatus')
 
+    def test_batch_syntaxchecker_oldstyle(self):
+        """
+        Submit the batch syntax checker form with old style input file.
+        """
+        variants = ['AccNo\tGenesymbol\tMutation',
+                    'AB026906.1\tSDHD\tg.7872G>T',
+                    'NM_003002.1\t\tc.3_4insG',
+                    'AL449423.14\tCDKN2A_v002\tc.5_400del']
+        self._batch('SyntaxChecker',
+                    file='\n'.join(variants),
+                    size=len(variants)-1,
+                    header='Input\tStatus')
+
+    def test_batch_syntaxchecker_toobig(self):
+        """
+        Submit the batch syntax checker with a too big input file.
+        """
+        seed = """
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy
+nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi
+enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis
+nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in
+hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu
+feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui
+blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla
+facilisi."""
+        file = seed
+        # Very crude way of creating something at least 6MB in size
+        while len(file) < 6000000:
+            file += file
+        r = self.app.get('/batch')
+        form = r.forms[0]
+        form['batchType'] = 'SyntaxChecker'
+        form['batchEmail'] = 'm.vermaat.hg@lumc.nl'
+        form.set('batchFile', ('test_batch_toobig.txt',
+                               file))
+        r = form.submit(status=413)
+        self.assertEqual(r.content_type, 'text/plain')
+
     def test_download_py(self):
         """
         Download a Python example client for the webservice.

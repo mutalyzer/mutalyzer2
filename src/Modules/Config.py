@@ -108,6 +108,7 @@ class Config() :
 
         Public variables:
             - PIDfile     ; Location of the PID file.
+            - batchInputMaxSize ; Max size for batch input files in bytes.
         """
 
         pass
@@ -208,6 +209,7 @@ class Config() :
 
         # Set thte variables neede for the Batch module.
         self.Batch.PIDfile = config["PIDfile"]
+        self.Batch.batchInputMaxSize = int(config["batchInputMaxSize"]) * 1048576
 
         # Set the variables needed by the File module.
         self.File.bufSize = int(config["bufSize"])
