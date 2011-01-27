@@ -414,7 +414,15 @@ facilisi."""
         """
         r = self.app.get('/download/client-mono.cs')
         self.assertEqual(r.content_type, 'text/plain')
-        r.mustcontain('public static void Main(string [] args) {')
+        r.mustcontain('public static void Main(String [] args) {')
+
+    def test_download_php(self):
+        """
+        Download a PHP example client for the webservice.
+        """
+        r = self.app.get('/download/client-php.php')
+        self.assertEqual(r.content_type, 'text/plain')
+        r.mustcontain('<?php')
 
     def test_downloads_batchtest(self):
         """

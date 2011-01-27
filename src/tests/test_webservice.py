@@ -36,22 +36,23 @@ class TestWebservice(unittest.TestCase):
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client(WSDL_URL)
+        self.client = Client(WSDL_URL, cache=None)
 
     def test_checksyntax_valid(self):
         """
-        Running checkSyntax with a valid variant name should say it is valid.
+        Running checkSyntax with a valid variant name should return True.
         """
         r = self.client.service.checkSyntax('AB026906.1:c.274G>T')
-        self.assertEqual(r, 'The syntax of this variant is OK!')
+        self.assertEqual(r.valid, True)
 
     def test_checksyntax_invalid(self):
         """
-        Running checkSyntax with an invalid variant name should say it is
-        invalid.
+        Running checkSyntax with an invalid variant name should return False
+        and give at least one error message.
         """
         r = self.client.service.checkSyntax('0:abcd')
-        self.assertEqual(r, 'This variant does not have the right syntax. Please try again.')
+        self.assertEqual(r.valid, False)
+        self.assertTrue(len(r.messages.SoapMessage) >= 1)
 
     def test_checksyntax_empty(self):
         """
@@ -82,8 +83,8 @@ class TestWebservice(unittest.TestCase):
         """
         r = self.client.service.numberConversion(build='hg19',
                                                  variant='NC_000001.10:g.159272155del')
-        self.assertEqual(type(r), list)
-        self.assertTrue('NM_002001.2:c.1del' in r)
+        self.assertEqual(type(r.string), list)
+        self.assertTrue('NM_002001.2:c.1del' in r.string)
 
     def test_numberconversion_ctog_valid(self):
         """
@@ -92,8 +93,8 @@ class TestWebservice(unittest.TestCase):
         """
         r = self.client.service.numberConversion(build='hg19',
                                                  variant='NM_002001.2:c.1del')
-        self.assertEqual(type(r), list)
-        self.assertTrue('NC_000001.10:g.159272155del' in r)
+        self.assertEqual(type(r.string), list)
+        self.assertTrue('NC_000001.10:g.159272155del' in r.string)
 
     def test_gettranscriptsbygenename_valid(self):
         """
@@ -102,7 +103,7 @@ class TestWebservice(unittest.TestCase):
         """
         r = self.client.service.getTranscriptsByGeneName(build='hg19',
                                                          name='DMD')
-        self.assertEqual(type(r), list)
+        self.assertEqual(type(r.string), list)
         for t in ['NM_004006.2',
                   'NM_000109.3',
                   'NM_004021.2',
@@ -110,7 +111,7 @@ class TestWebservice(unittest.TestCase):
                   'NM_004007.2',
                   'NM_004018.2',
                   'NM_004022.2']:
-            self.assertTrue(t in r)
+            self.assertTrue(t in r.string)
 
 if __name__ == '__main__':
     # Usage:

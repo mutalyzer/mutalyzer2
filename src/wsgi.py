@@ -111,9 +111,9 @@ urls = (
     '/batch([a-zA-Z]+)?',   'BatchChecker',
     '/progress',            'BatchProgress',
     '/Results_(\d+)\.txt',  'BatchResult',
-    '/download/([a-zA-Z-]+\.(?:py|cs))',  'Download',
-    '/downloads/([a-zA-Z\._-]+)',         'Downloads',
-    '/Reference/([\da-zA-Z\._-]+)',       'Reference',
+    '/download/([a-zA-Z-]+\.(?:py|cs|php))',  'Download',
+    '/downloads/([a-zA-Z\._-]+)',             'Downloads',
+    '/Reference/([\da-zA-Z\._-]+)',           'Reference',
     '/upload',              'Uploader'
 )
 
@@ -216,7 +216,7 @@ session = web.session.Session(app,
 
 class Download:
     """
-    Download file from template directory, processing it with TAL first.
+    Download file from template directory, formatting it first.
     """
     def GET(self, file):
         """
@@ -230,14 +230,15 @@ class Download:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z-]+\.(?:py|cs).
         """
-        # Process the file with TAL and return the content as a downloadable file.
         if not os.path.isfile("templates/" + file):
             raise web.notfound()
+        content = open('templates/' + file, 'r').read()
         # Force downloading
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
-        return getattr(render, file)({'path': web.ctx.homedomain + web.ctx.homepath},
-                                     scheme='file')
+        # We use new style string formatting (available from Python 2.6
+        # http://www.python.org/dev/peps/pep-3101/
+        return content.format(path=web.ctx.homedomain + web.ctx.homepath)
 #Download
 
 

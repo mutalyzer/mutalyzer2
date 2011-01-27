@@ -33,6 +33,7 @@ from soaplib.core import Application
 from soaplib.core.service import soap
 from soaplib.core.service import DefinitionBase
 from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.clazz import Array
 from soaplib.core.model.exception import Fault
 from soaplib.core.server import wsgi
 import os
@@ -51,7 +52,7 @@ from Modules import Config
 from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
-from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, List, TranscriptNameInfo
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage
 
 
 class MutalyzerService(DefinitionBase) :
@@ -150,7 +151,7 @@ class MutalyzerService(DefinitionBase) :
     #__checkVariant
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        _returns = List.String)
+        _returns = Array(Mandatory.String))
     def getTranscripts(self, build, chrom, pos) :
         """Get all the transcripts that overlap with a chromosomal position.
 
@@ -201,7 +202,7 @@ class MutalyzerService(DefinitionBase) :
         return ret
     #getTranscripts
 
-    @soap(Mandatory.String, Mandatory.String, _returns = List.String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
     def getTranscriptsByGeneName(self, build, name) :
         """Todo: documentation.
         """
@@ -225,7 +226,7 @@ class MutalyzerService(DefinitionBase) :
     #getTranscriptsByGene
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns = List.String)
+        Mandatory.Integer, Mandatory.Integer, _returns = Array(Mandatory.String))
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
         """Get all the transcripts that overlap with a range on a chromosome.
 
@@ -493,7 +494,7 @@ class MutalyzerService(DefinitionBase) :
         return result
     #chromosomeName
 
-    @soap(Mandatory.String, Mandatory.String, _returns = List.String)
+    @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
     def numberConversion(self, build, variant) :
         """Converts I{c.} to I{g.} notation or vice versa
 
@@ -530,37 +531,39 @@ class MutalyzerService(DefinitionBase) :
         return result
     #numberConversion
 
-    @soap(Mandatory.String, _returns = Mandatory.String)
+    @soap(Mandatory.String, _returns = CheckSyntaxOutput)
     def checkSyntax(self, variant):
         """Checks the syntax of a variant.
 
         @arg variant: The variant to check.
         @type variant: string
 
-        @return: Message stating OK or not OK.
-        @rtype: string
+        @return: Object with fields:
+                 - valid: A boolean indicating parse result (true for
+                          succes, false in case of a parse error).
+                 - messages: List of (error) messages as strings.
+        @rtype: object
         """
         C = Config.Config() # Read the configuration file.
-        L = Output.Output(__file__, C.Output)
-        L.addMessage(__file__, -1, "INFO",
+        O = Output.Output(__file__, C.Output)
+        O.addMessage(__file__, -1, "INFO",
                      "Received request checkSyntax(%s)" % (variant))
 
-        self.__checkVariant(L, variant)
+        result = CheckSyntaxOutput()
 
-        P = Parser.Nomenclatureparser(L)
+        self.__checkVariant(O, variant)
+
+        P = Parser.Nomenclatureparser(O)
         parsetree = P.parse(variant)
         del C, P
-        if not parsetree :
-            result = "This variant does not have the right syntax. "\
-                     "Please try again."
-        #if
-        else :
-            result = "The syntax of this variant is OK!"
+        result.valid = bool(parsetree)
 
-        L.addMessage(__file__, -1, "INFO",
+        O.addMessage(__file__, -1, "INFO",
                      "Finished processing checkSyntax(%s)" % (variant))
 
-        del L
+        result.messages = O.getSoapMessages()
+
+        del O
         return result
     #checkSyntax
 
@@ -569,35 +572,39 @@ class MutalyzerService(DefinitionBase) :
         """Todo: documentation.
         """
         C = Config.Config() # Read the configuration file.
-        L = Output.Output(__file__, C.Output)
-        L.addMessage(__file__, -1, "INFO",
+        O = Output.Output(__file__, C.Output)
+        O.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
-        Mutalyzer.process(variant, C, L)
-        M = MutalyzerOutput()
+        Mutalyzer.process(variant, C, O)
+
+        result = MutalyzerOutput()
 
         # We force the results to strings here, because some results
         # may be of type Bio.Seq.Seq which soaplib doesn't like.
         #
         # todo: We might have to also do this elsewhere.
 
-        M.original = str(L.getIndexedOutput("original", 0))
-        M.mutated = str(L.getIndexedOutput("mutated", 0))
+        result.original = str(O.getIndexedOutput("original", 0))
+        result.mutated = str(O.getIndexedOutput("mutated", 0))
 
-        M.origMRNA = str(L.getIndexedOutput("origMRNA", 0))
-        M.mutatedMRNA = str(L.getIndexedOutput("mutatedMRNA", 0))
+        result.origMRNA = str(O.getIndexedOutput("origMRNA", 0))
+        result.mutatedMRNA = str(O.getIndexedOutput("mutatedMRNA", 0))
 
-        M.origCDS = str(L.getIndexedOutput("origCDS", 0))
-        M.newCDS = str(L.getIndexedOutput("newCDS", 0))
+        result.origCDS = str(O.getIndexedOutput("origCDS", 0))
+        result.newCDS = str(O.getIndexedOutput("newCDS", 0))
 
-        M.origProtein = str(L.getIndexedOutput("oldprotein", 0))
-        M.newProtein = str(L.getIndexedOutput("newprotein", 0))
-        M.altProtein = str(L.getIndexedOutput("altProtein", 0))
+        result.origProtein = str(O.getIndexedOutput("oldprotein", 0))
+        result.newProtein = str(O.getIndexedOutput("newprotein", 0))
+        result.altProtein = str(O.getIndexedOutput("altProtein", 0))
 
-        M.errors, M.warnings, M.summary = L.Summary()
+        result.errors, result.warnings, result.summary = O.Summary()
 
-        L.addMessage(__file__, -1, "INFO",
+        O.addMessage(__file__, -1, "INFO",
                      "Finished processing runMutalyzer(%s)" % (variant))
-        return M
+
+        result.messages = O.getSoapMessages()
+
+        return result
     #runMutalyzer
 
     @soap(Mandatory.String, Mandatory.String, _returns = TranscriptNameInfo)

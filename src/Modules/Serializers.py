@@ -10,8 +10,8 @@ Collection of Serilizable Objects used by the webservice
 
 @todo: documentation
 """
-from soaplib.core.model.primitive import String, Integer
-from soaplib.core.model.clazz import ClassModel
+from soaplib.core.model.primitive import String, Integer, Boolean
+from soaplib.core.model.clazz import ClassModel, Array
 
 
 # Default attributes for soaplib models:
@@ -32,14 +32,7 @@ class Mandatory(object):
     """
     String = String(min_occurs=1, nillable=False)
     Integer = Integer(min_occurs=1, nillable=False)
-
-
-class List(object):
-    """
-    Unbounded (in number of occurrences) versions of models.
-    """
-    String = String(nillable=False, max_occurs="unbounded")
-    Integer = Integer(nillable=False, max_occurs="unbounded")
+    Boolean = Boolean(min_occurs=1, nillable=False)
 
 
 # Todo: use Mandatory.* models in the classmodels below?
@@ -84,7 +77,7 @@ class Mapping(ClassModel) :
     end_g = Integer
     mutationType = String
     errorcode = Integer
-    messages = SoapMessage(max_occurs="unbounded")
+    messages = Array(SoapMessage)
 #Mapping
 
 class Transcript(ClassModel) :
@@ -129,6 +122,8 @@ class MutalyzerOutput(ClassModel) :
     errors = Integer
     warnings = Integer
     summary = String
+
+    messages = Array(SoapMessage)
 #MutalyzerOutput
 
 class TranscriptNameInfo(ClassModel) :
@@ -140,3 +135,13 @@ class TranscriptNameInfo(ClassModel) :
     transcriptName = String
     productName = String
 #TranscriptNameInfo
+
+class CheckSyntaxOutput(ClassModel) :
+    """
+    """
+
+    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+
+    valid = Mandatory.Boolean
+    messages = Array(SoapMessage)
+#CheckSyntaxOutput
