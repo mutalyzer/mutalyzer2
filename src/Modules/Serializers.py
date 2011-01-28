@@ -123,6 +123,8 @@ class MutalyzerOutput(ClassModel) :
     warnings = Integer
     summary = String
 
+    chromDescription = String
+
     messages = Array(SoapMessage)
 #MutalyzerOutput
 

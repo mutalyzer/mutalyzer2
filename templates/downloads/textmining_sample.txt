@@ -1,0 +1,1 @@
+In this example, we extract the variant AB026906.1:c.274G>T from this text.

@@ -598,6 +598,9 @@ class MutalyzerService(DefinitionBase) :
         result.newProtein = str(O.getIndexedOutput("newprotein", 0))
         result.altProtein = str(O.getIndexedOutput("altProtein", 0))
 
+        result.chromDescription = \
+            str(O.getIndexedOutput("genomicChromDescription", 0))
+
         result.errors, result.warnings, result.summary = O.Summary()
 
         O.addMessage(__file__, -1, "INFO",
@@ -677,9 +680,29 @@ class MutalyzerService(DefinitionBase) :
         return UD
     #sliceChromosomeByGene
 
-    @soap(Mandatory.String, _returns = Mandatory.String)
+    @soap(Mandatory.String, Mandatory.Integer, Mandatory.Integer,
+        Mandatory.Integer, _returns = Mandatory.String)
     def sliceChromosome(self, chromAccNo, start, end, orientation) :
-        pass
+        """
+        Todo: documentation, error handling, argument checking, tests.
+        """
+
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        D = Db.Cache(C.Db)
+        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Received request sliceChromosome(%s, %s, %s, %s)" % (
+            chromAccNo, start, end, orientation))
+
+        UD = retriever.retrieveslice(chromAccNo, start, end, orientation)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Finished processing sliceChromosome(%s, %s, %s, %s)" % (
+            chromAccNo, start, end, orientation))
+
+        return UD
     #sliceChromosome
 #MutalyzerService
 
