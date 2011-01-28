@@ -52,6 +52,7 @@ from Modules import Config
 from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
+from Modules import GenRecord
 from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage
 
 
@@ -621,10 +622,15 @@ class MutalyzerService(DefinitionBase) :
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
 
+        GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
+        GenRecordInstance.record = record
+        GenRecordInstance.checkRecord()
+
         ret = TranscriptNameInfo()
-        for i in record.geneList :
+        for i in GenRecordInstance.record.geneList :
             for j in i.transcriptList :
                 if j.transcriptID == transcriptReference :
+                    #raise Exception(repr(j.CM.info()))
                     ret.transcriptName = "%s_v%s" % (i.name, j.name)
                     ret.productName = j.transcriptProduct
                 #if
