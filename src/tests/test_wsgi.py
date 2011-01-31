@@ -9,7 +9,7 @@ Uses WebTest, see:
 
 I just installed webtest by 'easy_install webtest'.
 
-@todo: Tests for /upload, /getGS, and /Variant_info.
+@todo: Tests for /upload.
 """
 
 #import logging; logging.basicConfig()
@@ -444,12 +444,53 @@ facilisi."""
     def test_soap_documentation(self):
         """
         Test the SOAP documentation generated from the WSDL.
-       """
+        """
         r = self.app.get('/documentation')
         self.assertEqual(r.content_type, 'text/html')
         r.mustcontain('Web Service: Mutalyzer')
 
+    def test_getgs(self):
+        """
+        Test the /getGS interface used by LOVD2.
+        """
+        r = self.app.get('/getGS?variantRecord=NM_003002.2&forward=1&mutationName=NG_012337.1:g.7055C%3ET')
+        r.mustcontain('0 Errors',
+                      '0 Warnings',
+                      'Raw variant 1: substitution at 7055',
+                      '<a href="#bottom" class="hornav">go to bottom</a>',
+                      '<input value="NG_012337.1(SDHD_v001):g.7055C&gt;T" type="text" name="mutationName" style="width:100%">')
+
+    def test_variantinfo_g2c(self):
+        """
+        Test the /Variant_info interface used by LOVD2 (g to c).
+        """
+        r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=g.48374289_48374389del')
+        self.assertEqual(r.content_type, 'text/plain')
+        expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
+        self.assertEqual(r.body, expected)
+
+    def test_variantinfo_c2g(self):
+        """
+        Test the /Variant_info interface used by LOVD2 (c to g).
+        """
+        r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=c.1020_1072%2B48del')
+        self.assertEqual(r.content_type, 'text/plain')
+        expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
+        self.assertEqual(r.body, expected)
+
+    def test_variantinfo_c2g_downstream(self):
+        """
+        Test the /Variant_info interface used by LOVD2 (c variant downstream
+        notation to g).
+        """
+        r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=c.1709%2Bd187del')
+        self.assertEqual(r.content_type, 'text/plain')
+        expected = '\n'.join(['1709', '187', '1709', '187', '48379389', '48379389', 'del'])
+        self.assertEqual(r.body, expected)
+
 if __name__ == '__main__':
     # Usage:
     #   ./test_wsgi.py -v
+    # Or, selecting a specific test:
+    #   ./test_wsgi.py -v TestWSGI.test_getgs_del
     unittest.main()

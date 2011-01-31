@@ -311,8 +311,6 @@ class GetGS:
     the first transcript. LOVD supplies the NM of the transcript needed but
     this was ignored. This helper allows LOVD to get the requested
     transcript variant from a genomic reference.
-
-    @todo: Test this.
     """
     def GET(self):
         """
@@ -328,8 +326,12 @@ class GetGS:
 
         i = web.input(mutationName=None, variantRecord=None, forward=None)
 
+        # Todo: The following is probably a problem elsewhere too.
+        # We stringify the variant, because a unicode string crashes
+        # Bio.Seq.reverse_complement in Mapper.py:607.
+
         # We are only interested in the legend
-        Mutalyzer.process(i.mutationName, C, O)
+        Mutalyzer.process(str(i.mutationName), C, O)
 
         legends = O.getOutput("legends")
 
@@ -531,8 +533,6 @@ class PositionConverter:
 class VariantInfo:
     """
     The I{g.} to I{c.} and vice versa interface for LOVD.
-
-    @todo: Tests.
     """
     def GET(self):
         """
