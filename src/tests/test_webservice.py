@@ -113,6 +113,23 @@ class TestWebservice(unittest.TestCase):
                   'NM_004022.2']:
             self.assertTrue(t in r.string)
 
+    def test_gettranscriptsandinfo_valid(self):
+        """
+        Running getTranscriptsAndInfo with a valid genomic reference should
+        give a list of TranscriptInfo objects.
+        """
+        r = self.client.service.getTranscriptsAndInfo('AL449423.14')
+        self.assertEqual(type(r.TranscriptInfo), list)
+        names = [t.name for t in r.TranscriptInfo]
+        for t in ['CDKN2B_v002',
+                  'CDKN2B_v001',
+                  'MTAP_v005',
+                  'CDKN2A_v008',
+                  'CDKN2A_v007',
+                  'C9orf53_v001',
+                  'CDKN2A_v001']:
+            self.assertTrue(t in names)
+
 if __name__ == '__main__':
     # Usage:
     #   ./test_webservice.py -v
