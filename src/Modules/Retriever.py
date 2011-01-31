@@ -517,6 +517,11 @@ class GenBankRetriever(Retriever):
             summary = Entrez.read(handle)
             handle.close()
             if summary[0]["NomenclatureSymbol"] == gene : # Found it.
+                if not summary[0]["GenomicInfo"] :
+                    self._output.addMessage(__file__, 4, "ENOMAPPING",
+                        "No mapping information found for gene %s." % gene)
+                    return None
+                #if
                 ChrAccVer = summary[0]["GenomicInfo"][0]["ChrAccVer"]
                 ChrLoc = summary[0]["GenomicInfo"][0]["ChrLoc"]
                 ChrStart = summary[0]["GenomicInfo"][0]["ChrStart"]
