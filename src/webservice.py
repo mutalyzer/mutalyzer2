@@ -22,6 +22,14 @@ Be sure to have this line first if you also define a / alias, like this:
        use __checkBuild.)
 """
 
+# WSGI applications should never print anything to stdout. We redirect to
+# stderr, but eventually Mutalyzer should be fixed to never just 'print'
+# anything.
+# http://code.google.com/p/modwsgi/wiki/DebuggingTechniques
+import sys
+sys.stdout = sys.stderr
+
+# Log exceptions to stdout
 import logging; logging.basicConfig()
 
 # We now use very current soaplib:
@@ -38,6 +46,7 @@ from soaplib.core.model.exception import Fault
 from soaplib.core.server import wsgi
 import os
 import site
+from operator import itemgetter, attrgetter
 
 # Add /src to Python path
 site.addsitedir(os.path.dirname(__file__))
@@ -53,7 +62,7 @@ from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
 from Modules import GenRecord
-from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage, TranscriptInfo, ExonInfo, ProteinTranscript
 
 
 class MutalyzerService(DefinitionBase) :
@@ -223,6 +232,7 @@ class MutalyzerService(DefinitionBase) :
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscriptsByGene(%s %s)" % (
                      build, name))
+
         return ret
     #getTranscriptsByGene
 
@@ -633,7 +643,6 @@ class MutalyzerService(DefinitionBase) :
         for i in GenRecordInstance.record.geneList :
             for j in i.transcriptList :
                 if j.transcriptID == transcriptReference :
-                    #raise Exception(repr(j.CM.info()))
                     ret.transcriptName = "%s_v%s" % (i.name, j.name)
                     ret.productName = j.transcriptProduct
                 #if
@@ -641,8 +650,130 @@ class MutalyzerService(DefinitionBase) :
         O.addMessage(__file__, -1, "INFO",
             "Finished processing getGeneAndTranscript(%s, %s)" % (
             genomicReference, transcriptReference))
+
         return ret
     #getGeneAndTranscript
+
+    @soap(Mandatory.String, _returns = Array(TranscriptInfo))
+    def getTranscriptsAndInfo(self, genomicReference):
+        """Given a genomic reference, return all its transcripts with their
+        transcription/cds start/end sites and exons.
+
+        @arg genomicReference: Name of a reference sequence.
+        @type genomicReference: string
+
+        @return: Array of TranscriptInfo objects with fields:
+                 - name
+                 - id
+                 - product
+                 - cTransStart
+                 - gTransStart
+                 - cTransEnd
+                 - gTransEnd
+                 - sortableTransEnd
+                 - cCDSStart
+                 - gCDSStart
+                 - cCDSStop
+                 - gCDSStop
+                 - locusTag
+                 - linkMethod
+                 - exons: Array of ExonInfo objects with fields:
+                          - cStart
+                          - gStart
+                          - cStop
+                          - gStop
+                 - proteinTranscript: ProteinTranscript object with fields:
+                                      - name
+                                      - id
+                                      - product
+        """
+        C = Config.Config()
+        O = Output.Output(__file__, C.Output)
+        D = Db.Cache(C.Db)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Received request getTranscriptsAndInfo(%s)" % genomicReference)
+        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        record = retriever.loadrecord(genomicReference)
+
+        GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
+        GenRecordInstance.record = record
+        GenRecordInstance.checkRecord()
+
+        transcripts = []
+
+        # The following loop is basically the same as building the legend in
+        # the name checker web interface (wsgi.Check).
+
+        for gene in GenRecordInstance.record.geneList :
+            for transcript in sorted(gene.transcriptList,
+                                     key=attrgetter('name')):
+
+                # Exclude nameless transcripts
+                if not transcript.name: continue
+
+                t = TranscriptInfo()
+
+                # Some raw info we don't use directly:
+                # - transcript.CDS.location        CDS start and stop (g)
+                # - transcript.CDS.positionList:   CDS splice sites (g) ?
+                # - transcript.mRNA.location:      translation start and stop (g)
+                # - transcript.mRNA.positionList:  splice sites (g)
+
+                t.exons = []
+                for i in range(0, transcript.CM.numberOfExons() * 2, 2):
+                    exon = ExonInfo()
+                    exon.gStart = transcript.CM.getSpliceSite(i)
+                    exon.cStart = transcript.CM.g2c(exon.gStart)
+                    exon.gStop = transcript.CM.getSpliceSite(i + 1)
+                    exon.cStop = transcript.CM.g2c(exon.gStop)
+                    t.exons.append(exon)
+
+                # Beware that CM.info() gives a made-up value for trans_end,
+                # which is sortable (no * notation). We therefore cannot use
+                # it in our output and use the end position of the last exon
+                # instead. The made-up value is still useful for sorting, so
+                # we return it as sortableTransEnd.
+                trans_start, sortable_trans_end, cds_stop = transcript.CM.info()
+                cds_start = 1
+
+                t.cTransEnd = str(t.exons[-1].cStop)
+                t.gTransEnd = t.exons[-1].gStop
+                t.sortableTransEnd = sortable_trans_end
+
+                # Todo: If we have no CDS info, CM.info() gives trans_end as
+                # value for cds_stop. This is an artifact to accomodate LOVD
+                # stupidity an should probably be removed sometime.
+                #if not transcript.CDS: cds_stop = None
+
+                t.name = '%s_v%s' % (gene.name, transcript.name)
+                t.id = transcript.transcriptID
+                t.product = transcript.transcriptProduct
+                t.cTransStart = str(trans_start)
+                t.gTransStart = transcript.CM.x2g(trans_start, 0)
+                t.cCDSStart = str(cds_start)
+                t.gCDSStart = transcript.CM.x2g(cds_start, 0)
+                t.cCDSStop = str(cds_stop)
+                t.gCDSStop = transcript.CM.x2g(cds_stop, 0)
+                t.locusTag = transcript.locusTag
+                t.linkMethod = transcript.linkMethod
+
+                t.proteinTranscript = None
+
+                if transcript.translate:
+                    p = ProteinTranscript()
+                    p.name = '%s_i%s' % (gene.name, transcript.name)
+                    p.id = transcript.proteinID
+                    p.product = transcript.proteinProduct
+                    t.proteinTranscript = p
+
+                transcripts.append(t)
+
+        O.addMessage(__file__, -1, "INFO",
+            "Finished processing getTranscriptsAndInfo(%s)" % genomicReference)
+
+        return transcripts
+    #getTranscriptsAndInfo
 
     @soap(Mandatory.String, _returns = Mandatory.String)
     def upLoadGenBankLocalFile(self, content) :

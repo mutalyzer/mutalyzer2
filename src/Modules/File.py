@@ -136,7 +136,7 @@ class File() :
         # from a web request, opened by the web.py input handler, which uses
         # the Python cgi module for opening uploaded files).
         #
-        # The fix is to get the handle's file descriptor and create a new
+        # A fix is to get the handle's file descriptor and create a new
         # handle for it, using 'U' mode.
         #
         # However, sometimes our handler has no .fileno(), for example when

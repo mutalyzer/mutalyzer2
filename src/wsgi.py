@@ -45,6 +45,13 @@ WEBSERVICE_LOCATION = '/services'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 
 
+# WSGI applications should never print anything to stdout. We redirect to
+# stderr, but eventually Mutalyzer should be fixed to never just 'print'
+# anything.
+# http://code.google.com/p/modwsgi/wiki/DebuggingTechniques
+import sys
+sys.stdout = sys.stderr
+
 # Log exceptions to stdout
 import logging; logging.basicConfig()
 
