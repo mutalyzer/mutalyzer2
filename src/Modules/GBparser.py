@@ -504,8 +504,8 @@ class GBparser() :
                 #if
 
                 if i.qualifiers.has_key("gene") :
+                    geneName = i.qualifiers["gene"][0]
                     if i.type == "gene" :
-                        geneName = i.qualifiers["gene"][0]
                         if not geneDict.has_key(geneName) :
                             myGene = Gene(geneName)
                             record.geneList.append(myGene)
@@ -513,7 +513,7 @@ class GBparser() :
                                 myGene.orientation = i.strand
                             myGene.location = self.__location2pos(i.location)
                             geneDict[geneName] = tempGene(geneName)
-                    #if
+                        #if
 
                     if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA", 
                        "tmRNA"] :
