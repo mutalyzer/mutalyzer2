@@ -512,7 +512,8 @@ html&gt;body #rightColumn {
 }
 
 .documentation {
-    white-space: pre-line;
+    white-space: pre; /* pre-line; */
+    font-family: monospace;
 }
 
 strong, strong a {

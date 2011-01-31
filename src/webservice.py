@@ -70,9 +70,6 @@ class MutalyzerService(DefinitionBase) :
     Mutalyzer webservices.
 
     These methods are made public via a SOAP interface.
-
-    Note: Don't use leading newline in the docstrings of SOAP methods. These
-    are visible in the generated documentation.
     """
 
     def __checkBuild(self, L, build, config) :
@@ -163,7 +160,8 @@ class MutalyzerService(DefinitionBase) :
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
         _returns = Array(Mandatory.String))
     def getTranscripts(self, build, chrom, pos) :
-        """Get all the transcripts that overlap with a chromosomal position.
+        """
+        Get all the transcripts that overlap with a chromosomal position.
 
         On error an exception is raised:
           - detail       ; Human readable description of the error.
@@ -214,7 +212,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
     def getTranscriptsByGeneName(self, build, name) :
-        """Todo: documentation.
+        """
+        Todo: documentation.
         """
 
         C = Config.Config()
@@ -239,7 +238,8 @@ class MutalyzerService(DefinitionBase) :
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
         Mandatory.Integer, Mandatory.Integer, _returns = Array(Mandatory.String))
     def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
-        """Get all the transcripts that overlap with a range on a chromosome.
+        """
+        Get all the transcripts that overlap with a range on a chromosome.
 
         @arg build: The human genome build (hg19 or hg18).
         @type build: string
@@ -283,7 +283,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneName(self, build, accno) :
-        """Find the gene name associated with a transcript.
+        """
+        Find the gene name associated with a transcript.
 
         @arg build: The human genome build (hg19 or hg18).
         @type build: string
@@ -316,7 +317,8 @@ class MutalyzerService(DefinitionBase) :
     @soap(Mandatory.String, Mandatory.String, Mandatory.String,
         Mandatory.String, _returns = Mapping)
     def mappingInfo(self, LOVD_ver, build, accNo, variant) :
-        """Search for an NM number in the MySQL database, if the version
+        """
+        Search for an NM number in the MySQL database, if the version
         number matches, get the start and end positions in a variant and
         translate these positions to I{g.} notation if the variant is in I{c.}
         notation and vice versa.
@@ -375,7 +377,8 @@ class MutalyzerService(DefinitionBase) :
     @soap(Mandatory.String, Mandatory.String, Mandatory.String,
         _returns = Transcript)
     def transcriptInfo(self, LOVD_ver, build, accNo) :
-        """Search for an NM number in the MySQL database, if the version
+        """
+        Search for an NM number in the MySQL database, if the version
         number matches, the transcription start and end and CDS end
         in I{c.} notation is returned.
 
@@ -411,7 +414,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def chromAccession(self, build, name) :
-        """Get the accession number of a chromosome, given a name.
+        """
+        Get the accession number of a chromosome, given a name.
 
         @arg build: The human genome build (hg19 or hg18).
         @type build: string
@@ -443,7 +447,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def chromosomeName(self, build, accNo) :
-        """Get the name of a chromosome, given a chromosome accession number.
+        """
+        Get the name of a chromosome, given a chromosome accession number.
 
         @arg build: The human genome build (hg19 or hg18).
         @type build: string
@@ -475,7 +480,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getchromName(self, build, acc) :
-        """Get the chromosome name, given a transcript identifier (NM number).
+        """
+        Get the chromosome name, given a transcript identifier (NM number).
 
         @arg build: The human genome build (hg19 or hg18).
         @type build: string
@@ -507,7 +513,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
     def numberConversion(self, build, variant) :
-        """Converts I{c.} to I{g.} notation or vice versa
+        """
+        Converts I{c.} to I{g.} notation or vice versa
 
 
         @arg build: The human genome build (hg19 or hg18).
@@ -544,7 +551,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, _returns = CheckSyntaxOutput)
     def checkSyntax(self, variant):
-        """Checks the syntax of a variant.
+        """
+        Checks the syntax of a variant.
 
         @arg variant: The variant to check.
         @type variant: string
@@ -580,7 +588,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
-        """Todo: documentation.
+        """
+        Todo: documentation.
         """
         C = Config.Config() # Read the configuration file.
         O = Output.Output(__file__, C.Output)
@@ -623,7 +632,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, Mandatory.String, _returns = TranscriptNameInfo)
     def getGeneAndTranscript(self, genomicReference, transcriptReference) :
-        """Todo: documentation.
+        """
+        Todo: documentation.
         """
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
@@ -656,7 +666,8 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, _returns = Array(TranscriptInfo))
     def getTranscriptsAndInfo(self, genomicReference):
-        """Given a genomic reference, return all its transcripts with their
+        """
+        Given a genomic reference, return all its transcripts with their
         transcription/cds start/end sites and exons.
 
         @arg genomicReference: Name of a reference sequence.
