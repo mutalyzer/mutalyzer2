@@ -38,9 +38,9 @@ port 8080):
 """
 
 
-VERSION = '2.0&nbsp;&beta;-7'
+VERSION = '2.0&nbsp;&beta;-8'
 NOMENCLATURE_VERSION = '2.0'
-RELEASE_DATE = '18 Jan 2011'
+RELEASE_DATE = '31 Jan 2011'
 WEBSERVICE_LOCATION = '/services'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 
@@ -89,7 +89,7 @@ from Modules import Retriever
 from Modules import File
 
 
-web.config.debug = True
+web.config.debug = False
 
 
 # Load configuration from configuration file
