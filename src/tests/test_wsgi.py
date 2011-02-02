@@ -59,7 +59,8 @@ class TestWSGI(unittest.TestCase):
         r = self.app.get('/')
         for link in r.lxml.cssselect('#menu a'):
             href = link.get('href')
-            if href.startswith('http://') or href in ignore:
+            if href.startswith('http://') or href.startswith('https://') \
+            or href in ignore:
                 continue
             if not href.startswith('/'):
                 href = '/' + href
@@ -407,6 +408,14 @@ facilisi."""
         r = self.app.get('/download/client-suds.py')
         self.assertEqual(r.content_type, 'text/plain')
         r.mustcontain('#!/usr/bin/env python')
+
+    def test_download_rb(self):
+        """
+        Download a Ruby example client for the webservice.
+        """
+        r = self.app.get('/download/client-savon.rb')
+        self.assertEqual(r.content_type, 'text/plain')
+        r.mustcontain('#!/usr/bin/env ruby')
 
     def test_download_cs(self):
         """

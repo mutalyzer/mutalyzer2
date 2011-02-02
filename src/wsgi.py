@@ -118,9 +118,9 @@ urls = (
     '/batch([a-zA-Z]+)?',   'BatchChecker',
     '/progress',            'BatchProgress',
     '/Results_(\d+)\.txt',  'BatchResult',
-    '/download/([a-zA-Z-]+\.(?:py|cs|php))',  'Download',
-    '/downloads/([a-zA-Z\._-]+)',             'Downloads',
-    '/Reference/([\da-zA-Z\._-]+)',           'Reference',
+    '/download/([a-zA-Z-]+\.(?:py|cs|php|rb))', 'Download',
+    '/downloads/([a-zA-Z\._-]+)',               'Downloads',
+    '/Reference/([\da-zA-Z\._-]+)',             'Reference',
     '/upload',              'Uploader'
 )
 
