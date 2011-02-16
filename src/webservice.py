@@ -707,6 +707,7 @@ class MutalyzerService(DefinitionBase) :
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
 
+        # Todo: If loadRecord failed (e.g. DTD missing), we should abort here.
         GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
         GenRecordInstance.record = record
         GenRecordInstance.checkRecord()
@@ -788,13 +789,19 @@ class MutalyzerService(DefinitionBase) :
 
     @soap(Mandatory.String, _returns = Mandatory.String)
     def upLoadGenBankLocalFile(self, content) :
-        pass
+        """
+        Not implemented yet.
+        """
+        raise Exception('Not implemented yet')
     #upLoadGenBankLocalFile
 
     @soap(Mandatory.String, _returns = Mandatory.String)
     def upLoadGenBankRemoteFile(self, url) :
-        pass
-    #upLoadGenBankLocalFile
+        """
+        Not implemented yet.
+        """
+        raise Exception('Not implemented yet')
+    #upLoadGenBankRemoteFile
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
         Mandatory.Integer, _returns = Mandatory.String)
