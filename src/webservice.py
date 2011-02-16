@@ -664,14 +664,18 @@ class MutalyzerService(DefinitionBase) :
         return ret
     #getGeneAndTranscript
 
-    @soap(Mandatory.String, _returns = Array(TranscriptInfo))
-    def getTranscriptsAndInfo(self, genomicReference):
+    @soap(Mandatory.String, String, _returns = Array(TranscriptInfo))
+    def getTranscriptsAndInfo(self, genomicReference, geneName=None):
         """
         Given a genomic reference, return all its transcripts with their
         transcription/cds start/end sites and exons.
 
         @arg genomicReference: Name of a reference sequence.
         @type genomicReference: string
+
+        @arg geneName: Name of gene to restrict returned transcripts to.
+                       Default is to return all transcripts.
+        @type geneName: string
 
         @return: Array of TranscriptInfo objects with fields:
                  - name
@@ -717,7 +721,10 @@ class MutalyzerService(DefinitionBase) :
         # The following loop is basically the same as building the legend in
         # the name checker web interface (wsgi.Check).
 
-        for gene in GenRecordInstance.record.geneList :
+        for gene in GenRecordInstance.record.geneList:
+            # Only return transcripts for requested gene (if there was one)
+            if geneName and gene.name != geneName:
+                continue
             for transcript in sorted(gene.transcriptList,
                                      key=attrgetter('name')):
 

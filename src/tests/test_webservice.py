@@ -130,7 +130,27 @@ class TestWebservice(unittest.TestCase):
                   'CDKN2A_v001']:
             self.assertTrue(t in names)
 
+    def test_gettranscriptsandinfo_restricted_valid(self):
+        """
+        Running getTranscriptsAndInfo with a valid genomic reference and a
+        gene name should give a list of TranscriptInfo objects restricted
+        to the gene.
+        """
+        r = self.client.service.getTranscriptsAndInfo('AL449423.14', 'CDKN2A')
+        self.assertEqual(type(r.TranscriptInfo), list)
+        names = [t.name for t in r.TranscriptInfo]
+        for t in ['CDKN2A_v008',
+                  'CDKN2A_v007']:
+            self.assertTrue(t in names)
+        for t in ['CDKN2B_v002',
+                  'CDKN2B_v001',
+                  'MTAP_v005',
+                  'C9orf53_v001']:
+            self.assertFalse(t in names)
+
 if __name__ == '__main__':
     # Usage:
     #   ./test_webservice.py -v
+    # Or, selecting a specific test:
+    #   ./test_webservice.py -v TestWebservice.test_checksyntax_empty
     unittest.main()
