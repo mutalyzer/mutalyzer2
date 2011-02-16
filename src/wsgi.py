@@ -341,7 +341,7 @@ class GetGS:
             if l[1] == i.variantRecord:
                 if i.forward:
                     p,a = i.mutationName.split(':')
-                    return Check.check(p+'('+l[0]+'):'+a)
+                    return Check.check(p+'('+l[0]+'):'+a, interactive=False)
                 else:
                     web.header('Content-Type', 'text/plain')
                     return l[0]
