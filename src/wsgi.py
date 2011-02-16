@@ -1008,7 +1008,15 @@ class Uploader:
                     web.ctx.status = '413 Request entity too large'
                     return 'Upload limit exceeded.'
                 #if
-                if not i.bestandsveld == None and i.bestandsveld.file:
+                # Non-conforming clients (read: LOVD) might send the form
+                # request urlencoded (and not as the requested multipart/
+                # form-data). We try to support this anyway.
+                if web.ctx.env.get('CONTENT_TYPE', '') \
+                       == 'application/x-www-form-urlencoded' \
+                       and isinstance(i.bestandsveld, str):
+                    UD = R.uploadrecord(i.bestandsveld)
+                elif not i.bestandsveld == None and i.bestandsveld.file:
+                    # Todo: actually we should check if .file exists
                     UD = R.uploadrecord(i.bestandsveld.file.read())
                 else:
                     raise web.badrequest()
