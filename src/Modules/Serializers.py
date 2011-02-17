@@ -80,6 +80,17 @@ class Transcript(ClassModel) :
 #Transcript
 
 
+class RawVariant(ClassModel):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+
+    description = Mandatory.String
+    visualisation = Mandatory.String
+#RawVariant
+
+
 class MutalyzerOutput(ClassModel) :
     """
     Return type of SOAP method runMutalyzer.
@@ -104,6 +115,8 @@ class MutalyzerOutput(ClassModel) :
     summary = String
 
     chromDescription = String
+
+    rawVariants = Array(RawVariant)
 
     messages = Array(SoapMessage)
 #MutalyzerOutput

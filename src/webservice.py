@@ -62,7 +62,7 @@ from Modules import Parser
 from Modules import Mapper
 from Modules import Retriever
 from Modules import GenRecord
-from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage, TranscriptInfo, ExonInfo, ProteinTranscript
+from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage, TranscriptInfo, ExonInfo, ProteinTranscript, RawVariant
 
 
 class MutalyzerService(DefinitionBase) :
@@ -619,6 +619,15 @@ class MutalyzerService(DefinitionBase) :
 
         result.chromDescription = \
             str(O.getIndexedOutput("genomicChromDescription", 0))
+
+        raw_variants = []
+        for v in O.getOutput("visualisation"):
+            r = RawVariant()
+            r.description = v[0]
+            r.visualisation = '%s\n%s' % (v[1], v[2])
+            raw_variants.append(r)
+
+        result.rawVariants = raw_variants
 
         result.errors, result.warnings, result.summary = O.Summary()
 
