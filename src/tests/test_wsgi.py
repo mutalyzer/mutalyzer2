@@ -497,9 +497,24 @@ facilisi."""
         expected = '\n'.join(['1709', '187', '1709', '187', '48379389', '48379389', 'del'])
         self.assertEqual(r.body, expected)
 
+    def test_upload_local_file(self):
+        """
+        Test the genbank uploader.
+
+        @todo: Test if returned genomic reference can indeed be used now.
+        """
+        test_genbank_file = 'src/tests/data/AB026906.1.gb'
+        r = self.app.get('/upload')
+        form = r.forms[0]
+        form['invoermethode'] = 'file'
+        form.set('bestandsveld', ('test_upload.gb',
+                                  open(test_genbank_file, 'r').read()))
+        r = form.submit()
+        r.mustcontain('Your reference sequence was uploaded successfully.')
+
 if __name__ == '__main__':
     # Usage:
     #   ./test_wsgi.py -v
     # Or, selecting a specific test:
-    #   ./test_wsgi.py -v TestWSGI.test_getgs_del
+    #   ./test_wsgi.py -v TestWSGI.test_getgs
     unittest.main()
