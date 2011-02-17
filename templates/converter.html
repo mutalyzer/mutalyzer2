@@ -52,6 +52,7 @@
         <br>
         <b>Chromosomal Variant:</b><br>
         <pre><div tal:replace = "structure string:${gName}<br>"></div></pre>
+        <b tal:condition = "not:cNames">No transcripts found in mutation region</b><br><br>
       </div>
 
       <div tal:condition = "cNames">

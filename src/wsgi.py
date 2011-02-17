@@ -500,7 +500,7 @@ class PositionConverter:
         if build and variant:
             converter = Mapper.Converter(build, C, O)
 
-            #Conver chr accNo to NC number
+            #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
 
             if variant :
@@ -513,11 +513,13 @@ class PositionConverter:
                 if ":c." in variant:
                     # Do the c2chrom dance
                     variant = converter.c2chrom(variant)
+
+                attr["gName"] = variant
+
                 if variant and ":g." in variant:
                     # Do the g2c dance
                     variants = converter.chrom2c(variant, "dict")
                     if variants:
-                        attr["gName"] = variant
                         output = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\
                                   for key, value in variants.items()]
                         attr["cNames"].extend(output)
