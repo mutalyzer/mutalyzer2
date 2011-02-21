@@ -842,6 +842,11 @@ class MutalyzerService(DefinitionBase) :
             "Finished processing sliceChromosomeByGene(%s, %s, %s, %s)" % (
             geneSymbol, organism, upStream, downStream))
 
+        if not UD:
+            error = 'The request could not be completed\n' \
+                    + '\n'.join(O.getMessages())
+            raise Exception(error)
+
         return UD
     #sliceChromosomeByGene
 
