@@ -12,6 +12,7 @@ effects on restriction sites are also analysed.
 
 The original as well as the mutated string are stored here.
 
+@requires: itertools.izip_longest
 @requires: Bio.Restriction
 @requires: Bio.Seq.Seq
 @requires: Bio.Alphabet.IUPAC.IUPACAmbiguousDNA
@@ -21,6 +22,7 @@ The original as well as the mutated string are stored here.
 #     - Mutator ; Mutate a string and register all shift points.
 
 
+from itertools import izip_longest
 from Bio import Restriction
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
@@ -179,12 +181,12 @@ class Mutator() :
         """
         Compare two lists, and count those elements which are only present
         in list1.
-        
+
         @arg list1: some list
         @type list1: list
         @arg list2: some (other) list
         @type list2: list
-        
+
         @return: the elements only present in list 1, together with the number
         of occurrences, if more than once present
         @rtype: list
@@ -232,7 +234,7 @@ class Mutator() :
         @type pos2: integer
         @arg ins:   The insertion
         @type ins:  string
-        
+
         @return: visualisation
         @rtype: string
         """
@@ -291,7 +293,7 @@ class Mutator() :
 
         self.mutated = self.mutated[:self.shiftpos(pos1)] + ins + \
                        self.mutated[self.shiftpos(pos2):]
-        self.__sortins([pos1 + 1, len(ins) + pos1 - pos2])
+        self.__sortins([pos2 + 1, len(ins) + pos1 - pos2])
 
         return visualisation
     #__mutate
@@ -300,10 +302,10 @@ class Mutator() :
         """
         If the length of a sequence is larger than a certain maxvissize, the
         string is clipped; otherwise the string is just returned.
-        
+
         @arg string: DNA sequence
         @type string: string
-        
+
         @return: either the original sequence, or an abbreviation of it
         @rtype:  string
         """
@@ -314,6 +316,25 @@ class Mutator() :
                 string[-self.__config.flankclipsize:])
         return string
     #visualiseIns
+
+    def shift_minus_at(self, position):
+        """
+        Indicates if the position-shift gets smaller at exactly the given
+        position.
+
+        @arg  position: Position in the original string.
+        @type position: int
+
+        @return: True if the position-shift gets smaller at exactly the
+                 given position, False otherwise.
+        @rtype:  bool
+
+        @todo: Since the __shift list is sorted we could optimize this a
+               bit.
+        """
+        return reduce(lambda b,s: b or (s[0] == position and s[1] < 0),
+                      self.__shift, False)
+    #shift_minus_at
 
     def shiftpos(self, position) :
         """
@@ -333,7 +354,7 @@ class Mutator() :
         ret = position
 
         for i in range(len(self.__shift)) :
-            if self.__shift[i][0] >= position :
+            if self.__shift[i][0] > position :
                 return ret
 
             ret += self.__shift[i][1]
@@ -346,27 +367,92 @@ class Mutator() :
         """
         Generate a list of new splice sites.
 
-        @arg sites:  A list of old splice sites
-        @type sites: list
+        @arg  sites: A list of old splice sites.
+        @type sites: list of int
 
-        @return: A list of new splice sites
-        @rtype:  list
+        @return: A list of new splice sites.
+        @rtype:  list of int
+
+
+        Example 1 (DNA): NG_012772.1
+
+                  ...---------[=========]----------...
+                              ^         ^
+                            18964     19013
+
+          Variant           Expected new location for splice site 18964
+          g.18963del        18963
+          g.18964del        18964
+          g.18963_18964ins  18964
+          g.18964_18965ins  18964
+
+          Variant           Expected new location for splice site 19013
+          g.19013del        19012
+          g.19014del        19013
+          g.19013_19014ins  19014
+
+
+        Example 2 (RNA): NM_000088.3
+
+                      ...============][==============...
+                                     /\
+                                  229  230
+
+          Variant           Expected new location for splice sites 229,230
+          n.228del          228,229
+          n.229del          228,229
+          n.230del          229,230
+          n.231del          229,230
+          n.228_229ins      230,231
+          n.229_230ins      229,230 or 230,231
+          n.230_231ins      229,230
         """
 
-        ret = []
+        # We use shiftpos(i+1)-1 instead of shiftpos(i) (and its mirror)
+        # to make sure insertions directly before or after an exon are
+        # placed inside the exon.
+        #
+        # Example:
+        #
+        #   -----SPLICE[======]SPLICE----------SPLICE[=======]SPLICE-----
+        #                      ^                    ^
+        #                      ins                  ins
+        #
+        #   These two insertions should be mapped inside the exons because
+        #   they are before and after (respectively) their exons and don't
+        #   hit the (biological) splice sites.
+        #
+        # This also makes sure deletions of the last exon base are really
+        # removed from the exon. The problem is that positions following
+        # (but not including) the deletion get a shift, but the splice site
+        # is stored by the position of the last exon base. So the splice
+        # site position would not be decremented without the +1-1 dance.
 
-        j = 0
-        for i in sites :
-            if (j % 2) :
-                ret.append(self.shiftpos(i + 1) - 1)
-                #ret.append(self.shiftpos(i))
-            else :
-                ret.append(self.shiftpos(i - 1) + 1)
-                #ret.append(self.shiftpos(i))
-            j += 1
-        #for
+        new_sites = []
 
-        return ret
+        prev_donor = -1
+        sites_iter = iter(sites)
+        for acceptor, donor in izip_longest(sites_iter, sites_iter):
+
+            # We don't want to do the -1+1 dance if
+            # 1) there is a deletion directly before the exon, or
+            # 2) there is another exon directly before this exon.
+            #
+            # A consequence of check 2) is that insertions between two
+            # directly adjacent exons are seen as insertions in the first
+            # exon.
+            if prev_donor == acceptor - 1 or self.shift_minus_at(acceptor):
+                new_sites.append(self.shiftpos(acceptor))
+            else:
+                new_sites.append(self.shiftpos(acceptor - 1) + 1)
+
+            # Should never happen since splice sites come in pairs.
+            if not donor: continue
+
+            new_sites.append(self.shiftpos(donor + 1) - 1)
+            prev_donor = donor
+
+        return new_sites
     #newSplice
 
     def delM(self, pos1, pos2) :
@@ -403,7 +489,6 @@ class Mutator() :
         @arg ins:  The insertion
         @type ins: string
         """
-
         visualisation = ["insertion between %i and %i" % (pos, pos + 1)]
         visualisation.extend(self.__mutate(pos, pos, ins))
         self.__output.addOutput("visualisation", visualisation)
