@@ -115,6 +115,9 @@ class MutalyzerOutput(ClassModel) :
     summary = String
 
     chromDescription = String
+    genomicDescription = String
+    transcriptDescriptions = Array(String)
+    proteinDescriptions = Array(String)
 
     rawVariants = Array(RawVariant)
 

@@ -618,7 +618,11 @@ class MutalyzerService(DefinitionBase) :
         result.altProtein = str(O.getIndexedOutput("altProtein", 0))
 
         result.chromDescription = \
-            str(O.getIndexedOutput("genomicChromDescription", 0))
+            O.getIndexedOutput("genomicChromDescription", 0)
+        result.genomicDescription = \
+            O.getIndexedOutput("genomicDescription", 0)
+        result.transcriptDescriptions = O.getOutput("descriptions")
+        result.proteinDescriptions = O.getOutput("protDescriptions")
 
         raw_variants = []
         for v in O.getOutput("visualisation"):
