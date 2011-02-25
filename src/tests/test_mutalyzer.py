@@ -43,11 +43,27 @@ class TestMutalyzer(unittest.TestCase):
 
     def test_no_roll(self):
         """
-        Just a variant where we should not roll.
+        Just a variant where we cannot roll.
         """
         Mutalyzer.process('NM_003002.2:c.274del', self.config, self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
         self.assertTrue(len(wroll) == 0)
+
+    def test_no_roll_splice(self):
+        """
+        Here we can roll but should not, because it is over a splice site.
+        """
+        Mutalyzer.process('NM_000088.3:g.459del', self.config, self.output)
+        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        self.assertTrue(len(wroll) == 0)
+
+    def test_roll_after_splice(self):
+        """
+        Here we can roll and should, we stay in the same exon.
+        """
+        Mutalyzer.process('NM_000088.3:g.460del', self.config, self.output)
+        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        self.assertTrue(len(wroll) > 0)
 
     def test_ins_cds_start(self):
         """

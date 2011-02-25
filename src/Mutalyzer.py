@@ -6,6 +6,7 @@ The nomenclature checker.
 @requires: sys
 @requires: math
 @requires: types
+@requires: itertools.izip_longest
 @requires: Bio
 @requires: Bio.Seq
 @requires: Bio.Seq.Seq
@@ -29,6 +30,7 @@ The nomenclature checker.
 import sys
 import math
 import types
+from itertools import izip_longest
 import Bio
 
 import Bio.Seq
@@ -885,14 +887,23 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
     # the roll shorter, just up to the splice site.
     shift = roll[1]
     if GenRecordInstance.record.molType == 'n' :
-        mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
-            ].mRNA.positionList
-        for i in mRNA :
-            if end_g <= i and end_g + roll[1] > i :
-                # Do a shorter roll, just up to the splice site
-                print "ALARM"
-                shift = i - end_g
-                print shift
+        mRNA = iter(GenRecordInstance.record.geneList[0].transcriptList[0] \
+                    .mRNA.positionList)
+        for acceptor, donor in izip_longest(mRNA, mRNA):
+            # Do a shorter roll, just up to the splice site.
+            # Note that acceptor and donor splice sites both point to the
+            # first, respectively last, position of the exon, so they are
+            # both at different sides of the boundary.
+            if end_g < acceptor and end_g + roll[1] >= acceptor:
+                shift = acceptor - 1 - end_g
+                #print "ALARM"
+                #print shift
+                break
+            #if
+            if end_g <= donor and end_g + roll[1] > donor:
+                shift = donor - end_g
+                #print "ALARM"
+                #print shift
                 break
             #if
         #for
@@ -985,14 +996,23 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     # the roll shorter, just up to the splice site.
     shift = roll[1]
     if GenRecordInstance.record.molType == 'n' :
-        mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
-            ].mRNA.positionList
-        for i in mRNA :
-            if newStop <= i and newStop + roll[1] > i :
-                # Do a shorter roll, just up to the splice site
-                print "ALARM"
-                shift = i - newStop
-                print shift
+        mRNA = iter(GenRecordInstance.record.geneList[0].transcriptList[0] \
+                    .mRNA.positionList)
+        for acceptor, donor in izip_longest(mRNA, mRNA):
+            # Do a shorter roll, just up to the splice site.
+            # Note that acceptor and donor splice sites both point to the
+            # first, respectively last, position of the exon, so they are
+            # both at different sides of the boundary.
+            if newStop < acceptor and newStop + roll[1] >= acceptor:
+                shift = acceptor - 1 - newStop
+                #print "ALARM"
+                #print shift
+                break
+            #if
+            if newStop <= donor and newStop + roll[1] > donor:
+                shift = donor - newStop
+                #print "ALARM"
+                #print shift
                 break
             #if
         #for
