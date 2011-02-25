@@ -285,6 +285,16 @@ class TestMutator(unittest.TestCase):
         m.insM(13, 'A')   # g.13_14insA
         self.assertEqual(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
 
+    def test_newSplice_first_acc_ins_on(self):
+        """
+        Insertion in first intron/exon boundary not be included.
+        """
+        l = 30
+        sites = [4, 9, 14, 17, 25, 27]
+        m = self._mutator(_seq(l))
+        m.insM(3, 'A')   # g.3_4insA
+        self.assertEqual(m.newSplice(sites), [5, 10, 15, 18, 26, 28])
+
     def test_newSplice_acc_ins_after(self):
         """
         Insertion 1 position after intron/exon boundary.
@@ -315,6 +325,16 @@ class TestMutator(unittest.TestCase):
         m.insM(17, 'A')   # g.17_18insA
         self.assertEqual(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
 
+    def test_newSplice_last_don_ins_on(self):
+        """
+        Insertion in last exon/intron boundary should not be included.
+        """
+        l = 30
+        sites = [4, 9, 14, 17, 25, 27]
+        m = self._mutator(_seq(l))
+        m.insM(27, 'A')   # g.27_28insA
+        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
+
     def test_newSplice_don_ins_after(self):
         """
         Insertion 1 position after exon/intron boundary.
@@ -339,15 +359,15 @@ class TestMutator(unittest.TestCase):
         m.insM(12, 'AT')   # g.12_13insAT
         self.assertEqual(m.newSplice(sites), [4, 9, 16, 19, 27, 29])
 
-    def test_newSplice_acc_ins2_on(self):
+    def test_newSplice_first_acc_ins2_on(self):
         """
-        Insertion of 2 in intron/exon boundary.
+        Insertion of 2 in last exon/intron boundary should not be included.
         """
         l = 30
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
-        m.insM(13, 'AT')   # g.13_14insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
+        m.insM(3, 'AT')   # g.3_4insAT
+        self.assertEqual(m.newSplice(sites), [6, 11, 16, 19, 27, 29])
 
     def test_newSplice_acc_ins2_after(self):
         """
@@ -369,15 +389,15 @@ class TestMutator(unittest.TestCase):
         m.insM(16, 'AT')   # g.16_17insAT
         self.assertEqual(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
 
-    def test_newSplice_don_ins2_on(self):
+    def test_newSplice_last_don_ins2_on(self):
         """
-        Insertion of 2 in exon/intron boundary.
+        Insertion of 2 in last exon/intron boundary should not be included.
         """
         l = 30
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
-        m.insM(17, 'AT')   # g.17_18insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
+        m.insM(27, 'AT')   # g.27_28insAT
+        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
 
     def test_newSplice_don_ins2_after(self):
         """
@@ -413,6 +433,16 @@ class TestMutator(unittest.TestCase):
         m.insM(13, 'ATT')   # g.13_14insATT
         self.assertEqual(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
 
+    def test_newSplice_first_acc_ins3_on(self):
+        """
+        Insertion of 3 in first intron/exon boundary should not be included.
+        """
+        l = 30
+        sites = [4, 9, 14, 17, 25, 27]
+        m = self._mutator(_seq(l))
+        m.insM(3, 'ATT')   # g.3_4insATT
+        self.assertEqual(m.newSplice(sites), [7, 12, 17, 20, 28, 30])
+
     def test_newSplice_acc_ins3_after(self):
         """
         Insertion of 3 1 position after intron/exon boundary.
@@ -442,6 +472,16 @@ class TestMutator(unittest.TestCase):
         m = self._mutator(_seq(l))
         m.insM(17, 'ATT')   # g.17_18insATT
         self.assertEqual(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
+
+    def test_newSplice_last_don_ins3_on(self):
+        """
+        Insertion of 3 in last exon/intron boundary should not be included.
+        """
+        l = 30
+        sites = [4, 9, 14, 17, 25, 27]
+        m = self._mutator(_seq(l))
+        m.insM(27, 'ATT')   # g.27_28insATT
+        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
 
     def test_newSplice_don_ins3_after(self):
         """

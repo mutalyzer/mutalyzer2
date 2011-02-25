@@ -430,17 +430,22 @@ class Mutator() :
 
         new_sites = []
 
-        prev_donor = -1
+        prev_donor = sites[0] - 1
         sites_iter = iter(sites)
         for acceptor, donor in izip_longest(sites_iter, sites_iter):
 
             # We don't want to do the -1+1 dance if
             # 1) there is a deletion directly before the exon, or
-            # 2) there is another exon directly before this exon.
+            # 2) there is another exon directly before this exon, or
+            # 3) this is the first site in the list.
             #
             # A consequence of check 2) is that insertions between two
             # directly adjacent exons are seen as insertions in the first
             # exon.
+            #
+            # Condition 3) makes sure we don't include insertions directly
+            # in front of CDS start in the CDS. It also affects translation
+            # start, but this should be no problem.
             if prev_donor == acceptor - 1 or self.shift_minus_at(acceptor):
                 new_sites.append(self.shiftpos(acceptor))
             else:
@@ -449,7 +454,15 @@ class Mutator() :
             # Should never happen since splice sites come in pairs.
             if not donor: continue
 
-            new_sites.append(self.shiftpos(donor + 1) - 1)
+            # We don't want to do the +1-1 dance if this is the last site
+            # in the list. This makes sure we don't include insertions
+            # directly at CDS end in the CDS. It also affects translation
+            # end, but this should be no problem.
+            if donor == sites[-1]:
+                new_sites.append(self.shiftpos(donor))
+            else:
+                new_sites.append(self.shiftpos(donor + 1) - 1)
+
             prev_donor = donor
 
         return new_sites
