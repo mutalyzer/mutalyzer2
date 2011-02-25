@@ -879,12 +879,15 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
 
     roll = __roll(MUU.orig, start_g, end_g)
 
+    # In the case of RNA, check if we roll over a splice site. If so, make
+    # the roll shorter, just up to the splice site.
     shift = roll[1]
     if GenRecordInstance.record.molType == 'n' :
         mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
             ].mRNA.positionList
         for i in mRNA :
             if end_g <= i and end_g + roll[1] > i :
+                # Do a shorter roll, just up to the splice site
                 print "ALARM"
                 shift = i - end_g
                 print shift
@@ -892,7 +895,6 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
             #if
         #for
     #if
-
 
     if shift : # FIXME, The warning may not be apropriate.
         newStart = start_g + shift
@@ -977,12 +979,15 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
     newStop = MUU.shiftpos(start_g) + insertionLength
     roll = __roll(MUU.mutated, newStart + 1, newStop)
 
+    # In the case of RNA, check if we roll over a splice site. If so, make
+    # the roll shorter, just up to the splice site.
     shift = roll[1]
     if GenRecordInstance.record.molType == 'n' :
         mRNA = GenRecordInstance.record.geneList[0].transcriptList[0
             ].mRNA.positionList
         for i in mRNA :
             if newStop <= i and newStop + roll[1] > i :
+                # Do a shorter roll, just up to the splice site
                 print "ALARM"
                 shift = i - newStop
                 print shift
