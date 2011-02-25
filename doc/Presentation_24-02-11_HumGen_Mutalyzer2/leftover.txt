@@ -1,0 +1,271 @@
+% - Mutalyzer 1.0.4
+\begin{slide}
+  \slideheading{Mutalyzer 1.0.4}
+
+  \begin{itemize}
+    \item Developed in over four years by multiple people.
+    \item Originally a command line program.
+    \item Web interface added later.
+  \end{itemize}
+  \vfill
+\end{slide}
+
+%   - Design flaws:
+%     - Nomenclature rules interwoven with the code.
+%     - No modularity (reuse of code is very hard).
+%     - Reference sequence parsing not abstracted.
+%     - HTML output interwoven with the code.
+\begin{slide}
+  \slideheading{Mutalyzer 1.0.4}
+
+  Design flaws:
+
+  \begin{itemize}
+    \item Nomenclature rules interwoven with the code.
+    \item HTML output interwoven with the code.
+    \item No modularity (reuse of code is very hard).
+    \item Reference sequence parsing not abstracted.
+  \end{itemize}
+  \vfill
+\end{slide}
+
+%   - Implementation flaws:
+%     - Inheritance of types (del on DNA -> del on PROT).
+%     - Disambiguation not general.
+%     - Support up/downstream exons.
+%     - Speed
+\begin{slide}
+  \slideheading{Mutalyzer 1.0.4}
+
+  Implementation flaws:
+
+  \begin{itemize}
+    \item Inheritance of types (del on DNA -> del on PROT).
+    \item Disambiguation not general.
+    \item Support up/downstream exons.
+    \item Nothing was ever redesigned, only wrapped in loops.
+    \begin{itemize}
+      \item Debugging, altering code made impossible.
+      \item Speed drastically deminished.
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+%   - Programming flaws:
+%     - Excessive usage of exceptions.
+%     - Incomprehensible error messages.
+%     - Poor documentation.
+\begin{slide}
+  \slideheading{Mutalyzer 1.0.4}
+
+  Programming flaws:
+
+  \begin{itemize}
+    \item Excessive usage of exceptions.
+    \item Incomprehensible error messages.
+    \item Poor documentation.
+  \end{itemize}
+  \vfill
+\end{slide}
+
+%   - Feature requests:
+%     - Extension of HGVS nomenclature rules.
+%     - Support for other reference files (LRG)
+%     - Programmatic access to internal functions.
+%     - Solving all problems mentioned above.
+%   - Since the nomenclature has changed, a rewrite was in order.
+%
+
+\begin{slide}
+  \slideheading{Mutalyzer 1.0.4}
+
+  Feature requests:
+
+  \begin{itemize}
+    \item Solving all problems mentioned above.
+    \item Support for other reference files (LRG).
+    \item Programmatic access to internal functions.
+  \end{itemize}
+  Since the HGVS nomenclature rules were changed in the mean time, and the
+  language was no longer regular (but context free), the only possible couse of
+  action was a complete redesign.
+  \vfill
+\end{slide}
+
+% - Preparations for version 2.0
+%   - Gathering and archiving all old versions (for comparison).
+%   - Setting up a version control repository.
+%   - Talking for months.
+%     - Figuring out what the HGVS language is.
+%     - Formalising that language (BNF).
+%     - Semantic rules.
+%   - Chopping everything up in functional modules.
+%   - Designing interfaces (web, webservice, command line, etc.)
+\begin{slide}
+  \slideheading{Preparing for a new version}
+
+  
+  \begin{itemize}
+    \item Setting up a version control repository.
+    \item Gathering all old versions and putting then under version control.
+    \begin{itemize}
+      \item Critical bugfixes until there is a new version.
+      \item Easy to search and track changes.
+      \item Point of reference for the new version.
+    \end{itemize}
+    \item Talking for months.
+    \begin{itemize}
+      \item Figuring out what the HGVS language is.
+      \item Formalising that language (BNF).
+      \item Semantic rules.
+    \end{itemize}
+    \item Chopping everything up in functional modules.
+    \item Designing interfaces (web, webservice, command line, etc.).
+  \end{itemize}
+  \vfill
+\end{slide}
+
+%
+% - Then finally, after months of talking and drawing with pencil and paper..
+%   - Implementing the modules.
+%   - Implementing the interfaces.
+\begin{slide}
+  \slideheading{Mutalyzer 2.0}
+
+  Then finally, after months of talking and drawing with pencil and paper..
+
+  \begin{itemize}
+    \item Implementing the modules.
+    \item Implementing the interfaces.
+  \end{itemize}
+
+  \vfill
+\end{slide}
+
+%
+% - Mutalyzer 2.0
+%   - Core functionalities.
+%   - Webservices.
+%   - ...
+
+
+\begin{slide}
+  \slideheading{TAL}
+
+  \begin{lstlisting}[language = HTML, caption = {TAL example}]
+    <table class = "raTable">
+      <tr>
+        <td>Number</td>
+        <td>Start (g.)</td>
+        <td>Stop (g.)</td>
+        <td>Start (c.)</td>
+        <td>Stop (c.)</td>
+      </tr>
+      <tr tal:repeat = "i exonInfo">
+        <td tal:content = "repeat/i/number"></td>
+        <td tal:repeat = "j i" tal:content = "j"></td>
+      </tr>
+    </table>
+  \end{lstlisting}
+
+  When we give a list of exon coordinates, a table is generated.
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{BNF}
+
+  \begin{lstlisting}[language = BNF, caption = {Abstract HGVS nomenclature}]
+    TransVar   -> `_v' Number
+    ProtIso    -> `_i' Number
+    GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
+  \end{lstlisting}
+
+  \begin{lstlisting}[caption = {HGVS nomenclature in Python}]
+      TransVar = Suppress("_v") + Number("TransVar")
+      ProtIso = Suppress("_i") + Number("ProtIso")
+      GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
+          Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
+  \end{lstlisting}
+
+  \bt{(CDKN2A\_v001)}
+  \begin{lstlisting}[caption = {Python object}]
+      Gene.GeneSymbol = CDKN2A
+      Gene.TransVar = 001
+  \end{lstlisting}
+
+  \bt{(CDKN2A\_i002)}
+  \begin{lstlisting}[caption = {Python object}]
+      Gene.GeneSymbol = CDKN2A
+      Gene.ProtIso = 002
+  \end{lstlisting}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Comparison to the old version (1.0.4)}
+
+  \renewcommand{\arraystretch}{0.99}
+  \begin{tabular}{l|c|c}
+                                  & Mutalyzer 1.0.4 & Mutalyzer 2.0\\
+    \hline
+    Disambiguation                & $\pm$           & $++$\\
+    Complex variants              & $--$            & $++$\\
+    Protein description           & $\pm$           & $+$\\
+    Up / downstream descriptions  & $--$            & $++$\\
+    Comprehensible error messages & $-$             & $++$\\
+    Using a protein reference     & $\pm$           & $--$\\
+    Batch checkers                & $\pm$           & $++$\\
+    GenBank uploader              & $+$             & $++$\\
+    Position conversion           & $--$            & $++$\\
+    Programmatic access           & $--$            & $++$\\
+    Other organisms / organelles  & $\pm$           & $++$\\
+  \end{tabular}
+
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Comparison to the old version (1.0.4): runtime}
+  \begin{center}
+    \colorbox{white} {
+      \includegraphics[scale = 0.65]{genes}
+    }
+  \end{center}
+  A $229\times$ speedup was measured (from almost $12min$ to about $3s$).
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Comparison to the old version (1.0.4): code}
+
+  \begin{tabular}{l|r|r}
+                               & Mutalyzer 1.0.4   & Mutalyzer 2.0\\
+    \hline
+    Total (lines)              &   $7,\!752$       &  $11,\!396$\\
+    Total (bytes)              & $365,\!736$       & $390,\!316$\\
+    Minimised (lines)          &   $5,\!102$       &   $4,\!320$\\
+    Minimised (bytes)          & $232,\!611$       & $156,\!803$\\
+    Percentage of code (lines) &    $66\%$         &    $38\%$\\
+    Percentage of code (bytes) &    $64\%$         &    $42\%$
+  \end{tabular}
+  \bigskip
+  \bigskip
+
+  The total amount of \emph{source code} in Mutalyzer~2.0 is $107\%$ of that in
+  Mutalyzer~1.0.4, but the amount of \emph{program code} is only $67\%$.
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Scalability: runtime with increasing complexity}
+  \begin{center}
+    \colorbox{white} {
+      \includegraphics[scale = 0.65]{allele}
+    }
+  \end{center}
+  The overhead ($\pm 2.5s$) is due to loading the reference sequence.
+  \vfill
+\end{slide}
+

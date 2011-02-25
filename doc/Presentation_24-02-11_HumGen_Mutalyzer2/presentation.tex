@@ -1,0 +1,798 @@
+% LUMC presentation template by J. F. J. Laros.
+% Last alteration on 20-02-2011.
+%
+% The packages texlive-latex-recommended, texlive-latex-base and
+%   texlive-latex-extra should be installed.
+%
+
+% Alter these four lines for a new presentation.
+\providecommand{\me}{Jeroen F. J. Laros}
+\providecommand{\myTitle}{Mutalyzer 2.0}
+\providecommand{\myConference}{Work discussion}
+\providecommand{\myDate}{Thursday, 24 February 2011}
+
+% Now go to %%% BEGIN PRESENTATION %%%
+
+\documentclass[a4, portrait]{seminar}
+
+\usepackage{semcolor} % For coloured text.
+\usepackage{slidesec} % For section headings.
+\usepackage{newcent}  % This is a better font for presentations.
+\usepackage{listings}
+\input{seminar.bug}
+
+\usepackage{graphicx} % For pictures.
+\usepackage{fancybox} % For the background picture.
+\usepackage[labelfont={color=white}, textfont={color=white}]{caption}
+
+\definecolor{Blue}{rgb}{0.,0.11372,0.37647} % Custom LUMC color
+
+\renewcommand{\labelitemi}{\textcolor{white}{$\bullet$}} % Make the bullets for
+\renewcommand{\labelitemii}{\textcolor{white}{--}}       % itemising white.
+\renewcommand{\labelitemiii}{\textcolor{white}{$\ast$}}
+\renewcommand{\labelitemiv}{\textcolor{white}{$\circ$}}
+\renewcommand{\labelenumi}{\textcolor{white}{\arabic{enumi}.}}
+
+\newcommand{\bt}[1]{\texttt{\textbf{#1}}}
+
+\lstdefinelanguage{BNF}{
+  sensitive = true,
+  otherkeywords = {-,>,|,',`,?,(,)},
+  morestring = [b][keywordstyle]',
+  morecomment = [l]{\#},
+}
+
+
+\newslideframe{TITLE}{ % Template for the title.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg}}
+  }{#1}
+}
+
+\newslideframe{PRES}{ % Template for the body.
+  \boxput{
+    \rput(0, 0){\includegraphics[angle=90, scale=.485]{bg2}}
+  }{
+    \textcolor{Blue}{
+      \rput[l]{90}(8.57, -1.5){\scriptsize{\myConference}} 
+      \rput[c]{90}(8.57, 5.35){\scriptsize{\theslide/\pageref{LastPage}}}
+      \rput[r]{90}(8.57, 12.2){\scriptsize{\myDate}}
+    }
+    \white #1
+  }
+}
+
+\renewcommand{\makeslideheading}[1]{ % Put the slide headings on top.
+  \rput[l](0.2, .40){
+      \textbf{
+        \textcolor{Blue}{#1}
+    }
+  }
+  \newline
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\slideframe{TITLE} % Use the title template.
+
+\begin{slide}
+  \setcounter{slide}{0}
+  \vspace*{1.5cm}
+  \begin{center}
+  {\bf\Large{\myTitle}}\\
+  \vfill
+  \textcolor{Blue}{
+    {\bf
+      \small{\me}\\
+      \small{Leiden Genome Technology Center}\\
+      \small{Department of Human Genetics}\\
+      \small{Center for Human and Clinical Genetics}
+    }
+  }
+  \vspace{1.1cm}
+  \end{center}
+\end{slide}
+
+\slideframe{PRES} % Use the body template.
+
+%%% BEGIN PRESENTATION %%%
+\providecommand{\positionpicture}{
+  \vspace{-0.5cm}
+  \begin{center}
+    \fbox{
+      \begin{picture}(300, 60)(0, 0)
+        \put(0, 30){\line(1, 0){300}}  % Genomic sequence.
+        \linethickness{4pt}
+        \put(50, 30){\line(1, 0){30}}  % Non-coding parts of the exons.
+        \put(220, 30){\line(1, 0){10}}
+        \linethickness{12pt}
+        \put(80, 30){\line(1, 0){20}}  % Coding parts of the exons.
+        \put(150, 30){\line(1, 0){20}}
+        \put(200, 30){\line(1, 0){20}}
+
+        \linethickness{0.5pt}
+        \put(20, 50){\scriptsize{Transcription start}}
+        \put(50, 45){\vector(0, -1){10}}
+        \put(200, 50){\scriptsize{Transcription end}}
+        \put(230, 45){\vector(0, -1){10}}
+
+        \put(70, 0){\scriptsize{CDS start}}
+        \put(80, 10){\vector(0, 1){10}}
+        \put(210, 0){\scriptsize{CDS stop}}
+        \put(220, 10){\vector(0, 1){10}}
+
+        \put(0, 0){\scriptsize{Genomic end}}
+        \put(0, 10){\vector(0, 1){10}}
+        \put(255, 0){\scriptsize{Genomic start}}
+        \put(300, 10){\vector(0, 1){10}}
+
+        \put(95, 50){\yellow \scriptsize{Variant A}\white}
+        \put(115, 45){\yellow \vector(0, -1){10}\white}
+
+        \put(140, 50){\yellow \scriptsize{Variant B}\white}
+        \put(160, 45){\yellow \vector(0, -1){10}\white}
+      \end{picture}
+    }
+  \end{center}
+  \bigskip
+}
+
+\providecommand{\positionshiftexampleheader}{
+  We observe a change from \bt{GG\underline{ATCATC}G} to 
+  \bt{GG\underline{ATCATCATC}G}.
+
+}
+
+\providecommand{\positionshiftexamplebody}{
+  \bt{\,123456789}
+  \vspace{-0.3cm}
+
+  \bt{GGATCATCG}
+
+}
+
+\providecommand{\inversionexampleheader}{
+  We observe a change from \bt{GCT\underline{TTAATT}AGG} to 
+  \bt{GCT\underline{AATTAA}AGG}.
+
+}
+
+\lstset{
+  language = Python,
+  basicstyle = \footnotesize,
+  lineskip = -0.5ex,
+  frame = shadowbox,
+  rulesepcolor = \color{black},
+  captionpos = b,
+  numbers = left,
+  numbersep = -1em,
+  numberstyle = \tiny
+}
+
+\begin{slide}
+  \slideheading{Introduction}
+  
+  A curational tool for \emph{Locus Specific Mutation Databases} (LSDBs).
+  
+  \bigskip
+  \begin{itemize}
+    \item Variant nomenclature checker applying \emph{Human Genome Variation
+          Society} (HGVS) guidelines.
+    \begin{itemize}
+      \item Is the syntax of the variant description valid?
+      \item Does the reference sequence exist?
+      \item Is the variant possible on this reference sequence?
+      \item Is this variant description the recommended one?
+    \end{itemize}
+    \item Basic effect prediction.
+    \begin{itemize}
+      \item Is the description of the transcript product as expected?
+      \item Is the predicted protein as expected?
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature}
+
+    Genomic orientated positions:
+    \begin{center}
+      \bt{AL449423.14:g.[65449\_65463del;65564\yellow T\white >\yellow C\white]}
+    \end{center}
+    \bigskip
+    Coding sequence orientated positions:
+    \begin{center}
+      \bt{AL449423.14(CDKN2A\_v001):c.[5\yellow A\white >\yellow G\white
+        ;106\_120del]}
+    \end{center}
+    \bigskip
+    \begin{itemize}
+      \item \bt{AL449423.14} -- reference sequence.
+      \item \bt{CDKN2A\_v001}$\;$ -- transcript variant \bt{1} of gene CDKN2A.
+      \item \bt{c.[5\yellow A\white >\yellow G\white ;106\_120del]} 
+      \begin{itemize}
+        \item A \emph{substitution} at position \bt{5} counting from the start
+          codon.
+        \item A \emph{deletion} from position \bt{106} to position \bt{120}.
+      \end{itemize}
+    \end{itemize}
+  
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: positions}
+
+  \positionpicture
+
+  This gene is on the reverse strand.
+
+  \bigskip
+  \begin{tabular}{l|l|l}
+    Name       &         & Description\\
+    \hline
+    Genomic    & \bt{g.} & From {\scriptsize Genomic start} to
+                           {\scriptsize Genomic end}. \\
+    Transcript & \bt{n.} & From {\scriptsize Transcription start} to 
+                           {\scriptsize Transcription end}, skip introns.\\
+    Coding     & \bt{c.} & From {\scriptsize CDS start} to 
+                           {\scriptsize CDS stop}, skip introns.
+  \end{tabular}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: positions}
+
+  \positionpicture
+
+  \bt{c.} positions:
+  \begin{itemize}
+    \item Positions in introns are relative to the nearest exonic position.
+    \item Positions before the CDS are indicated with a \bt{-} sign.
+    \item Positions after the CDS are indicated with a \bt{*} sign.
+  \end{itemize}
+
+  Position \bt{-1} and \bt{1} are adjacent.
+
+  If \bt{60} is the last position of the CDS, then \bt{60} and \bt{*1} are
+  adjacent.
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: positions}
+
+  \positionpicture
+
+  \renewcommand{\arraystretch}{1}
+  \begin{center}
+    \begin{tabular}{l|r|r|r}
+      Name                              & \bt{g.}  & \bt{n.}      & \bt{c.} \\
+      \hline
+      {\scriptsize Genomic start}       & \bt{1}   & \bt{100+d70} & 
+        \bt{*10+d70} \\
+      {\scriptsize Genomic end}         & \bt{300} & \bt{1-u50}   & 
+        \bt{-30-u50} \\
+      {\scriptsize Transcription start} & \bt{250} & \bt{1}       & \bt{-30} \\
+      {\scriptsize Transcription end}   & \bt{70}  & \bt{100}     & \bt{*10} \\
+      {\scriptsize CDS start}           & \bt{220} & \bt{30}      & \bt{1} \\
+      {\scriptsize CDS stop}            & \bt{80}  & \bt{90}      & \bt{60} \\
+    \end{tabular}
+  \end{center}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: positions}
+
+  \positionpicture
+
+  \renewcommand{\arraystretch}{1}
+  \begin{center}
+    \begin{tabular}{l|r|r|r}
+      Name                    & \bt{g.}  & \bt{n.}    & \bt{c.} \\
+      \hline
+      {\scriptsize Variant A} & \bt{185} & \bt{50+15} & \bt{20+15} \\
+      {\scriptsize Variant B} & \bt{140} & \bt{60}    & \bt{30} \\
+    \end{tabular}
+  \end{center}
+
+  \bigskip
+  \bt{NG\_001234.1:g.185\yellow A\white >\yellow C\white} 
+
+  \bt{NG\_001234.1(GEN\_v001):n.50+15\yellow T\white >\yellow G\white } 
+
+  \bt{NG\_001234.1(GEN\_v001):c.20+15\yellow T\white >\yellow G\white }
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: the position shift rule}
+  
+  \positionshiftexampleheader
+  \begin{center}
+    \positionshiftexamplebody
+    \begin{picture}(0, 0)(0, 0)
+      \put(-15.6, 5){\vector(0, 1){10}}
+      % \put(-9.5, 5){\vector(0, 1){10}}
+      % \put(-3.7, 5){\vector(0, 1){10}}
+      \put(2.5, 5){\vector(0, 1){10}}
+      % \put(8.8, 5){\vector(0, 1){10}}
+      % \put(15.1, 5){\vector(0, 1){10}}
+      \put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  Which can be described as an insertion of \bt{ATC} at three places:
+  \begin{itemize}
+    \item \bt{g.2\_3ins\yellow ATC\white}
+    \item \bt{g.5\_6ins\yellow ATC\white}% \ \ or \ \ \bt{g.3\_5dup}
+    \item \bt{g.8\_9ins\yellow ATC\white}% \ \ or \ \ \bt{g.6\_8dup}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: the position shift rule}
+  
+  \positionshiftexampleheader
+  \begin{center}
+    \positionshiftexamplebody
+    \begin{picture}(0, 0)(0, 0)
+      % \put(-15.6, 5){\vector(0, 1){10}}
+      \put(-9.5, 5){\vector(0, 1){10}}
+      % \put(-3.7, 5){\vector(0, 1){10}}
+      % \put(2.5, 5){\vector(0, 1){10}}
+      \put(8.8, 5){\vector(0, 1){10}}
+      % \put(15.1, 5){\vector(0, 1){10}}
+      % \put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  \ldots or an insertion of \bt{TCA} at two places:
+  \begin{itemize}
+    \item \bt{g.3\_4ins\yellow TCA\white}
+    \item \bt{g.6\_7ins\yellow TCA\white}% \ \ or \ \ \bt{g.4\_6dup}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: the position shift rule}
+  
+  \positionshiftexampleheader
+  \begin{center}
+    \positionshiftexamplebody
+    \begin{picture}(0, 0)(0, 0)
+      % \put(-15.6, 5){\vector(0, 1){10}}
+      % \put(-9.5, 5){\vector(0, 1){10}}
+      \put(-3.7, 5){\vector(0, 1){10}}
+      % \put(2.5, 5){\vector(0, 1){10}}
+      % \put(8.8, 5){\vector(0, 1){10}}
+      \put(15.1, 5){\vector(0, 1){10}}
+      %\put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  \ldots or an insertion of \bt{CAT} at two places:
+  \begin{itemize}
+    \item \bt{g.4\_5ins\yellow CAT\white}
+    \item \bt{g.7\_8ins\yellow CAT\white}% \ \ or \ \ \bt{g.5\_7dup}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: the position shift rule}
+  
+  \positionshiftexampleheader
+  \begin{center}
+    \positionshiftexamplebody
+    \begin{picture}(0, 0)(0, 0)
+      % \put(-15.6, 5){\vector(0, 1){10}}
+      % \put(-9.5, 5){\vector(0, 1){10}}
+      % \put(-3.7, 5){\vector(0, 1){10}}
+      % \put(2.5, 5){\vector(0, 1){10}}
+      % \put(8.8, 5){\vector(0, 1){10}}
+      % \put(15.1, 5){\vector(0, 1){10}}
+      \put(21.4, 5){\vector(0, 1){10}}
+    \end{picture}
+  \end{center}
+
+  The only correct one is the insertion on the 3' end.
+  \begin{itemize}
+    \item \bt{g.8\_9ins\yellow ATC}
+  \end{itemize}
+
+  However, this can also be described as a \emph{duplication}, which has
+  precedence over the \emph{insertion}.
+
+  The final description therefore is:
+  \begin{itemize}
+    \item \bt{g.6\_8dup}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: the position shift rule}
+  
+  However, the \bt{c.} notation of a gene on the reverse strand:
+
+  \begin{minipage}{0.4\textwidth}
+    \begin{center}
+      Genomic
+
+      \bt{\,123456789}
+      \vspace{-0.15cm}
+
+      \bt{GGATC\green\underline{\white ATC}\white G}
+    \end{center}
+  \end{minipage}
+  \begin{minipage}{0.4\textwidth}
+    \begin{center}
+      Coding
+
+      \bt{\,123456789}
+      \vspace{-0.15cm}
+
+      \bt{C\green\underline{\white GAT}\yellow\underline{\white GAT}\white CC}
+    \end{center}
+  \end{minipage}
+  \bigskip
+
+  \begin{itemize}
+    \item \bt{g.6\_8dup}
+    \item \bt{c.\yellow 5\white \_\yellow 7\white dup}\white \ \ \ and not \ \ 
+      \bt{c.\green 2\white \_\green 4\white dup}
+  \end{itemize}
+
+  A substitution on position \bt{g.8}, \emph{would} be converted to \bt{c.2}.
+
+  \begin{itemize}
+    \item \bt{g.8\yellow C\white >\yellow A\white}
+    \item \bt{c.2\yellow G\white >\yellow T\white}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: disambiguation}
+  
+  \inversionexampleheader
+  \begin{center}
+    \bt{\,\ \ \ \ \ \ \ \ \ 111}
+    \vspace{-0.3cm}
+
+    \bt{\,\,123456789012}
+    \vspace{-0.3cm}
+
+    \bt{G\underline{CTTTAATTAG}G}
+  \end{center}
+
+  We can describe it as follows:
+  \begin{itemize}
+    \item \bt{g.2\_11inv}
+  \end{itemize}
+  \begin{center}
+    \bt{\,\ \ \ \ \ \ \ \ \ 111}
+    \vspace{-0.3cm}
+
+    \bt{\,\,123456789012}
+    \vspace{-0.3cm}
+
+    \bt{GCT\underline{TTAATT}AGG}
+  \end{center}
+  \begin{itemize}
+    \item \bt{g.4\_9delins\yellow AATTAA\white}
+  \end{itemize}
+
+  But the correct way is:
+  \begin{itemize}
+    \item \bt{g.4\_9inv}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{HGVS nomenclature: disambiguation}
+
+  Other pitfalls:
+  \begin{itemize}
+    \item A deletion-insertion can actually be:
+    \begin{tabular}{llll}
+      --\, An inversion & \bt{2\_3del\yellow AC\white ins\yellow GT\white}
+        & $\Rightarrow$ & \bt{2\_3inv}\\
+      --\, An insertion & \bt{2del\yellow T\white ins\yellow TAA\white}
+        & $\Rightarrow$ & \bt{2\_3ins\yellow AA\white}\\
+      --\, A substitution & \bt{2del\yellow A\white ins\yellow T\white} 
+        & $\Rightarrow$ & \bt{2\yellow A\white >\yellow T\white}\\
+      --\, A deletion & \bt{2\_3del\yellow TA\white ins\yellow A\white}
+        & $\Rightarrow$ & \bt{2del}\\
+    \end{tabular}
+    \item An inversion can actually be a substitution 
+      (\bt{2\_4inv\yellow ACT\white}).
+    \item An insertion can actually be a duplication.
+    \item A variant can have no effect (\bt{2\_5inv\yellow ACGT\white},
+          \bt{2\yellow A\white >\yellow A\white}, etc.).
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: name checker}
+
+  \begin{center}
+    \bt{NM\_002001.2:c.[12\_14del;102\yellow G\white >\yellow T\white]}
+  \end{center}
+  \begin{enumerate}
+    \item Parse the variant description.
+    \begin{itemize}
+      \item Reference sequence e.g., \bt{NM\_002001.2}.
+      \item Position system (\bt{c.}, \bt{g.}, \bt{n.}, \ldots).
+      \item List of variants (\bt{12\_14del}, 
+            \bt{102\yellow G\white >\yellow T\white}).
+    \end{itemize}
+    \item Download the reference sequence.
+    \item Check the variants to the reference sequence.
+    \begin{itemize}
+      \item Is there a \bt{\yellow G\white } at position \bt{c.102}?
+    \end{itemize}
+    \item Mutate the reference sequence.
+    \item Predict the variant protein when applicable.
+    \item \ldots
+  \end{enumerate}
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: name checker}
+
+  \bigskip
+  \bigskip
+  \bigskip
+  \bigskip
+  \bigskip
+  \begin{center}
+    \bt{AL449423.14(CDKN2A\_v001):c.247\_250delins\yellow CTTT\white}
+
+    \bigskip
+    \bt{http://www.mutalyzer.nl/2.0/check}
+  \end{center}
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: name checker}
+
+  After a description is checked, other useful information is returned.
+  \begin{itemize}
+    \item Overview of the change on DNA level.
+    \item A genomic description.
+    \item A description on all affected transcripts.
+    \item Description of affected proteins.
+    \item Sequence of the original and affected protein with changes 
+      highlighted.
+    \item Exon and CDS start / stop information.
+    \item Effects on restriction sites.
+  \end{itemize}
+
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: design}
+
+  This version was built from scratch.
+  \begin{itemize}
+    \item Modular design allows for partial functionality or other combinations.
+    \begin{itemize}
+      \item Convert positions.
+      \item Check the syntax of a variant only.
+      \item Get information about a gene.
+      \item \ldots
+    \end{itemize}
+    \item Strict separation of functionality and interface.
+    \begin{itemize}
+      \item Web interface.
+      \item Batch interface.
+      \item Command line interface.
+      \item Programmatic access (for LOVD and other programs).
+    \end{itemize}
+  \end{itemize}
+
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: position converter}
+
+  Next Generation Sequencing uses chromosomal positions.
+
+  LSDB's usually use transcripts.
+
+  The position converter:
+  \begin{itemize}
+    \item Works on both hg18 (NCBI Build 36.1) and hg19 (GRCh37).
+    \item Works in both ways:
+    \begin{itemize}
+      \item \bt{NM\_003002.2:c.274\yellow G\white >\yellow T\white} to
+            \bt{NC\_000011.9:g.111959695\yellow G\white >\yellow T\white}.
+      \item \bt{chr11:g.111959695\yellow G\white >\yellow T\white} to 
+            \bt{NM\_003002.2:c.274\yellow G\white >\yellow T\white}.
+    \end{itemize}
+    \item Can be used to \emph{lift over} from hg18 to hg19 and vice versa.
+  \end{itemize}
+
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: other functionalities}
+  
+  Other functionalities of Mutalyzer 2.0 include:
+  \begin{itemize}
+    \item SNP conversion (from dbSNP rsId to HGVS notation).
+    \item Name generator (to help people that don't use the HGVS notation that
+          often).
+    \item GenBank uploader (to make your own reference sequences).
+    \begin{itemize}
+      \item Automatically uses the correct strand when a HGNC gene symbol is
+            used.
+    \end{itemize}
+    \item Recently added functionality for the LRG (Locus Reference Genomic)
+          reference files.
+    \begin{itemize}
+      \item Other formats can easily be added.
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Mutalyzer 2.0: other functionalities}
+
+  For a large number of checks, there are other interfaces.
+  \begin{itemize}
+    \item Batch interfaces (upload a table, receive the result by mail):
+    \begin{itemize}
+      \item Name checker.
+      \item Syntax checker.
+      \item Position converter.
+    \end{itemize}
+    \item Programmatic access (use from your own scripts).
+    \begin{itemize}
+      \item Currently $18$ functions available.
+      \begin{itemize}
+        \item Position conversion.
+        \item Mutate a reference sequence.
+        \item Retrieve all transcripts in a range of a chromosome.
+        \item Give extensive information of transcripts.
+        \item \ldots
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{LOVD}
+
+  LOVD, the \emph{Leiden Open Variation Database} is a \emph{locus specific
+  database} (LSDB).
+
+  \begin{itemize}
+    \item Gene centred.
+    \item Variants are supposed to be stored in HGVS format.
+    \begin{itemize}
+      \item Mutalyzer name checker.
+    \end{itemize}
+    \item Variants are described on one \emph{transcript}.
+    \begin{itemize}
+      \item Mutalyzer name checker gives descriptions for all annotated
+        transcripts.
+    \end{itemize}
+    \item Variants must be mapped to the genome.
+    \begin{itemize}
+      \item Mutalyzer position converter.
+    \end{itemize}
+  \end{itemize}
+  
+  \begin{center}
+    \bt{http://www.lovd.nl}
+  \end{center}
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{LOVD: Mutalyzer 2.0 dependencies}
+
+  Creating a database:
+  \begin{itemize}
+    \item The curator knows the accession number of a transcript.
+    \begin{itemize}
+      \item Find the gene.
+      \item Find a genomic reference sequence.
+      \item Use the accession number of the genomic and transcript reference to
+        make a HGVS reference notation.
+      \begin{itemize}
+        \item \bt{NG\_007109.1} \ \  and \ \ \bt{NM\_000249.3} $\Rightarrow$ 
+          \bt{NG\_007109.1(MLH1\_v001)}.
+      \end{itemize}
+    \end{itemize}
+    \item The curator knows the gene name.
+    \begin{itemize}
+      \item Find a genomic reference sequence.
+      \item Retrieve a list of transcripts.
+      \item Show product information of each transcript.
+    \end{itemize}
+  \end{itemize}
+
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{LOVD: Mutalyzer 2.0 dependencies}
+
+  Adding a variant:
+  \begin{itemize}
+    \item Verify the validity.
+    \item Convert to genomic (chromosomal) positions.
+    \begin{itemize}
+      \item Used for visualisation in the UCSC genome browser.
+      \item Enables all LOVD installations to be searched.
+    \end{itemize}
+    \item Convert variant descriptions to other transcripts.
+    \item Provide a sortable \bt{c.}-like position.
+  \end{itemize}
+
+  \vfill
+\end{slide}
+
+\begin{slide}
+  \slideheading{Conclusions and further research}
+
+  Short term:
+  \begin{itemize}
+    \item Using protein reference sequences.
+    \item Connection to SVEP.
+    \begin{itemize}
+      \item Splice prediction.
+      \item Alternative start.
+      \item Branch sites.
+      \item Transcription factors binding sites.
+      \item Protein effect prediction.
+      \item \ldots
+    \end{itemize}
+  \end{itemize}
+  \vfill
+\end{slide}
+  
+\begin{slide}
+  \rput(11.4,0.6){\includegraphics[scale=0.1]{Gen2Phen}}
+  \slideheading{Questions?}
+  \begin{center}
+    Acknowledgements
+    \bigskip
+    \bigskip
+    
+    Gerben Stouten\\
+    Martijn Vermaat\\
+    Gerard Schaafsma\\
+    Ivo Fokkema\\
+    Jacopo Celli\\
+    Johan den Dunnen\\
+    Peter Taschner
+    \bigskip
+    
+    \bt{http://www.mutalyzer.nl/}
+  \end{center}
+  \vfill
+  \label{LastPage}
+\end{slide}
+
+\end{document}

@@ -656,6 +656,8 @@ def findFrameShift(str1, str2) :
     lcp = __lcp(str1, str2)
 
     if lcp == len(str2) : # NonSense mutation.
+        if lcp == len(str1) : # Is this correct?
+            return ("p.(=)", 0, 0, 0)
         return ("p.(%s%i*)" % (seq3(str1[lcp]), lcp + 1), lcp, len(str1), lcp)
     if lcp == len(str1) :
         return ("p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),

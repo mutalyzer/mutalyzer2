@@ -514,6 +514,7 @@ class GBparser() :
                             myGene.location = self.__location2pos(i.location)
                             geneDict[geneName] = tempGene(geneName)
                         #if
+                    #if
 
                     if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA", 
                        "tmRNA"] :

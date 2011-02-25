@@ -49,7 +49,8 @@ class Nomenclatureparser() :
     # Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' |
     #       `m' | `s' | `w' | `b' | `d' | `h' | `v' | `i' |
     #       `n' | `A' | `C' | `G' | `T' | `U'
-    Nt = Word("acgtuACGTU", exact = 1)
+    #Nt = Word("acgtuACGTU", exact = 1)
+    Nt = Word("acgturykmswbdhvnACGTURYKMSWBDHVN", exact = 1)
 
     # New:
     NtString = Combine(OneOrMore(Nt))
