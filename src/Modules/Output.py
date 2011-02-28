@@ -185,7 +185,7 @@ class Output() :
 
         # Log the message if the message is important enough, or if it is only
         # meant to be logged (level -1).
-        if level > self.__config.loglevel or level == -1 :
+        if level >= self.__config.loglevel or level == -1 :
             self.__loghandle.write(time.strftime(
                 self.__config.datestring + ' ') + "%s (%s) %s: %s%s\n" % (
                     self.__instance, niceName, code, self.__levelToName(level),
@@ -208,7 +208,7 @@ class Output() :
 
         ret = []
         for i in self.__messages :
-            if i.level > self.__config.outputlevel :
+            if i.level >= self.__config.outputlevel :
                 #print "%s(%s): %s" % (self.__levelToName(i.level), i.origin,
                 #                      i.description)
                 ret.append("%s(%s): %s" % (self.__levelToName(i.level),
@@ -235,7 +235,7 @@ class Output() :
 
         ret = []
         for i in self.__messages:
-            if i.level > self.__config.outputlevel:
+            if i.level >= self.__config.outputlevel:
                 mess = SoapMessage()
                 mess.errorcode = i.code
                 mess.message = i.description

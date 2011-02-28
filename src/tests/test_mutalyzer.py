@@ -54,8 +54,21 @@ class TestMutalyzer(unittest.TestCase):
         Here we can roll but should not, because it is over a splice site.
         """
         Mutalyzer.process('NM_000088.3:g.459del', self.config, self.output)
+        wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
+        self.assertTrue(len(wrollback) > 0)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
         self.assertTrue(len(wroll) == 0)
+
+    def test_partial_roll_splice(self):
+        """
+        Here we can roll two positions, but should roll only one because
+        otherwise it is over a splice site.
+        """
+        Mutalyzer.process('NM_000088.3:g.494del', self.config, self.output)
+        wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
+        self.assertTrue(len(wrollback) > 0)
+        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        self.assertTrue(len(wroll) > 0)
 
     def test_roll_after_splice(self):
         """

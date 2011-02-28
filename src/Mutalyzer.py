@@ -76,7 +76,7 @@ def __intronicPosition(Loc) :
     Check whether a location is intronic.
 
     @arg Loc: A location from the Parser module
-    @type Loc: 
+    @type Loc:
 
     @return: True if the location is intronic, False otherwise
     @rtype: boolean
@@ -272,7 +272,7 @@ def __bprint2(s, pos1, pos2, O, where) :
     @arg O: The Output object
     @type O: object
     @arg where: Location in the Output object to store the representation
-    @type where: 
+    @type where:
     """
 
     if not s :
@@ -449,7 +449,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
     @arg p2: End position of the variant
     @type p2: integer
     @arg arg: The optional argument
-    @type arg: 
+    @type arg:
     @arg O: The Output object
     @type O: object
 
@@ -744,7 +744,7 @@ def _createBatchOutput(O):
     Format the results to a batch output.
 
     Filter the mutalyzer output
-    
+
     @arg O:
     @type O:
 
@@ -896,14 +896,10 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
             # both at different sides of the boundary.
             if end_g < acceptor and end_g + roll[1] >= acceptor:
                 shift = acceptor - 1 - end_g
-                #print "ALARM"
-                #print shift
                 break
             #if
             if end_g <= donor and end_g + roll[1] > donor:
                 shift = donor - end_g
-                #print "ALARM"
-                #print shift
                 break
             #if
         #for
@@ -915,11 +911,22 @@ def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
         O.addMessage(__file__, 2, "WROLL",
             "Sequence \"%s\" at position %s was given, however, " \
             "the HGVS notation prescribes that it should be \"%s\" at " \
-            "position %s." % (
+                     "position %s." % (
             MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
             __formatRange(start_g, end_g),
             MUU.visualiseLargeString(str(MUU.orig[newStart - 1:newStop])),
             __formatRange(newStart, newStop)))
+    #if
+    if shift != roll[1]:
+        incorrectStart = start_g + roll[1]
+        incorrectStop = end_g + roll[1]
+        O.addMessage(__file__, 1, "IROLLBACK",
+            "Sequence \"%s\" at position %s was not corrected to \"%s\" at " \
+            "position %s, since they reside in different exons." % (
+            MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
+            __formatRange(start_g, end_g),
+            MUU.visualiseLargeString(str(MUU.orig[incorrectStart - 1:incorrectStop])),
+            __formatRange(incorrectStart, incorrectStop)))
     #if
     if mutationType == "del" :
         MUU.delM(start_g, end_g)
@@ -1005,20 +1012,17 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
             # both at different sides of the boundary.
             if newStop < acceptor and newStop + roll[1] >= acceptor:
                 shift = acceptor - 1 - newStop
-                #print "ALARM"
-                #print shift
                 break
             #if
             if newStop <= donor and newStop + roll[1] > donor:
                 shift = donor - newStop
-                #print "ALARM"
-                #print shift
                 break
             #if
         #for
     #if
 
     if roll[0] + shift >= insertionLength :
+        # Todo: could there also be a IROLLBACK message in this case?
         O.addMessage(__file__, 2, "WINSDUP",
             "Insertion of %s at position %i_%i was given, " \
             "however, the HGVS notation prescribes that it should be a " \
@@ -1039,6 +1043,15 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
                 Arg1, start_g, start_g + 1,
                 MUU.mutated[newStart + shift:newStop + shift],
                 newStart + shift, newStart + shift + 1))
+        if shift != roll[1]:
+            O.addMessage(__file__, 1, "IROLLBACK",
+                "Insertion of %s at position %i_%i was not corrected to an " \
+                "insertion of %s at position %i_%i, since they reside in " \
+                "different exons." % (
+                Arg1, start_g, start_g + 1,
+                MUU.mutated[newStart + roll[1]:newStop + roll[1]],
+                newStart + roll[1], newStart + roll[1] + 1))
+        #if
         GenRecordInstance.name(start_g, start_g + 1, "ins",
             MUU.mutated[newStart + shift:newStop + shift] , "",
             (roll[0], shift))
@@ -1165,7 +1178,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                     return
                 start_g = __ivs2g(RawVar.StartLoc.IVSLoc, transcript)
                 if not start_g :
-                    O.addMessage(__file__, 3, "EPOS", 
+                    O.addMessage(__file__, 3, "EPOS",
                         "Invalid IVS position given.")
                     return
                 #if
@@ -1278,11 +1291,11 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             return
         #if
         if len(Arg2) != len(ins_part) :
-            O.addMessage(__file__, 2, "WNOTMINIMAL", 
+            O.addMessage(__file__, 2, "WNOTMINIMAL",
                 "Sequence \"%s\" at position %i_%i has the same prefix or " \
                 "suffix as the inserted sequence \"%s\". The HGVS notation " \
                 "prescribes that it should be \"%s\" at position %i_%i." % (
-                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])), 
+                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
                 start_g, end_g, Arg2, ins_part, start_g + lcp, end_g - lcs))
 
         MUU.delinsM(start_g + lcp, end_g - lcs, ins_part)
@@ -1396,9 +1409,9 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
         if W.transcribe :
             O.addOutput("myTranscriptDescription", W.description)
 
-            O.addOutput("origMRNA", 
+            O.addOutput("origMRNA",
                 str(__splice(MUU.orig, W.mRNA.positionList)))
-            O.addOutput("mutatedMRNA", 
+            O.addOutput("mutatedMRNA",
                 str(__splice(MUU.mutated, MUU.newSplice(W.mRNA.positionList))))
         #if
 
