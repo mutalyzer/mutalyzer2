@@ -536,7 +536,7 @@ def __overSplice(pos1, pos2, sites) :
 
     @arg pos1: The first coordinate of the range in g. notation.
     @type pos1: integer
-    @arg pos2: The first coordinate of the range in g. notation.
+    @arg pos2: The second coordinate of the range in g. notation.
     @type pos2: integer
     @arg sites: A list of splice sites in g. notation.
     @type sites: list(integer)
@@ -1043,6 +1043,7 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
                 Arg1, start_g, start_g + 1,
                 MUU.mutated[newStart + shift:newStop + shift],
                 newStart + shift, newStart + shift + 1))
+        #if
         if shift != roll[1]:
             O.addMessage(__file__, 1, "IROLLBACK",
                 "Insertion of %s at position %i_%i was not corrected to an " \
@@ -1055,6 +1056,7 @@ def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
         GenRecordInstance.name(start_g, start_g + 1, "ins",
             MUU.mutated[newStart + shift:newStop + shift] , "",
             (roll[0], shift))
+    #else
 #checkInsertion
 
 def __ivs2g(location, transcript) :
@@ -1149,7 +1151,10 @@ def __normal2g(RawVar, transcript) :
 
 def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
     """
+    Process one raw variant.
+
     @todo: documentation
+    @todo: parts argument is not used
     """
 
     # FIXME check this
@@ -1229,9 +1234,53 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
         Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
         Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
 
+    splice_abort = False
+
+    # If we hit a splice site, issue a warning. Later on we decide if we
+    # can still process this variant in any way (e.g. if it deletes an
+    # entire exon).
     if transcript and __overSplice(start_g, end_g, transcript.CM.RNA) :
+        splice_abort = True
         O.addMessage(__file__, 2, "WOVERSPLICE",
             "Variant hits one or more splice sites.")
+
+    # If we have a deletion, and it covers exactly an even number of splice
+    # sites, remove these splice sites.
+    # Todo: Special cases for first/last exon? Upstream/downstream exons?
+    # Note, this is not the same as __overSplice(). Here we collect
+    # sites where the delection borders the exon/intron boundary.
+    if transcript and RawVar.MutationType == 'del':
+        removed_sites = []
+        sites = iter(transcript.CM.RNA)
+        for acceptor, donor in izip_longest(sites, sites):
+            if start_g <= acceptor <= end_g + 1:
+                removed_sites.append(acceptor)
+            if start_g - 1 <= donor <= end_g:
+                removed_sites.append(donor)
+
+        if len(removed_sites) and not len(removed_sites) % 2:
+            # An even number of splice sites was removed. We can deal with
+            # this, but issue a warning.
+            splice_abort = False
+            MUU.add_removed_sites(removed_sites)
+            O.addMessage(__file__, 1, "IDELSPLICE", "Removed %i splice " \
+                         "sites from transcript." % len(removed_sites))
+
+    # If splice_abort is set, this basically means WOVERSPLICE was called and
+    # IDELSPLICE was not called.
+    # I guess in that case we do want to generate the visualisation, the
+    # genomic description, and affected transcripts. But NOT the predicted
+    # protein.
+    # The following solution is a bit of a hack. By setting the .translate
+    # field of the transcript to False, we force that no protein is predicted.
+    if splice_abort:
+        #return
+        transcript.translate = False
+        # The affected protein description for this transcript will now be
+        # a question mark, e.g. "NG_012772.1(BRCA2_i001):?". But protein
+        # descriptions for other transcripts (where splice sites are also
+        # crippled) are still shown. I think we ideally would not want this.
+        # However, some transcripts might be unaffected and should be shown.
 
     if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
         __checkOptArg(MUU.orig, start_g, end_g, Arg1, O)

@@ -22,7 +22,7 @@ The original as well as the mutated string are stored here.
 #     - Mutator ; Mutate a string and register all shift points.
 
 
-from itertools import izip_longest
+from itertools import ifilter, izip_longest
 from Bio import Restriction
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
@@ -43,6 +43,8 @@ class Mutator() :
                                where the modifications in length are stored.
                                Each first element of the tuples in this list
                                is unique, each second element is non-zero.
+        - __removed_sites    ; Set of splice sites to ignore in mutated
+                               string.
         - __restrictionBatch ;
 
     Public variables:
@@ -106,6 +108,7 @@ class Mutator() :
         self.__config = config
         self.__output = output
         self.__shift = []
+        self.__removed_sites = set()
         self.__restrictionBatch = Restriction.RestrictionBatch([], ['N'])
 
         self.orig = orig
@@ -363,6 +366,19 @@ class Mutator() :
         return ret
     #shiftpos
 
+    def add_removed_sites(self, sites):
+        """
+        Add sites to the set of splice sites to ignore in the mutated string.
+
+        @arg sites:  A list of splice sites to ignore.
+        @type sites: list of int
+
+        @todo: Resulting list of ignored sites should always be even.
+        """
+        for site in sites:
+            self.__removed_sites.add(site)
+    #add_ignore_sites
+
     def newSplice(self, sites) :
         """
         Generate a list of new splice sites.
@@ -374,7 +390,7 @@ class Mutator() :
         @rtype:  list of int
 
 
-        Example 1 (DNA): NG_012772.1
+        Example 1 (DNA): NG_012772.1(BRCA2_v001)
 
                   ...---------[=========]----------...
                               ^         ^
@@ -430,8 +446,9 @@ class Mutator() :
 
         new_sites = []
 
-        prev_donor = sites[0] - 1
-        sites_iter = iter(sites)
+        prev_donor = None
+        sites_iter = ifilter(lambda s: s not in self.__removed_sites, sites)
+
         for acceptor, donor in izip_longest(sites_iter, sites_iter):
 
             # We don't want to do the -1+1 dance if
@@ -446,7 +463,8 @@ class Mutator() :
             # Condition 3) makes sure we don't include insertions directly
             # in front of CDS start in the CDS. It also affects translation
             # start, but this should be no problem.
-            if prev_donor == acceptor - 1 or self.shift_minus_at(acceptor):
+            if not prev_donor or prev_donor == acceptor - 1 or \
+                   self.shift_minus_at(acceptor):
                 new_sites.append(self.shiftpos(acceptor))
             else:
                 new_sites.append(self.shiftpos(acceptor - 1) + 1)

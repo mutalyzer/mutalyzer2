@@ -668,6 +668,30 @@ class TestMutator(unittest.TestCase):
         m.insM(18, 'AT')   # g.18_19insAT
         self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 29])
 
+    def test_newSplice_removed_sites(self):
+        """
+        After removing splice sites, newSplice() should filter them.
+        """
+        l = 40
+        sites = [4, 9, 14, 19, 25, 27, 32, 38]
+        m = self._mutator(_seq(l))
+        m.add_removed_sites([19, 25])
+        self.assertEqual(m.newSplice(sites), [4, 9, 14, 27, 32, 38])
+        m.add_removed_sites([27, 32])
+        self.assertEqual(m.newSplice(sites), [4, 9, 14, 38])
+        m.insM(13, 'A')   # g.13_14insA
+        self.assertEqual(m.newSplice(sites), [4, 9, 14, 39])
+
+    def test_sites_even_invariant(self):
+        """
+        The number of splice sites should always be even. Modifying the list
+        of splice sites must always prevent the result of an odd number of
+        splice sites.
+
+        Todo: this test.
+        """
+        pass
+
 
 if __name__ == '__main__':
     # Usage:
