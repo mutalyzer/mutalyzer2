@@ -1,38 +1,18 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 The nomenclature checker.
 
-@requires: sys
-@requires: math
-@requires: types
-@requires: itertools.izip_longest
-@requires: Bio
-@requires: Bio.Seq
-@requires: Bio.Seq.Seq
-@requires: Bio.Alphabet.IUPAC
-@requires: Bio.SeqUtils.seq3
-@requires: Bio.Restriction
-@requires: Modules.Retriever
-@requires: Modules.GenRecord
-@requires: Modules.Crossmap
-@requires: Modules.Parser
-@requires: Modules.Db
-@requires: Modules.Mutator
-@requires: Modules.Output
-@requires: Modules.Config
-@requires: operator.itemgetter
-@requires: operator.attrgetter
-
-@todo: SET TO FALSE DEBUG FLAG
+@todo: Use exceptions for failure handling.
 """
+
 
 import sys
 import math
-import types
 from itertools import izip_longest
-import Bio
+from operator import itemgetter, attrgetter
 
+import Bio
 import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
@@ -48,331 +28,134 @@ from Modules import Mutator
 from Modules import Output
 from Modules import Config
 
-from operator import itemgetter, attrgetter
 
-#TODO: SET TO FALSE DEBUG FLAG
-DEBUG = False
+##############################################################################
+# General utility functions, usefull outside of the Mutalyzer context.
+##############################################################################
 
-def __formatRange(pos1, pos2) :
+
+def _format_range(pos1, pos2):
     """
     Simplify a range to one position when applicable.
 
-    @arg pos1: First coordinate of a range
+    @arg pos1: First coordinate of a range.
     @type pos1: integer
-    @arg pos2: Second coordinate of a range
+    @arg pos2: Second coordinate of a range.
     @type pos2: integer
 
-    @return: pos1_pos2 in case of a real range, pos1 otherwise
+    @return: pos1_pos2 in case of a real range, pos1 otherwise.
     @rtype: string
     """
-
-    if pos1 == pos2 :
+    if pos1 == pos2:
         return str(pos1)
-    return "%i_%i" % (pos1, pos2)
-#__formatRange
 
-def __intronicPosition(Loc) :
-    """
-    Check whether a location is intronic.
+    return '%i_%i' % (pos1, pos2)
+#_format_range
 
-    @arg Loc: A location from the Parser module
-    @type Loc:
 
-    @return: True if the location is intronic, False otherwise
-    @rtype: boolean
-    """
-
-    if not Loc :
-        return False
-    if not Loc.PtLoc :
-        return False
-    if not Loc.PtLoc.Offset :
-        return False
-    return True
-#__intronicPosition
-
-def __checkIntronPosition(main, offset, transcript) :
-    """
-    Check whether a c. position is really in an intron: The main coordinate
-    must be a splice site and the offset coordinate must have the correct
-    sign.
-
-    @arg main: Main coordinate of the position
-    @type main: integer
-    @arg offset: Offset coordinate of the position
-    @type offset: integer
-    @arg transcript: Transcript under scrutiny
-    @type transcript: object
-
-    @return: True if the combination (main, offset) is valid for this
-             transcript, False otherwise
-    @rtype: boolean
-    """
-
-    main_g = transcript.CM.x2g(main, 0)
-    rnaList = transcript.CM.RNA
-
-    if offset :
-        #print main_g, offset, rnaList
-        orientedOffset = offset * transcript.CM.orientation
-        if main_g in rnaList :          # The main coordinate is a splice site.
-            if rnaList.index(main_g) % 2 == 0 : # Splice donor.
-                if orientedOffset > 0 :         # So the sign must be '+'.
-                    return False
-            else :                              # Splice acceptor.
-                if orientedOffset < 0 :         # So the sign must be '-'.
-                    return False
-        #if
-        else :
-            return False
-    #if
-
-    return True
-#__checkIntronPosition
-
-def __roll(ref, start, stop) :
+# Used in: checkDeletionDuplication, checkInsertion
+def _roll(s, start, stop):
     """
     Determine the variability of a variant by looking at cyclic
     permutations. Not all cyclic permutations are tested at each time, it
     is sufficient to check ``aW'' if ``Wa'' matches (with ``a'' a letter,
     ``W'' a word) when rolling to the left for example.
 
-    @arg ref: A reference sequence
-    @type ref: string
-    @arg start: Start position of the pattern in the reference sequence
-    @type start: integer
+    @arg s: A reference sequence.
+    @type s: string
+    @arg start: Start position of the pattern in the reference sequence.
+    @type start: int
     @arg stop: End position of the pattern in the reference sequence.
-    @type stop: integer
+    @type stop: int
 
     @return: tuple:
-        - left  ; Amount of positions that the pattern can be shifted to the left
-        - right ; Amount of positions that the pattern can be shifted to the
-                  right
-    @rtype: tuple (integer, integer)
+        - left  ; Amount of positions that the pattern can be shifted to
+                  the left.
+        - right ; Amount of positions that the pattern can be shifted to
+                  the right.
+    @rtype: tuple(int, int)
     """
-
-    pattern = ref[start - 1:stop] # Extract the pattern.
-    patternLength = len(pattern)
+    pattern = s[start - 1:stop] # Extract the pattern
+    pattern_length = len(pattern)
 
     # Keep rolling to the left as long as a cyclic permutation matches.
     minimum = start - 2
-    j = patternLength - 1
-    while minimum > -1 and ref[minimum] == pattern[j % patternLength] :
+    j = pattern_length - 1
+    while minimum > -1 and s[minimum] == pattern[j % pattern_length]:
         j -= 1
         minimum -= 1
-    #while
 
     # Keep rolling to the right as long as a cyclic permutation matches.
     maximum = stop
     j = 0
-    while maximum < len(ref) and ref[maximum] == pattern[j % patternLength] :
+    while maximum < len(s) and s[maximum] == pattern[j % pattern_length]:
         j += 1
         maximum += 1
-    #while
 
     return start - minimum - 2, maximum - stop
-#__roll
+#_roll
 
-def __palinsnoop(string) :
+
+def _palinsnoop(s):
     """
     Check a sequence for a reverse-complement-palindromic prefix (and
     suffix). If one is detected, return the length of this prefix. If the
     string equals its reverse complement, return -1.
 
-    @arg string: A nucleotide sequence
-    @type string: string
-
-    @return: The number of elements that are palindromic or -1 if the string is
-             a "palindrome".
-    @rtype: string
-    """
-
-    revcomp = Bio.Seq.reverse_complement(string)
-
-    for i in range(int(math.ceil(len(string) / 2.0))) :
-        if string[i] != revcomp[i] :
-            return i # The first i elements are ``palindromic''.
-    return -1        # Perfect ``palindrome''.
-#__palinsnoop
-
-def __bprint(s, O, where) :
-    # FIXME obsoleted function (replaced by __bprint2()), but still used.
-    """
-    @todo: FIXME obsoleted function (replaced by __bprint2()), but still used.
-    """
-
-    if not s :
-        return
-
-    block = 10
-    line = 6 * block
-
-    m = int(math.floor(math.log(len(s), 10)) + 1)
-    o = 1
-    output = "%s " % str(o).rjust(m)
-    for i in range(0, len(s), block) :
-        output += ' ' + s[i:i + block]
-        if not (i + block) % line and i + block < len(s) :
-            o += line
-            O.addOutput(where, output)
-            output = "%s " % str(o).rjust(m)
-        #if
-    #for
-    O.addOutput(where, output)
-#__bprint
-
-def __insertTag(s, pos1, pos2, tag1, tag2) :
-    """
-    Insert two tags (tag1 and tag2) in string s at positions pos1 and pos2
-    respectively if the positions are within the length of s. If not,
-    either insert one tag or do nothing. If pos1 equals pos2, don't do
-    anything either.
-
-    @arg s: A sequence
-    @type s:
-    @arg pos1: Position of tag1
-    @type pos1:
-    @arg pos2: Position of tag2
-    @type pos2:
-    @arg tag1: Content of tag1
-    @type tag1:
-    @arg tag2: Content of tag2
-    @type tag2:
-
-    @return: The original sequence, or a sequence with eiter tag1, tag2 or both
-             tags inserted.
-    @rtype: string
-    """
-
-    output = s
-    block = len(s)
-
-    if pos1 != pos2 :               # Only do something if pos1 != pos2.
-        if 0 <= pos1 < block :
-            output = output[:pos1] + tag1 + output[pos1:] # Insert tag1.
-        if 0 <= pos2 < block :
-            output = output[:-(block - pos2)] + tag2 + \
-                     output[-(block - pos2):]             # Insert tag2.
-    #if
-
-    return output
-#__insertTag
-
-def __bprint2(s, pos1, pos2, O, where) :
-    """
-    Make a fancy representation of a protein and put it in the Output
-    object under the name "where".
-
-    @arg s: A protein sequence
+    @arg s: A nucleotide sequence.
     @type s: string
-    @arg pos1: First position to highlight
-    @type pos1:
-    @arg pos2: Last position to highlight
-    @type pos2:
-    @arg O: The Output object
-    @type O: object
-    @arg where: Location in the Output object to store the representation
-    @type where:
+
+    @return: The number of elements that are palindromic or -1 if the string
+             is a 'palindrome'.
+    @rtype: string
     """
+    s_revcomp = Bio.Seq.reverse_complement(s)
 
-    if not s :
-        return
+    for i in range(int(math.ceil(len(s) / 2.0))):
+        if s[i] != s_revcomp[i]:
+            # The first i elements are 'palindromic'.
+            return i
 
-    block = 10       # Each block consists of 10 amino acids.
-    line = 6 * block # Each line consists of 6 blocks.
+    # Perfect 'palindrome'.
+    return -1
+#_palinsnoop
 
-    tag1 = "<b style=\"color:#FF0000\">" # Use this tag for highlighting.
-    tag2 = "</b>"                        # And this one to end highlighting.
 
-    # The maximum length for positions is the 10_log of the length of the
-    #   protein.
-    m = int(math.floor(math.log(len(s), 10)) + 1)
-    o = 1
-    output = "%s " % str(o).rjust(m)     # Add the first position.
-    for i in range(0, len(s), block) :   # Add the blocks.
-        output += ' ' + __insertTag(s[i:i + block], pos1 - i,
-                                    pos2 - i, tag1, tag2)
-        if not (i + block) % line and i + block < len(s) :
-            o += line                    # One line done.
-            O.addOutput(where, output)   # Add it to the output.
-            # And add the next line (while escaping any potential highlighting).
-            output = \
-                "<tt style = \"color:000000;font-weight:normal\">%s</tt> " % \
-                str(o).rjust(m)
-        #if
-    #for
-    O.addOutput(where, output)
-#__bprint2
-
-def __PtLoc2main(Loc) :
-    """
-    Convert the main coordinate in a location (from the Parser) to an
-    integer.
-
-    @arg Loc: A location
-    @type Loc: object
-
-    @return: Integer representation of the main coordinate
-    @rtype: integer
-    """
-
-    main = int(Loc.Main)
-    if Loc.MainSgn == '-' :
-        return -main
-
-    return main
-#__PtLoc2main
-
-def __PtLoc2offset(Loc) :
-    """
-    Convert the offset coordinate in a location (from the Parser) to an
-    integer.
-
-    @arg Loc: A location.
-    @type Loc: object
-
-    @return: Integer representation of the offset coordinate
-    @rtype: integer
-    """
-
-    if Loc.Offset :
-        if Loc.Offset == '?' : # This is highly debatable.
-            return 0
-        offset = int(Loc.Offset)
-        if Loc.OffSgn == '-' :
-            return -offset
-        return offset
-    #if
-
-    return 0
-#__PtLoc2offset
-
-def __splice(string, splice_sites) :
+def _splice(s, splice_sites):
     """
     Construct the transcript or the coding sequence from a record and
     a list of splice sites.
 
-    @arg string: a DNA sequence
-    @type string: string
+    @arg s: A DNA sequence.
+    @type s: string
     @arg splice_sites: A list of even length of integers.
     @type splice_sites: list
 
-    @return: The concatenation of slices from the sequence that is present in
-             the GenBank record
+    @return: The concatenation of slices from the sequence that is present
+             in the GenBank record.
     @rtype: string
+
+    @todo: Assert length of splice_sites is even.
     """
+    transcript = ''
 
-    transcript = ""
-
-    for i in range(0, len(splice_sites), 2) :
-        transcript += string[splice_sites[i] - 1:splice_sites[i + 1]]
+    sites_iter = iter(splice_sites)
+    for acceptor, donor in izip_longest(sites_iter, sites_iter):
+        transcript += s[acceptor - 1:donor]
 
     return transcript
-#__splice
+#_splice
 
+
+# Todo: refactor
 def __nsplice(string, splice_sites, CDS, orientation) :
-    #FIXME document this.
     """
+    Just like _splice(), but it only keeps the parts between CDS[0] and
+    CDS[1] (in the right orientation).
+
+    I guess we could easily do this as a separate step after _splice()?
+
+    @todo: keep this function?
     @todo: documentation
     """
 
@@ -390,7 +173,7 @@ def __nsplice(string, splice_sites, CDS, orientation) :
     else :
         for i in range(0, len(splice_sites), 2) :
             if CDS[1] >= splice_sites[i] and CDS[1] <= splice_sites[i + 1] :
-                transcript += string[splice_sites[i] - 1: CDS[1]]
+                transcript += string[splice_sites[i] - 1:CDS[1]]
             else :
                 if splice_sites[i] < CDS[1] :
                     transcript += \
@@ -401,7 +184,8 @@ def __nsplice(string, splice_sites, CDS, orientation) :
     return transcript
 #__nsplice
 
-def __cdsLen(splice_sites) :
+
+def _cds_length(splice_sites):
     """
     Calculate the length of a CDS.
 
@@ -409,33 +193,469 @@ def __cdsLen(splice_sites) :
                        sites.
     @type splice_sites: list
 
-    @return: Length of the CDS
-    @rtype: integer
-    """
+    @return: Length of the CDS.
+    @rtype: int
 
+    @todo: Assert length of splice_sites is even.
+    """
     l = 0
 
-    for i in range(0, len(splice_sites), 2) :
-        l += splice_sites[i + 1] - splice_sites[i] + 1
-    return l
-#__cdsLen
+    sites_iter = iter(splice_sites)
+    for acceptor, donor in izip_longest(sites_iter, sites_iter):
+        l += donor - acceptor + 1
 
-def __checkDNA(arg) :
+    return l
+#_cds_length
+
+
+def _is_dna(s):
     """
     Check whether a string is a DNA string.
 
-    @arg arg: Any string
-    @type arg: string
+    @arg s: Any string or Bio.Seq.Seq instance.
+    @type s: string
 
-    @return: True if the string is a DNA string, False otherwise
+    @return: True if the string is a DNA string, False otherwise.
     @rtype: boolean
     """
-
-    for i in str(arg) :
-        if not i in IUPAC.unambiguous_dna.letters :
+    for i in str(s):
+        if not i in IUPAC.unambiguous_dna.letters:
             return False
+
     return True
-#__checkDNA
+#_is_dna
+
+
+def _longest_common_prefix(s1, s2):
+    """
+    Calculate the longest common prefix of two strings.
+
+    @arg s1: The first string.
+    @type s1: string
+    @arg s2: The second string.
+    @type s2: string
+
+    @return: The longest common prefix of s1 and s2.
+    @rtype: string
+    """
+    pos = 0
+
+    while pos < min(len(s1), len(s2)) and s1[pos] == s2[pos]:
+        pos += 1
+
+    return s1[:pos]
+#_longest_common_prefix
+
+
+def _longest_common_suffix(s1, s2):
+    """
+    Calculate the longest common suffix of two strings.
+
+    @arg s1: The first string.
+    @type s1: string
+    @arg s2: The second string.
+    @type s2: string
+
+    @return: The longest common suffix of s1 and s2.
+    @rtype: string
+    """
+    return _longest_common_prefix(s1[::-1], s2[::-1])[::-1]
+#_longest_common_suffix
+
+
+def _trim_common(s1, s2) :
+    """
+    Given two strings, trim their longest common prefix and suffix.
+
+    @arg s1: A string.
+    @type s1: string
+    @arg s2: Another string.
+    @type s2: string
+
+    @return: A tuple of:
+        - string: Trimmed version of s1.
+        - string: Trimmed version of s2.
+        - int:    Length of longest common prefix.
+        - int:    Length of longest common suffix.
+
+    @todo: More intelligently handle longest_common_prefix().
+    """
+    lcp = len(_longest_common_prefix(s1, s2))
+    lcs = len(_longest_common_suffix(s1[lcp:], s2[lcp:]))
+    return s1[lcp:len(s1) - lcs], s2[lcp:len(s2) - lcs], lcp, lcs
+#_trim_common
+
+
+def _over_splice_site(pos1, pos2, splice_sites):
+    """
+    Check wheter a genomic range (pos1_pos2) hits a splice site.
+
+    @arg pos1: The first coordinate of the range in g. notation.
+    @type pos1: int
+    @arg pos2: The first coordinate of the range in g. notation.
+    @type pos2: int
+    @arg sites: A list of splice sites in g. notation.
+    @type sites: list(int)
+
+    @return: True if one or more splice sites are hit, False otherwise.
+    @rtype: boolean
+    """
+    sites_iter = iter(splice_sites)
+    for acceptor, donor in izip_longest(sites_iter, sites_iter):
+        if pos1 < acceptor and pos2 >= acceptor:
+            return True
+        if donor and pos1 <= donor and pos2 > donor:
+            return True
+
+    return False
+#_over_splice_site
+
+
+##############################################################################
+# End of general utility functions.
+##############################################################################
+
+
+##############################################################################
+# Protein specific functionality.
+##############################################################################
+
+
+# Used in: _print_protein_html
+def _insert_tag(s, pos1, pos2, tag1, tag2):
+    """
+    Insert two tags (tag1 and tag2) in string s at positions pos1 and pos2
+    respectively if the positions are within the length of s. If not,
+    either insert one tag or do nothing. If pos1 equals pos2, don't do
+    anything either.
+
+    @arg s: A sequence.
+    @type s:
+    @arg pos1: Position of tag1.
+    @type pos1: int
+    @arg pos2: Position of tag2.
+    @type pos2: int
+    @arg tag1: Content of tag1.
+    @type tag1: string
+    @arg tag2: Content of tag2.
+    @type tag2: string
+
+    @return: The original sequence, or a sequence with eiter tag1, tag2 or
+             both tags inserted.
+    @rtype: string
+    """
+    output = s
+    block = len(s)
+
+    # Only do something if pos1 != pos2.
+    if pos1 != pos2:
+        if 0 <= pos1 < block:
+            # Insert tag1.
+            output = output[:pos1] + tag1 + output[pos1:]
+        if 0 <= pos2 < block:
+            # Insert tag2.
+            output = output[:-(block - pos2)] + tag2 \
+                     + output[-(block - pos2):]
+
+    return output
+#_insert_tag
+
+
+def _print_protein_html(s, pos1, pos2, O, where):
+    """
+    Make a fancy representation of a protein and put it in the Output
+    object under the name 'where'. The representation contains HTML tags
+    and is suitable for viewing in a monospaced font.
+
+    @arg s: A protein sequence.
+    @type s: string
+    @arg pos1: First position to highlight.
+    @type pos1: int
+    @arg pos2: Last position to highlight.
+    @type pos2: int
+    @arg O: The Output object.
+    @type O: object
+    @arg where: Location in the Output object to store the representation.
+    @type where: string
+    """
+    if not s: return
+
+    block = 10        # Each block consists of 10 amino acids.
+    line = 6 * block  # Each line consists of 6 blocks.
+
+    tag1 = '<b style="color:#FF0000">'  # Use this tag for highlighting.
+    tag2 = '</b>'                       # And this one to end highlighting.
+
+    # The maximum length for positions is the 10_log of the length of the
+    # protein.
+    m = int(math.floor(math.log(len(s), 10)) + 1)
+    o = 1
+
+    # Add the first position.
+    output = '%s ' % str(o).rjust(m)
+
+    for i in range(0, len(s), block):
+        # Add the blocks.
+        output += ' ' + _insert_tag(s[i:i + block], pos1 - i, pos2 - i,
+                                    tag1, tag2)
+        if not (i + block) % line and i + block < len(s):
+            # One line done.
+            o += line
+            O.addOutput(where, output)
+            # Add the position (while escaping any potential highlighting).
+            output = '<tt style="color:000000;font-weight:normal">%s</tt> ' \
+                     % str(o).rjust(m)
+
+    # Add last line.
+    O.addOutput(where, output)
+#_print_protein_html
+
+
+def in_frame_description(s1, s2) :
+    """
+    Give a description of an inframe difference of two proteins. Also give
+    the position at which the proteins start to differ and the positions at
+    which they are the same again.
+
+    @arg s1: The original protein.
+    @type s1: string
+    @arg s2: The mutated protein.
+    @type s2: string
+
+    @return: A tuple of:
+        - string ; Protein description of the change.
+        - int    ; Start position of the change.
+        - int    ; End position of the change in the first protein.
+        - int    ; End position of the change in the second protein.
+    @rtype: tuple(string, int, int, int)
+
+    @todo: More intelligently handle longest_common_prefix().
+    """
+    if s1 == s2:
+        # Nothing happened.
+        return ('p.(=)', 0, 0, 0)
+
+    lcp = len(_longest_common_prefix(s1, s2))
+    lcs = len(_longest_common_suffix(s1[lcp:], s2[lcp:]))
+    s1_end = len(s1) - lcs
+    s2_end = len(s2) - lcs
+
+    # Insertion / Duplication / Extention.
+    if not s1_end - lcp:
+        if len(s1) == lcp:
+            return ('p.(*%i%sext*%i)' % \
+                    (len(s1) + 1, seq3(s2[len(s1)]), abs(len(s1) - len(s2))),
+                    len(s1), len(s1), len(s2))
+        inLen = s2_end - lcp
+
+        if lcp - inLen >= 0 and s1[lcp - inLen:lcp] == s2[lcp:s2_end]:
+            if inLen == 1:
+                return ('p.(%s%idup)' % \
+                        (seq3(s1[lcp - inLen]), lcp - inLen + 1),
+                        lcp, lcp, lcp + 1)
+            return ('p.(%s%i_%s%idup)' % \
+                    (seq3(s1[lcp - inLen]),
+                     lcp - inLen + 1, seq3(s1[lcp - 1]), lcp),
+                    lcp, lcp, lcp + inLen)
+        #if
+        return ('p.(%s%i_%s%iins%s)' % \
+                (seq3(s1[lcp - 1]), lcp, seq3(s1[lcp]),
+                 lcp + 1, seq3(s2[lcp:s2_end])),
+                lcp, lcp, s2_end)
+    #if
+
+    # Deletion / Inframe stop.
+    if not s2_end - lcp:
+        if len(s2) == lcp:
+            return ('p.(%s%i*)' % (seq3(s1[len(s2)]), len(s2) + 1),
+                    0, 0, 0)
+
+        if lcp + 1 == s1_end:
+            return ('p.(%s%idel)' % (seq3(s1[lcp]), lcp + 1),
+                    lcp, lcp + 1, lcp)
+        return ('p.(%s%i_%s%idel)' % \
+                (seq3(s1[lcp]), lcp + 1, seq3(s1[s1_end - 1]), s1_end),
+                lcp, s1_end, lcp)
+    #if
+
+    # Substitution.
+    if s1_end == s2_end and s1_end == lcp + 1:
+        return ('p.(%s%i%s)' % (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp])),
+                lcp, lcp + 1, lcp + 1)
+
+    # InDel.
+    if lcp + 1 == s1_end:
+        return ('p.(%s%idelins%s)' % \
+                (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp:s2_end])),
+                lcp, lcp + 1, s2_end)
+    return ('p.(%s%i_%s%idelins%s)' % \
+            (seq3(s1[lcp]), lcp + 1, seq3(s1[s1_end - 1]), s1_end,
+             seq3(s2[lcp:s2_end])),
+            lcp, s1_end, s2_end)
+#in_frame_description
+
+
+def out_of_frame_description(s1, s2) :
+    """
+    Give the description of an out of frame difference between two
+    proteins. Give a description of an inframe difference of two proteins.
+    Also give the position at which the proteins start to differ and the
+    end positions (to be compatible with the in_frame_description function).
+
+    @arg s1: The original protein.
+    @type s1: string
+    @arg s2: The mutated protein.
+    @type s2: string
+
+    @return: A tuple of:
+        - string ; Protein description of the change.
+        - int    ; Start position of the change.
+        - int    ; End position of the first protein.
+        - int    ; End position of the second protein.
+    @rtype: tuple(string, int, int, int)
+
+    @todo: More intelligently handle longest_common_prefix().
+    """
+    lcp = len(_longest_common_prefix(s1, s2))
+
+    if lcp == len(s2): # NonSense mutation.
+        if lcp == len(s1): # Is this correct?
+            return ('p.(=)', 0, 0, 0)
+        return ('p.(%s%i*)' % (seq3(s1[lcp]), lcp + 1), lcp, len(s1), lcp)
+    if lcp == len(s1) :
+        return ('p.(*%i%sext*%i)' % \
+                (len(s1) + 1, seq3(s2[len(s1)]), abs(len(s1) - len(s2))),
+                len(s1), len(s1), len(s2))
+    return ('p.(%s%i%sfs*%i)' % \
+            (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp]), len(s2) - lcp + 1),
+            lcp, len(s1), len(s2))
+#out_of_frame_description
+
+
+def _protein_description(cds_stop, s1, s2) :
+    """
+    Wrapper function for the in_frame_description() and
+    out_of_frame_description() functions. It uses the value cds_stop to
+    decide which one to call.
+
+    @arg cds_stop: Position of the stop codon in c. notation (CDS length).
+    @type cds_stop: int
+    @arg s1: The original protein.
+    @type s1: string
+    @arg s2: The mutated protein.
+    @type s2: string
+
+    @return: A tuple of:
+        - string ; Protein description of the change.
+        - int    ; Start position of the change.
+        - int    ; End position of the change in the first protein.
+        - int    ; End position of the change in the second protein.
+    @rtype: tuple(string, int, int, int)
+    """
+    if cds_stop % 3:
+        description = out_of_frame_description(str(s1), str(s2))
+    else:
+        description = in_frame_description(str(s1), str(s2))
+
+    if not s2 or str(s1[0]) != str(s2[0]):
+        # Mutation in start codon.
+        return 'p.?', description[1], description[2], description[3]
+
+    return description
+#_protein_description
+
+
+##############################################################################
+# End of protein specific functionality.
+##############################################################################
+
+
+# Used in: __rv
+def _is_intronic_position(loc):
+    """
+    Check whether a location is intronic.
+
+    @arg loc: A location from the Parser module.
+    @type loc: pyparsing.ParseResults
+
+    @return: True if the location is intronic, False otherwise.
+    @rtype: boolean
+    """
+    if not loc:
+        return False
+    if not loc.PtLoc:
+        return False
+    if not loc.PtLoc.Offset:
+        return False
+    return True
+#_intronic_position
+
+
+# Used in: __normal2g
+def _check_intronic_position(main, offset, transcript):
+    """
+    Check whether a c. position is really in an intron: The main coordinate
+    must be a splice site and the offset coordinate must have the correct
+    sign.
+
+    @arg main: Main coordinate of the position.
+    @type main: integer
+    @arg offset: Offset coordinate of the position.
+    @type offset: integer
+    @arg transcript: Transcript under scrutiny.
+    @type transcript: object
+
+    @return: True if the combination (main, offset) is valid for this
+             transcript, False otherwise.
+    @rtype: boolean
+
+    @todo: Use exceptions.
+    """
+    main_g = transcript.CM.x2g(main, 0)
+    sites = transcript.CM.RNA
+
+    if offset:
+        oriented_offset = offset * transcript.CM.orientation
+        try:
+            i = sites.index(main_g)
+            if not i % 2:
+                # Splice acceptor, so sign must be -.
+                if oriented_offset > 0:
+                    return False
+            else:
+                # Splice donor, so sign must be +.
+                if oriented_offset < 0:
+                    return False
+        except ValueError:
+            # The main coordinate is not a splice site.
+            return False
+
+    return True
+#_check_intronic_position
+
+
+def _get_offset(loc) :
+    """
+    Convert the offset coordinate in a location (from the Parser) to an
+    integer.
+
+    @arg loc: A location.
+    @type loc: pyparsing.ParseResults
+
+    @return: Integer representation of the offset coordinate.
+    @rtype: int
+    """
+    if loc.Offset :
+        if loc.Offset == '?' : # This is highly debatable.
+            return 0
+        offset = int(loc.Offset)
+        if loc.OffSgn == '-' :
+            return -offset
+        return offset
+
+    return 0
+#_get_offset
+
 
 def __checkOptArg(ref, p1, p2, arg, O) :
     """
@@ -455,8 +675,9 @@ def __checkOptArg(ref, p1, p2, arg, O) :
 
     @return: True if the optional argument is correct, False otherwise.
     @rtype: boolean
-    """
 
+    @todo: Use exceptions.
+    """
     if arg : # The argument is optional, if it is not present, it is correct.
         if arg.isdigit() :         # If it is a digit (3_9del7 for example),
             length = int(arg)      #   the digit must be equal to the length
@@ -469,7 +690,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             #if
         #if
         else :
-            if not __checkDNA(arg) : # If it is not a digit, it muse be DNA.
+            if not _is_dna(arg) : # If it is not a digit, it muse be DNA.
                 O.addMessage(__file__, 4, "ENODNA",
                     "Invalid letters in argument.")
                 return False
@@ -479,7 +700,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             if ref_slice != str(arg) : # FIXME more informative.
                 O.addMessage(__file__, 3, "EREF",
                     "%s not found at position %s, found %s instead." % (
-                    arg, __formatRange(p1, p2), ref_slice))
+                    arg, _format_range(p1, p2), ref_slice))
                 return False
             #if
         #else
@@ -487,266 +708,16 @@ def __checkOptArg(ref, p1, p2, arg, O) :
     return True
 #__checkOptArg
 
-def __lcp(str1, str2) :
-    """
-    Calculate the length of the longest common prefix of two strings.
 
-    @arg str1: The first string
-    @type str1: string
-    @arg str2: The second string
-    @type str2: string
-
-    @return: The length of the longest common prefix of str1 and str2
-    @rtype: integer
-    """
-
-    pos = 0
-    s1l = len(str1) # Use the lengths to make sure we don't exceed the length
-    s2l = len(str2) # of the strings.
-
-    while pos < s1l and pos < s2l and str1[pos] == str2[pos] :
-        pos += 1
-
-    return pos
-#__lcp
-
-def __lcs(str1, str2) :
-    """
-    Calculate the length of the longest common suffix of two strings.
-
-    @arg str1: The first string
-    @type str1: string
-    @arg str2: The second string
-    @type str2: string
-
-    @return: The length of the longest common suffix of str1 and str2
-    @rtype: integer
-    """
-
-    t1 = str1[::-1] # Invert str1.
-    t2 = str2[::-1] # Invert str2.
-
-    # The lcp of the two inverted strings is the lcs of the original strings.
-    return __lcp(t1, t2)
-#__lcs
-
-def __overSplice(pos1, pos2, sites) :
-    """
-    Check wheter a genomic range (pos1_pos2) hits a splice site.
-
-    @arg pos1: The first coordinate of the range in g. notation.
-    @type pos1: integer
-    @arg pos2: The first coordinate of the range in g. notation.
-    @type pos2: integer
-    @arg sites: A list of splice sites in g. notation.
-    @type sites: list(integer)
-
-    @return: True if one or more splice sites are hit, False otherwise.
-    @rtype: boolean
-    """
-
-    for i in range(len(sites)) :
-        if i % 2 :
-            if (pos1 <= sites[i] and pos2 > sites[i]) :
-                return True
-        else :
-            if (pos1 < sites[i] and pos2 >= sites[i]) :
-                return True
-    #for
-
-    return False
-#__overSplice
-
-
-def findInFrameDescription(str1, str2) :
-    """
-    Give a description of an inframe difference of two proteins. Also give
-    the position at which the proteins start to differ and the positions at
-    which they are the same again.
-
-    @arg str1: The original protein
-    @type str1: string
-    @arg str2: The mutated protein
-    @type str2: string
-
-    @return: vector:
-        - string  ; Protein description of the change
-        - integer ; Start position of the change
-        - integer ; End position of the change in the first protein
-        - integer ; End position of the change in the second protein
-    @rtype: string
-    """
-
-    # Nothing happened.
-    if str1 == str2 :
-        return ("p.(=)", 0, 0, 0)
-
-    lcp = __lcp(str1, str2)
-    lcs = __lcs(str1[lcp:], str2[lcp:])
-    str1_end = len(str1) - lcs
-    str2_end = len(str2) - lcs
-
-    # Insertion / Duplication / Extention.
-    if not str1_end - lcp :
-        if len(str1) == lcp :
-            return ("p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),
-                abs(len(str1) - len(str2))), len(str1), len(str1), len(str2))
-        inLen = str2_end - lcp
-
-        if lcp - inLen >= 0 and str1[lcp - inLen:lcp] == str2[lcp:str2_end] :
-            if inLen == 1 :
-                return ("p.(%s%idup)" % (seq3(str1[lcp - inLen]),
-                    lcp - inLen + 1),
-                        lcp, lcp, lcp + 1)
-            return ("p.(%s%i_%s%idup)" % (seq3(str1[lcp - inLen]),
-                lcp - inLen + 1, seq3(str1[lcp - 1]), lcp), lcp, lcp,
-                lcp + inLen)
-        #if
-        return ("p.(%s%i_%s%iins%s)" % (seq3(str1[lcp - 1]), lcp,
-            seq3(str1[lcp]), lcp + 1, seq3(str2[lcp:str2_end])), lcp, lcp,
-            str2_end)
-    #if
-
-    # Deletion / Inframe stop.
-    if not str2_end - lcp :
-        if len(str2) == lcp :
-            return ("p.(%s%i*)" % (seq3(str1[len(str2)]), len(str2) + 1),
-                0, 0, 0)
-
-        if lcp + 1 == str1_end :
-            return ("p.(%s%idel)" % (seq3(str1[lcp]), lcp + 1),
-                lcp, lcp + 1, lcp)
-        return ("p.(%s%i_%s%idel)" % (seq3(str1[lcp]), lcp + 1,
-            seq3(str1[str1_end - 1]), str1_end), lcp, str1_end, lcp)
-    #if
-
-    # Substitution.
-    if str1_end == str2_end and str1_end == lcp + 1 :
-        return ("p.(%s%i%s)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp])),
-            lcp, lcp + 1, lcp + 1)
-
-    # InDel.
-    if lcp + 1 == str1_end :
-        return ("p.(%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
-            seq3(str2[lcp:str2_end])), lcp, lcp + 1, str2_end)
-    return ("p.(%s%i_%s%idelins%s)" % (seq3(str1[lcp]), lcp + 1,
-        seq3(str1[str1_end - 1]), str1_end, seq3(str2[lcp:str2_end])), lcp,
-        str1_end, str2_end)
-#findInFrameDescription
-
-def findFrameShift(str1, str2) :
-    """
-    Give the description of an out of frame difference between two
-    proteins. Give a description of an inframe difference of two proteins.
-    Also give the position at which the proteins start to differ and the
-    end positions (to be compatible with the findInFrameDescription()
-    function).
-
-    @arg str1: The original protein
-    @type str1: string
-    @arg str2: The mutated protein
-    @type str2: string
-
-    @return: vector:
-        - string  ; Protein description of the change.
-        - integer ; Start position of the change.
-        - integer ; End position of the first protein.
-        - integer ; End position of the second protein.
-    @rtype: string
-    """
-
-    lcp = __lcp(str1, str2)
-
-    if lcp == len(str2) : # NonSense mutation.
-        if lcp == len(str1) : # Is this correct?
-            return ("p.(=)", 0, 0, 0)
-        return ("p.(%s%i*)" % (seq3(str1[lcp]), lcp + 1), lcp, len(str1), lcp)
-    if lcp == len(str1) :
-        return ("p.(*%i%sext*%i)" % (len(str1) + 1, seq3(str2[len(str1)]),
-            abs(len(str1) - len(str2))), len(str1), len(str1), len(str2))
-    return ("p.(%s%i%sfs*%i)" % (seq3(str1[lcp]), lcp + 1, seq3(str2[lcp]),
-        len(str2) - lcp + 1), lcp, len(str1), len(str2))
-#findFrameShift
-
-def __toProtDescr(CDSStop, orig, trans) :
-    """
-    Wrapper function for the findInFrameDescription() and findFrameShift()
-    functions. It uses the value CDSStop to decide which one to call.
-
-    @arg CDSStop: Position of the stop codon in c. notation (CDS length)
-    @type CDSStop: integer
-    @arg orig: The original protein
-    @type orig: string
-    @arg trans: The mutated protein
-    @type trans: string
-
-    @return: vector:
-        - string  ; Protein description of the change.
-        - integer ; Start position of the change.
-        - integer ; End position of the change in the first protein.
-        - integer ; End position of the change in the second protein.
-    @rtype: tuple (string, integer, integer, integer)
-    """
-
-    if CDSStop % 3 :
-        ret = findFrameShift(str(orig), str(trans))
-    else :
-        ret = findInFrameDescription(str(orig), str(trans))
-    if not trans or str(orig[0]) != str(trans[0]) : # Mutation in start codon.
-        return ("p.?", ret[1], ret[2], ret[3])
-    return ret
-#__toProtDescr
-
-def __trim2(str1, str2) :
-    """
-    Given two strings, trim the lcp and the lcs.
-
-    @arg str1: A string
-    @type str1: string
-    @arg str2: An other string
-    @type str2: string
-
-    @return: tuple:
-        - string: Trimmed version of str1.
-        - string: Trimmed version of str2.
-    """
-
-    lcp = __lcp(str1, str2)
-    lcs = __lcs(str1[lcp:], str2[lcp:])
-    return str1[lcp:len(str1) - lcs], str2[lcp:len(str2) - lcs], lcp, lcs
-#__trim2
-
-def __rangeToC(M, g1, g2) :
-    # FIXME apparently obsolete.
-    """
-    Convert a genomic range to a CDS oriented range.
-
-    @arg M:
-    @type M:
-    @arg g1:
-    @type g1:
-    @arg g2:
-    @type g2:
-
-    @return: tuple (string, string)
-    @rtype: tuple
-    @todo: FIXME apparently obsolete.
-    """
-
-    if M.orientation == -1 :
-        return M.g2c(g2), M.g2c(g1)
-    return M.g2c(g1), M.g2c(g2)
-#__rangeToC
-
-def _createBatchOutput(O):
-    #TODO More documentation.
+def _add_batch_output(O):
     """
     Format the results to a batch output.
 
-    Filter the mutalyzer output
+    Filter the mutalyzer output and reformat it for use in the batch system
+    as output object 'batchDone'.
 
-    @arg O:
-    @type O:
+    @arg O: The Output object
+    @type O: Modules.Output.Output
 
     @todo: More documentation.
     """
@@ -827,235 +798,266 @@ def _createBatchOutput(O):
 
 
     O.addOutput("batchDone", outputline)
-#_createBatchOutput
+#_add_batch_output
 
-def checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O) :
+
+def apply_substitution(position, original, substitute, mutator, record, O):
     """
-        Do a semantic check for substitutions, do the actual substitution
-        and give it a name.
+    Do a semantic check for a substitution, do the actual substitution and
+    give it a name.
 
-        @arg start_g: Genomic location of the substitution
-        @type start_g: integer
-        @arg Arg1: Nucleotide in the reference sequence.
-        @type Arg1: string
-        @arg Arg2: Nucleotide in the mutated sequence.
-        @type Arg2: string
-        @arg MUU: A Mutator object.
-        @type MUU: object
-        @arg GenRecordInstance: A GenRecord object.
-        @type GenRecordInstance: object
-        @arg O: The Output object.
-        @type O: object
+    @arg position: Genomic location of the substitution.
+    @type position: int
+    @arg original: Nucleotide in the reference sequence.
+    @type original: string
+    @arg substitute: Nucleotide in the mutated sequence.
+    @type substitute: string
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg O: The Output object.
+    @type O: Modules.Output.Output
+
+    @todo: Exception instead of O.addMessage().
     """
-
-    if not __checkDNA(Arg2) : # It must be DNA.
+    if not _is_dna(substitute):
+        # This is not DNA.
         #O.addMessage(__file__, 4, "ENODNA", "Invalid letter in input")
+        # todo: exception
         return
-    if Arg1 == Arg2 :         # And there must be a real change.
-        O.addMessage(__file__, 3, "ENOVAR",
-            "No mutation given (%c>%c) at position %i." % (
-            Arg1, Arg1, start_g))
 
-    MUU.subM(start_g, Arg2)
-    GenRecordInstance.name(start_g, start_g, "subst", MUU.orig[start_g - 1],
-                           Arg2, None)
-#checkSubstitution
+    if original == substitute:
+        # This is not a real change.
+        O.addMessage(__file__, 3, 'ENOVAR',
+                     'No mutation given (%c>%c) at position %i.' % \
+                     (original, substitute, position))
 
-def checkDeletionDuplication(start_g, end_g, mutationType, MUU,
-                             GenRecordInstance, O) :
+    mutator.subM(position, substitute)
+
+    record.name(position, position, 'subst', mutator.orig[position - 1],
+                substitute, None)
+#apply_substitution
+
+
+def apply_deletion_duplication(start, end, type, mutator, record, O):
     """
     Do a semantic check for a deletion or duplication, do the actual
     deletion/duplication and give it a name.
 
-    @arg start_g : Genomic start position of the del/dup
-    @type start_g: integer
-    @arg end_g: Genomic end position of the del/dup
-    @type end_g: integer
-    @arg mutationType: The type (del or dup)
-    @type mutationType: string
-    @arg MUU: A Mutator object
-    @type MUU: object
-    @arg GenRecordInstance: A GenRecord object
-    @type GenRecordInstance: object
-    @arg O: The Output object
-    @type O: object
-    """
+    @arg start: Genomic start position of the del/dup.
+    @type start: int
+    @arg end: Genomic end position of the del/dup.
+    @type end: int
+    @arg type: The variant type (del or dup).
+    @type type: string
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg O: The Output object.
+    @type O: Modules.Output.Output
 
-    roll = __roll(MUU.orig, start_g, end_g)
+    @todo: Exception instead of O.addMessage().
+    """
+    roll = _roll(mutator.orig, start, end)
+    shift = roll[1]
 
     # In the case of RNA, check if we roll over a splice site. If so, make
     # the roll shorter, just up to the splice site.
-    shift = roll[1]
-    if GenRecordInstance.record.molType == 'n' :
-        mRNA = iter(GenRecordInstance.record.geneList[0].transcriptList[0] \
-                    .mRNA.positionList)
-        for acceptor, donor in izip_longest(mRNA, mRNA):
-            # Do a shorter roll, just up to the splice site.
+    if record.record.molType == 'n':
+        sites = iter(record.record.geneList[0].transcriptList[0] \
+                     .mRNA.positionList)
+        for acceptor, donor in izip_longest(sites, sites):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
-            if end_g < acceptor and end_g + roll[1] >= acceptor:
-                shift = acceptor - 1 - end_g
+            if end < acceptor and end + roll[1] >= acceptor:
+                shift = acceptor - 1 - end
                 break
-            #if
-            if end_g <= donor and end_g + roll[1] > donor:
-                shift = donor - end_g
+            if end <= donor and end + roll[1] > donor:
+                shift = donor - end
                 break
-            #if
-        #for
-    #if
 
-    if shift : # FIXME, The warning may not be apropriate.
-        newStart = start_g + shift
-        newStop = end_g + shift
-        O.addMessage(__file__, 2, "WROLL",
-            "Sequence \"%s\" at position %s was given, however, " \
-            "the HGVS notation prescribes that it should be \"%s\" at " \
-                     "position %s." % (
-            MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-            __formatRange(start_g, end_g),
-            MUU.visualiseLargeString(str(MUU.orig[newStart - 1:newStop])),
-            __formatRange(newStart, newStop)))
-    #if
+    if shift:
+        new_start = start + shift
+        new_stop = end + shift
+        O.addMessage(__file__, 2, 'WROLL',
+            'Sequence "%s" at position %s was given, however, ' \
+            'the HGVS notation prescribes that it should be "%s" at ' \
+            'position %s.' % (
+            mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
+            _format_range(start, end),
+            mutator.visualiseLargeString(str(mutator.orig[new_start - 1:new_stop])),
+            _format_range(new_start, new_stop)))
+
     if shift != roll[1]:
-        incorrectStart = start_g + roll[1]
-        incorrectStop = end_g + roll[1]
-        O.addMessage(__file__, 1, "IROLLBACK",
-            "Sequence \"%s\" at position %s was not corrected to \"%s\" at " \
-            "position %s, since they reside in different exons." % (
-            MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-            __formatRange(start_g, end_g),
-            MUU.visualiseLargeString(str(MUU.orig[incorrectStart - 1:incorrectStop])),
-            __formatRange(incorrectStart, incorrectStop)))
-    #if
-    if mutationType == "del" :
-        MUU.delM(start_g, end_g)
+        # The original roll was decreased because it crossed a splice site.
+        incorrect_start = start + roll[1]
+        incorrect_stop = end + roll[1]
+        O.addMessage(__file__, 1, 'IROLLBACK',
+            'Sequence "%s" at position %s was not corrected to "%s" at ' \
+            'position %s, since they reside in different exons.' % (
+            mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
+            _format_range(start, end),
+            mutator.visualiseLargeString(str(mutator.orig[incorrect_start - 1:incorrect_stop])),
+            _format_range(incorrect_start, incorrect_stop)))
+
+    if type == 'del':
+        mutator.delM(start, end)
     else :
-        MUU.dupM(start_g, end_g)
-    GenRecordInstance.name(start_g, end_g, mutationType, "", "",
-                           (roll[0], shift))
-#checkDeletionDuplication
+        mutator.dupM(start, end)
 
-def checkInversion(start_g, end_g, MUU, GenRecordInstance, O) :
-    """
-    @todo: documentation
-    """
+    record.name(start, end, type, '', '', (roll[0], shift))
+#apply_deletion_duplication
 
-    snoop = __palinsnoop(MUU.orig[start_g - 1:end_g])
-    if snoop :
+
+def apply_inversion(start, end, mutator, record, O) :
+    """
+    Do a semantic check for an inversion, do the actual inversion, and give
+    it a name.
+
+    @arg start: Genomic start position of the inversion.
+    @type start: int
+    @arg end: Genomic end position of the inversion.
+    @type end: int
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg O: The Output object.
+    @type O: Modules.Output.Output
+
+    @todo: Exception instead of O.addMessage().
+    """
+    snoop = _palinsnoop(mutator.orig[start - 1:end])
+
+    if snoop:
+        # We have a reverse-complement-palindromic prefix.
         if snoop == -1 :
-            O.addMessage(__file__, 2, "WNOCHANGE",
-                "Sequence \"%s\" at position %i_%i is a palindrome " \
-                "(its own reverse complement)." % (
-                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-                start_g, end_g))
+            # Actually, not just a prefix, but the entire selected sequence is
+            # a 'palindrome'.
+            O.addMessage(__file__, 2, 'WNOCHANGE',
+                'Sequence "%s" at position %i_%i is a palindrome ' \
+                '(its own reverse complement).' % (
+                mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
+                start, end))
             return
-        #if
-        else :
-            O.addMessage(__file__, 2, "WNOTMINIMAL",
-                "Sequence \"%s\" at position %i_%i is a partial " \
-                "palindrome (the first %i nucleotide(s) are the reverse " \
-                "complement of the last one(s)), the HGVS notation " \
-                "prescribes that it should be \"%s\" at position %i_%i." % (
-                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-                start_g, end_g, snoop,
-                MUU.visualiseLargeString(
-                    str(MUU.orig[start_g + snoop - 1: end_g - snoop])),
-                start_g + snoop, end_g - snoop))
-            start_g += snoop
-            end_g -= snoop
-        #else
-    #if
-    MUU.invM(start_g, end_g)
-    if start_g == end_g :
-        O.addMessage(__file__, 2, "WWRONGTYPE", "Inversion at position "\
-            "%i is actually a substitution." % start_g)
-        GenRecordInstance.name(start_g, start_g, "subst", MUU.orig[start_g - 1],
-            Bio.Seq.reverse_complement(MUU.orig[start_g - 1]), None)
-    #if
+        else:
+            O.addMessage(__file__, 2, 'WNOTMINIMAL',
+                'Sequence "%s" at position %i_%i is a partial ' \
+                'palindrome (the first %i nucleotide(s) are the reverse ' \
+                'complement of the last one(s)), the HGVS notation ' \
+                'prescribes that it should be "%s" at position %i_%i.' % (
+                mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
+                start, end, snoop,
+                mutator.visualiseLargeString(
+                    str(mutator.orig[start + snoop - 1: end - snoop])),
+                start + snoop, end - snoop))
+            start += snoop
+            end -= snoop
+
+    mutator.invM(start, end)
+
+    if start == end:
+        O.addMessage(__file__, 2, 'WWRONGTYPE', 'Inversion at position ' \
+            '%i is actually a substitution.' % start_g)
+        record.name(start, start, 'subst', mutator.orig[start - 1],
+            Bio.Seq.reverse_complement(mutator.orig[start - 1]), None)
     else :
-        GenRecordInstance.name(start_g, end_g, "inv", "", "", None)
-#checkInversion
+        record.name(start, end, 'inv', '', '', None)
+#apply_inversion
 
-def checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O) :
+
+def apply_insertion(start, end, s, mutator, record, O):
     """
-    @todo: documentation
+    Do a semantic check for an insertion, do the actual insertion, and give
+    it a name.
+
+    @arg start: Genomic start position of the insertion.
+    @type start: int
+    @arg end: Genomic end position of the insertion.
+    @type end: int
+    @arg s: Nucleotides to be inserted.
+    @type s: string
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg O: The Output object.
+    @type O: Modules.Output.Output
+
+    @todo: Exception instead of O.addMessage().
     """
-
-    if start_g + 1 != end_g :
-        O.addMessage(__file__, 3, "EINSRANGE",
-            "%i and %i are not consecutive positions." % (start_g, end_g))
+    if start + 1 != end:
+        O.addMessage(__file__, 3, 'EINSRANGE',
+            '%i and %i are not consecutive positions.' % (start, end))
         return
-    #if
-    if not Arg1 or not __checkDNA(Arg1) :
-        O.addMessage(__file__, 3, "EUNKVAR", "Although the syntax of this " \
-            "variant is correct, the effect can not be analysed.")
-        return
-    #if
 
-    MUU.insM(start_g, Arg1)
-    insertionLength = len(Arg1)
-    newStart = MUU.shiftpos(start_g)
-    newStop = MUU.shiftpos(start_g) + insertionLength
-    roll = __roll(MUU.mutated, newStart + 1, newStop)
+    if not s or not _is_dna(s):
+        O.addMessage(__file__, 3, 'EUNKVAR', 'Although the syntax of this ' \
+            'variant is correct, the effect can not be analysed.')
+        return
+
+    insertion_length = len(s)
+
+    mutator.insM(start, s)
+    new_start = mutator.shiftpos(start)
+    new_stop = mutator.shiftpos(start) + insertion_length
+
+    roll = _roll(mutator.mutated, new_start + 1, new_stop)
+    shift = roll[1]
 
     # In the case of RNA, check if we roll over a splice site. If so, make
     # the roll shorter, just up to the splice site.
-    shift = roll[1]
-    if GenRecordInstance.record.molType == 'n' :
-        mRNA = iter(GenRecordInstance.record.geneList[0].transcriptList[0] \
-                    .mRNA.positionList)
-        for acceptor, donor in izip_longest(mRNA, mRNA):
-            # Do a shorter roll, just up to the splice site.
+    if record.record.molType == 'n' :
+        sites = iter(record.record.geneList[0].transcriptList[0] \
+                     .mRNA.positionList)
+        for acceptor, donor in izip_longest(sites, sites):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
-            if newStop < acceptor and newStop + roll[1] >= acceptor:
-                shift = acceptor - 1 - newStop
+            if new_stop < acceptor and new_stop + roll[1] >= acceptor:
+                shift = acceptor - 1 - new_stop
                 break
-            #if
-            if newStop <= donor and newStop + roll[1] > donor:
-                shift = donor - newStop
+            if new_stop <= donor and new_stop + roll[1] > donor:
+                shift = donor - new_stop
                 break
-            #if
-        #for
-    #if
 
-    if roll[0] + shift >= insertionLength :
-        # Todo: could there also be a IROLLBACK message in this case?
-        O.addMessage(__file__, 2, "WINSDUP",
-            "Insertion of %s at position %i_%i was given, " \
-            "however, the HGVS notation prescribes that it should be a " \
-            "duplication of %s at position %i_%i." % (
-            Arg1, start_g, start_g + 1,
-            MUU.mutated[newStart + shift:newStop + shift], start_g + shift,
-            start_g + shift + insertionLength - 1))
-        end_g += shift - 1
-        start_g = end_g - insertionLength + 1
-        GenRecordInstance.name(start_g, end_g, "dup", "", "",
-                               (roll[0] + shift - insertionLength, 0))
-    #if
-    else :
-        if shift :
-            O.addMessage(__file__, 2, "WROLL", "Insertion of %s at position " \
-                "%i_%i was given, however, the HGVS notation prescribes " \
-                "that it should be an insertion of %s at position %i_%i." % (
-                Arg1, start_g, start_g + 1,
-                MUU.mutated[newStart + shift:newStop + shift],
-                newStart + shift, newStart + shift + 1))
+    if roll[0] + shift >= insertion_length:
+        # Todo: Could there also be a IROLLBACK message in this case?
+        O.addMessage(__file__, 2, 'WINSDUP',
+            'Insertion of %s at position %i_%i was given, ' \
+            'however, the HGVS notation prescribes that it should be a ' \
+            'duplication of %s at position %i_%i.' % (
+            s, start, start + 1,
+            mutator.mutated[new_start + shift:new_stop + shift], start + shift,
+            start + shift + insertion_length - 1))
+        end += shift - 1
+        start = end - insertion_length + 1
+        record.name(start, end, 'dup', '', '',
+                    (roll[0] + shift - insertion_length, 0))
+    else:
+        if shift:
+            O.addMessage(__file__, 2, 'WROLL', 'Insertion of %s at position ' \
+                '%i_%i was given, however, the HGVS notation prescribes ' \
+                'that it should be an insertion of %s at position %i_%i.' % (
+                s, start, start + 1,
+                mutator.mutated[new_start + shift:new_stop + shift],
+                new_start + shift, new_start + shift + 1))
         if shift != roll[1]:
-            O.addMessage(__file__, 1, "IROLLBACK",
-                "Insertion of %s at position %i_%i was not corrected to an " \
-                "insertion of %s at position %i_%i, since they reside in " \
-                "different exons." % (
-                Arg1, start_g, start_g + 1,
-                MUU.mutated[newStart + roll[1]:newStop + roll[1]],
-                newStart + roll[1], newStart + roll[1] + 1))
-        #if
-        GenRecordInstance.name(start_g, start_g + 1, "ins",
-            MUU.mutated[newStart + shift:newStop + shift] , "",
-            (roll[0], shift))
-#checkInsertion
+            O.addMessage(__file__, 1, 'IROLLBACK',
+                'Insertion of %s at position %i_%i was not corrected to an ' \
+                'insertion of %s at position %i_%i, since they reside in ' \
+                'different exons.' % (
+                s, start, start + 1,
+                mutator.mutated[new_start + roll[1]:new_stop + roll[1]],
+                new_start + roll[1], new_start + roll[1] + 1))
+        record.name(start, start + 1, 'ins',
+                    mutator.mutated[new_start + shift:new_stop + shift], '',
+                    (roll[0], shift))
+#apply_insertion
+
 
 def __ivs2g(location, transcript) :
     """
@@ -1123,9 +1125,9 @@ def __normal2g(RawVar, transcript) :
         #if not RawVar.StartLoc.PtLoc.Offset.isdigit() :
         #    return
 
-        start_offset = __PtLoc2offset(RawVar.StartLoc.PtLoc)
+        start_offset = _get_offset(RawVar.StartLoc.PtLoc)
 
-        if not __checkIntronPosition(start_main, start_offset, transcript) :
+        if not _check_intronic_position(start_main, start_offset, transcript) :
             return None, None
 
         start_g = transcript.CM.x2g(start_main, start_offset)
@@ -1135,8 +1137,8 @@ def __normal2g(RawVar, transcript) :
                                            RawVar.EndLoc.PtLoc.Main)
             #if not RawVar.EndLoc.PtLoc.Offset.isdigit() :
             #    return
-            end_offset = __PtLoc2offset(RawVar.EndLoc.PtLoc)
-            if not __checkIntronPosition(end_main, end_offset, transcript) :
+            end_offset = _get_offset(RawVar.EndLoc.PtLoc)
+            if not _check_intronic_position(end_main, end_offset, transcript) :
                 return None, None
             end_g = transcript.CM.x2g(end_main, end_offset)
         #if
@@ -1191,8 +1193,8 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             #if
             else :
                 if GenRecordInstance.record.molType != 'g' and \
-                   (__intronicPosition(RawVar.StartLoc) or
-                    __intronicPosition(RawVar.EndLoc)) :
+                   (_is_intronic_position(RawVar.StartLoc) or
+                    _is_intronic_position(RawVar.EndLoc)) :
                     O.addMessage(__file__, 3, "ENOINTRON", "Intronic " \
                         "position given for a non-genomic reference sequence.")
                     return
@@ -1229,7 +1231,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
         Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
         Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
 
-    if transcript and __overSplice(start_g, end_g, transcript.CM.RNA) :
+    if transcript and _over_splice_site(start_g, end_g, transcript.CM.RNA) :
         O.addMessage(__file__, 2, "WOVERSPLICE",
             "Variant hits one or more splice sites.")
 
@@ -1261,7 +1263,7 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
             return
         #if
 
-        del_part, ins_part, lcp, lcs = __trim2(Arg1, Arg2)
+        del_part, ins_part, lcp, lcs = _trim_common(Arg1, Arg2)
         if not len(del_part) :
             O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
                          "is actually an insertion.")
@@ -1410,14 +1412,14 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
             O.addOutput("myTranscriptDescription", W.description)
 
             O.addOutput("origMRNA",
-                str(__splice(MUU.orig, W.mRNA.positionList)))
+                str(_splice(MUU.orig, W.mRNA.positionList)))
             O.addOutput("mutatedMRNA",
-                str(__splice(MUU.mutated, MUU.newSplice(W.mRNA.positionList))))
+                str(_splice(MUU.mutated, MUU.newSplice(W.mRNA.positionList))))
         #if
 
 
         if W.translate :
-            cds = Seq(str(__splice(MUU.orig, W.CDS.positionList)),
+            cds = Seq(str(_splice(MUU.orig, W.CDS.positionList)),
                       IUPAC.unambiguous_dna)
             cdsm = Seq(str(__nsplice(MUU.mutated,
                                      MUU.newSplice(W.mRNA.positionList),
@@ -1441,31 +1443,33 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
             O.addOutput("newCDS", cdsm[:(len(str(trans)) + 1) * 3])
 
             if not trans or trans[0] != 'M' :
-                __bprint(orig + '*', O, "oldProteinFancy")
+                # Todo: Protein differences are not color-coded,
+                # use something like below in _protein_description().
+                _print_protein_html(orig + '*', 0, 0, O, "oldProteinFancy")
                 if str(cdsm[0:3]) in \
                     Bio.Data.CodonTable.unambiguous_dna_by_id[
                         W.txTable].start_codons :
                     O.addOutput("newprotein", '?')
-                    __bprint('?', O, "newProteinFancy")
+                    _print_protein_html('?', 0, 0, O, "newProteinFancy")
                     O.addOutput("altStart", str(cdsm[0:3]))
                     if str(orig[1:]) != str(trans[1:]) :
                         O.addOutput("altProtein", 'M' + trans[1:] + '*')
-                        __bprint('M' + trans[1:] + '*', O, "altProteinFancy")
+                        _print_protein_html('M' + trans[1:] + '*', 0, 0, O, "altProteinFancy")
                 #if
                 else :
                     O.addOutput("newprotein", '?')
-                    __bprint('?', O, "newProteinFancy")
+                    _print_protein_html('?', 0, 0, O, "newProteinFancy")
                 #else
             else :
-                cdsLen = __cdsLen(MUU.newSplice(W.CDS.positionList))
-                descr = __toProtDescr(cdsLen, orig, trans)
+                cdsLen = _cds_length(MUU.newSplice(W.CDS.positionList))
+                descr = _protein_description(cdsLen, orig, trans)
                 O.addOutput("myProteinDescription", descr[0])
 
-                __bprint2(orig + '*', descr[1], descr[2], O,
+                _print_protein_html(orig + '*', descr[1], descr[2], O,
                     "oldProteinFancy")
                 if str(orig) != str(trans) :
                     O.addOutput("newprotein", trans + '*')
-                    __bprint2(trans + '*', descr[1], descr[3], O,
+                    _print_protein_html(trans + '*', descr[1], descr[3], O,
                         "newProteinFancy")
             #else
         #if
@@ -1548,7 +1552,7 @@ def process(cmd, C, O) :
         #if i.location :
         for j in i.transcriptList :
             if not ';' in j.description and j.CDS and j.translate :
-                cds = Seq(str(__splice(MUU.orig, j.CDS.positionList)),
+                cds = Seq(str(_splice(MUU.orig, j.CDS.positionList)),
                           IUPAC.unambiguous_dna)
                 cdsm = Seq(str(__nsplice(MUU.mutated,
                                          MUU.newSplice(j.mRNA.positionList),
@@ -1577,8 +1581,8 @@ def process(cmd, C, O) :
                     trans = cdsm.translate(table = j.txTable,
                         to_stop = True)
 
-                    cdsLen = __cdsLen(MUU.newSplice(j.CDS.positionList))
-                    j.proteinDescription = __toProtDescr(cdsLen, orig,
+                    cdsLen = _cds_length(MUU.newSplice(j.CDS.positionList))
+                    j.proteinDescription = _protein_description(cdsLen, orig,
                         trans)[0]
                 #if
                 else :
@@ -1699,7 +1703,7 @@ def process(cmd, C, O) :
     else:
         O.addOutput("geneOfInterest", dict())
 
-    _createBatchOutput(O)
+    _add_batch_output(O)
 
     O.addOutput("original", str(MUU.orig))
     O.addOutput("mutated", str(MUU.mutated))
@@ -1738,8 +1742,7 @@ def main(cmd) :
     print summary
     print
 
-    #if not errors :
-    if not errors or DEBUG:
+    if not errors:
         visualisation = O.getOutput("visualisation")
         if visualisation :
             for i in range(len(visualisation)) :
