@@ -315,7 +315,7 @@ class Retriever(object) :
             if message.find('cannot get document summary') != -1:
                 # Entrez does not have this rs ID.
                 O.addMessage(__file__, 4, 'EENTREZ',
-                             'No dbSNP with ID rs%s could be found.' % ID)
+                             'ID rs%s could be found in dbSNP.' % ID)
             else:
                 # Something else was wrong (print {message} to see more).
                 O.addMessage(__file__, 4, 'EENTREZ',
