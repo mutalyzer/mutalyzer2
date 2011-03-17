@@ -268,13 +268,15 @@ class Retriever(object) :
     #_updateDBmd5
 
 
-    def snpConvert(self, rsId) :
+    def snpConvert(self, rsId, O) :
         """
         Search an rsId in dbSNP and return all annotated HGVS notations of
         it.
 
-        @arg rsId: The id of the SNP
+        @arg rsId: The id of the SNP.
         @type rsId: string
+        @arg O: The Output object.
+        @type O: Modules.Output.Output
 
         @return: A list of HGVS notations
         @rtype: list
@@ -292,8 +294,36 @@ class Retriever(object) :
 
         # Parse the output.
         doc = xml.dom.minidom.parseString(response.read())
-        for i in doc.getElementsByTagName("hgvs") :
-            self._output.addOutput("snp", i.lastChild.data.encode("utf8"))
+
+        set = doc.getElementsByTagName('ExchangeSet')
+
+        if len(set) < 1:
+            # Not even the expected root element is present.
+            O.addMessage(__file__, 4, 'EENTREZ',
+                         'Unkown dbSNP error. Got no result from dbSNP.')
+            return
+
+        rs = set[0].getElementsByTagName('Rs')
+
+        if len(rs) < 1:
+            # No Rs result element.
+            text = []
+            for node in set[0].childNodes:
+                if node.nodeType == node.TEXT_NODE:
+                    text.append(node.data)
+            message = ''.join(text)
+            if message.find('cannot get document summary') != -1:
+                # Entrez does not have this rs ID.
+                O.addMessage(__file__, 4, 'EENTREZ',
+                             'No dbSNP with ID rs%s could be found.' % ID)
+            else:
+                # Something else was wrong (print {message} to see more).
+                O.addMessage(__file__, 4, 'EENTREZ',
+                             'Unkown dbSNP error. Got no result from dbSNP.')
+            return
+
+        for i in rs[0].getElementsByTagName('hgvs'):
+            self._output.addOutput('snp', i.lastChild.data.encode('utf8'))
     #snpConvert
 #Retriever
 

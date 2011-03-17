@@ -596,7 +596,7 @@ class Scheduler() :
 
         if not skip :
             R = Retriever.Retriever(C.Retriever, O, None)
-            R.snpConvert(cmd)
+            R.snpConvert(cmd, O)
 
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd
