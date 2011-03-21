@@ -431,7 +431,7 @@ class Snp:
         if rsId :
             O.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
             R = Retriever.Retriever(C.Retriever, O, None)
-            R.snpConvert(rsId)
+            R.snpConvert(rsId, O)
             O.addMessage(__file__, -1, "INFO",
                          "Finished processing rs%s" % rsId)
         #if
