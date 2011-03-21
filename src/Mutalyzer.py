@@ -1070,7 +1070,7 @@ def apply_insertion(before, after, s, mutator, record, O):
 #apply_insertion
 
 
-def apply_delins(first, last, del, ins, mutator, record, output):
+def apply_delins(first, last, delete, insert, mutator, record, output):
     """
     Do a semantic check for an delins, do the actual delins, and give
     it a name.
@@ -1079,11 +1079,11 @@ def apply_delins(first, last, del, ins, mutator, record, output):
     @type first: int
     @arg last: Genomic end position of the delins.
     @type last: int
-    @arg del: Sequence to delete (may be None, in which case it will be
-              constructed from the reference sequence).
-    @type del: string
-    @arg ins: Sequence to insert.
-    @type ins: string
+    @arg delete: Sequence to delete (may be None, in which case it will be
+                 constructed from the reference sequence).
+    @type delete: string
+    @arg insert: Sequence to insert.
+    @type insert: string
     @arg mutator: A Mutator object.
     @type mutator: Modules.Mutator.Mutator
     @arg record: A GenRecord object.
@@ -1093,10 +1093,10 @@ def apply_delins(first, last, del, ins, mutator, record, output):
 
     @todo: Exception instead of O.addMessage().
     """
-    if not del:
-        del = mutator.orig[first - 1:last]
+    if not delete:
+        delete = mutator.orig[first - 1:last]
 
-    if str(del) == str(ins):
+    if str(delete) == str(insert):
         output.addMessage(__file__, 2, 'WNOCHANGE',
                           'Sequence "%s" at position %i_%i is identical to ' \
                           'the variant.' % (
@@ -1104,47 +1104,47 @@ def apply_delins(first, last, del, ins, mutator, record, output):
                               first, last))
         return
 
-    del_trimmed, ins_trimmed, lcp, lcs = _trim_common(del, ins)
+    delete_trimmed, insert_trimmed, lcp, lcs = _trim_common(delete, insert)
 
-    if not len(del_trimmed):
+    if not len(delete_trimmed):
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                           'is actually an insertion.')
-        apply_insertion(first + lcp - 1, first + lcp, ins_trimmed, mutator,
+        apply_insertion(first + lcp - 1, first + lcp, insert_trimmed, mutator,
                         record, output)
         return
 
-    if len(del_trimmed) == 1 and len(ins_trimmed) == 1:
+    if len(delete_trimmed) == 1 and len(insert_trimmed) == 1:
             output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                               'is actually a substitution.')
-            apply_substitution(first + lcp, del_trimmed, ins_trimmed, mutator,
-                               record, output)
+            apply_substitution(first + lcp, delete_trimmed, insert_trimmed,
+                               mutator, record, output)
             return
 
-    if not len(ins_trimmed):
+    if not len(insert_trimmed):
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                           'is actually a deletion.')
         apply_deletion_duplication(first + lcp, last - lcs, 'del',
                                    mutator, record, output)
         return
 
-    if str(Bio.Seq.reverse_complement(del_trimmed)) == ins_trimmed:
+    if str(Bio.Seq.reverse_complement(delete_trimmed)) == insert_trimmed:
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                           'is actually an inversion.')
         apply_inversion(first + lcp, last - lcs, mutator,
                         record, output)
         return
 
-    if len(ins) != len(ins_trimmed):
+    if len(insert) != len(insert_trimmed):
         output.addMessage(__file__, 2, 'WNOTMINIMAL',
                 'Sequence "%s" at position %i_%i has the same prefix or ' \
                 'suffix as the inserted sequence "%s". The HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
                 mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
-                first, last, ins, ins_trimmed, first + lcp, last - lcs))
+                first, last, insert, insert_trimmed, first + lcp, last - lcs))
 
-    mutator.delinsM(first + lcp, last - lcs, ins_trimmed)
+    mutator.delinsM(first + lcp, last - lcs, insert_trimmed)
 
-    record.name(first + lcp, last - lcs, 'delins', ins_trimmed, '', None)
+    record.name(first + lcp, last - lcs, 'delins', insert_trimmed, '', None)
 #apply_delins
 
 
@@ -1235,7 +1235,7 @@ def _genomic_to_genomic(first_location, last_location):
         return None, None
 
     first = int(first_location.Main)
-    last = int(last_position.Main)
+    last = int(last_location.Main)
 
     return first, last
 
@@ -1347,9 +1347,9 @@ def _raw_variant(mutator, variant, record, transcript, output):
                     output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
                         'position given for a non-genomic reference sequence.')
                     return
-                first_location = RawVar.StartLoc.PtLoc
-                if RawVar.EndLoc:
-                    last_location = RawVar.EndLoc.PtLoc
+                first_location = variant.StartLoc.PtLoc
+                if variant.EndLoc:
+                    last_location = variant.EndLoc.PtLoc
                 else:
                     last_location = first_location
                 if transcript:
@@ -1658,7 +1658,8 @@ def process(description, config, output):
             if parsed_description.Gene.ProtIso:
                 output.addMessage(__file__, 4, 'EPROT', 'Indexing by ' \
                                   'protein isoform is not supported.')
-        retriever = Retriever.GenBankRetriever(C.Retriever, output, database)
+        retriever = Retriever.GenBankRetriever(config.Retriever, output,
+                                               database)
         filetype = 'GB'
 
     # Add recordType to output for output formatting.
@@ -1850,171 +1851,7 @@ def process(description, config, output):
     output.addOutput('mutated', str(mutator.mutated))
 
     # Todo: remove?
-    del MUU
+    del mutator
 
     return record
 #process
-
-
-def main(cmd):
-    """
-    Command line interface to the name checker.
-
-    @todo: documentation
-    """
-    C = Config.Config()
-    O = Output.Output(__file__, C.Output)
-
-    O.addMessage(__file__, -1, "INFO", "Received variant " + cmd)
-
-    RD = process(cmd, C, O)
-
-    O.addMessage(__file__, -1, "INFO", "Finished processing variant " + cmd)
-
-    ### OUTPUT BLOCK ###
-    gn = O.getOutput("genename")
-    if gn :
-        print "Gene Name: " + gn[0]
-    tv = O.getOutput("transcriptvariant")
-    if tv :
-        print "Transcript variant: " + tv[0]
-        print
-    #if
-
-    for i in O.getMessages() :
-        print i
-    errors, warnings, summary = O.Summary()
-    print summary
-    print
-
-    if not errors:
-        visualisation = O.getOutput("visualisation")
-        if visualisation :
-            for i in range(len(visualisation)) :
-                if i and not i % 3 :
-                    print
-                print visualisation[i]
-            #for
-            print
-        #if
-
-        reference = O.getOutput("reference")[-1]
-        for i in O.getOutput("descriptions") :
-            print i
-        print
-        for i in O.getOutput("protDescriptions") :
-            print i
-        print
-
-        if RD.record and RD.record._sourcetype == "LRG": #LRG record
-            from collections import defaultdict
-            toutput = defaultdict(list)
-            poutput = defaultdict(list)
-            for i in RD.record.geneList:
-                for j in i.transcriptList:
-                    d = j.description
-                    d = ';' in d and '['+d+']' or d
-                    if j.name:
-                        toutput[i.name].append(
-                            "%st%s:%c.%s" % (reference, j.name, j.molType, d))
-                    else:
-                        pass
-                    if j.molType == 'c':
-                        poutput[i.name].append(
-                                "%sp%s:%s" % (reference, j.name,
-                                    j.proteinDescription))
-                        poutput[i.name].sort()
-                toutput[i.name].sort()
-
-            #Transcript Notation
-            print "Following transcripts were affected:"
-            for key, values in toutput.items():
-                print key
-                for value in values:
-                    print "\t"+value
-
-            #Protein Notation
-            print "\nFollowing proteins were affected:"
-            for key, values in poutput.items():
-                print key
-                for value in values:
-                    print "\t"+value
-            #for
-        #if
-        else :
-            for i in RD.record.geneList :
-                for j in i.transcriptList :
-                    if ';' in j.description :
-                        print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name,
-                                                      j.molType, j.description)
-                    else :
-                        print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name,
-                                                    j.molType, j.description)
-                        if (j.molType == 'c') :
-                            print "%s(%s_i%s):%s" % (reference, i.name, j.name,
-                                                     j.proteinDescription)
-                    #else
-                #for
-            #for
-        #else
-
-        #Genomic Notation
-        rdrd = RD.record.description
-        gdescr = ';' in rdrd and '['+rdrd+']' or rdrd
-        print "\nGenomic notation:\n\t%s:g.%s" % (reference, gdescr)
-        print O.getOutput("genomicChromDescription")
-
-        op = O.getOutput("oldprotein")
-        if op :
-            print "\nOld protein:"
-            #__bprint(op[0], O)
-            for i in O.getOutput("oldProteinFancy") :
-                print i
-            print
-        #if
-        np = O.getOutput("newprotein")
-        if np :
-            print "\nNew protein:"
-            #__bprint(np[0], O)
-            for i in O.getOutput("newProteinFancy") :
-                print i
-            print
-        #if
-        ap = O.getOutput("altProtein")
-        if ap :
-            print "\nAlternative protein using start codon %s:" % \
-                O.getOutput("altstart")[0]
-            #__bprint(ap[0], O)
-            for i in O.getOutput("altProteinFancy") :
-                print i
-            print
-        #if
-
-        for i in O.getOutput("exonInfo") :
-            print i
-        print
-        print O.getOutput("cdsStart")
-        print O.getOutput("cdsStop")
-        print
-
-        for i in O.getOutput("legends") :
-            print i
-
-        print
-        print "Restriction sites:"
-        for i in O.getOutput("restrictionSites") :
-            print i
-
-        print "+++ %s" % O.getOutput("myTranscriptDescription")
-
-    #if
-    ### OUTPUT BLOCK ###
-    del O
-#main
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print 'Please provide a variant'
-        sys.exit(1)
-    main(sys.argv[1])
