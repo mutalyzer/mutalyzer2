@@ -4,6 +4,15 @@
 The nomenclature checker.
 
 @todo: Use exceptions for failure handling.
+@todo: End vs stop. I guess we should use start/stop (end goes with beginning).
+       Or first/last, or acceptor/donor. Anyway, CDS is always denoted with
+       start/stop.
+       Idea:
+       * CDS -> use start/stop
+       * splice sites or exons -> acceptor/donor
+       * translation -> begin/end
+       * any range of bases -> first/last
+       * interbase position (if two numbers are used) -> before/after
 """
 
 
@@ -34,27 +43,27 @@ from Modules import Config
 ##############################################################################
 
 
-def _format_range(pos1, pos2):
+def _format_range(first, last):
     """
     Simplify a range to one position when applicable.
 
-    @arg pos1: First coordinate of a range.
-    @type pos1: integer
-    @arg pos2: Second coordinate of a range.
-    @type pos2: integer
+    @arg first: First coordinate of a range.
+    @type first: integer
+    @arg last: Second coordinate of a range.
+    @type last: integer
 
-    @return: pos1_pos2 in case of a real range, pos1 otherwise.
+    @return: {first}_{last} in case of a real range, {first} otherwise.
     @rtype: string
     """
-    if pos1 == pos2:
-        return str(pos1)
+    if first == last:
+        return str(first)
 
-    return '%i_%i' % (pos1, pos2)
+    return '%i_%i' % (first, last)
 #_format_range
 
 
 # Used in: checkDeletionDuplication, checkInsertion
-def _roll(s, start, stop):
+def _roll(s, first, last):
     """
     Determine the variability of a variant by looking at cyclic
     permutations. Not all cyclic permutations are tested at each time, it
@@ -63,10 +72,10 @@ def _roll(s, start, stop):
 
     @arg s: A reference sequence.
     @type s: string
-    @arg start: Start position of the pattern in the reference sequence.
-    @type start: int
-    @arg stop: End position of the pattern in the reference sequence.
-    @type stop: int
+    @arg first: First position of the pattern in the reference sequence.
+    @type first: int
+    @arg last: Last position of the pattern in the reference sequence.
+    @type last: int
 
     @return: tuple:
         - left  ; Amount of positions that the pattern can be shifted to
@@ -75,24 +84,24 @@ def _roll(s, start, stop):
                   the right.
     @rtype: tuple(int, int)
     """
-    pattern = s[start - 1:stop] # Extract the pattern
+    pattern = s[first - 1:last] # Extract the pattern
     pattern_length = len(pattern)
 
     # Keep rolling to the left as long as a cyclic permutation matches.
-    minimum = start - 2
+    minimum = first - 2
     j = pattern_length - 1
     while minimum > -1 and s[minimum] == pattern[j % pattern_length]:
         j -= 1
         minimum -= 1
 
     # Keep rolling to the right as long as a cyclic permutation matches.
-    maximum = stop
+    maximum = last
     j = 0
     while maximum < len(s) and s[maximum] == pattern[j % pattern_length]:
         j += 1
         maximum += 1
 
-    return start - minimum - 2, maximum - stop
+    return first - minimum - 2, maximum - last
 #_roll
 
 
@@ -286,14 +295,14 @@ def _trim_common(s1, s2) :
 #_trim_common
 
 
-def _over_splice_site(pos1, pos2, splice_sites):
+def _over_splice_site(first, last, splice_sites):
     """
-    Check wheter a genomic range (pos1_pos2) hits a splice site.
+    Check wheter a genomic range {first}_{last} hits a splice site.
 
-    @arg pos1: The first coordinate of the range in g. notation.
-    @type pos1: int
-    @arg pos2: The first coordinate of the range in g. notation.
-    @type pos2: int
+    @arg first: The first coordinate of the range in g. notation.
+    @type first: int
+    @arg last: The last coordinate of the range in g. notation.
+    @type last: int
     @arg sites: A list of splice sites in g. notation.
     @type sites: list(int)
 
@@ -302,9 +311,9 @@ def _over_splice_site(pos1, pos2, splice_sites):
     """
     sites_iter = iter(splice_sites)
     for acceptor, donor in izip_longest(sites_iter, sites_iter):
-        if pos1 < acceptor and pos2 >= acceptor:
+        if first < acceptor and last >= acceptor:
             return True
-        if donor and pos1 <= donor and pos2 > donor:
+        if donor and first <= donor and last > donor:
             return True
 
     return False
@@ -361,7 +370,7 @@ def _insert_tag(s, pos1, pos2, tag1, tag2):
 #_insert_tag
 
 
-def _print_protein_html(s, pos1, pos2, O, where):
+def _print_protein_html(s, first, last, O, where):
     """
     Make a fancy representation of a protein and put it in the Output
     object under the name 'where'. The representation contains HTML tags
@@ -369,13 +378,13 @@ def _print_protein_html(s, pos1, pos2, O, where):
 
     @arg s: A protein sequence.
     @type s: string
-    @arg pos1: First position to highlight.
-    @type pos1: int
-    @arg pos2: Last position to highlight.
-    @type pos2: int
+    @arg first: First position to highlight.
+    @type first: int
+    @arg last: Last position to highlight.
+    @type last: int
     @arg O: The Output object.
-    @type O: object
-    @arg where: Location in the Output object to store the representation.
+    @type O: Modules.Output.Output
+    @arg where: Location in the {O} object to store the representation.
     @type where: string
     """
     if not s: return
@@ -396,7 +405,7 @@ def _print_protein_html(s, pos1, pos2, O, where):
 
     for i in range(0, len(s), block):
         # Add the blocks.
-        output += ' ' + _insert_tag(s[i:i + block], pos1 - i, pos2 - i,
+        output += ' ' + _insert_tag(s[i:i + block], first - i, last - i,
                                     tag1, tag2)
         if not (i + block) % line and i + block < len(s):
             # One line done.
@@ -424,9 +433,9 @@ def in_frame_description(s1, s2) :
 
     @return: A tuple of:
         - string ; Protein description of the change.
-        - int    ; Start position of the change.
-        - int    ; End position of the change in the first protein.
-        - int    ; End position of the change in the second protein.
+        - int    ; First position of the change.
+        - int    ; Last position of the change in the first protein.
+        - int    ; Last position of the change in the second protein.
     @rtype: tuple(string, int, int, int)
 
     @todo: More intelligently handle longest_common_prefix().
@@ -509,9 +518,9 @@ def out_of_frame_description(s1, s2) :
 
     @return: A tuple of:
         - string ; Protein description of the change.
-        - int    ; Start position of the change.
-        - int    ; End position of the first protein.
-        - int    ; End position of the second protein.
+        - int    ; First position of the change.
+        - int    ; Last position of the first protein.
+        - int    ; Last position of the second protein.
     @rtype: tuple(string, int, int, int)
 
     @todo: More intelligently handle longest_common_prefix().
@@ -547,9 +556,9 @@ def _protein_description(cds_stop, s1, s2) :
 
     @return: A tuple of:
         - string ; Protein description of the change.
-        - int    ; Start position of the change.
-        - int    ; End position of the change in the first protein.
-        - int    ; End position of the change in the second protein.
+        - int    ; First position of the change.
+        - int    ; Last position of the change in the first protein.
+        - int    ; Last position of the change in the second protein.
     @rtype: tuple(string, int, int, int)
     """
     if cds_stop % 3:
@@ -570,8 +579,8 @@ def _protein_description(cds_stop, s1, s2) :
 ##############################################################################
 
 
-# Used in: __rv
-def _is_intronic_position(loc):
+# Used in: _raw_variant
+def _is_intronic(loc):
     """
     Check whether a location is intronic.
 
@@ -588,10 +597,10 @@ def _is_intronic_position(loc):
     if not loc.PtLoc.Offset:
         return False
     return True
-#_intronic_position
+#_is_intronic
 
 
-# Used in: __normal2g
+# Used in: _coding_to_genomic
 def _check_intronic_position(main, offset, transcript):
     """
     Check whether a c. position is really in an intron: The main coordinate
@@ -634,22 +643,23 @@ def _check_intronic_position(main, offset, transcript):
 #_check_intronic_position
 
 
-def _get_offset(loc) :
+# Used in: _coding_to_genomic
+def _get_offset(location) :
     """
     Convert the offset coordinate in a location (from the Parser) to an
     integer.
 
-    @arg loc: A location.
-    @type loc: pyparsing.ParseResults
+    @arg location: A location.
+    @type location: pyparsing.ParseResults
 
     @return: Integer representation of the offset coordinate.
     @rtype: int
     """
-    if loc.Offset :
-        if loc.Offset == '?' : # This is highly debatable.
+    if location.Offset :
+        if location.Offset == '?' : # This is highly debatable.
             return 0
-        offset = int(loc.Offset)
-        if loc.OffSgn == '-' :
+        offset = int(location.Offset)
+        if location.OffSgn == '-' :
             return -offset
         return offset
 
@@ -676,6 +686,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
     @return: True if the optional argument is correct, False otherwise.
     @rtype: boolean
 
+    @todo: refactor
     @todo: Use exceptions.
     """
     if arg : # The argument is optional, if it is not present, it is correct.
@@ -840,15 +851,15 @@ def apply_substitution(position, original, substitute, mutator, record, O):
 #apply_substitution
 
 
-def apply_deletion_duplication(start, end, type, mutator, record, O):
+def apply_deletion_duplication(first, last, type, mutator, record, O):
     """
     Do a semantic check for a deletion or duplication, do the actual
     deletion/duplication and give it a name.
 
-    @arg start: Genomic start position of the del/dup.
-    @type start: int
-    @arg end: Genomic end position of the del/dup.
-    @type end: int
+    @arg first: Genomic start position of the del/dup.
+    @type first: int
+    @arg last: Genomic end position of the del/dup.
+    @type last: int
     @arg type: The variant type (del or dup).
     @type type: string
     @arg mutator: A Mutator object.
@@ -860,7 +871,7 @@ def apply_deletion_duplication(start, end, type, mutator, record, O):
 
     @todo: Exception instead of O.addMessage().
     """
-    roll = _roll(mutator.orig, start, end)
+    roll = _roll(mutator.orig, first, last)
     shift = roll[1]
 
     # In the case of RNA, check if we roll over a splice site. If so, make
@@ -872,55 +883,55 @@ def apply_deletion_duplication(start, end, type, mutator, record, O):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
-            if end < acceptor and end + roll[1] >= acceptor:
-                shift = acceptor - 1 - end
+            if last < acceptor and last + roll[1] >= acceptor:
+                shift = acceptor - 1 - last
                 break
-            if end <= donor and end + roll[1] > donor:
-                shift = donor - end
+            if last <= donor and last + roll[1] > donor:
+                shift = donor - last
                 break
 
     if shift:
-        new_start = start + shift
-        new_stop = end + shift
+        new_first = first + shift
+        new_stop = last + shift
         O.addMessage(__file__, 2, 'WROLL',
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that it should be "%s" at ' \
             'position %s.' % (
-            mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
-            _format_range(start, end),
-            mutator.visualiseLargeString(str(mutator.orig[new_start - 1:new_stop])),
-            _format_range(new_start, new_stop)))
+            mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+            _format_range(first, last),
+            mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
+            _format_range(new_first, new_stop)))
 
     if shift != roll[1]:
         # The original roll was decreased because it crossed a splice site.
-        incorrect_start = start + roll[1]
-        incorrect_stop = end + roll[1]
+        incorrect_first = first + roll[1]
+        incorrect_stop = last + roll[1]
         O.addMessage(__file__, 1, 'IROLLBACK',
             'Sequence "%s" at position %s was not corrected to "%s" at ' \
             'position %s, since they reside in different exons.' % (
-            mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
-            _format_range(start, end),
-            mutator.visualiseLargeString(str(mutator.orig[incorrect_start - 1:incorrect_stop])),
-            _format_range(incorrect_start, incorrect_stop)))
+            mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+            _format_range(first, last),
+            mutator.visualiseLargeString(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
+            _format_range(incorrect_first, incorrect_stop)))
 
     if type == 'del':
-        mutator.delM(start, end)
+        mutator.delM(first, last)
     else :
-        mutator.dupM(start, end)
+        mutator.dupM(first, last)
 
-    record.name(start, end, type, '', '', (roll[0], shift))
+    record.name(first, last, type, '', '', (roll[0], shift))
 #apply_deletion_duplication
 
 
-def apply_inversion(start, end, mutator, record, O) :
+def apply_inversion(first, last, mutator, record, O) :
     """
     Do a semantic check for an inversion, do the actual inversion, and give
     it a name.
 
-    @arg start: Genomic start position of the inversion.
-    @type start: int
-    @arg end: Genomic end position of the inversion.
-    @type end: int
+    @arg first: Genomic start position of the inversion.
+    @type first: int
+    @arg last: Genomic end position of the inversion.
+    @type last: int
     @arg mutator: A Mutator object.
     @type mutator: Modules.Mutator.Mutator
     @arg record: A GenRecord object.
@@ -930,7 +941,7 @@ def apply_inversion(start, end, mutator, record, O) :
 
     @todo: Exception instead of O.addMessage().
     """
-    snoop = _palinsnoop(mutator.orig[start - 1:end])
+    snoop = _palinsnoop(mutator.orig[first - 1:last])
 
     if snoop:
         # We have a reverse-complement-palindromic prefix.
@@ -940,8 +951,8 @@ def apply_inversion(start, end, mutator, record, O) :
             O.addMessage(__file__, 2, 'WNOCHANGE',
                 'Sequence "%s" at position %i_%i is a palindrome ' \
                 '(its own reverse complement).' % (
-                mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
-                start, end))
+                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                first, last))
             return
         else:
             O.addMessage(__file__, 2, 'WNOTMINIMAL',
@@ -949,35 +960,35 @@ def apply_inversion(start, end, mutator, record, O) :
                 'palindrome (the first %i nucleotide(s) are the reverse ' \
                 'complement of the last one(s)), the HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                mutator.visualiseLargeString(str(mutator.orig[start - 1:end])),
-                start, end, snoop,
+                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                first, last, snoop,
                 mutator.visualiseLargeString(
-                    str(mutator.orig[start + snoop - 1: end - snoop])),
-                start + snoop, end - snoop))
-            start += snoop
-            end -= snoop
+                    str(mutator.orig[first + snoop - 1: last - snoop])),
+                first + snoop, last - snoop))
+            first += snoop
+            last -= snoop
 
-    mutator.invM(start, end)
+    mutator.invM(first, last)
 
-    if start == end:
+    if first == last:
         O.addMessage(__file__, 2, 'WWRONGTYPE', 'Inversion at position ' \
-            '%i is actually a substitution.' % start_g)
-        record.name(start, start, 'subst', mutator.orig[start - 1],
-            Bio.Seq.reverse_complement(mutator.orig[start - 1]), None)
+            '%i is actually a substitution.' % first_g)
+        record.name(first, first, 'subst', mutator.orig[first - 1],
+            Bio.Seq.reverse_complement(mutator.orig[first - 1]), None)
     else :
-        record.name(start, end, 'inv', '', '', None)
+        record.name(first, last, 'inv', '', '', None)
 #apply_inversion
 
 
-def apply_insertion(start, end, s, mutator, record, O):
+def apply_insertion(before, after, s, mutator, record, O):
     """
     Do a semantic check for an insertion, do the actual insertion, and give
     it a name.
 
-    @arg start: Genomic start position of the insertion.
-    @type start: int
-    @arg end: Genomic end position of the insertion.
-    @type end: int
+    @arg before: Genomic position before the insertion.
+    @type before: int
+    @arg after: Genomic position after the insertion.
+    @type after: int
     @arg s: Nucleotides to be inserted.
     @type s: string
     @arg mutator: A Mutator object.
@@ -989,9 +1000,9 @@ def apply_insertion(start, end, s, mutator, record, O):
 
     @todo: Exception instead of O.addMessage().
     """
-    if start + 1 != end:
+    if before + 1 != after:
         O.addMessage(__file__, 3, 'EINSRANGE',
-            '%i and %i are not consecutive positions.' % (start, end))
+            '%i and %i are not consecutive positions.' % (before, after))
         return
 
     if not s or not _is_dna(s):
@@ -1001,11 +1012,11 @@ def apply_insertion(start, end, s, mutator, record, O):
 
     insertion_length = len(s)
 
-    mutator.insM(start, s)
-    new_start = mutator.shiftpos(start)
-    new_stop = mutator.shiftpos(start) + insertion_length
+    mutator.insM(before, s)
+    new_before = mutator.shiftpos(before)
+    new_stop = mutator.shiftpos(before) + insertion_length
 
-    roll = _roll(mutator.mutated, new_start + 1, new_stop)
+    roll = _roll(mutator.mutated, new_before + 1, new_stop)
     shift = roll[1]
 
     # In the case of RNA, check if we roll over a splice site. If so, make
@@ -1030,691 +1041,825 @@ def apply_insertion(start, end, s, mutator, record, O):
             'Insertion of %s at position %i_%i was given, ' \
             'however, the HGVS notation prescribes that it should be a ' \
             'duplication of %s at position %i_%i.' % (
-            s, start, start + 1,
-            mutator.mutated[new_start + shift:new_stop + shift], start + shift,
-            start + shift + insertion_length - 1))
-        end += shift - 1
-        start = end - insertion_length + 1
-        record.name(start, end, 'dup', '', '',
+            s, before, before + 1,
+            mutator.mutated[new_before + shift:new_stop + shift], before + shift,
+            before + shift + insertion_length - 1))
+        after += shift - 1
+        before = after - insertion_length + 1
+        record.name(before, after, 'dup', '', '',
                     (roll[0] + shift - insertion_length, 0))
     else:
         if shift:
             O.addMessage(__file__, 2, 'WROLL', 'Insertion of %s at position ' \
                 '%i_%i was given, however, the HGVS notation prescribes ' \
                 'that it should be an insertion of %s at position %i_%i.' % (
-                s, start, start + 1,
-                mutator.mutated[new_start + shift:new_stop + shift],
-                new_start + shift, new_start + shift + 1))
+                s, before, before + 1,
+                mutator.mutated[new_before + shift:new_stop + shift],
+                new_before + shift, new_before + shift + 1))
         if shift != roll[1]:
             O.addMessage(__file__, 1, 'IROLLBACK',
                 'Insertion of %s at position %i_%i was not corrected to an ' \
                 'insertion of %s at position %i_%i, since they reside in ' \
                 'different exons.' % (
-                s, start, start + 1,
-                mutator.mutated[new_start + roll[1]:new_stop + roll[1]],
-                new_start + roll[1], new_start + roll[1] + 1))
-        record.name(start, start + 1, 'ins',
-                    mutator.mutated[new_start + shift:new_stop + shift], '',
+                s, before, before + 1,
+                mutator.mutated[new_before + roll[1]:new_stop + roll[1]],
+                new_before + roll[1], new_before + roll[1] + 1))
+        record.name(before, before + 1, 'ins',
+                    mutator.mutated[new_before + shift:new_stop + shift], '',
                     (roll[0], shift))
 #apply_insertion
 
 
-def __ivs2g(location, transcript) :
+def apply_delins(first, last, del, ins, mutator, record, output):
     """
-    @todo: documentation
+    Do a semantic check for an delins, do the actual delins, and give
+    it a name.
+
+    @arg first: Genomic start position of the delins.
+    @type first: int
+    @arg last: Genomic end position of the delins.
+    @type last: int
+    @arg del: Sequence to delete (may be None, in which case it will be
+              constructed from the reference sequence).
+    @type del: string
+    @arg ins: Sequence to insert.
+    @type ins: string
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
+
+    @todo: Exception instead of O.addMessage().
     """
+    if not del:
+        del = mutator.orig[first - 1:last]
 
-    ivsNumber = int(location.IVSNumber)
+    if str(del) == str(ins):
+        output.addMessage(__file__, 2, 'WNOCHANGE',
+                          'Sequence "%s" at position %i_%i is identical to ' \
+                          'the variant.' % (
+                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                              first, last))
+        return
 
-    if ivsNumber < 1 or ivsNumber > transcript.CM.numberOfIntrons() :
+    del_trimmed, ins_trimmed, lcp, lcs = _trim_common(del, ins)
+
+    if not len(del_trimmed):
+        output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
+                          'is actually an insertion.')
+        apply_insertion(first + lcp - 1, first + lcp, ins_trimmed, mutator,
+                        record, output)
+        return
+
+    if len(del_trimmed) == 1 and len(ins_trimmed) == 1:
+            output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
+                              'is actually a substitution.')
+            apply_substitution(first + lcp, del_trimmed, ins_trimmed, mutator,
+                               record, output)
+            return
+
+    if not len(ins_trimmed):
+        output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
+                          'is actually a deletion.')
+        apply_deletion_duplication(first + lcp, last - lcs, 'del',
+                                   mutator, record, output)
+        return
+
+    if str(Bio.Seq.reverse_complement(del_trimmed)) == ins_trimmed:
+        output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
+                          'is actually an inversion.')
+        apply_inversion(first + lcp, last - lcs, mutator,
+                        record, output)
+        return
+
+    if len(ins) != len(ins_trimmed):
+        output.addMessage(__file__, 2, 'WNOTMINIMAL',
+                'Sequence "%s" at position %i_%i has the same prefix or ' \
+                'suffix as the inserted sequence "%s". The HGVS notation ' \
+                'prescribes that it should be "%s" at position %i_%i.' % (
+                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                first, last, ins, ins_trimmed, first + lcp, last - lcs))
+
+    mutator.delinsM(first + lcp, last - lcs, ins_trimmed)
+
+    record.name(first + lcp, last - lcs, 'delins', ins_trimmed, '', None)
+#apply_delins
+
+
+def _intronic_to_genomic(location, transcript):
+    """
+    Get genomic location from IVS location.
+
+    @arg location: A location.
+    @type location: pyparsing.ParseResults
+    @arg transcript: todo
+    @type transcript: todo
+
+    @return: Genomic location represented by given IVS location.
+    @rtype: int
+    """
+    ivs_number = int(location.IVSNumber)
+
+    if ivs_number < 1 or ivs_number > transcript.CM.numberOfIntrons():
+        # Todo: Exception?
         return None
 
-    if location.OffSgn == '+' :
-        return transcript.CM.getSpliceSite(ivsNumber * 2 - 1) + \
-            transcript.CM.orientation * int(location.Offset)
-    return transcript.CM.getSpliceSite(ivsNumber * 2) - \
-        transcript.CM.orientation * int(location.Offset)
-#__ivs2g
+    if location.OffSgn == '+':
+        return transcript.CM.getSpliceSite(ivs_number * 2 - 1) + \
+               transcript.CM.orientation * int(location.Offset)
+    else:
+        return transcript.CM.getSpliceSite(ivs_number * 2) - \
+               transcript.CM.orientation * int(location.Offset)
+#_intronic_to_genomic
 
-def __ex2g(location, transcript) :
+
+def _exonic_to_genomic(location, transcript) :
     """
-    @todo: documentation
+    Get genomic range from EX location.
+
+    @arg location: A location.
+    @type location: pyparsing.ParseResults
+    @arg transcript: todo
+    @type transcript: todo
+
+    @return: A tuple of:
+        - first: Genomic start location represented by given EX location.
+        - last:  Genomic end location represented by given EX location.
+    @rtype: tuple(int, int)
+
+    @todo: We probably want to treat this as a-?_b+?, so take the centers of
+           flanking exons.
+    @todo: Exceptions instead of returning None?
     """
-
-    numberOfExons = transcript.CM.numberOfExons()
-
-    exNumberStart = int(location.EXNumberStart)
-    if exNumberStart < 1 or exNumberStart > transcript.CM.numberOfExons() :
+    first_exon = int(location.EXNumberStart)
+    if first_exon < 1 or first_exon > transcript.CM.numberOfExons():
         return None
-    start_g = transcript.CM.getSpliceSite(exNumberStart * 2 - 2)
+    first = transcript.CM.getSpliceSite(first_exon * 2 - 2)
 
-    if location.EXNumberStop :
-        exNumberStop = int(location.EXNumberStop)
-        if exNumberStop < 1 or exNumberStop > transcript.CM.numberOfExons() :
+    if location.EXNumberStop:
+        last_exon = int(location.EXNumberStop)
+        if last_exon < 1 or last_exon > transcript.CM.numberOfExons():
             return None
-        stop_g = transcript.CM.getSpliceSite(exNumberStop * 2 - 1)
-    else :
-        stop_g = transcript.CM.getSpliceSite(exNumberStart * 2 - 1)
+        last = transcript.CM.getSpliceSite(last_exon * 2 - 1)
+    else:
+        last = transcript.CM.getSpliceSite(first_exon * 2 - 1)
 
-    return start_g, stop_g
-#__ex2g
+    return first, last
+#_exonic_to_genomic
 
-def __normal2g(RawVar, transcript) :
+
+def _genomic_to_genomic(first_location, last_location):
     """
-    @todo: documentation
+    Get genomic range from parsed genomic location.
+
+    @arg first_location: The start location (g.) of the variant.
+    @type first_location: pyparsing.ParseResults
+    @arg last_location: The start location (g.) of the variant.
+    @type last_location: pyparsing.ParseResults
+
+    @return: A tuple of:
+        - first: Genomic start location represented by given location.
+        - last:  Genomic end location represented by given location.
+    @rtype: tuple(int, int)
+
+    @todo: Exceptions.
     """
+    if not first_location.Main.isdigit():
+        # For ? in a position.
+        return None, None
 
-    if not RawVar.StartLoc.PtLoc.Main.isdigit() :
-        return None, None # For ? in a position.
+    if not last_location.Main.isdigit():
+        # For ? in a position.
+        return None, None
 
-    start_g = int(RawVar.StartLoc.PtLoc.Main)
-    end_g = start_g
-    if RawVar.EndLoc :
-        if not RawVar.EndLoc.PtLoc.Main.isdigit() : # For ? in a position.
-            return None, None
-        #end_g = transcript.CM.main2int(
-        #    RawVar.EndLoc.PtLoc.MainSgn + RawVar.EndLoc.PtLoc.Main)
-        end_g = int(RawVar.EndLoc.PtLoc.Main)
-    #if
+    first = int(first_location.Main)
+    last = int(last_position.Main)
+
+    return first, last
 
 
-    # If it is not, convert it to g. notation.
-    if transcript :
-        start_main = transcript.CM.main2int(RawVar.StartLoc.PtLoc.MainSgn + \
-                                            RawVar.StartLoc.PtLoc.Main)
-        #if not RawVar.StartLoc.PtLoc.Offset.isdigit() :
-        #    return
-
-        start_offset = _get_offset(RawVar.StartLoc.PtLoc)
-
-        if not _check_intronic_position(start_main, start_offset, transcript) :
-            return None, None
-
-        start_g = transcript.CM.x2g(start_main, start_offset)
-        end_g = start_g
-        if RawVar.EndLoc :
-            end_main = transcript.CM.main2int(RawVar.EndLoc.PtLoc.MainSgn + \
-                                           RawVar.EndLoc.PtLoc.Main)
-            #if not RawVar.EndLoc.PtLoc.Offset.isdigit() :
-            #    return
-            end_offset = _get_offset(RawVar.EndLoc.PtLoc)
-            if not _check_intronic_position(end_main, end_offset, transcript) :
-                return None, None
-            end_g = transcript.CM.x2g(end_main, end_offset)
-        #if
-        if transcript.CM.orientation == -1 :
-            start_g, end_g = end_g, start_g
-    #if
-
-    return start_g, end_g
-#__normal2g
-
-def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
+def _coding_to_genomic(first_location, last_location, transcript):
     """
-    @todo: documentation
+    Get genomic range from parsed c. location.
+
+    @arg first_location: The start location (c.) of the variant.
+    @type first_location: pyparsing.ParseResults
+    @arg last_location: The start location (c.) of the variant.
+    @type last_location: pyparsing.ParseResults
+    @arg transcript: todo
+    @type transcript: todo
+
+    @return: A tuple of:
+        - first: Genomic start location represented by given location.
+        - last:  Genomic end location represented by given location.
+    @rtype: tuple(int, int)
+
+    @todo: Exceptions.
     """
+    if not first_location.Main.isdigit():
+        # For ? in a position.
+        return None, None
 
-    # FIXME check this
-    # First assume that the variant is given in g. notation.
-    #print RawVar.StartLoc.PtLoc.MainSgn + RawVar.StartLoc.PtLoc.Main
-    #print __PtLoc2offset(RawVar.StartLoc.PtLoc)
+    if not last_location.Main.isdigit():
+        # For ? in a position.
+        return None, None
 
-    Arg1 = RawVar.Arg1
-    Arg2 = RawVar.Arg2
+    first_main = transcript.CM.main2int(first_location.MainSgn + \
+                                        first_location.Main)
+    first_offset = _get_offset(first_location)
+    first = transcript.CM.x2g(first_main, first_offset)
 
-    if RawVar.EXLoc :
-        start_g, end_g = __ex2g(RawVar.EXLoc, transcript)
-        if not start_g :
-            O.addMessage(__file__, 3, "EPOS", "Invalid EX position given.")
+    last_main = transcript.CM.main2int(last_location.MainSgn + \
+                                       last_location.Main)
+    last_offset = _get_offset(last_location)
+    last = transcript.CM.x2g(last_main, last_offset)
+
+    # Todo: Exceptions.
+    if not _check_intronic_position(first_main, first_offset, transcript):
+        return None, None
+    if not _check_intronic_position(last_main, last_offset, transcript):
+        return None, None
+
+    if transcript.CM.orientation == -1:
+        first, last = last, first
+
+    return first, last
+#_coding_to_genomic
+
+
+def _raw_variant(mutator, variant, record, transcript, output):
+    """
+    Process a raw variant.
+
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg variant: A parsed raw (simple, noncompound) variant.
+    @type variant: pyparsing.ParseResults
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg transcript: A transcript object.
+    @type transcript: Modules.GenRecord.Locus
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
+
+    @todo: Documentation.
+    @todo: Exceptions.
+    """
+    if transcript and transcript.CM.orientation == -1:
+        s1 = Bio.Seq.reverse_complement(variant.Arg1)
+        s2 = Bio.Seq.reverse_complement(variant.Arg2)
+    else:
+        s1 = variant.Arg1
+        s2 = variant.Arg2
+
+    if variant.EXLoc:
+        first, last = _exonic_to_genomic(variant.EXLoc, transcript)
+        if not first:
+            output.addMessage(__file__, 3, 'EPOS', 'Invalid EX position given.')
             return
-        #if
-        if end_g < start_g : # FIXME
-            start_g, end_g = end_g, start_g
-    #if
-    else :
-        if RawVar.StartLoc :
-            if RawVar.StartLoc.IVSLoc :
-                if GenRecordInstance.record.molType != 'g' :
-                    O.addMessage(__file__, 3, "ENOINTRON", "Intronic " \
-                        "position given for a non-genomic reference sequence.")
+        if last < first:
+            # Todo: huh?
+            first, last = last, first
+    else:
+        if variant.StartLoc:
+            if variant.StartLoc.IVSLoc:
+                if record.record.molType != 'g':
+                    output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
+                        'position given for a non-genomic reference sequence.')
                     return
-                start_g = __ivs2g(RawVar.StartLoc.IVSLoc, transcript)
-                if not start_g :
-                    O.addMessage(__file__, 3, "EPOS",
-                        "Invalid IVS position given.")
+                first = _intronic_to_genomic(variant.StartLoc.IVSLoc, transcript)
+                if not first:
+                    output.addMessage(__file__, 3, 'EPOS',
+                        'Invalid IVS position given.')
                     return
-                #if
-                end_g = start_g
-                if RawVar.EndLoc and RawVar.EndLoc.IVSLoc : # FIXME
-                    end_g = __ivs2g(RawVar.EndLoc.IVSLoc, transcript)
-                    if end_g < start_g :
-                        start_g, end_g = end_g, start_g
-                #if
-            #if
-            else :
-                if GenRecordInstance.record.molType != 'g' and \
-                   (_is_intronic_position(RawVar.StartLoc) or
-                    _is_intronic_position(RawVar.EndLoc)) :
-                    O.addMessage(__file__, 3, "ENOINTRON", "Intronic " \
-                        "position given for a non-genomic reference sequence.")
+                last = first
+                if variant.EndLoc and variant.EndLoc.IVSLoc:
+                    # Todo: fixme
+                    last = _intronic_to_genomic(variant.EndLoc.IVSLoc, transcript)
+                    if last < first:
+                        first, last = last, first
+            else:
+                if record.record.molType != 'g' and \
+                       (_is_intronic(variant.StartLoc) or
+                        _is_intronic(variant.EndLoc)):
+                    output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
+                        'position given for a non-genomic reference sequence.')
                     return
-                start_g, end_g = __normal2g(RawVar, transcript)
-                if not start_g :
-                    O.addMessage(__file__, 3, "ESPLICE", "Invalid intronic " \
-                        "position given.")
+                first_location = RawVar.StartLoc.PtLoc
+                if RawVar.EndLoc:
+                    last_location = RawVar.EndLoc.PtLoc
+                else:
+                    last_location = first_location
+                if transcript:
+                    first, last = _coding_to_genomic(first_location, last_location, transcript)
+                else:
+                    first, last = _genomic_to_genomic(first_location, last_location)
+                if not first:
+                    output.addMessage(__file__, 3, 'ESPLICE', 'Invalid intronic ' \
+                        'position given.')
                     return
-            #else
-        #if
-        else :
-            O.addMessage(__file__, 4, "EUNKNOWN", "An unknown error occurred.")
+        else:
+            output.addMessage(__file__, 4, 'EUNKNOWN', 'An unknown error occurred.')
             return
-        #else
-    #else
-    if end_g < start_g :
-        O.addMessage(__file__, 3, "ERANGE", "End position is smaller than " \
-                     "the begin position.")
+
+    if last < first:
+        output.addMessage(__file__, 3, 'ERANGE', 'End position is smaller than ' \
+                          'the begin position.')
         return
-    #if
 
-    if start_g < 1 :
-        O.addMessage(__file__, 4, "ERANGE", "Position %i is out of range." %
-                     start_g)
+    if first < 1:
+        output.addMessage(__file__, 4, 'ERANGE', 'Position %i is out of range.' %
+                          first)
         return
-    #if
-    if end_g > len(MUU.orig) :
-        O.addMessage(__file__, 4, "ERANGE", "Position %s is out of range." %
-                     end_g)
+
+    if last > len(mutator.orig):
+        output.addMessage(__file__, 4, 'ERANGE', 'Position %s is out of range.' %
+                          last)
         return
-    #if
 
-    if transcript and transcript.CM.orientation == -1 :
-        Arg1 = Bio.Seq.reverse_complement(RawVar.Arg1)
-        Arg2 = Bio.Seq.reverse_complement(RawVar.Arg2)
+    if transcript and _over_splice_site(first, last, transcript.CM.RNA):
+        output.addMessage(__file__, 2, 'WOVERSPLICE',
+                          'Variant hits one or more splice sites.')
 
-    if transcript and _over_splice_site(start_g, end_g, transcript.CM.RNA) :
-        O.addMessage(__file__, 2, "WOVERSPLICE",
-            "Variant hits one or more splice sites.")
+    if variant.MutationType in ['del', 'dup', 'subst', 'delins']:
+        __checkOptArg(mutator.orig, first, last, s1, output)
 
-    if RawVar.MutationType in ["del", "dup", "subst", "delins"] :
-        __checkOptArg(MUU.orig, start_g, end_g, Arg1, O)
+    # Substitution.
+    if variant.MutationType == 'subst':
+        apply_substitution(first, s1, s2, mutator, record, output)
 
-    if RawVar.MutationType == "subst" :
-        checkSubstitution(start_g, Arg1, Arg2, MUU, GenRecordInstance, O)
-    if RawVar.MutationType in ["del", "dup"] :
-        checkDeletionDuplication(start_g, end_g, RawVar.MutationType, MUU,
-                                 GenRecordInstance, O)
-    if RawVar.MutationType == "inv" :
-        checkInversion(start_g, end_g, MUU, GenRecordInstance, O)
-    if RawVar.MutationType == "ins" :
-        checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O)
+    # Deletion or duplication.
+    if variant.MutationType in ['del', 'dup']:
+        apply_deletion_duplication(first, last, variant.MutationType, mutator,
+                                   record, output)
 
+    # Inversion.
+    if variant.MutationType == 'inv':
+        apply_inversion(first, last, mutator, record, output)
+
+    # Insertion.
+    if variant.MutationType == 'ins':
+        apply_insertion(first, last, s1, mutator, record, output)
 
     # DelIns.
-    if RawVar.MutationType == "delins" :
-        if not Arg1 :
-            Arg1 = MUU.orig[start_g - 1:end_g]
+    if variant.MutationType == 'delins':
+        apply_delins(first, last, s1, s2, mutator, record, output)
+#_raw_variant
 
-        if str(Arg1) == str(Arg2) :
-            O.addMessage(__file__, 2, "WNOCHANGE",
-                "Sequence \"%s\" at position %i_%i is identical to the " \
-                "variant." % (
-                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-                start_g, end_g))
-            return
-        #if
 
-        del_part, ins_part, lcp, lcs = _trim_common(Arg1, Arg2)
-        if not len(del_part) :
-            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
-                         "is actually an insertion.")
-            checkInsertion(start_g + lcp - 1, start_g + lcp, ins_part, MUU,
-                           GenRecordInstance, O)
-            return
-        #if
-        if len(del_part) == 1 and len(ins_part) == 1 :
-            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
-                         "is actually a substitution.")
-            checkSubstitution(start_g + lcp, del_part, ins_part, MUU,
-                              GenRecordInstance, O)
-            return
-        #if
-        if not len(ins_part) :
-            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
-                         "is actually a deletion.")
-            checkDeletionDuplication(start_g + lcp, end_g - lcs, "del",
-                                     MUU, GenRecordInstance, O)
-            return
-        #if
-        if str(Bio.Seq.reverse_complement(del_part)) == ins_part :
-            O.addMessage(__file__, 2, "WWRONGTYPE", "The given DelIns " \
-                         "is actually an inversion.")
-            checkInversion(start_g + lcp, end_g - lcs, MUU,
-                           GenRecordInstance, O)
-            return
-        #if
-        if len(Arg2) != len(ins_part) :
-            O.addMessage(__file__, 2, "WNOTMINIMAL",
-                "Sequence \"%s\" at position %i_%i has the same prefix or " \
-                "suffix as the inserted sequence \"%s\". The HGVS notation " \
-                "prescribes that it should be \"%s\" at position %i_%i." % (
-                MUU.visualiseLargeString(str(MUU.orig[start_g - 1:end_g])),
-                start_g, end_g, Arg2, ins_part, start_g + lcp, end_g - lcs))
-
-        MUU.delinsM(start_g + lcp, end_g - lcs, ins_part)
-
-        GenRecordInstance.name(start_g + lcp, end_g - lcs, "delins", ins_part,
-            "", None)
-    #if
-#__rv
-
-def __ppp(MUU, parts, GenRecordInstance, O) :
+def __ppp(mutator, description, record, output):
     """
-    @todo: documentation
-    """
-    if parts.RawVar or parts.SingleAlleleVarSet :
-        if parts.RefType == 'r' :
-            O.addMessage(__file__, 4, "ERNA", "Descriptions on RNA level " \
-                "are not supported.")
-        if parts.RefType in ['c', 'n'] :
-            GS, W = None, None
-            goi, toi = O.getOutput("geneSymbol")[-1]
-            if parts.LrgAcc:                   # LRG
-                GS = GenRecordInstance.record.geneList[0] #LRG pick top gene
-                if toi:
-                    W = GS.findLocus(toi)
-                    if not W:
-                        O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "Multiple transcripts found for gene %s. Please " \
-                            "choose from: %s" %(GS.name,
-                                ", ".join(GS.listLoci())))
-                else:                       # No transcript id given
-                    if len(GS.transcriptList) == 1:
-                        #No transcript given, only 1 found
-                        W = GS.transcriptList[0]
-                    else:
-                        O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "No transcript given for gene %s. Please " \
-                            "choose from: %s" %(GS.name,
-                                ", ".join(GS.listLoci())))
+    @arg mutator: A Mutator object.
+    @type mutator: Modules.Mutator.Mutator
+    @arg description: Parsed HGVS variant description.
+    @type description: pyparsing.ParseResults
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
 
-            #if
+    @todo: Documentation.
+    @todo: Exceptions.
+    """
+    if not description.RawVar and not description.SingleAlleleVarSet:
+        # Nothing to do. Exception?
+        return
+
+    if description.RefType == 'r':
+        output.addMessage(__file__, 4, "ERNA", "Descriptions on RNA level " \
+                          "are not supported.")
+        return
+
+    if description.RefType in ['c', 'n']:
+
+        gene, transcript = None, None
+        gene_symbol, transcript_id = O.getOutput('geneSymbol')[-1]
+
+        if description.LrgAcc:
+            # LRG case, pick the top gene.
+            gene = record.record.geneList[0]
+            if transcript_id:
+                transcript = gene.findLocus(transcript_id)
+                if not transcript:
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                        "Multiple transcripts found for gene %s. Please " \
+                        "choose from: %s" %(gene.name,
+                            ", ".join(gene.listLoci())))
             else:
-                # gene of interest
-                genes = GenRecordInstance.record.listGenes()
-                toi = toi and "%.3i" % int(toi)
-
-                if goi in genes: #we found our gene
-                    GS = GenRecordInstance.record.findGene(goi)
-                elif (len(genes) == 1) and not(goi):
-                    #There is only one gene in the Record, message?
-                    GS = GenRecordInstance.record.geneList[0]
+                # No transcript id given.
+                if len(gene.transcriptList) == 1:
+                    # No transcript given, only 1 found, pick that.
+                    transcript = gene.transcriptList[0]
                 else:
-                    O.addMessage(__file__, 4, "EINVALIDGENE",
-                        "Gene %s not found. Please choose from: %s" % (
-                        goi, ", ".join(genes)))
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                        "No transcript given for gene %s. Please " \
+                        "choose from: %s" %(gene.name,
+                            ", ".join(gene.listLoci())))
 
-                if GS:
-                    #Find Transcript
-                    transcripts = GS.listLoci()
-                    if toi in transcripts:
-                        W = GS.findLocus(toi)
-                    elif (len(transcripts) == 1) and not(toi):
-                        W = GS.transcriptList[0]
-                    else:
-                        O.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                            "Multiple transcripts found for gene %s. Please " \
-                            "choose from: %s" %(GS.name,
-                            ", ".join(GS.listLoci())))
-            #else
+        else:
+            # Not an LRG, find our gene manually.
+            genes = record.record.listGenes()
+            transcript_id = transcript_id and "%.3i" % int(transcript_id)
 
-            # Add seletcted geneSymbol to output
-            O.addOutput("geneSymbol", (GS and GS.name or "", W and W.name or ""))
+            if gene_symbol in genes:
+                # We found our gene.
+                gene = record.record.findGene(gene_symbol)
+            elif (len(genes) == 1) and not(gene_symbol):
+                # No gene given and there is only one gene in the record.
+                # Todo: message?
+                gene = record.record.geneList[0]
+            else:
+                output.addMessage(__file__, 4, "EINVALIDGENE",
+                    "Gene %s not found. Please choose from: %s" % (
+                    gene_symbol, ", ".join(genes)))
 
-            # Return if no transcript is selected
-            if not W:
-                #Skip all BatchJobs with the same preColon data
-                O.addOutput("BatchFlags", ("S2",
-                    O.getOutput("preColon")[-1]))
-                return None #Explicit return in case of an error
-        #if
-        else :
-            W = None
-        #if W and not W.location :
-        #    W = None
-        if W and not W.transcribe :
+            if gene:
+                # Find transcript.
+                transcripts = gene.listLoci()
+                if transcript_id in transcripts:
+                    # Found our transcript.
+                    transcript = gene.findLocus(transcript_id)
+                elif (len(transcripts) == 1) and not(transcript_id):
+                    # No transcript given and there is only one transcript for
+                    # this gene.
+                    transcript = gene.transcriptList[0]
+                else:
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                        "Multiple transcripts found for gene %s. Please " \
+                        "choose from: %s" %(gene.name,
+                        ", ".join(gene.listLoci())))
+
+        # Add selected gene symbol to output
+        output.addOutput('geneSymbol', (gene and gene.name or '',
+                                        transcript and transcript.name or ''))
+
+        # Return if no transcript is selected
+        if not transcript:
+            # Skip all BatchJobs with the same preColon data.
+            output.addOutput('BatchFlags',
+                             ('S2', output.getOutput('preColon')[-1]))
+            # Explicit return in case of an error.
             return
 
-        if parts.SingleAlleleVarSet:
-            for i in parts.SingleAlleleVarSet :
-                __rv(MUU, i.RawVar, GenRecordInstance, parts, O, W)
-        else :
-            __rv(MUU, parts.RawVar, GenRecordInstance, parts, O, W)
+    else:
+        # Not description.RefType in ['c', 'n'].
+        transcript = None
 
+    if transcript and not transcript.transcribe:
+        return
 
-        if not W : # Genomic given or error with transcript
+    if description.SingleAlleleVarSet:
+        for var in description.SingleAlleleVarSet:
+            _raw_variant(mutator, var.RawVar, record, transcript, output)
+    else:
+        _raw_variant(mutator, description.RawVar, record, transcript, output)
+
+    if not transcript:
+        # Genomic given or error with transcript.
+        return
+
+    if not record.record.geneList:
+        # EST
+        return
+
+    # Add exon table to output.
+    for i in range(0, transcript.CM.numberOfExons() * 2, 2):
+        acceptor = transcript.CM.getSpliceSite(i)
+        donor = transcript.CM.getSpliceSite(i + 1)
+        output.addOutput('exonInfo', [acceptor, donor,
+                                      transcript.CM.g2c(acceptor),
+                                      transcript.CM.g2c(donor)])
+
+    # Add CDS info to output.
+    cds_stop = transcript.CM.info()[2]
+    output.addOutput('cdsStart_g', transcript.CM.x2g(1, 0))
+    output.addOutput('cdsStart_c', 1)
+    output.addOutput('cdsStop_g', transcript.CM.x2g(cds_stop, 0))
+    output.addOutput('cdsStop_c', cds_stop)
+
+    # Add transcript info to output.
+    if transcript.transcribe:
+        output.addOutput('myTranscriptDescription', transcript.description)
+        output.addOutput('origMRNA',
+            str(_splice(mutator.orig, transcript.mRNA.positionList)))
+        output.addOutput('mutatedMRNA',
+            str(_splice(mutator.mutated,
+                        mutator.newSplice(transcript.mRNA.positionList))))
+
+    # Add protein prediction to output.
+    if transcript.translate:
+        cds_original = Seq(str(_splice(mutator.orig, transcript.CDS.positionList)),
+                           IUPAC.unambiguous_dna)
+        cds_variant = Seq(str(__nsplice(mutator.mutated,
+                                        mutator.newSplice(transcript.mRNA.positionList),
+                                        mutator.newSplice(transcript.CDS.location),
+                                        transcript.CM.orientation)),
+                          IUPAC.unambiguous_dna)
+
+        #output.addOutput('origCDS', cds_original)
+
+        if transcript.CM.orientation == -1:
+            cds_original = Bio.Seq.reverse_complement(cds_original)
+            cds_variant = Bio.Seq.reverse_complement(cds_variant)
+
+        if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
+            output.addMessage(__file__, 3, 'ESTOP',
+                              'In frame stop codon found.')
             return
-        if not GenRecordInstance.record.geneList : # EST
-            return
 
-        for i in range(0, W.CM.numberOfExons() * 2, 2) :
-            exonStart = W.CM.getSpliceSite(i)
-            exonStop = W.CM.getSpliceSite(i + 1)
-            O.addOutput("exonInfo", [exonStart, exonStop,
-                W.CM.g2c(exonStart), W.CM.g2c(exonStop)])
+        protein_original = cds_original.translate(table=transcript.txTable,
+                                                  to_stop=True)
+        protein_variant = cds_variant.translate(table=transcript.txTable,
+                                                to_stop=True)
 
-        O.addOutput("cdsStart_g", W.CM.x2g(1, 0))
-        O.addOutput("cdsStart_c", 1)
-        cdsStop = W.CM.info()[2]
-        O.addOutput("cdsStop_g", W.CM.x2g(cdsStop, 0))
-        O.addOutput("cdsStop_c", cdsStop)
+        # Note: addOutput('origCDS', ...) was first before the possible
+        #       reverse complement operation above.
+        output.addOutput('origCDS', cds_original)
+        output.addOutput("newCDS", cds_variant[:(len(str(protein_variant)) + 1) * 3])
 
-        if W.transcribe :
-            O.addOutput("myTranscriptDescription", W.description)
+        output.addOutput('oldprotein', protein_original + '*')
 
-            O.addOutput("origMRNA",
-                str(_splice(MUU.orig, W.mRNA.positionList)))
-            O.addOutput("mutatedMRNA",
-                str(_splice(MUU.mutated, MUU.newSplice(W.mRNA.positionList))))
-        #if
-
-
-        if W.translate :
-            cds = Seq(str(_splice(MUU.orig, W.CDS.positionList)),
-                      IUPAC.unambiguous_dna)
-            cdsm = Seq(str(__nsplice(MUU.mutated,
-                                     MUU.newSplice(W.mRNA.positionList),
-                                     MUU.newSplice(W.CDS.location),
-                                     W.CM.orientation)),
-                       IUPAC.unambiguous_dna)
-            O.addOutput("origCDS", cds)
-
-            if W.CM.orientation == -1 :
-                cds = Bio.Seq.reverse_complement(cds)
-                cdsm = Bio.Seq.reverse_complement(cdsm)
-            #if
-
-            if '*' in cds.translate(table = W.txTable)[:-1] :
-                O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
-                return
-            #if
-            orig = cds.translate(table = W.txTable, to_stop = True)
-            O.addOutput("oldprotein", orig + '*')
-            trans = cdsm.translate(table = W.txTable, to_stop = True)
-            O.addOutput("newCDS", cdsm[:(len(str(trans)) + 1) * 3])
-
-            if not trans or trans[0] != 'M' :
-                # Todo: Protein differences are not color-coded,
-                # use something like below in _protein_description().
-                _print_protein_html(orig + '*', 0, 0, O, "oldProteinFancy")
-                if str(cdsm[0:3]) in \
-                    Bio.Data.CodonTable.unambiguous_dna_by_id[
-                        W.txTable].start_codons :
-                    O.addOutput("newprotein", '?')
-                    _print_protein_html('?', 0, 0, O, "newProteinFancy")
-                    O.addOutput("altStart", str(cdsm[0:3]))
-                    if str(orig[1:]) != str(trans[1:]) :
-                        O.addOutput("altProtein", 'M' + trans[1:] + '*')
-                        _print_protein_html('M' + trans[1:] + '*', 0, 0, O, "altProteinFancy")
-                #if
-                else :
-                    O.addOutput("newprotein", '?')
-                    _print_protein_html('?', 0, 0, O, "newProteinFancy")
-                #else
+        if not protein_variant or protein_variant[0] != 'M':
+            # Todo: Protein differences are not color-coded,
+            # use something like below in _protein_description().
+            _print_protein_html(protein_original + '*', 0, 0, output,
+                                'oldProteinFancy')
+            if str(cds_variant[0:3]) in \
+                   Bio.Data.CodonTable.unambiguous_dna_by_id \
+                   [transcript.txTable].start_codons:
+                output.addOutput('newprotein', '?')
+                _print_protein_html('?', 0, 0, output, 'newProteinFancy')
+                output.addOutput('altStart', str(cds_variant[0:3]))
+                if str(protein_original[1:]) != str(protein_variant[1:]):
+                    output.addOutput('altProtein',
+                                     'M' + protein_variant[1:] + '*')
+                    _print_protein_html('M' + protein_variant[1:] + '*', 0, 0,
+                                        output, 'altProteinFancy')
             else :
-                cdsLen = _cds_length(MUU.newSplice(W.CDS.positionList))
-                descr = _protein_description(cdsLen, orig, trans)
-                O.addOutput("myProteinDescription", descr[0])
+                output.addOutput('newprotein', '?')
+                _print_protein_html('?', 0, 0, O, 'newProteinFancy')
 
-                _print_protein_html(orig + '*', descr[1], descr[2], O,
-                    "oldProteinFancy")
-                if str(orig) != str(trans) :
-                    O.addOutput("newprotein", trans + '*')
-                    _print_protein_html(trans + '*', descr[1], descr[3], O,
-                        "newProteinFancy")
-            #else
-        #if
-    #if
+        else:
+            cds_length = _cds_length(
+                mutator.newSplice(transcript.CDS.positionList))
+            descr, first, last_original, last_variant = \
+                   _protein_description(cds_length, protein_original,
+                                        protein_variant)
+
+            output.addOutput('myProteinDescription', descr)
+
+            _print_protein_html(protein_original + '*', first, last_original,
+                                output, 'oldProteinFancy')
+            if str(protein_original) != str(protein_variant):
+                output.addOutput('newprotein', protein_variant + '*')
+                _print_protein_html(protein_variant + '*', first, last_variant,
+                                    output, 'newProteinFancy')
 #__ppp
 
-def process(cmd, C, O) :
+
+def process(description, config, output):
     """
+    @return: A GenRecord object.
+    @rtype: Modules.GenRecord.GenRecord
+
     @todo: documentation
     """
-    parser = Parser.Nomenclatureparser(O)
-    O.addOutput("inputvariant", cmd)
-    ParseObj = parser.parse(cmd)
+    output.addOutput('inputvariant', description)
+
+    parser = Parser.Nomenclatureparser(output)
+    parsed_description = parser.parse(description)
+
+    # Todo: remove?
     del parser
-    if not ParseObj :
-        #Parsing went wrong
-        return None     #Excplicit return of None in case of an error
 
-    if ParseObj.Version :
-        RetrieveRecord = ParseObj.RefSeqAcc + '.' + ParseObj.Version
-    else :
-        RetrieveRecord = ParseObj.RefSeqAcc
+    if not parsed_description:
+        # Parsing went wrong.
+        return None
 
-    D = Db.Cache(C.Db)
-    if ParseObj.LrgAcc :
-        filetype = "LRG"
-        RetrieveRecord = ParseObj.LrgAcc
-        geneSymbol = ("", ParseObj.LRGTranscriptID)
-        retriever = Retriever.LRGRetriever(C.Retriever, O, D)
-    else :
-        if ParseObj.Gene:
-            geneSymbol = (ParseObj.Gene.GeneSymbol or "",
-                    ParseObj.Gene.TransVar or "")
-            if ParseObj.Gene.ProtIso :
-                O.addMessage(__file__, 4, "EPROT", "Indexing by protein " \
-                    "isoform is not supported.")
-        else:
-            geneSymbol = ("", "")
-        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
-        filetype = "GB"
+    if parsed_description.Version:
+        record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
+    else:
+        record_id = parsed_description.RefSeqAcc
 
-    # Store the recordType for output formatting
-    O.addOutput("recordType", filetype)
+    gene_symbol = transcript_id = ''
 
-    # Note concerning objects in outputObject, example:
-    # O.getOutput('reference')[-1] countains the last added value
-    # O.getOutput('reference')[0] countains the first added value
-    # These can refer to the same element
-    O.addOutput("reference", RetrieveRecord)
+    database = Db.Cache(config.Db)
+    if parsed_description.LrgAcc:
+        filetype = 'LRG'
+        record_id = parsed_description.LrgAcc
+        transcript_id = parsed_description.LRGTranscriptID
+        retriever = Retriever.LRGRetriever(config.Retriever, output, database)
+    else:
+        if parsed_description.Gene:
+            gene_symbol = parsed_description.Gene.GeneSymbol or ''
+            transcript_id = parsed_description.Gene.TransVar or ''
+            if parsed_description.Gene.ProtIso:
+                output.addMessage(__file__, 4, 'EPROT', 'Indexing by ' \
+                                  'protein isoform is not supported.')
+        retriever = Retriever.GenBankRetriever(C.Retriever, output, database)
+        filetype = 'GB'
 
-    # The geneSymbol[0] is used as a filter for batch runs
-    O.addOutput("geneSymbol", geneSymbol) #tuple(Gene, TransV)
+    # Add recordType to output for output formatting.
+    output.addOutput('recordType', filetype)
 
-    # preColon is used to filter out Batch entries
-    # that will result in identical errors
-    O.addOutput("preColon", cmd.split(":")[0])
-    O.addOutput("variant", cmd.split(":")[-1])
+    output.addOutput('reference', record_id)
 
-    record = retriever.loadrecord(RetrieveRecord)
-    #if record and record.version and not '.' in RetrieveRecord : #FIXME
-    #    O.addOutput("reference", RetrieveRecord + '.' + record.version)
-    #else :
+    # Note: geneSymbol[0] is used as a filter for batch runs.
+    output.addOutput('geneSymbol', (gene_symbol, transcript_id))
 
-    if not record :
-        return
+    # Note: preColon is used to filter out Batch entries that will result in
+    # identical errors.
+    output.addOutput('preColon', description.split(':')[0])
+    output.addOutput('variant', description.split(':')[-1])
+
+    retrieved_record = retriever.loadrecord(record_id)
+
+    if not retrieved_record:
+        return None
+
+    # Todo: remove?
     del retriever
-    del D
+    del database
 
-    GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
-    GenRecordInstance.record = record
-    GenRecordInstance.checkRecord()
-    #NOTE:  GenRecordInstance is carrying the sequence in   .record.seq
-    #       so is the Mutator.Mutator instance MUU          .orig
+    record = GenRecord.GenRecord(output, config.GenRecord)
+    record.record = retrieved_record
+    record.checkRecord()
 
-    MUU = Mutator.Mutator(GenRecordInstance.record.seq, C.Mutator, O)
-    __ppp(MUU, ParseObj, GenRecordInstance, O)
+    mutator = Mutator.Mutator(record.record.seq, config.Mutator, output)
 
-    # PROTEIN
-    for i in GenRecordInstance.record.geneList :
-        #if i.location :
-        for j in i.transcriptList :
-            if not ';' in j.description and j.CDS and j.translate :
-                cds = Seq(str(_splice(MUU.orig, j.CDS.positionList)),
-                          IUPAC.unambiguous_dna)
-                cdsm = Seq(str(__nsplice(MUU.mutated,
-                                         MUU.newSplice(j.mRNA.positionList),
-                                         MUU.newSplice(j.CDS.location),
-                                         j.CM.orientation)),
-                           IUPAC.unambiguous_dna)
-                if j.CM.orientation == -1 :
-                    cds = Bio.Seq.reverse_complement(cds)
-                    cdsm = Bio.Seq.reverse_complement(cdsm)
-                #if
+    # Note: The GenRecord instance is carrying the sequence in .record.seq.
+    #       So is the Mutator instance in .mutator.orig.
 
-                #if '*' in cds.translate()[:-1] :
-                #    O.addMessage(__file__, 3, "ESTOP",
-                #                 "In frame stop codon found.")
+    __ppp(mutator, parsed_description, record, output)
+
+    # Protein.
+    for gene in record.record.geneList:
+        for transcript in gene.transcriptList:
+            if not ';' in transcript.description \
+                   and transcript.CDS and transcript.translate:
+                cds_original = Seq(str(_splice(mutator.orig, transcript.CDS.positionList)),
+                                   IUPAC.unambiguous_dna)
+                cds_variant = Seq(str(__nsplice(mutator.mutated,
+                                                mutator.newSplice(transcript.mRNA.positionList),
+                                                mutator.newSplice(transcript.CDS.location),
+                                                transcript.CM.orientation)),
+                                  IUPAC.unambiguous_dna)
+                if transcript.CM.orientation == -1:
+                    cds_original = Bio.Seq.reverse_complement(cds_original)
+                    cds_variant = Bio.Seq.reverse_complement(cds_variant)
+
+                #if '*' in cds_original.translate()[:-1]:
+                #    output.addMessage(__file__, 3, "ESTOP",
+                #                      "In frame stop codon found.")
                 #    return
                 ##if
 
-                if not len(cds) % 3 :
-                    try : # FIXME this is a bit of a rancid fix.
-                        orig = cds.translate(table = j.txTable, cds = True,
-                            to_stop = True)
-                    except Bio.Data.CodonTable.TranslationError :
-                        O.addMessage(__file__, 4, "ETRANS", "Original " \
-                            "CDS could not be translated.")
-                        return GenRecordInstance
-                    trans = cdsm.translate(table = j.txTable,
-                        to_stop = True)
-
-                    cdsLen = _cds_length(MUU.newSplice(j.CDS.positionList))
-                    j.proteinDescription = _protein_description(cdsLen, orig,
-                        trans)[0]
-                #if
-                else :
-                    O.addMessage(__file__, 2, "ECDS", "CDS length is " \
+                if not len(cds_original) % 3:
+                    try:
+                        # FIXME this is a bit of a rancid fix.
+                        protein_original = cds_original.translate(table=transcript.txTable,
+                                                                  cds=True,
+                                                                  to_stop=True)
+                    except Bio.Data.CodonTable.TranslationError:
+                        output.addMessage(__file__, 4, "ETRANS", "Original " \
+                                          "CDS could not be translated.")
+                        return record
+                    protein_variant = cds_variant.translate(table=transcript.txTable,
+                                                            to_stop=True)
+                    cds_length = _cds_length(mutator.newSplice(transcript.CDS.positionList))
+                    transcript.proteinDescription = _protein_description(cds_length,
+                                                                         protein_original,
+                                                                         protein_variant)[0]
+                else:
+                    output.addMessage(__file__, 2, "ECDS", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
-                        "variant %s." % (i.name, j.name))
-                    j.proteinDescription = '?'
-    # /PROTEIN
+                        "variant %s." % (gene.name, transcript.name))
+                    transcript.proteinDescription = '?'
 
-    reference = O.getOutput("reference")[-1]
-    if ';' in GenRecordInstance.record.description :
-        descr = '['+GenRecordInstance.record.description+']'
+    reference = output.getOutput('reference')[-1]
+    if ';' in record.record.description:
+        generated_description = '[' + record.record.description + ']'
     else:
-        descr = GenRecordInstance.record.description
+        generated_description = record.record.description
 
-    O.addOutput("genomicDescription", "%s:%c.%s" % (reference,
-        GenRecordInstance.record.molType, descr))
-    O.addOutput("gDescription", "%c.%s" % (
-        GenRecordInstance.record.molType, descr))
-    O.addOutput("molType", GenRecordInstance.record.molType)
+    output.addOutput('genomicDescription', '%s:%c.%s' % \
+                     (reference, record.record.molType, generated_description))
+    output.addOutput('gDescription', '%c.%s' % \
+                     (record.record.molType, generated_description))
+    output.addOutput('molType', record.record.molType)
 
-    if GenRecordInstance.record.chromOffset :
-        if ';' in GenRecordInstance.record.chromDescription :
-            chromDescr = '['+GenRecordInstance.record.chromDescription+']'
+    if record.record.chromOffset:
+        if ';' in record.record.chromDescription:
+            chromosomal_description = '[' + record.record.chromDescription + ']'
         else:
-            chromDescr = GenRecordInstance.record.chromDescription
+            chromosomal_description = record.record.chromDescription
+        output.addOutput('genomicChromDescription', '%s:%c.%s' % \
+                         (record.record.recordId,
+                          record.record.molType, chromosomal_description))
 
-        O.addOutput("genomicChromDescription", "%s:%c.%s" % (
-            GenRecordInstance.record.recordId,
-            GenRecordInstance.record.molType, chromDescr))
-    #if
+    # Now we add variant descriptions for all transcripts, including protein
+    # level descriptions. In the same loop, we also create the legend.
 
-    if GenRecordInstance.record._sourcetype == "LRG": #LRG record
-        for i in GenRecordInstance.record.geneList:
-            for j in sorted(i.transcriptList, key = attrgetter("name")) :
-                (iName, jName, mType, cDescr, pDescr,
-                        gAcc, cAcc, pAcc, fullDescr, fullpDescr) =\
-                    (i.name, j.name, j.molType, "", "", "", "", "", "", "")
+    for gene in record.record.geneList:
+        for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
 
-                if ';' in j.description:
-                    descr = '['+j.description+']'
+            # Note: I don't think genomic_id is ever used, because it is
+            # always ''.
+            coding_description = ''
+            protein_description = ''
+            full_description = ''
+            full_protein_description = ''
+            genomic_id = coding_id = protein_id = ''
+
+            if ';' in transcript.description:
+                generated_description = '[' + transcript.description + ']'
+            else:
+                generated_description = transcript.description
+
+            if record.record._sourcetype == 'LRG':
+                if transcript.name:
+                    full_description = '%st%s:%c.%s' % \
+                                       (reference, transcript.name,
+                                        transcript.molType,
+                                        generated_description)
+                    output.addOutput('descriptions', full_description)
                 else:
-                    descr = j.description
+                    output.addOutput('descriptions', gene.name)
+            else:
+                full_description = '%s(%s_v%s):%c.%s' % \
+                                   (reference, gene.name, transcript.name,
+                                    transcript.molType,
+                                    generated_description)
+                output.addOutput('descriptions', full_description)
 
-                if j.name:
-                    fullDescr =\
-                        "%st%s:%c.%s" % (reference, j.name, j.molType, descr)
-                    O.addOutput("descriptions", fullDescr)
-                #if
+            if transcript.molType == 'c':
+                coding_description = 'c.%s' % generated_description
+                protein_description = transcript.proteinDescription
+                if record.record._sourcetype == 'LRG':
+                    full_protein_description = '%sp%s:%s' % \
+                                               (reference, transcript.name,
+                                                protein_description)
                 else:
-                    O.addOutput("descriptions", (i.name))
+                    full_protein_description = '%s(%s_i%s):%s' % \
+                                               (reference, gene.name,
+                                                transcript.name,
+                                                protein_description)
 
-                if j.molType == 'c':
-                    cDescr = "c.%s" % descr
-                    pDescr = j.proteinDescription
-                    fullpDescr = "%sp%s:%s" % (reference, j.name, pDescr)
-                    O.addOutput("protDescriptions", fullpDescr)
-                    cAcc, pAcc = j.transcriptID, j.proteinID
-                #if
+                coding_id, protein_id = \
+                           transcript.transcriptID, transcript.proteinID
+                output.addOutput('protDescriptions',
+                                 full_protein_description)
 
-                O.addOutput("NewDescriptions", (
-                    iName, jName, mType, cDescr, pDescr, gAcc,
-                    cAcc, pAcc, fullDescr, fullpDescr))
-            #for
-        #for
-    #if
-    else :
-        for i in GenRecordInstance.record.geneList :
-            for j in sorted(i.transcriptList, key = attrgetter("name")) :
-                (iName, jName, mType, cDescr, pDescr,
-                        gAcc, cAcc, pAcc, fullDescr, fullpDescr) =\
-                    (i.name, j.name, j.molType, "", "", "", "", "", "", "")
+            # The 'NewDescriptions' field is currently not used.
+            output.addOutput('NewDescriptions',
+                             (gene.name, transcript.name,
+                              transcript.molType, coding_description,
+                              protein_description, genomic_id, coding_id,
+                              protein_id, full_description,
+                              full_protein_description))
 
-                if ';' in j.description :
-                    descr = '['+j.description+']'
-                else:
-                    descr = j.description
+            # Now add to the legend, but exclude nameless transcripts.
+            if not transcript.name:
+                continue
 
-                fullDescr = "%s(%s_v%s):%c.%s" % (reference,\
-                        iName, jName, mType, descr)
-                O.addOutput("descriptions", fullDescr)
+            output.addOutput('legends',
+                             ['%s_v%s' % (gene.name, transcript.name),
+                              transcript.transcriptID, transcript.locusTag,
+                              transcript.transcriptProduct,
+                              transcript.linkMethod])
 
-                if (j.molType == 'c') :
-                    cDescr = "c.%s" % descr
-                    pDescr = j.proteinDescription
-                    fullpDescr = "%s(%s_i%s):%s" % (
-                        reference, iName, jName, pDescr)
-                    O.addOutput("protDescriptions", fullpDescr)
-                    cAcc, pAcc = j.transcriptID, j.proteinID
-                #if
+            if transcript.translate:
+                output.addOutput('legends',
+                                 ['%s_i%s' % (gene.name, transcript.name),
+                                  transcript.proteinID, transcript.locusTag,
+                                  transcript.proteinProduct,
+                                  transcript.linkMethod])
 
-                O.addOutput("NewDescriptions", (
-                    iName, jName, mType, cDescr, pDescr, gAcc,
-                    cAcc, pAcc, fullDescr, fullpDescr))
-            #for
-        #for
-    #else
-
-
-    # LEGEND
-    for i in GenRecordInstance.record.geneList :
-        for j in sorted(i.transcriptList, key = attrgetter("name")) :
-
-            if not j.name: continue #Exclude nameless transcripts
-
-            O.addOutput("legends", ["%s_v%s" % (i.name, j.name),
-                        j.transcriptID, j.locusTag,
-                        j.transcriptProduct, j.linkMethod])
-            if j.translate :
-                O.addOutput("legends", ["%s_i%s" % (i.name, j.name),
-                    j.proteinID, j.locusTag,
-                    j.proteinProduct, j.linkMethod])
-        #for
-
-    #Add GeneSymbol and Transcript Var to the Output object for batch
-    if ParseObj.Gene:
-        O.addOutput("geneOfInterest", dict(ParseObj.Gene.items()))
+    # Add GeneSymbol and Transcript Var to the Output object for batch.
+    if parsed_description.Gene:
+        output.addOutput('geneOfInterest',
+                         dict(parsed_description.Gene.items()))
     else:
-        O.addOutput("geneOfInterest", dict())
+        output.addOutput('geneOfInterest', dict())
 
-    _add_batch_output(O)
+    _add_batch_output(output)
 
-    O.addOutput("original", str(MUU.orig))
-    O.addOutput("mutated", str(MUU.mutated))
+    output.addOutput('original', str(mutator.orig))
+    output.addOutput('mutated', str(mutator.mutated))
+
+    # Todo: remove?
     del MUU
 
-    return GenRecordInstance
-    #if
+    return record
 #process
 
-def main(cmd) :
+
+def main(cmd):
     """
+    Command line interface to the name checker.
+
     @todo: documentation
     """
     C = Config.Config()
@@ -1867,7 +2012,9 @@ def main(cmd) :
     del O
 #main
 
-if __name__ == "__main__" :
-    if len(sys.argv) > 1:
-        main(sys.argv[1])
-#if
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print 'Please provide a variant'
+        sys.exit(1)
+    main(sys.argv[1])
