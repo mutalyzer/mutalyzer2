@@ -20,6 +20,7 @@ General utility functions.
 
 
 import math
+import time
 from itertools import izip_longest
 
 import Bio.Seq
@@ -665,3 +666,18 @@ def print_protein_html(s, first, last, O, where):
     # Add last line.
     O.addOutput(where, output)
 #print_protein_html
+
+
+def generate_id():
+    """
+    Generates a (somewhat) unique number, using time().
+
+    Note: Don't use this in very high frequencies, because it utilizes a
+    short time.sleep() call to get a higher uniqueness.
+
+    @return: A somewhat unique number.
+    @rtype: int
+    """
+    unique_per_second = 100
+    time.sleep(1.0 / unique_per_second)
+    return int(time.time() * unique_per_second)

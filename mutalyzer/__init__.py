@@ -7,7 +7,6 @@
 #     - Crossmap  ;
 #     - Db        ;
 #     - GenRecord ;
-#     - Misc      ;
 #     - Mutator   ;
 #     - Output    ;
 #     - Parser    ;

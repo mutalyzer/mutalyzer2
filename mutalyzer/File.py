@@ -11,7 +11,6 @@ Module for parsing CSV files and spreadsheets.
 @requires: xml.dom.minidom
 @requires: os
 @requires: types
-@requires: Modules.Misc
 """
 # Public classes:
 #     - File ; Parse CSV files and spreadsheets.
@@ -26,7 +25,7 @@ import os              # remove()
 import types           # UnicodeType
 from cStringIO import StringIO
 
-from Modules import Misc
+from mutalyzer import util
 
 class File() :
     """
@@ -87,9 +86,7 @@ class File() :
         """
 
         # Generate an unique filename in the tempDir directory.
-        MiscInstance = Misc.Misc()
-        fileName = self.__config.tempDir + '/' + str(MiscInstance.ID())
-        del MiscInstance
+        fileName = self.__config.tempDir + '/' + str(util.generate_id())
 
         # Dump the content of the stream pointed to by handle into the file.
         handle.seek(0)

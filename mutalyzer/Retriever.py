@@ -16,7 +16,6 @@ to re-download the file.
 @requires: Bio.SeqIO
 @requires: Bio.Entrez
 @requires: Bio.Seq.UnknownSeq
-@requires: Modules.Misc
 @requires: Modules.LRGparser
 @requires: Modules.GBparser
 @requires: xml.dom.DOMException
@@ -37,7 +36,7 @@ from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 from Bio.Seq import UnknownSeq
 
-from Modules import Misc
+from mutalyzer import util
 from Modules import LRGparser
 from Modules import GBparser
 from xml.dom import DOMException
@@ -230,9 +229,7 @@ class Retriever(object) :
         @rtype: string
         """
 
-        M = Misc.Misc()
-        UD = M.ID()
-        del M
+        UD = util.generate_id()
         return "UD_" + str(UD)
     #_newUD
 

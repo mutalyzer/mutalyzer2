@@ -10,7 +10,6 @@ statements.
 @requires: types
 @requires: time
 @requires: os
-@requires: Modules.Misc
 """
 
 #Public classes:
@@ -26,8 +25,7 @@ import MySQLdb # connect(), escape_string()
 import types   # TupleType
 import time    # strftime()
 import os      # os.remove()
-
-from Modules import Misc # ID()
+from mutalyzer import util
 
 #
 # Note that compound queries are split into single queries because of a bug
@@ -1317,9 +1315,7 @@ class Batch(Db) :
         @rtype: integer
         """
 
-        M = Misc.Misc()
-        jobID = M.ID()
-        del M
+        jobID = util.generate_id()
         statement = """
             INSERT INTO BatchJob
               VALUES (%s, %s, %s, %s, %s, %s)
