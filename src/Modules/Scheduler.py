@@ -29,7 +29,7 @@ from Modules import Parser              # Parser.Nomenclatureparser
 from Modules import Mapper              # Mapper.Converter
 from Modules import Retriever           # Retriever.Retriever
 
-import Mutalyzer                        # Mutalyzer.process
+from Modules import variant_checker
 
 __all__ = ["Scheduler"]
 
@@ -375,7 +375,8 @@ class Scheduler() :
         if not skip :
             #Run mutalyzer and get values from Output Object 'O'
             try :
-                Mutalyzer.process(cmd, C, O)
+                #Mutalyzer.process(cmd, C, O)
+                variant_checker.check_variant(cmd, C, O)
             except Exception, e :
                 #Catch all exceptions related to the processing of cmd
                 O.addMessage(__file__, 4, "EBATCHU",

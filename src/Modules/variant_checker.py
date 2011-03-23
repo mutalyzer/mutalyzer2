@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 The nomenclature checker.
 
@@ -16,578 +14,35 @@ The nomenclature checker.
 """
 
 
-import sys
-import math
-from itertools import izip_longest
 from operator import itemgetter, attrgetter
 
 import Bio
 import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
-from Bio.SeqUtils import seq3
-from Bio import Restriction
 
+from Modules import util
 from Modules import Retriever
 from Modules import GenRecord
 from Modules import Crossmap
 from Modules import Parser
 from Modules import Db
 from Modules import Mutator
-from Modules import Output
 from Modules import Config
 
 
-##############################################################################
-# General utility functions, usefull outside of the Mutalyzer context.
-##############################################################################
-
-
-def _format_range(first, last):
-    """
-    Simplify a range to one position when applicable.
-
-    @arg first: First coordinate of a range.
-    @type first: integer
-    @arg last: Second coordinate of a range.
-    @type last: integer
-
-    @return: {first}_{last} in case of a real range, {first} otherwise.
-    @rtype: string
-    """
-    if first == last:
-        return str(first)
-
-    return '%i_%i' % (first, last)
-#_format_range
-
-
-# Used in: checkDeletionDuplication, checkInsertion
-def _roll(s, first, last):
-    """
-    Determine the variability of a variant by looking at cyclic
-    permutations. Not all cyclic permutations are tested at each time, it
-    is sufficient to check ``aW'' if ``Wa'' matches (with ``a'' a letter,
-    ``W'' a word) when rolling to the left for example.
-
-    @arg s: A reference sequence.
-    @type s: string
-    @arg first: First position of the pattern in the reference sequence.
-    @type first: int
-    @arg last: Last position of the pattern in the reference sequence.
-    @type last: int
-
-    @return: tuple:
-        - left  ; Amount of positions that the pattern can be shifted to
-                  the left.
-        - right ; Amount of positions that the pattern can be shifted to
-                  the right.
-    @rtype: tuple(int, int)
-    """
-    pattern = s[first - 1:last] # Extract the pattern
-    pattern_length = len(pattern)
-
-    # Keep rolling to the left as long as a cyclic permutation matches.
-    minimum = first - 2
-    j = pattern_length - 1
-    while minimum > -1 and s[minimum] == pattern[j % pattern_length]:
-        j -= 1
-        minimum -= 1
-
-    # Keep rolling to the right as long as a cyclic permutation matches.
-    maximum = last
-    j = 0
-    while maximum < len(s) and s[maximum] == pattern[j % pattern_length]:
-        j += 1
-        maximum += 1
-
-    return first - minimum - 2, maximum - last
-#_roll
-
-
-def _palinsnoop(s):
-    """
-    Check a sequence for a reverse-complement-palindromic prefix (and
-    suffix). If one is detected, return the length of this prefix. If the
-    string equals its reverse complement, return -1.
-
-    @arg s: A nucleotide sequence.
-    @type s: string
-
-    @return: The number of elements that are palindromic or -1 if the string
-             is a 'palindrome'.
-    @rtype: string
-    """
-    s_revcomp = Bio.Seq.reverse_complement(s)
-
-    for i in range(int(math.ceil(len(s) / 2.0))):
-        if s[i] != s_revcomp[i]:
-            # The first i elements are 'palindromic'.
-            return i
-
-    # Perfect 'palindrome'.
-    return -1
-#_palinsnoop
-
-
-def _splice(s, splice_sites):
-    """
-    Construct the transcript or the coding sequence from a record and
-    a list of splice sites.
-
-    @arg s: A DNA sequence.
-    @type s: string
-    @arg splice_sites: A list of even length of integers.
-    @type splice_sites: list
-
-    @return: The concatenation of slices from the sequence that is present
-             in the GenBank record.
-    @rtype: string
-
-    @todo: Assert length of splice_sites is even.
-    """
-    transcript = ''
-
-    sites_iter = iter(splice_sites)
-    for acceptor, donor in izip_longest(sites_iter, sites_iter):
-        transcript += s[acceptor - 1:donor]
-
-    return transcript
-#_splice
-
-
-# Todo: refactor
-def __nsplice(string, splice_sites, CDS, orientation) :
-    """
-    Just like _splice(), but it only keeps the parts between CDS[0] and
-    CDS[1] (in the right orientation).
-
-    I guess we could easily do this as a separate step after _splice()?
-
-    @todo: keep this function?
-    @todo: documentation
-    """
-
-    transcript = ""
-    if orientation == 1 :
-        for i in range(0, len(splice_sites), 2) :
-            if CDS[0] >= splice_sites[i] and CDS[0] <= splice_sites[i + 1] :
-                transcript += string[CDS[0] - 1:splice_sites[i + 1]]
-            else :
-                if splice_sites[i] > CDS[0] :
-                    transcript += \
-                        string[splice_sites[i] - 1:splice_sites[i + 1]]
-        #for
-    #if
-    else :
-        for i in range(0, len(splice_sites), 2) :
-            if CDS[1] >= splice_sites[i] and CDS[1] <= splice_sites[i + 1] :
-                transcript += string[splice_sites[i] - 1:CDS[1]]
-            else :
-                if splice_sites[i] < CDS[1] :
-                    transcript += \
-                        string[splice_sites[i] - 1:splice_sites[i + 1]]
-        #for
-    #else
-
-    return transcript
-#__nsplice
-
-
-def _cds_length(splice_sites):
-    """
-    Calculate the length of a CDS.
-
-    @arg splice_sites: The coordinates of the CDS including internal splice
-                       sites.
-    @type splice_sites: list
-
-    @return: Length of the CDS.
-    @rtype: int
-
-    @todo: Assert length of splice_sites is even.
-    """
-    l = 0
-
-    sites_iter = iter(splice_sites)
-    for acceptor, donor in izip_longest(sites_iter, sites_iter):
-        l += donor - acceptor + 1
-
-    return l
-#_cds_length
-
-
-def _is_dna(s):
-    """
-    Check whether a string is a DNA string.
-
-    @arg s: Any string or Bio.Seq.Seq instance.
-    @type s: string
-
-    @return: True if the string is a DNA string, False otherwise.
-    @rtype: boolean
-    """
-    for i in str(s):
-        if not i in IUPAC.unambiguous_dna.letters:
-            return False
-
-    return True
-#_is_dna
-
-
-def _longest_common_prefix(s1, s2):
-    """
-    Calculate the longest common prefix of two strings.
-
-    @arg s1: The first string.
-    @type s1: string
-    @arg s2: The second string.
-    @type s2: string
-
-    @return: The longest common prefix of s1 and s2.
-    @rtype: string
-    """
-    pos = 0
-
-    while pos < min(len(s1), len(s2)) and s1[pos] == s2[pos]:
-        pos += 1
-
-    return s1[:pos]
-#_longest_common_prefix
-
-
-def _longest_common_suffix(s1, s2):
-    """
-    Calculate the longest common suffix of two strings.
-
-    @arg s1: The first string.
-    @type s1: string
-    @arg s2: The second string.
-    @type s2: string
-
-    @return: The longest common suffix of s1 and s2.
-    @rtype: string
-    """
-    return _longest_common_prefix(s1[::-1], s2[::-1])[::-1]
-#_longest_common_suffix
-
-
-def _trim_common(s1, s2) :
-    """
-    Given two strings, trim their longest common prefix and suffix.
-
-    @arg s1: A string.
-    @type s1: string
-    @arg s2: Another string.
-    @type s2: string
-
-    @return: A tuple of:
-        - string: Trimmed version of s1.
-        - string: Trimmed version of s2.
-        - int:    Length of longest common prefix.
-        - int:    Length of longest common suffix.
-
-    @todo: More intelligently handle longest_common_prefix().
-    """
-    lcp = len(_longest_common_prefix(s1, s2))
-    lcs = len(_longest_common_suffix(s1[lcp:], s2[lcp:]))
-    return s1[lcp:len(s1) - lcs], s2[lcp:len(s2) - lcs], lcp, lcs
-#_trim_common
-
-
-def _over_splice_site(first, last, splice_sites):
-    """
-    Check wheter a genomic range {first}_{last} hits a splice site.
-
-    @arg first: The first coordinate of the range in g. notation.
-    @type first: int
-    @arg last: The last coordinate of the range in g. notation.
-    @type last: int
-    @arg sites: A list of splice sites in g. notation.
-    @type sites: list(int)
-
-    @return: True if one or more splice sites are hit, False otherwise.
-    @rtype: boolean
-    """
-    sites_iter = iter(splice_sites)
-    for acceptor, donor in izip_longest(sites_iter, sites_iter):
-        if first < acceptor and last >= acceptor:
-            return True
-        if donor and first <= donor and last > donor:
-            return True
-
-    return False
-#_over_splice_site
-
-
-##############################################################################
-# End of general utility functions.
-##############################################################################
-
-
-##############################################################################
-# Protein specific functionality.
-##############################################################################
-
-
-# Used in: _print_protein_html
-def _insert_tag(s, pos1, pos2, tag1, tag2):
-    """
-    Insert two tags (tag1 and tag2) in string s at positions pos1 and pos2
-    respectively if the positions are within the length of s. If not,
-    either insert one tag or do nothing. If pos1 equals pos2, don't do
-    anything either.
-
-    @arg s: A sequence.
-    @type s:
-    @arg pos1: Position of tag1.
-    @type pos1: int
-    @arg pos2: Position of tag2.
-    @type pos2: int
-    @arg tag1: Content of tag1.
-    @type tag1: string
-    @arg tag2: Content of tag2.
-    @type tag2: string
-
-    @return: The original sequence, or a sequence with eiter tag1, tag2 or
-             both tags inserted.
-    @rtype: string
-    """
-    output = s
-    block = len(s)
-
-    # Only do something if pos1 != pos2.
-    if pos1 != pos2:
-        if 0 <= pos1 < block:
-            # Insert tag1.
-            output = output[:pos1] + tag1 + output[pos1:]
-        if 0 <= pos2 < block:
-            # Insert tag2.
-            output = output[:-(block - pos2)] + tag2 \
-                     + output[-(block - pos2):]
-
-    return output
-#_insert_tag
-
-
-def _print_protein_html(s, first, last, O, where):
-    """
-    Make a fancy representation of a protein and put it in the Output
-    object under the name 'where'. The representation contains HTML tags
-    and is suitable for viewing in a monospaced font.
-
-    @arg s: A protein sequence.
-    @type s: string
-    @arg first: First position to highlight.
-    @type first: int
-    @arg last: Last position to highlight.
-    @type last: int
-    @arg O: The Output object.
-    @type O: Modules.Output.Output
-    @arg where: Location in the {O} object to store the representation.
-    @type where: string
-    """
-    if not s: return
-
-    block = 10        # Each block consists of 10 amino acids.
-    line = 6 * block  # Each line consists of 6 blocks.
-
-    tag1 = '<b style="color:#FF0000">'  # Use this tag for highlighting.
-    tag2 = '</b>'                       # And this one to end highlighting.
-
-    # The maximum length for positions is the 10_log of the length of the
-    # protein.
-    m = int(math.floor(math.log(len(s), 10)) + 1)
-    o = 1
-
-    # Add the first position.
-    output = '%s ' % str(o).rjust(m)
-
-    for i in range(0, len(s), block):
-        # Add the blocks.
-        output += ' ' + _insert_tag(s[i:i + block], first - i, last - i,
-                                    tag1, tag2)
-        if not (i + block) % line and i + block < len(s):
-            # One line done.
-            o += line
-            O.addOutput(where, output)
-            # Add the position (while escaping any potential highlighting).
-            output = '<tt style="color:000000;font-weight:normal">%s</tt> ' \
-                     % str(o).rjust(m)
-
-    # Add last line.
-    O.addOutput(where, output)
-#_print_protein_html
-
-
-def in_frame_description(s1, s2) :
-    """
-    Give a description of an inframe difference of two proteins. Also give
-    the position at which the proteins start to differ and the positions at
-    which they are the same again.
-
-    @arg s1: The original protein.
-    @type s1: string
-    @arg s2: The mutated protein.
-    @type s2: string
-
-    @return: A tuple of:
-        - string ; Protein description of the change.
-        - int    ; First position of the change.
-        - int    ; Last position of the change in the first protein.
-        - int    ; Last position of the change in the second protein.
-    @rtype: tuple(string, int, int, int)
-
-    @todo: More intelligently handle longest_common_prefix().
-    """
-    if s1 == s2:
-        # Nothing happened.
-        return ('p.(=)', 0, 0, 0)
-
-    lcp = len(_longest_common_prefix(s1, s2))
-    lcs = len(_longest_common_suffix(s1[lcp:], s2[lcp:]))
-    s1_end = len(s1) - lcs
-    s2_end = len(s2) - lcs
-
-    # Insertion / Duplication / Extention.
-    if not s1_end - lcp:
-        if len(s1) == lcp:
-            return ('p.(*%i%sext*%i)' % \
-                    (len(s1) + 1, seq3(s2[len(s1)]), abs(len(s1) - len(s2))),
-                    len(s1), len(s1), len(s2))
-        inLen = s2_end - lcp
-
-        if lcp - inLen >= 0 and s1[lcp - inLen:lcp] == s2[lcp:s2_end]:
-            if inLen == 1:
-                return ('p.(%s%idup)' % \
-                        (seq3(s1[lcp - inLen]), lcp - inLen + 1),
-                        lcp, lcp, lcp + 1)
-            return ('p.(%s%i_%s%idup)' % \
-                    (seq3(s1[lcp - inLen]),
-                     lcp - inLen + 1, seq3(s1[lcp - 1]), lcp),
-                    lcp, lcp, lcp + inLen)
-        #if
-        return ('p.(%s%i_%s%iins%s)' % \
-                (seq3(s1[lcp - 1]), lcp, seq3(s1[lcp]),
-                 lcp + 1, seq3(s2[lcp:s2_end])),
-                lcp, lcp, s2_end)
-    #if
-
-    # Deletion / Inframe stop.
-    if not s2_end - lcp:
-        if len(s2) == lcp:
-            return ('p.(%s%i*)' % (seq3(s1[len(s2)]), len(s2) + 1),
-                    0, 0, 0)
-
-        if lcp + 1 == s1_end:
-            return ('p.(%s%idel)' % (seq3(s1[lcp]), lcp + 1),
-                    lcp, lcp + 1, lcp)
-        return ('p.(%s%i_%s%idel)' % \
-                (seq3(s1[lcp]), lcp + 1, seq3(s1[s1_end - 1]), s1_end),
-                lcp, s1_end, lcp)
-    #if
-
-    # Substitution.
-    if s1_end == s2_end and s1_end == lcp + 1:
-        return ('p.(%s%i%s)' % (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp])),
-                lcp, lcp + 1, lcp + 1)
-
-    # InDel.
-    if lcp + 1 == s1_end:
-        return ('p.(%s%idelins%s)' % \
-                (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp:s2_end])),
-                lcp, lcp + 1, s2_end)
-    return ('p.(%s%i_%s%idelins%s)' % \
-            (seq3(s1[lcp]), lcp + 1, seq3(s1[s1_end - 1]), s1_end,
-             seq3(s2[lcp:s2_end])),
-            lcp, s1_end, s2_end)
-#in_frame_description
-
-
-def out_of_frame_description(s1, s2) :
-    """
-    Give the description of an out of frame difference between two
-    proteins. Give a description of an inframe difference of two proteins.
-    Also give the position at which the proteins start to differ and the
-    end positions (to be compatible with the in_frame_description function).
-
-    @arg s1: The original protein.
-    @type s1: string
-    @arg s2: The mutated protein.
-    @type s2: string
-
-    @return: A tuple of:
-        - string ; Protein description of the change.
-        - int    ; First position of the change.
-        - int    ; Last position of the first protein.
-        - int    ; Last position of the second protein.
-    @rtype: tuple(string, int, int, int)
-
-    @todo: More intelligently handle longest_common_prefix().
-    """
-    lcp = len(_longest_common_prefix(s1, s2))
-
-    if lcp == len(s2): # NonSense mutation.
-        if lcp == len(s1): # Is this correct?
-            return ('p.(=)', 0, 0, 0)
-        return ('p.(%s%i*)' % (seq3(s1[lcp]), lcp + 1), lcp, len(s1), lcp)
-    if lcp == len(s1) :
-        return ('p.(*%i%sext*%i)' % \
-                (len(s1) + 1, seq3(s2[len(s1)]), abs(len(s1) - len(s2))),
-                len(s1), len(s1), len(s2))
-    return ('p.(%s%i%sfs*%i)' % \
-            (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp]), len(s2) - lcp + 1),
-            lcp, len(s1), len(s2))
-#out_of_frame_description
-
-
-def _protein_description(cds_stop, s1, s2) :
-    """
-    Wrapper function for the in_frame_description() and
-    out_of_frame_description() functions. It uses the value cds_stop to
-    decide which one to call.
-
-    @arg cds_stop: Position of the stop codon in c. notation (CDS length).
-    @type cds_stop: int
-    @arg s1: The original protein.
-    @type s1: string
-    @arg s2: The mutated protein.
-    @type s2: string
-
-    @return: A tuple of:
-        - string ; Protein description of the change.
-        - int    ; First position of the change.
-        - int    ; Last position of the change in the first protein.
-        - int    ; Last position of the change in the second protein.
-    @rtype: tuple(string, int, int, int)
-    """
-    if cds_stop % 3:
-        description = out_of_frame_description(str(s1), str(s2))
-    else:
-        description = in_frame_description(str(s1), str(s2))
-
-    if not s2 or str(s1[0]) != str(s2[0]):
-        # Mutation in start codon.
-        return 'p.?', description[1], description[2], description[3]
-
-    return description
-#_protein_description
-
-
-##############################################################################
-# End of protein specific functionality.
-##############################################################################
+__all__ = ['check_variant']
 
 
 # Used in: _raw_variant
-def _is_intronic(loc):
+def _is_coding_intronic(loc):
     """
-    Check whether a location is intronic.
+    Check whether a location is an intronic c. position.
 
     @arg loc: A location from the Parser module.
     @type loc: pyparsing.ParseResults
 
-    @return: True if the location is intronic, False otherwise.
+    @return: True if the location is c. intronic, False otherwise.
     @rtype: boolean
     """
     if not loc:
@@ -597,7 +52,7 @@ def _is_intronic(loc):
     if not loc.PtLoc.Offset:
         return False
     return True
-#_is_intronic
+#_is_coding_intronic
 
 
 # Used in: _coding_to_genomic
@@ -667,6 +122,7 @@ def _get_offset(location) :
 #_get_offset
 
 
+# Todo: refactor
 def __checkOptArg(ref, p1, p2, arg, O) :
     """
     Do several checks for the optional argument of a variant.
@@ -701,7 +157,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             #if
         #if
         else :
-            if not _is_dna(arg) : # If it is not a digit, it muse be DNA.
+            if not util.is_dna(arg) : # If it is not a digit, it muse be DNA.
                 O.addMessage(__file__, 4, "ENODNA",
                     "Invalid letters in argument.")
                 return False
@@ -711,7 +167,7 @@ def __checkOptArg(ref, p1, p2, arg, O) :
             if ref_slice != str(arg) : # FIXME more informative.
                 O.addMessage(__file__, 3, "EREF",
                     "%s not found at position %s, found %s instead." % (
-                    arg, _format_range(p1, p2), ref_slice))
+                    arg, util.format_range(p1, p2), ref_slice))
                 return False
             #if
         #else
@@ -832,7 +288,7 @@ def apply_substitution(position, original, substitute, mutator, record, O):
 
     @todo: Exception instead of O.addMessage().
     """
-    if not _is_dna(substitute):
+    if not util.is_dna(substitute):
         # This is not DNA.
         #O.addMessage(__file__, 4, "ENODNA", "Invalid letter in input")
         # todo: exception
@@ -871,15 +327,15 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
 
     @todo: Exception instead of O.addMessage().
     """
-    roll = _roll(mutator.orig, first, last)
+    roll = util.roll(mutator.orig, first, last)
     shift = roll[1]
 
     # In the case of RNA, check if we roll over a splice site. If so, make
     # the roll shorter, just up to the splice site.
     if record.record.molType == 'n':
-        sites = iter(record.record.geneList[0].transcriptList[0] \
-                     .mRNA.positionList)
-        for acceptor, donor in izip_longest(sites, sites):
+        splice_sites = record.record.geneList[0].transcriptList[0] \
+                       .mRNA.positionList
+        for acceptor, donor in util.grouper(splice_sites):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
@@ -898,9 +354,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             'the HGVS notation prescribes that it should be "%s" at ' \
             'position %s.' % (
             mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
-            _format_range(first, last),
+            util.format_range(first, last),
             mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
-            _format_range(new_first, new_stop)))
+            util.format_range(new_first, new_stop)))
 
     if shift != roll[1]:
         # The original roll was decreased because it crossed a splice site.
@@ -910,9 +366,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             'Sequence "%s" at position %s was not corrected to "%s" at ' \
             'position %s, since they reside in different exons.' % (
             mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
-            _format_range(first, last),
+            util.format_range(first, last),
             mutator.visualiseLargeString(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
-            _format_range(incorrect_first, incorrect_stop)))
+            util.format_range(incorrect_first, incorrect_stop)))
 
     if type == 'del':
         mutator.delM(first, last)
@@ -941,7 +397,7 @@ def apply_inversion(first, last, mutator, record, O) :
 
     @todo: Exception instead of O.addMessage().
     """
-    snoop = _palinsnoop(mutator.orig[first - 1:last])
+    snoop = util.palinsnoop(mutator.orig[first - 1:last])
 
     if snoop:
         # We have a reverse-complement-palindromic prefix.
@@ -1005,7 +461,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             '%i and %i are not consecutive positions.' % (before, after))
         return
 
-    if not s or not _is_dna(s):
+    if not s or not util.is_dna(s):
         O.addMessage(__file__, 3, 'EUNKVAR', 'Although the syntax of this ' \
             'variant is correct, the effect can not be analysed.')
         return
@@ -1016,15 +472,15 @@ def apply_insertion(before, after, s, mutator, record, O):
     new_before = mutator.shiftpos(before)
     new_stop = mutator.shiftpos(before) + insertion_length
 
-    roll = _roll(mutator.mutated, new_before + 1, new_stop)
+    roll = util.roll(mutator.mutated, new_before + 1, new_stop)
     shift = roll[1]
 
     # In the case of RNA, check if we roll over a splice site. If so, make
     # the roll shorter, just up to the splice site.
     if record.record.molType == 'n' :
-        sites = iter(record.record.geneList[0].transcriptList[0] \
-                     .mRNA.positionList)
-        for acceptor, donor in izip_longest(sites, sites):
+        splice_sites = record.record.geneList[0].transcriptList[0] \
+                       .mRNA.positionList
+        for acceptor, donor in util.grouper(splice_sites):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
@@ -1104,7 +560,7 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
                               first, last))
         return
 
-    delete_trimmed, insert_trimmed, lcp, lcs = _trim_common(delete, insert)
+    delete_trimmed, insert_trimmed, lcp, lcs = util.trim_common(delete, insert)
 
     if not len(delete_trimmed):
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
@@ -1277,6 +733,7 @@ def _coding_to_genomic(first_location, last_location, transcript):
     last = transcript.CM.x2g(last_main, last_offset)
 
     # Todo: Exceptions.
+    # todo: wat does check_intronic do and _is_intronic etc?
     if not _check_intronic_position(first_main, first_offset, transcript):
         return None, None
     if not _check_intronic_position(last_main, last_offset, transcript):
@@ -1289,7 +746,7 @@ def _coding_to_genomic(first_location, last_location, transcript):
 #_coding_to_genomic
 
 
-def _raw_variant(mutator, variant, record, transcript, output):
+def _process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
 
@@ -1342,8 +799,8 @@ def _raw_variant(mutator, variant, record, transcript, output):
                         first, last = last, first
             else:
                 if record.record.molType != 'g' and \
-                       (_is_intronic(variant.StartLoc) or
-                        _is_intronic(variant.EndLoc)):
+                       (_is_coding_intronic(variant.StartLoc) or
+                        _is_coding_intronic(variant.EndLoc)):
                     output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
                         'position given for a non-genomic reference sequence.')
                     return
@@ -1361,6 +818,7 @@ def _raw_variant(mutator, variant, record, transcript, output):
                         'position given.')
                     return
         else:
+            # Not variant.StartLoc.
             output.addMessage(__file__, 4, 'EUNKNOWN', 'An unknown error occurred.')
             return
 
@@ -1379,7 +837,7 @@ def _raw_variant(mutator, variant, record, transcript, output):
                           last)
         return
 
-    if transcript and _over_splice_site(first, last, transcript.CM.RNA):
+    if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
         output.addMessage(__file__, 2, 'WOVERSPLICE',
                           'Variant hits one or more splice sites.')
 
@@ -1406,10 +864,10 @@ def _raw_variant(mutator, variant, record, transcript, output):
     # DelIns.
     if variant.MutationType == 'delins':
         apply_delins(first, last, s1, s2, mutator, record, output)
-#_raw_variant
+#_process_raw_variant
 
 
-def __ppp(mutator, description, record, output):
+def _process_variant(mutator, description, record, output):
     """
     @arg mutator: A Mutator object.
     @type mutator: Modules.Mutator.Mutator
@@ -1435,7 +893,7 @@ def __ppp(mutator, description, record, output):
     if description.RefType in ['c', 'n']:
 
         gene, transcript = None, None
-        gene_symbol, transcript_id = O.getOutput('geneSymbol')[-1]
+        gene_symbol, transcript_id = output.getOutput('geneSymbol')[-1]
 
         if description.LrgAcc:
             # LRG case, pick the top gene.
@@ -1512,9 +970,11 @@ def __ppp(mutator, description, record, output):
 
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
-            _raw_variant(mutator, var.RawVar, record, transcript, output)
+            _process_raw_variant(mutator, var.RawVar, record, transcript,
+                                 output)
     else:
-        _raw_variant(mutator, description.RawVar, record, transcript, output)
+        _process_raw_variant(mutator, description.RawVar, record, transcript,
+                             output)
 
     if not transcript:
         # Genomic given or error with transcript.
@@ -1543,16 +1003,16 @@ def __ppp(mutator, description, record, output):
     if transcript.transcribe:
         output.addOutput('myTranscriptDescription', transcript.description)
         output.addOutput('origMRNA',
-            str(_splice(mutator.orig, transcript.mRNA.positionList)))
+            str(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
-            str(_splice(mutator.mutated,
+            str(util.splice(mutator.mutated,
                         mutator.newSplice(transcript.mRNA.positionList))))
 
     # Add protein prediction to output.
     if transcript.translate:
-        cds_original = Seq(str(_splice(mutator.orig, transcript.CDS.positionList)),
+        cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                            IUPAC.unambiguous_dna)
-        cds_variant = Seq(str(__nsplice(mutator.mutated,
+        cds_variant = Seq(str(util.__nsplice(mutator.mutated,
                                         mutator.newSplice(transcript.mRNA.positionList),
                                         mutator.newSplice(transcript.CDS.location),
                                         transcript.CM.orientation)),
@@ -1581,46 +1041,62 @@ def __ppp(mutator, description, record, output):
 
         output.addOutput('oldprotein', protein_original + '*')
 
+        # Todo: Don't generate the fancy HTML protein views here, do this in
+        # wsgi.py.
+        # I think it would also be nice to include the mutated list of splice
+        # sites.
         if not protein_variant or protein_variant[0] != 'M':
             # Todo: Protein differences are not color-coded,
-            # use something like below in _protein_description().
-            _print_protein_html(protein_original + '*', 0, 0, output,
-                                'oldProteinFancy')
+            # use something like below in protein_description().
+            util.print_protein_html(protein_original + '*', 0, 0, output,
+                                    'oldProteinFancy')
             if str(cds_variant[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
                 output.addOutput('newprotein', '?')
-                _print_protein_html('?', 0, 0, output, 'newProteinFancy')
+                util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
                 output.addOutput('altStart', str(cds_variant[0:3]))
                 if str(protein_original[1:]) != str(protein_variant[1:]):
                     output.addOutput('altProtein',
                                      'M' + protein_variant[1:] + '*')
-                    _print_protein_html('M' + protein_variant[1:] + '*', 0, 0,
-                                        output, 'altProteinFancy')
+                    util.print_protein_html('M' + protein_variant[1:] + '*', 0, 0,
+                                            output, 'altProteinFancy')
             else :
                 output.addOutput('newprotein', '?')
-                _print_protein_html('?', 0, 0, O, 'newProteinFancy')
+                util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
 
         else:
-            cds_length = _cds_length(
+            cds_length = util.cds_length(
                 mutator.newSplice(transcript.CDS.positionList))
             descr, first, last_original, last_variant = \
-                   _protein_description(cds_length, protein_original,
-                                        protein_variant)
+                   util.protein_description(cds_length, protein_original,
+                                            protein_variant)
 
+            # This is never used.
             output.addOutput('myProteinDescription', descr)
 
-            _print_protein_html(protein_original + '*', first, last_original,
-                                output, 'oldProteinFancy')
+            util.print_protein_html(protein_original + '*', first, last_original,
+                                    output, 'oldProteinFancy')
             if str(protein_original) != str(protein_variant):
                 output.addOutput('newprotein', protein_variant + '*')
-                _print_protein_html(protein_variant + '*', first, last_variant,
-                                    output, 'newProteinFancy')
-#__ppp
+                util.print_protein_html(protein_variant + '*', first, last_variant,
+                                        output, 'newProteinFancy')
+#_process_variant
 
 
-def process(description, config, output):
+def check_variant(description, config, output):
     """
+    Check the variant described by {description} according to the HGVS variant
+    nomenclature and populate the {output} object with various information
+    about the variant and its reference sequence.
+
+    @arg description: Variant description in HGVS notation.
+    @type description: string
+    @arg config: A configuration object.
+    @type config: Modules.Config.Config
+    @arg output: An output object.
+    @type output: Modules.Output.Output
+
     @return: A GenRecord object.
     @rtype: Modules.GenRecord.GenRecord
 
@@ -1630,9 +1106,6 @@ def process(description, config, output):
 
     parser = Parser.Nomenclatureparser(output)
     parsed_description = parser.parse(description)
-
-    # Todo: remove?
-    del parser
 
     if not parsed_description:
         # Parsing went wrong.
@@ -1680,10 +1153,6 @@ def process(description, config, output):
     if not retrieved_record:
         return None
 
-    # Todo: remove?
-    del retriever
-    del database
-
     record = GenRecord.GenRecord(output, config.GenRecord)
     record.record = retrieved_record
     record.checkRecord()
@@ -1693,16 +1162,16 @@ def process(description, config, output):
     # Note: The GenRecord instance is carrying the sequence in .record.seq.
     #       So is the Mutator instance in .mutator.orig.
 
-    __ppp(mutator, parsed_description, record, output)
+    _process_variant(mutator, parsed_description, record, output)
 
     # Protein.
     for gene in record.record.geneList:
         for transcript in gene.transcriptList:
             if not ';' in transcript.description \
                    and transcript.CDS and transcript.translate:
-                cds_original = Seq(str(_splice(mutator.orig, transcript.CDS.positionList)),
+                cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                                    IUPAC.unambiguous_dna)
-                cds_variant = Seq(str(__nsplice(mutator.mutated,
+                cds_variant = Seq(str(util.__nsplice(mutator.mutated,
                                                 mutator.newSplice(transcript.mRNA.positionList),
                                                 mutator.newSplice(transcript.CDS.location),
                                                 transcript.CM.orientation)),
@@ -1729,10 +1198,9 @@ def process(description, config, output):
                         return record
                     protein_variant = cds_variant.translate(table=transcript.txTable,
                                                             to_stop=True)
-                    cds_length = _cds_length(mutator.newSplice(transcript.CDS.positionList))
-                    transcript.proteinDescription = _protein_description(cds_length,
-                                                                         protein_original,
-                                                                         protein_variant)[0]
+                    cds_length = util.cds_length(mutator.newSplice(transcript.CDS.positionList))
+                    transcript.proteinDescription = util.protein_description(
+                        cds_length, protein_original, protein_variant)[0]
                 else:
                     output.addMessage(__file__, 2, "ECDS", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
@@ -1850,8 +1318,5 @@ def process(description, config, output):
     output.addOutput('original', str(mutator.orig))
     output.addOutput('mutated', str(mutator.mutated))
 
-    # Todo: remove?
-    del mutator
-
     return record
-#process
+#check_variant

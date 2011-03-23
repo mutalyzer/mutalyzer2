@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Command line interface to the nomenclature checker.
+Command-line interface to the nomenclature checker.
 
 Usage:
   ./check 'AB026906.1:c.274delG'
@@ -129,16 +129,18 @@ def main(cmd):
         if op :
             print "\nOld protein:"
             #__bprint(op[0], O)
-            for i in O.getOutput("oldProteinFancy") :
-                print i
+            #for i in O.getOutput("oldProteinFancy") :
+            #    print i
+            print 'Disabled (see how wsgi.py handles this)'
             print
         #if
         np = O.getOutput("newprotein")
         if np :
             print "\nNew protein:"
             #__bprint(np[0], O)
-            for i in O.getOutput("newProteinFancy") :
-                print i
+            #for i in O.getOutput("newProteinFancy") :
+            #    print i
+            print 'Disabled (see how wsgi.py handles this)'
             print
         #if
         ap = O.getOutput("altProtein")
@@ -146,8 +148,9 @@ def main(cmd):
             print "\nAlternative protein using start codon %s:" % \
                 O.getOutput("altstart")[0]
             #__bprint(ap[0], O)
-            for i in O.getOutput("altProteinFancy") :
-                print i
+            #for i in O.getOutput("altProteinFancy") :
+            #    print i
+            print 'Disabled (see how wsgi.py handles this)'
             print
         #if
 

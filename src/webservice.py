@@ -54,7 +54,7 @@ site.addsitedir(os.path.dirname(__file__))
 # Todo: fix Mutalyzer to not depend on working directory
 os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
-import Mutalyzer
+from Modules import variant_checker
 from Modules import Db
 from Modules import Output
 from Modules import Config
@@ -595,7 +595,8 @@ class MutalyzerService(DefinitionBase) :
         O = Output.Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
-        Mutalyzer.process(variant, C, O)
+        #Mutalyzer.process(variant, C, O)
+        variant_checker.check_variant(variant, C, O)
 
         result = MutalyzerOutput()
 
@@ -812,7 +813,7 @@ class MutalyzerService(DefinitionBase) :
         """
         Not implemented yet.
         """
-        raise Exception('Not implemented yet')
+        raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
     #upLoadGenBankLocalFile
 
     @soap(Mandatory.String, _returns = Mandatory.String)
@@ -820,7 +821,7 @@ class MutalyzerService(DefinitionBase) :
         """
         Not implemented yet.
         """
-        raise Exception('Not implemented yet')
+        raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
     #upLoadGenBankRemoteFile
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
@@ -846,6 +847,7 @@ class MutalyzerService(DefinitionBase) :
             "Finished processing sliceChromosomeByGene(%s, %s, %s, %s)" % (
             geneSymbol, organism, upStream, downStream))
 
+        # Todo: use SOAP Fault object here (see Trac issue #41).
         if not UD:
             error = 'The request could not be completed\n' \
                     + '\n'.join(O.getMessages())
@@ -860,7 +862,6 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation, error handling, argument checking, tests.
         """
-
         C = Config.Config()
         O = Output.Output(__file__, C.Output)
         D = Db.Cache(C.Db)

@@ -77,8 +77,8 @@ if not __name__ == '__main__':
     os.chdir(root_dir)
 
 import webservice
-import Mutalyzer
 import VarInfo
+from Modules import variant_checker
 from Modules import Config
 from Modules import Output
 from Modules import Parser
@@ -89,7 +89,7 @@ from Modules import Retriever
 from Modules import File
 
 
-web.config.debug = False
+web.config.debug = True
 
 
 # Load configuration from configuration file
@@ -331,7 +331,8 @@ class GetGS:
         # Bio.Seq.reverse_complement in Mapper.py:607.
 
         # We are only interested in the legend
-        Mutalyzer.process(str(i.mutationName), C, O)
+        #Mutalyzer.process(str(i.mutationName), C, O)
+        variant_checker.check_variant(str(i.mutationName), C, O)
 
         legends = O.getOutput("legends")
 
@@ -620,7 +621,8 @@ class Check:
             # Todo: The following is probably a problem elsewhere too.
             # We stringify the variant, because a unicode string crashes
             # Bio.Seq.reverse_complement in Mapper.py:607.
-            RD = Mutalyzer.process(str(name), C, O)
+            #RD = Mutalyzer.process(str(name), C, O)
+            variant_checker.check_variant(str(name), C, O)
             O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
                          name)
 
@@ -657,6 +659,8 @@ class Check:
                 newDescr.append([i, urllib.quote(i)])
             return newDescr
 
+        # Todo: Generate the fancy HTML views for the proteins here instead
+        #       of in Modules/Namechecker.py.
         args = {
             "lastpost"           : name,
             "messages"           : O.getMessages(),
