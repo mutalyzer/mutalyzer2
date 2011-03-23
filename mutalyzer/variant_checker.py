@@ -21,17 +21,14 @@ import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-from Modules import util
-from Modules import Retriever
-from Modules import GenRecord
-from Modules import Crossmap
-from Modules import Parser
-from Modules import Db
-from Modules import Mutator
-from Modules import Config
-
-
-__all__ = ['check_variant']
+from mutalyzer import util
+from mutalyzer import Retriever
+from mutalyzer import GenRecord
+from mutalyzer import Crossmap
+from mutalyzer import Parser
+from mutalyzer import Db
+from mutalyzer import Mutator
+from mutalyzer import Config
 
 
 # Used in: _raw_variant

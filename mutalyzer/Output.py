@@ -231,7 +231,7 @@ class Output() :
         """
 
         #TODO: MOVE to top if works
-        from Modules.Serializers import SoapMessage
+        from mutalyzer.Serializers import SoapMessage
 
         ret = []
         for i in self.__messages:

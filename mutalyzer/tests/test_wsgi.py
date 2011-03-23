@@ -20,8 +20,8 @@ from webtest import TestApp
 
 # Todo: Can this be done in a more elegant way?
 import site
-site.addsitedir('..')
-from wsgi import application
+site.addsitedir('../..')
+from mutalyzer.wsgi import application
 
 class TestWSGI(unittest.TestCase):
     """

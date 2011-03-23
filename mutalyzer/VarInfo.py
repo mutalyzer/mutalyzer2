@@ -26,13 +26,13 @@ positions to I{g.} notation if the variant is in I{c.} notation and vice versa.
 """
 
 import sys                   # argv
-from Modules import Db       # Db(), get_NM_version(), get_NM_info()
-from Modules import Crossmap # Crossmap(), g2x(), x2g(), main2int(),
+from mutalyzer import Db       # Db(), get_NM_version(), get_NM_info()
+from mutalyzer import Crossmap # Crossmap(), g2x(), x2g(), main2int(),
                              # offset2int(), info()
-from Modules import Parser   # Nomenclatureparser(), parse()
-from Modules import Output   # Output(), LogMsg()
-from Modules import Config
-from Modules import Mapper
+from mutalyzer import Parser   # Nomenclatureparser(), parse()
+from mutalyzer import Output   # Output(), LogMsg()
+from mutalyzer import Config
+from mutalyzer import Mapper
 
 def __sl2il(l) :
     """

@@ -17,9 +17,9 @@ import daemon
 import signal
 import fcntl
 
-from Modules import Config
-from Modules.Db import Batch
-from Modules import Scheduler
+from mutalyzer import Config
+from mutalyzer.Db import Batch
+from mutalyzer import Scheduler
 
 def sigusr1_daemon_notified(*args):
     """

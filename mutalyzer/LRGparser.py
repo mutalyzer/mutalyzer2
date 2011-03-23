@@ -24,11 +24,13 @@ added in python2.5. Its main strengths are speed and readability [pythonesque].
 @requires: Bio.Alphabet.IUPAC
 """
 
-from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
-from Modules import GenRecord
 import xml.dom.minidom
 from xml.parsers.expat import ExpatError    # Raised on invalid XML files
+
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
+
+from mutalyzer import GenRecord
 
 __all__ = ["createLrgRecord"] # Only import createLrgRecord from this module
 

@@ -37,8 +37,8 @@ from Bio import Entrez # efetch(), read(), esearch(), esummary()
 from Bio.Seq import UnknownSeq
 
 from mutalyzer import util
-from Modules import LRGparser
-from Modules import GBparser
+from mutalyzer import LRGparser
+from mutalyzer import GBparser
 from xml.dom import DOMException
 import xml.dom.minidom
 

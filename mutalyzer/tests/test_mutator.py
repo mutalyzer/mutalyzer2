@@ -14,11 +14,11 @@ from Bio.Seq import Seq
 
 # Todo: Can this be done in a more elegant way?
 os.chdir('../..')
-site.addsitedir('src')
+site.addsitedir('.')
 
-from Modules import Config
-from Modules import Output
-from Modules import Mutator
+from mutalyzer import Config
+from mutalyzer import Output
+from mutalyzer import Mutator
 
 
 def _seq(length):

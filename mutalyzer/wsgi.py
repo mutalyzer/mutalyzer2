@@ -38,9 +38,6 @@ port 8080):
 """
 
 
-VERSION = '2.0&nbsp;&beta;-8'
-NOMENCLATURE_VERSION = '2.0'
-RELEASE_DATE = '31 Jan 2011'
 WEBSERVICE_LOCATION = '/services'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 
@@ -76,17 +73,18 @@ root_dir = os.path.split(os.path.dirname(__file__))[0]
 if not __name__ == '__main__':
     os.chdir(root_dir)
 
-import webservice
-import VarInfo
-from Modules import variant_checker
-from Modules import Config
-from Modules import Output
-from Modules import Parser
-from Modules import Mapper
-from Modules import Db
-from Modules import Scheduler
-from Modules import Retriever
-from Modules import File
+from mutalyzer import VERSION, NOMENCLATURE_VERSION, RELEASE_DATE
+from mutalyzer import webservice
+from mutalyzer import VarInfo
+from mutalyzer import variant_checker
+from mutalyzer import Config
+from mutalyzer import Output
+from mutalyzer import Parser
+from mutalyzer import Mapper
+from mutalyzer import Db
+from mutalyzer import Scheduler
+from mutalyzer import Retriever
+from mutalyzer import File
 
 
 web.config.debug = True
@@ -558,7 +556,6 @@ class VariantInfo:
         web.header('Content-Type', 'text/plain')
 
         if LOVD_ver == "2.0-23" : # Obsoleted error messages, remove when possible.
-            import re
             return re.sub("^Error \(.*\):", "Error:", result)
         #if
         return result
@@ -660,7 +657,7 @@ class Check:
             return newDescr
 
         # Todo: Generate the fancy HTML views for the proteins here instead
-        #       of in Modules/Namechecker.py.
+        #       of in mutalyzer/variant_checker.py.
         args = {
             "lastpost"           : name,
             "messages"           : O.getMessages(),

@@ -18,9 +18,10 @@ search for them each time.
 #     - GenRecord ; Convert a GenBank record to a nested dictionary.
 
 
-import Crossmap
 import Bio
-import Db
+
+from mutalyzer import Crossmap
+from mutalyzer import Db
 
 
 class PList(object) :

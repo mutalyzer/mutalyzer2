@@ -17,10 +17,10 @@ This program is intended to be run daily from cron.
 import sys # sys.argv
 import os  # os.chdir()
 
-from Modules import Config
-from Modules import Output
-from Modules.Db import Remote
-from Modules.Db import Update
+from mutalyzer import Config
+from mutalyzer import Output
+from mutalyzer.Db import Remote
+from mutalyzer.Db import Update
 
 os.chdir(sys.argv[0].rsplit('/', 2)[0])
 

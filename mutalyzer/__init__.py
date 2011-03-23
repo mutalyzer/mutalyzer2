@@ -1,14 +1,10 @@
 """
-@organization: Leiden University Medical Center (LUMC)
-@copyright: 2010, Jeroen Laros, LUMC
+Mutalyzer, a HGVS variant nomenclature checker.
+
+Developed at the Human Genetics department of the Leiden University
+Medical Center.
 """
-# Public modules:
-#     - Config    ;
-#     - Crossmap  ;
-#     - Db        ;
-#     - GenRecord ;
-#     - Mutator   ;
-#     - Output    ;
-#     - Parser    ;
-#     - Retriever ;
-#     - Scheduler ;
+
+VERSION = '2.0&nbsp;&beta;-8'
+NOMENCLATURE_VERSION = '2.0'
+RELEASE_DATE = '31 Jan 2011'

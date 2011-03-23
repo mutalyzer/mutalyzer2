@@ -29,13 +29,13 @@ positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
 """
 
 import sys                     # argv
-from Modules import Config     # Config()
-from Modules import Db         # Db(), get_NM_version(), get_NM_info()
-from Modules import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
+from mutalyzer import Config     # Config()
+from mutalyzer import Db         # Db(), get_NM_version(), get_NM_info()
+from mutalyzer import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
                                # offset2int(), info()
-from Modules import Parser     # Nomenclatureparser(), parse()
-from Modules import Output     # Output(), LogMsg()
-from Modules.Serializers import SoapMessage, Mapping, Transcript
+from mutalyzer import Parser     # Nomenclatureparser(), parse()
+from mutalyzer import Output     # Output(), LogMsg()
+from mutalyzer.Serializers import SoapMessage, Mapping, Transcript
 
 from Bio.Seq import reverse_complement
 from collections import defaultdict

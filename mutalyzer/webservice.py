@@ -54,15 +54,15 @@ site.addsitedir(os.path.dirname(__file__))
 # Todo: fix Mutalyzer to not depend on working directory
 os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
-from Modules import variant_checker
-from Modules import Db
-from Modules import Output
-from Modules import Config
-from Modules import Parser
-from Modules import Mapper
-from Modules import Retriever
-from Modules import GenRecord
-from Modules.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage, TranscriptInfo, ExonInfo, ProteinTranscript, RawVariant
+from mutalyzer import variant_checker
+from mutalyzer import Db
+from mutalyzer import Output
+from mutalyzer import Config
+from mutalyzer import Parser
+from mutalyzer import Mapper
+from mutalyzer import Retriever
+from mutalyzer import GenRecord
+from mutalyzer.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage, TranscriptInfo, ExonInfo, ProteinTranscript, RawVariant
 
 
 class MutalyzerService(DefinitionBase) :

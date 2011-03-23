@@ -23,13 +23,13 @@ import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 
-from Modules import Config              # Config.Config
-from Modules import Output              # Output.Output
-from Modules import Parser              # Parser.Nomenclatureparser
-from Modules import Mapper              # Mapper.Converter
-from Modules import Retriever           # Retriever.Retriever
+from mutalyzer import Config              # Config.Config
+from mutalyzer import Output              # Output.Output
+from mutalyzer import Parser              # Parser.Nomenclatureparser
+from mutalyzer import Mapper              # Mapper.Converter
+from mutalyzer import Retriever           # Retriever.Retriever
 
-from Modules import variant_checker
+from mutalyzer import variant_checker
 
 __all__ = ["Scheduler"]
 

@@ -14,11 +14,11 @@ from Bio.Seq import Seq
 
 # Todo: Can this be done in a more elegant way?
 os.chdir('../..')
-site.addsitedir('src')
+site.addsitedir('.')
 
-from Modules import Config
-from Modules import Output
-import Mutalyzer
+from mutalyzer import Config
+from mutalyzer import Output
+from mutalyzer.variant_checker import check_variant
 
 
 class TestMutalyzer(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestMutalyzer(unittest.TestCase):
         """
         Just a variant where we should roll.
         """
-        Mutalyzer.process('NM_003002.2:c.273del', self.config, self.output)
+        check_variant('NM_003002.2:c.273del', self.config, self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
         self.assertTrue(len(wroll) > 0)
 
@@ -45,7 +45,7 @@ class TestMutalyzer(unittest.TestCase):
         """
         Just a variant where we cannot roll.
         """
-        Mutalyzer.process('NM_003002.2:c.274del', self.config, self.output)
+        check_variant('NM_003002.2:c.274del', self.config, self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
         self.assertTrue(len(wroll) == 0)
 
@@ -53,7 +53,7 @@ class TestMutalyzer(unittest.TestCase):
         """
         Here we can roll but should not, because it is over a splice site.
         """
-        Mutalyzer.process('NM_000088.3:g.459del', self.config, self.output)
+        check_variant('NM_000088.3:g.459del', self.config, self.output)
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         self.assertTrue(len(wrollback) > 0)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
@@ -64,7 +64,7 @@ class TestMutalyzer(unittest.TestCase):
         Here we can roll two positions, but should roll only one because
         otherwise it is over a splice site.
         """
-        Mutalyzer.process('NM_000088.3:g.494del', self.config, self.output)
+        check_variant('NM_000088.3:g.494del', self.config, self.output)
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         self.assertTrue(len(wrollback) > 0)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
@@ -74,7 +74,7 @@ class TestMutalyzer(unittest.TestCase):
         """
         Here we can roll and should, we stay in the same exon.
         """
-        Mutalyzer.process('NM_000088.3:g.460del', self.config, self.output)
+        check_variant('NM_000088.3:g.460del', self.config, self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLL')
         self.assertTrue(len(wroll) > 0)
 
@@ -82,14 +82,14 @@ class TestMutalyzer(unittest.TestCase):
         """
         Insertion on CDS start boundary should not be included in CDS.
         """
-        Mutalyzer.process('NM_000143.3:c.-1_1insCAT', self.config, self.output)
+        check_variant('NM_000143.3:c.-1_1insCAT', self.config, self.output)
         self.assertEqual(self.output.getIndexedOutput("newprotein", 0), None)
 
     def test_ins_cds_start_after(self):
         """
         Insertion after CDS start boundary should be included in CDS.
         """
-        Mutalyzer.process('NM_000143.3:c.1_2insCAT', self.config, self.output)
+        check_variant('NM_000143.3:c.1_2insCAT', self.config, self.output)
         self.assertEqual(self.output.getIndexedOutput("newprotein", 0), '?')
 
 
