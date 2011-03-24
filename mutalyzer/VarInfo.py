@@ -17,7 +17,6 @@ positions to I{g.} notation if the variant is in I{c.} notation and vice versa.
 @requires: sys
 @requires: Modules.Db
 @requires: Modules.Crossmap
-@requires: Modules.Parser
 @requires: Modules.Output
 @requires: Modules.Config
 @requires: Modules.Mapper
@@ -29,7 +28,6 @@ import sys                   # argv
 from mutalyzer import Db       # Db(), get_NM_version(), get_NM_info()
 from mutalyzer import Crossmap # Crossmap(), g2x(), x2g(), main2int(),
                              # offset2int(), info()
-from mutalyzer import Parser   # Nomenclatureparser(), parse()
 from mutalyzer import Output   # Output(), LogMsg()
 from mutalyzer import Config
 from mutalyzer import Mapper

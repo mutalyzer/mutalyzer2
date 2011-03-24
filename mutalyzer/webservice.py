@@ -54,11 +54,11 @@ site.addsitedir(os.path.dirname(__file__))
 # Todo: fix Mutalyzer to not depend on working directory
 os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
+from mutalyzer.grammar import Grammar
 from mutalyzer import variant_checker
 from mutalyzer import Db
 from mutalyzer import Output
 from mutalyzer import Config
-from mutalyzer import Parser
 from mutalyzer import Mapper
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
@@ -564,25 +564,23 @@ class MutalyzerService(DefinitionBase) :
         @rtype: object
         """
         C = Config.Config() # Read the configuration file.
-        O = Output.Output(__file__, C.Output)
-        O.addMessage(__file__, -1, "INFO",
-                     "Received request checkSyntax(%s)" % (variant))
+        output = Output.Output(__file__, C.Output)
+        output.addMessage(__file__, -1, "INFO",
+                          "Received request checkSyntax(%s)" % (variant))
 
         result = CheckSyntaxOutput()
 
-        self.__checkVariant(O, variant)
+        self.__checkVariant(output, variant)
 
-        P = Parser.Nomenclatureparser(O)
-        parsetree = P.parse(variant)
-        del C, P
+        grammar = Grammar(output)
+        parsetree = grammar.parse(variant)
         result.valid = bool(parsetree)
 
-        O.addMessage(__file__, -1, "INFO",
-                     "Finished processing checkSyntax(%s)" % (variant))
+        output.addMessage(__file__, -1, "INFO",
+                          "Finished processing checkSyntax(%s)" % (variant))
 
-        result.messages = O.getSoapMessages()
+        result.messages = output.getSoapMessages()
 
-        del O
         return result
     #checkSyntax
 

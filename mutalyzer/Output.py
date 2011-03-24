@@ -264,7 +264,9 @@ class Output() :
         lastorigin = ""
         for i in self.__messages:
             if i.level >= level:
-                if lastorigin == "Parser": #Only one parse error
+                # Todo: We changed this from 'Parser' to 'grammar', does this
+                # still work?
+                if lastorigin == 'grammar': #Only one parse error
                     continue
                 lastorigin = i.origin
                 ret.append("(%s): %s" % (i.origin, i.description))

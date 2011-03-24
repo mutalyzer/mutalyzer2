@@ -64,22 +64,20 @@ from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
 
-# Add /src to Python path
-site.addsitedir(os.path.dirname(__file__))
-
 # Todo: Get this from the configuration file
 root_dir = os.path.split(os.path.dirname(__file__))[0]
+site.addsitedir(root_dir)
 # Todo: Fix Mutalyzer to not depend on working directory
 if not __name__ == '__main__':
     os.chdir(root_dir)
 
 from mutalyzer import VERSION, NOMENCLATURE_VERSION, RELEASE_DATE
+from mutalyzer.grammar import Grammar
 from mutalyzer import webservice
 from mutalyzer import VarInfo
 from mutalyzer import variant_checker
 from mutalyzer import Config
 from mutalyzer import Output
-from mutalyzer import Parser
 from mutalyzer import Mapper
 from mutalyzer import Db
 from mutalyzer import Scheduler
@@ -373,25 +371,24 @@ class SyntaxCheck:
         Parameters:
         - variant: Variant name to check.
         """
-        O = Output.Output(__file__, C.Output)
+        output = Output.Output(__file__, C.Output)
         i = web.input()
         variant = i.variant
         if variant.find(',') >= 0:
-            O.addMessage(__file__, 2, "WCOMMASYNTAX",
+            output.addMessage(__file__, 2, "WCOMMASYNTAX",
                          "Comma's are not allowed in the syntax, autofixed")
             variant = variant.replace(',', '')
             #args["variant"]=variant
-        P = Parser.Nomenclatureparser(O)
-        parsetree = P.parse(variant)
-        pe = O.getOutput("parseError")
+        grammar = Grammar(output)
+        parsetree = grammar.parse(variant)
+        pe = output.getOutput("parseError")
         if pe: pe[0] = pe[0].replace('<', "&lt;")
         args = {
             "variant"       : variant,
-            "messages"      : O.getMessages(),
+            "messages"      : output.getMessages(),
             "parseError"    : pe,
             "debug"         : ""
         }
-        del O
         return render.parse(args)
 #SyntaxCheck
 
@@ -477,7 +474,7 @@ class PositionConverter:
         @kwarg build: Human genome build (currently 'hg18' or 'hg19').
         @kwarg variant: Variant to convert.
         """
-        O = Output.Output(__file__, C.Output)
+        output = Output.Output(__file__, C.Output)
 
         avail_builds = C.Db.dbNames[::-1]
 
@@ -497,7 +494,7 @@ class PositionConverter:
         }
 
         if build and variant:
-            converter = Mapper.Converter(build, C, O)
+            converter = Mapper.Converter(build, C, output)
 
             #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
@@ -505,8 +502,8 @@ class PositionConverter:
             if variant :
                 if not(":c." in variant or ":g." in variant):
                     #Bad name
-                    P = Parser.Nomenclatureparser(O)
-                    parsetree = P.parse(variant)
+                    grammar = Grammar(output)
+                    parsetree = grammar.parse(variant)
                 #if
 
                 if ":c." in variant:
@@ -519,14 +516,14 @@ class PositionConverter:
                     # Do the g2c dance
                     variants = converter.chrom2c(variant, "dict")
                     if variants:
-                        output = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\
-                                  for key, value in variants.items()]
-                        attr["cNames"].extend(output)
+                        out = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))\
+                               for key, value in variants.items()]
+                        attr["cNames"].extend(out)
                     #if
                 #if
             #if
 
-            attr["errors"].extend(O.getMessages())
+            attr["errors"].extend(output.getMessages())
         return render.converter(attr)
 #PositionConverter
 

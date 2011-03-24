@@ -8,7 +8,6 @@ Module used to add and manage the Batch Jobs.
 @requires: email.mime.text.MIMEText
 @requires: Modules.Config
 @requires: Modules.Output
-@requires: Modules.Parser
 @requires: Modules.Mapper
 @requires: Mutalyzer
 """
@@ -25,13 +24,15 @@ from email.mime.text import MIMEText    # MIMEText
 
 from mutalyzer import Config              # Config.Config
 from mutalyzer import Output              # Output.Output
-from mutalyzer import Parser              # Parser.Nomenclatureparser
 from mutalyzer import Mapper              # Mapper.Converter
 from mutalyzer import Retriever           # Retriever.Retriever
 
 from mutalyzer import variant_checker
+from mutalyzer.grammar import Grammar
+
 
 __all__ = ["Scheduler"]
+
 
 def debug(f) :
     """
@@ -435,23 +436,23 @@ class Scheduler() :
         """
 
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
-        P = Parser.Nomenclatureparser(O)
+        output = Output.Output(__file__, C.Output)
+        grammar = Grammar(output)
 
-        O.addMessage(__file__, -1, "INFO",
-            "Received SyntaxChecker batchvariant " + cmd)
+        output.addMessage(__file__, -1, "INFO",
+                           "Received SyntaxChecker batchvariant " + cmd)
 
-        skip = self.__processFlags(O, flags)
+        skip = self.__processFlags(output, flags)
         #Process
         if not skip :
-            parsetree = P.parse(cmd)
+            parsetree = grammar.parse(cmd)
         else :
             parsetree = None
 
         if parsetree :
             result = "OK"
         else :
-            result = "|".join(O.getBatchMessages(3))
+            result = "|".join(output.getBatchMessages(3))
 
         #Output
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
@@ -468,8 +469,8 @@ class Scheduler() :
 
         handle.write("%s\t%s\n" % (cmd, result))
         handle.close()
-        O.addMessage(__file__, -1, "INFO",
-            "Finished SyntaxChecker batchvariant " + cmd)
+        output.addMessage(__file__, -1, "INFO",
+                          "Finished SyntaxChecker batchvariant " + cmd)
     #_processSyntaxCheck
 
     def _processConversion(self, cmd, i, build, flags) :
@@ -514,8 +515,8 @@ class Scheduler() :
                 #TODO: Parse the variant and check for c or g. This is ugly
                 if not(":c." in variant or ":g." in variant) :
                     #Bad name
-                    P = Parser.Nomenclatureparser(O)
-                    parsetree = P.parse(variant)
+                    grammar = Grammar(O)
+                    parsetree = grammar.parse(variant)
                 #if
 
                 if ":c." in variant :

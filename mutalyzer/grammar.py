@@ -1,23 +1,21 @@
-#!/usr/bin/python
-
 """
 Module for parsing a variant described using the HGVS nomenclature.
 
-A context-free parser is defined here, the nomenclature rules are specified
-in Backus-Naur Form (BNF), which is used (with some minor modifications) as source of this
-module.
+A context-free grammar is defined here, the nomenclature rules are specified
+in Backus-Naur Form (BNF), which is used (with some minor modifications) as
+source of this module.
 
-@requires: pyparsing
+@todo: Update docstrings.
+@todo: Automatically generate a LaTeX BNF description from this.
 """
-# Public classes:
-#     - Nomenclatureparser ; Parse an input string.
 
 
 from pyparsing import *
 
-class Nomenclatureparser() :
+
+class Grammar():
     """
-    Parse an input string.
+    Defines the HGVS nomenclature grammar.
 
     Private variables:
         - __output ; The output object.
@@ -32,7 +30,6 @@ class Nomenclatureparser() :
     Public methods:
         - parse(input) ; Parse the input string and return a parse tree.
     """
-
     # New:
     # Nest -> `{' SimpleAlleleVarSet `}'
     SimpleAlleleVarSet = Forward()
@@ -308,70 +305,50 @@ class Nomenclatureparser() :
     Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
           UnkEffectVar ^ NoRNAVar ^ SplicingVar
 
-    def __init__(self, output) :
+
+    def __init__(self, output):
         """
-        Initialise the class and enable packrat parsing.
+        Initialise the class and enable packrat parsing. Packrat speeds up
+        parsing considerably.
 
         Private variables (altered):
-            - __output ; Set to the output object.
+            - _output ; Set to the output object.
 
-        @arg output: The output object
-        @type output: object
+        @arg output: The output object.
+        @type output: mutalyzer.Output.Output
         """
-
-        self.__output = output
-        ParserElement.enablePackrat() # Speed up parsing considerably.
+        self._output = output
+        ParserElement.enablePackrat()
     #__init__
 
-    def parse(self, variant) :
+
+    def parse(self, variant):
         """
         Parse the input string and return a parse tree if the parsing was
         successful. Otherwise print the parse error and the position in
-        the input where the error occurred.
+        the input where the error occurred (and return None).
 
         Private variables:
-            - __output ; The output object.
+            - _output ; The output object.
 
         Public variables:
             - Var ; The top-level rule of our parser.
 
-        @arg variant: The input string that needs to be parsed
+        @arg variant: The input string that needs to be parsed.
         @type variant: string
 
-        @return: The parse tree containing the parse results
-        @rtype: object
+        @return: The parse tree containing the parse results, or None in
+                 case of a parsing error.
+        @rtype: pyparsing.ParseResults
         """
-
-        try :
-            return self.Var.parseString(variant, parseAll = True)
-        except ParseException, err :
-            self.__output.addMessage(__file__, 4, "EPARSE", str(err))
-
-            # Log the input.
-            #self.__output.addMessage(__file__, 4, "EPARSE", variant)
-
-            # And log the position where the parsing error occurred.
+        try:
+            return self.Var.parseString(variant, parseAll=True)
+        except ParseException as err:
+            # Log parse error and the position where it occurred.
+            self._output.addMessage(__file__, 4, 'EPARSE', str(err))
             pos = int(str(err).split(':')[-1][:-1]) - 1
-            #self.__output.addMessage(__file__, 4, "EPARSE", pos * ' ' + '^')
-
-            #self.__output.addOutput("parseError", str(err))
-            self.__output.addOutput("parseError", variant)
-            self.__output.addOutput("parseError", pos * ' ' + '^')
+            self._output.addOutput('parseError', variant)
+            self._output.addOutput('parseError', pos * ' ' + '^')
             return None
-        #except
     #parse
-#Nomenclatureparser
-
-#
-# Unit test.
-#
-if __name__ == "__main__" :
-    P = Nomenclatureparser()
-    parsetree = P.parse("NM_002001.2:c.[12del]")
-    parsetree = P.parse("NM_002001.2:c.[(12del)]")
-    parsetree = P.parse("NM_002001.2:c.[(12del)?]")
-    parsetree = P.parse("NM_002001.2:c.[(12del);(12del)]")
-    parsetree = P.parse("NM_002001.2:c.[(12del;12del)]")
-    parsetree = P.parse("NM_002001.2:c.[((12del)?;12del)?]")
-    del P
-#if
+#Grammar

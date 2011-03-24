@@ -1,5 +1,7 @@
 """
-The nomenclature checker.
+The HGVS variant nomenclature checker.
+
+Entrypoint is the check_variant() function.
 
 @todo: Use exceptions for failure handling.
 @todo: End vs stop. I guess we should use start/stop (end goes with beginning).
@@ -22,10 +24,10 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 from mutalyzer import util
+from mutalyzer.grammar import Grammar
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Crossmap
-from mutalyzer import Parser
 from mutalyzer import Db
 from mutalyzer import Mutator
 from mutalyzer import Config
@@ -1101,8 +1103,8 @@ def check_variant(description, config, output):
     """
     output.addOutput('inputvariant', description)
 
-    parser = Parser.Nomenclatureparser(output)
-    parsed_description = parser.parse(description)
+    grammar = Grammar(output)
+    parsed_description = grammar.parse(description)
 
     if not parsed_description:
         # Parsing went wrong.
