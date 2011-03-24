@@ -25,12 +25,15 @@ from Bio.Alphabet import IUPAC
 
 from mutalyzer import util
 from mutalyzer.grammar import Grammar
+from mutalyzer.mutator import Mutator
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Crossmap
 from mutalyzer import Db
-from mutalyzer import Mutator
 from mutalyzer import Config
+
+
+class _VariantError(Exception): pass
 
 
 # Used in: _raw_variant
@@ -121,58 +124,58 @@ def _get_offset(location) :
 #_get_offset
 
 
-# Todo: refactor
-def __checkOptArg(ref, p1, p2, arg, O) :
+def _check_argument(argument, reference, first, last, output):
     """
-    Do several checks for the optional argument of a variant.
+    Do several checks for the optional argument of a variant. Return True
+    if the argument is valid, False otherwise.
 
-
-    @arg ref: The reference sequence
-    @type ref: string
-    @arg p1: Start position of the variant
-    @type p1: integer
-    @arg p2: End position of the variant
-    @type p2: integer
-    @arg arg: The optional argument
-    @type arg:
-    @arg O: The Output object
-    @type O: object
+    @arg reference: The reference sequence.
+    @type reference: string
+    @arg first: Start position of the variant.
+    @type first: int
+    @arg last: End position of the variant.
+    @type last: int
+    @arg argument: The optional argument.
+    @type argument: string
+    @arg output: The Output object.
+    @type output: mutalyzer.Output.Output
 
     @return: True if the optional argument is correct, False otherwise.
-    @rtype: boolean
-
-    @todo: refactor
-    @todo: Use exceptions.
+    @rtype: bool
     """
-    if arg : # The argument is optional, if it is not present, it is correct.
-        if arg.isdigit() :         # If it is a digit (3_9del7 for example),
-            length = int(arg)      #   the digit must be equal to the length
-            interval = p2 - p1 + 1 #   of the given range.
-            if length != interval :
-                O.addMessage(__file__, 3, "EARGLEN",
-                    "The length (%i) differed from that of the range (%i)." % (
-                    length, interval))
-                return False
-            #if
-        #if
-        else :
-            if not util.is_dna(arg) : # If it is not a digit, it muse be DNA.
-                O.addMessage(__file__, 4, "ENODNA",
-                    "Invalid letters in argument.")
-                return False
-            #if
-            # And the DNA must match the reference sequence.
-            ref_slice = str(ref[p1 - 1:p2])
-            if ref_slice != str(arg) : # FIXME more informative.
-                O.addMessage(__file__, 3, "EREF",
-                    "%s not found at position %s, found %s instead." % (
-                    arg, util.format_range(p1, p2), ref_slice))
-                return False
-            #if
-        #else
-    #if
+    if not argument:
+        # The argument is optional, if it is not present, it is correct.
+        return True
+
+    if argument.isdigit():
+        # If it is a digit (3_9del7 for example), the digit must be equal to
+        # the length of the given range.
+        length = int(argument)
+        interval = first - last + 1
+        if length != interval:
+            output.addMessage(__file__, 3, 'EARGLEN',
+                              'The length (%i) differed from that of the ' \
+                              'range (%i).' % (length, interval))
+            return False
+    else:
+        # If it is not a digit, it muse be DNA.
+        if not util.is_dna(argument):
+            output.addMessage(__file__, 4, 'ENODNA',
+                              'Invalid letters in argument.')
+            return False
+        # And the DNA must match the reference sequence.
+        reference_slice = str(reference[first - 1:last])
+        if reference_slice != str(argument):
+            # Todo: Be more informative.
+            output.addMessage(__file__, 3, 'EREF',
+                              '%s not found at position %s, found %s ' \
+                              'instead.' % (argument,
+                                            util.format_range(first, last),
+                                            reference_slice))
+            return False
+
     return True
-#__checkOptArg
+#_check_argument
 
 
 def _add_batch_output(O):
@@ -278,8 +281,8 @@ def apply_substitution(position, original, substitute, mutator, record, O):
     @type original: string
     @arg substitute: Nucleotide in the mutated sequence.
     @type substitute: string
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
@@ -317,8 +320,8 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     @type last: int
     @arg type: The variant type (del or dup).
     @type type: string
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
@@ -387,8 +390,8 @@ def apply_inversion(first, last, mutator, record, O) :
     @type first: int
     @arg last: Genomic end position of the inversion.
     @type last: int
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
@@ -446,8 +449,8 @@ def apply_insertion(before, after, s, mutator, record, O):
     @type after: int
     @arg s: Nucleotides to be inserted.
     @type s: string
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
@@ -539,8 +542,8 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
     @type delete: string
     @arg insert: Sequence to insert.
     @type insert: string
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
     @type record: Modules.GenRecord.GenRecord
     @arg output: The Output object.
@@ -732,7 +735,6 @@ def _coding_to_genomic(first_location, last_location, transcript):
     last = transcript.CM.x2g(last_main, last_offset)
 
     # Todo: Exceptions.
-    # todo: wat does check_intronic do and _is_intronic etc?
     if not _check_intronic_position(first_main, first_offset, transcript):
         return None, None
     if not _check_intronic_position(last_main, last_offset, transcript):
@@ -749,8 +751,8 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
 
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
     @arg variant: A parsed raw (simple, noncompound) variant.
     @type variant: pyparsing.ParseResults
     @arg record: A GenRecord object.
@@ -763,89 +765,109 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     @todo: Documentation.
     @todo: Exceptions.
     """
+    # {argument} may be a number, or a subsequence of the reference.
+    # {sequence} is the variant subsequence.
+    argument = variant.Arg1
+    sequence = variant.Arg2
+
+    # If we are on the reverse strand, subsequences must be in reverse
+    # complement.
     if transcript and transcript.CM.orientation == -1:
-        s1 = Bio.Seq.reverse_complement(variant.Arg1)
-        s2 = Bio.Seq.reverse_complement(variant.Arg2)
-    else:
-        s1 = variant.Arg1
-        s2 = variant.Arg2
+        sequence = Bio.Seq.reverse_complement(sequence)
+        if util.is_dna(argument):
+            argument = Bio.Seq.reverse_complement(argument)
+
+    # Get genomic first and last positions for this variant. Below we handle
+    # the different ways of describing these positions.
 
     if variant.EXLoc:
+        # EX positioning.
         first, last = _exonic_to_genomic(variant.EXLoc, transcript)
         if not first:
             output.addMessage(__file__, 3, 'EPOS', 'Invalid EX position given.')
-            return
+            raise _VariantError()
         if last < first:
-            # Todo: huh?
+            # Todo: Why could this ever happen?
             first, last = last, first
+
+    elif not variant.StartLoc:
+        # All non-EX positioning ways need a start location.
+        # Todo: Better message.
+        output.addMessage(__file__, 4, 'EUNKNOWN', 'An unknown error occurred.')
+        raise _VariantError()
+
+    elif variant.StartLoc.IVSLoc:
+        # IVS positioning.
+        if record.record.molType != 'g':
+            output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
+                'position given for a non-genomic reference sequence.')
+            raise _VariantError()
+        first = last = _intronic_to_genomic(variant.StartLoc.IVSLoc, transcript)
+        if not first:
+            output.addMessage(__file__, 3, 'EPOS',
+                'Invalid IVS position given.')
+            raise _VariantError()
+        if variant.EndLoc and variant.EndLoc.IVSLoc:
+            # Todo: fixme
+            last = _intronic_to_genomic(variant.EndLoc.IVSLoc, transcript)
+            if last < first:
+                # Todo: Why could this ever happen?
+                first, last = last, first
+
     else:
-        if variant.StartLoc:
-            if variant.StartLoc.IVSLoc:
-                if record.record.molType != 'g':
-                    output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
-                        'position given for a non-genomic reference sequence.')
-                    return
-                first = _intronic_to_genomic(variant.StartLoc.IVSLoc, transcript)
-                if not first:
-                    output.addMessage(__file__, 3, 'EPOS',
-                        'Invalid IVS position given.')
-                    return
-                last = first
-                if variant.EndLoc and variant.EndLoc.IVSLoc:
-                    # Todo: fixme
-                    last = _intronic_to_genomic(variant.EndLoc.IVSLoc, transcript)
-                    if last < first:
-                        first, last = last, first
-            else:
-                if record.record.molType != 'g' and \
-                       (_is_coding_intronic(variant.StartLoc) or
-                        _is_coding_intronic(variant.EndLoc)):
-                    output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
-                        'position given for a non-genomic reference sequence.')
-                    return
-                first_location = variant.StartLoc.PtLoc
-                if variant.EndLoc:
-                    last_location = variant.EndLoc.PtLoc
-                else:
-                    last_location = first_location
-                if transcript:
-                    first, last = _coding_to_genomic(first_location, last_location, transcript)
-                else:
-                    first, last = _genomic_to_genomic(first_location, last_location)
-                if not first:
-                    output.addMessage(__file__, 3, 'ESPLICE', 'Invalid intronic ' \
-                        'position given.')
-                    return
+        # Genomic or coding positioning.
+        if record.record.molType != 'g' and \
+               (_is_coding_intronic(variant.StartLoc) or
+                _is_coding_intronic(variant.EndLoc)):
+            output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
+                'position given for a non-genomic reference sequence.')
+            raise _VariantError()
+
+        first_location = last_location = variant.StartLoc.PtLoc
+        if variant.EndLoc:
+            last_location = variant.EndLoc.PtLoc
+
+        if transcript:
+            # Coding positioning.
+            first, last = _coding_to_genomic(first_location, last_location, transcript)
         else:
-            # Not variant.StartLoc.
-            output.addMessage(__file__, 4, 'EUNKNOWN', 'An unknown error occurred.')
-            return
+            # Genomic positioning.
+            first, last = _genomic_to_genomic(first_location, last_location)
+
+        if not first:
+            # Todo: What does this situation really mean? I don't think
+            # this is the right message.
+            output.addMessage(__file__, 3, 'ESPLICE', 'Invalid intronic ' \
+                'position given.')
+            raise _VariantError()
 
     if last < first:
         output.addMessage(__file__, 3, 'ERANGE', 'End position is smaller than ' \
                           'the begin position.')
-        return
+        raise _VariantError()
 
     if first < 1:
         output.addMessage(__file__, 4, 'ERANGE', 'Position %i is out of range.' %
                           first)
-        return
+        raise _VariantError()
 
     if last > len(mutator.orig):
         output.addMessage(__file__, 4, 'ERANGE', 'Position %s is out of range.' %
                           last)
-        return
+        raise _VariantError()
 
     if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
         output.addMessage(__file__, 2, 'WOVERSPLICE',
                           'Variant hits one or more splice sites.')
 
-    if variant.MutationType in ['del', 'dup', 'subst', 'delins']:
-        __checkOptArg(mutator.orig, first, last, s1, output)
+    # Check if the (optional) argument is valid.
+    if variant.MutationType in ['del', 'dup', 'subst', 'delins'] and \
+           not _check_argument(argument, mutator.orig, first, last, output):
+        raise _VariantError()
 
     # Substitution.
     if variant.MutationType == 'subst':
-        apply_substitution(first, s1, s2, mutator, record, output)
+        apply_substitution(first, argument, sequence, mutator, record, output)
 
     # Deletion or duplication.
     if variant.MutationType in ['del', 'dup']:
@@ -858,131 +880,29 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
 
     # Insertion.
     if variant.MutationType == 'ins':
-        apply_insertion(first, last, s1, mutator, record, output)
+        apply_insertion(first, last, argument, mutator, record, output)
 
     # DelIns.
     if variant.MutationType == 'delins':
-        apply_delins(first, last, s1, s2, mutator, record, output)
+        apply_delins(first, last, argument, sequence, mutator, record, output)
 #_process_raw_variant
 
 
-def _process_variant(mutator, description, record, output):
+def _add_transcript_info(mutator, transcript, output):
     """
-    @arg mutator: A Mutator object.
-    @type mutator: Modules.Mutator.Mutator
-    @arg description: Parsed HGVS variant description.
-    @type description: pyparsing.ParseResults
-    @arg record: A GenRecord object.
-    @type record: Modules.GenRecord.GenRecord
+    Add transcript-specific information (including protein prediction) to
+    the {output} object.
+
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
+    @arg transcript: A transcript object.
+    @type transcript: Modules.GenRecord.Locus
     @arg output: The Output object.
     @type output: Modules.Output.Output
 
     @todo: Documentation.
-    @todo: Exceptions.
+    @todo: Don't generate the fancy HTML protein descriptions here.
     """
-    if not description.RawVar and not description.SingleAlleleVarSet:
-        # Nothing to do. Exception?
-        return
-
-    if description.RefType == 'r':
-        output.addMessage(__file__, 4, "ERNA", "Descriptions on RNA level " \
-                          "are not supported.")
-        return
-
-    if description.RefType in ['c', 'n']:
-
-        gene, transcript = None, None
-        gene_symbol, transcript_id = output.getOutput('geneSymbol')[-1]
-
-        if description.LrgAcc:
-            # LRG case, pick the top gene.
-            gene = record.record.geneList[0]
-            if transcript_id:
-                transcript = gene.findLocus(transcript_id)
-                if not transcript:
-                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                        "Multiple transcripts found for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
-                            ", ".join(gene.listLoci())))
-            else:
-                # No transcript id given.
-                if len(gene.transcriptList) == 1:
-                    # No transcript given, only 1 found, pick that.
-                    transcript = gene.transcriptList[0]
-                else:
-                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                        "No transcript given for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
-                            ", ".join(gene.listLoci())))
-
-        else:
-            # Not an LRG, find our gene manually.
-            genes = record.record.listGenes()
-            transcript_id = transcript_id and "%.3i" % int(transcript_id)
-
-            if gene_symbol in genes:
-                # We found our gene.
-                gene = record.record.findGene(gene_symbol)
-            elif (len(genes) == 1) and not(gene_symbol):
-                # No gene given and there is only one gene in the record.
-                # Todo: message?
-                gene = record.record.geneList[0]
-            else:
-                output.addMessage(__file__, 4, "EINVALIDGENE",
-                    "Gene %s not found. Please choose from: %s" % (
-                    gene_symbol, ", ".join(genes)))
-
-            if gene:
-                # Find transcript.
-                transcripts = gene.listLoci()
-                if transcript_id in transcripts:
-                    # Found our transcript.
-                    transcript = gene.findLocus(transcript_id)
-                elif (len(transcripts) == 1) and not(transcript_id):
-                    # No transcript given and there is only one transcript for
-                    # this gene.
-                    transcript = gene.transcriptList[0]
-                else:
-                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                        "Multiple transcripts found for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
-                        ", ".join(gene.listLoci())))
-
-        # Add selected gene symbol to output
-        output.addOutput('geneSymbol', (gene and gene.name or '',
-                                        transcript and transcript.name or ''))
-
-        # Return if no transcript is selected
-        if not transcript:
-            # Skip all BatchJobs with the same preColon data.
-            output.addOutput('BatchFlags',
-                             ('S2', output.getOutput('preColon')[-1]))
-            # Explicit return in case of an error.
-            return
-
-    else:
-        # Not description.RefType in ['c', 'n'].
-        transcript = None
-
-    if transcript and not transcript.transcribe:
-        return
-
-    if description.SingleAlleleVarSet:
-        for var in description.SingleAlleleVarSet:
-            _process_raw_variant(mutator, var.RawVar, record, transcript,
-                                 output)
-    else:
-        _process_raw_variant(mutator, description.RawVar, record, transcript,
-                             output)
-
-    if not transcript:
-        # Genomic given or error with transcript.
-        return
-
-    if not record.record.geneList:
-        # EST
-        return
-
     # Add exon table to output.
     for i in range(0, transcript.CM.numberOfExons() * 2, 2):
         acceptor = transcript.CM.getSpliceSite(i)
@@ -1080,6 +1000,124 @@ def _process_variant(mutator, description, record, output):
                 output.addOutput('newprotein', protein_variant + '*')
                 util.print_protein_html(protein_variant + '*', first, last_variant,
                                         output, 'newProteinFancy')
+#_add_transcript_info
+
+
+def _process_variant(mutator, description, record, output):
+    """
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
+    @arg description: Parsed HGVS variant description.
+    @type description: pyparsing.ParseResults
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
+
+    @todo: Documentation.
+    @todo: Exceptions.
+    """
+    if not description.RawVar and not description.SingleAlleleVarSet:
+        output.addMessage(__file__, 4, 'ENOVARIANT',
+                          'Variant description contains no mutation.')
+        raise _VariantError()
+
+    if description.RefType == 'r':
+        output.addMessage(__file__, 4, 'ERNA',
+                          'Descriptions on RNA level are not supported.')
+        raise _VariantError()
+
+    transcript = None
+
+    if description.RefType in ['c', 'n']:
+
+        gene = None
+        gene_symbol, transcript_id = output.getOutput('geneSymbol')[-1]
+
+        if description.LrgAcc:
+            # LRG case, pick the top gene.
+            gene = record.record.geneList[0]
+            if transcript_id:
+                transcript = gene.findLocus(transcript_id)
+                if not transcript:
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                        "Multiple transcripts found for gene %s. Please " \
+                        "choose from: %s" %(gene.name,
+                            ", ".join(gene.listLoci())))
+            else:
+                # No transcript id given.
+                if len(gene.transcriptList) == 1:
+                    # No transcript given, only 1 found, pick that.
+                    transcript = gene.transcriptList[0]
+                else:
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                        "No transcript given for gene %s. Please " \
+                        "choose from: %s" %(gene.name,
+                            ", ".join(gene.listLoci())))
+
+        else:
+            # Not an LRG, find our gene manually.
+            genes = record.record.listGenes()
+            transcript_id = transcript_id and "%.3i" % int(transcript_id)
+
+            if gene_symbol in genes:
+                # We found our gene.
+                gene = record.record.findGene(gene_symbol)
+            elif (len(genes) == 1) and not(gene_symbol):
+                # No gene given and there is only one gene in the record.
+                # Todo: message?
+                gene = record.record.geneList[0]
+            else:
+                output.addMessage(__file__, 4, "EINVALIDGENE",
+                    "Gene %s not found. Please choose from: %s" % (
+                    gene_symbol, ", ".join(genes)))
+
+            if gene:
+                # Find transcript.
+                transcripts = gene.listLoci()
+                if transcript_id in transcripts:
+                    # Found our transcript.
+                    transcript = gene.findLocus(transcript_id)
+                elif (len(transcripts) == 1) and not(transcript_id):
+                    # No transcript given and there is only one transcript for
+                    # this gene.
+                    transcript = gene.transcriptList[0]
+                else:
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
+                        "Multiple transcripts found for gene %s. Please " \
+                        "choose from: %s" %(gene.name,
+                        ", ".join(gene.listLoci())))
+
+        # Add selected gene symbol to output
+        output.addOutput('geneSymbol', (gene and gene.name or '',
+                                        transcript and transcript.name or ''))
+
+        # Return if no transcript is selected
+        if not transcript:
+            # Skip all BatchJobs with the same preColon data.
+            output.addOutput('BatchFlags',
+                             ('S2', output.getOutput('preColon')[-1]))
+            raise _VariantError()
+        elif not transcript.transcribe:
+            # Todo: Shouldn't we add some message here?
+            raise _VariantError()
+
+    # Now process all raw variants (or just the only one). If _VariantError
+    # was raised, stop processing and re-raise it.
+    try:
+        if description.SingleAlleleVarSet:
+            for var in description.SingleAlleleVarSet:
+                _process_raw_variant(mutator, var.RawVar, record, transcript,
+                                     output)
+        else:
+            _process_raw_variant(mutator, description.RawVar, record,
+                                 transcript, output)
+    except _VariantError:
+        raise
+
+    # Add transcript-specific information.
+    if transcript and record.record.geneList:
+        _add_transcript_info(mutator, transcript, output)
 #_process_variant
 
 
@@ -1156,12 +1194,17 @@ def check_variant(description, config, output):
     record.record = retrieved_record
     record.checkRecord()
 
-    mutator = Mutator.Mutator(record.record.seq, config.Mutator, output)
+    mutator = Mutator(record.record.seq, config.Mutator, output)
 
     # Note: The GenRecord instance is carrying the sequence in .record.seq.
     #       So is the Mutator instance in .mutator.orig.
 
-    _process_variant(mutator, parsed_description, record, output)
+    # Todo: If processing of the variant fails, we might still want to show
+    # information about the record, gene, transcript.
+    try:
+        _process_variant(mutator, parsed_description, record, output)
+    except _VariantError:
+        return record
 
     # Protein.
     for gene in record.record.geneList:

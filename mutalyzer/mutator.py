@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 Module for mutating a string.
 
@@ -11,22 +9,15 @@ visualisation of each raw variant within a combined variant is made and
 effects on restriction sites are also analysed.
 
 The original as well as the mutated string are stored here.
-
-@requires: itertools.izip_longest
-@requires: Bio.Restriction
-@requires: Bio.Seq.Seq
-@requires: Bio.Alphabet.IUPAC.IUPACAmbiguousDNA
-@requires: Bio.Seq.reverse_complement
 """
-# Public classes:
-#     - Mutator ; Mutate a string and register all shift points.
 
 
 from itertools import izip_longest
 from Bio import Restriction
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
-from Bio.Seq import reverse_complement # reverse_complement()
+from Bio.Seq import reverse_complement
+
 
 class Mutator() :
     """
@@ -581,10 +572,3 @@ class Mutator() :
         self.__output.addOutput("visualisation", visualisation)
     #dupM
 #Mutator
-
-#
-# Unit test.
-#
-if __name__ == "__main__" :
-    pass
-#if

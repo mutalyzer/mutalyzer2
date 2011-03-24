@@ -25,7 +25,7 @@ class TestGrammar(unittest.TestCase):
 
     def setUp(self):
         """
-        Initialize test Mutator module.
+        Initialize test Grammar instance.
         """
         self.config = Config.Config()
         self.output = Output.Output(__file__, self.config.Output)

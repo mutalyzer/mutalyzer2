@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Tests for the Mutator module.
+Tests for the mutalyzer.mutator module.
 """
 
 #import logging; logging.basicConfig()
@@ -18,7 +18,7 @@ site.addsitedir('.')
 
 from mutalyzer import Config
 from mutalyzer import Output
-from mutalyzer import Mutator
+from mutalyzer import mutator
 
 
 def _seq(length):
@@ -33,21 +33,21 @@ def _seq(length):
 
 class TestMutator(unittest.TestCase):
     """
-    Test the Mutator module.
+    Test the mutator module.
     """
 
     def setUp(self):
         """
-        Initialize test Mutator module.
+        Initialize test mutator module.
         """
         self.config = Config.Config()
         self.output = Output.Output(__file__, self.config.Output)
 
     def _mutator(self, sequence):
         """
-        Create a Mutator object for a given sequence.
+        Create a Mutator instance for a given sequence.
         """
-        return Mutator.Mutator(sequence,
+        return mutator.Mutator(sequence,
                                self.config.Mutator,
                                self.output)
 

@@ -6,3 +6,9 @@ Probably have a separate bin/ directory with, e.g. files like
     #!/usr/bin/env python
     from mutalyzer import batch_runner
     batch_runner.run()
+Get rid of mail.txt in the root dir.
+
+
+Europium copy:
+Hostname aanpassen.
+Mailserver.
