@@ -305,7 +305,7 @@ i {
     width: 620px;
 }
 
-.debug, .info, .warning, .error {
+.debug, .information, .warning, .error {
     padding-left: 25px;
     background: left top no-repeat;
     cursor: pointer;
@@ -315,7 +315,7 @@ i {
     background-image: url('../images/debug.png');
 }
 
-.info {
+.information {
     background-image: url('../images/info.png');
 }
 

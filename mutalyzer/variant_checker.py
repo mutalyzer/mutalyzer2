@@ -34,9 +34,10 @@ from mutalyzer import Config
 
 
 class _VariantError(Exception): pass
-class _UnknownPositionError(_VariantError): pass
+class _RawVariantError(_VariantError): pass
+class _UnknownPositionError(_RawVariantError): pass
 
-class _OffsetSignError(_VariantError):
+class _OffsetSignError(_RawVariantError):
     def __init__(self, main, offset, acceptor):
         """
         @arg main:
@@ -50,7 +51,7 @@ class _OffsetSignError(_VariantError):
         self.offset = offset
         self.acceptor = acceptor
 
-class _OffsetNotFromBoundaryError(_VariantError):
+class _OffsetNotFromBoundaryError(_RawVariantError):
     def __init__(self, main):
         """
         @arg main:
@@ -710,7 +711,7 @@ def _genomic_to_genomic(first_location, last_location):
         raise _UnknownPositionError()
 
     if not first_location.Main.isdigit() or not last_location.Main.isdigit():
-        raise _VariantError()
+        raise _RawVariantError()
 
     first = int(first_location.Main)
     last = int(last_location.Main)
@@ -741,7 +742,7 @@ def _coding_to_genomic(first_location, last_location, transcript):
         raise _UnknownPositionError()
 
     if not first_location.Main.isdigit() or not last_location.Main.isdigit():
-        raise _VariantError()
+        raise _RawVariantError()
 
     first_main = transcript.CM.main2int(first_location.MainSgn + \
                                         first_location.Main)
@@ -802,7 +803,7 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
         first, last = _exonic_to_genomic(variant.EXLoc, transcript)
         if not first:
             output.addMessage(__file__, 3, 'EPOS', 'Invalid EX position given.')
-            raise _VariantError()
+            raise _RawVariantError()
         if last < first:
             # Todo: Why could this ever happen?
             first, last = last, first
@@ -811,19 +812,19 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
         # All non-EX positioning ways need a start location.
         # Todo: Better message.
         output.addMessage(__file__, 4, 'EUNKNOWN', 'An unknown error occurred.')
-        raise _VariantError()
+        raise _RawVariantError()
 
     elif variant.StartLoc.IVSLoc:
         # IVS positioning.
         if record.record.molType != 'g':
             output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
                 'position given for a non-genomic reference sequence.')
-            raise _VariantError()
+            raise _RawVariantError()
         first = last = _intronic_to_genomic(variant.StartLoc.IVSLoc, transcript)
         if not first:
             output.addMessage(__file__, 3, 'EPOS',
                 'Invalid IVS position given.')
-            raise _VariantError()
+            raise _RawVariantError()
         if variant.EndLoc and variant.EndLoc.IVSLoc:
             # Todo: fixme
             last = _intronic_to_genomic(variant.EndLoc.IVSLoc, transcript)
@@ -838,7 +839,7 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
                 _is_coding_intronic(variant.EndLoc)):
             output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
                 'position given for a non-genomic reference sequence.')
-            raise _VariantError()
+            raise _RawVariantError()
 
         first_location = last_location = variant.StartLoc.PtLoc
         if variant.EndLoc:
@@ -856,20 +857,21 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
             output.addMessage(__file__, 4, 'EUNKNOWN',
                               'Unknown positions (denoted by "?") are ' \
                               'not supported.')
-            raise _VariantError()
+            raise
         except _OffsetSignError as e:
             output.addMessage(__file__, 3, 'EOFFSETSIGN', 'Offset %s from ' \
-                              'position %s is %s but should be %s.' % \
+                              'position %s is in %s direction but should ' \
+                              'be in %s direction.' % \
                               (e.offset, e.main,
                                'downstream' if e.acceptor else 'upstream',
                                'upstream' if e.acceptor else 'downstream'))
-            raise _VariantError()
+            raise
         except _OffsetNotFromBoundaryError as e:
             output.addMessage(__file__, 3, 'EOFFSETFROMBOUNDARY',
                               'Offset may not be from position %s because ' \
                               ' this is not an exon boundary.' % e.main)
-            raise _VariantError()
-        except _VariantError:
+            raise
+        except _RawVariantError:
             # Todo: What does this situation really mean? I don't think
             # this is the right message.
             #output.addMessage(__file__, 3, 'ESPLICE', 'Invalid intronic ' \
@@ -881,17 +883,17 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     if last < first:
         output.addMessage(__file__, 3, 'ERANGE', 'End position is smaller than ' \
                           'the begin position.')
-        raise _VariantError()
+        raise _RawVariantError()
 
     if first < 1:
         output.addMessage(__file__, 4, 'ERANGE', 'Position %i is out of range.' %
                           first)
-        raise _VariantError()
+        raise _RawVariantError()
 
     if last > len(mutator.orig):
         output.addMessage(__file__, 4, 'ERANGE', 'Position %s is out of range.' %
                           last)
-        raise _VariantError()
+        raise _RawVariantError()
 
     if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
         output.addMessage(__file__, 2, 'WOVERSPLICE',
@@ -900,7 +902,7 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     # Check if the (optional) argument is valid.
     if variant.MutationType in ['del', 'dup', 'subst', 'delins'] and \
            not _check_argument(argument, mutator.orig, first, last, output):
-        raise _VariantError()
+        raise _RawVariantError()
 
     # Substitution.
     if variant.MutationType == 'subst':
@@ -1139,22 +1141,20 @@ def _process_variant(mutator, description, record, output):
             # Todo: Shouldn't we add some message here?
             raise _VariantError()
 
-    # Now process all raw variants (or just the only one). If _VariantError
-    # was raised, stop processing and re-raise it.
-    try:
-        if description.SingleAlleleVarSet:
-            for var in description.SingleAlleleVarSet:
-                # Todo: if _VariantError was called, we might go on processing
-                # the other raw variants (and add a message skipping this
-                # raw variant).
-                # Perhaps we should have a separate _RawVariantError for this.
+    # Now process all raw variants (or just the only one). The function
+    # _process_raw_variant might raise a _VariantError exception.
+    if description.SingleAlleleVarSet:
+        for var in description.SingleAlleleVarSet:
+            try:
                 _process_raw_variant(mutator, var.RawVar, record, transcript,
                                      output)
-        else:
-            _process_raw_variant(mutator, description.RawVar, record,
-                                 transcript, output)
-    except _VariantError:
-        raise
+            except _RawVariantError:
+                output.addMessage(__file__, 1, 'ISKIPRAWVARIANT',
+                                  'Ignoring raw variant "%s" because it ' \
+                                  'could not be processed.' % var[0])
+    else:
+        _process_raw_variant(mutator, description.RawVar, record,
+                             transcript, output)
 
     # Add transcript-specific information.
     if transcript and record.record.geneList:

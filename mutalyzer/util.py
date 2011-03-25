@@ -709,7 +709,7 @@ def message_info(message):
     @rtype: dictionary
     """
     classes = {0: 'debug',
-               1: 'info',
+               1: 'information',
                2: 'warning',
                3: 'error',
                4: 'error'}

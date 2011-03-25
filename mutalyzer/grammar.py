@@ -219,8 +219,9 @@ class Grammar():
     # RawVar -> (CRawVar | (`(' CRawVar `)')) `?'?
     CRawVar = Group(Subst ^ Del ^ Dup ^ VarSSR ^ \
                    Ins ^ Indel ^ Inv ^ Conv)("RawVar")
-    RawVar = (CRawVar ^ (Suppress('(') + CRawVar + Suppress(')'))) + \
-             Suppress(Optional('?'))
+    RawVar = originalTextFor((CRawVar ^ (Suppress('(') + CRawVar + \
+                                         Suppress(')'))) + \
+                             Suppress(Optional('?')), False)
 
     # SingleVar -> Ref RawVar | TransLoc
     # ExtendedRawVar -> RawVar | `=' | `?'
