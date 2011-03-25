@@ -17,7 +17,7 @@ os.chdir('../..')
 site.addsitedir('.')
 
 from mutalyzer import Config
-from mutalyzer import Output
+from mutalyzer.output import Output
 from mutalyzer.variant_checker import check_variant
 
 
@@ -31,7 +31,7 @@ class TestMutalyzer(unittest.TestCase):
         Initialize test Mutalyzer module.
         """
         self.config = Config.Config()
-        self.output = Output.Output(__file__, self.config.Output)
+        self.output = Output(__file__, self.config.Output)
 
     def test_roll(self):
         """

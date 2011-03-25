@@ -677,8 +677,9 @@ class Scheduler() :
             self.__database.addToQueue(jobID, inputl, flag)
 
         # Spawn child
+        # Todo: Executable should be in bin/ directory.
         p = subprocess.Popen(["MutalyzerBatch",
-            "src/BatchChecker.py"], executable="python")
+            "mutalyzer/BatchChecker.py"], executable="python")
 
         #Wait for the BatchChecker to fork of the Daemon
         p.communicate()

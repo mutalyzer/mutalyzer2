@@ -425,6 +425,8 @@ class Snp:
         """
         output = Output(__file__, C.Output)
 
+        descriptions = []
+
         if rsId :
             output.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
             R = Retriever.Retriever(C.Retriever, output, None)

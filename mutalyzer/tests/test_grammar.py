@@ -15,7 +15,7 @@ site.addsitedir('.')
 
 from mutalyzer.grammar import Grammar
 from mutalyzer import Config
-from mutalyzer import Output
+from mutalyzer.output import Output
 
 
 class TestGrammar(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestGrammar(unittest.TestCase):
         Initialize test Grammar instance.
         """
         self.config = Config.Config()
-        self.output = Output.Output(__file__, self.config.Output)
+        self.output = Output(__file__, self.config.Output)
         self.grammar = Grammar(self.output)
 
     def test_some_variants(self):

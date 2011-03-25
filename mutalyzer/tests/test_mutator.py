@@ -17,7 +17,7 @@ os.chdir('../..')
 site.addsitedir('.')
 
 from mutalyzer import Config
-from mutalyzer import Output
+from mutalyzer.output import Output
 from mutalyzer import mutator
 
 
@@ -41,7 +41,7 @@ class TestMutator(unittest.TestCase):
         Initialize test mutator module.
         """
         self.config = Config.Config()
-        self.output = Output.Output(__file__, self.config.Output)
+        self.output = Output(__file__, self.config.Output)
 
     def _mutator(self, sequence):
         """
