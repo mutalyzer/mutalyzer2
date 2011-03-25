@@ -34,6 +34,29 @@ from mutalyzer import Config
 
 
 class _VariantError(Exception): pass
+class _UnknownPositionError(_VariantError): pass
+
+class _OffsetSignError(_VariantError):
+    def __init__(self, main, offset, acceptor):
+        """
+        @arg main:
+        @type main: string
+        @arg offset:
+        @type offset: string
+        @arg acceptor:
+        @type acceptor: bool
+        """
+        self.main = main
+        self.offset = offset
+        self.acceptor = acceptor
+
+class _OffsetNotFromBoundaryError(_VariantError):
+    def __init__(self, main):
+        """
+        @arg main:
+        @type main: string
+        """
+        self.main = main
 
 
 # Used in: _raw_variant
@@ -65,17 +88,11 @@ def _check_intronic_position(main, offset, transcript):
     sign.
 
     @arg main: Main coordinate of the position.
-    @type main: integer
+    @type main: int
     @arg offset: Offset coordinate of the position.
-    @type offset: integer
+    @type offset: int
     @arg transcript: Transcript under scrutiny.
     @type transcript: object
-
-    @return: True if the combination (main, offset) is valid for this
-             transcript, False otherwise.
-    @rtype: boolean
-
-    @todo: Use exceptions.
     """
     main_g = transcript.CM.x2g(main, 0)
     sites = transcript.CM.RNA
@@ -87,16 +104,20 @@ def _check_intronic_position(main, offset, transcript):
             if not i % 2:
                 # Splice acceptor, so sign must be -.
                 if oriented_offset > 0:
-                    return False
+                    raise _OffsetSignError(
+                        transcript.CM.int2main(main),
+                        transcript.CM.int2offset((main, offset)),
+                        True)
             else:
                 # Splice donor, so sign must be +.
                 if oriented_offset < 0:
-                    return False
+                    raise _OffsetSignError(
+                        transcript.CM.int2main(main),
+                        transcript.CM.int2offset((main, offset)),
+                        False)
         except ValueError:
             # The main coordinate is not a splice site.
-            return False
-
-    return True
+            raise _OffsetNotFromBoundaryError(transcript.CM.int2main(main))
 #_check_intronic_position
 
 
@@ -684,13 +705,12 @@ def _genomic_to_genomic(first_location, last_location):
 
     @todo: Exceptions.
     """
-    if not first_location.Main.isdigit():
-        # For ? in a position.
-        return None, None
+    if not first_location.Main or not last_location.Main:
+        # Unknown positions are denoted by the '?' character.
+        raise _UnknownPositionError()
 
-    if not last_location.Main.isdigit():
-        # For ? in a position.
-        return None, None
+    if not first_location.Main.isdigit() or not last_location.Main.isdigit():
+        raise _VariantError()
 
     first = int(first_location.Main)
     last = int(last_location.Main)
@@ -716,29 +736,27 @@ def _coding_to_genomic(first_location, last_location, transcript):
 
     @todo: Exceptions.
     """
-    if not first_location.Main.isdigit():
-        # For ? in a position.
-        return None, None
+    if not first_location.Main or not last_location.Main:
+        # Unknown positions are denoted by the '?' character.
+        raise _UnknownPositionError()
 
-    if not last_location.Main.isdigit():
-        # For ? in a position.
-        return None, None
+    if not first_location.Main.isdigit() or not last_location.Main.isdigit():
+        raise _VariantError()
 
     first_main = transcript.CM.main2int(first_location.MainSgn + \
                                         first_location.Main)
     first_offset = _get_offset(first_location)
-    first = transcript.CM.x2g(first_main, first_offset)
 
     last_main = transcript.CM.main2int(last_location.MainSgn + \
                                        last_location.Main)
     last_offset = _get_offset(last_location)
-    last = transcript.CM.x2g(last_main, last_offset)
 
-    # Todo: Exceptions.
-    if not _check_intronic_position(first_main, first_offset, transcript):
-        return None, None
-    if not _check_intronic_position(last_main, last_offset, transcript):
-        return None, None
+    # These raise exceptions on invalid positions.
+    _check_intronic_position(first_main, first_offset, transcript)
+    _check_intronic_position(last_main, last_offset, transcript)
+
+    first = transcript.CM.x2g(first_main, first_offset)
+    last = transcript.CM.x2g(last_main, last_offset)
 
     if transcript.CM.orientation == -1:
         first, last = last, first
@@ -763,7 +781,6 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     @type output: Modules.Output.Output
 
     @todo: Documentation.
-    @todo: Exceptions.
     """
     # {argument} may be a number, or a subsequence of the reference.
     # {sequence} is the variant subsequence.
@@ -827,19 +844,39 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
         if variant.EndLoc:
             last_location = variant.EndLoc.PtLoc
 
-        if transcript:
-            # Coding positioning.
-            first, last = _coding_to_genomic(first_location, last_location, transcript)
-        else:
-            # Genomic positioning.
-            first, last = _genomic_to_genomic(first_location, last_location)
-
-        if not first:
+        # Todo: Check these error messages for minus strand variants etc.
+        try:
+            if transcript:
+                # Coding positioning.
+                first, last = _coding_to_genomic(first_location, last_location, transcript)
+            else:
+                # Genomic positioning.
+                first, last = _genomic_to_genomic(first_location, last_location)
+        except _UnknownPositionError:
+            output.addMessage(__file__, 4, 'EUNKNOWN',
+                              'Unknown positions (denoted by "?") are ' \
+                              'not supported.')
+            raise _VariantError()
+        except _OffsetSignError as e:
+            output.addMessage(__file__, 3, 'EOFFSETSIGN', 'Offset %s from ' \
+                              'position %s is %s but should be %s.' % \
+                              (e.offset, e.main,
+                               'downstream' if e.acceptor else 'upstream',
+                               'upstream' if e.acceptor else 'downstream'))
+            raise _VariantError()
+        except _OffsetNotFromBoundaryError as e:
+            output.addMessage(__file__, 3, 'EOFFSETFROMBOUNDARY',
+                              'Offset may not be from position %s because ' \
+                              ' this is not an exon boundary.' % e.main)
+            raise _VariantError()
+        except _VariantError:
             # Todo: What does this situation really mean? I don't think
             # this is the right message.
-            output.addMessage(__file__, 3, 'ESPLICE', 'Invalid intronic ' \
-                'position given.')
-            raise _VariantError()
+            #output.addMessage(__file__, 3, 'ESPLICE', 'Invalid intronic ' \
+            #                  'position given.')
+            output.addMessage(__file__, 4, 'EPOSITION',
+                              'Could not determine position.')
+            raise
 
     if last < first:
         output.addMessage(__file__, 3, 'ERANGE', 'End position is smaller than ' \
@@ -1107,6 +1144,10 @@ def _process_variant(mutator, description, record, output):
     try:
         if description.SingleAlleleVarSet:
             for var in description.SingleAlleleVarSet:
+                # Todo: if _VariantError was called, we might go on processing
+                # the other raw variants (and add a message skipping this
+                # raw variant).
+                # Perhaps we should have a separate _RawVariantError for this.
                 _process_raw_variant(mutator, var.RawVar, record, transcript,
                                      output)
         else:
