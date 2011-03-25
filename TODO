@@ -12,3 +12,11 @@ Get rid of mail.txt in the root dir.
 Europium copy:
 Hostname aanpassen.
 Mailserver.
+
+
+Useful Python example projects:
+http://code.djangoproject.com/browser/django/trunk
+http://twistedmatrix.com/trac/browser/trunk
+https://github.com/webpy/webpy
+https://github.com/mitsuhiko/jinja2
+https://bitbucket.org/mramm/tg-21/src

@@ -301,6 +301,32 @@ i {
 	font-family : Arial, Helvetica, sans-serif;
 }
 
+.messages {
+    width: 620px;
+}
+
+.debug, .info, .warning, .error {
+    padding-left: 25px;
+    background: left top no-repeat;
+    cursor: pointer;
+}
+
+.debug {
+    background-image: url('../images/debug.png');
+}
+
+.info {
+    background-image: url('../images/info.png');
+}
+
+.warning {
+    background-image: url('../images/warning.png');
+}
+
+.error {
+    background-image: url('../images/error.png');
+}
+
 .thnormal {  
 	font-family: Arial, Helvetica, sans-serif; 
 	font-weight: bold; 

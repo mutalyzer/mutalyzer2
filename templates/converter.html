@@ -45,35 +45,27 @@
           </form>
       </table> <!-- inputform -->
 
-      <div tal:condition = "gName">
-        <br>
-        <br>
-        <h3>Output:</h3>
-        <br>
-        <b>Chromosomal Variant:</b><br>
-        <pre><div tal:replace = "structure string:${gName}<br>"></div></pre>
-        <b tal:condition = "not:cNames">No transcripts found in mutation region</b><br><br>
-      </div>
-
-      <div tal:condition = "cNames">
-        <b>Found transcripts in mutation region:</b><br>
-        <pre><div tal:repeat = "i cNames"
-             tal:replace = "structure string:${i}<br>">
-        </div></pre>
-      </div>
-
-      <div tal:condition = "debug">
-        <b>Debug output:</b><br>
-        <pre><div tal:repeat = "i debug"
-             tal:replace = "structure string:${i}<br>">
-        </div></pre>
-      </div>
-
-      <div tal:condition = "errors">
-        <b>Error output:</b><br>
-        <pre><div tal:repeat = "i errors"
-             tal:replace = "structure string:${i}<br>">
-        </div></pre>
+      <div tal:condition = "posted">
+        <h3>Results:</h3>
+        <div class="messages">
+        <p tal:repeat = "m messages" tal:content = "m/description"
+           tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
+           onclick = "expandMessage(this);"></p>
+        <p tal:content = "summary"></p>
+        </div>
+        <div tal:condition = "gName">
+          <br>
+          <br>
+          <b>Chromosomal Variant:</b><br>
+          <pre><div tal:replace = "structure string:${gName}<br>"></div></pre>
+          <b tal:condition = "not:cNames">No transcripts found in mutation region</b><br><br>
+        </div>
+        <div tal:condition = "cNames">
+          <b>Found transcripts in mutation region:</b><br>
+          <pre><div tal:repeat = "i cNames"
+                    tal:replace = "structure string:${i}<br>">
+          </div></pre>
+        </div>
       </div>
 
     </div> <!-- div metal:define-macro="content" -->

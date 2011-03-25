@@ -19,7 +19,6 @@ positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
 @requires: Modules.Config 
 @requires: Modules.Db 
 @requires: Modules.Crossmap
-@requires: Modules.Output
 @requires: Modules.Serializers.SoapMessage
 @requires: Modules.Serializers.Mapping
 @requires: Modules.Serializers.Transcript
@@ -33,7 +32,6 @@ from mutalyzer import Config     # Config()
 from mutalyzer import Db         # Db(), get_NM_version(), get_NM_info()
 from mutalyzer import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
                                # offset2int(), info()
-from mutalyzer import Output     # Output(), LogMsg()
 from mutalyzer.Serializers import SoapMessage, Mapping, Transcript
 
 from Bio.Seq import reverse_complement

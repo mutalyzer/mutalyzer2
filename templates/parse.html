@@ -29,12 +29,15 @@
                onClick = "clearForm(this.form, 'variant');">
       </form><br>
       <div tal:condition = "variant">
-        <h3>Output:</h3>
+        <h3>Variant syntax checker results:</h3>
         <div tal:condition = "parseError">
-          <div tal:repeat = "i messages"
-               tal:replace = "structure string:${i}<br>">
+          <div class="messages">
+            <p tal:repeat = "m messages" tal:content = "m/description"
+               tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
+               onclick = "expandMessage(this);"></p>
+            <p tal:content = "summary"></p>
+            <br>
           </div>
-          <br>
           <h4>Details of the parse error:</h4>
           <pre tal:content = 
             "structure string:${parseError/0}<br>${parseError/1}">

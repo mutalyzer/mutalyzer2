@@ -36,12 +36,13 @@
         <br>
       </div>
       <div tal:condition = "lastpost">
-        <h3>Mutalyzer output:</h3>
-        <br>
-        <div tal:repeat = "i messages"
-             tal:replace = "structure string:${i}<br>">
+        <h3>Name checker results:</h3>
+        <div class="messages">
+        <p tal:repeat = "m messages" tal:content = "m/description"
+           tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
+           onclick = "expandMessage(this);"></p>
+        <p tal:content = "summary"></p>
         </div>
-        <div tal:replace = "summary"></div><br>
         <br>
         <div tal:condition = "parseError">
           <h4>Details of the parse error:</h4>

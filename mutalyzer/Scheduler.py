@@ -7,7 +7,6 @@ Module used to add and manage the Batch Jobs.
 @requires: smtplib
 @requires: email.mime.text.MIMEText
 @requires: Modules.Config
-@requires: Modules.Output
 @requires: Modules.Mapper
 @requires: Mutalyzer
 """
@@ -23,7 +22,7 @@ import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 
 from mutalyzer import Config              # Config.Config
-from mutalyzer import Output              # Output.Output
+from mutalyzer.output import Output
 from mutalyzer import Mapper              # Mapper.Converter
 from mutalyzer import Retriever           # Retriever.Retriever
 
@@ -366,7 +365,7 @@ class Scheduler() :
         """
 
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
             "Received NameChecker batchvariant " + cmd)
 
@@ -436,7 +435,7 @@ class Scheduler() :
         """
 
         C = Config.Config()
-        output = Output.Output(__file__, C.Output)
+        output = Output(__file__, C.Output)
         grammar = Grammar(output)
 
         output.addMessage(__file__, -1, "INFO",
@@ -494,7 +493,7 @@ class Scheduler() :
         """
 
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         variant = cmd
         variants = None
         gName = ""
@@ -588,7 +587,7 @@ class Scheduler() :
         """
 
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
             "Received SNP converter batch rs" + cmd)
 
@@ -596,13 +595,14 @@ class Scheduler() :
         # Todo: Do something with the flags?
         skip = self.__processFlags(O, flags)
 
+        descriptions = []
         if not skip :
             R = Retriever.Retriever(C.Retriever, O, None)
-            R.snpConvert(cmd, O)
+            descriptions = R.snpConvert(cmd)
 
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd
-        outputline += "%s\t" % "|".join(O.getOutput('snp'))
+        outputline += "%s\t" % "|".join(descriptions)
         outputline += "%s\t" % "|".join(O.getBatchMessages(3))
 
         outputline += "\n"

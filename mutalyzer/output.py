@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 Module for storing output and messages.
 Output is stored as a named list that can be expanded.
@@ -16,15 +14,17 @@ Message levels:
     - 3 : Error   ; Serious errors that can be compensated for.
     - 4 : Fatal   ; Errors that are not recoverable.
     - 5 : Off     ; Can be used as a log/output level to turn off output.
-
-@requires: time
 """
 # Public classes:
 #     - Message ; Container class for message variables.
 #     - Output  ; Output interface for errors, warnings and logging.
 
 
-import time # strftime()
+import time
+
+from mutalyzer import util
+from mutalyzer.Serializers import SoapMessage
+
 
 class Output() :
     """
@@ -44,11 +44,6 @@ class Output() :
                                        from the config file and the calling
                                        module.
         - __del__()                  ; Close the logfile and clean up.
-
-    Private methods:
-        - __niceName(filename) ; Strip the path and the extention from a
-                                 filename.
-        - __levelToName(level) ; Convert a log level to a readable string.
 
     Public methods:
         - addMessage(filename, level, code, description) ; Add a message to
@@ -86,7 +81,7 @@ class Output() :
         self.__config = config
         self.__outputData = {}
         self.__messages = []
-        self.__instance = self.__niceName(instance)
+        self.__instance = util.nice_filename(instance)
         self.__loghandle = open(self.__config.log, "a+")
         self.__errors = 0
         self.__warnings = 0
@@ -111,44 +106,6 @@ class Output() :
             del i
     #__del__
 
-    def __niceName(self, filename) :
-        """
-        Strip the path and the extention from a filename.
-
-        @arg filename: A complete path plus extention
-        @type filename: string
-
-        @return: The bare filename without a path and extention
-        @rtype: string
-        """
-
-        return filename.split('/')[-1].split('.')[0]
-    #__niceName
-
-    def __levelToName(self, level) :
-        """
-        Convert a log level to a readable string.
-
-        @arg level:  A log level (an integer between -1 and 5)
-        @type level: integer
-
-        @return:     A readable description of the log level
-        @rtype:      string
-        """
-
-        if level == 0 :
-            return "Debug: "
-        if level == 1 :
-            return "Info: "
-        if level == 2 :
-            return "Warning: "
-        if level == 3 :
-            return "Error: "
-        if level == 4 :
-            return "Fatal: "
-        return ""
-    #__levelToName
-
     def addMessage(self, filename, level, code, description) :
         """
         Add a message to the message list.
@@ -172,23 +129,23 @@ class Output() :
         @arg code:        Error code of the message
         @arg description: Description of the message
         """
-
-        niceName = self.__niceName(filename)
+        nice_name = util.nice_filename(filename)
+        message = Message(nice_name, level, code, description)
 
         # Append a new message object to the messages list.
-        self.__messages.append(Message(niceName, level, code, description))
+        self.__messages.append(message)
 
-        if level == 2 :
+        if level == 2:
             self.__warnings += 1
-        if level > 2 :
+        if level > 2:
             self.__errors += 1
 
         # Log the message if the message is important enough, or if it is only
         # meant to be logged (level -1).
         if level >= self.__config.loglevel or level == -1 :
             self.__loghandle.write(time.strftime(
-                self.__config.datestring + ' ') + "%s (%s) %s: %s%s\n" % (
-                    self.__instance, niceName, code, self.__levelToName(level),
+                self.__config.datestring + ' ') + "%s (%s) %s: %s: %s\n" % (
+                    self.__instance, nice_name, code, message.named_level(),
                     description))
             self.__loghandle.flush()
         #if
@@ -205,16 +162,16 @@ class Output() :
         @return: A list of messages
         @rtype: list
         """
-
-        ret = []
-        for i in self.__messages :
-            if i.level >= self.__config.outputlevel :
-                #print "%s(%s): %s" % (self.__levelToName(i.level), i.origin,
-                #                      i.description)
-                ret.append("%s(%s): %s" % (self.__levelToName(i.level),
-                                           i.origin, i.description))
-        return ret
+        return filter(lambda m: m.level >= self.__config.outputlevel,
+                      self.__messages)
     #getMessages
+
+#        ret = []
+#        for i in self.__messages :
+#            if i.level >= self.__config.outputlevel :
+#                ret.append('%s: (%s): %s' % (i.named_level(), i.origin,
+#                                             i.description))
+#        return ret
 
     def getSoapMessages(self):
         """
@@ -229,10 +186,6 @@ class Output() :
         @return: list of SoapMessages
         @rtype: list
         """
-
-        #TODO: MOVE to top if works
-        from mutalyzer.Serializers import SoapMessage
-
         ret = []
         for i in self.__messages:
             if i.level >= self.__config.outputlevel:
@@ -306,7 +259,7 @@ class Output() :
 
         @arg name: Name of a node in the output dictionary
         @type name: string
-        
+
         @return: output dictionary
         @rtype: dictionary
         """
@@ -351,14 +304,8 @@ class Output() :
         @return: A filtered list
         @rtype: list
         """
-
-        ret = []
-        for i in self.__messages:
-            if i.code == errorcode:
-                ret.append(i)
-        return ret
+        return filter(lambda m: m.code == errorcode, self.__messages)
     #getMessagesWithErrorCode
-
 
     def Summary(self) :
         """
@@ -421,17 +368,37 @@ class Message() :
         @arg description: A description of the message
         @type description: string
         """
-
         self.origin = origin
         self.level = level
         self.code = code
         self.description = description
     #__init__
-#Message
 
-#
-# Unit test.
-#
-if __name__ == "__main__" :
-    pass
-#if
+    def __repr__(self):
+        return 'Message("%s", %i, "%s", "%s")' % \
+               (self.origin, self.level, self.code, self.description)
+
+    def __str__(self):
+        return '%s (%s): %s' % \
+               (self.named_level(), self.origin, self.description)
+
+    def named_level(self):
+        """
+        Get message log level as readable string.
+
+        @return:     A readable description of the log level.
+        @rtype:      string
+        """
+        if self.level == 0:
+            return "Debug"
+        if self.level == 1:
+            return "Info"
+        if self.level == 2:
+            return "Warning"
+        if self.level == 3:
+            return "Error"
+        if self.level == 4:
+            return "Fatal"
+        return ''
+    #named_level
+#Message

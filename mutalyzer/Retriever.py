@@ -265,25 +265,23 @@ class Retriever(object) :
     #_updateDBmd5
 
 
-    def snpConvert(self, rsId, O) :
+    def snpConvert(self, rsId) :
         """
-        Search an rsId in dbSNP and return all annotated HGVS notations of
+        Search for an rsId in dbSNP and return all annotated HGVS notations of
         it.
 
-        @arg rsId: The id of the SNP.
+        @arg rsId: The rsId of the SNP (example: 'rs9919552').
         @type rsId: string
-        @arg O: The Output object.
-        @type O: Modules.Output.Output
 
-        @return: A list of HGVS notations
-        @rtype: list
+        @return: A list of HGVS notations.
+        @rtype: list(string)
         """
-
         # A simple input check.
         ID = rsId[2:]
         if rsId[:2] != "rs" or not ID.isdigit() :
-            self._output.addMessage(__file__, 4, "ESNPID", "This is not a" \
-                " valid dbSNP id.")
+            self._output.addMessage(__file__, 4, 'ESNPID',
+                                    'This is not a valid dbSNP id.')
+            return []
 
         # Query dbSNP for the SNP.
         response = Entrez.efetch(db = "SNP", id = ID, rettype = "flt",
@@ -296,9 +294,9 @@ class Retriever(object) :
 
         if len(set) < 1:
             # Not even the expected root element is present.
-            O.addMessage(__file__, 4, 'EENTREZ',
-                         'Unkown dbSNP error. Got no result from dbSNP.')
-            return
+            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unkown dbSNP ' \
+                                     'error. Got no result from dbSNP.')
+            return []
 
         rs = set[0].getElementsByTagName('Rs')
 
@@ -311,16 +309,20 @@ class Retriever(object) :
             message = ''.join(text)
             if message.find('cannot get document summary') != -1:
                 # Entrez does not have this rs ID.
-                O.addMessage(__file__, 4, 'EENTREZ',
-                             'ID rs%s could be found in dbSNP.' % ID)
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'ID rs%s could be found in dbSNP.' % ID)
             else:
                 # Something else was wrong (print {message} to see more).
-                O.addMessage(__file__, 4, 'EENTREZ',
-                             'Unkown dbSNP error. Got no result from dbSNP.')
-            return
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'Unkown dbSNP error. Got no result ' \
+                                        'from dbSNP.')
+            return []
 
+        snps = []
         for i in rs[0].getElementsByTagName('hgvs'):
-            self._output.addOutput('snp', i.lastChild.data.encode('utf8'))
+            snps.append(i.lastChild.data.encode('utf8'))
+
+        return snps
     #snpConvert
 #Retriever
 

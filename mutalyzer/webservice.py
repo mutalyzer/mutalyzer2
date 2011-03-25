@@ -56,8 +56,8 @@ os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
 from mutalyzer.grammar import Grammar
 from mutalyzer import variant_checker
+from mutalyzer.output import Output
 from mutalyzer import Db
-from mutalyzer import Output
 from mutalyzer import Config
 from mutalyzer import Mapper
 from mutalyzer import Retriever
@@ -181,7 +181,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscripts(%s %s %s)" % (build,
@@ -217,7 +217,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscriptsByGene(%s %s)" % (build,
@@ -259,7 +259,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
@@ -296,7 +296,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getGeneName(%s %s)" % (build, accno))
@@ -357,7 +357,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Reveived request mappingInfo(%s %s %s %s)" % (
@@ -397,7 +397,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
 
         O.addMessage(__file__, -1, "INFO",
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
@@ -427,7 +427,7 @@ class MutalyzerService(DefinitionBase) :
         """
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromAccession(%s %s)" % (build, name))
@@ -460,7 +460,7 @@ class MutalyzerService(DefinitionBase) :
         """
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromName(%s %s)" % (build, accNo))
@@ -493,7 +493,7 @@ class MutalyzerService(DefinitionBase) :
         """
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
-        L = Output.Output(__file__, C.Output)
+        L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getchromName(%s %s)" % (build, acc))
@@ -529,7 +529,7 @@ class MutalyzerService(DefinitionBase) :
 
         C = Config.Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
@@ -564,7 +564,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: object
         """
         C = Config.Config() # Read the configuration file.
-        output = Output.Output(__file__, C.Output)
+        output = Output(__file__, C.Output)
         output.addMessage(__file__, -1, "INFO",
                           "Received request checkSyntax(%s)" % (variant))
 
@@ -590,7 +590,7 @@ class MutalyzerService(DefinitionBase) :
         Todo: documentation.
         """
         C = Config.Config() # Read the configuration file.
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
         #Mutalyzer.process(variant, C, O)
@@ -648,7 +648,7 @@ class MutalyzerService(DefinitionBase) :
         Todo: documentation.
         """
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
 
         O.addMessage(__file__, -1, "INFO",
@@ -715,7 +715,7 @@ class MutalyzerService(DefinitionBase) :
                                       - product
         """
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
 
         O.addMessage(__file__, -1, "INFO",
@@ -831,7 +831,7 @@ class MutalyzerService(DefinitionBase) :
         """
 
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
 
@@ -848,7 +848,7 @@ class MutalyzerService(DefinitionBase) :
         # Todo: use SOAP Fault object here (see Trac issue #41).
         if not UD:
             error = 'The request could not be completed\n' \
-                    + '\n'.join(O.getMessages())
+                    + '\n'.join(map(lambda m: str(m), O.getMessages()))
             raise Exception(error)
 
         return UD
@@ -861,7 +861,7 @@ class MutalyzerService(DefinitionBase) :
         Todo: documentation, error handling, argument checking, tests.
         """
         C = Config.Config()
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
 

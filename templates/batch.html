@@ -115,9 +115,11 @@
 
       <div tal:condition = "errors" id="errors">
           <b>Errors:</b><br />
-        <div tal:repeat = "i errors"
-                  tal:replace = "structure string:${i}<br>">
-              </div><br />
+          <div class="messages">
+            <p tal:repeat = "m errors" tal:content = "m/description"
+               tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
+               onclick = "expandMessage(this);"></p>
+          </div>
      </div>
 
   <div tal:condition = "messages">

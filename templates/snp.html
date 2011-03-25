@@ -32,11 +32,13 @@
       </form>
       <div tal:condition = "lastpost">
         <br>
-        <h3>Results:</h3><br>
-        <div tal:repeat = "i messages"
-          tal:replace = "structure string:${i}<br>">
+        <h3>SNP converter results:</h3>
+        <div class="messages">
+        <p tal:repeat = "m messages" tal:content = "m/description"
+           tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
+           onclick = "expandMessage(this);"></p>
+        <p tal:content = "summary"></p>
         </div>
-        <div tal:replace = "summary"></div><br>
         <br>
         <h4>dbSNP rs ID:</h4>
         <tt tal:content = "lastpost"></tt><br>

@@ -681,3 +681,41 @@ def generate_id():
     unique_per_second = 100
     time.sleep(1.0 / unique_per_second)
     return int(time.time() * unique_per_second)
+#generate_id
+
+
+def nice_filename(filename):
+    """
+    Strip the path and the extention from a filename.
+
+    @arg filename: A complete path plus extention.
+    @type filename: string
+
+    @return: The bare filename without a path and extention.
+    @rtype: string
+    """
+    return filename.split('/')[-1].split('.')[0]
+#nice_filename
+
+
+def message_info(message):
+    """
+    Construct a dictionary with information about {message}.
+
+    @arg message: A message instance.
+    @type message: output.Message
+
+    @return: A dictionary with fields of {message}.
+    @rtype: dictionary
+    """
+    classes = {0: 'debug',
+               1: 'info',
+               2: 'warning',
+               3: 'error',
+               4: 'error'}
+
+    return {'level':       message.named_level(),
+            'origin':      message.origin,
+            'class':       classes[message.level],
+            'description': message.description}
+#message_info

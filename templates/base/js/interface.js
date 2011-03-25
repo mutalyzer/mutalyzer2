@@ -99,6 +99,13 @@ function updatePercentage() {
 }
 
 
+function expandMessage(message) {
+    message.innerHTML += '<br><i>' + message.getAttribute('data-level')
+        + '</i>, origin: ' + message.getAttribute('data-origin') + '.';
+    message.onclick = null;
+}
+
+
 function linkify(text){
     var replacePattern = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.([-\*]?\d+((\+|-)[ud]?\d+)?)(_([-\*]?\d+((\+|-)[ud]?\d+)?))?(([delinsup]+[ACTGactg]*)|([ACTGactg].[ACTGactg])))/gim;
     //reference = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.

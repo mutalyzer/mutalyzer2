@@ -72,12 +72,13 @@ if not __name__ == '__main__':
     os.chdir(root_dir)
 
 from mutalyzer import VERSION, NOMENCLATURE_VERSION, RELEASE_DATE
+from mutalyzer import util
 from mutalyzer.grammar import Grammar
 from mutalyzer import webservice
-from mutalyzer import VarInfo
 from mutalyzer import variant_checker
+from mutalyzer.output import Output
+from mutalyzer import VarInfo
 from mutalyzer import Config
-from mutalyzer import Output
 from mutalyzer import Mapper
 from mutalyzer import Db
 from mutalyzer import Scheduler
@@ -318,7 +319,7 @@ class GetGS:
         @return: Output of name checker if forward is set, otherwise the
                  GeneSymbol with the variant notation as string.
         """
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
 
         i = web.input(mutationName=None, variantRecord=None, forward=None)
 
@@ -371,12 +372,12 @@ class SyntaxCheck:
         Parameters:
         - variant: Variant name to check.
         """
-        output = Output.Output(__file__, C.Output)
+        output = Output(__file__, C.Output)
         i = web.input()
         variant = i.variant
         if variant.find(',') >= 0:
             output.addMessage(__file__, 2, "WCOMMASYNTAX",
-                         "Comma's are not allowed in the syntax, autofixed")
+                         "Comma's are not allowed in the syntax, autofixed.")
             variant = variant.replace(',', '')
             #args["variant"]=variant
         grammar = Grammar(output)
@@ -385,7 +386,7 @@ class SyntaxCheck:
         if pe: pe[0] = pe[0].replace('<', "&lt;")
         args = {
             "variant"       : variant,
-            "messages"      : output.getMessages(),
+            "messages"      : map(util.message_info, output.getMessages()),
             "parseError"    : pe,
             "debug"         : ""
         }
@@ -422,20 +423,20 @@ class Snp:
 
         @kwarg rsId: The dbSNP rs number.
         """
-        O = Output.Output(__file__, C.Output)
+        output = Output(__file__, C.Output)
 
         if rsId :
-            O.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
-            R = Retriever.Retriever(C.Retriever, O, None)
-            R.snpConvert(rsId, O)
-            O.addMessage(__file__, -1, "INFO",
-                         "Finished processing rs%s" % rsId)
+            output.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
+            R = Retriever.Retriever(C.Retriever, output, None)
+            descriptions = R.snpConvert(rsId)
+            output.addMessage(__file__, -1, "INFO",
+                              "Finished processing rs%s" % rsId)
         #if
 
         args = {
-            "snp"      : O.getOutput("snp"),
-            "messages" : O.getMessages(),
-            "summary"  : O.Summary()[2],
+            "snp"      : descriptions,
+            "messages" : map(util.message_info, output.getMessages()),
+            "summary"  : output.Summary()[2],
             "lastpost" : rsId
         }
 
@@ -474,7 +475,7 @@ class PositionConverter:
         @kwarg build: Human genome build (currently 'hg18' or 'hg19').
         @kwarg variant: Variant to convert.
         """
-        output = Output.Output(__file__, C.Output)
+        output = Output(__file__, C.Output)
 
         avail_builds = C.Db.dbNames[::-1]
 
@@ -489,8 +490,7 @@ class PositionConverter:
             "gName"        : "",
             "cNames"       : [],
             "messages"     : [],
-            "errors"       : [],
-            "debug"        : []
+            "posted"       : build and variant
         }
 
         if build and variant:
@@ -523,7 +523,7 @@ class PositionConverter:
                 #if
             #if
 
-            attr["errors"].extend(output.getMessages())
+            attr['messages'] = map(util.message_info, output.getMessages())
         return render.converter(attr)
 #PositionConverter
 
@@ -608,35 +608,35 @@ class Check:
         @kwarg interactive: Run interactively, meaning we wrap the result in
                             the site layout and include the HTML form.
         """
-        O = Output.Output(__file__, C.Output)
+        output = Output(__file__, C.Output)
 
         if name:
-            O.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
+            output.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
             # Todo: The following is probably a problem elsewhere too.
             # We stringify the variant, because a unicode string crashes
             # Bio.Seq.reverse_complement in Mapper.py:607.
             #RD = Mutalyzer.process(str(name), C, O)
-            variant_checker.check_variant(str(name), C, O)
-            O.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
-                         name)
+            variant_checker.check_variant(str(name), C, output)
+            output.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
+                              name)
 
-        errors, warnings, summary = O.Summary()
-        recordType = O.getIndexedOutput("recordType",0)
-        reference = O.getIndexedOutput("reference", 0)
+        errors, warnings, summary = output.Summary()
+        recordType = output.getIndexedOutput("recordType",0)
+        reference = output.getIndexedOutput("reference", 0)
         if recordType == "LRG" :
             reference = reference + ".xml" if reference else ""
         else :
             reference = reference + ".gb" if reference else ""
 
-        pe = O.getOutput("parseError")
+        pe = output.getOutput("parseError")
         if pe :
             pe[0] = pe[0].replace('<', "&lt;")
 
         genomicDNA = True
-        if O.getIndexedOutput("molType", 0) == 'n' :
+        if output.getIndexedOutput("molType", 0) == 'n' :
             genomicDNA = False
 
-        genomicDescription = O.getIndexedOutput("genomicDescription", 0)
+        genomicDescription = output.getIndexedOutput("genomicDescription", 0)
 
         def urlEncode(descriptions):
             """
@@ -657,32 +657,29 @@ class Check:
         #       of in mutalyzer/variant_checker.py.
         args = {
             "lastpost"           : name,
-            "messages"           : O.getMessages(),
+            "messages"           : map(util.message_info, output.getMessages()),
             "summary"            : summary,
             "parseError"         : pe,
             "errors"             : errors,
             "genomicDescription" : urlEncode([genomicDescription])[0] if genomicDescription else "",
-            "chromDescription"   : O.getIndexedOutput("genomicChromDescription", 0),
+            "chromDescription"   : output.getIndexedOutput("genomicChromDescription", 0),
             "genomicDNA"         : genomicDNA,
-            "visualisation"      : O.getOutput("visualisation"),
-            "descriptions"       : urlEncode(O.getOutput("descriptions")),
-            "protDescriptions"   : O.getOutput("protDescriptions"),
-            "oldProtein"         : O.getOutput("oldProteinFancy"),
-            "altStart"           : O.getIndexedOutput("altStart", 0),
-            "altProtein"         : O.getOutput("altProteinFancy"),
-            "newProtein"         : O.getOutput("newProteinFancy"),
-            "exonInfo"           : O.getOutput("exonInfo"),
-            "cdsStart_g"         : O.getIndexedOutput("cdsStart_g", 0),
-            "cdsStart_c"         : O.getIndexedOutput("cdsStart_c", 0),
-            "cdsStop_g"          : O.getIndexedOutput("cdsStop_g", 0),
-            "cdsStop_c"          : O.getIndexedOutput("cdsStop_c", 0),
-            "restrictionSites"   : O.getOutput("restrictionSites"),
-            "legends"            : O.getOutput("legends"),
+            "visualisation"      : output.getOutput("visualisation"),
+            "descriptions"       : urlEncode(output.getOutput("descriptions")),
+            "protDescriptions"   : output.getOutput("protDescriptions"),
+            "oldProtein"         : output.getOutput("oldProteinFancy"),
+            "altStart"           : output.getIndexedOutput("altStart", 0),
+            "altProtein"         : output.getOutput("altProteinFancy"),
+            "newProtein"         : output.getOutput("newProteinFancy"),
+            "exonInfo"           : output.getOutput("exonInfo"),
+            "cdsStart_g"         : output.getIndexedOutput("cdsStart_g", 0),
+            "cdsStart_c"         : output.getIndexedOutput("cdsStart_c", 0),
+            "cdsStop_g"          : output.getIndexedOutput("cdsStop_g", 0),
+            "cdsStop_c"          : output.getIndexedOutput("cdsStop_c", 0),
+            "restrictionSites"   : output.getOutput("restrictionSites"),
+            "legends"            : output.getOutput("legends"),
             "reference"          : reference
         }
-
-        # Todo: This shouldn't really be necessary
-        del O
 
         return render.check(args, standalone=not interactive)
 #Check
@@ -726,7 +723,7 @@ class BatchProgress:
 
         @todo: The 'progress' template does not exist.
         """
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
 
         attr = {"percentage": 0}
 
@@ -798,7 +795,7 @@ class BatchChecker:
                           (default), 'SyntaxChecker', 'PositionConverter', or
                           'SnpConverter'.
         """
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
 
         maxUploadSize = C.Batch.batchInputMaxSize
 
@@ -867,7 +864,7 @@ class BatchChecker:
                                         " is scheduled, you will receive an email when the job is "
                                         "finished.")
 
-            attr["errors"].extend(O.getMessages())
+            attr["errors"].extend(map(util.message_info, O.getMessages()))
 
         return render.batch(attr)
 #BatchChecker
@@ -986,7 +983,7 @@ class Uploader:
         """
         maxUploadSize = C.Retriever.maxDldSize
 
-        O = Output.Output(__file__, C.Output)
+        O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
         R = Retriever.GenBankRetriever(C.Retriever, O, D)
 
@@ -1052,7 +1049,7 @@ class Uploader:
             if not UD:
                 #Something went wrong
                 errors += ["The request could not be completed"]
-                errors.extend(O.getMessages())
+                errors.extend(map(lambda m: str(m), O.getMessages()))
 
         args = {
             "UD"      : UD,
