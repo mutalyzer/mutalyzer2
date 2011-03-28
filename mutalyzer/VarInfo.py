@@ -28,7 +28,7 @@ from mutalyzer import Db       # Db(), get_NM_version(), get_NM_info()
 from mutalyzer import Crossmap # Crossmap(), g2x(), x2g(), main2int(),
                              # offset2int(), info()
 from mutalyzer.output import Output
-from mutalyzer import Config
+from mutalyzer.config import Config
 from mutalyzer import Mapper
 
 def __sl2il(l) :
@@ -114,7 +114,7 @@ def main(LOVD_ver, build, acc, var) :
     @rtype: 
     """
 
-    C = Config.Config()
+    C = Config()
     O = Output(__file__, C.Output)
 
     O.addMessage(__file__, -1, "INFO",

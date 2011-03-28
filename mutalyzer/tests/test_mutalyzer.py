@@ -16,9 +16,9 @@ from Bio.Seq import Seq
 os.chdir('../..')
 site.addsitedir('.')
 
-from mutalyzer import Config
+from mutalyzer.config import Config
 from mutalyzer.output import Output
-from mutalyzer.variant_checker import check_variant
+from mutalyzer.variantchecker import check_variant
 
 
 class TestMutalyzer(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestMutalyzer(unittest.TestCase):
         """
         Initialize test Mutalyzer module.
         """
-        self.config = Config.Config()
+        self.config = Config()
         self.output = Output(__file__, self.config.Output)
 
     def test_roll(self):

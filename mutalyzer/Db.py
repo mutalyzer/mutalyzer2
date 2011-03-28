@@ -25,6 +25,7 @@ import MySQLdb # connect(), escape_string()
 import types   # TupleType
 import time    # strftime()
 import os      # os.remove()
+import tempfile
 from mutalyzer import util
 
 #
@@ -529,10 +530,13 @@ class Remote(Db) :
         window (defined in the configuration file) and gather the results
         into one mapping table.
 
-        The results will be written to a temporary file (also defined in
-        the configuration file) to be imported in the local database with
-        the load_Update() function.
+        The results will be written to a temporary file to be imported in
+        the local database with the load_Update() function.
 
+        Return temporary filename used to store the results.
+
+        @return: Filename used to store the results.
+        @rtype: string
 
         SQL tables from dbNames:
             - gbStatus ; acc -> version mapping (NM to NM + version),
@@ -554,7 +558,7 @@ class Remote(Db) :
               AND time >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
         """, self.__config.UpdateInterval
 
-        handle = open(self.__config.TempFile, "w")
+        handle, filename = tempfile.mkstemp(text=True)
 
         # Convert the results to a tab delimited file.
         for i in self.query(statement) :
@@ -564,6 +568,7 @@ class Remote(Db) :
         #for
 
         handle.close()
+        return filename
     #get_Update
 #Remote
 
@@ -614,11 +619,13 @@ class Update(Db) :
         Db.__init__(self, build, config.LocalMySQLuser, config.LocalMySQLhost)
     #__init__
 
-    def load_Update(self) :
+    def load_Update(self, filename) :
         """
-        Load the updates from the temporary file (defined in the
-        configuration file) created by the get_Update() function and import
-        it in the local database.
+        Load the updates from the temporary file created by the get_Update()
+        function and import it in the local database.
+
+        @arg filename: Filename to read the update from.
+        @type filename: string
 
         SQL tables from dbNames (altered):
             - map_temp ; Created and loaded with data from TempFile.
@@ -637,11 +644,11 @@ class Update(Db) :
         statement = """
             LOAD DATA LOCAL INFILE %s
               INTO TABLE map_temp;
-        """, self.__config.TempFile
+        """, filename
 
         self.query(statement)
 
-        os.remove(self.__config.TempFile)
+        os.remove(filename)
     #load_Update
 
     def count_Updates(self) :

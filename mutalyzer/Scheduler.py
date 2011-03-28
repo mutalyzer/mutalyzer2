@@ -21,12 +21,12 @@ import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 
-from mutalyzer import Config              # Config.Config
+from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import Mapper              # Mapper.Converter
 from mutalyzer import Retriever           # Retriever.Retriever
 
-from mutalyzer import variant_checker
+from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 
 
@@ -115,7 +115,7 @@ class Scheduler() :
         Send an e-mail containing an url to a batch job submitter.
 
         Private variables:
-            - __config ; The variables mailMessage, mailSubject and mailFrom
+            - __config ; The variables mailSubject and mailFrom
                        are used.
         
         @todo: Handle Connection errors in a try, except clause
@@ -129,10 +129,18 @@ class Scheduler() :
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 
-        # Todo: It seems unnecessary to have this configurable.
-        handle = open(self.__config.mailMessage)
-        message = MIMEText(handle.read() % url)
-        handle.close()
+        message = MIMEText("""Dear submitter,
+
+The batch operation you have submitted, has been processed successfully.
+
+Your results can be found here:
+%s
+
+Thanks for using Mutalyzer.
+
+
+With kind regards,
+Mutalyzer batch checker.""" % url)
 
         message["Subject"] = self.__config.mailSubject
         message["From"] = self.__config.mailFrom
@@ -365,7 +373,7 @@ class Scheduler() :
         @type flags:
         """
 
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
             "Received NameChecker batchvariant " + cmd)
@@ -377,7 +385,7 @@ class Scheduler() :
             #Run mutalyzer and get values from Output Object 'O'
             try :
                 #Mutalyzer.process(cmd, C, O)
-                variant_checker.check_variant(cmd, C, O)
+                variantchecker.check_variant(cmd, C, O)
             except Exception, e :
                 #Catch all exceptions related to the processing of cmd
                 O.addMessage(__file__, 4, "EBATCHU",
@@ -435,7 +443,7 @@ class Scheduler() :
         @type flags:
         """
 
-        C = Config.Config()
+        C = Config()
         output = Output(__file__, C.Output)
         grammar = Grammar(output)
 
@@ -493,7 +501,7 @@ class Scheduler() :
         @type flags:
         """
 
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         variant = cmd
         variants = None
@@ -587,7 +595,7 @@ class Scheduler() :
         @type flags:
         """
 
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
             "Received SNP converter batch rs" + cmd)

@@ -28,7 +28,6 @@ positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
 
 import sys                     # argv
 from mutalyzer.grammar import Grammar
-from mutalyzer import Config     # Config()
 from mutalyzer import Db         # Db(), get_NM_version(), get_NM_info()
 from mutalyzer import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
                                # offset2int(), info()

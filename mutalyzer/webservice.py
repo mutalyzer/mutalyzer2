@@ -20,6 +20,8 @@ Be sure to have this line first if you also define a / alias, like this:
        kind of strictness checks on the input. For example, in
        transcriptInfo, the build argument must really be present. (Hint:
        use __checkBuild.)
+@todo: The mutalyzer.config.Config object can just be instantiated once
+       and we should not create it on every request.
 """
 
 # WSGI applications should never print anything to stdout. We redirect to
@@ -54,11 +56,11 @@ site.addsitedir(os.path.dirname(__file__))
 # Todo: fix Mutalyzer to not depend on working directory
 os.chdir(os.path.split(os.path.dirname(__file__))[0])
 
+from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
-from mutalyzer import variant_checker
+from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer import Db
-from mutalyzer import Config
 from mutalyzer import Mapper
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
@@ -180,7 +182,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: list
         """
 
-        C = Config.Config()
+        C = Config()
         L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -216,7 +218,7 @@ class MutalyzerService(DefinitionBase) :
         Todo: documentation.
         """
 
-        C = Config.Config()
+        C = Config()
         L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -258,7 +260,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: list
         """
 
-        C = Config.Config()
+        C = Config()
         L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -295,7 +297,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: string
         """
 
-        C = Config.Config()
+        C = Config()
         L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -356,7 +358,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: object
         """
 
-        C = Config.Config()
+        C = Config()
         L = Output(__file__, C.Output)
 
         L.addMessage(__file__, -1, "INFO",
@@ -396,7 +398,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: object
         """
 
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
 
         O.addMessage(__file__, -1, "INFO",
@@ -425,7 +427,7 @@ class MutalyzerService(DefinitionBase) :
         @return: The accession number of a chromosome.
         @rtype: string
         """
-        C = Config.Config() # Read the configuration file.
+        C = Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
         L = Output(__file__, C.Output)
 
@@ -458,7 +460,7 @@ class MutalyzerService(DefinitionBase) :
         @return: The name of a chromosome.
         @rtype: string
         """
-        C = Config.Config() # Read the configuration file.
+        C = Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
         L = Output(__file__, C.Output)
 
@@ -491,7 +493,7 @@ class MutalyzerService(DefinitionBase) :
         @return: The name of a chromosome.
         @rtype: string
         """
-        C = Config.Config() # Read the configuration file.
+        C = Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
         L = Output(__file__, C.Output)
 
@@ -527,7 +529,7 @@ class MutalyzerService(DefinitionBase) :
         @rtype: list
         """
 
-        C = Config.Config() # Read the configuration file.
+        C = Config() # Read the configuration file.
         D = Db.Mapping(build, C.Db)
         O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
@@ -563,7 +565,7 @@ class MutalyzerService(DefinitionBase) :
                  - messages: List of (error) messages as strings.
         @rtype: object
         """
-        C = Config.Config() # Read the configuration file.
+        C = Config() # Read the configuration file.
         output = Output(__file__, C.Output)
         output.addMessage(__file__, -1, "INFO",
                           "Received request checkSyntax(%s)" % (variant))
@@ -589,12 +591,12 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation.
         """
-        C = Config.Config() # Read the configuration file.
+        C = Config() # Read the configuration file.
         O = Output(__file__, C.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
         #Mutalyzer.process(variant, C, O)
-        variant_checker.check_variant(variant, C, O)
+        variantchecker.check_variant(variant, C, O)
 
         result = MutalyzerOutput()
 
@@ -647,7 +649,7 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation.
         """
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
 
@@ -714,7 +716,7 @@ class MutalyzerService(DefinitionBase) :
                                       - id
                                       - product
         """
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
 
@@ -830,7 +832,7 @@ class MutalyzerService(DefinitionBase) :
         Todo: documentation, error handling, argument checking, tests.
         """
 
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
@@ -860,7 +862,7 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation, error handling, argument checking, tests.
         """
-        C = Config.Config()
+        C = Config()
         O = Output(__file__, C.Output)
         D = Db.Cache(C.Db)
         retriever = Retriever.GenBankRetriever(C.Retriever, O, D)

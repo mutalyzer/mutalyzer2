@@ -24,13 +24,13 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 from mutalyzer import util
+from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Crossmap
 from mutalyzer import Db
-from mutalyzer import Config
 
 
 class _VariantError(Exception): pass

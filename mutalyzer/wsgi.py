@@ -71,14 +71,14 @@ site.addsitedir(root_dir)
 if not __name__ == '__main__':
     os.chdir(root_dir)
 
-from mutalyzer import VERSION, NOMENCLATURE_VERSION, RELEASE_DATE
+import mutalyzer
 from mutalyzer import util
+from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
 from mutalyzer import webservice
-from mutalyzer import variant_checker
+from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer import VarInfo
-from mutalyzer import Config
 from mutalyzer import Mapper
 from mutalyzer import Db
 from mutalyzer import Scheduler
@@ -90,7 +90,7 @@ web.config.debug = True
 
 
 # Load configuration from configuration file
-C = Config.Config()
+config = Config()
 
 
 # URL dispatch table
@@ -203,19 +203,15 @@ class render_tal:
 
 
 # TAL template render
-render = render_tal(os.path.join(root_dir, 'templates'),
-                    globals={'version': VERSION,
-                             'nomenclatureVersion': NOMENCLATURE_VERSION,
-                             'releaseDate': RELEASE_DATE,
-                             'contactEmail': C.Retriever.email})
+render = render_tal(os.path.join(root_dir, 'templates'), globals={
+    'version': mutalyzer.__version__,
+    'nomenclatureVersion': mutalyzer.NOMENCLATURE_VERSION,
+    'releaseDate': mutalyzer.__date__,
+    'release': mutalyzer.RELEASE,
+    'contactEmail': config.Retriever.email})
 
 # web.py application
 app = web.application(urls, globals(), autoreload=False)
-
-# Sessions are only used by CheckForward (as a hack)
-session = web.session.Session(app,
-                              web.session.DiskStore(os.path.join(root_dir, 'var', 'sessions')),
-                              initializer={'variant': None})
 
 
 class Download:
@@ -265,7 +261,7 @@ class Downloads:
         if not os.path.isfile("templates/downloads/" + file):
             raise web.notfound()
         handle = open("templates/downloads/" + file)
-        F = File.File(C.File, None)
+        F = File.File(config.File, None)
         web.header('Content-Type', F.getMimeType(handle)[0])
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
@@ -288,7 +284,7 @@ class Reference:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-        fileName = "%s/%s.bz2" % (C.Retriever.cache, file)
+        fileName = "%s/%s.bz2" % (config.Retriever.cache, file)
         if not os.path.isfile(fileName):
             raise web.notfound()
         handle = bz2.BZ2File(fileName, 'r')
@@ -319,7 +315,7 @@ class GetGS:
         @return: Output of name checker if forward is set, otherwise the
                  GeneSymbol with the variant notation as string.
         """
-        O = Output(__file__, C.Output)
+        O = Output(__file__, config.Output)
 
         i = web.input(mutationName=None, variantRecord=None, forward=None)
 
@@ -328,8 +324,8 @@ class GetGS:
         # Bio.Seq.reverse_complement in Mapper.py:607.
 
         # We are only interested in the legend
-        #Mutalyzer.process(str(i.mutationName), C, O)
-        variant_checker.check_variant(str(i.mutationName), C, O)
+        #Mutalyzer.process(str(i.mutationName), config, O)
+        variantchecker.check_variant(str(i.mutationName), config, O)
 
         legends = O.getOutput("legends")
 
@@ -372,7 +368,7 @@ class SyntaxCheck:
         Parameters:
         - variant: Variant name to check.
         """
-        output = Output(__file__, C.Output)
+        output = Output(__file__, config.Output)
         i = web.input()
         variant = i.variant
         if variant.find(',') >= 0:
@@ -423,13 +419,13 @@ class Snp:
 
         @kwarg rsId: The dbSNP rs number.
         """
-        output = Output(__file__, C.Output)
+        output = Output(__file__, config.Output)
 
         descriptions = []
 
         if rsId :
             output.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
-            R = Retriever.Retriever(C.Retriever, output, None)
+            R = Retriever.Retriever(config.Retriever, output, None)
             descriptions = R.snpConvert(rsId)
             output.addMessage(__file__, -1, "INFO",
                               "Finished processing rs%s" % rsId)
@@ -477,9 +473,9 @@ class PositionConverter:
         @kwarg build: Human genome build (currently 'hg18' or 'hg19').
         @kwarg variant: Variant to convert.
         """
-        output = Output(__file__, C.Output)
+        output = Output(__file__, config.Output)
 
-        avail_builds = C.Db.dbNames[::-1]
+        avail_builds = config.Db.dbNames[::-1]
 
         if build :
             avail_builds.remove(build)
@@ -496,7 +492,7 @@ class PositionConverter:
         }
 
         if build and variant:
-            converter = Mapper.Converter(build, C, output)
+            converter = Mapper.Converter(build, config, output)
 
             #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
@@ -573,7 +569,7 @@ class Check:
         1. Provide the 'mutationName' parameter. In this case, the checker is
            called non-interactively, meaning the result is rendered without
            the HTML form, site layout, and menu.
-        2. By having a 'variant' value in the session. The value is removed.
+        2. By having a 'variant' value in the cookie. The value is removed.
 
         Parameters:
         - mutationName: Variant to check.
@@ -585,9 +581,9 @@ class Check:
             interactive = False
             variant = i.mutationName
         else:
-            # Run checker if session.variant is not None
-            variant = session.variant
-            session.variant = None
+            # Run checker if cookie variant is not None
+            variant = web.cookies().get('variant')
+            web.setcookie('variant', '', 60)
         return self.check(variant, interactive=interactive)
 
     def POST(self):
@@ -610,15 +606,15 @@ class Check:
         @kwarg interactive: Run interactively, meaning we wrap the result in
                             the site layout and include the HTML form.
         """
-        output = Output(__file__, C.Output)
+        output = Output(__file__, config.Output)
 
         if name:
             output.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
             # Todo: The following is probably a problem elsewhere too.
             # We stringify the variant, because a unicode string crashes
             # Bio.Seq.reverse_complement in Mapper.py:607.
-            #RD = Mutalyzer.process(str(name), C, O)
-            variant_checker.check_variant(str(name), C, output)
+            #RD = Mutalyzer.process(str(name), config, O)
+            variantchecker.check_variant(str(name), config, output)
             output.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
                               name)
 
@@ -656,7 +652,7 @@ class Check:
             return newDescr
 
         # Todo: Generate the fancy HTML views for the proteins here instead
-        #       of in mutalyzer/variant_checker.py.
+        #       of in mutalyzer/variantchecker.py.
         args = {
             "lastpost"           : name,
             "messages"           : map(util.message_info, output.getMessages()),
@@ -689,20 +685,20 @@ class Check:
 
 class CheckForward:
     """
-    Set the given variant in the session and redirect to the name checker.
+    Set the given variant in the cookie and redirect to the name checker.
 
-    @todo: Cleaner solution (one without using a session variable).
+    @todo: Cleaner solution (one without using a cookie).
     """
     def GET(self):
         """
-        Set the 'variant' session value to the given variant and redirect
+        Set the 'variant' cookie value to the given variant and redirect
         to the name checker (where we will arrive by a GET request).
 
         Parameters:
-        - mutationName: Variant to set in the session.
+        - mutationName: Variant to set in the cookie.
         """
         i = web.input(mutationName=None)
-        session.variant = i.mutationName
+        web.setcookie('variant', i.mutationName, 5 * 60)  # Five minutes
         raise web.seeother('check')
 #CheckForward
 
@@ -725,7 +721,7 @@ class BatchProgress:
 
         @todo: The 'progress' template does not exist.
         """
-        O = Output(__file__, C.Output)
+        O = Output(__file__, config.Output)
 
         attr = {"percentage": 0}
 
@@ -735,7 +731,7 @@ class BatchProgress:
             total = int(i.totalJobs)
         except Exception, e:
             return
-        D = Db.Batch(C.Db)
+        D = Db.Batch(config.Db)
         left = D.entriesLeftForJob(jobID)
         percentage = int(100 - (100 * left / float(total)))
         if i.ajax:
@@ -797,9 +793,9 @@ class BatchChecker:
                           (default), 'SyntaxChecker', 'PositionConverter', or
                           'SnpConverter'.
         """
-        O = Output(__file__, C.Output)
+        O = Output(__file__, config.Output)
 
-        maxUploadSize = C.Batch.batchInputMaxSize
+        maxUploadSize = config.Batch.batchInputMaxSize
 
         attr = {"messages"      : [],
                 "errors"        : [],
@@ -812,7 +808,7 @@ class BatchChecker:
                 "hideTypes"     : batchType and 'none' or '',
                 "selected"      : "0",
                 "batchType"     : batchType or "",
-                "avail_builds"  : C.Db.dbNames[::-1],
+                "avail_builds"  : config.Db.dbNames[::-1],
                 "jobID"         : None,
                 "totalJobs"     : None
         }
@@ -844,9 +840,9 @@ class BatchChecker:
                 web.ctx.status = '413 Request entity too large'
                 return 'Sorry, only files up to %s megabytes are accepted.' % (float(maxUploadSize) / 1048576)
 
-            D = Db.Batch(C.Db)
-            S = Scheduler.Scheduler(C.Scheduler, D)
-            FileInstance = File.File(C.File, O)
+            D = Db.Batch(config.Db)
+            S = Scheduler.Scheduler(config.Scheduler, D)
+            FileInstance = File.File(config.File, O)
 
             # Generate the fromhost URL from which the results can be fetched
             fromHost = web.ctx.homedomain + web.ctx.homepath + '/'
@@ -891,7 +887,7 @@ class BatchResult:
         of the form \d+.
         """
         file = 'Results_%s.txt' % result
-        handle = open(os.path.join(C.Scheduler.resultsDir, file))
+        handle = open(os.path.join(config.Scheduler.resultsDir, file))
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
@@ -940,7 +936,7 @@ class Uploader:
         """
         Render reference sequence uploader form.
         """
-        maxUploadSize = C.Retriever.maxDldSize
+        maxUploadSize = config.Retriever.maxDldSize
         UD, errors = "", []
         args = {
             "UD"      : UD,
@@ -983,11 +979,11 @@ class Uploader:
         - stop: Stop position.
         - orientation: Orientation.
         """
-        maxUploadSize = C.Retriever.maxDldSize
+        maxUploadSize = config.Retriever.maxDldSize
 
-        O = Output(__file__, C.Output)
-        D = Db.Cache(C.Db)
-        R = Retriever.GenBankRetriever(C.Retriever, O, D)
+        O = Output(__file__, config.Output)
+        D = Db.Cache(config.Db)
+        R = Retriever.GenBankRetriever(config.Retriever, O, D)
 
         UD, errors = "", []
 

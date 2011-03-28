@@ -19,6 +19,7 @@ import bz2                     # BZ2Compressor(), BZ2File()
 import Db
 
 from Bio import SeqIO, Entrez  # read()
+from mutalyzer.config import Config
 from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
 
 class tempGene() :
@@ -68,9 +69,7 @@ class GBparser() :
         
         @requires: Config
         """
-
-        import Config
-        config = Config.Config()
+        config = Config()
         Entrez.email = config.Retriever.email
         self.__database = Db.Cache(config.Db)
     #__init__

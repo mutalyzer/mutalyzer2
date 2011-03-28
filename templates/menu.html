@@ -519,9 +519,15 @@
   
   
     <center>
-      <h2 tal:content = "structure string:Mutalyzer ${version}<br>
+      <h2 tal:condition = "release"
+          tal:content = "structure string:Mutalyzer ${version}<br>
         <small><small><small><small>
           released on ${releaseDate}
+        </small></small></small></small>"></h2>
+      <h2 tal:condition = "not:release"
+          tal:content = "structure string:Mutalyzer ${version}<br>
+        <small><small><small><small>
+          development version
         </small></small></small></small>"></h2>
       HGVS nomenclature version 
       <span tal:content = "nomenclatureVersion"></span>

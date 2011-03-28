@@ -1,7 +1,8 @@
 #
 # Mutalyzer config file.
 #
-
+# Copy this file to /etc/mutalyzer/config or ~/.config/mutalyzer/config and
+# modify to your preferences.
 
 #
 # These settings are used by the Retriever module.
@@ -11,7 +12,7 @@
 email = "mutalyzer@humgen.nl"
 
 # The cache directory.
-cache = "./var/cache"
+cache = "/var/cache/mutalyzer"
 
 # The maximum size of the cache in megabytes.
 cachesize = 50
@@ -51,16 +52,13 @@ RemoteMySQLhost = "genome-mysql.cse.ucsc.edu"
 # Retrieve all entries modified within a certain number of days.
 UpdateInterval = 7
 
-# Temporary file for updated UCSC mapping information.
-TempFile = "./var/UCSC_Update.txt"
-
 
 #
 # These settings are used by the Output module.
 #
 
 # Name and location of the log file.
-log = "./var/mutalyzer.log"
+log = "/var/log/mutalyzer.log"
 
 # Prefix for each log message.
 datestring = "%Y-%m-%d %H:%M:%S"
@@ -105,17 +103,15 @@ processName = "MutalyzerBatch2"
 # Return e-mail address.
 mailFrom = "noreply@humgen.nl"
 
-# Location of the mail template.
-mailMessage = "./templates/batch-mail.txt"
-
 # Subject of the message.
 mailSubject = "Result of Mutalyzer batch check."
 
 # Location of the results.
-resultsDir = "./var/cache"
+resultsDir = "/var/cache/mutalyzer"
 
 # Location of the PID file.
-PIDfile = "./var/batch.pid"
+#PIDfile = "/var/run/mutalyzerbatch.pid"
+PIDfile = "/tmp/mutalyzerbatch.pid"
 
 # Maximum size for uploaded batch input files in megabytes.
 batchInputMaxSize = 5
@@ -142,9 +138,6 @@ bufSize = 32768
 
 # The obligatory header in batch request files.
 header = "AccNo", "Genesymbol", "Mutation"
-
-# Directory for temporary files.
-tempDir = "./var"
 
 # Threshold for Batch Jobs
 threshold = 0.05

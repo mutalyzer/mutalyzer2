@@ -22,6 +22,7 @@ import xlrd            # open_workbook()
 import zipfile         # ZipFile()
 import xml.dom.minidom # parseString()
 import os              # remove()
+import tempfile
 import types           # UnicodeType
 from cStringIO import StringIO
 
@@ -84,21 +85,18 @@ class File() :
         @return: unknown; the output of func().
         @rtype: ?
         """
-
-        # Generate an unique filename in the tempDir directory.
-        fileName = self.__config.tempDir + '/' + str(util.generate_id())
+        write_handle, filename = tempfile.mkstemp(text=True)
 
         # Dump the content of the stream pointed to by handle into the file.
         handle.seek(0)
-        writeHandle = open(fileName, "w")
-        writeHandle.write(handle.read())
-        writeHandle.close()
+        write_handle.write(handle.read())
+        write_handle.close()
 
         # Open the file with func().
-        ret = func(fileName)
+        ret = func(filename)
         # Apperantly apache will remove this file even when opened by the
         # function *func
-        os.remove(fileName)
+        os.remove(filename)
 
         return ret
     #__tempFileWrapper

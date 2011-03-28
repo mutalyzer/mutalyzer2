@@ -17,7 +17,7 @@ import daemon
 import signal
 import fcntl
 
-from mutalyzer import Config
+from mutalyzer.config import Config
 from mutalyzer.Db import Batch
 from mutalyzer import Scheduler
 
@@ -31,7 +31,7 @@ def sigusr1_daemon_notified(*args):
 if len(sys.argv[0].split('/')) > 2 :
     os.chdir(sys.argv[0].rsplit('/', 2)[0])
 
-C = Config.Config()
+C = Config()
 
 batchconfig = C.Batch
 cwd = os.getcwd()
@@ -58,7 +58,7 @@ DaemonInst = daemon.DaemonContext(signal_map = sigmap,
                 files_preserve = [ pidfile ], working_directory = cwd)
 DaemonInst.__enter__()
 # stdout = stdout, stderr = stdout
-C = Config.Config()
+C = Config()
 D = Batch(C.Db)
 S = Scheduler.Scheduler(C.Scheduler, D)
 S.process()

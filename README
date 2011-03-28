@@ -3,6 +3,7 @@ Coding style guide:
 * Follow PEP 8 (code) and PEP 257 (docstrings).
     http://www.python.org/dev/peps/pep-0008/
     http://www.python.org/dev/peps/pep-0257/
+* Use Epydoc style documentation in docstrings.
 * Use __all__ definitions in modules.
 * Executables are in the bin/ directory, e.g. like this:
     #!/usr/bin/env python
@@ -14,6 +15,7 @@ Coding style guide:
     https://github.com/webpy/webpy
     https://github.com/mitsuhiko/jinja2
     https://bitbucket.org/mramm/tg-21/src
+    http://bazaar.launchpad.net/~bzr-pqm/bzr/bzr.dev/files
 
 
 Todo:
@@ -22,6 +24,9 @@ Todo:
   or accept a --config command line argument or something. Look for standard
   Python ways to handle this. Store an example configuration file in the SVN
   repository.
+  Follow the XDG Base Directory Specification.
+  http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+* Document integration, deployment, release management, etc.
 
 
 Notes for server setup (Europium VM copy):

@@ -13,8 +13,8 @@ import site
 os.chdir('../..')
 site.addsitedir('.')
 
+from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
-from mutalyzer import Config
 from mutalyzer.output import Output
 
 
@@ -27,7 +27,7 @@ class TestGrammar(unittest.TestCase):
         """
         Initialize test Grammar instance.
         """
-        self.config = Config.Config()
+        self.config = Config()
         self.output = Output(__file__, self.config.Output)
         self.grammar = Grammar(self.output)
 

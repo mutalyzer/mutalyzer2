@@ -16,7 +16,7 @@ from Bio.Seq import Seq
 os.chdir('../..')
 site.addsitedir('.')
 
-from mutalyzer import Config
+from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import mutator
 
@@ -40,7 +40,7 @@ class TestMutator(unittest.TestCase):
         """
         Initialize test mutator module.
         """
-        self.config = Config.Config()
+        self.config = Config()
         self.output = Output(__file__, self.config.Output)
 
     def _mutator(self, sequence):
