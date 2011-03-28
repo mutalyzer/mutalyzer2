@@ -240,7 +240,7 @@ class Download:
         # Force downloading
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
-        # We use new style string formatting (available from Python 2.6
+        # We use new style string formatting (available from Python 2.6)
         # http://www.python.org/dev/peps/pep-3101/
         return content.format(path=web.ctx.homedomain + web.ctx.homepath)
 #Download

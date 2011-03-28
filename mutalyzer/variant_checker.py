@@ -88,6 +88,10 @@ def _check_intronic_position(main, offset, transcript):
     must be a splice site and the offset coordinate must have the correct
     sign.
 
+    Raises _OffsetNotFromBoundary if an offset from a non-boundary position
+    was used and _OffsetSignError if the offset from exon boundary has the
+    wrong sign.
+
     @arg main: Main coordinate of the position.
     @type main: int
     @arg offset: Offset coordinate of the position.
@@ -694,6 +698,9 @@ def _genomic_to_genomic(first_location, last_location):
     """
     Get genomic range from parsed genomic location.
 
+    Raises _UnknownPositionError if unknown positions were used and
+    _RawVariantError if we otherwise cannot interprete the range.
+
     @arg first_location: The start location (g.) of the variant.
     @type first_location: pyparsing.ParseResults
     @arg last_location: The start location (g.) of the variant.
@@ -703,8 +710,6 @@ def _genomic_to_genomic(first_location, last_location):
         - first: Genomic start location represented by given location.
         - last:  Genomic end location represented by given location.
     @rtype: tuple(int, int)
-
-    @todo: Exceptions.
     """
     if not first_location.Main or not last_location.Main:
         # Unknown positions are denoted by the '?' character.
@@ -722,6 +727,13 @@ def _genomic_to_genomic(first_location, last_location):
 def _coding_to_genomic(first_location, last_location, transcript):
     """
     Get genomic range from parsed c. location.
+
+    Raises _UnknownPositionError if unknown positions were used and
+    _RawVariantError if we otherwise cannot interprete the range.
+
+    Raises _OffsetNotFromBoundary if an offset from a non-boundary position
+    was used and _OffsetSignError if the offset from exon boundary has the
+    wrong sign.
 
     @arg first_location: The start location (c.) of the variant.
     @type first_location: pyparsing.ParseResults
@@ -769,6 +781,11 @@ def _coding_to_genomic(first_location, last_location, transcript):
 def _process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
+
+    We raise _RawVariantError if there was something seriously in error
+    with the raw variant (but it is still okay to process other raw
+    variants). We might (don't at the moment) also raise _VariantError,
+    meaning to stop processing the entire variant.
 
     @arg mutator: A Mutator instance.
     @type mutator: mutalyzer.mutator.Mutator

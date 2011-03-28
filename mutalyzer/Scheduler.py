@@ -129,6 +129,7 @@ class Scheduler() :
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 
+        # Todo: It seems unnecessary to have this configurable.
         handle = open(self.__config.mailMessage)
         message = MIMEText(handle.read() % url)
         handle.close()

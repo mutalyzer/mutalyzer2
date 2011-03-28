@@ -1,0 +1,45 @@
+Coding style guide:
+
+* Follow PEP 8 (code) and PEP 257 (docstrings).
+    http://www.python.org/dev/peps/pep-0008/
+    http://www.python.org/dev/peps/pep-0257/
+* Use __all__ definitions in modules.
+* Executables are in the bin/ directory, e.g. like this:
+    #!/usr/bin/env python
+    from mutalyzer import batch_runner
+    batch_runner.run()
+* For examples, check established Python projects:
+    http://code.djangoproject.com/browser/django/trunk
+    http://twistedmatrix.com/trac/browser/trunk
+    https://github.com/webpy/webpy
+    https://github.com/mitsuhiko/jinja2
+    https://bitbucket.org/mramm/tg-21/src
+
+
+Todo:
+
+* Redo configuration management. Probably look in /etc, ~/, current directory,
+  or accept a --config command line argument or something. Look for standard
+  Python ways to handle this. Store an example configuration file in the SVN
+  repository.
+
+
+Notes for server setup (Europium VM copy):
+
+- Hostname aanpassen.
+- Mailserver.
+- Batch checker stoppen.
+
+
+Obsoleted features:
+
+  On eu.liacs.nl: /etc/apache2/mods-enabled/rewrite.load
+  - This file contains a rewrite rule that converts "Variant_info.php" to
+    "Variant_info".
+  - When all LOVD versions are above 2.0-23, this rule can be deleted and
+    the rewrite module can be disabled.
+
+  index.py:
+  - In the Variant_info() function a substitution on error messages is
+    performed.
+  - When all LOVD versions are above 2.0-23, this check can be deleted.
