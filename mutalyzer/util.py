@@ -351,9 +351,9 @@ def trim_common(s1, s2):
     """
     Given two strings, trim their longest common prefix and suffix.
 
-        >>> util.trim_common('abcdefg', 'abcabcdefg')
+        >>> trim_common('abcdefg', 'abcabcdefg')
         ('', 'abc', 3, 4)
-        >>> util.trim_common('abcxyzefg', 'abcabcg')
+        >>> trim_common('abcxyzefg', 'abcabcg')
         ('xyzef', 'abc', 3, 1)
 
     @arg s1: A string.

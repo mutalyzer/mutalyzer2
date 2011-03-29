@@ -1,13 +1,11 @@
-#!/usr/bin/env python
-
 """
 Tests for the mutalyzer.grammar module.
 """
 
 #import logging; logging.basicConfig()
 import os
-import unittest
 import site
+from nose.tools import *
 
 # Todo: Can this be done in a more elegant way?
 os.chdir('../..')
@@ -18,7 +16,7 @@ from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 
 
-class TestGrammar(unittest.TestCase):
+class TestGrammar():
     """
     Test the mytalyzer.grammar module.
     """
@@ -33,7 +31,7 @@ class TestGrammar(unittest.TestCase):
 
     def test_some_variants(self):
         """
-        No change, no shifts.
+        Some example variants.
         """
         self.grammar.parse('NM_002001.2:c.[12del]')
         self.grammar.parse('NM_002001.2:c.[(12del)]')
@@ -41,11 +39,3 @@ class TestGrammar(unittest.TestCase):
         self.grammar.parse('NM_002001.2:c.[(12del);(12del)]')
         self.grammar.parse('NM_002001.2:c.[(12del;12del)]')
         self.grammar.parse('NM_002001.2:c.[((12del)?;12del)?]')
-
-
-if __name__ == '__main__':
-    # Usage:
-    #   ./test_parser.py -v
-    # Or, selecting a specific test:
-    #   ./test_parser.py -v TestParser.test_some_variants
-    unittest.main()

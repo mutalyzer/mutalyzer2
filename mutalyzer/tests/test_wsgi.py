@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Tests for the WSGI interface to Mutalyzer.
 
@@ -12,10 +10,11 @@ I just installed webtest by 'easy_install webtest'.
 @todo: Tests for /upload.
 """
 
+
 #import logging; logging.basicConfig()
 import re
 import time
-import unittest
+from nose.tools import *
 from webtest import TestApp
 
 # Todo: Can this be done in a more elegant way?
@@ -23,7 +22,8 @@ import site
 site.addsitedir('../..')
 from mutalyzer.wsgi import application
 
-class TestWSGI(unittest.TestCase):
+
+class TestWSGI():
     """
     Test the Mutalyzer WSGI interface.
     """
@@ -39,7 +39,7 @@ class TestWSGI(unittest.TestCase):
         Expect the index HTML page.
         """
         r = self.app.get('/')
-        self.assertEqual(r.status, '200 OK')
+        assert_equal(r.status, '200 OK')
         # We check for <html> to make sure the menu template is included
         r.mustcontain('<html>',
                       'Welcome to the Mutalyzer web site',
@@ -131,8 +131,8 @@ class TestWSGI(unittest.TestCase):
         Should not include form and main layout HTML.
         """
         r = self.app.get('/check?mutationName=NM_002001.2:g.1del')
-        self.assertFalse('<a href="#bottom" class="hornav">go to bottom</a>' in r)
-        self.assertFalse('<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">' in r)
+        assert_false('<a href="#bottom" class="hornav">go to bottom</a>' in r)
+        assert_false('<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">' in r)
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
@@ -145,8 +145,8 @@ class TestWSGI(unittest.TestCase):
         redirect to the name checker.
         """
         r = self.app.get('/checkForward?mutationName=NM_002001.2:g.1del')
-        self.assertEqual(r.status, '303 See Other')
-        self.assertTrue(r.location.endswith('/check'))
+        assert_equal(r.status, '303 See Other')
+        assert r.location.endswith('/check')
         r = r.follow()
         r.mustcontain('0 Errors',
                       '0 Warnings',
@@ -229,16 +229,16 @@ class TestWSGI(unittest.TestCase):
         max_tries = 60
         for i in range(max_tries):
             r = self.app.get('/progress?jobID=' + id + '&totalJobs=' + str(size) + '&ajax=1')
-            self.assertEqual(r.content_type, 'text/plain')
+            assert_equal(r.content_type, 'text/plain')
             #print '%s: %s' % (batch_type, r.body)
             if r.body == 'OK': break
-            self.assertTrue(re.match('[0-9]+', r.body))
+            assert re.match('[0-9]+', r.body)
             time.sleep(2)
-        self.assertEqual(r.body, 'OK')
+        assert_equal(r.body, 'OK')
         r = self.app.get('/Results_' + id + '.txt')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         r.mustcontain(header)
-        self.assertTrue(len(r.body.strip().split('\n')) == size + 1)
+        assert len(r.body.strip().split('\n')) == size + 1
 
     def test_batch_namechecker(self):
         """
@@ -401,14 +401,14 @@ facilisi."""
         form.set('batchFile', ('test_batch_toobig.txt',
                                file))
         r = form.submit(status=413)
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
 
     def test_download_py(self):
         """
         Download a Python example client for the webservice.
         """
         r = self.app.get('/download/client-suds.py')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         r.mustcontain('#!/usr/bin/env python')
 
     def test_download_rb(self):
@@ -416,7 +416,7 @@ facilisi."""
         Download a Ruby example client for the webservice.
         """
         r = self.app.get('/download/client-savon.rb')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         r.mustcontain('#!/usr/bin/env ruby')
 
     def test_download_cs(self):
@@ -424,7 +424,7 @@ facilisi."""
         Download a C# example client for the webservice.
         """
         r = self.app.get('/download/client-mono.cs')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         r.mustcontain('public static void Main(String [] args) {')
 
     def test_download_php(self):
@@ -432,7 +432,7 @@ facilisi."""
         Download a PHP example client for the webservice.
         """
         r = self.app.get('/download/client-php.php')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         r.mustcontain('<?php')
 
     def test_downloads_batchtest(self):
@@ -440,7 +440,7 @@ facilisi."""
         Download the batch test example file.
         """
         r = self.app.get('/downloads/batchtestnew.txt')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         r.mustcontain('NM_003002.1:c.3_4insG')
 
     def test_reference(self):
@@ -448,8 +448,8 @@ facilisi."""
         Download a reference file.
         """
         r = self.app.get('/Reference/AB026906.1.gb')
-        self.assertEqual(r.content_type, 'text/plain')
-        self.assertEqual(r.content_length, 26427)
+        assert_equal(r.content_type, 'text/plain')
+        assert_equal(r.content_length, 26427)
         r.mustcontain('ggaaaaagtc tctcaaaaaa cctgctttat')
 
     def test_soap_documentation(self):
@@ -457,7 +457,7 @@ facilisi."""
         Test the SOAP documentation generated from the WSDL.
         """
         r = self.app.get('/documentation')
-        self.assertEqual(r.content_type, 'text/html')
+        assert_equal(r.content_type, 'text/html')
         r.mustcontain('Web Service: Mutalyzer')
 
     def test_getgs(self):
@@ -468,26 +468,26 @@ facilisi."""
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: substitution at 7055')
-        self.assertTrue(r.body.find('go to bottom') == -1)
-        self.assertTrue(r.body.find('<input') == -1)
+        assert r.body.find('go to bottom') == -1
+        assert r.body.find('<input') == -1
 
     def test_variantinfo_g2c(self):
         """
         Test the /Variant_info interface used by LOVD2 (g to c).
         """
         r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=g.48374289_48374389del')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
-        self.assertEqual(r.body, expected)
+        assert_equal(r.body, expected)
 
     def test_variantinfo_c2g(self):
         """
         Test the /Variant_info interface used by LOVD2 (c to g).
         """
         r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=c.1020_1072%2B48del')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
-        self.assertEqual(r.body, expected)
+        assert_equal(r.body, expected)
 
     def test_variantinfo_c2g_downstream(self):
         """
@@ -495,9 +495,9 @@ facilisi."""
         notation to g).
         """
         r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=c.1709%2Bd187del')
-        self.assertEqual(r.content_type, 'text/plain')
+        assert_equal(r.content_type, 'text/plain')
         expected = '\n'.join(['1709', '187', '1709', '187', '48379389', '48379389', 'del'])
-        self.assertEqual(r.body, expected)
+        assert_equal(r.body, expected)
 
     def test_upload_local_file(self):
         """
@@ -513,10 +513,3 @@ facilisi."""
                                   open(test_genbank_file, 'r').read()))
         r = form.submit()
         r.mustcontain('Your reference sequence was uploaded successfully.')
-
-if __name__ == '__main__':
-    # Usage:
-    #   ./test_wsgi.py -v
-    # Or, selecting a specific test:
-    #   ./test_wsgi.py -v TestWSGI.test_getgs
-    unittest.main()

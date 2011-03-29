@@ -15,6 +15,7 @@ This program depends on the following packages:
 - python-webpy     >= 0.33
 - python-webtest   >= 1.2.3
 - python-suds      >= 0.3.9-1
+- python-nose      >= 0.11
 
 The web and SOAP interfaces depend on the following packages:
 - apache2               >= 2.2.11

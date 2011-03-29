@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Tests for the mutalyzer.mutator module.
 """
@@ -8,8 +6,8 @@ Tests for the mutalyzer.mutator module.
 import re
 import os
 import random
-import unittest
 import site
+from nose.tools import *
 from Bio.Seq import Seq
 
 # Todo: Can this be done in a more elegant way?
@@ -31,7 +29,7 @@ def _seq(length):
     return Seq(sequence)
 
 
-class TestMutator(unittest.TestCase):
+class TestMutator():
     """
     Test the mutator module.
     """
@@ -59,7 +57,7 @@ class TestMutator(unittest.TestCase):
         m = self._mutator(_seq(l))
         # Numbering is 1-based
         for i in range(1, l + 1):
-            self.assertEqual(m.shiftpos(i), i)
+            assert_equal(m.shiftpos(i), i)
 
     def test_shiftpos_del_example(self):
         """
@@ -67,9 +65,9 @@ class TestMutator(unittest.TestCase):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.delM(2, 2)
-        self.assertEqual(m.shiftpos(1), 1)
-        self.assertEqual(m.shiftpos(2), 2)
-        self.assertEqual(m.shiftpos(3), 2)
+        assert_equal(m.shiftpos(1), 1)
+        assert_equal(m.shiftpos(2), 2)
+        assert_equal(m.shiftpos(3), 2)
 
     def test_shiftpos_del(self):
         """
@@ -80,9 +78,9 @@ class TestMutator(unittest.TestCase):
             m = self._mutator(_seq(l))
             m.delM(d, d)
             for p in range(1, d + 1):
-                self.assertEqual(m.shiftpos(p), p)
+                assert_equal(m.shiftpos(p), p)
             for p in range(d + 1, l + 1):
-                self.assertEqual(m.shiftpos(p), p - 1)
+                assert_equal(m.shiftpos(p), p - 1)
 
     def test_shiftpos_del2(self):
         """
@@ -93,9 +91,9 @@ class TestMutator(unittest.TestCase):
             m = self._mutator(_seq(l))
             m.delM(d, d + 1)
             for p in range(1, d + 2):
-                self.assertEqual(m.shiftpos(p), p)
+                assert_equal(m.shiftpos(p), p)
             for p in range(d + 2, l + 1):
-                self.assertEqual(m.shiftpos(p), p - 2)
+                assert_equal(m.shiftpos(p), p - 2)
 
     def test_shiftpos_ins_example(self):
         """
@@ -103,9 +101,9 @@ class TestMutator(unittest.TestCase):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.insM(2, 'A')
-        self.assertEqual(m.shiftpos(1), 1)
-        self.assertEqual(m.shiftpos(2), 2)
-        self.assertEqual(m.shiftpos(3), 4)
+        assert_equal(m.shiftpos(1), 1)
+        assert_equal(m.shiftpos(2), 2)
+        assert_equal(m.shiftpos(3), 4)
 
     def test_shiftpos_ins(self):
         """
@@ -116,9 +114,9 @@ class TestMutator(unittest.TestCase):
             m = self._mutator(_seq(l))
             m.insM(i, 'T')
             for p in range(1, i + 1):
-                self.assertEqual(m.shiftpos(p), p)
+                assert_equal(m.shiftpos(p), p)
             for p in range(i + 1, l + 1):
-                self.assertEqual(m.shiftpos(p), p + 1)
+                assert_equal(m.shiftpos(p), p + 1)
 
     def test_shiftpos_ins2(self):
         """
@@ -129,9 +127,9 @@ class TestMutator(unittest.TestCase):
             m = self._mutator(_seq(l))
             m.insM(i, 'TT')
             for p in range(1, i + 1):
-                self.assertEqual(m.shiftpos(p), p)
+                assert_equal(m.shiftpos(p), p)
             for p in range(i + 1, l + 1):
-                self.assertEqual(m.shiftpos(p), p + 2)
+                assert_equal(m.shiftpos(p), p + 2)
 
     def test_newSplice_no_change(self):
         """
@@ -147,7 +145,7 @@ class TestMutator(unittest.TestCase):
         l = 30
         sites = [4, 9, 14, 19, 25, 27]
         m = self._mutator(_seq(l))
-        self.assertEqual(m.newSplice(sites), sites)
+        assert_equal(m.newSplice(sites), sites)
 
     def test_newSplice_acc_del_before(self):
         """
@@ -159,7 +157,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(13, 13)   # g.13del
-        self.assertEqual(m.newSplice(sites), [4, 9, 13, 16, 24, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 13, 16, 24, 26])
 
     def test_newSplice_acc_del_after(self):
         """
@@ -169,7 +167,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(14, 14)   # g.14del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 16, 24, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 24, 26])
 
     def test_newSplice_don_del_before(self):
         """
@@ -179,7 +177,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(17, 17)   # g.17del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 16, 24, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 24, 26])
 
     def test_newSplice_don_del_after(self):
         """
@@ -191,7 +189,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(18, 18)   # g.18del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 24, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 24, 26])
 
     def test_newSplice_acc_del2_before(self):
         """
@@ -203,7 +201,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(12, 13)   # g.12_13del
-        self.assertEqual(m.newSplice(sites), [4, 9, 12, 15, 23, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 12, 15, 23, 25])
 
     def test_newSplice_acc_del2_on(self):
         """
@@ -216,7 +214,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(13, 14)   # g.13_14del
-        self.assertEqual(m.newSplice(sites), [4, 9, 13, 15, 23, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 13, 15, 23, 25])
 
     def test_newSplice_acc_del2_after(self):
         """
@@ -226,7 +224,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(14, 15)   # g.14_15del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 15, 23, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 15, 23, 25])
 
     def test_newSplice_don_del2_before(self):
         """
@@ -236,7 +234,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(16, 17)   # g.16_17del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 15, 23, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 15, 23, 25])
 
     def test_newSplice_don_del2_on(self):
         """
@@ -249,7 +247,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(17, 18)   # g.17_18del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 16, 23, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 23, 25])
 
     def test_newSplice_don_del2_after(self):
         """
@@ -261,7 +259,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(18, 19)   # g.18_19del
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 23, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 23, 25])
 
     def test_newSplice_acc_ins_before(self):
         """
@@ -273,7 +271,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(12, 'A')   # g.12_13insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 15, 18, 26, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 15, 18, 26, 28])
 
     def test_newSplice_acc_ins_on(self):
         """
@@ -283,7 +281,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(13, 'A')   # g.13_14insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
 
     def test_newSplice_first_acc_ins_on(self):
         """
@@ -293,7 +291,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(3, 'A')   # g.3_4insA
-        self.assertEqual(m.newSplice(sites), [5, 10, 15, 18, 26, 28])
+        assert_equal(m.newSplice(sites), [5, 10, 15, 18, 26, 28])
 
     def test_newSplice_acc_ins_after(self):
         """
@@ -303,7 +301,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(14, 'A')   # g.14_15insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
 
     def test_newSplice_don_ins_before(self):
         """
@@ -313,7 +311,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(16, 'A')   # g.16_17insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
 
     def test_newSplice_don_ins_on(self):
         """
@@ -323,7 +321,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(17, 'A')   # g.17_18insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 18, 26, 28])
 
     def test_newSplice_last_don_ins_on(self):
         """
@@ -333,7 +331,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(27, 'A')   # g.27_28insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
 
     def test_newSplice_don_ins_after(self):
         """
@@ -345,7 +343,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(18, 'A')   # g.18_19insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 26, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 26, 28])
 
     def test_newSplice_acc_ins2_before(self):
         """
@@ -357,7 +355,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(12, 'AT')   # g.12_13insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 16, 19, 27, 29])
+        assert_equal(m.newSplice(sites), [4, 9, 16, 19, 27, 29])
 
     def test_newSplice_first_acc_ins2_on(self):
         """
@@ -367,7 +365,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(3, 'AT')   # g.3_4insAT
-        self.assertEqual(m.newSplice(sites), [6, 11, 16, 19, 27, 29])
+        assert_equal(m.newSplice(sites), [6, 11, 16, 19, 27, 29])
 
     def test_newSplice_acc_ins2_after(self):
         """
@@ -377,7 +375,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(14, 'AT')   # g.14_15insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
 
     def test_newSplice_don_ins2_before(self):
         """
@@ -387,7 +385,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(16, 'AT')   # g.16_17insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 19, 27, 29])
 
     def test_newSplice_last_don_ins2_on(self):
         """
@@ -397,7 +395,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(27, 'AT')   # g.27_28insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
 
     def test_newSplice_don_ins2_after(self):
         """
@@ -409,7 +407,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(18, 'AT')   # g.18_19insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 27, 29])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 27, 29])
 
     def test_newSplice_acc_ins3_before(self):
         """
@@ -421,7 +419,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(12, 'ATT')   # g.12_13insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 17, 20, 28, 30])
+        assert_equal(m.newSplice(sites), [4, 9, 17, 20, 28, 30])
 
     def test_newSplice_acc_ins3_on(self):
         """
@@ -431,7 +429,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(13, 'ATT')   # g.13_14insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
 
     def test_newSplice_first_acc_ins3_on(self):
         """
@@ -441,7 +439,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(3, 'ATT')   # g.3_4insATT
-        self.assertEqual(m.newSplice(sites), [7, 12, 17, 20, 28, 30])
+        assert_equal(m.newSplice(sites), [7, 12, 17, 20, 28, 30])
 
     def test_newSplice_acc_ins3_after(self):
         """
@@ -451,7 +449,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(14, 'ATT')   # g.14_15insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
 
     def test_newSplice_don_ins3_before(self):
         """
@@ -461,7 +459,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(16, 'ATT')   # g.16_17insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
 
     def test_newSplice_don_ins3_on(self):
         """
@@ -471,7 +469,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(17, 'ATT')   # g.17_18insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 20, 28, 30])
 
     def test_newSplice_last_don_ins3_on(self):
         """
@@ -481,7 +479,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(27, 'ATT')   # g.27_28insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 25, 27])
 
     def test_newSplice_don_ins3_after(self):
         """
@@ -493,7 +491,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insM(18, 'ATT')   # g.18_19insATT
-        self.assertEqual(m.newSplice(sites), [4, 9, 14, 17, 28, 30])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 17, 28, 30])
 
     def test_newSplice_adj_del_before1(self):
         """
@@ -510,7 +508,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(16, 16)   # g.16del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 16, 17, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 16, 17, 26])
 
     def test_newSplice_adj_del_before(self):
         """
@@ -520,7 +518,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(17, 17)   # g.17del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 16, 17, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 16, 17, 26])
 
     def test_newSplice_adj_del_after(self):
         """
@@ -530,7 +528,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(18, 18)   # g.18del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 26])
 
     def test_newSplice_adj_del_after1(self):
         """
@@ -540,7 +538,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(19, 19)   # g.19del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 26])
 
     def test_newSplice_adj_ins_before(self):
         """
@@ -550,7 +548,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insM(16, 'A')   # g.16_17insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 18, 19, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 18, 19, 28])
 
     def test_newSplice_adj_ins_on(self):
         """
@@ -566,7 +564,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insM(17, 'A')   # g.17_18insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 18, 19, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 18, 19, 28])
 
     def test_newSplice_adj_ins_after(self):
         """
@@ -576,7 +574,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insM(18, 'A')   # g.18_19insA
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 28])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 28])
 
     def test_newSplice_adj_del2_before1(self):
         """
@@ -586,7 +584,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(15, 16)   # g.15_16del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 15, 16, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 15, 16, 25])
 
     def test_newSplice_adj_del2_before(self):
         """
@@ -596,7 +594,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(16, 17)   # g.16_17del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 15, 16, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 15, 16, 25])
 
     def test_newSplice_adj_del2_on(self):
         """
@@ -610,7 +608,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(17, 18)   # g.17_18del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 16, 17, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 16, 17, 25])
 
     def test_newSplice_adj_del2_after(self):
         """
@@ -620,7 +618,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(18, 19)   # g.18_19del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 25])
 
     def test_newSplice_adj_del2_after1(self):
         """
@@ -630,7 +628,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.delM(19, 20)   # g.19_20del
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 25])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 25])
 
     def test_newSplice_adj_ins2_before(self):
         """
@@ -640,7 +638,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insM(16, 'AT')   # g.16_17insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 19, 20, 29])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 19, 20, 29])
 
     def test_newSplice_adj_ins2_on(self):
         """
@@ -656,7 +654,7 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insM(17, 'AT')   # g.17_18insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 19, 20, 29])
+        assert_equal(m.newSplice(sites), [4, 9, 10, 19, 20, 29])
 
     def test_newSplice_adj_ins2_after(self):
         """
@@ -666,12 +664,4 @@ class TestMutator(unittest.TestCase):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insM(18, 'AT')   # g.18_19insAT
-        self.assertEqual(m.newSplice(sites), [4, 9, 10, 17, 18, 29])
-
-
-if __name__ == '__main__':
-    # Usage:
-    #   ./test_mutator.py -v
-    # Or, selecting a specific test:
-    #   ./test_mutator.py -v TestMutator.test_mutated
-    unittest.main()
+        assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 29])
