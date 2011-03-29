@@ -30,6 +30,10 @@ Todo:
 * Use standard logging module, with rotating functionality.
 * Use environment variable for testing situation. Something like:
   http://webpy.org/cookbook/testing_with_paste_and_nose
+  For example, we probably want to disable logging during the test run.
+* Setup continuous integration. Currently, I'm most impressed with Hudson.
+  http://hudson-ci.org/
+  http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
 
 
 Notes for server setup (Europium VM copy):

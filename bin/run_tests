@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# This is just an example of running the test suite and producing a HTML
+# coverage report.
+# Something like this should eventually be used on the test server as a
+# post-commit hook.
+
+nosetests --with-coverage --cover-package mutalyzer --cover-html --cover-html-dir=/tmp/coverage

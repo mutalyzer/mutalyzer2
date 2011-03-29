@@ -18,14 +18,14 @@ import sys # sys.argv
 import os  # os.chdir()
 
 from mutalyzer.config import Config
-from mutalyzer import Output
+from mutalyzer.output import Output
 from mutalyzer.Db import Remote
 from mutalyzer.Db import Update
 
 os.chdir(sys.argv[0].rsplit('/', 2)[0])
 
 C = Config()
-O = Output.Output(__file__, C.Output)
+O = Output(__file__, C.Output)
 O.addMessage(__file__, -1, "INFO", "Starting UCSC mapping data update")
 
 for i in C.Db.dbNames :
