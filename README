@@ -27,6 +27,7 @@ Todo:
   Follow the XDG Base Directory Specification.
   http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
 * Document integration, deployment, release management, etc.
+* Use standard logging module, with rotating functionality.
 
 
 Notes for server setup (Europium VM copy):

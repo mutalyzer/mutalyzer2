@@ -3,16 +3,12 @@ The HGVS variant nomenclature checker.
 
 Entrypoint is the check_variant() function.
 
-@todo: Use exceptions for failure handling.
-@todo: End vs stop. I guess we should use start/stop (end goes with beginning).
-       Or first/last, or acceptor/donor. Anyway, CDS is always denoted with
-       start/stop.
-       Idea:
-       * CDS -> use start/stop
-       * splice sites or exons -> acceptor/donor
-       * translation -> begin/end
-       * any range of bases -> first/last
-       * interbase position (if two numbers are used) -> before/after
+Notes about naming positions:
+* CDS -> use start/stop
+* splice sites or exons -> acceptor/donor
+* translation -> begin/end
+* any range of bases -> first/last
+* interbase position (if two numbers are used) -> before/after
 """
 
 
@@ -33,34 +29,30 @@ from mutalyzer import Crossmap
 from mutalyzer import Db
 
 
+# Exceptions used (privately) in this module.
 class _VariantError(Exception): pass
 class _RawVariantError(_VariantError): pass
 class _UnknownPositionError(_RawVariantError): pass
-
+class _NotDNAError(_RawVariantError): pass
+class _PositionsNotConsecutiveError(_RawVariantError): pass
+class _LengthMismatchError(_RawVariantError): pass
+class _ReferenceMismatchError(_RawVariantError): pass
 class _OffsetSignError(_RawVariantError):
     def __init__(self, main, offset, acceptor):
-        """
-        @arg main:
-        @type main: string
-        @arg offset:
-        @type offset: string
-        @arg acceptor:
-        @type acceptor: bool
-        """
         self.main = main
         self.offset = offset
         self.acceptor = acceptor
-
 class _OffsetNotFromBoundaryError(_RawVariantError):
     def __init__(self, main):
-        """
-        @arg main:
-        @type main: string
-        """
         self.main = main
+class _InvalidExonError(_RawVariantError):
+    def __init__(self, exon):
+        self.exon = exon
+class _InvalidIntronError(_RawVariantError):
+    def __init__(self, intron):
+        self.intron = intron
 
 
-# Used in: _raw_variant
 def _is_coding_intronic(loc):
     """
     Check whether a location is an intronic c. position.
@@ -81,16 +73,11 @@ def _is_coding_intronic(loc):
 #_is_coding_intronic
 
 
-# Used in: _coding_to_genomic
 def _check_intronic_position(main, offset, transcript):
     """
     Check whether a c. position is really in an intron: The main coordinate
     must be a splice site and the offset coordinate must have the correct
-    sign.
-
-    Raises _OffsetNotFromBoundary if an offset from a non-boundary position
-    was used and _OffsetSignError if the offset from exon boundary has the
-    wrong sign.
+    sign. Raise _RawVariantError exception if this check fails.
 
     @arg main: Main coordinate of the position.
     @type main: int
@@ -98,6 +85,10 @@ def _check_intronic_position(main, offset, transcript):
     @type offset: int
     @arg transcript: Transcript under scrutiny.
     @type transcript: object
+
+    @raise _OffsetNotFromBoundary: An offset from a non-boundary position
+                                   was used.
+    @raise _OffsetSignError: Offset from exon boundary has the wrong sign.
     """
     main_g = transcript.CM.x2g(main, 0)
     sites = transcript.CM.RNA
@@ -126,34 +117,10 @@ def _check_intronic_position(main, offset, transcript):
 #_check_intronic_position
 
 
-# Used in: _coding_to_genomic
-def _get_offset(location) :
-    """
-    Convert the offset coordinate in a location (from the Parser) to an
-    integer.
-
-    @arg location: A location.
-    @type location: pyparsing.ParseResults
-
-    @return: Integer representation of the offset coordinate.
-    @rtype: int
-    """
-    if location.Offset :
-        if location.Offset == '?' : # This is highly debatable.
-            return 0
-        offset = int(location.Offset)
-        if location.OffSgn == '-' :
-            return -offset
-        return offset
-
-    return 0
-#_get_offset
-
-
 def _check_argument(argument, reference, first, last, output):
     """
-    Do several checks for the optional argument of a variant. Return True
-    if the argument is valid, False otherwise.
+    Do several checks for the optional argument of a variant. Raise a
+    _RawVariantError exception if the checks fail.
 
     @arg reference: The reference sequence.
     @type reference: string
@@ -166,12 +133,15 @@ def _check_argument(argument, reference, first, last, output):
     @arg output: The Output object.
     @type output: mutalyzer.Output.Output
 
-    @return: True if the optional argument is correct, False otherwise.
-    @rtype: bool
+    @raise _LengthMismatchError: The argument is a length, but it does not
+                                 match the given range length.
+    @raise NotDNAError: The argument should be DNA, but it is not.
+    @raise ReferenceMismatchError: The argument is DNA, but it does not
+                                   match the given reference.
     """
     if not argument:
         # The argument is optional, if it is not present, it is correct.
-        return True
+        return
 
     if argument.isdigit():
         # If it is a digit (3_9del7 for example), the digit must be equal to
@@ -182,13 +152,13 @@ def _check_argument(argument, reference, first, last, output):
             output.addMessage(__file__, 3, 'EARGLEN',
                               'The length (%i) differed from that of the ' \
                               'range (%i).' % (length, interval))
-            return False
+            raise _LengthMismatchError()
     else:
         # If it is not a digit, it muse be DNA.
         if not util.is_dna(argument):
             output.addMessage(__file__, 4, 'ENODNA',
                               'Invalid letters in argument.')
-            return False
+            raise _NotDNAError()
         # And the DNA must match the reference sequence.
         reference_slice = str(reference[first - 1:last])
         if reference_slice != str(argument):
@@ -198,9 +168,7 @@ def _check_argument(argument, reference, first, last, output):
                               'instead.' % (argument,
                                             util.format_range(first, last),
                                             reference_slice))
-            return False
-
-    return True
+            raise _ReferenceMismatchError()
 #_check_argument
 
 
@@ -291,7 +259,6 @@ def _add_batch_output(O):
     #outputline+="http://localhost/mutalyzer2/redirect?mutationName=%s" %\
     #        "todovariant"
 
-
     O.addOutput("batchDone", outputline)
 #_add_batch_output
 
@@ -314,19 +281,17 @@ def apply_substitution(position, original, substitute, mutator, record, O):
     @arg O: The Output object.
     @type O: Modules.Output.Output
 
-    @todo: Exception instead of O.addMessage().
+    @raise _NotDNAError: Invalid (non-DNA) letter in input.
     """
     if not util.is_dna(substitute):
-        # This is not DNA.
-        #O.addMessage(__file__, 4, "ENODNA", "Invalid letter in input")
-        # todo: exception
-        return
+        O.addMessage(__file__, 4, 'ENODNA', 'Invalid letter in input')
+        raise _NotDNAError()
 
     if original == substitute:
-        # This is not a real change.
-        O.addMessage(__file__, 3, 'ENOVAR',
+        O.addMessage(__file__, 2, 'WNOCHANGE',
                      'No mutation given (%c>%c) at position %i.' % \
                      (original, substitute, position))
+        return
 
     mutator.subM(position, substitute)
 
@@ -352,8 +317,6 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
     @type O: Modules.Output.Output
-
-    @todo: Exception instead of O.addMessage().
     """
     roll = util.roll(mutator.orig, first, last)
     shift = roll[1]
@@ -422,8 +385,6 @@ def apply_inversion(first, last, mutator, record, O) :
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
     @type O: Modules.Output.Output
-
-    @todo: Exception instead of O.addMessage().
     """
     snoop = util.palinsnoop(mutator.orig[first - 1:last])
 
@@ -482,17 +443,19 @@ def apply_insertion(before, after, s, mutator, record, O):
     @arg O: The Output object.
     @type O: Modules.Output.Output
 
-    @todo: Exception instead of O.addMessage().
+    @raise _NotDNAError: Invalid (non-DNA) letter in input.
+    @raise _PositionsNotConsecutiveError: Positions {before} and {after} are
+                                          not consecutive.
     """
     if before + 1 != after:
         O.addMessage(__file__, 3, 'EINSRANGE',
             '%i and %i are not consecutive positions.' % (before, after))
-        return
+        raise _PositionsNotConsecutiveError()
 
     if not s or not util.is_dna(s):
         O.addMessage(__file__, 3, 'EUNKVAR', 'Although the syntax of this ' \
             'variant is correct, the effect can not be analysed.')
-        return
+        raise _NotDNAError()
 
     insertion_length = len(s)
 
@@ -574,8 +537,6 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
     @type record: Modules.GenRecord.GenRecord
     @arg output: The Output object.
     @type output: Modules.Output.Output
-
-    @todo: Exception instead of O.addMessage().
     """
     if not delete:
         delete = mutator.orig[first - 1:last]
@@ -632,6 +593,29 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
 #apply_delins
 
 
+def _get_offset(location):
+    """
+    Convert the offset coordinate in a location (from the Parser) to an
+    integer.
+
+    @arg location: A location.
+    @type location: pyparsing.ParseResults
+
+    @return: Integer representation of the offset coordinate.
+    @rtype: int
+    """
+    if location.Offset :
+        if location.Offset == '?' : # This is highly debatable.
+            return 0
+        offset = int(location.Offset)
+        if location.OffSgn == '-' :
+            return -offset
+        return offset
+
+    return 0
+#_get_offset
+
+
 def _intronic_to_genomic(location, transcript):
     """
     Get genomic location from IVS location.
@@ -643,12 +627,13 @@ def _intronic_to_genomic(location, transcript):
 
     @return: Genomic location represented by given IVS location.
     @rtype: int
+
+    @raise _InvalidIntronError: Intron does not exist.
     """
     ivs_number = int(location.IVSNumber)
 
     if ivs_number < 1 or ivs_number > transcript.CM.numberOfIntrons():
-        # Todo: Exception?
-        return None
+        raise _InvalidIntronError(ivs_number)
 
     if location.OffSgn == '+':
         return transcript.CM.getSpliceSite(ivs_number * 2 - 1) + \
@@ -673,19 +658,20 @@ def _exonic_to_genomic(location, transcript) :
         - last:  Genomic end location represented by given EX location.
     @rtype: tuple(int, int)
 
+    @raise _InvalidExonError: Exon does not exist.
+
     @todo: We probably want to treat this as a-?_b+?, so take the centers of
            flanking exons.
-    @todo: Exceptions instead of returning None?
     """
     first_exon = int(location.EXNumberStart)
     if first_exon < 1 or first_exon > transcript.CM.numberOfExons():
-        return None
+        raise _InvalidExonError(first_exon)
     first = transcript.CM.getSpliceSite(first_exon * 2 - 2)
 
     if location.EXNumberStop:
         last_exon = int(location.EXNumberStop)
         if last_exon < 1 or last_exon > transcript.CM.numberOfExons():
-            return None
+            raise _InvalidExonError(last_exon)
         last = transcript.CM.getSpliceSite(last_exon * 2 - 1)
     else:
         last = transcript.CM.getSpliceSite(first_exon * 2 - 1)
@@ -698,9 +684,6 @@ def _genomic_to_genomic(first_location, last_location):
     """
     Get genomic range from parsed genomic location.
 
-    Raises _UnknownPositionError if unknown positions were used and
-    _RawVariantError if we otherwise cannot interprete the range.
-
     @arg first_location: The start location (g.) of the variant.
     @type first_location: pyparsing.ParseResults
     @arg last_location: The start location (g.) of the variant.
@@ -710,6 +693,9 @@ def _genomic_to_genomic(first_location, last_location):
         - first: Genomic start location represented by given location.
         - last:  Genomic end location represented by given location.
     @rtype: tuple(int, int)
+
+    @raise _UnknownPositionError: Unknown positions were used.
+    @raise _RawVariantError: Range cannot be intepreted.
     """
     if not first_location.Main or not last_location.Main:
         # Unknown positions are denoted by the '?' character.
@@ -728,13 +714,6 @@ def _coding_to_genomic(first_location, last_location, transcript):
     """
     Get genomic range from parsed c. location.
 
-    Raises _UnknownPositionError if unknown positions were used and
-    _RawVariantError if we otherwise cannot interprete the range.
-
-    Raises _OffsetNotFromBoundary if an offset from a non-boundary position
-    was used and _OffsetSignError if the offset from exon boundary has the
-    wrong sign.
-
     @arg first_location: The start location (c.) of the variant.
     @type first_location: pyparsing.ParseResults
     @arg last_location: The start location (c.) of the variant.
@@ -747,7 +726,11 @@ def _coding_to_genomic(first_location, last_location, transcript):
         - last:  Genomic end location represented by given location.
     @rtype: tuple(int, int)
 
-    @todo: Exceptions.
+    @raise _UnknownPositionError: Unknown positions were used.
+    @raise _RawVariantError: Range cannot be interpreted.
+    @raise _OffsetNotFromBoundary: An offset from a non-boundary position
+                                    was used.
+    @raise _OffsetSignError: Offset from exon boundary has the wrong sign.
     """
     if not first_location.Main or not last_location.Main:
         # Unknown positions are denoted by the '?' character.
@@ -764,7 +747,7 @@ def _coding_to_genomic(first_location, last_location, transcript):
                                        last_location.Main)
     last_offset = _get_offset(last_location)
 
-    # These raise exceptions on invalid positions.
+    # These raise _RawVariantError exceptions on invalid positions.
     _check_intronic_position(first_main, first_offset, transcript)
     _check_intronic_position(last_main, last_offset, transcript)
 
@@ -798,7 +781,8 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     @arg output: The Output object.
     @type output: Modules.Output.Output
 
-    @todo: Documentation.
+    @raise _RawVariantError: Cannot process this raw variant.
+    @raise _VariantError: Cannot further process the entire variant.
     """
     # {argument} may be a number, or a subsequence of the reference.
     # {sequence} is the variant subsequence.
@@ -817,10 +801,12 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
 
     if variant.EXLoc:
         # EX positioning.
-        first, last = _exonic_to_genomic(variant.EXLoc, transcript)
-        if not first:
-            output.addMessage(__file__, 3, 'EPOS', 'Invalid EX position given.')
-            raise _RawVariantError()
+        try:
+            first, last = _exonic_to_genomic(variant.EXLoc, transcript)
+        except _InvalidExonError as e:
+            output.addMessage(__file__, 4, 'EINVALIDEXON',
+                              'Non-existing exon number %d given.' % e.exon)
+            raise
         if last < first:
             # Todo: Why could this ever happen?
             first, last = last, first
@@ -828,7 +814,8 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     elif not variant.StartLoc:
         # All non-EX positioning ways need a start location.
         # Todo: Better message.
-        output.addMessage(__file__, 4, 'EUNKNOWN', 'An unknown error occurred.')
+        output.addMessage(__file__, 4, 'EUNKNOWN',
+                          'An unknown error occurred.')
         raise _RawVariantError()
 
     elif variant.StartLoc.IVSLoc:
@@ -837,14 +824,22 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
             output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
                 'position given for a non-genomic reference sequence.')
             raise _RawVariantError()
-        first = last = _intronic_to_genomic(variant.StartLoc.IVSLoc, transcript)
-        if not first:
-            output.addMessage(__file__, 3, 'EPOS',
-                'Invalid IVS position given.')
-            raise _RawVariantError()
+        try:
+            first = last = _intronic_to_genomic(variant.StartLoc.IVSLoc,
+                                                transcript)
+        except _InvalidIntronError as e:
+            output.addMessage(__file__, 4, 'EINVALIDINTRON',
+                              'Non-existing intron number %d given.' % \
+                              e.intron)
+            raise
         if variant.EndLoc and variant.EndLoc.IVSLoc:
-            # Todo: fixme
-            last = _intronic_to_genomic(variant.EndLoc.IVSLoc, transcript)
+            try:
+                last = _intronic_to_genomic(variant.EndLoc.IVSLoc, transcript)
+            except _InvalidIntronError as e:
+                output.addMessage(__file__, 4, 'EINVALIDINTRON',
+                                  'Non-existing intron number %d given.' % \
+                                  e.intron)
+                raise
             if last < first:
                 # Todo: Why could this ever happen?
                 first, last = last, first
@@ -916,10 +911,12 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
         output.addMessage(__file__, 2, 'WOVERSPLICE',
                           'Variant hits one or more splice sites.')
 
+    # The following functions can raise _RawVariantError exceptions, but we
+    # just let them flow through to the caller.
+
     # Check if the (optional) argument is valid.
-    if variant.MutationType in ['del', 'dup', 'subst', 'delins'] and \
-           not _check_argument(argument, mutator.orig, first, last, output):
-        raise _RawVariantError()
+    if variant.MutationType in ['del', 'dup', 'subst', 'delins']:
+        _check_argument(argument, mutator.orig, first, last, output)
 
     # Substitution.
     if variant.MutationType == 'subst':
@@ -1070,8 +1067,9 @@ def _process_variant(mutator, description, record, output):
     @arg output: The Output object.
     @type output: Modules.Output.Output
 
+    @raise _VariantError: Cannot process this variant.
+
     @todo: Documentation.
-    @todo: Exceptions.
     """
     if not description.RawVar and not description.SingleAlleleVarSet:
         output.addMessage(__file__, 4, 'ENOVARIANT',
