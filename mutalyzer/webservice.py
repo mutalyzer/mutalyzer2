@@ -581,7 +581,12 @@ class MutalyzerService(DefinitionBase) :
         output.addMessage(__file__, -1, "INFO",
                           "Finished processing checkSyntax(%s)" % (variant))
 
-        result.messages = output.getSoapMessages()
+        result.messages = []
+        for message in output.getMessages():
+            soap_message = SoapMessage()
+            soap_message.errorcode = message.code
+            soap_message.message = message.description
+            result.messages.append(soap_message)
 
         return result
     #checkSyntax
@@ -639,7 +644,12 @@ class MutalyzerService(DefinitionBase) :
         O.addMessage(__file__, -1, "INFO",
                      "Finished processing runMutalyzer(%s)" % (variant))
 
-        result.messages = O.getSoapMessages()
+        result.messages = []
+        for message in O.getMessages():
+            soap_message = SoapMessage()
+            soap_message.errorcode = message.code
+            soap_message.message = message.description
+            result.messages.append(soap_message)
 
         return result
     #runMutalyzer

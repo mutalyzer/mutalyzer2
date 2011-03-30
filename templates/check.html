@@ -50,188 +50,186 @@
             "structure string:${parseError/0}<br>${parseError/1}">
           </pre>
           The &quot;^&quot; indicates the position where the error occurred.
-        </div>
+        </div> <!-- parseError -->
         <br>
-        <!-- Todo: In case of errors, we can perfectly show some of the
-             information below! -->
-        <div tal:condition = "not:errors">
-          <div tal:condition = "visualisation">
-            <b>Overview of the raw variants:</b><br>
-            <br>
-            <div tal:repeat = "i visualisation">
-              <div tal:repeat = "j i">
-                <div tal:condition = "repeat/j/start" 
-                     tal:content = "structure string:Raw variant 
-                                    ${repeat/i/number}: ${j}"></div>
-                <tt tal:condition = "not: repeat/j/start" tal:content = "j">
-                </tt>
-              </div>
-              <br>
+        <div tal:condition = "visualisation">
+          <b>Overview of the raw variants:</b><br>
+          <br>
+          <div tal:repeat = "i visualisation">
+            <div tal:repeat = "j i">
+              <div tal:condition = "repeat/j/start" 
+                   tal:content = "structure string:Raw variant 
+                                  ${repeat/i/number}: ${j}"></div>
+              <tt tal:condition = "not: repeat/j/start" tal:content = "j">
+              </tt>
             </div>
             <br>
-            <div tal:condition = "genomicDNA">
-              <b>Genomic description:</b>
+          </div>
+          <br>
+        </div> <!-- not:visualisation -->
+        <div tal:condition = "genomicDescription/0">
+          <div tal:condition = "genomicDNA">
+            <b>Genomic description:</b>
+          </div> <!-- genomicDNA -->
+          <div tal:condition = "not:genomicDNA">
+            <b>Description relative to transcription start:</b><br>
+            (Not for use in LSDBs in case of protein-coding transcripts).
+          </div> <!-- not:genomicDNA -->
+          <br>
+          <tt>
+            <a tal:content = "genomicDescription/0"
+               tal:attributes = "href 
+                 string:checkForward?mutationName=${genomicDescription/1}">
+            </a>
+            <br>
+          </tt>
+        </div> <!-- genomicDescription/0 -->
+        <div tal:condition = "chromDescription">
+          <br>
+          Alternative chromosomal position:<br>
+          <tt tal:content = "chromDescription"></tt>
+        </div> <!-- chromDescription -->
+        <br>
+        <br>
+        <div tal:condition = "descriptions">
+          <b>Affected transcripts:</b><br>
+          <br>
+          <tt tal:repeat = "i descriptions">
+            <a tal:content = "i/0"
+               tal:attributes = 
+                 "href string:checkForward?mutationName=${i/1}"></a><br>
+          </tt>
+          <br>
+          <br>
+        </div> <!-- descriptions -->
+        <div tal:condition = "protDescriptions">
+          <b>Affected proteins:</b><br>
+          <br>
+          <tt>
+            <div tal:repeat = "i protDescriptions"
+                 tal:replace = "structure string:${i}<br>">
             </div>
-            <div tal:condition = "not:genomicDNA">
-              <b>Description relative to transcription start:</b><br>
-              (Not for use in LSDBs in case of protein-coding transcripts).
-            </div>
-            <br>
-            <tt>
-              <a tal:content = "genomicDescription/0"
-                 tal:attributes = "href 
-                   string:checkForward?mutationName=${genomicDescription/1}">
-              </a>
-              <br>
-            </tt>
-            <div tal:condition = "chromDescription">
-              <br>
-              Alternative chromosomal position:<br>
-              <tt tal:content = "chromDescription"></tt>
-            </div>
-            <br>
-            <br>
-            <b>Affected transcripts:</b><br>
-            <br>
-            <tt tal:repeat = "i descriptions">
-              <a tal:content = "i/0"
-                 tal:attributes = 
-                   "href string:checkForward?mutationName=${i/1}"></a><br>
-            </tt>
-            <br>
-            <br>
-            <b>Affected proteins:</b><br>
-            <br>
-            <tt>
-              <div tal:repeat = "i protDescriptions"
-                   tal:replace = "structure string:${i}<br>">
-              </div>
-            </tt>
-            <br>
-            <br>
+          </tt>
+          <br>
+          <br>
+        </div> <!-- protDescriptions -->
+        <div tal:condition = "transcriptInfo">
+          <b>Detailed information about the selected transcript:</b><br>
+          <br>
+          <div style = "background-color : #ccffff;">
             <div tal:condition = "oldProtein">
-              <b>Detailed information about the selected transcript and
-                 predicted protein:</b><br>
+              <b>Reference protein:</b><br>
+              <pre><div tal:repeat = "i oldProtein"
+                        tal:replace = "structure string:${i}<br>">
+                </div></pre>
               <br>
-              <div style = "background-color : #ccffff;">
-                <b>Reference protein:</b><br>
-                <pre><div tal:repeat = "i oldProtein"
+              <b>Protein predicted from variant coding sequence:</b><br>
+              <div tal:condition = "not:newProtein">
+                <br>
+                No change: Predicted protein (not shown) equals reference
+                protein. <br>
+                <br>
+              </div> <!-- not:newProtein -->
+              <div tal:condition = "newProtein">
+                <pre><div tal:repeat = "i newProtein"
                           tal:replace = "structure string:${i}<br>">
                   </div></pre>
-                <br>
-                <b>Protein predicted from variant coding sequence:</b><br>
-                <div tal:condition = "not:newProtein">
+              </div> <!-- newProtein -->
+              <br>
+              <div tal:condition = "altStart">
+                <b tal:content = "structure string:Alternative protein 
+                  using start codon ${altStart}:"></b><br>
+                <div tal:condition = "altProtein">
+                  <pre><div tal:repeat = "i altProtein"
+                         tal:replace = "structure string:${i}<br>">
+                    </div></pre>
+                </div> <!-- altProtein -->
+                <div tal:condition = "not:altProtein">
                   <br>
                   No change: Predicted protein (not shown) equals reference
                   protein. <br>
                   <br>
-                </div>
-                <div tal:condition = "newProtein">
-                  <pre><div tal:repeat = "i newProtein"
-                            tal:replace = "structure string:${i}<br>">
-                    </div></pre>
-                </div>
+                </div> <!-- not:altProtein -->
                 <br>
-                <div tal:condition = "altStart">
-                  <b tal:content = "structure string:Alternative protein 
-                    using start codon ${altStart}:"></b><br>
-                  <div tal:condition = "altProtein">
-                    <pre><div tal:repeat = "i altProtein"
-                           tal:replace = "structure string:${i}<br>">
-                      </div></pre>
-                  </div>
-                  <div tal:condition = "not:altProtein">
-                    <br>
-                    No change: Predicted protein (not shown) equals reference
-                    protein. <br>
-                    <br>
-                  </div>
-                  <br>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div tal:condition = "oldProtein">
-            <div style = "background-color : #ccffff;">
-              <b>Additional information about the transcript:</b><br>
-              <br>
-              Exon information:<br>
-              <table class = "raTable">
-                <tr>
-                  <td>Number</td>
-                  <td>Start (g.)</td>
-                  <td>Stop (g.)</td>
-                  <td>Start (c.)</td>
-                  <td>Stop (c.)</td>
-                </tr>
-                <tr tal:repeat = "i exonInfo">
-                  <td tal:content = "repeat/i/number"></td>
-                  <td tal:repeat = "j i" tal:content = "j"></td>
-                </tr>
-              </table>
-              <br>
-              <span class = "helper" title = "Coding Sequence">CDS</span> 
-              information:<br>
-              <table class = "raTable">
-                <tr>
-                  <td></td>
-                  <td>g.</td>
-                  <td>c.</td>
-                </tr>
-                <tr>
-                  <td>Start</td>
-                  <td tal:content = "cdsStart_g"></td>
-                  <td tal:content = "cdsStart_c"></td>
-                </tr>
-                <tr>
-                  <td>Stop</td>
-                  <td tal:content = "cdsStop_g"></td>
-                  <td tal:content = "cdsStop_c"></td>
-                </tr>
-                <tr>
-                </tr>
-              </table>
-              <br>
-            </div>
-            <br>
-          </div>
-          <div tal:condition = "visualisation">
-            <b>Effects on Restriction sites:</b><br>
-            <br>
-            <table class = "laTable">
+              </div> <!-- altStart -->
+            </div> <!-- oldProtein -->
+            <b>Exon information:</b><br>
+            <table class = "raTable">
               <tr>
-                <td>Raw variant</td>
-                <td>Created</td>
-                <td>Deleted</td>
+                <td>Number</td>
+                <td>Start (g.)</td>
+                <td>Stop (g.)</td>
+                <td>Start (c.)</td>
+                <td>Stop (c.)</td>
               </tr>
-              <tr tal:repeat = "i restrictionSites">
+              <tr tal:repeat = "i exonInfo">
                 <td tal:content = "repeat/i/number"></td>
-                <td>
-                  <span tal:repeat = "j i/0">
-                    <span tal:condition = "not:repeat/j/end"
-                          tal:content = "structure string:${j},">
-                    </span>
-                    <span tal:condition = "repeat/j/end"
-                          tal:content = "structure string:${j}">
-                    </span>
-                  </span>
-                </td>
-                <td>
-                  <span tal:repeat = "j i/1">
-                    <span tal:condition = "not:repeat/j/end"
-                          tal:content = "structure string:${j},">
-                    </span>
-                    <span tal:condition = "repeat/j/end"
-                          tal:content = "structure string:${j}">
-                    </span>
-                  </span>
-                </td>
+                <td tal:repeat = "j i" tal:content = "j"></td>
               </tr>
             </table>
             <br>
+            <b><span class = "helper" title = "Coding Sequence">CDS</span> 
+            information:</b><br>
+            <table class = "raTable">
+              <tr>
+                <td></td>
+                <td>g.</td>
+                <td>c.</td>
+              </tr>
+              <tr>
+                <td>Start</td>
+                <td tal:content = "cdsStart_g"></td>
+                <td tal:content = "cdsStart_c"></td>
+              </tr>
+              <tr>
+                <td>Stop</td>
+                <td tal:content = "cdsStop_g"></td>
+                <td tal:content = "cdsStop_c"></td>
+              </tr>
+              <tr>
+              </tr>
+            </table>
             <br>
-          </div>
+          </div> <!-- background color -->
+          <br>
+          <br>
         </div>
+        <div tal:condition = "restrictionSites">
+          <b>Effects on Restriction sites:</b><br>
+          <br>
+          <table class = "laTable">
+            <tr>
+              <td>Raw variant</td>
+              <td>Created</td>
+              <td>Deleted</td>
+            </tr>
+            <tr tal:repeat = "i restrictionSites">
+              <td tal:content = "repeat/i/number"></td>
+              <td>
+                <span tal:repeat = "j i/0">
+                  <span tal:condition = "not:repeat/j/end"
+                        tal:content = "structure string:${j},">
+                  </span>
+                  <span tal:condition = "repeat/j/end"
+                        tal:content = "structure string:${j}">
+                  </span>
+                </span>
+              </td>
+              <td>
+                <span tal:repeat = "j i/1">
+                  <span tal:condition = "not:repeat/j/end"
+                        tal:content = "structure string:${j},">
+                  </span>
+                  <span tal:condition = "repeat/j/end"
+                        tal:content = "structure string:${j}">
+                  </span>
+                </span>
+              </td>
+            </tr>
+          </table>
+          <br>
+          <br>
+        </div> <!-- restrictionSites -->
         <div tal:condition = "legends">
           <b>Legend:</b><br>
           <br>
@@ -247,6 +245,9 @@
               <td tal:repeat = "j i" tal:content = "j"></td>
             </tr>
           </table>
+          <br>
+        </div> <!-- legends -->
+        <div tal:condition = "reference">
           <div tal:condition = "interactive">
             <br>
             <br>
@@ -255,9 +256,9 @@
             Download this reference sequence file: 
             <a tal:content = "reference"
                tal:attributes = "href string:Reference/${reference}"></a>
-          </div>
-        </div>
-      </div>
+          </div> <!-- interactive -->
+        </div> <!-- reference -->
+      </div> <!-- lastpost -->
     </div>
   </body>
 </html>

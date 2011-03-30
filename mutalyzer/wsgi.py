@@ -604,79 +604,71 @@ class Check:
 
         @kwarg name: Variant to check.
         @kwarg interactive: Run interactively, meaning we wrap the result in
-                            the site layout and include the HTML form.
+            the site layout and include the HTML form.
         """
         output = Output(__file__, config.Output)
 
-        if name:
-            output.addMessage(__file__, -1, "INFO", "Received variant %s" % name)
-            # Todo: The following is probably a problem elsewhere too.
-            # We stringify the variant, because a unicode string crashes
-            # Bio.Seq.reverse_complement in Mapper.py:607.
-            #RD = Mutalyzer.process(str(name), config, O)
-            variantchecker.check_variant(str(name), config, output)
-            output.addMessage(__file__, -1, "INFO", "Finished processing variant %s" % \
-                              name)
+        args = {
+            'lastpost' : name
+        }
+
+        if not name:
+            return render.check(args, standalone=not interactive)
+
+        output.addMessage(__file__, -1, 'INFO', 'Received variant %s' % name)
+        # Todo: The following is probably a problem elsewhere too.
+        # We stringify the variant, because a unicode string crashes
+        # Bio.Seq.reverse_complement in Mapper.py:607.
+        variantchecker.check_variant(str(name), config, output)
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing variant %s' % name)
 
         errors, warnings, summary = output.Summary()
-        recordType = output.getIndexedOutput("recordType",0)
-        reference = output.getIndexedOutput("reference", 0)
-        if recordType == "LRG" :
-            reference = reference + ".xml" if reference else ""
-        else :
-            reference = reference + ".gb" if reference else ""
+        record_type = output.getIndexedOutput('recordType', 0, '')
+        reference = output.getIndexedOutput('reference', 0, '')
 
-        pe = output.getOutput("parseError")
-        if pe :
-            pe[0] = pe[0].replace('<', "&lt;")
+        if reference:
+            if record_type == 'LRG':
+                reference = reference + '.xml'
+            else:
+                reference = reference + '.gb'
 
-        genomicDNA = True
-        if output.getIndexedOutput("molType", 0) == 'n' :
-            genomicDNA = False
+        # This is a tuple (variant, position)
+        parse_error = output.getOutput('parseError')
+        if parse_error:
+            parse_error[0] = parse_error[0].replace('<', '&lt;')
 
-        genomicDescription = output.getIndexedOutput("genomicDescription", 0)
+        genomic_dna = output.getIndexedOutput('molType', 0) != 'n'
 
-        def urlEncode(descriptions):
-            """
-            @todo: This should probably be done in the template.
-
-            @arg descriptions:
-            @type descriptions: list
-
-            @return: urlEncode descriptions???????????????
-            @rtype: list
-            """
-            newDescr = []
-            for i in descriptions :
-                newDescr.append([i, urllib.quote(i)])
-            return newDescr
+        genomic_description = output.getIndexedOutput('genomicDescription', 0, '')
 
         # Todo: Generate the fancy HTML views for the proteins here instead
-        #       of in mutalyzer/variantchecker.py.
+        # of in mutalyzer/variantchecker.py.
         args = {
-            "lastpost"           : name,
-            "messages"           : map(util.message_info, output.getMessages()),
-            "summary"            : summary,
-            "parseError"         : pe,
-            "errors"             : errors,
-            "genomicDescription" : urlEncode([genomicDescription])[0] if genomicDescription else "",
-            "chromDescription"   : output.getIndexedOutput("genomicChromDescription", 0),
-            "genomicDNA"         : genomicDNA,
-            "visualisation"      : output.getOutput("visualisation"),
-            "descriptions"       : urlEncode(output.getOutput("descriptions")),
-            "protDescriptions"   : output.getOutput("protDescriptions"),
-            "oldProtein"         : output.getOutput("oldProteinFancy"),
-            "altStart"           : output.getIndexedOutput("altStart", 0),
-            "altProtein"         : output.getOutput("altProteinFancy"),
-            "newProtein"         : output.getOutput("newProteinFancy"),
-            "exonInfo"           : output.getOutput("exonInfo"),
-            "cdsStart_g"         : output.getIndexedOutput("cdsStart_g", 0),
-            "cdsStart_c"         : output.getIndexedOutput("cdsStart_c", 0),
-            "cdsStop_g"          : output.getIndexedOutput("cdsStop_g", 0),
-            "cdsStop_c"          : output.getIndexedOutput("cdsStop_c", 0),
-            "restrictionSites"   : output.getOutput("restrictionSites"),
-            "legends"            : output.getOutput("legends"),
-            "reference"          : reference
+            'lastpost'           : name,
+            'messages'           : map(util.message_info, output.getMessages()),
+            'summary'            : summary,
+            'parseError'         : parse_error,
+            'errors'             : errors,
+            'genomicDescription' : (genomic_description, urllib.quote(genomic_description)),
+            'chromDescription'   : output.getIndexedOutput('genomicChromDescription', 0),
+            'genomicDNA'         : genomic_dna,
+            'visualisation'      : output.getOutput('visualisation'),
+            'descriptions'       : map(lambda d: (d, urllib.quote(d)), output.getOutput('descriptions')),
+            'protDescriptions'   : output.getOutput('protDescriptions'),
+            'oldProtein'         : output.getOutput('oldProteinFancy'),
+            'altStart'           : output.getIndexedOutput('altStart', 0),
+            'altProtein'         : output.getOutput('altProteinFancy'),
+            'newProtein'         : output.getOutput('newProteinFancy'),
+            'transcriptInfo'     : output.getIndexedOutput('hasTranscriptInfo', 0, False),
+            'exonInfo'           : output.getOutput('exonInfo'),
+            'cdsStart_g'         : output.getIndexedOutput('cdsStart_g', 0),
+            'cdsStart_c'         : output.getIndexedOutput('cdsStart_c', 0),
+            'cdsStop_g'          : output.getIndexedOutput('cdsStop_g', 0),
+            'cdsStop_c'          : output.getIndexedOutput('cdsStop_c', 0),
+            'restrictionSites'   : output.getOutput('restrictionSites'),
+            'legends'            : output.getOutput('legends'),
+            'reference'          : reference
         }
 
         return render.check(args, standalone=not interactive)

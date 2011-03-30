@@ -1,23 +1,26 @@
 """
 Module for storing output and messages.
-Output is stored as a named list that can be expanded.
-Messages can be retrieved at a later time to provide flexibility. Message
-levels are defined to increase or decrease the amount of logging and ouput.
+
+Output is stored as a named list that can be expanded. Messages can be
+retrieved at a later time to provide flexibility. Message levels are
+defined to increase or decrease the amount of logging and ouput.
+
 The position of the log file, as well as the levels are defined in the
 configuration file.
 
 Message levels:
-    - E{-}1 : Log     ; Specifically log a message.
-    - 0 : Debug   ; Debug information.
-    - 1 : Info    ; Info.
-    - 2 : Warning ; Regular warnings.
-    - 3 : Error   ; Serious errors that can be compensated for.
-    - 4 : Fatal   ; Errors that are not recoverable.
-    - 5 : Off     ; Can be used as a log/output level to turn off output.
+  - -1 : Log     ; Specifically log a message.
+  -  0 : Debug   ; Debug information.
+  -  1 : Info    ; Info.
+  -  2 : Warning ; Regular warnings.
+  -  3 : Error   ; Serious errors that can be compensated for.
+  -  4 : Fatal   ; Errors that are not recoverable.
+  -  5 : Off     ; Can be used as a log/output level to turn off output.
+
+Public classes:
+  - Message ; Container class for message variables.
+  - Output  ; Output interface for errors, warnings and logging.
 """
-# Public classes:
-#     - Message ; Container class for message variables.
-#     - Output  ; Output interface for errors, warnings and logging.
 
 
 import time
@@ -166,37 +169,21 @@ class Output() :
                       self.__messages)
     #getMessages
 
-#        ret = []
-#        for i in self.__messages :
-#            if i.level >= self.__config.outputlevel :
-#                ret.append('%s: (%s): %s' % (i.named_level(), i.origin,
-#                                             i.description))
-#        return ret
-
-    def getSoapMessages(self):
+    def getMessagesWithErrorCode(self, errorcode):
         """
-        Returns a list of SoapMessages for over the wire
+        Retrieve all messages that have a specific error code.
 
         Private variables:
-            - __messages  ; The messages list.
-            - __config    ; The variable outputlevel is used.
+            - __messages   ; The messages list.
 
-        @requires: Modules.Serializers.SoapMessage
+        @arg errorcode: The error code to filter on
+        @type errorcode: string
 
-        @return: list of SoapMessages
+        @return: A filtered list
         @rtype: list
         """
-        ret = []
-        for i in self.__messages:
-            if i.level >= self.__config.outputlevel:
-                mess = SoapMessage()
-                mess.errorcode = i.code
-                mess.message = i.description
-                ret.append(mess)
-            #if
-        #for
-        return ret
-    #getSoapMessages
+        return filter(lambda m: m.code == errorcode, self.__messages)
+    #getMessagesWithErrorCode
 
     def getBatchMessages(self, level):
         """
@@ -212,7 +199,6 @@ class Output() :
         @return: list of Messages
         @rtype: list
         """
-
         ret = []
         lastorigin = ""
         for i in self.__messages:
@@ -228,7 +214,6 @@ class Output() :
         return ret
     #getBatchMessages
 
-
     def addOutput(self, name, data) :
         """
         If the output dictionary already has a node with the specified
@@ -243,7 +228,6 @@ class Output() :
         @arg data: The data to be stored at this node
         @type data: object
         """
-
         if self.__outputData.has_key(name) :
             self.__outputData[name].append(data)
         else :
@@ -263,20 +247,21 @@ class Output() :
         @return: output dictionary
         @rtype: dictionary
         """
-
         if self.__outputData.has_key(name) :
             return self.__outputData[name]
         return []
     #getOutput
 
-    def getIndexedOutput(self, name, index) :
+    def getIndexedOutput(self, name, index, default=None):
         """
         Return an element of a list, the list is called 'name' in de
         __outputData dictionary. If either the list or the element does not
-        exist, return None.
+        exist, return {default}.
 
         @arg name:  Name of the list.
         @arg index: Index of the element to be retuned.
+        @arg default: Default to return if either the list or the element
+            does not exist.
 
         Private variables:
             - __outputData ; The output dictionary.
@@ -284,28 +269,11 @@ class Output() :
         @return: The requested element or None
         @rtype: any type
         """
-
         if self.__outputData.has_key(name) :
             if 0 <= index < len(self.__outputData[name]) :
                 return self.__outputData[name][index]
-        return None
-    #getFirst
-
-    def getMessagesWithErrorCode(self, errorcode):
-        """
-        Retrieve all messages that have a specific error code.
-
-        Private variables:
-            - __messages   ; The messages list.
-
-        @arg errorcode: The error code to filter on
-        @type errorcode: string
-
-        @return: A filtered list
-        @rtype: list
-        """
-        return filter(lambda m: m.code == errorcode, self.__messages)
-    #getMessagesWithErrorCode
+        return default
+    #getIndexedOutput
 
     def Summary(self) :
         """
@@ -322,7 +290,6 @@ class Output() :
                 - Summary
         @rtype: integer, integer, string
         """
-
         e_s = 's'
         w_s = 's'
         if self.__errors == 1 :
@@ -377,10 +344,12 @@ class Message() :
     def __repr__(self):
         return 'Message("%s", %i, "%s", "%s")' % \
                (self.origin, self.level, self.code, self.description)
+    #__repr__
 
     def __str__(self):
         return '%s (%s): %s' % \
                (self.named_level(), self.origin, self.description)
+    #__str__
 
     def named_level(self):
         """

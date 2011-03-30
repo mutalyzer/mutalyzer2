@@ -370,7 +370,7 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
 #apply_deletion_duplication
 
 
-def apply_inversion(first, last, mutator, record, O) :
+def apply_inversion(first, last, mutator, record, O):
     """
     Do a semantic check for an inversion, do the actual inversion, and give
     it a name.
@@ -761,7 +761,7 @@ def _coding_to_genomic(first_location, last_location, transcript):
 #_coding_to_genomic
 
 
-def _process_raw_variant(mutator, variant, record, transcript, output):
+def process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
 
@@ -938,7 +938,35 @@ def _process_raw_variant(mutator, variant, record, transcript, output):
     # DelIns.
     if variant.MutationType == 'delins':
         apply_delins(first, last, argument, sequence, mutator, record, output)
-#_process_raw_variant
+#process_raw_variant
+
+
+def _add_static_transcript_info(transcript, output):
+    """
+    Add static (unrelated to the variant) transcript-specific information to
+    the {output} object.
+
+    @arg transcript: A transcript object.
+    @type transcript: Modules.GenRecord.Locus
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
+    """
+    output.addOutput('hasTranscriptInfo', True)
+
+    # Add exon table to output.
+    for i in range(0, transcript.CM.numberOfExons() * 2, 2):
+        acceptor = transcript.CM.getSpliceSite(i)
+        donor = transcript.CM.getSpliceSite(i + 1)
+        output.addOutput('exonInfo', [acceptor, donor,
+                                      transcript.CM.g2c(acceptor),
+                                      transcript.CM.g2c(donor)])
+
+    # Add CDS info to output.
+    cds_stop = transcript.CM.info()[2]
+    output.addOutput('cdsStart_g', transcript.CM.x2g(1, 0))
+    output.addOutput('cdsStart_c', 1)
+    output.addOutput('cdsStop_g', transcript.CM.x2g(cds_stop, 0))
+    output.addOutput('cdsStop_c', cds_stop)
 
 
 def _add_transcript_info(mutator, transcript, output):
@@ -955,22 +983,8 @@ def _add_transcript_info(mutator, transcript, output):
 
     @todo: Documentation.
     @todo: Don't generate the fancy HTML protein descriptions here.
+    @todo: Add mutated transcript and CDS info.
     """
-    # Add exon table to output.
-    for i in range(0, transcript.CM.numberOfExons() * 2, 2):
-        acceptor = transcript.CM.getSpliceSite(i)
-        donor = transcript.CM.getSpliceSite(i + 1)
-        output.addOutput('exonInfo', [acceptor, donor,
-                                      transcript.CM.g2c(acceptor),
-                                      transcript.CM.g2c(donor)])
-
-    # Add CDS info to output.
-    cds_stop = transcript.CM.info()[2]
-    output.addOutput('cdsStart_g', transcript.CM.x2g(1, 0))
-    output.addOutput('cdsStart_c', 1)
-    output.addOutput('cdsStop_g', transcript.CM.x2g(cds_stop, 0))
-    output.addOutput('cdsStop_c', cds_stop)
-
     # Add transcript info to output.
     if transcript.transcribe:
         output.addOutput('myTranscriptDescription', transcript.description)
@@ -1056,7 +1070,7 @@ def _add_transcript_info(mutator, transcript, output):
 #_add_transcript_info
 
 
-def _process_variant(mutator, description, record, output):
+def process_variant(mutator, description, record, output):
     """
     @arg mutator: A Mutator instance.
     @type mutator: mutalyzer.mutator.Mutator
@@ -1156,25 +1170,30 @@ def _process_variant(mutator, description, record, output):
             # Todo: Shouldn't we add some message here?
             raise _VariantError()
 
+    if transcript and record.record.geneList:
+        _add_static_transcript_info(transcript, output)
+
     # Now process all raw variants (or just the only one). The function
-    # _process_raw_variant might raise a _VariantError exception.
+    # process_raw_variant might raise a _VariantError exception.
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
             try:
-                _process_raw_variant(mutator, var.RawVar, record, transcript,
-                                     output)
+                process_raw_variant(mutator, var.RawVar, record, transcript,
+                                    output)
             except _RawVariantError:
-                output.addMessage(__file__, 1, 'ISKIPRAWVARIANT',
-                                  'Ignoring raw variant "%s" because it ' \
-                                  'could not be processed.' % var[0])
+                output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
+                                  'Ignoring raw variant "%s".' % var[0])
     else:
-        _process_raw_variant(mutator, description.RawVar, record,
-                             transcript, output)
+        process_raw_variant(mutator, description.RawVar, record,
+                            transcript, output)
 
     # Add transcript-specific information.
+    # Todo: Some of this info is static (unrelated to the variant, but related
+    # to the selected transcript). We should add this info, even if an error
+    # occured in processing the variant.
     if transcript and record.record.geneList:
         _add_transcript_info(mutator, transcript, output)
-#_process_variant
+#process_variant
 
 
 def check_variant(description, config, output):
@@ -1190,10 +1209,8 @@ def check_variant(description, config, output):
     @arg output: An output object.
     @type output: Modules.Output.Output
 
-    @return: A GenRecord object.
-    @rtype: Modules.GenRecord.GenRecord
-
-    @todo: documentation
+    @todo: Documentation.
+    @todo: Raise exceptions on failure instead of just return.
     """
     output.addOutput('inputvariant', description)
 
@@ -1202,7 +1219,14 @@ def check_variant(description, config, output):
 
     if not parsed_description:
         # Parsing went wrong.
-        return None
+        return
+
+    # Add GeneSymbol and Transcript Var to the Output object for batch.
+    if parsed_description.Gene:
+        output.addOutput('geneOfInterest',
+                         dict(parsed_description.Gene.items()))
+    else:
+        output.addOutput('geneOfInterest', dict())
 
     if parsed_description.Version:
         record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
@@ -1218,6 +1242,7 @@ def check_variant(description, config, output):
         transcript_id = parsed_description.LRGTranscriptID
         retriever = Retriever.LRGRetriever(config.Retriever, output, database)
     else:
+        filetype = 'GB'
         if parsed_description.Gene:
             gene_symbol = parsed_description.Gene.GeneSymbol or ''
             transcript_id = parsed_description.Gene.TransVar or ''
@@ -1226,7 +1251,6 @@ def check_variant(description, config, output):
                                   'protein isoform is not supported.')
         retriever = Retriever.GenBankRetriever(config.Retriever, output,
                                                database)
-        filetype = 'GB'
 
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
@@ -1244,66 +1268,90 @@ def check_variant(description, config, output):
     retrieved_record = retriever.loadrecord(record_id)
 
     if not retrieved_record:
-        return None
+        return
 
     record = GenRecord.GenRecord(output, config.GenRecord)
     record.record = retrieved_record
     record.checkRecord()
 
-    mutator = Mutator(record.record.seq, config.Mutator, output)
+    # Create the legend.
+    for gene in record.record.geneList:
+        for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
+            if not transcript.name:
+                continue
+            output.addOutput('legends',
+                             ['%s_v%s' % (gene.name, transcript.name),
+                              transcript.transcriptID, transcript.locusTag,
+                              transcript.transcriptProduct,
+                              transcript.linkMethod])
+            if transcript.translate:
+                output.addOutput('legends',
+                                 ['%s_i%s' % (gene.name, transcript.name),
+                                  transcript.proteinID, transcript.locusTag,
+                                  transcript.proteinProduct,
+                                  transcript.linkMethod])
 
     # Note: The GenRecord instance is carrying the sequence in .record.seq.
     #       So is the Mutator instance in .mutator.orig.
 
+    mutator = Mutator(record.record.seq, config.Mutator, output)
+
     # Todo: If processing of the variant fails, we might still want to show
     # information about the record, gene, transcript.
+
     try:
-        _process_variant(mutator, parsed_description, record, output)
+        process_variant(mutator, parsed_description, record, output)
     except _VariantError:
-        return record
+        return
+
+    output.addOutput('original', str(mutator.orig))
+    output.addOutput('mutated', str(mutator.mutated))
 
     # Protein.
     for gene in record.record.geneList:
         for transcript in gene.transcriptList:
-            if not ';' in transcript.description \
-                   and transcript.CDS and transcript.translate:
-                cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
-                                   IUPAC.unambiguous_dna)
-                cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                                mutator.newSplice(transcript.mRNA.positionList),
-                                                mutator.newSplice(transcript.CDS.location),
-                                                transcript.CM.orientation)),
-                                  IUPAC.unambiguous_dna)
-                if transcript.CM.orientation == -1:
-                    cds_original = Bio.Seq.reverse_complement(cds_original)
-                    cds_variant = Bio.Seq.reverse_complement(cds_variant)
 
-                #if '*' in cds_original.translate()[:-1]:
-                #    output.addMessage(__file__, 3, "ESTOP",
-                #                      "In frame stop codon found.")
-                #    return
-                ##if
+            if not (transcript.CDS and transcript.translate) \
+                   or ';' in transcript.description:
+                continue
 
-                if not len(cds_original) % 3:
-                    try:
-                        # FIXME this is a bit of a rancid fix.
-                        protein_original = cds_original.translate(table=transcript.txTable,
-                                                                  cds=True,
-                                                                  to_stop=True)
-                    except Bio.Data.CodonTable.TranslationError:
-                        output.addMessage(__file__, 4, "ETRANS", "Original " \
-                                          "CDS could not be translated.")
-                        return record
-                    protein_variant = cds_variant.translate(table=transcript.txTable,
-                                                            to_stop=True)
-                    cds_length = util.cds_length(mutator.newSplice(transcript.CDS.positionList))
-                    transcript.proteinDescription = util.protein_description(
-                        cds_length, protein_original, protein_variant)[0]
-                else:
-                    output.addMessage(__file__, 2, "ECDS", "CDS length is " \
-                        "not a multiple of three in gene %s, transcript " \
-                        "variant %s." % (gene.name, transcript.name))
-                    transcript.proteinDescription = '?'
+            cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
+                               IUPAC.unambiguous_dna)
+            cds_variant = Seq(str(util.__nsplice(mutator.mutated,
+                                            mutator.newSplice(transcript.mRNA.positionList),
+                                            mutator.newSplice(transcript.CDS.location),
+                                            transcript.CM.orientation)),
+                              IUPAC.unambiguous_dna)
+            if transcript.CM.orientation == -1:
+                cds_original = Bio.Seq.reverse_complement(cds_original)
+                cds_variant = Bio.Seq.reverse_complement(cds_variant)
+
+            #if '*' in cds_original.translate()[:-1]:
+            #    output.addMessage(__file__, 3, "ESTOP",
+            #                      "In frame stop codon found.")
+            #    return
+            ##if
+
+            if not len(cds_original) % 3:
+                try:
+                    # FIXME this is a bit of a rancid fix.
+                    protein_original = cds_original.translate(table=transcript.txTable,
+                                                              cds=True,
+                                                              to_stop=True)
+                except Bio.Data.CodonTable.TranslationError:
+                    output.addMessage(__file__, 4, "ETRANS", "Original " \
+                                      "CDS could not be translated.")
+                    return
+                protein_variant = cds_variant.translate(table=transcript.txTable,
+                                                        to_stop=True)
+                cds_length = util.cds_length(mutator.newSplice(transcript.CDS.positionList))
+                transcript.proteinDescription = util.protein_description(
+                    cds_length, protein_original, protein_variant)[0]
+            else:
+                output.addMessage(__file__, 2, "ECDS", "CDS length is " \
+                    "not a multiple of three in gene %s, transcript " \
+                    "variant %s." % (gene.name, transcript.name))
+                transcript.proteinDescription = '?'
 
     reference = output.getOutput('reference')[-1]
     if ';' in record.record.description:
@@ -1327,8 +1375,7 @@ def check_variant(description, config, output):
                           record.record.molType, chromosomal_description))
 
     # Now we add variant descriptions for all transcripts, including protein
-    # level descriptions. In the same loop, we also create the legend.
-
+    # level descriptions.
     for gene in record.record.geneList:
         for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
 
@@ -1379,7 +1426,7 @@ def check_variant(description, config, output):
                 output.addOutput('protDescriptions',
                                  full_protein_description)
 
-            # The 'NewDescriptions' field is currently not used.
+            # The 'NewDescriptions' field is used in _add_batch_output.
             output.addOutput('NewDescriptions',
                              (gene.name, transcript.name,
                               transcript.molType, coding_description,
@@ -1387,34 +1434,5 @@ def check_variant(description, config, output):
                               protein_id, full_description,
                               full_protein_description))
 
-            # Now add to the legend, but exclude nameless transcripts.
-            if not transcript.name:
-                continue
-
-            output.addOutput('legends',
-                             ['%s_v%s' % (gene.name, transcript.name),
-                              transcript.transcriptID, transcript.locusTag,
-                              transcript.transcriptProduct,
-                              transcript.linkMethod])
-
-            if transcript.translate:
-                output.addOutput('legends',
-                                 ['%s_i%s' % (gene.name, transcript.name),
-                                  transcript.proteinID, transcript.locusTag,
-                                  transcript.proteinProduct,
-                                  transcript.linkMethod])
-
-    # Add GeneSymbol and Transcript Var to the Output object for batch.
-    if parsed_description.Gene:
-        output.addOutput('geneOfInterest',
-                         dict(parsed_description.Gene.items()))
-    else:
-        output.addOutput('geneOfInterest', dict())
-
     _add_batch_output(output)
-
-    output.addOutput('original', str(mutator.orig))
-    output.addOutput('mutated', str(mutator.mutated))
-
-    return record
 #check_variant

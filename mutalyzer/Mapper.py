@@ -414,15 +414,21 @@ class Converter(object) :
             self._FieldsFromDb(acc, version)
 
         mapping = self._coreMapping()
-        soaperrors = self.__output.getSoapMessages()
+
+        errors = []
+        for message in self.__output.getMessages():
+            soap_message = SoapMessage()
+            soap_message.errorcode = message.code
+            soap_message.message = message.description
+            errors.append(soap_message)
 
         if mapping is None :         # Something went wrong
             mapping = Mapping()
-            mapping.errorcode = len(soaperrors)
+            mapping.errorcode = len(errors)
         else :
             mapping.errorcode = 0
 
-        mapping.messages = soaperrors
+        mapping.messages = errors
 
         return mapping
     #main_Mapping

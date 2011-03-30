@@ -384,14 +384,13 @@ Mutalyzer batch checker.""" % url)
         if not skip :
             #Run mutalyzer and get values from Output Object 'O'
             try :
-                #Mutalyzer.process(cmd, C, O)
                 variantchecker.check_variant(cmd, C, O)
             except Exception, e :
                 #Catch all exceptions related to the processing of cmd
                 O.addMessage(__file__, 4, "EBATCHU",
                         "Unexpected error occurred, dev-team notified")
                 import traceback
-                O.addMessage(__file__, 4, "DEBUG", `traceback.format_exc()`)
+                O.addMessage(__file__, 4, "DEBUG", repr(traceback.format_exc()))
             #except
             finally :
                 #check if we need to update the database
