@@ -50,8 +50,8 @@
             "structure string:${parseError/0}<br>${parseError/1}">
           </pre>
           The &quot;^&quot; indicates the position where the error occurred.
+          <br>
         </div> <!-- parseError -->
-        <br>
         <div tal:condition = "visualisation">
           <b>Overview of the raw variants:</b><br>
           <br>
@@ -68,29 +68,30 @@
           <br>
         </div> <!-- not:visualisation -->
         <div tal:condition = "genomicDescription/0">
-          <div tal:condition = "genomicDNA">
-            <b>Genomic description:</b>
+          <div tal:condition = "genomicDNA" tal:omit-tag="">
+            <b>Genomic description:</b><br>
           </div> <!-- genomicDNA -->
-          <div tal:condition = "not:genomicDNA">
+          <div tal:condition = "not:genomicDNA" tal:omit-tag="">
             <b>Description relative to transcription start:</b><br>
-            (Not for use in LSDBs in case of protein-coding transcripts).
+            (Not for use in LSDBs in case of protein-coding transcripts).<br>
           </div> <!-- not:genomicDNA -->
           <br>
           <tt>
             <a tal:content = "genomicDescription/0"
                tal:attributes = "href 
                  string:checkForward?mutationName=${genomicDescription/1}">
-            </a>
-            <br>
+            </a><br>
           </tt>
+          <br>
+          <br>
         </div> <!-- genomicDescription/0 -->
         <div tal:condition = "chromDescription">
-          <br>
           Alternative chromosomal position:<br>
-          <tt tal:content = "chromDescription"></tt>
+          <br>
+          <tt><div tal:replace = "chromDescription"></div><br></tt>
+          <br>
+          <br>
         </div> <!-- chromDescription -->
-        <br>
-        <br>
         <div tal:condition = "descriptions">
           <b>Affected transcripts:</b><br>
           <br>
@@ -116,7 +117,7 @@
         <div tal:condition = "transcriptInfo">
           <b>Detailed information about the selected transcript:</b><br>
           <br>
-          <div style = "background-color : #ccffff;">
+          <div style = "background-color : #ccffff; padding : 20px;">
             <div tal:condition = "oldProtein">
               <b>Reference protein:</b><br>
               <pre><div tal:repeat = "i oldProtein"
@@ -189,7 +190,6 @@
               <tr>
               </tr>
             </table>
-            <br>
           </div> <!-- background color -->
           <br>
           <br>
@@ -246,16 +246,17 @@
             </tr>
           </table>
           <br>
+          <br>
         </div> <!-- legends -->
         <div tal:condition = "reference">
           <div tal:condition = "interactive">
-            <br>
-            <br>
             <b>Links:</b><br>
             <br>
             Download this reference sequence file: 
             <a tal:content = "reference"
                tal:attributes = "href string:Reference/${reference}"></a>
+            <br>
+            <br>
           </div> <!-- interactive -->
         </div> <!-- reference -->
       </div> <!-- lastpost -->

@@ -20,12 +20,7 @@ Coding style guide:
 
 Todo:
 
-* Redo configuration management. Probably look in /etc, ~/, current directory,
-  or accept a --config command line argument or something. Look for standard
-  Python ways to handle this. Store an example configuration file in the SVN
-  repository.
-  Follow the XDG Base Directory Specification.
-  http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+* Accept a --config command line argument for a configuration file location.
 * Document integration, deployment, release management, etc.
 * Use standard logging module, with rotating functionality. Race conditions
   on the log file are probably a problem in the current setup.
@@ -35,6 +30,17 @@ Todo:
 * Setup continuous integration. Currently, I'm most impressed with Hudson.
   http://hudson-ci.org/
   http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
+* Create an installation script, and from that preferably a Debian package.
+  Non-trivial thing here would be the requirement of database contents.
+* Make the batch checker a real system service, using /var/run and a Upstart
+  init script.
+* Migrate Javascript to JQuery.
+* I think in the long run, the Output object is not really the way to go. It
+  obscures the control flow. The logging part should use the standard logging
+  module. The data gathering by the Output object is probably better handled
+  by explicitely returning data objects from functions.
+* Migrate from TAL to a more mondern and maintained Python template library.
+* Develop a large test suite.
 
 
 Notes for server setup (Europium VM copy):

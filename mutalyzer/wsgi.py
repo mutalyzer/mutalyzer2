@@ -128,8 +128,8 @@ class render_tal:
 
     Example to render /templates/hello.html with parameter 'alice':
 
-        render = render_tal('templates')
-        render.hello('alice')
+        >>> render = render_tal('templates')
+        >>> render.hello('alice')
     """
     def __init__(self, path, globals={}):
         """
