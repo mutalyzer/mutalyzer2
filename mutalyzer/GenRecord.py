@@ -108,42 +108,7 @@ class Locus(object) :
         self.linkMethod = None
         self.transcriptProduct = None
         self.proteinProduct = None
-        self.removed_splice_sites = set()
     #__init__
-
-    def remove_splice_sites(self, splice_sites):
-        """
-        Remove (an even number of consecutive) splice sites.
-
-        @arg splice_sites: An even number of consecutive splice sites.
-        @type splice_sites: list(int)
-
-        @todo: Check if they are consecutive and even in number.
-        @todo: This is a huge can of worms, but we probably also should
-            remove the splice sites from self.CM.
-        @todo: Implementation is very inefficient.
-        @todo: CDS start/stop should never be removed.
-        """
-        # Todo: This is not usefull in this form. The .mRNA and .CDS are
-        # still used after processing the variant to get the original
-        # splice sites (but at that point, this method has altered them).
-        # Solution could be to maintain a separate 'mutated' list of splice
-        # sites.
-        #self.mRNA.positionList = filter(lambda s: s not in splice_sites,
-        #                                self.mRNA.positionList)
-        #self.CDS.positionList = filter(lambda s: s not in splice_sites,
-        #                               self.CDS.positionList)
-        self.removed_splice_sites.update(splice_sites)
-
-    # Rancid fix
-    def variant_mrna_positionlist(self):
-        return filter(lambda p: p not in self.removed_splice_sites,
-                      self.mRNA.positionList)
-
-    # Rancid fix
-    def variant_cds_positionlist(self):
-        return filter(lambda p: p not in self.removed_splice_sites,
-                      self.CDS.positionList)
 
     def addToDescription(self, rawVariant) :
         """

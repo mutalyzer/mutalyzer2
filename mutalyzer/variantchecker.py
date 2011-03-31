@@ -935,7 +935,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             # An even number of splice sites was removed. We can deal with
             # this, but issue a warning.
             splice_abort = False
-            transcript.remove_splice_sites(removed_sites)
+            mutator.add_removed_sites(removed_sites)
             output.addMessage(__file__, 1, 'IDELSPLICE',
                               'Removed %i splice sites from transcript.' % \
                               len(removed_sites))
@@ -1037,15 +1037,15 @@ def _add_transcript_info(mutator, transcript, output):
             str(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
             str(util.splice(mutator.mutated,
-                        mutator.newSplice(transcript.variant_mrna_positionlist()))))
+                        mutator.newSplice(transcript.mRNA.positionList))))
 
     # Add protein prediction to output.
     if transcript.translate:
         cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                            IUPAC.unambiguous_dna)
         cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                        mutator.newSplice(transcript.variant_mrna_positionlist()),
-                                        mutator.newSplice(transcript.variant_cds_positionlist()),
+                                        mutator.newSplice(transcript.mRNA.positionList),
+                                        mutator.newSplice(transcript.CDS.positionList),
                                         transcript.CM.orientation)),
                           IUPAC.unambiguous_dna)
 
@@ -1098,7 +1098,7 @@ def _add_transcript_info(mutator, transcript, output):
 
         else:
             cds_length = util.cds_length(
-                mutator.newSplice(transcript.variant_cds_positionlist()))
+                mutator.newSplice(transcript.CDS.positionList))
             descr, first, last_original, last_variant = \
                    util.protein_description(cds_length, protein_original,
                                             protein_variant)
@@ -1363,8 +1363,8 @@ def check_variant(description, config, output):
             cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                                IUPAC.unambiguous_dna)
             cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                            mutator.newSplice(transcript.variant_mrna_positionlist()),
-                                            mutator.newSplice(transcript.variant_cds_positionlist()),
+                                            mutator.newSplice(transcript.mRNA.positionList),
+                                            mutator.newSplice(transcript.CDS.positionList),
                                             transcript.CM.orientation)),
                               IUPAC.unambiguous_dna)
             if transcript.CM.orientation == -1:
@@ -1392,7 +1392,7 @@ def check_variant(description, config, output):
                     return
                 protein_variant = cds_variant.translate(table=transcript.txTable,
                                                         to_stop=True)
-                cds_length = util.cds_length(mutator.newSplice(transcript.variant_cds_positionlist()))
+                cds_length = util.cds_length(mutator.newSplice(transcript.CDS.positionList))
                 transcript.proteinDescription = util.protein_description(
                     cds_length, protein_original, protein_variant)[0]
             else:
