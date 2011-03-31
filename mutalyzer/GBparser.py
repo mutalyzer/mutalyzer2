@@ -402,7 +402,7 @@ class GBparser() :
                         i.link = j
                         i.linkMethod = "locus"
                         j.linked = True
-                        print "Linked:", j.locus_tag
+                        #print "Linked:", j.locus_tag
                         break
                     #if
                     # Try the proteinLink tag.

@@ -10,7 +10,7 @@ from suds import WebFault
 from nose.tools import *
 
 
-WSDL_URL = 'http://mutalyzer.martijn/services/?wsdl'
+WSDL_URL = 'http://mutalyzer-refactor.martijn/services/?wsdl'
 
 
 class TestWSDL():
@@ -38,7 +38,8 @@ class TestWebservice():
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client(WSDL_URL, cache=None)
+        self.client = Client(WSDL_URL) #, cache=None)
+        self.client.options.cache.setduration(seconds=120)
 
     def test_checksyntax_valid(self):
         """
