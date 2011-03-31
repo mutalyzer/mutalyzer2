@@ -16,6 +16,14 @@ import sys
 import daemon
 import signal
 import fcntl
+import site
+
+# Todo: Get this from the configuration file
+root_dir = os.path.split(os.path.dirname(__file__))[0]
+site.addsitedir(root_dir)
+# Todo: Fix Mutalyzer to not depend on working directory
+if not __name__ == '__main__':
+    os.chdir(root_dir)
 
 from mutalyzer.config import Config
 from mutalyzer.Db import Batch
@@ -28,8 +36,8 @@ def sigusr1_daemon_notified(*args):
     sys.exit()
 
 # Change dir
-if len(sys.argv[0].split('/')) > 2 :
-    os.chdir(sys.argv[0].rsplit('/', 2)[0])
+#if len(sys.argv[0].split('/')) > 2 :
+#    os.chdir(sys.argv[0].rsplit('/', 2)[0])
 
 C = Config()
 

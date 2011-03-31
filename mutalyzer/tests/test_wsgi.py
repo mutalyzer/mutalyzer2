@@ -215,7 +215,6 @@ class TestWSGI():
         @kwarg size: Number of variants in input.
         @kwarg header: Message that must be found in the batch job result.
         """
-        return  # Todo: temporarily switched of batch tests.
         r = self.app.get('/batch')
         form = r.forms[0]
         if arg1:
