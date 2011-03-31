@@ -89,6 +89,8 @@ def _check_intronic_position(main, offset, transcript):
     @raise _OffsetNotFromBoundary: An offset from a non-boundary position
                                    was used.
     @raise _OffsetSignError: Offset from exon boundary has the wrong sign.
+
+    @todo: Check if the offset is really in the flanking intron.
     """
     main_g = transcript.CM.x2g(main, 0)
     sites = transcript.CM.RNA
@@ -907,9 +909,52 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                           last)
         raise _RawVariantError()
 
+    splice_abort = False
+    # If we hit a splice site, issue a warning. Later on we decide if we
+    # can still process this variant in any way (e.g. if it deletes an
+    # entire exon).
     if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
+        splice_abort = True
         output.addMessage(__file__, 2, 'WOVERSPLICE',
                           'Variant hits one or more splice sites.')
+
+    # If we have a deletion, and it covers exactly an even number of splice
+    # sites, remove these splice sites.
+    # Note, this is not the same as util.over_splice_site(). Here we collect
+    # sites where the delection borders the exon/intron boundary.
+    # Todo: Special cases for first/last exon? Upstream/downstream exons?
+    if transcript and variant.MutationType == 'del':
+        removed_sites = []
+        for acceptor, donor in util.grouper(transcript.CM.RNA):
+            if first <= acceptor <= last + 1:
+                removed_sites.append(acceptor)
+            if first - 1 <= donor <= last:
+                removed_sites.append(donor)
+
+        if len(removed_sites) and not len(removed_sites) % 2:
+            # An even number of splice sites was removed. We can deal with
+            # this, but issue a warning.
+            splice_abort = False
+            transcript.remove_splice_sites(removed_sites)
+            output.addMessage(__file__, 1, 'IDELSPLICE',
+                              'Removed %i splice sites from transcript.' % \
+                              len(removed_sites))
+
+    # If splice_abort is set, this basically means WOVERSPLICE was called and
+    # IDELSPLICE was not called.
+    # I guess in that case we do want to generate the visualisation, the
+    # genomic description, and affected transcripts. But NOT the predicted
+    # protein.
+    # The following solution is a bit of a hack. By setting the .translate
+    # field of the transcript to False, we force that no protein is predicted.
+    if splice_abort:
+        #return
+        transcript.translate = False
+        # The affected protein description for this transcript will now be
+        # a question mark, e.g. "NG_012772.1(BRCA2_i001):?". But protein
+        # descriptions for other transcripts (where splice sites are also
+        # crippled) are still shown. I think we ideally would not want this.
+        # However, some transcripts might be unaffected and should be shown.
 
     # The following functions can raise _RawVariantError exceptions, but we
     # just let them flow through to the caller.
@@ -992,15 +1037,15 @@ def _add_transcript_info(mutator, transcript, output):
             str(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
             str(util.splice(mutator.mutated,
-                        mutator.newSplice(transcript.mRNA.positionList))))
+                        mutator.newSplice(transcript.variant_mrna_positionlist()))))
 
     # Add protein prediction to output.
     if transcript.translate:
         cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                            IUPAC.unambiguous_dna)
         cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                        mutator.newSplice(transcript.mRNA.positionList),
-                                        mutator.newSplice(transcript.CDS.location),
+                                        mutator.newSplice(transcript.variant_mrna_positionlist()),
+                                        mutator.newSplice(transcript.variant_cds_positionlist()),
                                         transcript.CM.orientation)),
                           IUPAC.unambiguous_dna)
 
@@ -1053,7 +1098,7 @@ def _add_transcript_info(mutator, transcript, output):
 
         else:
             cds_length = util.cds_length(
-                mutator.newSplice(transcript.CDS.positionList))
+                mutator.newSplice(transcript.variant_cds_positionlist()))
             descr, first, last_original, last_variant = \
                    util.protein_description(cds_length, protein_original,
                                             protein_variant)
@@ -1318,8 +1363,8 @@ def check_variant(description, config, output):
             cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                                IUPAC.unambiguous_dna)
             cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                            mutator.newSplice(transcript.mRNA.positionList),
-                                            mutator.newSplice(transcript.CDS.location),
+                                            mutator.newSplice(transcript.variant_mrna_positionlist()),
+                                            mutator.newSplice(transcript.variant_cds_positionlist()),
                                             transcript.CM.orientation)),
                               IUPAC.unambiguous_dna)
             if transcript.CM.orientation == -1:
@@ -1331,6 +1376,9 @@ def check_variant(description, config, output):
             #                      "In frame stop codon found.")
             #    return
             ##if
+
+            # Todo: Figure out if this is all ok, even if the CDS stop is
+            # somehow removed, if the sequence is really short, etc.
 
             if not len(cds_original) % 3:
                 try:
@@ -1344,7 +1392,7 @@ def check_variant(description, config, output):
                     return
                 protein_variant = cds_variant.translate(table=transcript.txTable,
                                                         to_stop=True)
-                cds_length = util.cds_length(mutator.newSplice(transcript.CDS.positionList))
+                cds_length = util.cds_length(mutator.newSplice(transcript.variant_cds_positionlist()))
                 transcript.proteinDescription = util.protein_description(
                     cds_length, protein_original, protein_variant)[0]
             else:

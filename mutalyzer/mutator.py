@@ -365,7 +365,7 @@ class Mutator() :
         @rtype:  list of int
 
 
-        Example 1 (DNA): NG_012772.1
+        Example 1 (DNA): NG_012772.1(BRCA2_v001)
 
                   ...---------[=========]----------...
                               ^         ^
