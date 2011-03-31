@@ -408,34 +408,35 @@ class Snp:
         Convert to HGVS description(s) and render SNP converter HTML form.
 
         Parameters:
-        - rsId: The dbSNP rs number.
+          - rsId: The dbSNP rs number.
         """
         i = web.input(rsId=None)
         return self.snp(i.rsId)
 
-    def snp(self, rsId=None):
+    def snp(self, rs_id=None):
         """
-        Convert to HGVS description(s) and render SNP converter HTML form.
+        Convert {rs_id} to HGVS description(s) and render SNP converter HTML
+        form.
 
-        @kwarg rsId: The dbSNP rs number.
+        @kwarg rs_id: The dbSNP rs number (including 'rs' prefix).
+        @type rs_id: string
         """
         output = Output(__file__, config.Output)
 
         descriptions = []
 
-        if rsId :
-            output.addMessage(__file__, -1, "INFO", "Received rs%s" % rsId)
-            R = Retriever.Retriever(config.Retriever, output, None)
-            descriptions = R.snpConvert(rsId)
-            output.addMessage(__file__, -1, "INFO",
-                              "Finished processing rs%s" % rsId)
-        #if
+        if rs_id:
+            output.addMessage(__file__, -1, 'INFO', 'Received %s' % rs_id)
+            retriever = Retriever.Retriever(config.Retriever, output, None)
+            descriptions = retriever.snpConvert(rs_id)
+            output.addMessage(__file__, -1, 'INFO',
+                              'Finished processing %s' % rs_id)
 
         args = {
-            "snp"      : descriptions,
-            "messages" : map(util.message_info, output.getMessages()),
-            "summary"  : output.Summary()[2],
-            "lastpost" : rsId
+            'snp'      : descriptions,
+            'messages' : map(util.message_info, output.getMessages()),
+            'summary'  : output.Summary()[2],
+            'lastpost' : rs_id
         }
 
         return render.snp(args)

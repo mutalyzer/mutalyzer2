@@ -41,6 +41,8 @@ from mutalyzer import LRGparser
 from mutalyzer import GBparser
 from xml.dom import DOMException
 import xml.dom.minidom
+import xml.parsers.expat
+
 
 class Retriever(object) :
     """
@@ -265,7 +267,7 @@ class Retriever(object) :
     #_updateDBmd5
 
 
-    def snpConvert(self, rsId) :
+    def snpConvert(self, rs_id) :
         """
         Search for an rsId in dbSNP and return all annotated HGVS notations of
         it.
@@ -277,28 +279,38 @@ class Retriever(object) :
         @rtype: list(string)
         """
         # A simple input check.
-        ID = rsId[2:]
-        if rsId[:2] != "rs" or not ID.isdigit() :
+        id = rs_id[2:]
+        if rs_id[:2] != 'rs' or not id.isdigit():
             self._output.addMessage(__file__, 4, 'ESNPID',
                                     'This is not a valid dbSNP id.')
             return []
 
         # Query dbSNP for the SNP.
-        response = Entrez.efetch(db = "SNP", id = ID, rettype = "flt",
-            retmode = "xml")
+        response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                                 retmode='xml')
+        response_text = response.read()
 
-        # Parse the output.
-        doc = xml.dom.minidom.parseString(response.read())
-
-        set = doc.getElementsByTagName('ExchangeSet')
-
-        if len(set) < 1:
-            # Not even the expected root element is present.
-            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unkown dbSNP ' \
-                                     'error. Got no result from dbSNP.')
+        try:
+            # Parse the output.
+            doc = xml.dom.minidom.parseString(response_text)
+            set = doc.getElementsByTagName('ExchangeSet')
+            rs = set[0].getElementsByTagName('Rs')
+        except xml.parsers.expat.ExpatError, e:
+            # Could not parse XML.
+            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
+                                    'error. Error parsing result XML.')
+            self._output.addMessage(__file__, -1, 'INFO',
+                                    'ExpatError: %s' % str(e))
+            self._output.addMessage(__file__, -1, 'INFO',
+                                    'Result from dbSNP: %s' % response_text)
             return []
-
-        rs = set[0].getElementsByTagName('Rs')
+        except IndexError:
+            # The expected root element is not present.
+            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unkown dbSNP ' \
+                                    'error. Result XML was not as expected.')
+            self._output.addMessage(__file__, -1, 'INFO',
+                                    'Result from dbSNP: %s' % response_text)
+            return []
 
         if len(rs) < 1:
             # No Rs result element.
@@ -310,12 +322,14 @@ class Retriever(object) :
             if message.find('cannot get document summary') != -1:
                 # Entrez does not have this rs ID.
                 self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'ID rs%s could be found in dbSNP.' % ID)
+                                        'ID rs%s could be found in dbSNP.' % id)
             else:
                 # Something else was wrong (print {message} to see more).
                 self._output.addMessage(__file__, 4, 'EENTREZ',
                                         'Unkown dbSNP error. Got no result ' \
                                         'from dbSNP.')
+                self._output.addMessage(__file__, -1, 'INFO',
+                                        'Message from dbSNP: %s'  % message)
             return []
 
         snps = []
