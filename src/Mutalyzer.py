@@ -1431,6 +1431,11 @@ def __ppp(MUU, parts, GenRecordInstance, O) :
                 cdsm = Bio.Seq.reverse_complement(cdsm)
             #if
 
+            if not __checkDNA(cds) :
+                O.addMessage(__file__, 4, "ENODNA", "Invalid letters in "
+                    "reference sequence.")
+                return
+            #if
             if '*' in cds.translate(table = W.txTable)[:-1] :
                 O.addMessage(__file__, 3, "ESTOP", "In frame stop codon found.")
                 return
