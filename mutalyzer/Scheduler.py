@@ -687,7 +687,7 @@ Mutalyzer batch checker.""" % url)
         # Spawn child
         # Todo: Executable should be in bin/ directory.
         p = subprocess.Popen(["MutalyzerBatch",
-            "mutalyzer/BatchChecker.py"], executable="python")
+            "bin/batch_daemon"], executable="python")
 
         #Wait for the BatchChecker to fork of the Daemon
         p.communicate()

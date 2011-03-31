@@ -41,6 +41,7 @@ Todo:
   by explicitely returning data objects from functions.
 * Migrate from TAL to a more mondern and maintained Python template library.
 * Develop a large test suite.
+* Create a web interface url to watch the progress of a batch job.
 
 
 Notes for server setup (Europium VM copy):

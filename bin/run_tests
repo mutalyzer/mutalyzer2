@@ -5,4 +5,4 @@
 # Something like this should eventually be used on the test server as a
 # post-commit hook.
 
-nosetests --with-coverage --cover-package mutalyzer --cover-html --cover-html-dir=/tmp/coverage
+nosetests --with-coverage --cover-package mutalyzer --cover-html --cover-html-dir=/tmp/nosecover -v
