@@ -108,7 +108,27 @@ class Scheduler() :
 
         self.__config = config
         self.__database = database
+        self.__run = True
     #__init__
+
+    def stop(self):
+        """
+        If the {process} method is running, the current job item will be
+        processed and {process} will return.
+        """
+        self.__run = False
+    #stop
+
+    def stopped(self):
+        """
+        Test if the scheduler instance is stopped (i.e. the {stop} method is
+        called).
+
+        @return: True if {stop} was called, False otherwise.
+        @rtype: bool
+        """
+        return not self.__run
+    #stopped
 
     def __sendMail(self, mailTo, url) :
         """
@@ -300,6 +320,9 @@ Mutalyzer batch checker.""" % url)
         fashion. If all jobs are done the process checks if new jobs are
         added during the last processing round.
 
+        If during this process the {stop} method is called, the current
+        job item is completed and we return.
+
         This method uses two database tables, BatchJob and BatchQueue.
 
         The jobList is an array of tuples with three elements
@@ -333,7 +356,7 @@ Mutalyzer batch checker.""" % url)
 
         jobList = self.__database.getJobs()
 
-        while jobList :
+        while jobList and self.__run:
             for i, jobType, arg1 in jobList :
                 inputl, flags = self.__database.getFromQueue(i)
                 if not (inputl is None) :
@@ -352,6 +375,8 @@ Mutalyzer batch checker.""" % url)
                     print "Job %s finished, email %s file %s" % (i, eMail, i)
                     self.__sendMail(eMail, "%sResults_%s.txt" % (fromHost, i))
                 #else
+                if not self.__run:
+                    break
             #for
             jobList = self.__database.getJobs()
         #while
@@ -686,11 +711,11 @@ Mutalyzer batch checker.""" % url)
 
         # Spawn child
         # Todo: Executable should be in bin/ directory.
-        p = subprocess.Popen(["MutalyzerBatch",
-            "bin/batch_daemon"], executable="python")
+        #p = subprocess.Popen(["MutalyzerBatch",
+        #    "bin/batch_daemon"], executable="python")
 
         #Wait for the BatchChecker to fork of the Daemon
-        p.communicate()
+        #p.communicate()
         return jobID
     #addJob
 #Scheduler

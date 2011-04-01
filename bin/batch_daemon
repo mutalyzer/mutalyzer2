@@ -1,17 +1,22 @@
 #!/usr/bin/env python
 
 """
-Run batch jobs.
+Daemon for processing scheduled batch jobs.
 
-Eventually this probably should be transformed into a proper system daemon.
+We use python-daemon [1] for daemonizing the job processing.
+
+@todo: Write an init script and change user.
+@todo: Wrap processing in a try block, to recover from errors.
+
+[1] http://pypi.python.org/pypi/python-daemon/
 """
 
 
 import os
 import sys
-import daemon
+from daemon import pidlockfile, DaemonContext
 import signal
-import fcntl
+import time
 import site
 
 # Todo: Get this from the configuration file
@@ -23,51 +28,62 @@ if not __name__ == '__main__':
 
 from mutalyzer.config import Config
 from mutalyzer.Db import Batch
-from mutalyzer import Scheduler
+from mutalyzer.Scheduler import Scheduler
 
 
-def sigusr1_daemon_notified(*args):
+def cleanup(signum, stack_frame):
     """
-    Stop the Daemon with SIGUSR1 signal.
-
-    Example:
-      kill -10 PID
+    Generate a normal exit signal.
     """
-    sys.exit()
+    sys.exit(1)
 
 
-config = Config()
+def daemonize():
+    """
+    Write PID file when it is not locked and daemonize a loop processing
+    scheduled batch jobs.
+    """
+    config = Config()
+    batch_config = config.Batch
 
-batchconfig = config.Batch
-cwd = os.getcwd()
-pidfile_path = os.path.realpath(batchconfig.PIDfile)
+    pidfile = os.path.realpath(batch_config.PIDfile)
 
-pidfile = open(pidfile_path, 'w')
+    lockfile = pidlockfile.TimeoutPIDLockFile(pidfile, acquire_timeout=1,
+                                              threaded=False)
 
-try:
-    fcntl.flock(pidfile.fileno(), fcntl.LOCK_EX|fcntl.LOCK_NB)
-except IOError,e:
-    #process is already running and file is locked
-    print "Can't lock: %s\nBatchChecker already running\n" % pidfile_path
-    sys.exit(2)
+    context = DaemonContext(working_directory=os.getcwd(),
+                            pidfile=lockfile)
 
-# If we get here the file is not locked and no Daemon is running.
+    # Writing the PID file as root before changing user/group does not seem
+    # to work.
+    #uid=pwd.getpwnam('www-data').pw_uid
+    #gid=grp.getgrnam('www-data').gr_gid
 
-# Write PID to pidfile
-pidfile.write(repr(os.getpid()))
+    context.signal_map = {
+        signal.SIGTERM: cleanup,
+        signal.SIGHUP:  'terminate'
+    }
 
-# Populate signal map
-sigmap ={signal.SIGUSR1: sigusr1_daemon_notified}
-stdout = sys.stdout
-context = daemon.DaemonContext(signal_map=sigmap, files_preserve=[pidfile],
-                               working_directory=cwd)
+    with context:
+        # Note that any opened files are now closed. This is not a problem for
+        # the Config instance, since it does not read its file again after
+        # initialisation.
+        database = Batch(config.Db)
+        scheduler = Scheduler(config.Scheduler, database)
 
-#context.__enter__()
-# stdout = stdout, stderr = stdout
+        def stop_scheduler(signum, stack_frame):
+            scheduler.stop()
+        signal.signal(signal.SIGTERM, stop_scheduler)
 
-with context:
-    database = Batch(config.Db)
-    scheduler = Scheduler.Scheduler(config.Scheduler, database)
-    scheduler.process()
+        while not scheduler.stopped():
+            # Process batch jobs. This process() method runs while there
+            # exist jobs to run.
+            scheduler.process()
+            if scheduler.stopped():
+                break
+            # Wait a bit and process any possible new jobs.
+            time.sleep(60 * 2)
 
-#context.__exit__()
+
+if __name__ == '__main__':
+    daemonize()
