@@ -15,6 +15,7 @@ We use python-daemon [1] for daemonizing the job processing.
 import os
 import sys
 from daemon import pidlockfile, DaemonContext
+from lockfile import LockTimeout
 import signal
 import time
 import site
@@ -86,4 +87,10 @@ def daemonize():
 
 
 if __name__ == '__main__':
-    daemonize()
+    try:
+        daemonize()
+    except LockTimeout:
+        # If we want to see something on stdout, we have to add it to the
+        # {files_preserve} argument of the DaemonContext.
+        #print 'Mutalyzer batch daemon is already running.'
+        sys.exit(1)
