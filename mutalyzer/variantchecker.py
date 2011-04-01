@@ -1226,8 +1226,12 @@ def process_variant(mutator, description, record, output):
                 process_raw_variant(mutator, var.RawVar, record, transcript,
                                     output)
             except _RawVariantError:
-                output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
-                                  'Ignoring raw variant "%s".' % var[0])
+                #output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
+                #                  'Ignoring raw variant "%s".' % var[0])
+                output.addMessage(__file__, 1, 'IRAWVARIANTERROR',
+                                  'Aborted variant check due to error in ' \
+                                  'raw variant "%s".' % var[0])
+                raise
     else:
         process_raw_variant(mutator, description.RawVar, record,
                             transcript, output)
