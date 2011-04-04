@@ -16,6 +16,7 @@ Coding style guide:
     https://github.com/mitsuhiko/jinja2
     https://bitbucket.org/mramm/tg-21/src
     http://bazaar.launchpad.net/~bzr-pqm/bzr/bzr.dev/files
+    https://github.com/ask/celery
 
 
 Todo:
@@ -35,6 +36,10 @@ Todo:
   http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
 * Create an installation script, and from that preferably a Debian package.
   Non-trivial thing here would be the requirement of database contents.
+  http://www.siafoo.net/article/77
+  http://ghantoos.org/2008/10/19/creating-a-deb-package-from-a-python-setuppy/
+  http://packages.python.org/distribute/setuptools.html#developer-s-guide
+  https://wiki.ubuntu.com/PackagingGuide/Python#The debhelper way
 * Make the batch checker a real system service, using /var/run and a Upstart
   init script.
   http://wiki.debian.org/LSBInitScripts

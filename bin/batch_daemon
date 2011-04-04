@@ -83,11 +83,11 @@ def daemonize():
             try:
                 scheduler.process()
             except Exception as e:
-                #f = open('/tmp/batcherror.log', 'a+')
-                #f.write('Error (%s): %s\n' % (type(e), str(e)))
-                #f.write('%s\n\n' % repr(traceback.format_exc()))
-                #f.flush()
-                #f.close()
+                f = open('/tmp/batcherror.log', 'a+')
+                f.write('Error (%s): %s\n' % (type(e), str(e)))
+                f.write('%s\n\n' % repr(traceback.format_exc()))
+                f.flush()
+                f.close()
                 pass
             if scheduler.stopped():
                 break
