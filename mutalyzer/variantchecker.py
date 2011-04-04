@@ -1055,6 +1055,11 @@ def _add_transcript_info(mutator, transcript, output):
             cds_original = Bio.Seq.reverse_complement(cds_original)
             cds_variant = Bio.Seq.reverse_complement(cds_variant)
 
+        if not util.is_dna(cds_original):
+            output.addMessage(__file__, 4, 'ENODNA',
+                              'Invalid letters in reference sequence.')
+            return
+
         if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon found.')
