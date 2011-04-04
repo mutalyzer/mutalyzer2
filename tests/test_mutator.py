@@ -10,10 +10,13 @@ import site
 from nose.tools import *
 from Bio.Seq import Seq
 
-# Todo: Can this be done in a more elegant way?
-os.chdir('../..')
-site.addsitedir('.')
-
+# Todo: Get this from the configuration file
+root_dir = os.path.split(os.path.dirname(__file__))[0]
+site.addsitedir(root_dir)
+# Todo: Fix Mutalyzer to not depend on working directory
+if not __name__ == '__main__':
+    os.chdir(root_dir)
+        
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import mutator

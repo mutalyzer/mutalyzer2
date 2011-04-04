@@ -3,10 +3,10 @@
 """
 Daemon for processing scheduled batch jobs.
 
-We use python-daemon [1] for daemonizing the job processing.
+We use python-daemon [1] for daemonizing the job processing. This file
+should be run with the mutalyzer directory as working directory.
 
-@todo: Write an init script and change user.
-@todo: Wrap processing in a try block, to recover from errors.
+@todo: Check if PID dir is writable.
 
 [1] http://pypi.python.org/pypi/python-daemon/
 """
@@ -19,13 +19,9 @@ from lockfile import LockTimeout
 import signal
 import time
 import site
+import traceback
 
-# Todo: Get this from the configuration file
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-site.addsitedir(root_dir)
-# Todo: Fix Mutalyzer to not depend on working directory
-if not __name__ == '__main__':
-    os.chdir(root_dir)
+site.addsitedir(os.getcwd())
 
 from mutalyzer.config import Config
 from mutalyzer.Db import Batch
@@ -55,6 +51,11 @@ def daemonize():
     context = DaemonContext(working_directory=os.getcwd(),
                             pidfile=lockfile)
 
+    # To preserve stderr and stdout, add these arguments.
+    #stdin=sys.stdin,
+    #stdout=sys.stdout,
+    #files_preserve=[sys.stdin, sys.stdout]
+
     # Writing the PID file as root before changing user/group does not seem
     # to work.
     #uid=pwd.getpwnam('www-data').pw_uid
@@ -79,11 +80,19 @@ def daemonize():
         while not scheduler.stopped():
             # Process batch jobs. This process() method runs while there
             # exist jobs to run.
-            scheduler.process()
+            try:
+                scheduler.process()
+            except Exception as e:
+                #f = open('/tmp/batcherror.log', 'a+')
+                #f.write('Error (%s): %s\n' % (type(e), str(e)))
+                #f.write('%s\n\n' % repr(traceback.format_exc()))
+                #f.flush()
+                #f.close()
+                pass
             if scheduler.stopped():
                 break
             # Wait a bit and process any possible new jobs.
-            time.sleep(60 * 2)
+            time.sleep(10)
 
 
 if __name__ == '__main__':
