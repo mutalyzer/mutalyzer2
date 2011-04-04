@@ -21,6 +21,8 @@ The web and SOAP interfaces depend on the following packages:
 - apache2               >= 2.2.11
 - libapache2-mod-wsgi   >= 2.8
 
+Copy ./examples/config to /etc/mutalyzer/config and edit to your needs.
+
 Add Apache configuration for Mutalyzer. For example, add the following to
 the file /etc/apache2/sites-available/mutalyzer (change the path
 /var/www/mutalyzer2 when appropriate) and run 'a2ensite mutalyzer'.

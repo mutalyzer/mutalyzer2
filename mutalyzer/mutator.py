@@ -365,6 +365,8 @@ class Mutator() :
         @type sites: list of int
 
         @todo: Resulting list of ignored sites should always be even.
+        @todo: Don't remove CDS start/stop, as happens e.g. with
+               AL449423.14(CDKN2A_v002):c.5_400del.
         """
         for site in sites:
             self.__removed_sites.add(site)

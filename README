@@ -20,6 +20,7 @@ Coding style guide:
 
 Todo:
 
+* https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
 * Accept a --config command line argument for a configuration file location.
 * Document integration, deployment, release management, etc.
 * Use standard logging module, with rotating functionality. Race conditions
@@ -36,6 +37,9 @@ Todo:
   Non-trivial thing here would be the requirement of database contents.
 * Make the batch checker a real system service, using /var/run and a Upstart
   init script.
+  http://wiki.debian.org/LSBInitScripts
+  http://celeryproject.org/docs/cookbook/daemonizing.html
+  http://www.debian-administration.org/articles/28
 * Migrate Javascript to JQuery.
 * I think in the long run, the Output object is not really the way to go. It
   obscures the control flow. The logging part should use the standard logging
@@ -44,6 +48,7 @@ Todo:
 * Migrate from TAL to a more mondern and maintained Python template library.
 * Develop a large test suite.
 * Create a web interface url to watch the progress of a batch job.
+* Use virtualenv?
 
 
 Notes for server setup (Europium VM copy):
