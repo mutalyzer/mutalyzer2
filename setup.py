@@ -13,10 +13,18 @@ setup(
     author=distmeta.__author__,
     author_email=distmeta.__contact__,
     url=distmeta.__homepage__,
+    license='Not distributable',
+    platform=['any'],
     packages=find_packages(exclude=['doc', 'extras', 'tests']),
     include_package_data=True,
-    scripts=['bin/batch_daemon'],
+    scripts=['bin/mutalyzer-batchd'],
     zip_safe=False
-    #data_files=[('/etc/init.d', ['examples/init.d/mutalyzer-batchd'])]
-    # Todo: templates, doc, bin
 )
+
+# Things not handled by this setup.py:
+# - Copy extras/config.example to /etc/mutalyzer/config
+# - Database setup
+# - Chown /var/log/mutalyzer.log
+# - Copy extras/init.d/mutalyzer-batchd to /etc/init.d/mutalyzer-batchd
+# - Copy doc to /usr/share/doc
+# Perhaps as a postinstall script?

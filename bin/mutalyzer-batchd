@@ -7,6 +7,7 @@ We use python-daemon [1] for daemonizing the job processing. This file
 should be run with the mutalyzer directory as working directory.
 
 @todo: Check if PID dir is writable.
+@todo: Get rid of ugly exception logging.
 
 [1] http://pypi.python.org/pypi/python-daemon/
 """
