@@ -2,24 +2,22 @@
 Tests for the mutalyzer.mutator module.
 """
 
+
 #import logging; logging.basicConfig()
 import re
 import os
 import random
-import site
 from nose.tools import *
 from Bio.Seq import Seq
 
-# Todo: Get this from the configuration file
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-site.addsitedir(root_dir)
-# Todo: Fix Mutalyzer to not depend on working directory
-if not __name__ == '__main__':
-    os.chdir(root_dir)
-        
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import mutator
+
+
+# Todo: Fix Mutalyzer to not depend on working directory
+root_dir = os.path.split(os.path.dirname(__file__))[0]
+os.chdir(os.path.join(root_dir, 'mutalyzer'))
 
 
 def _seq(length):
@@ -180,7 +178,7 @@ class TestMutator():
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(17, 17)   # g.17del
-        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 24, 26])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 24, 27])
 
     def test_newSplice_don_del_after(self):
         """

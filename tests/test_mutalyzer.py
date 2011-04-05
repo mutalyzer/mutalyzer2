@@ -2,24 +2,22 @@
 Tests for the Mutalyzer module.
 """
 
+
 #import logging; logging.basicConfig()
 import re
 import os
 import random
-import site
 from nose.tools import *
 from Bio.Seq import Seq
-
-# Todo: Get this from the configuration file
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-site.addsitedir(root_dir)
-# Todo: Fix Mutalyzer to not depend on working directory
-if not __name__ == '__main__':
-    os.chdir(root_dir)
 
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant
+
+
+# Todo: Fix Mutalyzer to not depend on working directory
+root_dir = os.path.split(os.path.dirname(__file__))[0]
+os.chdir(os.path.join(root_dir, 'mutalyzer'))
 
 
 class TestMutalyzer():

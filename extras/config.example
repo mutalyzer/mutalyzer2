@@ -110,7 +110,7 @@ mailSubject = "Result of Mutalyzer batch check."
 resultsDir = "/var/cache/mutalyzer"
 
 # Location of the PID file.
-PIDfile = "/var/run/mutalyzer/batchd.pid"
+PIDfile = "/var/run/mutalyzer/mutalyzer-batchd.pid"
 
 # Maximum size for uploaded batch input files in megabytes.
 batchInputMaxSize = 5

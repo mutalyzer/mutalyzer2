@@ -56,6 +56,7 @@ Todo:
 * Develop a large test suite.
 * Create a web interface url to watch the progress of a batch job.
 * Use virtualenv?
+* Perhaps the WSGI file should be somewhere else and be called mutalyzer.wsgi?
 
 
 Notes for server setup (Europium VM copy):

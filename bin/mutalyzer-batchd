@@ -19,10 +19,7 @@ from daemon import pidlockfile, DaemonContext
 from lockfile import LockTimeout
 import signal
 import time
-import site
 import traceback
-
-site.addsitedir(os.getcwd())
 
 from mutalyzer.config import Config
 from mutalyzer.Db import Batch

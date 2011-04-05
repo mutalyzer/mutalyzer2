@@ -16,10 +16,10 @@
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Mutalyzer batch deamon"
-DAEMON=/home/martijn/projects/mutalyzer/svn/branches/refactor-mutalyzer-branch/bin/batch_daemon
+DAEMON=/home/martijn/projects/mutalyzer/svn/branches/refactor-mutalyzer-branch/bin/mutalyzer-batchd
 DIR=/home/martijn/projects/mutalyzer/svn/branches/refactor-mutalyzer-branch
 NAME=mutalyzer-batchd
-PIDFILE=/var/run/mutalyzer/batchd.pid
+PIDFILE=/var/run/mutalyzer/mutalyzer-batchd.pid
 PIDDIR=/var/run/mutalyzer
 SCRIPTNAME=/etc/init.d/mutalyzer-batchd
 USER=www-data

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 General WSGI interface.
 
@@ -57,19 +55,11 @@ import os
 import bz2
 import web
 import urllib
-import site
 
 from lxml import etree
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
-
-# Todo: Get this from the configuration file
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-site.addsitedir(root_dir)
-# Todo: Fix Mutalyzer to not depend on working directory
-if not __name__ == '__main__':
-    os.chdir(root_dir)
 
 import mutalyzer
 from mutalyzer import util
@@ -203,7 +193,7 @@ class render_tal:
 
 
 # TAL template render
-render = render_tal(os.path.join(root_dir, 'templates'), globals={
+render = render_tal('templates', globals={
     'version': mutalyzer.__version__,
     'nomenclatureVersion': mutalyzer.NOMENCLATURE_VERSION,
     'releaseDate': mutalyzer.__date__,
@@ -1109,10 +1099,13 @@ class Static:
 
 
 if __name__ == '__main__':
-    # Todo: Setting the working directory probably doesn't work
+    # Todo: add a main() function or something, and create an executable
+    # wrapper in bin/.
     # Usage:
     #   ./src/wsgi.py [port]
     app.run()
 else:
     # WSGI application
+    # Todo: Fix Mutalyzer to not depend on working directory
+    os.chdir(os.path.dirname(__file__))
     application = app.wsgifunc()

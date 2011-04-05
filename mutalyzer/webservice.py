@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Mutalyzer webservices.
 
@@ -24,6 +22,7 @@ Be sure to have this line first if you also define a / alias, like this:
        and we should not create it on every request.
 """
 
+
 # WSGI applications should never print anything to stdout. We redirect to
 # stderr, but eventually Mutalyzer should be fixed to never just 'print'
 # anything.
@@ -47,15 +46,7 @@ from soaplib.core.model.clazz import Array
 from soaplib.core.model.exception import Fault
 from soaplib.core.server import wsgi
 import os
-import site
 from operator import itemgetter, attrgetter
-
-# Todo: Get this from the configuration file
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-site.addsitedir(root_dir)
-# Todo: Fix Mutalyzer to not depend on working directory
-if not __name__ == '__main__':
-    os.chdir(root_dir)
 
 from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
@@ -892,15 +883,23 @@ class MutalyzerService(DefinitionBase) :
     #sliceChromosome
 #MutalyzerService
 
+
 # WSGI application for use with e.g. Apache/mod_wsgi
 soap_application = Application([MutalyzerService],
                                'http://mutalyzer.nl/2.0/services', # namespace
                                'Mutalyzer')
 application = wsgi.Application(soap_application)
 
+
+# Todo: Fix Mutalyzer to not depend on working directory
+if not __name__ == '__main__':
+    os.chdir(os.path.dirname(__file__))
+
+
 # We can also use the built-in webserver by executing this file directly
 if __name__ == '__main__':
-    # Todo: Setting the working directory probably doesn't work
+    # Todo: add a main() function or something, and create an executable
+    # wrapper in bin/.
     from wsgiref.simple_server import make_server
     print 'Listening to http://localhost:8081/'
     print 'WDSL file is at http://localhost:8081/?wsdl'
