@@ -13,7 +13,10 @@ setup(
     author=distmeta.__author__,
     author_email=distmeta.__contact__,
     url=distmeta.__homepage__,
-    packages=find_packages(exclude=['doc', 'examples', 'tests']),
-    data_files=[('/etc/init.d', ['examples/init.d/mutalyzer-batchd'])]
+    packages=find_packages(exclude=['doc', 'extras', 'tests']),
+    include_package_data=True,
+    scripts=['bin/batch_daemon'],
+    zip_safe=False
+    #data_files=[('/etc/init.d', ['examples/init.d/mutalyzer-batchd'])]
     # Todo: templates, doc, bin
 )

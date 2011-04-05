@@ -40,6 +40,8 @@ Todo:
   http://ghantoos.org/2008/10/19/creating-a-deb-package-from-a-python-setuppy/
   http://packages.python.org/distribute/setuptools.html#developer-s-guide
   https://wiki.ubuntu.com/PackagingGuide/Python#The debhelper way
+  http://stackoverflow.com/questions/4981174/migrating-to-pipvirtualenv-from-setuptools
+  http://peak.telecommunity.com/DevCenter/setuptools
 * Make the batch checker a real system service, using /var/run and a Upstart
   init script.
   http://wiki.debian.org/LSBInitScripts
