@@ -12,9 +12,10 @@ Usage:
 
 import sys
 import os
-import Mutalyzer
-from Modules import Output
-from Modules import Config
+
+import mutalyzer
+from mutalyzer.output import Output
+from mutalyzer.config import Config
 
 
 def main(cmd):
@@ -23,8 +24,8 @@ def main(cmd):
 
     @todo: documentation
     """
-    C = Config.Config()
-    O = Output.Output(__file__, C.Output)
+    C = Config()
+    O = Output(__file__, C.Output)
 
     O.addMessage(__file__, -1, "INFO", "Received variant " + cmd)
 
