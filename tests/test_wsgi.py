@@ -22,10 +22,6 @@ import mutalyzer
 from mutalyzer.wsgi import application
 
 
-# Todo: Fix Mutalyzer to not depend on working directory
-os.chdir(mutalyzer.package_root())
-
-
 class TestWSGI():
     """
     Test the Mutalyzer WSGI interface.
@@ -507,7 +503,7 @@ facilisi."""
 
         @todo: Test if returned genomic reference can indeed be used now.
         """
-        test_genbank_file = '../tests/data/AB026906.1.gb'
+        test_genbank_file = os.path.join(os.path.split(mutalyzer.package_root())[0], 'tests/data/AB026906.1.gb')
         r = self.app.get('/upload')
         form = r.forms[0]
         form['invoermethode'] = 'file'

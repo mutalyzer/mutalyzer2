@@ -16,13 +16,6 @@ from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant
 
 
-# If we remove the os.chdir below, this is no longer necessary
-CONFIG = os.path.realpath('config')
-
-# Todo: Fix Mutalyzer to not depend on working directory
-os.chdir(mutalyzer.package_root())
-
-
 class TestMutalyzer():
     """
     Test the Mutalyzer module.
@@ -32,7 +25,7 @@ class TestMutalyzer():
         """
         Initialize test Mutalyzer module.
         """
-        self.config = Config(CONFIG)
+        self.config = Config()
         self.output = Output(__file__, self.config.Output)
 
     def test_roll(self):

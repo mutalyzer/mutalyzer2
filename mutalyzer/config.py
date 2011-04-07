@@ -6,7 +6,10 @@ module.
 
 
 import os
+import tempfile
 from configobj import ConfigObj
+
+import mutalyzer
 
 
 class ConfigurationError(Exception):
@@ -134,6 +137,14 @@ class Config():
             #self.File.downstream = int(config["downstream"])
             self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
             self.GenRecord.spliceWarn = int(config["spliceWarn"])
+
+            # If we are in a testing environment, use a temporary file for
+            # logging.
+            if mutalyzer.is_test():
+                handle, filename = tempfile.mkstemp(suffix='.log',
+                                                    prefix='mutalyzer-tests-')
+                os.close(handle)
+                self.Output.log = filename
 
         except KeyError as e:
             raise ConfigurationError('Missing configuration value: %s' % e)

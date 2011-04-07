@@ -194,7 +194,8 @@ class render_tal:
 
 
 # TAL template render
-render = render_tal('templates', globals={
+render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
+                    globals={
     'version': mutalyzer.__version__,
     'nomenclatureVersion': mutalyzer.NOMENCLATURE_VERSION,
     'releaseDate': mutalyzer.__date__,
@@ -238,9 +239,10 @@ class Download:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z-]+\.(?:py|cs).
         """
-        if not os.path.isfile("templates/" + file):
+        file_path = os.path.join(mutalyzer.package_root(), 'templates', file)
+        if not os.path.isfile(file_path):
             raise web.notfound()
-        content = open('templates/' + file, 'r').read()
+        content = open(file_path, 'r').read()
         # Force downloading
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
@@ -266,9 +268,11 @@ class Downloads:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-        if not os.path.isfile("templates/downloads/" + file):
+        file_path = os.path.join(mutalyzer.package_root(),
+                                 'templates', 'downloads', file)
+        if not os.path.isfile(file_path):
             raise web.notfound()
-        handle = open("templates/downloads/" + file)
+        handle = open(file_path)
         F = File.File(config.File, None)
         web.header('Content-Type', F.getMimeType(handle)[0])
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
@@ -292,10 +296,10 @@ class Reference:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-        fileName = "%s/%s.bz2" % (config.Retriever.cache, file)
-        if not os.path.isfile(fileName):
+        file_path = os.path.join(config.Retriever.cache, '%s.bz2' % file)
+        if not os.path.isfile(file_path):
             raise web.notfound()
-        handle = bz2.BZ2File(fileName, 'r')
+        handle = bz2.BZ2File(file_path, 'r')
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
@@ -1085,7 +1089,8 @@ class Documentation:
         """
         url = web.ctx.homedomain + web.ctx.homepath + WEBSERVICE_LOCATION
         wsdl_handle = StringIO(webservice.soap_application.get_wsdl(url))
-        xsl_handle = open(WSDL_VIEWER, 'r')
+        xsl_handle = open(os.path.join(mutalyzer.package_root(), WSDL_VIEWER),
+                          'r')
         wsdl_doc = etree.parse(wsdl_handle)
         xsl_doc = etree.parse(xsl_handle)
         transform = etree.XSLT(xsl_doc)
@@ -1116,15 +1121,5 @@ class Static:
         return getattr(render, page)()
 
 
-if __name__ == '__main__':
-    # Todo: add a main() function or something, and create an executable
-    # wrapper in bin/.
-    # Usage:
-    #   ./src/wsgi.py [port]
-    app.run()
-else:
-    # WSGI application
-    # Todo: Fix Mutalyzer to not depend on working directory
-    #os.chdir(os.path.dirname(__file__))
-    os.chdir(mutalyzer.package_root())
-    application = app.wsgifunc()
+# WSGI application
+application = app.wsgifunc()

@@ -563,11 +563,11 @@ class Remote(Db) :
         # Convert the results to a tab delimited file.
         for i in self.query(statement) :
             for j in i :
-                handle.write(str(j) + chr(0x09))  # 0x09 is a TAB.
-            handle.write('\n')
+                os.write(handle, str(j) + chr(0x09))  # 0x09 is a TAB.
+            os.write(handle, '\n')
         #for
 
-        handle.close()
+        os.close(handle)
         return filename
     #get_Update
 #Remote

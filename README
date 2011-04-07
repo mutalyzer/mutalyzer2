@@ -19,8 +19,14 @@ Coding style guide:
     https://github.com/ask/celery
 
 
+Run the test with (from the package root, or the /tests directory):
+  MUTALYZER_ENV=test nosetests
+
+
 Todo:
 
+* Fix mutalyzer/UCSC_update.py.
+* Test all uses of mkstemp().
 * https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
 * Accept a --config command line argument for a configuration file location.
 * Document integration, deployment, release management, etc.

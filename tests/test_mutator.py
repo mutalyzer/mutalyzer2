@@ -16,13 +16,6 @@ from mutalyzer.output import Output
 from mutalyzer import mutator
 
 
-# If we remove the os.chdir below, this is no longer necessary
-CONFIG = os.path.realpath('config')
-
-# Todo: Fix Mutalyzer to not depend on working directory
-os.chdir(mutalyzer.package_root())
-
-
 def _seq(length):
     """
     Return random DNA sequence of given length.
@@ -42,7 +35,7 @@ class TestMutator():
         """
         Initialize test mutator module.
         """
-        self.config = Config(CONFIG)
+        self.config = Config()
         self.output = Output(__file__, self.config.Output)
 
     def _mutator(self, sequence):

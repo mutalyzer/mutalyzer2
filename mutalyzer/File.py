@@ -89,8 +89,8 @@ class File() :
 
         # Dump the content of the stream pointed to by handle into the file.
         handle.seek(0)
-        write_handle.write(handle.read())
-        write_handle.close()
+        os.write(write_handle, handle.read())
+        os.close(write_handle)
 
         # Open the file with func().
         ret = func(filename)

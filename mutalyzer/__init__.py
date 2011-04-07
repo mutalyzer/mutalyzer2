@@ -27,4 +27,24 @@ NOMENCLATURE_VERSION = '.'.join(NOMENCLATURE_VERSION_INFO)
 
 
 def package_root():
-    return os.path.split(__file__)[0]
+    """
+    Get the absolute path to the mutalyzer package. This is usefull for
+    things like locating HTML templates (which are in a subdirectory of the
+    package).
+
+    @return: Absolute path to the mutalyzer package.
+    @rtype:  string
+    """
+    return os.path.realpath(os.path.split(__file__)[0])
+
+
+def is_test():
+    """
+    Check if we are in a test environment. This is determined by the
+    MUTALYZER_ENV environment variable, which should then be set to 'test'.
+
+    @return: True if we are in a test environment, False otherwise.
+    @rtype:  bool
+    """
+    return 'MUTALYZER_ENV' in os.environ \
+           and os.environ['MUTALYZER_ENV'] == 'test'

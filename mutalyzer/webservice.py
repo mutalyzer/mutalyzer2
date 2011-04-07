@@ -891,16 +891,11 @@ soap_application = Application([MutalyzerService],
 application = wsgi.Application(soap_application)
 
 
-# Todo: Fix Mutalyzer to not depend on working directory
-if not __name__ == '__main__':
-    os.chdir(os.path.dirname(__file__))
-
-
 # We can also use the built-in webserver by executing this file directly
-if __name__ == '__main__':
-    # Todo: add a main() function or something, and create an executable
-    # wrapper in bin/.
-    from wsgiref.simple_server import make_server
-    print 'Listening to http://localhost:8081/'
-    print 'WDSL file is at http://localhost:8081/?wsdl'
-    make_server('localhost', 8081, application).serve_forever()
+#if __name__ == '__main__':
+#    # Todo: add a main() function or something, and create an executable
+#    # wrapper in bin/.
+#    from wsgiref.simple_server import make_server
+#    print 'Listening to http://localhost:8081/'
+#    print 'WDSL file is at http://localhost:8081/?wsdl'
+#    make_server('localhost', 8081, application).serve_forever()

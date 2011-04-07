@@ -21,13 +21,13 @@ import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 
+import mutalyzer
+from mutalyzer import variantchecker
+from mutalyzer.grammar import Grammar
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import Mapper              # Mapper.Converter
 from mutalyzer import Retriever           # Retriever.Retriever
-
-from mutalyzer import variantchecker
-from mutalyzer.grammar import Grammar
 
 
 __all__ = ["Scheduler"]
@@ -145,6 +145,8 @@ class Scheduler() :
         @arg url: The url containing the results
         @type url: string
         """
+        if mutalyzer.is_test():
+            return
 
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error

@@ -13,13 +13,6 @@ from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 
 
-# If we remove the os.chdir below, this is no longer necessary
-CONFIG = os.path.realpath('config')
-
-# Todo: Fix Mutalyzer to not depend on working directory
-os.chdir(mutalyzer.package_root())
-
-
 class TestGrammar():
     """
     Test the mytalyzer.grammar module.
@@ -29,7 +22,7 @@ class TestGrammar():
         """
         Initialize test Grammar instance.
         """
-        self.config = Config(CONFIG)
+        self.config = Config()
         self.output = Output(__file__, self.config.Output)
         self.grammar = Grammar(self.output)
 

@@ -3,6 +3,7 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
+import os
 import logging; logging.raiseExceptions = 0
 import urllib2
 from suds.client import Client

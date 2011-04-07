@@ -184,12 +184,4 @@ if __name__ == '__main__':
         print 'Please provide a variant'
         sys.exit(1)
 
-    # Todo: Fix Mutalyzer to not depend on working directory
-    if not os.path.dirname(__file__) or os.path.dirname(__file__) == '.':
-        os.chdir('..')
-    else:
-        root_dir = os.path.split(os.path.dirname(__file__))[0]
-        if root_dir:
-            os.chdir(root_dir)
-
     main(sys.argv[1])
