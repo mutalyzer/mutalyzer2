@@ -34,7 +34,17 @@ Installation instructions.
 
 4) Test the installation.
 
-  You should always test the installation by running:
+  Note: This step is broken at the moment. Some tests write to the cache
+  for which we have no rights. This should be fixed to have a temporary
+  cache for the tests I guess.
+
+  You should always test the installation. The tests (for now at least)
+  need the batch daemon and the webserver (the SOAP part) running:
+
+    $ sudo /etc/init.d/mutalyzer-batchd start
+    $ sudo /etc/init.d/apache2 restart
+
+  Now run the tests:
 
     $ MUTALYZER_ENV=test nosetests
 

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 Module used to add and manage the Batch Jobs.
 

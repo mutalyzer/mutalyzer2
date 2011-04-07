@@ -25,6 +25,9 @@ Run the test with (from the package root, or the /tests directory):
 
 Todo:
 
+* Tests fail in clean installation, because name checker tests make the
+  Retriever want to write to the cache and we don't run the tests as the
+  user that owns the cache. How to fix this?
 * Fix mutalyzer/UCSC_update.py.
 * Test all uses of mkstemp().
 * https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
