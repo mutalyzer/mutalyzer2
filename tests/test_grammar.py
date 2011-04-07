@@ -7,14 +7,17 @@ Tests for the mutalyzer.grammar module.
 import os
 from nose.tools import *
 
+import mutalyzer
 from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 
 
+# If we remove the os.chdir below, this is no longer necessary
+CONFIG = os.path.realpath('config')
+
 # Todo: Fix Mutalyzer to not depend on working directory
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-os.chdir(os.path.join(root_dir, 'mutalyzer'))
+os.chdir(mutalyzer.package_root())
 
 
 class TestGrammar():
@@ -26,7 +29,7 @@ class TestGrammar():
         """
         Initialize test Grammar instance.
         """
-        self.config = Config()
+        self.config = Config(CONFIG)
         self.output = Output(__file__, self.config.Output)
         self.grammar = Grammar(self.output)
 

@@ -85,6 +85,7 @@ config = Config()
 
 # URL dispatch table
 urls = (
+    '',                     'RedirectHome',
     '/(index)?',            'Static',
     '/(about)',             'Static',
     '/(help)',              'Static',
@@ -202,6 +203,23 @@ render = render_tal('templates', globals={
 
 # web.py application
 app = web.application(urls, globals(), autoreload=False)
+
+
+class RedirectHome:
+    """
+    Permanent redirect to the homepage.
+    """
+    def GET(self):
+        """
+        Redirect to / and include the query string.
+        """
+        raise web.redirect('/' + web.ctx.query)
+
+    def POST(self):
+        """
+        Redirect to / and include the query string.
+        """
+        raise web.redirect('/' + web.ctx.query)
 
 
 class Download:
@@ -1107,5 +1125,6 @@ if __name__ == '__main__':
 else:
     # WSGI application
     # Todo: Fix Mutalyzer to not depend on working directory
-    os.chdir(os.path.dirname(__file__))
+    #os.chdir(os.path.dirname(__file__))
+    os.chdir(mutalyzer.package_root())
     application = app.wsgifunc()

@@ -18,12 +18,12 @@ import time
 from nose.tools import *
 from webtest import TestApp
 
+import mutalyzer
 from mutalyzer.wsgi import application
 
 
 # Todo: Fix Mutalyzer to not depend on working directory
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-os.chdir(os.path.join(root_dir, 'mutalyzer'))
+os.chdir(mutalyzer.package_root())
 
 
 class TestWSGI():

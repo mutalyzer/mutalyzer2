@@ -1,6 +1,6 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          mutalyzer-batch-daemon
+# Provides:          mutalyzer-batchd
 # Required-Start:    $local_fs $remote_fs $network $syslog $mysql
 # Required-Stop:     $local_fs $remote_fs $network $syslog $mysql
 # Default-Start:     2 3 4 5
@@ -9,26 +9,21 @@
 # Description:       Controls the Mutalyzer batch job processing daemon..
 ### END INIT INFO
 
-# Author: Martijn Vermaat <m.vermaat.hg@lumc.nl>
-
-# Do NOT "set -e"
-
-# PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Mutalyzer batch deamon"
-DAEMON=/home/martijn/projects/mutalyzer/svn/branches/refactor-mutalyzer-branch/bin/mutalyzer-batchd
-DIR=/home/martijn/projects/mutalyzer/svn/branches/refactor-mutalyzer-branch
 NAME=mutalyzer-batchd
-PIDFILE=/var/run/mutalyzer/mutalyzer-batchd.pid
+DAEMON=<MUTALYZER_BIN_BATCHD>
+DIR=<MUTALYZER_PACKAGE_ROOT>
 PIDDIR=/var/run/mutalyzer
-SCRIPTNAME=/etc/init.d/mutalyzer-batchd
+PIDFILE=$PIDDIR/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
 USER=www-data
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
 
 # Read configuration variable file if it is present
-[ -r /etc/default/mutalyzer ] && . /etc/default/mutalyzer
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh

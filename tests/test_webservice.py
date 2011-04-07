@@ -10,7 +10,7 @@ from suds import WebFault
 from nose.tools import *
 
 
-WSDL_URL = 'http://mutalyzer-refactor.martijn/services/?wsdl'
+WSDL_URL = 'http://localhost/mutalyzer/services/?wsdl'
 
 
 class TestWSDL():

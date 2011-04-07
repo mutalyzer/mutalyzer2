@@ -10,14 +10,17 @@ import random
 from nose.tools import *
 from Bio.Seq import Seq
 
+import mutalyzer
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import mutator
 
 
+# If we remove the os.chdir below, this is no longer necessary
+CONFIG = os.path.realpath('config')
+
 # Todo: Fix Mutalyzer to not depend on working directory
-root_dir = os.path.split(os.path.dirname(__file__))[0]
-os.chdir(os.path.join(root_dir, 'mutalyzer'))
+os.chdir(mutalyzer.package_root())
 
 
 def _seq(length):
@@ -39,7 +42,7 @@ class TestMutator():
         """
         Initialize test mutator module.
         """
-        self.config = Config()
+        self.config = Config(CONFIG)
         self.output = Output(__file__, self.config.Output)
 
     def _mutator(self, sequence):
@@ -178,7 +181,7 @@ class TestMutator():
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.delM(17, 17)   # g.17del
-        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 24, 27])
+        assert_equal(m.newSplice(sites), [4, 9, 14, 16, 24, 26])
 
     def test_newSplice_don_del_after(self):
         """

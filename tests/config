@@ -1,0 +1,157 @@
+#
+# Mutalyzer config file.
+#
+# Copy this file to /etc/mutalyzer/config or ~/.config/mutalyzer/config and
+# modify to suit your preferences.
+
+#
+# These settings are used by the Retriever module.
+#
+
+# Use this email address for retrieval of records at the NCBI.
+email = "m.vermaat.hg@lumc.nl"
+
+# The cache directory.
+cache = "/var/cache/mutalyzer"
+
+# The maximum size of the cache in megabytes.
+cachesize = 50
+
+# The maximum size of a downloaded GenBank file in megabytes.
+maxDldSize = 10
+
+# The minimum size of a downloaded GenBank file in bytes.
+minDldSize = 512
+
+# The URL from where LRG files are fetched
+lrgurl = "ftp://ftp.ebi.ac.uk/pub/databases/lrgex/"
+
+
+#
+# These settings are used by the Db module.
+#
+
+# Internal database.
+internalDb = "mutalyzer"
+
+# MySQL mapping database names.
+dbNames = "hg18", "hg19"
+
+# MySQL username for the local databases (internalDb and dbNames).
+LocalMySQLuser = "mutalyzer"
+
+# Host name for the local databases.
+LocalMySQLhost = "localhost"
+
+# MySQL username for the UCSC database.
+RemoteMySQLuser = "genome"
+
+# Host name for the UCSC database.
+RemoteMySQLhost = "genome-mysql.cse.ucsc.edu"
+
+# Retrieve all entries modified within a certain number of days.
+UpdateInterval = 7
+
+
+#
+# These settings are used by the Output module.
+#
+
+# Name and location of the log file.
+log = "/tmp/mutalyzer-tests.log"
+
+# Prefix for each log message.
+datestring = "%Y-%m-%d %H:%M:%S"
+
+# Message levels:
+#
+# 0 : Debug   ; Show all messages.
+# 1 : Info    ; Show all messages except debug messages.
+# 2 : Warning ; Show warning, error and fatal messages.
+# 3 : Error   ; Show error and fatal messages.
+# 4 : Fatal   ; Only show fatal messages.
+# 5 : Off     ; Show nothing.
+
+# Level of logged messages.
+loglevel = 3
+
+# Level of output messages.
+outputlevel = 1
+
+
+#
+# These settings are used by the Mutator module.
+#
+
+# Length of the flanking sequences (used in the visualisation of mutations).
+flanksize = 25
+
+# Maximum length of visualised mutations.
+maxvissize = 25
+
+# Length of the flanking sequences of the clipped mutations (see maxvissize).
+flankclipsize = 6
+
+
+#
+# These settings are used by the Scheduler module.
+#
+
+# Name of the batch process.
+processName = "MutalyzerBatch2"
+
+# Return e-mail address.
+mailFrom = "noreply@humgen.nl"
+
+# Subject of the message.
+mailSubject = "Result of Mutalyzer batch check."
+
+# Location of the results.
+resultsDir = "/var/cache/mutalyzer"
+
+# Location of the PID file.
+PIDfile = "/var/run/mutalyzer/mutalyzer-batchd.pid"
+
+# Maximum size for uploaded batch input files in megabytes.
+batchInputMaxSize = 5
+
+# The output header for NameChecking
+nameCheckOutHeader = "Input", "Errors | Messages", "AccNo", "Genesymbol", "Variant", "Reference Sequence Start Descr.", "Coding DNA Descr.", "Protein Descr.", "GeneSymbol Coding DNA Descr.", "GeneSymbol Protein Descr.", "Genomic Reference", "Coding Reference", "Protein Reference", "Affected Transcripts", "Affected Proteins"
+
+# The output header for SyntaxChecking
+syntaxCheckOutHeader = "Input", "Status"
+
+# The output header for PositionConverter
+positionConverterOutHeader = "Input Variant", "Errors", "Chromosomal Variant", "Coding Variant(s)"
+
+# The output header for SnpConverter
+snpConverterOutHeader = "Input Variant", "HGVS description(s)", "Errors | Messages"
+
+
+#
+# These settings are used by the File module.
+#
+
+# Amount of bytes to be read for determining the file type.
+bufSize = 32768
+
+# The obligatory header in batch request files.
+header = "AccNo", "Genesymbol", "Mutation"
+
+# Threshold for Batch Jobs
+threshold = 0.05
+
+
+#
+# These settings are used by the GenRecord module.
+#
+
+# Number of upstream nucleotides when searching for a transcript.
+upstream = 5000
+
+# Number of downstream nucleotides when searching for a transcript.
+downstream = 2000
+
+spliceAlarm = 2
+
+spliceWarn = 5

@@ -27,4 +27,4 @@ setup(
 # - Chown /var/log/mutalyzer.log and /var/cache/mutalyzer
 # - Copy extras/init.d/mutalyzer-batchd to /etc/init.d/mutalyzer-batchd
 # - Copy doc to /usr/share/doc
-# Perhaps as a postinstall script?
+# Check extras/post-install.sh for these.

@@ -8,6 +8,7 @@ should be run with the mutalyzer directory as working directory.
 
 @todo: Check if PID dir is writable.
 @todo: Get rid of ugly exception logging.
+@todo: Reload configuration without restarting (for example, on SIGHUP).
 
 [1] http://pypi.python.org/pypi/python-daemon/
 """
