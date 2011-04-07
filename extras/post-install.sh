@@ -94,7 +94,8 @@ mysql -u mutalyzer -D hg18 < refLink.sql
 zcat refLink.txt.gz | mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
 
 mysql -u mutalyzer -D hg18 < gbStatus.sql
-zgrep mRNA gbStatus.txt.gz | mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE gbStatus;'
+zgrep mRNA gbStatus.txt.gz > gbStatus.mrna.txt
+mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "gbStatus.mrna.txt" INTO TABLE gbStatus;'
 
 mysql -u mutalyzer -D hg18 < refGene.sql
 zcat refGene.txt.gz | mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
@@ -112,6 +113,7 @@ cat << EOF | mysql -u mutalyzer -D hg18
 EOF
 
 popd
+rm -Rf /tmp/mutalyzer-install/hg18
 
 # Do hg19
 mkdir -p hg19
@@ -134,7 +136,8 @@ mysql -u mutalyzer -D hg19 < refLink.sql
 zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
 
 mysql -u mutalyzer -D hg19 < gbStatus.sql
-zgrep mRNA gbStatus.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE gbStatus;'
+zgrep mRNA gbStatus.txt.gz > gbStatus.mrna.txt
+mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "gbStatus.mrna.txt" INTO TABLE gbStatus;'
 
 mysql -u mutalyzer -D hg19 < refGene.sql
 zcat refGene.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
@@ -158,12 +161,12 @@ rm -Rf /tmp/mutalyzer-install
 
 # Create ChrName tables (hg18)
 cat << EOF | mysql -u mutalyzer -D hg18
-CREATE TABLE `ChrName` (
-  `AccNo` char(20) NOT NULL,
-  `name` char(20) NOT NULL,
-  PRIMARY KEY (`AccNo`)
+CREATE TABLE ChrName (
+  AccNo char(20) NOT NULL,
+  name char(20) NOT NULL,
+  PRIMARY KEY (AccNo)
 );
-INSERT INTO `ChrName` (`AccNo`, `name`) VALUES
+INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000001.9', 'chr1'),
 ('NC_000002.10', 'chr2'),
 ('NC_000003.10', 'chr3'),
@@ -195,12 +198,12 @@ EOF
 
 # Create ChrName tables (hg19)
 cat << EOF | mysql -u mutalyzer -D hg19
-CREATE TABLE `ChrName` (
-  `AccNo` char(20) NOT NULL,
-  `name` char(20) NOT NULL,
-  PRIMARY KEY (`AccNo`)
+CREATE TABLE ChrName (
+  AccNo char(20) NOT NULL,
+  name char(20) NOT NULL,
+  PRIMARY KEY (AccNo)
 );
-INSERT INTO `ChrName` (`AccNo`, `name`) VALUES
+INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000001.10', 'chr1'),
 ('NC_000002.11', 'chr2'),
 ('NC_000003.11', 'chr3'),
@@ -240,48 +243,48 @@ echo "Creating tables in mutalyzer database"
 
 # Create mutalyzer tables
 cat << EOF | mysql -u mutalyzer -D mutalyzer
-CREATE TABLE `BatchJob` (
-  `JobID` char(20) NOT NULL,
-  `Filter` char(20) NOT NULL,
-  `EMail` char(255) NOT NULL,
-  `FromHost` char(255) NOT NULL,
-  `JobType` char(20) DEFAULT NULL,
-  `Arg1` char(20) DEFAULT NULL,
-  PRIMARY KEY (`JobID`)
+CREATE TABLE BatchJob (
+  JobID char(20) NOT NULL,
+  Filter char(20) NOT NULL,
+  EMail char(255) NOT NULL,
+  FromHost char(255) NOT NULL,
+  JobType char(20) DEFAULT NULL,
+  Arg1 char(20) DEFAULT NULL,
+  PRIMARY KEY (JobID)
 );
-CREATE TABLE `BatchQueue` (
-  `QueueID` int(5) NOT NULL AUTO_INCREMENT,
-  `JobID` char(20) NOT NULL,
-  `Input` char(255) NOT NULL,
-  `Flags` char(20) DEFAULT NULL,
-  PRIMARY KEY (`QueueID`)
+CREATE TABLE BatchQueue (
+  QueueID int(5) NOT NULL AUTO_INCREMENT,
+  JobID char(20) NOT NULL,
+  Input char(255) NOT NULL,
+  Flags char(20) DEFAULT NULL,
+  PRIMARY KEY (QueueID)
 );
-CREATE TABLE `GBInfo` (
-  `AccNo` char(20) NOT NULL DEFAULT '',
-  `GI` char(13) DEFAULT NULL,
-  `hash` char(32) NOT NULL DEFAULT '',
-  `ChrAccVer` char(20) DEFAULT NULL,
-  `ChrStart` int(12) DEFAULT NULL,
-  `ChrStop` int(12) DEFAULT NULL,
-  `orientation` int(2) DEFAULT NULL,
-  `url` char(255) DEFAULT NULL,
-  PRIMARY KEY (`AccNo`),
-  UNIQUE KEY `hash` (`hash`),
-  UNIQUE KEY `alias` (`GI`)
+CREATE TABLE GBInfo (
+  AccNo char(20) NOT NULL DEFAULT '',
+  GI char(13) DEFAULT NULL,
+  hash char(32) NOT NULL DEFAULT '',
+  ChrAccVer char(20) DEFAULT NULL,
+  ChrStart int(12) DEFAULT NULL,
+  ChrStop int(12) DEFAULT NULL,
+  orientation int(2) DEFAULT NULL,
+  url char(255) DEFAULT NULL,
+  PRIMARY KEY (AccNo),
+  UNIQUE KEY hash (hash),
+  UNIQUE KEY alias (GI)
 );
-CREATE TABLE `Link` (
-  `mrnaAcc` char(20) NOT NULL,
-  `protAcc` char(20) NOT NULL,
-  PRIMARY KEY (`mrnaAcc`),
-  UNIQUE KEY `protAcc` (`protAcc`)
+CREATE TABLE Link (
+  mrnaAcc char(20) NOT NULL,
+  protAcc char(20) NOT NULL,
+  PRIMARY KEY (mrnaAcc),
+  UNIQUE KEY protAcc (protAcc)
 );
-CREATE TABLE `mm1` (
-  `hg18` char(50) DEFAULT NULL,
-  `hg19` char(50) DEFAULT NULL
+CREATE TABLE mm1 (
+  hg18 char(50) DEFAULT NULL,
+  hg19 char(50) DEFAULT NULL
 );
-CREATE TABLE `mm2` (
-  `hg18` char(50) DEFAULT NULL,
-  `hg19` char(50) DEFAULT NULL
+CREATE TABLE mm2 (
+  hg18 char(50) DEFAULT NULL,
+  hg19 char(50) DEFAULT NULL
 );
 EOF
 

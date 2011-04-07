@@ -25,7 +25,6 @@ apt-get install \
   python-daemon \
   python-webpy \
   python-webtest \
-  python-suds \
   python-nose \
   apache2 \
   libapache2-mod-wsgi \
@@ -39,9 +38,13 @@ pushd /tmp/mutalyzer-install
 
 git clone https://github.com/soaplib/soaplib.git
 cd soaplib
-sudo python setup.py install
+python setup.py install
 
 popd
 rm -Rf /tmp/mutalyzer-install
+
+echo "Installing suds using easy_install"
+
+easy_install suds
 
 echo "kthxbye"
