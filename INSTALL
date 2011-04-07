@@ -1,3 +1,16 @@
+To setup a production environment:
+
+  $ sudo python setup.py install
+  $ sudo bash extras/post-install.sh
+  $ MUTALYZER_ENV=test nosetests
+
+To setup a development environment:
+
+  $ sudo python setup.py develop
+  $ sudo bash extras/post-install.sh
+  $ MUTALYZER_ENV=test nosetests
+
+
 This program depends on the following packages:
 - mysql-server     >= 5.0.0
 - python           >= 2.5.2

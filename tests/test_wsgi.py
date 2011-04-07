@@ -33,6 +33,20 @@ class TestWSGI():
         """
         self.app = TestApp(application)
 
+    def test_root(self):
+        """
+        Expect the index HTML page.
+        """
+        r = self.app.get('')
+        assert_equal(r.status, '301 Moved Permanently')
+        assert r.location.endswith('/')
+        r = r.follow()
+        assert_equal(r.status, '200 OK')
+        # We check for <html> to make sure the menu template is included
+        r.mustcontain('<html>',
+                      'Welcome to the Mutalyzer web site',
+                      '</html>')
+
     def test_index(self):
         """
         Expect the index HTML page.
@@ -43,6 +57,25 @@ class TestWSGI():
         r.mustcontain('<html>',
                       'Welcome to the Mutalyzer web site',
                       '</html>')
+
+    def test_index_explicit(self):
+        """
+        Expect the index HTML page.
+        """
+        r = self.app.get('/index')
+        assert_equal(r.status, '200 OK')
+        # We check for <html> to make sure the menu template is included
+        r.mustcontain('<html>',
+                      'Welcome to the Mutalyzer web site',
+                      '</html>')
+
+    def test_about(self):
+        """
+        See if my name is on the About page ;)
+        """
+        r = self.app.get('/about')
+        assert_equal(r.status, '200 OK')
+        r.mustcontain('Martijn Vermaat')
 
     def test_non_existing(self):
         """
@@ -378,7 +411,6 @@ class TestWSGI():
         """
         Submit the batch syntax checker with a too big input file.
         """
-        return  # Todo: temporarily switched of batch tests.
         seed = """
 Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy
 nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi

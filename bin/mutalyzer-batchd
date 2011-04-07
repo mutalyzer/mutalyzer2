@@ -9,8 +9,10 @@ should be run with the mutalyzer directory as working directory.
 @todo: Check if PID dir is writable.
 @todo: Get rid of ugly exception logging.
 @todo: Reload configuration without restarting (for example, on SIGHUP).
+@todo: Use [2] to set process name (and use that in init script).
 
 [1] http://pypi.python.org/pypi/python-daemon/
+[2] http://code.google.com/p/py-setproctitle/
 """
 
 

@@ -64,7 +64,8 @@ do_stop()
 	#   2 if daemon could not be stopped
 	#   other if a failure occurred
     start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
-	[ "$?" = 2 ] && return 2
+    RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
 	# Many daemons don't delete their pidfiles when they exit.
 	rm -f $PIDFILE
 	return "$RETVAL"
