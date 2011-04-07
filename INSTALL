@@ -1,14 +1,42 @@
-To setup a production environment:
+Installation instructions.
 
-  $ sudo python setup.py install
-  $ sudo bash extras/post-install.sh
-  $ MUTALYZER_ENV=test nosetests
+1) Install dependencies.
 
-To setup a development environment:
+  If you are on Debian or Ubuntu, you can use the following command to
+  install all dependencies:
 
-  $ sudo python setup.py develop
-  $ sudo bash extras/post-install.sh
-  $ MUTALYZER_ENV=test nosetests
+    $ sudo bash extras/pre-install-debian.sh
+
+  Otherwise, install them manually (perhaps have a look in the above script
+  for a useful dependency list). Also, step 3 below might assume some
+  locations that are not standard for your distribution (so keep an eye on
+  that).
+
+2) Install Mutalyzer.
+
+  Mutalyzer can be installed using Python setuptools. For a production
+  environment:
+
+    $ sudo python setup.py install
+
+  Alternatively, if you want to have a development environment, use:
+
+    $ sudo python setup.py develop
+
+  The development environment uses symlinks to this source directory, so
+  you can develop from here.
+
+3) Create configuration files, setup database.
+
+  Just run:
+
+    $ sudo bash extras/post-install.sh
+
+4) Test the installation.
+
+  You should always test the installation by running:
+
+    $ MUTALYZER_ENV=test nosetests
 
 
 This program depends on the following packages:
@@ -19,7 +47,6 @@ This program depends on the following packages:
 - python-pyparsing >= 1.5.0
 - python-configobj >= 4.4.0
 - python-simpletal >= 4.1-6
-- python-soaplib   >= 2.0.0-alpha1
 - python-soappy    >= 0.12.0-2
 - python-magic     >= 5.04-2
 - python-psutil    >= 0.1.3-1
@@ -33,81 +60,8 @@ This program depends on the following packages:
 The web and SOAP interfaces depend on the following packages:
 - apache2               >= 2.2.11
 - libapache2-mod-wsgi   >= 2.8
+- python-soaplib        >= 2.0.0-alpha1
 
-Copy ./examples/config to /etc/mutalyzer/config and edit to your needs.
-
-Add Apache configuration for Mutalyzer. For example, add the following to
-the file /etc/apache2/sites-available/mutalyzer (change the path
-/var/www/mutalyzer2 when appropriate) and run 'a2ensite mutalyzer'.
----
-<VirtualHost *:80>
-    ServerName mutalyzer.nl
-
-    WSGIScriptAlias /services /var/www/mutalyzer2/src/webservice.py
-    WSGIScriptAlias / /var/www/mutalyzer2/src/wsgi.py
-
-    Alias /base /var/www/mutalyzer2/templates/base
-</VirtualHost>
----
-
-After installing MySQL, create a database named ``hg19'', owned by the
-user ``mutalyzer'':
----
-cat << EOF | mysql -u root -p
-  CREATE USER mutalyzer;
-  CREATE DATABASE hg19;
-  GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
-  FLUSH PRIVILEGES;
-EOF
-cat << EOF | mysql -u root -p
-  CREATE DATABASE hg18;
-  GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
-  FLUSH PRIVILEGES;
-EOF
----
-Then retrieve the refLink table from the UCSC website:
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.txt.gz
-
-For Variant_info to work, you need the following files too:
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.txt.gz
-
-
-And import the table:
----
-mysql -u mutalyzer -D hg19 < refLink.sql
-zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
-
----
-
-Combine the mapping info into one table.
----
-CREATE TABLE map
-  SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd,
-                  exonStarts, exonEnds, name2 AS geneName, chrom,
-                  strand, protAcc
-    FROM gbStatus, refGene, refLink
-    WHERE type = "mRNA"
-    AND refGene.name = acc
-    AND acc = mrnaAcc;
----
-
-
-For Variant_info:
----
-mysql -u mutalyzer -D hg19 < gbStatus.sql
-zgrep mRNA gbStatus.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE gbStatus;'
-mysql -u mutalyzer -D hg19 < refGene.sql
-zcat refGene.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
----
-
-Edit the file mutalyzer.conf to finish the installation.
-
-Take a look at Obsoleted.txt for information about backwards compatibility and
-removed features.
 
 Below is the old install.sh script, but it is a bit outdated:
 
@@ -152,58 +106,3 @@ EOF
 chmod go+rx . src src/Modules templates
 chmod go+r .htaccess mutalyzer.conf src/*.py src/Modules/*.py templates/*
 chmod go+rw var
-
-
-
-What follows is the MySQL database structure for db mutalyzer:
-
-CREATE DATABASE `mutalyzer`
-
-USE `mutalyzer`;
-
-CREATE TABLE `BatchJob` (
-  `JobID` char(20) NOT NULL,
-  `Filter` char(20) NOT NULL,
-  `EMail` char(255) NOT NULL,
-  `FromHost` char(255) NOT NULL,
-  `JobType` char(20) DEFAULT NULL,
-  `Arg1` char(20) DEFAULT NULL,
-  PRIMARY KEY (`JobID`)
-);
-
-CREATE TABLE `BatchQueue` (
-  `QueueID` int(5) NOT NULL AUTO_INCREMENT,
-  `JobID` char(20) NOT NULL,
-  `Input` char(255) NOT NULL,
-  `Flags` char(20) DEFAULT NULL,
-  PRIMARY KEY (`QueueID`)
-);
-CREATE TABLE `GBInfo` (
-  `AccNo` char(20) NOT NULL DEFAULT '',
-  `GI` char(13) DEFAULT NULL,
-  `hash` char(32) NOT NULL DEFAULT '',
-  `ChrAccVer` char(20) DEFAULT NULL,
-  `ChrStart` int(12) DEFAULT NULL,
-  `ChrStop` int(12) DEFAULT NULL,
-  `orientation` int(2) DEFAULT NULL,
-  `url` char(255) DEFAULT NULL,
-  PRIMARY KEY (`AccNo`),
-  UNIQUE KEY `hash` (`hash`),
-  UNIQUE KEY `alias` (`GI`)
-);
-
-CREATE TABLE `Link` (
-  `mrnaAcc` char(20) NOT NULL,
-  `protAcc` char(20) NOT NULL,
-  PRIMARY KEY (`mrnaAcc`),
-  UNIQUE KEY `protAcc` (`protAcc`)
-);
-
-CREATE TABLE `mm1` (
-  `hg18` char(50) DEFAULT NULL,
-  `hg19` char(50) DEFAULT NULL
-);
-CREATE TABLE `mm2` (
-  `hg18` char(50) DEFAULT NULL,
-  `hg19` char(50) DEFAULT NULL
-);
