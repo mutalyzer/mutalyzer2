@@ -1,79 +1,82 @@
-Installation instructions.
-
-1) Install dependencies.
-
-  If you are on Debian or Ubuntu, you can use the following command to
-  install all dependencies:
-
-    $ sudo bash extras/pre-install-debian.sh
-
-  Otherwise, install them manually (perhaps have a look in the above script
-  for a useful dependency list). Also, step 3 below might assume some
-  locations that are not standard for your distribution (so keep an eye on
-  that).
-
-2) Install Mutalyzer.
-
-  Mutalyzer can be installed using Python setuptools. For a production
-  environment:
-
-    $ sudo python setup.py install
-
-  Alternatively, if you want to have a development environment, use:
-
-    $ sudo python setup.py develop
-
-  The development environment uses symlinks to this source directory, so
-  you can develop from here.
-
-3) Create configuration files, setup database.
-
-  Just run:
-
-    $ sudo bash extras/post-install.sh
-
-4) Test the installation.
-
-  Note: This step is broken at the moment. Some tests write to the cache
-  for which we have no rights. This should be fixed to have a temporary
-  cache for the tests I guess.
-
-  You should always test the installation. The tests (for now at least)
-  need the batch daemon and the webserver (the SOAP part) running:
-
-    $ sudo /etc/init.d/mutalyzer-batchd start
-    $ sudo /etc/init.d/apache2 restart
-
-  Now run the tests:
-
-    $ MUTALYZER_ENV=test nosetests
+Mutalyzer installation instructions.
 
 
-This program depends on the following packages:
-- mysql-server     >= 5.0.0
-- python           >= 2.5.2
-- python-mysqldb   >= 1.2.2
-- python-biopython >= 1.54
-- python-pyparsing >= 1.5.0
-- python-configobj >= 4.4.0
-- python-simpletal >= 4.1-6
-- python-soappy    >= 0.12.0-2
-- python-magic     >= 5.04-2
-- python-psutil    >= 0.1.3-1
-- python-xlrd      >= 0.6.1-2
-- python-daemon	   >= 1.5.5
-- python-webpy     >= 0.33
-- python-webtest   >= 1.2.3
-- python-suds      >= 0.3.9-1
-- python-nose      >= 0.11
+Get Mutalyzer
+=============
 
-The web and SOAP interfaces depend on the following packages:
-- apache2               >= 2.2.11
-- libapache2-mod-wsgi   >= 2.8
-- python-soaplib        >= 2.0.0-alpha1
+Since you are reading this, you can probably skip this step. Otherwise, get
+your hands on a tarball and:
+
+  $ tar -zxvf mutalyzer-XXX.tar.gz
+  $ cd mutalyzer-XXX
+
+Or get the source from SVN directly:
+
+  $ svn https://www.mutalyzer.nl/svn/mutalyzer2/trunk mutalyzer
+  $ cd mutalyzer
 
 
-Below is the old install.sh script, but it is a bit outdated:
+Install Dependencies
+====================
+
+If you are on Debian or Ubuntu, you can use the following command to install
+all dependencies:
+
+  $ sudo bash extras/pre-install-debian.sh
+
+Otherwise, install them manually (perhaps have a look in the above script for
+a useful dependency list). Also, further steps might assume some non-standard
+locations for your distribution (so keep an eye on that).
+
+
+Install Mutalyzer
+=================
+
+Mutalyzer can be installed using Python setuptools. For a production
+environment:
+
+  $ sudo python setup.py install
+
+Alternatively, if you want to have a development environment, use:
+
+  $ sudo python setup.py develop
+
+The development environment uses symlinks to this source directory, so you can
+develop directly from here.
+
+
+Setup Mutalyzer
+===============
+
+This step creates configuration files and populates the database:
+
+  $ sudo bash extras/post-install.sh
+
+
+Test the Installation
+=====================
+
+Note: This step is broken at the moment. Some tests write to the cache for
+      which we have no rights. This should be fixed to have a temporary cache
+      for the tests I guess.
+
+You should always test the installation. The tests (for now at least) need
+the batch daemon and the webserver (the SOAP part) running:
+
+  $ sudo /etc/init.d/mutalyzer-batchd start
+  $ sudo /etc/init.d/apache2 restart
+
+Now run the tests:
+
+  $ MUTALYZER_ENV=test nosetests
+
+
+Additional Notes
+================
+
+Included below for future reference is the old install.sh script. It is a bit
+outdated.
+
 
 #!/bin/sh
 

@@ -1,15 +1,71 @@
-Coding style guide:
+Mutalyzer, a HGVS variant nomenclature checker.
 
-* Follow PEP 8 (code) and PEP 257 (docstrings).
+
+Documentation
+=============
+
+See the doc/ directory for (possibly outdated) developer documentation and
+presentation slides related to Mutalyzer. See http://www.mutalyzer.nl for
+user documentation.
+
+
+Installation
+============
+
+See the INSTALL file for installation instructions.
+
+
+Unit Tests
+==========
+
+The unit tests depend on a running batch daemon and SOAP webservice:
+
+  $ sudo /etc/init.d/mutalyzer-batchd start
+  $ sudo /etc/init.d/apache2 start
+
+Now run the tests with:
+
+  $ MUTALYZER_ENV=test nosetests
+
+
+Development Notes
+=================
+
+Todo list:
+- Tests fail in clean installation, because name checker tests make the
+  Retriever want to write to the cache and we don't run the tests as the
+  user that owns the cache. How to fix this?
+- Fix mutalyzer/UCSC_update.py.
+- Test all uses of mkstemp().
+- Integrate fuzzy offsets from this branch:
+  https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
+- Use standard logging module, with rotating functionality. Race conditions
+  on the log file are probably a problem in the current setup.
+  Instead of that rotating, we could also use logrotate:
+  http://serverfault.com/questions/55610/logrotate-and-open-files
+- Setup continuous integration. Currently, I'm most impressed with Hudson.
+  http://hudson-ci.org/
+  http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
+- Migrate Javascript to JQuery.
+- I think in the long run, the Output object is not really the way to go. It
+  obscures the control flow. The logging part should use the standard logging
+  module. The data gathering by the Output object is probably better handled
+  by explicitely returning data objects from functions.
+- Migrate from TAL to a more mondern and maintained Python template library.
+- Develop a large test suite.
+- Create a web interface url to watch the progress of a batch job.
+- Use virtualenv?
+- Perhaps the WSGI interface should be somewhere else and be called
+  mutalyzer.wsgi?
+- Password for MySQL user.
+
+Code style guide:
+- Follow PEP 8 (code) and PEP 257 (docstrings).
     http://www.python.org/dev/peps/pep-0008/
     http://www.python.org/dev/peps/pep-0257/
-* Use Epydoc style documentation in docstrings.
-* Use __all__ definitions in modules.
-* Executables are in the bin/ directory, e.g. like this:
-    #!/usr/bin/env python
-    from mutalyzer import batch_runner
-    batch_runner.run()
-* For examples, check established Python projects:
+- Use Epydoc style documentation in docstrings.
+- Executables are in the bin/ directory.
+- For examples, check established Python projects:
     http://code.djangoproject.com/browser/django/trunk
     http://twistedmatrix.com/trac/browser/trunk
     https://github.com/webpy/webpy
@@ -17,74 +73,42 @@ Coding style guide:
     https://bitbucket.org/mramm/tg-21/src
     http://bazaar.launchpad.net/~bzr-pqm/bzr/bzr.dev/files
     https://github.com/ask/celery
-
-
-Run the test with (from the package root, or the /tests directory):
-  MUTALYZER_ENV=test nosetests
-
-
-Todo:
-
-* Tests fail in clean installation, because name checker tests make the
-  Retriever want to write to the cache and we don't run the tests as the
-  user that owns the cache. How to fix this?
-* Fix mutalyzer/UCSC_update.py.
-* Test all uses of mkstemp().
-* https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
-* Accept a --config command line argument for a configuration file location.
-* Document integration, deployment, release management, etc.
-* Use standard logging module, with rotating functionality. Race conditions
-  on the log file are probably a problem in the current setup.
-  Instead of that rotating, we could also use logrotate:
-  http://serverfault.com/questions/55610/logrotate-and-open-files
-* Use environment variable for testing situation. Something like:
-  http://webpy.org/cookbook/testing_with_paste_and_nose
-  For example, we probably want to disable logging during the test run.
-* Setup continuous integration. Currently, I'm most impressed with Hudson.
-  http://hudson-ci.org/
-  http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
-* Create an installation script, and from that preferably a Debian package.
-  Non-trivial thing here would be the requirement of database contents.
-  http://www.siafoo.net/article/77
-  http://ghantoos.org/2008/10/19/creating-a-deb-package-from-a-python-setuppy/
-  http://packages.python.org/distribute/setuptools.html#developer-s-guide
-  https://wiki.ubuntu.com/PackagingGuide/Python#The debhelper way
-  http://stackoverflow.com/questions/4981174/migrating-to-pipvirtualenv-from-setuptools
-  http://peak.telecommunity.com/DevCenter/setuptools
-* Make the batch checker a real system service, using /var/run and a Upstart
-  init script.
-  http://wiki.debian.org/LSBInitScripts
-  http://celeryproject.org/docs/cookbook/daemonizing.html
-  http://www.debian-administration.org/articles/28
-* Migrate Javascript to JQuery.
-* I think in the long run, the Output object is not really the way to go. It
-  obscures the control flow. The logging part should use the standard logging
-  module. The data gathering by the Output object is probably better handled
-  by explicitely returning data objects from functions.
-* Migrate from TAL to a more mondern and maintained Python template library.
-* Develop a large test suite.
-* Create a web interface url to watch the progress of a batch job.
-* Use virtualenv?
-* Perhaps the WSGI file should be somewhere else and be called mutalyzer.wsgi?
-* Password for MySQL user.
-
-
-Notes for server setup (Europium VM copy):
-
-- Hostname aanpassen.
-- Mailserver.
-- Batch checker stoppen.
-
+- A lot of code does not yet adhere to these points, this is an ongoing
+  effort.
 
 Obsoleted features:
+- On eu.liacs.nl:
+  /etc/apache2/mods-enabled/rewrite.load contains a rewrite rule that converts
+  "Variant_info.php" to "Variant_info".
+  When all LOVD versions are above 2.0-23, this rule can be deleted and the
+  rewrite module can be disabled.
+- In the Variant_info() function a substitution on error messages is
+  performed.
+  When all LOVD versions are above 2.0-23, this check can be deleted.
 
-  On eu.liacs.nl: /etc/apache2/mods-enabled/rewrite.load
-  - This file contains a rewrite rule that converts "Variant_info.php" to
-    "Variant_info".
-  - When all LOVD versions are above 2.0-23, this rule can be deleted and
-    the rewrite module can be disabled.
 
-  index.py:
-  - In the Variant_info() function a substitution on error messages is
-    performed.
-  - When all LOVD versions are above 2.0-23, this check can be deleted.
+Dependencies
+============
+
+Mutalyzer depends on the following (Debian/Ubuntu) packages:
+- mysql-server     >= 5.0.0
+- python           >= 2.5.2
+- python-mysqldb   >= 1.2.2
+- python-biopython >= 1.54
+- python-pyparsing >= 1.5.0
+- python-configobj >= 4.4.0
+- python-simpletal >= 4.1-6
+- python-soappy    >= 0.12.0-2
+- python-magic     >= 5.04-2
+- python-psutil    >= 0.1.3-1
+- python-xlrd      >= 0.6.1-2
+- python-daemon    >= 1.5.5
+- python-webpy     >= 0.33
+- python-webtest   >= 1.2.3
+- python-suds      >= 0.3.9-1
+- python-nose      >= 0.11
+
+The web and SOAP interfaces depend on the following packages:
+- apache2             >= 2.2.11
+- libapache2-mod-wsgi >= 2.8
+- python-soaplib      >= 2.0.0-alpha1
