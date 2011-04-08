@@ -25,6 +25,8 @@ __homepage__ = 'http://mutalyzer.nl'
 NOMENCLATURE_VERSION_INFO = ('2', '0')
 NOMENCLATURE_VERSION = '.'.join(NOMENCLATURE_VERSION_INFO)
 
+SOAP_NAMESPACE = 'http://mutalyzer.nl/2.0/services'
+
 
 def package_root():
     """

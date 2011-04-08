@@ -32,6 +32,7 @@ Development Notes
 =================
 
 Todo list:
+- Fix VarInfo.py.
 - Tests fail in clean installation, because name checker tests make the
   Retriever want to write to the cache and we don't run the tests as the
   user that owns the cache. How to fix this?

@@ -1,28 +1,26 @@
-#!/usr/bin/python
-
 """
-Collection of Serilizable Objects used by the webservice
+Collection of serilizable objects used by the SOAP webservice. They extend
+from the soaplib ClassModel.
 
-@requires: soaplib.serializers.primitive.String
-@requires: soaplib.serializers.primitive.Integer
-@requires: soaplib.serializers.primitive.Array
-@requires: soaplib.serializers.clazz.ClassSerializer
+Default attributes for the soaplib ClassModel:
+- nillable = True
+- min_occurs = 0
+- max_occurs = 1
 
-@todo: documentation
+Additional attributes values for the soaplib String model:
+- min_len = 0
+- max_len = 'unbounded'
+- pattern = None
+
+@todo: Use Mandatory.* models in the ClassModel extensions?
+@todo: See if it improves client code if we use Array(_, nillable=False).
 """
+
+
 from soaplib.core.model.primitive import String, Integer, Boolean
 from soaplib.core.model.clazz import ClassModel, Array
 
-
-# Default attributes for soaplib models:
-#   nillable = True
-#   min_occurs = 0
-#   max_occurs = 1
-#
-# Additional attributes values for String model:
-#   min_len = 0
-#   max_len = "unbounded"
-#   pattern = None
+from mutalyzer import SOAP_NAMESPACE
 
 
 class Mandatory(object):
@@ -33,28 +31,25 @@ class Mandatory(object):
     String = String(min_occurs=1, nillable=False)
     Integer = Integer(min_occurs=1, nillable=False)
     Boolean = Boolean(min_occurs=1, nillable=False)
-
-
-# Todo: Use Mandatory.* models in the classmodels below?
-# Todo: See if it improves client code if we use Array(_, nillable=False)
+#Mandatory
 
 
 class SoapMessage(ClassModel):
     """
     Type of messages used in SOAP method return values.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     errorcode = Mandatory.String
     message = Mandatory.String
 #SoapMessage
 
 
-class Mapping(ClassModel) :
+class Mapping(ClassModel):
     """
     Return type of SOAP method mappingInfo.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     startmain = Integer
     startoffset = Integer
@@ -68,11 +63,11 @@ class Mapping(ClassModel) :
 #Mapping
 
 
-class Transcript(ClassModel) :
+class Transcript(ClassModel):
     """
     Return type of SOAP method transcriptInfo.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     trans_start = Integer
     trans_stop = Integer
@@ -84,18 +79,18 @@ class RawVariant(ClassModel):
     """
     Used in MutalyzerOutput data type.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     description = Mandatory.String
     visualisation = Mandatory.String
 #RawVariant
 
 
-class MutalyzerOutput(ClassModel) :
+class MutalyzerOutput(ClassModel):
     """
     Return type of SOAP method runMutalyzer.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     original = String
     mutated = String
@@ -125,11 +120,11 @@ class MutalyzerOutput(ClassModel) :
 #MutalyzerOutput
 
 
-class TranscriptNameInfo(ClassModel) :
+class TranscriptNameInfo(ClassModel):
     """
     Return type of SOAP method getGeneAndTranscript.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     transcriptName = Mandatory.String
     productName = Mandatory.String
@@ -140,7 +135,7 @@ class ExonInfo(ClassModel):
     """
     Used in TranscriptInfo data type.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     cStart = Mandatory.String
     gStart = Mandatory.Integer
@@ -153,7 +148,7 @@ class ProteinTranscript(ClassModel):
     """
     Used in TranscriptInfo data type.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     name = Mandatory.String
     id = Mandatory.String
@@ -169,7 +164,7 @@ class TranscriptInfo(ClassModel):
            both trans and CDS. Ivar asked for 'end'. Internally, we have
            trans 'end' and CDS 'stop'.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     name = Mandatory.String
     id = Mandatory.String
@@ -195,11 +190,11 @@ class TranscriptInfo(ClassModel):
 #TranscriptInfo
 
 
-class CheckSyntaxOutput(ClassModel) :
+class CheckSyntaxOutput(ClassModel):
     """
     Return type of SOAP method checkSyntax.
     """
-    __namespace__ = 'http://mutalyzer.nl/2.0/services'
+    __namespace__ = SOAP_NAMESPACE
 
     valid = Mandatory.Boolean
     messages = Array(SoapMessage)

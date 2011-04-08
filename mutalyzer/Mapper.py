@@ -16,8 +16,8 @@ positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
     will be printed.
 
 @requires: sys
-@requires: Modules.Config 
-@requires: Modules.Db 
+@requires: Modules.Config
+@requires: Modules.Db
 @requires: Modules.Crossmap
 @requires: Modules.Serializers.SoapMessage
 @requires: Modules.Serializers.Mapping
@@ -31,7 +31,7 @@ from mutalyzer.grammar import Grammar
 from mutalyzer import Db         # Db(), get_NM_version(), get_NM_info()
 from mutalyzer import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
                                # offset2int(), info()
-from mutalyzer.Serializers import SoapMessage, Mapping, Transcript
+from mutalyzer.models import SoapMessage, Mapping, Transcript
 
 from Bio.Seq import reverse_complement
 from collections import defaultdict
@@ -89,14 +89,14 @@ class Converter(object) :
     def __init__(self, build, C, O) :
         """
         Initialise the class.
-        
+
         @arg build: the genome build version of the organism (e.g. hg19 for
         human genome build version 19)
         @type build: string
         @arg C: crossmapper object
         @type C: object
         @arg O: output object
-        @type O: object        
+        @type O: object
         """
 
         self.build = None
@@ -114,7 +114,7 @@ class Converter(object) :
         """
         @todo document me (figure out what is does)
         Change the build if it different from the one previously set?????.
-        
+
         @arg build: the genome build version of the organism (e.g. hg19 for
         human genome build version 19)
         @type build: string
@@ -136,10 +136,10 @@ class Converter(object) :
     def _parseInput(self, variant) :
         """
         Parse a variant.
-        
+
         @arg variant: variant description
         @type variant: string
-        
+
         @return: parsetree object
         @rtype: object
         """
@@ -169,13 +169,13 @@ class Converter(object) :
         #TODO: ADD Error Messages, unlikely that CDS info is missing
         """
         Create a Mutalyzer compatible exon list.
-        
+
         @todo: ADD Error Messages, unlikely that CDS info is missing.
-        
+
         @arg Fields: dictionary with exon start and end positions taken from the
         MySQL database
         @type Fields: dictionary
-        
+
         @return: Exon list
         @rtype: list
         """
@@ -207,10 +207,10 @@ class Converter(object) :
         (zip returns a list of tuples, where the i-th tuple contains the i-th
         element from each of the argument sequences or iterables.
         dict(arg) creates a new data dictionary, with items taken from arg.)
-        
+
         @arg values: list of values take from the MySQL database
         @type values: list
-        
+
         @return: dictionary with values taken from the MySQL database
         @rtype: dictionary
         """
@@ -226,7 +226,7 @@ class Converter(object) :
     def _FieldsFromDb(self, acc, version) :
         """
         Get data from database and populate dbFields dict.
-        
+
         @arg acc: NM_ accession number (without version)
         @type acc: string
         @arg version: version number
@@ -277,9 +277,9 @@ class Converter(object) :
     #_FieldsFromDb
 
     def makeCrossmap(self) :
-        """ 
+        """
         Build the crossmapper.
-        
+
         @todo: ADD Error Messages
 
         @return: Cross ; A Crossmap object
@@ -315,7 +315,7 @@ class Converter(object) :
         """
 
         Cross = self.makeCrossmap()
-        if not Cross : 
+        if not Cross :
             return None
 
         mutation = self.parseTree.RawVar
@@ -353,10 +353,10 @@ class Converter(object) :
         """
         Returns transcription start, transcription end and CDS stop, if
         available.
-        
+
         @arg accNo: transcript (NM_) accession number (with or without version)
         @type accNo: string
-        
+
         @return: transcription start, transcription end and CDS stop
         @rtype: triple
         """
@@ -367,7 +367,7 @@ class Converter(object) :
             acc, ver = accNo.split('.')
         self._FieldsFromDb(acc, ver)
         CM = self.makeCrossmap()
-        if CM : 
+        if CM :
             return CM.info()
     #giveInfo
 
@@ -397,12 +397,12 @@ class Converter(object) :
     def mainMapping(self, accNo, mutation) :
         """
         One of the entry points (called by the HTML publisher).
-        
+
         @arg accNo: transcript (NM_) accession number (with version?)
         @type accNo: string
         @arg mutation: the 'mutation' (e.g. c.123C>T)
         @type mutation: string
-        
+
         @return: ClassSerializer object
         @rtype: object
         """
@@ -450,7 +450,7 @@ class Converter(object) :
             self._FieldsFromDb(acc, version)
         #if
         M = self._coreMapping()
-        if M is None : 
+        if M is None :
             return None
 
         # construct the variant description
@@ -478,8 +478,8 @@ class Converter(object) :
         """
         @arg variant:
         @type variant: string
-        
-        @return: variant ; 
+
+        @return: variant ;
         @rtype: string
         """
 
@@ -513,8 +513,8 @@ class Converter(object) :
         @type variant: string
         @arg rt: the return type
         @type rt: string
-        
-        @return: HGVS_notatations ; 
+
+        @return: HGVS_notatations ;
         @rtype: dictionary or list
         """
 
@@ -591,7 +591,7 @@ class Converter(object) :
 
         @arg revc:
         @type revc:
-        
+
         @return:
         @rtype: string
         """

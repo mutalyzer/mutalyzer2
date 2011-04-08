@@ -26,7 +26,7 @@ Public classes:
 import time
 
 from mutalyzer import util
-from mutalyzer.Serializers import SoapMessage
+from mutalyzer.models import SoapMessage
 
 
 class Output() :

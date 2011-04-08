@@ -33,11 +33,6 @@ sys.stdout = sys.stderr
 # Log exceptions to stdout
 import logging; logging.basicConfig()
 
-# We now use very current soaplib:
-#   $ git clone https://github.com/soaplib/soaplib.git
-#   $ cd soaplib
-#   $ sudo python setup.py install
-
 from soaplib.core import Application
 from soaplib.core.service import soap
 from soaplib.core.service import DefinitionBase
@@ -48,15 +43,16 @@ from soaplib.core.server import wsgi
 import os
 from operator import itemgetter, attrgetter
 
+import mutalyzer
 from mutalyzer.config import Config
+from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer import variantchecker
-from mutalyzer.output import Output
 from mutalyzer import Db
 from mutalyzer import Mapper
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
-from mutalyzer.Serializers import Mapping, Transcript, MutalyzerOutput, Mandatory, TranscriptNameInfo, CheckSyntaxOutput, SoapMessage, TranscriptInfo, ExonInfo, ProteinTranscript, RawVariant
+from mutalyzer.models import *
 
 
 class MutalyzerService(DefinitionBase) :
@@ -885,8 +881,7 @@ class MutalyzerService(DefinitionBase) :
 
 
 # WSGI application for use with e.g. Apache/mod_wsgi
-soap_application = Application([MutalyzerService],
-                               'http://mutalyzer.nl/2.0/services', # namespace
+soap_application = Application([MutalyzerService], mutalyzer.SOAP_NAMESPACE,
                                'Mutalyzer')
 application = wsgi.Application(soap_application)
 
