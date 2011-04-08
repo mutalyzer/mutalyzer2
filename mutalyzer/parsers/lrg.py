@@ -1,7 +1,5 @@
-#!/usr/bin/python
-
 """
-Module contains one public function createLrgRecord which returns a
+Module contains one public function create_record which returns a
 mutalyzer GenRecord.Record populated with data from a LRG file.
 
 A LRG file is an XML formatted file and consists of a fixed and
@@ -17,31 +15,24 @@ This module is based on the result of the minidom xml parser.
 NOTE: A strong alternative to the minidom parser would be ElementTree which is
 added in python2.5. Its main strengths are speed and readability [pythonesque].
 (http://docs.python.org/library/xml.etree.elementtree.html)
-
-@requires: xml.dom.minidom
-@requires: xml.parsers.expat.ExpatError
-@requires: Bio.Seq.Seq
-@requires: Bio.Alphabet.IUPAC
 """
 
-import xml.dom.minidom
-from xml.parsers.expat import ExpatError    # Raised on invalid XML files
 
+import xml.dom.minidom
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 from mutalyzer import GenRecord
 
-__all__ = ["createLrgRecord"] # Only import createLrgRecord from this module
 
-def __debugParsedData(title, data):
+def _debug_parsed_data(title, data):
     """
     Output additional data to stdout. Used for debugging the
     intermediate format used while parsing a LRG file.
-    
+
     @requires: pprint
-    
-    @arg title: 
+
+    @arg title:
     @type title: string
     @arg data: minidom object
     @type data: object
@@ -50,9 +41,10 @@ def __debugParsedData(title, data):
     print "#"*79+"\nDEBUG: Start of "+title+"\n"+"#"*79
     pprint.pprint(data)
     print "#"*79+"\nDEBUG: End of "+title+"\n"+"#"*79
-#__debugParsedData
+#_debug_parsed_data
 
-def _getContent(data, refname):
+
+def _get_content(data, refname):
     """
     Return string-content of an XML textnode.
 
@@ -69,7 +61,8 @@ def _getContent(data, refname):
         return temp[0].lastChild.data.encode("utf8")
     else:
         return ""
-#_getContent
+#_get_content
+
 
 def _attr2dict(attr):
     """
@@ -90,7 +83,8 @@ def _attr2dict(attr):
     return ret
 #_attr2dict
 
-def createLrgRecord(data):
+
+def create_record(data):
     """
     Create a GenRecord.Record of a LRG <xml> formatted string.
 
@@ -114,7 +108,7 @@ def createLrgRecord(data):
 
     # NOTE: To get insight in the structure of the intermediate
     # nested dictionary format please comment out the following line
-    #__debugParsedData("Updatable Section",updParsed)
+    #_debug_parsed_data('Updatable Section', updParsed)
 
     # Get the genomic mapping from the Updatable Section -> LRG
     # NOTE: The mapping is not yet used in the mutalyzer program
@@ -127,9 +121,9 @@ def createLrgRecord(data):
     # from the updatable section.
 
     # get sequence from Fixed Section
-    #assert(_getContent(fixed, "mol_type") == "dna")
+    #assert(_get_content(fixed, "mol_type") == "dna")
     record.molType = 'g'
-    record.seq = Seq(_getContent(fixed, "sequence"), IUPAC.unambiguous_dna)
+    record.seq = Seq(_get_content(fixed, "sequence"), IUPAC.unambiguous_dna)
 
     # Get the genename of the fixed gene in the LRG
     # and put that gene on top of the geneList.
@@ -196,7 +190,8 @@ def createLrgRecord(data):
         transcription.CDS = CDSPList
     #for
     return record
-#createLrgRecord
+#create_record
+
 
 def genesFromUpdatable(updParsed):
     """
@@ -229,6 +224,7 @@ def genesFromUpdatable(updParsed):
     return genes
 #genesFromUpdatable
 
+
 def transcriptsFromParsed(parsedData):
     """
     Populate GenRecord.Locus instances with updatable LRG node data
@@ -257,13 +253,11 @@ def transcriptsFromParsed(parsedData):
     return transcripts
 #transcriptsFromParsed
 
+
 def _emptyTranscripts(data):
-    #TODO: This function can be moved to the GenRecord.checkRecord method
     """
     Populate a GenRecord.Locus instance with minimal data to make the
     gene compatible with mutalyzer. Data abstracted from the gene.
-    
-    @todo: This function can be moved to the GenRecord.checkRecord method.
 
     @arg data: Data from the gene which is used to populate the create a minimal
     GenRecord.Locus instance
@@ -272,6 +266,8 @@ def _emptyTranscripts(data):
     @return: List with a single bogus GenRecord.Locus instance, in which
     location and mRNA are copied from the gene
     @rtype: list
+
+    @todo: This function can be moved to the GenRecord.checkRecord method.
     """
     transcript = GenRecord.Locus('')
     transcript.molType = 'n'
@@ -283,6 +279,7 @@ def _emptyTranscripts(data):
     return [transcript,]
 #_emptyTranscripts
 
+
 def _transcriptPopulator(trName, trData):
     """
     Populate GenRecord.Locus instance with updatable LRG node data.
@@ -291,7 +288,7 @@ def _transcriptPopulator(trName, trData):
     @type trName: string
     @arg trData: Data associated with the transcript
     @type trData: dictionary
-    
+
     @return: transcript  ; GenRecord.Locus instance, populated with the content
     of the parsed Data
     @rtype: object
@@ -320,6 +317,7 @@ def _transcriptPopulator(trName, trData):
     return transcript
 #_transcriptPopulator
 
+
 def getMapping(rawMapData):
     """
     Collect all necessary info to map the current LRG sequence to the
@@ -346,6 +344,7 @@ def getMapping(rawMapData):
     return ret
 #getMapping
 
+
 def parseUpdatable(data):
     """
     Mediator function which transforms the minidom object to a nested dict
@@ -364,7 +363,7 @@ def parseUpdatable(data):
     ret = {"LRG":{}, "NCBI":{}, "Ensembl":{}}
     annotation_nodes = data.getElementsByTagName("annotation_set")
     for anno in annotation_nodes:
-        name = _getContent(anno, "name")
+        name = _get_content(anno, "name")
         if name == "LRG":
             ret["LRG"] = getLrgAnnotation(anno)
         elif name == "NCBI RefSeqGene":
@@ -377,6 +376,7 @@ def parseUpdatable(data):
     #for
     return ret
 #parseUpdatable
+
 
 def getLrgAnnotation(data):
     """
@@ -408,9 +408,10 @@ def getLrgAnnotation(data):
         ret["mapping"] = (mapattr,spanattr,diffs)
     #for
     # Get the LRG Gene Name, this is the main gene in this LRG
-    ret["genename"] = _getContent(data, "lrg_gene_name")
+    ret["genename"] = _get_content(data, "lrg_gene_name")
     return ret
 #getLrgAnnotation
+
 
 def getFeaturesAnnotation(data):
     """
@@ -424,9 +425,9 @@ def getFeaturesAnnotation(data):
 
     NOTE: an xml node has attributes and elements, this function squashes this
     ambiguity and collects only the attributes and elements of interest
-          
+
     @todo: check documentation
-    
+
     @arg data: updatable section -> Annotations -> NCBI | Ensembl
     @type data: dictionary
 
@@ -453,18 +454,18 @@ def getFeaturesAnnotation(data):
     feature = data.getElementsByTagName("features")[0]
     for gene in feature.getElementsByTagName("gene"):
         geneAttr = _attr2dict(gene.attributes)
-        geneLongName = _getContent(gene, "long_name")
+        geneLongName = _get_content(gene, "long_name")
         transcripts = {"noFixedId": []}
         for transcript in gene.getElementsByTagName("transcript"):
             transAttr = _attr2dict(transcript.attributes)
-            transLongName = _getContent(transcript, "long_name")
+            transLongName = _get_content(transcript, "long_name")
             # Check if the transcript has a protein product
             proteinProduct =\
                     transcript.getElementsByTagName("protein_product")
             if proteinProduct:
                 protein = proteinProduct[0]
                 proteinAttr = _attr2dict(protein.attributes)
-                proteinLongName = _getContent(protein, "long_name")
+                proteinLongName = _get_content(protein, "long_name")
             else:
                 proteinAttr = {}
                 proteinLongName = ""
@@ -492,6 +493,3 @@ def getFeaturesAnnotation(data):
     #for gene
     return ret
 #getFeaturesAnnotation
-
-if __name__ == "__main__":
-    print "Use the unit tests to test this Module"

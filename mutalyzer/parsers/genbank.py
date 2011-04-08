@@ -1,28 +1,18 @@
-#!/usr/bin/python
-
 """
-Module contains one public function createGBRecord which returns a
+Module contains one public function create_record which returns a
 mutalyzer GenRecord. Record populated with data from a GenBank file.
-
-@requires: bz2
-@requires: Db
-@requires: Bio.SeqIO
-@requires: Bio.Entrez
-@requires: GenRecord.PList
-@requires: GenRecord.Locus
-@requires: GenRecord.Gene
-@requires: GenRecord.Record
-@requires: GenRecord.GenRecord
 """
 
-import bz2                     # BZ2Compressor(), BZ2File()
-import Db
 
-from Bio import SeqIO, Entrez  # read()
+import bz2
+from Bio import SeqIO, Entrez
+
 from mutalyzer.config import Config
+from mutalyzer import Db
 from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
 
-class tempGene() :
+
+class tempGene():
     """
     Container class for a given gene name.
 
@@ -34,14 +24,14 @@ class tempGene() :
         - cdsList ; CDS list (including internal splice sites).
     """
 
-    def __init__(self, name) :
+    def __init__(self, name):
         """
         Initialise the class for a given gene name.
-        
+
         Public variables:
             - rnaList ; List of splice sites.
             - cdsList ; CDS list (including internal splice sites).
-        
+
         @arg name: Gene name
         @type name: string
         """
@@ -52,21 +42,21 @@ class tempGene() :
     #__init__
 #tempGene
 
-class GBparser() :
+
+class GBparser():
     """
     @todo: documentation
     """
-
-    def __init__(self) :
+    def __init__(self):
         """
         Initialise the class
-        
+
         Public variables:
             - config ; Config object.
-            
+
         Private variables:
             - __database ; Db.Cache object
-        
+
         @requires: Config
         """
         config = Config()
@@ -74,7 +64,7 @@ class GBparser() :
         self.__database = Db.Cache(config.Db)
     #__init__
 
-    def __location2pos(self, location) :
+    def __location2pos(self, location):
         """
         Convert a location object to a tuple of integers.
 
@@ -98,7 +88,7 @@ class GBparser() :
         return ret
     #__location2pos
 
-    def __locationList2posList(self, locationList) :
+    def __locationList2posList(self, locationList):
         """
         Convert a list of locations to a list of integers.
 
@@ -131,7 +121,7 @@ class GBparser() :
         return ret
     #__locationList2posList
 
-    def __transcriptToProtein(self, transcriptAcc) :
+    def __transcriptToProtein(self, transcriptAcc):
         """
         Try to find the protein linked to a transcript id.
 
@@ -141,7 +131,7 @@ class GBparser() :
         @arg transcriptAcc: Accession number of the transcript for which we
                             want to find the protein
         @type transcriptAcc: string
-        
+
         @return: Accession number of a protein or None if nothing can be found
         @rtype: string
         """
@@ -176,7 +166,7 @@ class GBparser() :
         return proteinAcc
     #__transcriptToProtein
 
-    def __findMismatch(self, productList, direction) :
+    def __findMismatch(self, productList, direction):
         """
         Find the index of the first or last word that distinguishes one
         sentence from an other.
@@ -188,7 +178,7 @@ class GBparser() :
         @type productList: list of strings
         @arg direction: The direction in which to search
         @type direction: integer (1 or -1)
-        
+
         @return: The index of the word where sentences start to differ
         @rtype: integer
         """
@@ -208,7 +198,7 @@ class GBparser() :
         return 0
     #__findMismatch
 
-    def __tagByDict(self, locus, key) :
+    def __tagByDict(self, locus, key):
         """
         Transfer a variable in the qualifiers dictionary to the locus
         object. If the variable does not exist, set it to the empty string.
@@ -225,7 +215,7 @@ class GBparser() :
             setattr(locus, key, "")
     #__tagByDict
 
-    def __tagLocus(self, locusList) :
+    def __tagLocus(self, locusList):
         """
         Enrich a list of locus objects (mRNA or CDS) with information used
         for linking (locus_tag, proteinLink and productTag). Also
@@ -281,7 +271,7 @@ class GBparser() :
     #__tagLocus
 
 
-    def __checkTags(self, locusList, tagName) :
+    def __checkTags(self, locusList, tagName):
         """
         Check whether all tags in a locus list are unique. Prune all the
         non unique tags.
@@ -310,7 +300,7 @@ class GBparser() :
         #for
     #__checkTags
 
-    def __matchByRange(self, mrna, cds) :
+    def __matchByRange(self, mrna, cds):
         """
         Match the mRNA list to the CDS list.
 
@@ -353,7 +343,7 @@ class GBparser() :
         return 1         # Everything matches, but there is little information.
     #__matchByRange
 
-    def link(self, rnaList, cdsList) :
+    def link(self, rnaList, cdsList):
         """
         Link mRNA loci to CDS loci (all belonging to one gene).
 
@@ -362,10 +352,10 @@ class GBparser() :
         method is by looking at the locus_tag, if this fails, we try to
         match the proteinLink tags, if this also fails, we try the
         productTag.
-        
+
         If no link could be found, but there is only one possibility left,
         the loci are linked too.
-        
+
         The method that was used to link the loci, is put in the linkmethod
         variable of the transcript locus. The link variable of the
         transcript locus is a pointer to the CDS locus. Furthermore, the
@@ -445,17 +435,16 @@ class GBparser() :
         #for
     #link
 
-    def createGBRecord(self, filename):
+    def create_record(self, filename):
         """
-            Create a GenRecord.Record from a GenBank file
+        Create a GenRecord.Record from a GenBank file
 
-            @arg filename: The full path to the compressed GenBank file
-            @type filename: string
+        @arg filename: The full path to the compressed GenBank file
+        @type filename: string
 
-            @return: A GenRecord.Record instance
-            @rtype: object (record)
+        @return: A GenRecord.Record instance
+        @rtype: object (record)
         """
-
         # first create an intermediate genbank record with BioPython
         file_handle = bz2.BZ2File(filename, "r")
         biorecord = SeqIO.read(file_handle, "genbank")
@@ -515,7 +504,7 @@ class GBparser() :
                         #if
                     #if
 
-                    if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA", 
+                    if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
                        "tmRNA"] :
                         geneDict[geneName].rnaList.append(i)
                     if i.type == "CDS" :
@@ -626,5 +615,5 @@ class GBparser() :
                 record.geneList.remove(i)
 
         return record
-    #parseRecord
+    #create_record
 #GBparser

@@ -27,7 +27,6 @@ class Config():
     class Scheduler(): pass
     class Batch(): pass
     class File(): pass
-    class GBparser(): pass
     class GenRecord(): pass
 
     def __init__(self, filename=None):
@@ -127,9 +126,6 @@ class Config():
             self.File.bufSize = int(config["bufSize"])
             self.File.header = config["header"]
             self.File.threshold = float(config["threshold"])
-
-            # Set the variables needed by the GBparser module.
-            self.GBparser.email = config["email"]
 
             # Set the variables needed by the File module.
             self.GenRecord.spliceAlarm = int(config["spliceAlarm"])

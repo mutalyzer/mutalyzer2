@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 Module for retrieving files from either the cache or the NCBI.
 
@@ -7,22 +5,9 @@ A hash of every retrieved file is stored in the internal database. If a
 requested file is not found, but its hash is, we use additional information
 to re-download the file.
 
-@requires: os
-@requires: bz2
-@requires: hashlib
-@requires: urllib2
-@requires: StringIO
-@requires: ftplib
-@requires: Bio.SeqIO
-@requires: Bio.Entrez
-@requires: Bio.Seq.UnknownSeq
-@requires: Modules.LRGparser
-@requires: Modules.GBparser
-@requires: xml.dom.DOMException
-@requires: xml.dom.minidom
+Public classes:
+- Retriever ; Retrieve a record from either the cache or the NCBI.
 """
-# Public classes:
-#     - Retriever ; Retrieve a record from either the cache or the NCBI.
 
 
 import os              # path.isfile(), link() path.isdir(), path.mkdir(),
@@ -35,13 +20,13 @@ import ftplib          # FTP(), all_errors
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 from Bio.Seq import UnknownSeq
-
-from mutalyzer import util
-from mutalyzer import LRGparser
-from mutalyzer import GBparser
 from xml.dom import DOMException
 import xml.dom.minidom
 import xml.parsers.expat
+
+from mutalyzer import util
+from mutalyzer.parsers import lrg
+from mutalyzer.parsers import genbank
 
 
 class Retriever(object) :
@@ -736,8 +721,8 @@ class GenBankRetriever(Retriever):
             return None
 
         # Now we have the file, so we can parse it.
-        GenBankParser = GBparser.GBparser()
-        return GenBankParser.createGBRecord(filename)
+        GenBankParser = genbank.GBparser()
+        return GenBankParser.create_record(filename)
     #loadrecord
 #GenBankRetriever
 
@@ -797,7 +782,7 @@ class LRGRetriever(Retriever):
         file_handle = bz2.BZ2File(filename, "r")
 
         #create GenRecord.Record from LRG file
-        record = LRGparser.createLrgRecord(file_handle.read())
+        record = lrg.create_record(file_handle.read())
         file_handle.close()
 
         return record
@@ -919,7 +904,7 @@ class LRGRetriever(Retriever):
         # Dirty way to test if a file is valid,
         # Parse the file to see if it's a real LRG file.
         try:
-            LRGparser.createLrgRecord(raw_data)
+            lrg.create_record(raw_data)
         except DOMException:
             self._output.addMessage(__file__, 4, "ERECPARSE",
                                       "Could not parse file.")

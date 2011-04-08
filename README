@@ -36,6 +36,8 @@ Todo list:
   Retriever want to write to the cache and we don't run the tests as the
   user that owns the cache. How to fix this?
 - Test all uses of mkstemp().
+- Use naming conventions for modules Crossmap, Db, File, GenRecord, Mapper,
+  Retriever, Scheduler.
 - Integrate fuzzy offsets from this branch:
   https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
 - Use standard logging module, with rotating functionality. Race conditions
