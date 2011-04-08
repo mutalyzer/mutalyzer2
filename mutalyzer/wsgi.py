@@ -68,7 +68,6 @@ from mutalyzer.grammar import Grammar
 from mutalyzer import webservice
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
-from mutalyzer import VarInfo
 from mutalyzer import Mapper
 from mutalyzer import Db
 from mutalyzer import Scheduler
@@ -542,16 +541,48 @@ class PositionConverter:
 class VariantInfo:
     """
     The I{g.} to I{c.} and vice versa interface for LOVD.
+
+    Search for an NM number in the MySQL database, if the version number
+    matches, get the start and end positions in a variant and translate these
+    positions to I{g.} notation if the variant is in I{c.} notation and vice
+    versa.
+    - If no end position is present, the start position is assumed to be the
+      end position.
+    - If the version number is not found in the database, an error message is
+      generated and a suggestion for an other version is given.
+    - If the reference sequence is not found at all, an error is returned.
+    - If no variant is present, the transcription start and end and CDS end
+      in I{c.} notation is returned.
+    - If the variant is not accepted by the nomenclature parser, a parse error
+      will be printed.
     """
     def GET(self):
         """
-        Run VarInfo and return the result as plain text.
+        Get variant info and return the result as plain text.
 
         Parameters:
         - LOVD_ver: The version of the calling LOVD.
         - build: The human genome build (hg19 assumed).
         - acc: The accession number (NM number).
         - var: A description of the variant.
+
+        Returns:
+        - start_main   ; The main coordinate of the start position in I{c.}
+                         (non-star) notation.
+        - start_offset ; The offset coordinate of the start position in I{c.}
+                         notation (intronic position).
+        - end_main     ; The main coordinate of the end position in I{c.}
+                         (non-star) notation.
+        - end_offset   ; The offset coordinate of the end position in I{c.}
+                         notation (intronic position).
+        - start_g      ; The I{g.} notation of the start position.
+        - end_g        ; The I{g.} notation of the end position.
+        - type         ; The mutation type.
+
+        Returns (alternative):
+        - trans_start  ; Transcription start in I{c.} notation.
+        - trans_stop   ; Transcription stop in I{c.} notation.
+        - CDS_stop     ; CDS stop in I{c.} notation.
         """
         i = web.input(var='')
         LOVD_ver = i.LOVD_ver
@@ -559,13 +590,45 @@ class VariantInfo:
         acc = i.acc
         var = i.var
 
-        result = VarInfo.main(LOVD_ver, build, acc, var)
+        output = Output(__file__, config.Output)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Received %s:%s (LOVD_ver %s, build %s)' \
+                          % (acc, var, LOVD_ver, build))
+
+        Converter = Mapper.Converter(build, config, output)
+
+        result = ''
+
+        # If no variant is given, return transcription start, transcription
+        # end and CDS stop in c. notation.
+        if var:
+            ret = Converter.mainMapping(acc, var)
+        else:
+            ret = Converter.giveInfo(acc)
+            if ret:
+                result = '%i\n%i\n%i' % ret
+
+        if not result and not getattr(ret, 'startmain', None):
+            out = output.getOutput('LOVDERR')
+            if out:
+                result = out[0]
+            else:
+                result = 'Unknown error occured'
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing %s:%s (LOVD_ver %s, build %s)' \
+                          % (acc, var, LOVD_ver, build))
+
+        result = '%i\n%i\n%i\n%i\n%i\n%i\n%s' \
+                 % (ret.startmain, ret.startoffset, ret.endmain,
+                    ret.endoffset, ret.start_g, ret.end_g, ret.mutationType)
 
         web.header('Content-Type', 'text/plain')
 
         if LOVD_ver == "2.0-23" : # Obsoleted error messages, remove when possible.
             return re.sub("^Error \(.*\):", "Error:", result)
-        #if
+
         return result
 #VariantInfo
 

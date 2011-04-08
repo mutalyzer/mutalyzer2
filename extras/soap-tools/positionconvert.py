@@ -6,7 +6,7 @@
 import sys
 from suds.client import Client  # https://fedorahosted.org/suds/
 
-URL = 'http://www.mutalyzer.nl/2.0/services/?wsdl'
+URL = 'http://localhost/mutalyzer/services/?wsdl'
 
 if len(sys.argv) < 3:
     print 'Please provide a human genome build and a variant'

@@ -17,7 +17,7 @@ from suds.client import Client  # https://fedorahosted.org/suds/
 
 VERBOSE = True
 
-URL = 'http://www.mutalyzer.nl/2.0/services/?wsdl'
+URL = 'http://localhost/mutalyzer/services/?wsdl'
 
 if len(sys.argv) < 2:
     print 'Please provide a variant'

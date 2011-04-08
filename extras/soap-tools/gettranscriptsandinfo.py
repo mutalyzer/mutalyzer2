@@ -3,7 +3,7 @@
 import sys
 from suds.client import Client
 
-URL = 'http://www.mutalyzer.nl/2.0/services/?wsdl'
+URL = 'http://localhost/mutalyzer/services/?wsdl'
 
 if len(sys.argv) < 2:
     print 'Please provide a genomic reference'
