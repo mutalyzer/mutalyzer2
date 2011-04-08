@@ -97,9 +97,6 @@ flankclipsize = 6
 # These settings are used by the Scheduler module.
 #
 
-# Name of the batch process.
-processName = "MutalyzerBatch2"
-
 # Return e-mail address.
 mailFrom = "noreply@humgen.nl"
 
@@ -145,12 +142,6 @@ threshold = 0.05
 #
 # These settings are used by the GenRecord module.
 #
-
-# Number of upstream nucleotides when searching for a transcript.
-upstream = 5000
-
-# Number of downstream nucleotides when searching for a transcript.
-downstream = 2000
 
 spliceAlarm = 2
 

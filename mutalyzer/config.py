@@ -111,7 +111,6 @@ class Config():
             self.Mutator.flankclipsize = int(config["flankclipsize"])
 
             # Set the variables needed by the Scheduler module.
-            self.Scheduler.processName = config["processName"]
             self.Scheduler.mailFrom = config["mailFrom"]
             self.Scheduler.mailSubject = config["mailSubject"]
             self.Scheduler.resultsDir = config["resultsDir"]
@@ -133,8 +132,6 @@ class Config():
             self.GBparser.email = config["email"]
 
             # Set the variables needed by the File module.
-            #self.File.upstream = int(config["upstream"])
-            #self.File.downstream = int(config["downstream"])
             self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
             self.GenRecord.spliceWarn = int(config["spliceWarn"])
 
