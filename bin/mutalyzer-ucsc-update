@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+"""
+Get updates on mapping information from the UCSC.
+
+This program is intended to be run daily from cron. Example:
+
+  25 6 * * *  mutalyzer-ucsc-update
+"""
+
+
+import sys
+import os
+
+from mutalyzer.config import Config
+from mutalyzer.output import Output
+from mutalyzer.Db import Remote
+from mutalyzer.Db import Update
+
+
+def main():
+    """
+    Update the database with information from the UCSC.
+    """
+    config = Config()
+    output = Output(__file__, config.Output)
+    output.addMessage(__file__, -1, 'INFO',
+                      'Starting UCSC mapping data update')
+
+    for database in config.Db.dbNames:
+        remote = Remote(database, config.Db)
+        tempfile = remote.get_Update()
+
+        update = Update(database, config.Db)
+        update.load_Update(tempfile)
+
+        count_updates = update.count_Updates()
+        if count_updates:
+            output.addMessage(__file__, -1, 'INFO',
+                              '%i updates found' % count_updates)
+            update.backup_cdsUpdates()
+            count_cds_updates = update.count_cdsUpdates()
+            if count_cds_updates:
+                output.addMessage(__file__, -1, 'INFO', '%i CDS updates ' \
+                                  'found, backing up' % count_cds_updates)
+            update.merge_cdsUpdates()
+
+        update.merge_Update()
+
+    output.addMessage(__file__, -1, 'INFO', 'UCSC mapping data update end')
+
+
+if __name__ == '__main__':
+    main()

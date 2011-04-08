@@ -10,7 +10,7 @@
 # - Copy doc to /usr/share/doc
 # - General cleanup
 # - Cron jobs
-# - Register init script with a runlevel
+# - Install init script links
 
 set -e
 
@@ -18,6 +18,7 @@ set -e
 # directory to be used.
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
 BIN_BATCHD=$(which mutalyzer-batchd)
+BIN_UCSC_UPDATE=$(which mutalyzer-ucsc-update)
 
 if [ ! -e /etc/mutalyzer/config ]; then
     echo "Creating /etc/mutalyzer/config"
@@ -46,6 +47,13 @@ if [ ! -e /etc/init.d/mutalyzer-batchd ]; then
 else
     echo "Not touching /etc/init.d/mutalyzer-batchd (it exists)"
 fi
+
+# echo "Installing init script links"
+# update-rc.d mutalyzer-batchd defaults 98 02
+
+# echo "Installing crontab"
+# cp extras/cron.d/mutalyzer-ucsc-update /etc/cron.d/mutalyzer-ucsc-update
+# sed -i -e "s@<MUTALYZER_BIN_UCSC_UPDATE>@${BIN_UCSC_UPDATE}@g" /etc/cron.d/mutalyzer-ucsc-update
 
 if [ ! -e /etc/apache2/conf.d/mutalyzer.conf ]; then
     echo "Creating /etc/apache2/conf.d/mutalyzer.conf"
@@ -110,6 +118,20 @@ cat << EOF | mysql -u mutalyzer -D hg18
     WHERE type = "mRNA"
     AND refGene.name = acc
     AND acc = mrnaAcc;
+  CREATE TABLE map_cdsBackup (
+    acc char(12) NOT NULL DEFAULT '',
+    version smallint(6) unsigned NOT NULL DEFAULT '0',
+    txStart int(11) unsigned NOT NULL DEFAULT '0',
+    txEnd int(11) unsigned NOT NULL DEFAULT '0',
+    cdsStart int(11) unsigned NOT NULL DEFAULT '0',
+    cdsEnd int(11) unsigned NOT NULL DEFAULT '0',
+    exonStarts longblob NOT NULL,
+    exonEnds longblob NOT NULL,
+    geneName varchar(255) NOT NULL DEFAULT '',
+    chrom varchar(255) NOT NULL DEFAULT '',
+    strand char(1) NOT NULL DEFAULT '',
+    protAcc varchar(255) NOT NULL DEFAULT ''
+  );
 EOF
 
 popd
@@ -152,6 +174,20 @@ cat << EOF | mysql -u mutalyzer -D hg19
     WHERE type = "mRNA"
     AND refGene.name = acc
     AND acc = mrnaAcc;
+  CREATE TABLE map_cdsBackup (
+    acc char(12) NOT NULL DEFAULT '',
+    version smallint(5) unsigned NOT NULL DEFAULT '0',
+    txStart int(10) unsigned NOT NULL DEFAULT '0',
+    txEnd int(10) unsigned NOT NULL DEFAULT '0',
+    cdsStart int(10) unsigned NOT NULL DEFAULT '0',
+    cdsEnd int(10) unsigned NOT NULL DEFAULT '0',
+    exonStarts longblob NOT NULL,
+    exonEnds longblob NOT NULL,
+    geneName varchar(255) NOT NULL DEFAULT '',
+    chrom varchar(255) NOT NULL DEFAULT '',
+    strand char(1) NOT NULL DEFAULT '',
+    protAcc varchar(255) NOT NULL DEFAULT ''
+  );
 EOF
 
 popd

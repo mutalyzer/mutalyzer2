@@ -17,7 +17,8 @@ setup(
     platforms=['any'],
     packages=find_packages(exclude=['doc', 'extras', 'tests']),
     include_package_data=True,
-    scripts=['bin/mutalyzer', 'bin/mutalyzer-batchd'],
+    scripts=['bin/mutalyzer', 'bin/mutalyzer-batchd',
+             'bin/mutalyzer-ucsc-update'],
     zip_safe=False
 )
 

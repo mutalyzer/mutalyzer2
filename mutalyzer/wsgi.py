@@ -734,7 +734,7 @@ class BatchProgress:
         try:
             jobID = int(i.jobID)
             total = int(i.totalJobs)
-        except Exception, e:
+        except ValueError:
             return
         D = Db.Batch(config.Db)
         left = D.entriesLeftForJob(jobID)

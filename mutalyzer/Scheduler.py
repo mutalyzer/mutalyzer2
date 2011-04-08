@@ -32,49 +32,6 @@ from mutalyzer import Retriever           # Retriever.Retriever
 __all__ = ["Scheduler"]
 
 
-def debug(f) :
-    """
-    Decorator for functions called from within the daemon. Can be used
-    to debug errors that are hidden because the daemon's stdout and
-    errout filehandlers are closed.
-
-    Usage: Place the decorator line above the function to investigate
-
-    >>> @debug
-    >>> def process(self) :
-    >>>     pass    # function code
-    """
-    #NOTE: All debug functions & methods should be moved to a DEBUG module
-
-    def _tempf(*args) :
-        """
-        The decorated function is replaced by this function. Which sets up
-        the filehandle to write to and print out additional debug info.
-
-        The original function is called from within a try, except clause
-        which catches [AND DOES NOT RERAISE] an exception occuring in the
-        debugged function.
-
-        This can result in odd behaviour, therefor the decorators should
-        be removed from any production version.
-        """
-
-        of = open("/tmp/daemon.out", "a+")
-        try :
-            of.write("\nFunction %s\n\targs: %s\n\t" % (`f`, `args`))
-            ret = f(*args)  # Actual function call
-            of.write("Returns: %s" % `ret`)
-            return ret
-        #try
-        except Exception, e :
-            import traceback
-            of.write("\nEXCEPTION:\n")
-            traceback.print_exc(file=of)
-        #except
-    return _tempf
-#debug
-
-
 class Scheduler() :
     """
     Special methods:

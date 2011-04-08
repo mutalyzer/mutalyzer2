@@ -35,7 +35,6 @@ Todo list:
 - Tests fail in clean installation, because name checker tests make the
   Retriever want to write to the cache and we don't run the tests as the
   user that owns the cache. How to fix this?
-- Fix mutalyzer/UCSC_update.py.
 - Test all uses of mkstemp().
 - Integrate fuzzy offsets from this branch:
   https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
@@ -46,6 +45,8 @@ Todo list:
 - Setup continuous integration. Currently, I'm most impressed with Hudson.
   http://hudson-ci.org/
   http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
+- Use monit on the production server.
+  http://mmonit.com/monit/
 - Migrate Javascript to JQuery.
 - I think in the long run, the Output object is not really the way to go. It
   obscures the control flow. The logging part should use the standard logging
@@ -55,6 +56,7 @@ Todo list:
 - Develop a large test suite.
 - Create a web interface url to watch the progress of a batch job.
 - Use virtualenv?
+- Use SQLAlchemy?
 - Perhaps the WSGI interface should be somewhere else and be called
   mutalyzer.wsgi?
 - Password for MySQL user.
