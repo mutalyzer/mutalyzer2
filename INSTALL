@@ -1,6 +1,21 @@
 Mutalyzer installation instructions.
 
 
+Short Version
+=============
+
+Run the following commands:
+
+  $ svn https://www.mutalyzer.nl/svn/mutalyzer2/trunk .
+  $ sudo bash extras/pre-install-debian.sh
+  $ sudo python setup.py install
+  $ sudo bash extras/post-install.sh
+  $ sudo /etc/init.d/apache2 reload
+  $ sensible-browser http://localhost/mutalyzer
+
+Or follow the more detailed instructions below.
+
+
 Get Mutalyzer
 =============
 
@@ -52,6 +67,9 @@ This step creates configuration files and populates the database:
 
   $ sudo bash extras/post-install.sh
 
+You can now edit /etc/mutalyzer/config and /etc/apache2/conf.d/mutalyzer.conf
+to your likings.
+
 
 Test the Installation
 =====================
@@ -64,7 +82,7 @@ You should always test the installation. The tests (for now at least) need
 the batch daemon and the webserver (the SOAP part) running:
 
   $ sudo /etc/init.d/mutalyzer-batchd start
-  $ sudo /etc/init.d/apache2 restart
+  $ sudo /etc/init.d/apache2 reload
 
 Now run the tests:
 

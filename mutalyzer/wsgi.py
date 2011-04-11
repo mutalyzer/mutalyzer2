@@ -917,14 +917,14 @@ class BatchChecker:
             #fromHost = "http://%s%s" % (
             #    req.hostname, req.uri.rsplit("/", 1)[0]+"/")
 
-            job = FileInstance.parseBatchFile(inFile.file)
+            job, columns = FileInstance.parseBatchFile(inFile.file)
             if job is None:
                 O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
                              " file, please check your file format.")
             else:
                 #TODO: Add Binair Switches to toggle some events
-                attr["jobID"] =\
-                              S.addJob("BINSWITHCES", email, job, fromHost, batchType, arg1)
+                attr["jobID"] = S.addJob("BINSWITHCES", email, job, columns,
+                                         fromHost, batchType, arg1)
                 attr["totalJobs"] = len(job) or 1
                 attr["messages"].append("Your file has been parsed and the job"
                                         " is scheduled, you will receive an email when the job is "

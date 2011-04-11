@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Pre-install script for Mutalyzer. Run before the setuptools installation
-# (python setup.py install).
+# Pre-install script for Mutalyzer on Debian or Debian-like systems. Run
+# before the setuptools installation (python setup.py install).
 #
 # Usage (from the source root directory):
 #   sudo bash extras/pre-install.sh

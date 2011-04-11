@@ -93,7 +93,7 @@ class Db() :
         if args != (None,) : # Don't escape the empty string.
             for i in args :
                 if i :
-                    if type(i) == types.StringType :
+                    if type(i) in [types.StringType, types.UnicodeType]:
                         escaped_args.append(MySQLdb.escape_string(str(i)))
                     else :
                         escaped_args.append(i)
@@ -1304,7 +1304,7 @@ class Batch(Db) :
     #entriesLeftForJob
 
 
-    def addJob(self, outputFilter, email, fromHost, jobType, Arg1) :
+    def addJob(self, outputFilter, email, fromHost, jobType, Arg1):
         """
         Add a job and give it a unique ID.
 
@@ -1317,11 +1317,12 @@ class Batch(Db) :
         @type email: string
         @arg jobType: The type of batch job
         @type jobType: string
+        @arg Arg1: Possible argument.
+        @type Arg1: string
 
         @return: A job ID
         @rtype: integer
         """
-
         jobID = util.generate_id()
         statement = """
             INSERT INTO BatchJob

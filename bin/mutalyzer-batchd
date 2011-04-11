@@ -93,7 +93,7 @@ def daemonize():
             if scheduler.stopped():
                 break
             # Wait a bit and process any possible new jobs.
-            time.sleep(10)
+            time.sleep(5)
 
 
 if __name__ == '__main__':

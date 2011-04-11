@@ -53,7 +53,7 @@ class Scheduler() :
         """
         Initialize the Scheduler, which requires a config object
         and a database connection.
-        
+
         @todo: documentation
 
         @arg config: Config object
@@ -93,7 +93,7 @@ class Scheduler() :
         Private variables:
             - __config ; The variables mailSubject and mailFrom
                        are used.
-        
+
         @todo: Handle Connection errors in a try, except clause
 
         @arg mailTo: The batch job submitter
@@ -145,7 +145,7 @@ Mutalyzer batch checker.""" % url)
         @rtype: boolean
         """
 
-        if not flags : 
+        if not flags :
             return False
         if 'S' in flags : #This entry is going to be skipped
             #Add a usefull message to the Output object
@@ -184,8 +184,8 @@ Mutalyzer batch checker.""" % url)
         false positives. e.g. NM_002001.1(FCER1A_v001):c.1A>C should not
         be replaced. The double bracket notation is the MySQL escape char
         for a regular expression.
-        
-        @arg jobID: 
+
+        @arg jobID:
         @type jobID:
         @arg old:
         @type old:
@@ -205,8 +205,8 @@ Mutalyzer batch checker.""" % url)
         Alias for the database.skipBatchDb method.
 
         Skip all batch entries that match a certain selector.
-        
-        @arg jobID: 
+
+        @arg jobID:
         @type jobID:
         @arg flag:
         @type flag:
@@ -232,7 +232,7 @@ Mutalyzer batch checker.""" % url)
             @type O:    object
             @arg jobID: ID of job, so that the altering is only done within one
             job
-            @type jobID: 
+            @type jobID:
         """
 
         flags = O.getOutput("BatchFlags")
@@ -295,7 +295,7 @@ Mutalyzer batch checker.""" % url)
         the flags for the job.
 
         #Flags
-        A job can be flagged in two ways:
+        A job can be flagged in three ways:
           - A       ;   Altered - this means that the input is altered
                         before execution. This could be the case if an
                         entry uses an accession number without a version.
@@ -307,11 +307,13 @@ Mutalyzer batch checker.""" % url)
                         case if the user made a mistake that could not be
                         auto fixed and henceforth all occurences of the
                         mistake will be skipped.
+          - C       ;   Continue - this means the input does not end the
+                        current row, so no new row in the output should
+                        be started.
 
-        A Flag consists of either an A or S followed by a digit, which
+        A Flag consists of either an A, S or C followed by a digit, which
         refers to the reason of alteration / skip.
         """
-
         jobList = self.__database.getJobs()
 
         while jobList and self.__run:
@@ -388,8 +390,6 @@ Mutalyzer batch checker.""" % url)
         if batchOutput :
             outputline += batchOutput[0]
 
-        outputline += "\n"
-
         #Output
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename) :
@@ -403,7 +403,12 @@ Mutalyzer batch checker.""" % url)
         else :
             handle = open(filename, 'a')
 
-        handle.write(outputline)
+        if flags and 'C' in flags:
+            separator = '\t'
+        else:
+            separator = '\n'
+
+        handle.write("%s%s" % (outputline, separator))
         handle.close()
         O.addMessage(__file__, -1, "INFO",
             "Finished NameChecker batchvariant " + cmd)
@@ -457,7 +462,12 @@ Mutalyzer batch checker.""" % url)
         else :
             handle = open(filename, 'a')
 
-        handle.write("%s\t%s\n" % (cmd, result))
+        if flags and 'C' in flags:
+            separator = '\t'
+        else:
+            separator = '\n'
+
+        handle.write("%s\t%s%s" % (cmd, result, separator))
         handle.close()
         output.addMessage(__file__, -1, "INFO",
                           "Finished SyntaxChecker batchvariant " + cmd)
@@ -554,7 +564,12 @@ Mutalyzer batch checker.""" % url)
         else :
             handle = open(filename, 'a')
 
-        handle.write("%s\t%s\t%s\t%s\n" % (cmd, error, gName, "\t".join(cNames)))
+        if flags and 'C' in flags:
+            separator = '\t'
+        else:
+            separator = '\n'
+
+        handle.write("%s\t%s\t%s\t%s%s" % (cmd, error, gName, "\t".join(cNames), separator))
         handle.close()
         O.addMessage(__file__, -1, "INFO",
             "Finisehd PositionCoverter batchvariant " + cmd)
@@ -596,8 +611,6 @@ Mutalyzer batch checker.""" % url)
         outputline += "%s\t" % "|".join(descriptions)
         outputline += "%s\t" % "|".join(O.getBatchMessages(3))
 
-        outputline += "\n"
-
         #Output
         filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
         if not os.path.exists(filename) :
@@ -611,14 +624,20 @@ Mutalyzer batch checker.""" % url)
         else :
             handle = open(filename, 'a')
 
-        handle.write(outputline)
+        if flags and 'C' in flags:
+            separator = '\t'
+        else:
+            separator = '\n'
+
+        handle.write("%s%s" % (outputline, separator))
         handle.close()
         O.addMessage(__file__, -1, "INFO",
                      "Finished SNP converter batch rs%s" % cmd)
     #_processSNP
 
 
-    def addJob(self, outputFilter, eMail, queue, fromHost, jobType, Arg1) :
+    def addJob(self, outputFilter, eMail, queue, columns, fromHost, jobType,
+               Arg1):
         """
         Add a job to the Database and start the BatchChecker.
 
@@ -628,25 +647,27 @@ Mutalyzer batch checker.""" % url)
         @type eMail:        string
         @arg queue:         A list of jobs
         @type queue:        list
+        @arg columns:       The number of columns.
+        @type columns:      int
         @arg fromHost:      From where is the request made
-        @type fromHost:     
+        @type fromHost:
         @arg jobType:       The type of Batch Job that should be run
         @type jobType:
         @arg Arg1:          Batch Arguments, for now only build info
         @type Arg1:
-        
+
         @return: jobID
         @rtype:
-        
+
         @todo: outputFilter is not used
         """
         #TODO: outputFilter is not used
 
         # Add jobs to the database
-        jobID = self.__database.addJob(outputFilter, eMail,
-                fromHost, jobType, Arg1)
+        jobID = self.__database.addJob(outputFilter, eMail, fromHost, jobType,
+                                       Arg1)
 
-        for inputl in queue :
+        for i, inputl in enumerate(queue):
             # NOTE:
             # This is a very dirty way to skip entries before they are fed
             # to the batch processes. This is needed for e.g. an empty line
@@ -656,15 +677,16 @@ Mutalyzer batch checker.""" % url)
             # output in terms of input line and outputline.
             if inputl.startswith("~!"): #Dirty Escape
                 inputl = inputl[2:]
-                if inputl :
+                if inputl:
                     flag = "S0"     # Flag for wrong format
-                else :
+                else:
                     flag = "S9"     # Flag for empty line
                     inputl = " " #Database doesn't like an empty inputfield
-                #else
-            #if
-            else :
+            else:
                 flag = None
+            if (i + 1) % columns:
+                # Add flag for continuing the current row
+                flag = '%s%s' % (flag if flag else '', 'C0')
             self.__database.addToQueue(jobID, inputl, flag)
 
         # Spawn child
@@ -677,6 +699,3 @@ Mutalyzer batch checker.""" % url)
         return jobID
     #addJob
 #Scheduler
-
-if __name__ == "__main__" :
-    pass

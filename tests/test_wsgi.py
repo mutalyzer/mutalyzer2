@@ -236,7 +236,7 @@ class TestWSGI():
         r.mustcontain('NM_003002.2:c.204C>T')
 
     def _batch(self, batch_type='NameChecker', arg1=None, file="", size=0,
-               header=''):
+               header='', lines=None):
         """
         Submit a batch form.
 
@@ -246,6 +246,10 @@ class TestWSGI():
         @kwarg file: String with variants to use as input for the batch job.
         @kwarg size: Number of variants in input.
         @kwarg header: Message that must be found in the batch job result.
+        @kwarg lines: Number of result rows expected.
+
+        @return: The batch result document.
+        @rtype: string
         """
         r = self.app.get('/batch')
         form = r.forms[0]
@@ -269,7 +273,10 @@ class TestWSGI():
         r = self.app.get('/Results_' + id + '.txt')
         assert_equal(r.content_type, 'text/plain')
         r.mustcontain(header)
-        assert len(r.body.strip().split('\n')) == size + 1
+        if not lines:
+            lines = size
+        assert_equal(len(r.body.strip().split('\n')), lines + 1)
+        return r.body
 
     def test_batch_namechecker(self):
         """
@@ -432,6 +439,21 @@ facilisi."""
                                file))
         r = form.submit(status=413)
         assert_equal(r.content_type, 'text/plain')
+
+    def test_batch_multicolumn(self):
+        """
+        Submit the batch syntax checker with a multiple-colums input file.
+        """
+        variants = [('AB026906.1(SDHD):g.7872G>T', 'NM_003002.1:c.3_4insG'),
+                    ('NM_003002.1:c.3_4insG', 'AB026906.1(SDHD):g.7872G>T'),
+                    ('AL449423.14(CDKN2A_v002):c.5_400del', 'AL449423.14(CDKN2A_v002):c.5_400del')]
+        result = self._batch('SyntaxChecker',
+                             file='\n'.join(['\t'.join(r) for r in variants]),
+                             size=len(variants) * 2,
+                             header='Input\tStatus',
+                             lines=len(variants))
+        for line in result.splitlines()[1:]:
+            assert_equal(len(line.split('\t')), len(variants[0]) * 2)
 
     def test_download_py(self):
         """

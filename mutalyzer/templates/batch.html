@@ -19,7 +19,18 @@
       and the maximum size is <span tal:content = "maxSize"></span> megabytes.
       </p>
     <h5>We accept two types of input files, you can download examples below</h5>
-    <h5>Old Style: 
+    <h5>New Style <a href="downloads/batchtestnew.txt">Download Example File</a></h5>
+    <div style="padding-left:20px; width:400px">
+        <p>This file format has no header-row. Each row consists of one or
+          more tab delimited fields, where every field contains a single
+          variant description. Note that all rows must have the same number
+          of fields.</p>
+        <table>
+            <tr><td>AB026906.1:c.274G&gt;T</td></tr>
+            <tr><td>AL449423.14(CDKN2A_v002):c.5_400del</td></tr>
+        </table>
+    </div>
+    <h5>Old Style:
         <a href="downloads/batchtestold.txt">Download Example File</a></h5>
     <div style="padding-left:20px; width:400px">
         <p >This file format has a header-row, which consists of
@@ -32,15 +43,6 @@
             <tr>
                 <td>AB026906.1</td><td>SDHD</td><td>g.7872G>T</td>
             </tr>
-        </table>
-    </div>
-    <h5>New Style <a href="downloads/batchtestnew.txt">Download Example File</a></h5>
-    <div style="padding-left:20px; width:400px">
-        <p>This file format has no header-row and no columns. 
-        Instead each row contains a single variant for the Batch.</p>
-        <table>
-            <tr><td>AB026906.1:c.274G&gt;T</td></tr>
-            <tr><td>AL449423.14(CDKN2A_v002):c.5_400del<td></tr>
         </table>
     </div>
     <h5>Output Format</h5>
@@ -61,7 +63,7 @@
                   <td>
                 <select id="batchType" name="batchType" onchange="return changeBatch(this)">
 
-                <option 
+                <option
                     tal:repeat = "i batchTypes"
                     tal:content = "structure string:${i}"
                     tal:attributes = "value i">
@@ -83,15 +85,15 @@
               </tr>
               <tr>
                   <td><b>Email</b></td>
-                  <td><input type = "text" 
-                             name = "batchEmail" 
+                  <td><input type = "text"
+                             name = "batchEmail"
                              tal:attributes = "value lastpost"
                              style = "width:200px"></td>
               </tr>
               <tr>
                   <td><b>File</b></td>
-                  <td><input type = "file" 
-                             name = "batchFile" 
+                  <td><input type = "file"
+                             name = "batchFile"
                              style = "width:200px"></td>
               </tr>
               <tr>
@@ -109,7 +111,7 @@
         }
     </script>
 
-    <script language="javascript" 
+    <script language="javascript"
         tal:content="structure string:document.getElementById('batchType').selectedIndex = ${selected}; document.getElementById('batchRow').style.display = '${hideTypes}'; window.onload = initpage;">
         </script>
 
@@ -124,7 +126,7 @@
 
   <div tal:condition = "messages">
     <b>Messages</b><br>
-     <div tal:repeat = "i messages" 
+     <div tal:repeat = "i messages"
          tal:replace = "structure string:${i}<br>">
     </div>
     <div tal:condition = "jobID">

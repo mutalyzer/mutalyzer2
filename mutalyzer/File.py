@@ -60,7 +60,7 @@ class File() :
         Private variables (altered):
             - __config ; Initialised with configuration variables.
             - __output ; Set to the Output object.
-        
+
         @arg config: Configuration variables
         @type config: class instance
         @arg output: Output object
@@ -192,7 +192,7 @@ class File() :
         reader = csv.reader(new_handle, dialect)
 
         ret = []
-        for i in reader :
+        for i in reader:
             ret.append(i)
 
         new_handle.close()
@@ -272,7 +272,7 @@ class File() :
 
         Private variables:
             - __config ; The header configuration variable.
-        
+
         @todo: Add more new style old style logic
         @todo: if not inputl: try to make something out of it
 
@@ -280,13 +280,15 @@ class File() :
         @type job: list
 
         @return: A sanitised list of lists (without a header or empty lines)
-        @rtype: list
+                 and the number of columns.
+        @rtype: tuple(list, int)
         """
+        columns = 1
+
         #store original line numbers line 1 = job[0]
         jobl = [(l+1, row) for l, row in enumerate(job)]
 
         #TODO:  Add more new style old style logic
-
         if jobl[0][1] == self.__config.header : #Old style NameCheckBatch job
             ret = []
             notthree = []
@@ -338,32 +340,40 @@ class File() :
         #if
 
         else:   #No Header, possibly a new BatchType
-            if len(jobl) == 0: return
-            #collect all lines with data in fields other than the first
-            errlist = [line for line, row in jobl if any(row[1:])]
+            if len(jobl) == 0:
+                return (None, columns)
+            # Determine number of columns from first line.
+            columns = len(jobl[0][1])
+            # Collect all lines with a different number of columns
+            errlist = [line for line, row in jobl
+                       if any(row) and len(row) != columns]
             if any(errlist):
                 self.__output.addMessage(__file__, 3, "EBPARSE",
-                    "New Type Batch jobs (see help) should contain one "
-                    "entry per line, please check %i line(s): %s" %
-                    (len(errList), makeList(errlist)))
+                    "New Type Batch jobs (see help) should contain the same "
+                    "number of columns on every line, please check %i "
+                    "line(s): %s" %
+                    (len(errlist), makeList(errlist)))
 
             ret = []
             for line, job in jobl:
                 if not any(job):    #Empty line
-                    ret.append("~!")
+                    ret.extend(['~!' for _ in range(columns)])
                     continue
                 if line in errlist:
-                    inputl = "~!InputFields: "   #Dirty Escape BatchEntries
+                    #Dirty Escape BatchEntries
+                    ret.append("~!InputFields: " + '|'.join(job))
+                    ret.extend(['~!' for _ in range(columns - 1)])
                 else:
-                    inputl = ""
-                ret.append(inputl+"|".join(job))
+                    ret.extend(job)
         #else
 
-        if not ret: return None     #prevent divide by zero
+        if not ret:
+            #prevent divide by zero
+            return (None, columns)
 
         err = float(len(errlist))/len(ret)
         if err == 0:
-            return ret
+            return (ret, columns)
         elif err < self.__config.threshold:
             #allow a 5 (default) percent threshold for errors in batchfiles
             self.__output.addMessage(__file__, 3, "EBPARSE",
@@ -372,9 +382,9 @@ class File() :
             self.__output.addMessage(__file__, 3, "EBPARSE",
                     "Please check the batch input file help at the top of "
                     "this page for additional information.")
-            return ret
+            return (ret, columns)
         else:
-            return None
+            return (None, columns)
     #__checkBatchFormat
 
     def getMimeType(self, handle) :
@@ -431,7 +441,7 @@ class File() :
             return self.__parseOdsFile(handle)
 
         return None
-    #parseFile
+    #parseFileRaw
 
     def parseBatchFile(self, handle) :
         """
@@ -441,15 +451,15 @@ class File() :
         @arg handle: A handle to a stream
         @type handle: stream
 
-        @return: A sanitised list of lists (without a header or empty lines),
-        or None if an error occured
-        @rtype: list
+        @return: A sanitised list of lists (without a header or empty lines)
+                 (or None if an error occured) and the number of columns.
+        @rtype: tuple(list, int)
         """
 
         job = self.parseFileRaw(handle)
-        if job :
+        if job:
             return self.__checkBatchFormat(job)
-        return None
+        return (None, 1)
     #parseBatchFile
 #File
 
