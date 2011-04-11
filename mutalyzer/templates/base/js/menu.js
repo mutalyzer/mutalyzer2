@@ -141,6 +141,9 @@ function initActive() {
   winLoc = winLoc.replace("#", "");
 
   a_Act = winLoc.split("/");
+  // This is a Quick Hack (tm)
+  if (a_Act[0] == '2.0' || a_Act[0] == 'mutalyzer')
+    a_Act.shift();
   a_navAct = a_Act;
 
   alterActive(a_Act, 1);
