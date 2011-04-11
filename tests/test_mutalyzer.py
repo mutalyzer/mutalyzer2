@@ -174,7 +174,7 @@ class TestMutalyzer():
         """
         Deletion of an entire exon with unknown offsets should be possible.
         """
-        return
+        return # Todo
         check_variant('NG_012772.1(BRCA2_v001):c.632-?_681+?del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
@@ -199,7 +199,7 @@ class TestMutalyzer():
         NG_012772.1(BRCA2_v001):c.68-?_316+?del is such a variant, since
         positions 68 through 316 are exactly one exon and (316-68+1)/3 = 83.
         """
-        return
+        return # Todo
         check_variant('NG_012772.1(BRCA2_v001):c.68-?_316+?del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
@@ -220,7 +220,7 @@ class TestMutalyzer():
         Deletion of an entire exon with unknown offsets and another composed
         variant with exact positioning should be possible.
         """
-        return
+        return # Todo
         check_variant('UD_129433404385(DMD_v010):c.[281-?_492+?del;492+4del]',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0

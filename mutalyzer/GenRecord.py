@@ -20,6 +20,7 @@ search for them each time.
 
 import Bio
 
+from mutalyzer import util
 from mutalyzer import Crossmap
 from mutalyzer import Db
 
@@ -118,7 +119,7 @@ class Locus(object) :
         @type rawVariant: string
         """
 
-        if self.description :
+        if self.description:
             self.description = "%s;%s" % (self.description, rawVariant)
         else :
             self.description = rawVariant

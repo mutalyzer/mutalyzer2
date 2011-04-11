@@ -910,13 +910,19 @@ def process_raw_variant(mutator, variant, record, transcript, output):
         raise _RawVariantError()
 
     splice_abort = False
+
     # If we hit a splice site, issue a warning. Later on we decide if we
     # can still process this variant in any way (e.g. if it deletes an
     # entire exon).
-    if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
-        splice_abort = True
-        output.addMessage(__file__, 2, 'WOVERSPLICE',
-                          'Variant hits one or more splice sites.')
+    for gene in record.record.geneList:
+        for t in gene.transcriptList:
+            if t.CM and util.over_splice_site(first, last, t.CM.RNA):
+                if t == transcript:
+                    splice_abort = True
+                    output.addMessage(__file__, 2, 'WOVERSPLICE',
+                                      'Variant hits one or more splice sites.')
+                else:
+                    t.translate = False
 
     # If we have a deletion, and it covers exactly an even number of splice
     # sites, remove these splice sites.
@@ -934,11 +940,22 @@ def process_raw_variant(mutator, variant, record, transcript, output):
         if len(removed_sites) and not len(removed_sites) % 2:
             # An even number of splice sites was removed. We can deal with
             # this, but issue a warning.
-            splice_abort = False
-            mutator.add_removed_sites(removed_sites)
-            output.addMessage(__file__, 1, 'IDELSPLICE',
-                              'Removed %i splice sites from transcript.' % \
-                              len(removed_sites))
+            # However, don't do this trick if we end up removing an odd number
+            # of sites from the CDS.
+            # Todo: We might cripple the start codon, fix the translation code
+            # (further down) to deal with this.
+            # Todo: Bit unrelated, but find out the difference between
+            # - transcript.CM.RNA
+            # - transcript.mRNA.positionList
+            # and what we should use (likewise for CDS).
+            removed_cds_sites = filter(lambda s: s in transcript.CDS.positionList,
+                                       removed_sites)
+            if not len(removed_cds_sites) % 2:
+                splice_abort = False
+                mutator.add_removed_sites(removed_sites)
+                output.addMessage(__file__, 1, 'IDELSPLICE',
+                                  'Removed %i splice sites from transcript.' \
+                                  % len(removed_sites))
 
     # If splice_abort is set, this basically means WOVERSPLICE was called and
     # IDELSPLICE was not called.
@@ -948,13 +965,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # The following solution is a bit of a hack. By setting the .translate
     # field of the transcript to False, we force that no protein is predicted.
     if splice_abort:
-        #return
         transcript.translate = False
-        # The affected protein description for this transcript will now be
-        # a question mark, e.g. "NG_012772.1(BRCA2_i001):?". But protein
-        # descriptions for other transcripts (where splice sites are also
-        # crippled) are still shown. I think we ideally would not want this.
-        # However, some transcripts might be unaffected and should be shown.
 
     # The following functions can raise _RawVariantError exceptions, but we
     # just let them flow through to the caller.
@@ -1220,6 +1231,7 @@ def process_variant(mutator, description, record, output):
             # Todo: Shouldn't we add some message here?
             raise _VariantError()
 
+    # Add static transcript-specific information.
     if transcript and record.record.geneList:
         _add_static_transcript_info(transcript, output)
 
@@ -1241,10 +1253,7 @@ def process_variant(mutator, description, record, output):
         process_raw_variant(mutator, description.RawVar, record,
                             transcript, output)
 
-    # Add transcript-specific information.
-    # Todo: Some of this info is static (unrelated to the variant, but related
-    # to the selected transcript). We should add this info, even if an error
-    # occured in processing the variant.
+    # Add transcript-specific variant information.
     if transcript and record.record.geneList:
         _add_transcript_info(mutator, transcript, output)
 #process_variant
@@ -1366,7 +1375,13 @@ def check_variant(description, config, output):
         for transcript in gene.transcriptList:
 
             if not (transcript.CDS and transcript.translate) \
-                   or ';' in transcript.description:
+                   or ';' in transcript.description \
+                   or transcript.description == '?':
+                # Default value is '?', but later on we don't prefix a 'p.'
+                # string, so we include it here. If there's no good reason
+                # for this, I think we should only add the 'p.' later (so
+                # __toProtDescr should also not add it).
+                transcript.proteinDescription = 'p.?'
                 continue
 
             cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
@@ -1408,7 +1423,7 @@ def check_variant(description, config, output):
                 output.addMessage(__file__, 2, "ECDS", "CDS length is " \
                     "not a multiple of three in gene %s, transcript " \
                     "variant %s." % (gene.name, transcript.name))
-                transcript.proteinDescription = '?'
+                transcript.proteinDescription = 'p.?'
 
     reference = output.getOutput('reference')[-1]
     if ';' in record.record.description:
