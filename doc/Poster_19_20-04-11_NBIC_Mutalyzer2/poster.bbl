@@ -1,0 +1,17 @@
+\begin{thebibliography}{1}
+
+\bibitem{HGVS}
+{Human Genome Variation Society}.
+\newblock \begin{small}\texttt{http://www.hgvs.org/}\end{small}.
+
+\bibitem{LOVD}
+I.~Fokkema, J.~{den}~Dunnen, and P.~Taschner, ``{LOVD}: easy creation of a
+  locus-specific sequence variation database using an ``{LSDB-in-a-Box}''
+  approach.,'' {\em Human Mutation}, vol.~26, no.~2, pp.~63--68, 2005.
+
+\bibitem{LRG}
+R.~e.~a. Dalgleish, ``Locus reference genomic,'' {\em Genome Med}, vol.~2,
+  p.~24, 2010.
+\newblock See also {\small\texttt{http://www.lrg-sequence.org/}}.
+
+\end{thebibliography}
