@@ -363,6 +363,8 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             mutator.visualiseLargeString(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
             util.format_range(incorrect_first, incorrect_stop)))
 
+    # Todo: I think we should use shifted first and last here...
+    # Likewise for other apply_* functions.
     if type == 'del':
         mutator.delM(first, last)
     else :
@@ -914,15 +916,11 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # If we hit a splice site, issue a warning. Later on we decide if we
     # can still process this variant in any way (e.g. if it deletes an
     # entire exon).
-    for gene in record.record.geneList:
-        for t in gene.transcriptList:
-            if t.CM and util.over_splice_site(first, last, t.CM.RNA):
-                if t == transcript:
-                    splice_abort = True
-                    output.addMessage(__file__, 2, 'WOVERSPLICE',
-                                      'Variant hits one or more splice sites.')
-                else:
-                    t.translate = False
+    if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
+        splice_abort = True
+        output.addMessage(__file__, 2, 'WOVERSPLICE',
+                          'Variant hits one or more splice sites in ' \
+                          'selected transcript.')
 
     # If we have a deletion, and it covers exactly an even number of splice
     # sites, remove these splice sites.
@@ -954,8 +952,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 splice_abort = False
                 mutator.add_removed_sites(removed_sites)
                 output.addMessage(__file__, 1, 'IDELSPLICE',
-                                  'Removed %i splice sites from transcript.' \
-                                  % len(removed_sites))
+                                  'Removed %i splice sites from selected ' \
+                                  'transcript.' % len(removed_sites))
 
     # If splice_abort is set, this basically means WOVERSPLICE was called and
     # IDELSPLICE was not called.
@@ -1230,6 +1228,9 @@ def process_variant(mutator, description, record, output):
         elif not transcript.transcribe:
             # Todo: Shouldn't we add some message here?
             raise _VariantError()
+
+        # Mark this as the current transcript we work with.
+        transcript.current = True
 
     # Add static transcript-specific information.
     if transcript and record.record.geneList:

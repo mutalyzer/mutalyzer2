@@ -15,7 +15,7 @@
 import sys
 from suds.client import Client  # https://fedorahosted.org/suds/
 
-VERBOSE = True
+VERBOSE = False
 
 URL = 'http://localhost/mutalyzer/services/?wsdl'
 

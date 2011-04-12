@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
 Module to convert a GenBank record to a nested dictionary consisting of
 a list of genes, which itself consists of a list of loci. This structure
@@ -89,6 +87,7 @@ class Locus(object) :
         """
 
         self.name = name
+        self.current = False
         self.mRNA = None
         self.CDS = None
         self.location = []
@@ -646,12 +645,22 @@ class GenRecord() :
                         orientedStop = reverseStop
                     #if
 
-                    # Check whether the variant hits CDS start.
+                    # Turn of translation to protein if we hit splice sites.
+                    # For the current transcript, this is handled with more
+                    # care in variantchecker.py.
+                    if not j.current and \
+                           util.over_splice_site(orientedStart, orientedStop,
+                                                 j.CM.RNA):
+                        j.translate = False
+
+                    # And check whether the variant hits CDS start.
                     if j.molType == 'c' and forwardStop >= j.CM.x2g(1, 0) \
                        and forwardStart <= j.CM.x2g(3, 0) :
                         self.__output.addMessage(__file__, 2, "WSTART",
                             "Mutation in start codon of gene %s transcript " \
                             "%s." % (i.name, j.name))
+                        if not j.current:
+                            j.translate = False
 
                     # FIXME Check whether the variant hits a splice site.
 
@@ -713,8 +722,3 @@ class GenRecord() :
         #if
     #checkIntron
 #GenRecord
-
-if __name__ == "__main__" :
-    R = GenRecord()
-    del R
-#if

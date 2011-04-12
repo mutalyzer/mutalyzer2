@@ -378,10 +378,9 @@ class File() :
             #allow a 5 (default) percent threshold for errors in batchfiles
             self.__output.addMessage(__file__, 3, "EBPARSE",
                     "There were errors in your batch entry file, they are "
-                    "omitted and your batch is started.")
-            self.__output.addMessage(__file__, 3, "EBPARSE",
-                    "Please check the batch input file help at the top of "
-                    "this page for additional information.")
+                    "omitted and your batch is started. Please check the "
+                    "batch input file help at the top of this page for "
+                    "additional information.")
             return (ret, columns)
         else:
             return (None, columns)
