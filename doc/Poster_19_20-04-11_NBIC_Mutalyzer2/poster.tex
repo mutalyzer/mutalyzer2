@@ -1,9 +1,9 @@
 \documentclass[final, slidestop]{beamer}
 
-\title{Mutalyzer 2.0: Improved sequence variant descriptions from next
-  generation sequencing data and gene variant databases}
-\author{Jeroen F. J. Laros, Martijn Vermaat, Gerben Stouten, \\
-  Johan T. den Dunnen, Peter E. M. Taschner}
+\title{Mutalyzer 2.0: Improved sequence variant descriptions from \\
+  next generation sequencing data and gene variant databases}
+\author{Jeroen F.J. Laros, Martijn Vermaat, Gerben Stouten, 
+  Johan T. den Dunnen, Peter E.M. Taschner}
 \institute{Center for Human and Clinical Genetics, Leiden University Medical
   Center, Leiden, The Netherlands}
 \providecommand{\centerLogo}{
@@ -33,24 +33,28 @@
         \vspace{2cm}
         \setlength{\unitlength}{0.12cm}
         \input{positionpicture}
-        \caption{Key positions in HGVS numbering scheme.}
+        \caption{Gene-centred key positions in HGVS numbering scheme.}
         \label{fig:positions}
       \end{figure}
 
       \begin{table}
-        \caption{Positions from Fig.~\ref{fig:positions} in HGVS genomic (g.),
-          non-coding (n.) and coding DNA (c.) notations.}
+        \caption{HGVS positions in genomic (g.), non-coding (n.) and coding DNA
+          (c.) notations.}
         \colorbox{white}{
-        \begin{tabular}{l|r|r|r}
-          Key position        & \bt{g.}  & \bt{n.}      & \bt{c.} \\
-          \hline
-          Genomic end         & \bt{300} & \bt{1-u50}   & \bt{-30-u50} \\
-          Transcription start & \bt{250} & \bt{1}       & \bt{-30} \\
-          CDS start           & \bt{220} & \bt{30}      & \bt{1} \\
-          CDS stop            & \bt{80}  & \bt{90}      & \bt{60} \\
-          Transcription end   & \bt{70}  & \bt{100}     & \bt{*10} \\
-          Genomic start       & \bt{1}   & \bt{100+d70} & \bt{*10+d70} \\
-        \end{tabular}
+        {\small
+          \begin{tabular}{l|r|r|r}
+            Key position        & \bt{g.}  & \bt{n.}      & \bt{c.} \\
+            \hline
+            Genomic start       & \bt{1}    & \bt{1-u470}   & \bt{-29-u470} \\
+            Transcription start & \bt{471}  & \bt{1}        & \bt{-29} \\
+            CDS start           & \bt{501}  & \bt{30}       & \bt{1} \\
+            Intron 1 start      & \bt{513}  & \bt{41+1}     & \bt{12+1} \\
+            Intron 1 end        & \bt{612}  & \bt{42-1}     & \bt{13-1} \\
+            CDS stop            & \bt{1830} & \bt{359}      & \bt{330} \\
+            Transcription end   & \bt{2050} & \bt{579}      & \bt{*220} \\
+            Genomic end         & \bt{2670} & \bt{579+d620} & \bt{*220+d620} \\
+          \end{tabular}
+          }
         }
       \end{table}
     }
@@ -91,27 +95,28 @@
         {
           \includegraphics[width = 0.95\textwidth, height = 57cm]{mutalyzerNameCheck}
         }
-        \caption{Mutalyzer 2.0 Name Checker using a LRG reference
-          sequence~\cite{LRG}}
+        \caption{Mutalyzer 2.0 Name Checker results using the CDKN2A LRG
+          reference sequence~\cite{LRG}}
         \label{figure:namecheck}
       \end{figure}
     }
     \colorBlock{GreenBg}{Interfaces}{1}{
       
       \begin{tabular}{l@{\ \ --\ \ }p{25cm}}
-        Name Checker       & Syntactic and semantic checks. 
-                               Fig.~\ref{figure:namecheck} $^*$ \\
-        Syntax Checker     & Syntactic checks only. $^*$ \\
+        Name Checker       & Syntactic and semantic checks.$^*$
+                               (Fig.~\ref{figure:namecheck}) \\
+        Syntax Checker     & Syntactic checks only.$^*$ \\
         Position Converter & Convert chromosomal positions to gene-centered
-                               notation (no semantic check)
-                               Fig.~\ref{figure:positionconvert} $^*$ \\
-        SNP Converter      & Convert a dbSNP rsId to HGVS notation. $^*$ \\
+                               notation (no semantic check)$^*$
+                               (Fig.~\ref{figure:positionconvert}) \\
+        SNP Converter      & Convert a dbSNP rsId to HGVS notation.$^*$ \\
         Name Generator     & Contruct a HGVS notation. \\
         GenBank Uploader   & Upload custom GenBank files. \\
         Webservices        & Programmatic (SOAP) interface. \\
       \end{tabular}
+      \bigskip
 
-      $^*$ Also available as a batch interface.
+      $^*$ {\small Also available as a batch interface.}
     }
     \colorBlock{Background}{References}{1}{
       {\small
