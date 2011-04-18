@@ -567,7 +567,7 @@ class Crossmap() :
 #Crossmap
 
 #
-# Unit test.
+# Unit test. Todo: move to /tests
 #
 if __name__ == "__main__" :
     # Build a crossmapper for a hypothetical gene.

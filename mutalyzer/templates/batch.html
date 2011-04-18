@@ -119,8 +119,7 @@
           <b>Errors:</b><br />
           <div class="messages">
             <p tal:repeat = "m errors" tal:content = "m/description"
-               tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
-               onclick = "expandMessage(this);"></p>
+               tal:attributes = "class m/class; title string:${m/level} (origin: ${m/origin})"></p>
           </div>
      </div>
 

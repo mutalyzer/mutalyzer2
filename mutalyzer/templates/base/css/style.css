@@ -308,7 +308,6 @@ i {
 .debug, .information, .warning, .error {
     padding-left: 25px;
     background: left top no-repeat;
-    cursor: pointer;
 }
 
 .debug {

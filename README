@@ -32,6 +32,8 @@ Development Notes
 =================
 
 Todo list:
+- Download reference sequence link should not be shown if there is none.
+  Example: chr11:g.111959693G>T
 - Tests fail in clean installation, because name checker tests make the
   Retriever want to write to the cache and we don't run the tests as the
   user that owns the cache. How to fix this?

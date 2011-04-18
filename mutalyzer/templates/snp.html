@@ -35,8 +35,7 @@
         <h3>SNP converter results:</h3>
         <div class="messages">
         <p tal:repeat = "m messages" tal:content = "m/description"
-           tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
-           onclick = "expandMessage(this);"></p>
+           tal:attributes = "class m/class; title string:${m/level} (origin: ${m/origin})"></p>
         <p tal:content = "summary"></p>
         </div>
         <br>

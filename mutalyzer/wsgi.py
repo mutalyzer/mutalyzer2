@@ -737,6 +737,7 @@ class Check:
             'altProtein'         : output.getOutput('altProteinFancy'),
             'newProtein'         : output.getOutput('newProteinFancy'),
             'transcriptInfo'     : output.getIndexedOutput('hasTranscriptInfo', 0, False),
+            'transcriptCoding'   : output.getIndexedOutput('transcriptCoding', 0, False),
             'exonInfo'           : output.getOutput('exonInfo'),
             'cdsStart_g'         : output.getIndexedOutput('cdsStart_g', 0),
             'cdsStart_c'         : output.getIndexedOutput('cdsStart_c', 0),

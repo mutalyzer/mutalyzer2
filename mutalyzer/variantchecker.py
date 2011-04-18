@@ -25,7 +25,6 @@ from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
-from mutalyzer import Crossmap
 from mutalyzer import Db
 
 
@@ -325,6 +324,8 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
 
     # In the case of RNA, check if we roll over a splice site. If so, make
     # the roll shorter, just up to the splice site.
+    # We only have to consider the forward roll (roll[1]), since RNA reference
+    # sequences are always oriented in correspondence with the transcript.
     if record.record.molType == 'n':
         splice_sites = record.record.geneList[0].transcriptList[0] \
                        .mRNA.positionList
@@ -342,6 +343,8 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     if shift:
         new_first = first + shift
         new_stop = last + shift
+        # Todo: Positioning in this message should be in original scheme, not
+        # always genomic. This holds for alle messages in apply_* functions.
         O.addMessage(__file__, 2, 'WROLL',
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that it should be "%s" at ' \
@@ -925,8 +928,10 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # If we have a deletion, and it covers exactly an even number of splice
     # sites, remove these splice sites.
     # Note, this is not the same as util.over_splice_site(). Here we collect
-    # sites where the delection borders the exon/intron boundary.
+    # sites where the deletion borders the exon/intron boundary.
     # Todo: Special cases for first/last exon? Upstream/downstream exons?
+    # Todo: This still goes horribly wrong in some cases, example:
+    # NM_000088.3(COL1A1_v001):c.588del
     if transcript and variant.MutationType == 'del':
         removed_sites = []
         for acceptor, donor in util.grouper(transcript.CM.RNA):
@@ -947,8 +952,10 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             # - transcript.mRNA.positionList
             # and what we should use (likewise for CDS).
             removed_cds_sites = filter(lambda s: s in transcript.CDS.positionList,
-                                       removed_sites)
+                                       removed_sites) if transcript.CDS else []
             if not len(removed_cds_sites) % 2:
+                # Todo: splice_abort=False undoes the warning (sort of), but
+                # the warning might (also) be about other sites...
                 splice_abort = False
                 mutator.add_removed_sites(removed_sites)
                 output.addMessage(__file__, 1, 'IDELSPLICE',
@@ -1021,6 +1028,11 @@ def _add_static_transcript_info(transcript, output):
     output.addOutput('cdsStart_c', 1)
     output.addOutput('cdsStop_g', transcript.CM.x2g(cds_stop, 0))
     output.addOutput('cdsStop_c', cds_stop)
+
+    # Is this transcript coding?
+    # Example of non-coding transcript variant:
+    # AL449423.14(CDKN2A_v004):n.42_437del
+    output.addOutput('transcriptCoding', bool(transcript.CM.CDS))
 
 
 def _add_transcript_info(mutator, transcript, output):
@@ -1316,6 +1328,11 @@ def check_variant(description, config, output):
         retriever = Retriever.GenBankRetriever(config.Retriever, output,
                                                database)
 
+    retrieved_record = retriever.loadrecord(record_id)
+
+    if not retrieved_record:
+        return
+
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
 
@@ -1328,11 +1345,6 @@ def check_variant(description, config, output):
     # identical errors.
     output.addOutput('preColon', description.split(':')[0])
     output.addOutput('variant', description.split(':')[-1])
-
-    retrieved_record = retriever.loadrecord(record_id)
-
-    if not retrieved_record:
-        return
 
     record = GenRecord.GenRecord(output, config.GenRecord)
     record.record = retrieved_record

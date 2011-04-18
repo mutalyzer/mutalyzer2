@@ -10,37 +10,51 @@
       <center>
         <h3>Name checker</h3>
       </center>
-      <div id = "output" tal:condition = "interactive">
-        <div>
-        Please insert the mutation name using the 
-        <span class = "helper" 
-        title = "Human Genome Variation Society standard variant nomenclature">
-          <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
-          &lt;Accession Number&gt;.&lt;version 
-          number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
-          type&gt;.&lt;mutation&gt;
-        </div><br>
-        Example: AB026906.1:c.274G&gt;T<br>
-        <br>
-        <form action = "" method = "post">
-          <input 
-            type = "text" 
-            name = "mutationName" 
-            tal:attributes = "value lastpost"
-            style = "width:100%"
-          ><br>
-          <input type="submit" value="Submit">
-          <input type="button" value="Clear field" 
-                 onClick = "clearForm(this.form, 'mutationName');">  
-        </form>
-        <br>
-      </div>
+      <div style="border: 1px solid grey; background: #ccffff; padding:  20px;">
+        <div id = "output" tal:condition = "interactive">
+          <div>
+          Please insert the mutation name using the 
+          <span class = "helper" 
+          title = "Human Genome Variation Society standard variant nomenclature">
+            <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
+            &lt;Accession Number&gt;.&lt;version 
+            number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
+            type&gt;.&lt;mutation&gt;
+          </div><br>
+          Example: AB026906.1:c.274G&gt;T<br>
+          <br>
+          <form action = "" method = "post">
+            <input 
+              type = "text" 
+              name = "mutationName" 
+              tal:attributes = "value lastpost"
+              style = "width:100%"
+            ><br>
+            <input type="submit" value="Submit">
+            <input type="button" value="Clear field" 
+                   onClick = "clearForm(this.form, 'mutationName');">  
+          </form>
+        </div>
+        <div tal:condition = "visualisation">
+          <b>Overview of the raw variants:</b><br>
+          <div tal:repeat = "i visualisation">
+            <br>
+            <div tal:repeat = "j i">
+              <div tal:condition = "repeat/j/start" 
+                   tal:content = "structure string:Raw variant 
+                                  ${repeat/i/number}: ${j}"></div>
+              <tt tal:condition = "not: repeat/j/start" tal:content = "j">
+              </tt>
+            </div>
+          </div>
+        </div> <!-- not:visualisation -->
+      </div> <!-- form area -->
+      <br>
       <div tal:condition = "lastpost">
         <h3>Name checker results:</h3>
         <div class="messages">
         <p tal:repeat = "m messages" tal:content = "m/description"
-           tal:attributes = "class m/class; data-level m/level; data-origin m/origin"
-           onclick = "expandMessage(this);"></p>
+           tal:attributes = "class m/class; title string:${m/level} (origin: ${m/origin})"></p>
         <p tal:content = "summary"></p>
         </div>
         <br>
@@ -52,21 +66,6 @@
           The &quot;^&quot; indicates the position where the error occurred.
           <br>
         </div> <!-- parseError -->
-        <div tal:condition = "visualisation">
-          <b>Overview of the raw variants:</b><br>
-          <br>
-          <div tal:repeat = "i visualisation">
-            <div tal:repeat = "j i">
-              <div tal:condition = "repeat/j/start" 
-                   tal:content = "structure string:Raw variant 
-                                  ${repeat/i/number}: ${j}"></div>
-              <tt tal:condition = "not: repeat/j/start" tal:content = "j">
-              </tt>
-            </div>
-            <br>
-          </div>
-          <br>
-        </div> <!-- not:visualisation -->
         <div tal:condition = "genomicDescription/0">
           <div tal:condition = "genomicDNA" tal:omit-tag="">
             <b>Genomic description:</b><br>
@@ -117,7 +116,7 @@
         <div tal:condition = "transcriptInfo">
           <b>Detailed information about the selected transcript:</b><br>
           <br>
-          <div style = "background-color : #ccffff; padding : 20px;">
+          <div style = "background-color : #ccffff; padding : 20px; border: 1px solid grey">
             <div tal:condition = "oldProtein">
               <b>Reference protein:</b><br>
               <pre><div tal:repeat = "i oldProtein"
@@ -160,36 +159,44 @@
                 <td>Number</td>
                 <td>Start (g.)</td>
                 <td>Stop (g.)</td>
-                <td>Start (c.)</td>
-                <td>Stop (c.)</td>
+                <td>
+                  <span tal:condition="transcriptCoding" tal:omit-tag="">Start (c.)</span>
+                  <span tal:condition="not:transcriptCoding" tal:omit-tag="">Start (n.)</span>
+                </td>
+                <td>
+                  <span tal:condition="transcriptCoding" tal:omit-tag="">Stop (c.)</span>
+                  <span tal:condition="not:transcriptCoding" tal:omit-tag="">Stop (n.)</span>
+                </td>
               </tr>
               <tr tal:repeat = "i exonInfo">
                 <td tal:content = "repeat/i/number"></td>
                 <td tal:repeat = "j i" tal:content = "j"></td>
               </tr>
             </table>
-            <br>
-            <b><span class = "helper" title = "Coding Sequence">CDS</span> 
-            information:</b><br>
-            <table class = "raTable">
-              <tr>
-                <td></td>
-                <td>g.</td>
-                <td>c.</td>
-              </tr>
-              <tr>
-                <td>Start</td>
-                <td tal:content = "cdsStart_g"></td>
-                <td tal:content = "cdsStart_c"></td>
-              </tr>
-              <tr>
-                <td>Stop</td>
-                <td tal:content = "cdsStop_g"></td>
-                <td tal:content = "cdsStop_c"></td>
-              </tr>
-              <tr>
-              </tr>
-            </table>
+            <div tal:condition="transcriptCoding" tal:omit-tag="">
+              <br>
+              <b><span class = "helper" title = "Coding Sequence">CDS</span> 
+              information:</b><br>
+              <table class = "raTable">
+                <tr>
+                  <td></td>
+                  <td>g.</td>
+                  <td>c.</td>
+                </tr>
+                <tr>
+                  <td>Start</td>
+                  <td tal:content = "cdsStart_g"></td>
+                  <td tal:content = "cdsStart_c"></td>
+                </tr>
+                <tr>
+                  <td>Stop</td>
+                  <td tal:content = "cdsStop_g"></td>
+                  <td tal:content = "cdsStop_c"></td>
+                </tr>
+                <tr>
+                </tr>
+              </table>
+            </div>
           </div> <!-- background color -->
           <br>
           <br>
