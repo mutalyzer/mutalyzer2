@@ -1,0 +1,327 @@
+\documentclass[slidestop]{beamer}
+
+\title{Mutalyzer 2.0 interfaces}
+\providecommand{\myConference}{NBIC conference}
+\providecommand{\myDate}{Wednesday, 20 April 2011}
+\author{Martijn Vermaat}
+\providecommand{\myGroup}{Leiden Genome Technology Center}
+\providecommand{\myDepartment}{Department of Human Genetics}
+\providecommand{\myCenter}{Center for Human and Clinical Genetics}
+\providecommand{\lastCenterLogo}{
+  \raisebox{-0.1cm}{
+    \includegraphics[scale = 0.1]{gen2phen_logo}
+  }
+}
+\providecommand{\lastRightLogo}{
+  \includegraphics[scale = 0.1]{nbic_logo}
+}
+
+\usetheme{lumc}
+
+\begin{document}
+
+\input{picture.tex}
+
+% This disables the \pause command, handy in the editing phase.
+%\renewcommand{\pause}{}
+
+% Make the title page.
+\bodytemplate
+
+% First page of the presentation.
+\section{Introduction}
+\begin{frame}
+  A curational tool for \emph{Locus Specific Mutation Databases} (LSDBs).
+
+  \bigskip
+  \begin{itemize}
+    \pause
+    \item Variant nomenclature checker applying \emph{Human Genome Variation
+          Society} (HGVS) guidelines.
+    \begin{itemize}
+      \item Is the syntax of the variant description valid?
+      \item Does the reference sequence exist?
+      \item Is the variant possible on this reference sequence?
+      \item Is this variant description the recommended one?
+    \end{itemize}
+    \pause
+    \item Basic effect prediction.
+    \begin{itemize}
+      \item Is the description of the transcript product as expected?
+      \item Is the predicted protein as expected?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{HGVS nomenclature}
+\begin{frame}
+  Genomic orientated positions:
+  \begin{center}
+    \bt{AL449423.14:g.[65449\_65463del;65564\color{yellow}T\color{white}>\color{yellow}C\color{white}]}
+  \end{center}
+  \pause
+  \bigskip
+  Coding sequence orientated positions:
+  \begin{center}
+    \bt{AL449423.14(CDKN2A\_v001):c.[5\color{yellow}A\color{white}>\color{yellow}G\color{white}
+      ;106\_120del]}
+  \end{center}
+  \bigskip
+  \pause
+  \begin{itemize}
+    \item \bt{AL449423.14} -- reference sequence.
+    \item \bt{CDKN2A\_v001}$\;$ -- transcript variant \bt{1} of gene CDKN2A.
+    \item \bt{c.[5\color{yellow}A\color{white}>\color{yellow}G\color{white};106\_120del]}
+    \begin{itemize}
+      \item A \emph{substitution} at position \bt{5} counting from the start
+        codon.
+      \item A \emph{deletion} from position \bt{106} to position \bt{120}.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{HGVS nomenclature: positions}
+\begin{frame}
+  \positionpicture
+
+  This gene is on the reverse strand.
+
+  \bigskip
+  \bigskip
+  \pause
+  \begin{tabular}{l|l|p{7cm}}
+    Name       &         & Description\\
+    \hline
+    Genomic    & \bt{g.} & From {\scriptsize Genomic start} to
+                           {\scriptsize Genomic end}. \\
+    Transcript & \bt{n.} & From {\scriptsize Transcription start} to
+                           {\scriptsize Transcription end}, skip introns.\\
+    Coding     & \bt{c.} & From {\scriptsize CDS start} to
+                           {\scriptsize CDS stop}, skip introns.
+  \end{tabular}
+\end{frame}
+
+\begin{frame}
+  \positionpicture
+
+  \bt{c.} positions:
+  \bigskip
+  \begin{itemize}
+    \item Positions in introns are relative to the nearest exonic position.
+    \item Positions before the CDS are indicated with a \bt{-} sign.
+    \item Positions after the CDS are indicated with a \bt{*} sign.
+  \end{itemize}
+
+  \pause
+  \bigskip
+  Position \bt{-1} and \bt{1} are adjacent.
+
+  If \bt{60} is the last position of the CDS, then \bt{60} and \bt{*1} are
+  adjacent.
+\end{frame}
+
+\begin{frame}
+  \positionpicture
+
+  \renewcommand{\arraystretch}{1}
+  \begin{center}
+    \begin{tabular}{l|r|r|r}
+      Name                              & \bt{g.}  & \bt{n.}      & \bt{c.} \\
+      \hline
+      {\scriptsize Genomic start}       & \bt{1}   & \bt{100+d70} &
+        \bt{*10+d70} \\
+      {\scriptsize Genomic end}         & \bt{300} & \bt{1-u50}   &
+        \bt{-30-u50} \\
+      {\scriptsize Transcription start} & \bt{250} & \bt{1}       & \bt{-30} \\
+      {\scriptsize Transcription end}   & \bt{70}  & \bt{100}     & \bt{*10} \\
+      {\scriptsize CDS start}           & \bt{220} & \bt{30}      & \bt{1} \\
+      {\scriptsize CDS stop}            & \bt{80}  & \bt{90}      & \bt{60} \\
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \positionpicture
+
+  \renewcommand{\arraystretch}{1}
+  \begin{center}
+    \begin{tabular}{l|r|r|r}
+      Name                    & \bt{g.}  & \bt{n.}    & \bt{c.} \\
+      \hline
+      {\scriptsize Variant A} & \bt{185} & \bt{50+15} & \bt{20+15} \\
+      {\scriptsize Variant B} & \bt{140} & \bt{60}    & \bt{30} \\
+    \end{tabular}
+  \end{center}
+
+  \bigskip
+  \bigskip
+  \pause
+  \bt{NG\_001234.1:g.185\color{yellow}A\color{white}>\color{yellow}C\color{white}}
+
+  \bt{NG\_001234.1(GEN\_v001):n.50+15\color{yellow}T\color{white}>\color{yellow}G\color{white}}
+
+  \bt{NG\_001234.1(GEN\_v001):c.20+15\color{yellow}T\color{white}>\color{yellow}G\color{white}}
+\end{frame}
+
+\section{Mutalyzer 2.0: name checker}
+\begin{frame}
+  \begin{center}
+    \bt{NM\_002001.2:c.[12\_14del;102\color{yellow}G\color{white}>\color{yellow}T\color{white}]}
+  \end{center}
+  \bigskip
+  \begin{enumerate}
+    \pause
+    \item Parse the variant description.
+    \begin{itemize}
+      \item Reference sequence e.g., \bt{NM\_002001.2}.
+      \item Position system (\bt{c.}, \bt{g.}, \bt{n.}, \ldots).
+      \item List of variants (\bt{12\_14del},
+            \bt{102\color{yellow}G\color{white}>\color{yellow}T\color{white}}).
+    \end{itemize}
+    \pause
+    \item Download the reference sequence.
+    \pause
+    \item Check the variants to the reference sequence.
+    \begin{itemize}
+      \item Is there a \bt{\color{yellow}G\color{white}} at position \bt{c.102}?
+    \end{itemize}
+    \pause
+    \item Mutate the reference sequence.
+    \pause
+    \item Predict the variant protein when applicable.
+    \item \ldots
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  After a description is checked, other useful information is returned.
+  \begin{itemize}
+    \pause
+    \item Overview of the change on DNA level.
+    \pause
+    \item A genomic description.
+    \pause
+    \item A description on all affected transcripts.
+    \pause
+    \item Description of affected proteins.
+    \pause
+    \item Sequence of the original and affected protein with changes
+      highlighted.
+    \pause
+    \item Exon and CDS start / stop information.
+    \pause
+    \item Effects on restriction sites.
+    \pause
+    \item Information about transcripts, prote\"ins, their products and their
+      IDs.
+  \end{itemize}
+\end{frame}
+
+\section{Mutalyzer 2.0: position converter}
+\begin{frame}
+  Next Generation Sequencing uses chromosomal positions.
+
+  LSDB's usually use transcripts.
+  \bigskip
+
+  The position converter:
+  \begin{itemize}
+    \pause
+    \item Works on both hg18 (NCBI Build 36.1) and hg19 (GRCh37).
+    \pause
+    \item Works in both ways:
+    \begin{itemize}
+      \item \bt{NM\_003002.2:c.274\color{yellow}G\color{white}>\color{yellow}T\color{white}} to
+            \bt{NC\_000011.9:g.111959695\color{yellow}G\color{white}>\color{yellow}T\color{white}}.
+      \item \bt{chr11:g.111959695\color{yellow}G\color{white}>\color{yellow}T\color{white}} to
+            \bt{NM\_003002.2:c.274\color{yellow}G\color{white}>\color{yellow}T\color{white}}.
+    \end{itemize}
+    \pause
+    \item Can be used to \emph{lift over} from hg18 to hg19 and vice versa.
+    \pause
+    \item LSDBs use it to map variants to the genome.
+    \begin{itemize}
+      \item NGS pipelines can find variants.
+      \item NGS pipelines can store data in LSDBs.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Mutalyzer 2.0: other functionalities}
+\begin{frame}
+  Other functionalities of Mutalyzer 2.0 include:
+  \begin{itemize}
+    \pause
+    \item SNP conversion (from dbSNP rsId to HGVS notation).
+    \pause
+    \item Syntax checker.
+    \pause
+    \item Name generator (to help people that don't use the HGVS notation that
+          often).
+    \pause
+    \item GenBank uploader (to make your own reference sequences).
+    \begin{itemize}
+      \item Automatically uses the correct strand when a HGNC gene symbol is
+            used.
+    \end{itemize}
+    \pause
+    \item Recently added functionality for the LRG (Locus Reference Genomic)
+          reference files.
+    \begin{itemize}
+      \item Other formats can easily be added.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  For a large number of checks, there are other interfaces.
+  \bigskip
+  \begin{itemize}
+    \pause
+    \item Batch interfaces (upload a table, receive the result by mail):
+    \begin{itemize}
+      \item Name checker.
+      \item Syntax checker.
+      \item Position converter.
+      \item SNP converter.
+    \end{itemize}
+    \pause
+    \item Programmatic access (use from your own scripts).
+    \begin{itemize}
+      \item Currently $18$ functions available.
+      \begin{itemize}
+        \item Position conversion.
+        \item Mutate a reference sequence.
+        \item Retrieve all transcripts in a range of a chromosome.
+        \item Give extensive information of transcripts.
+        \item Upload GenBank files.
+        \item \ldots
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Questions?}
+\lastpagetemplate
+\begin{frame}
+  \begin{center}
+    Acknowledgements:
+    \bigskip
+    \bigskip
+
+    Jeroen Laros\\
+    Gerben Stouten\\
+    Gerard Schaafsma\\
+    Ivo Fokkema\\
+    Jacopo Celli\\
+    Peter Taschner\\
+    Johan den Dunnen
+    \bigskip
+    \bigskip
+    \bigskip
+
+    \bt{http://www.mutalyzer.nl/}
+  \end{center}
+\end{frame}
+
+\end{document}
