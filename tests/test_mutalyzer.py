@@ -33,7 +33,7 @@ class TestMutalyzer():
         Just a variant where we should roll.
         """
         check_variant('NM_003002.2:c.273del', self.config, self.output)
-        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
     def test_no_roll(self):
@@ -41,7 +41,7 @@ class TestMutalyzer():
         Just a variant where we cannot roll.
         """
         check_variant('NM_003002.2:c.274del', self.config, self.output)
-        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) == 0
 
     def test_no_roll_splice(self):
@@ -51,7 +51,7 @@ class TestMutalyzer():
         check_variant('NM_000088.3:g.459del', self.config, self.output)
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         assert len(wrollback) > 0
-        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) == 0
 
     def test_partial_roll_splice(self):
@@ -62,7 +62,7 @@ class TestMutalyzer():
         check_variant('NM_000088.3:g.494del', self.config, self.output)
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         assert len(wrollback) > 0
-        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
     def test_roll_after_splice(self):
@@ -70,8 +70,53 @@ class TestMutalyzer():
         Here we can roll and should, we stay in the same exon.
         """
         check_variant('NM_000088.3:g.460del', self.config, self.output)
-        wroll = self.output.getMessagesWithErrorCode('WROLL')
+        wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
+
+    def test_roll_both_ins(self):
+        """
+        Insertion that rolls should not use the same inserted sequence in
+        descriptions on forward and reverse strands.
+
+        Here we have the following situation on the forward strand:
+
+                                65470 (genomic)
+                                  |
+          CGGTGCGTTGGGCAGCGCCCCCGCCTCCAGCAGCGCCCGCACCTCCTCTA
+
+        Now, an insertion of TAC after 65470 should be rolled to an insertion
+        of ACT after 65471:
+
+          CGGTGCGTTGGGCAGCGCCCCCGCC --- TCCAGCAGCGCCCGCACCTCCTCTA
+          CGGTGCGTTGGGCAGCGCCCCCGCC TAC TCCAGCAGCGCCCGCACCTCCTCTA  =>
+
+          CGGTGCGTTGGGCAGCGCCCCCGCCT --- CCAGCAGCGCCCGCACCTCCTCTA
+          CGGTGCGTTGGGCAGCGCCCCCGCCT ACT CCAGCAGCGCCCGCACCTCCTCTA
+
+        However, in CDKN2A_v001 (on the reverse strand), this insertion should
+        roll the other direction and the inserted sequence should be the reverse
+        complement of CTA, which is TAG, and not that of ACT, which is AGT.
+
+        The next test (test_roll_reverse_ins) tests the situation for an input
+        of AL449423.14:g.65471_65472insACT, where only the reverse roll should
+        be done.
+        """
+        check_variant('AL449423.14:g.65470_65471insTAC', self.config, self.output)
+        assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
+        assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
+        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
+
+    def test_roll_reverse_ins(self):
+        """
+        Insertion that rolls on the reverse strand should not use the same
+        inserted sequence in descriptions on forward and reverse strands.
+        """
+        check_variant('AL449423.14:g.65471_65472insACT', self.config, self.output)
+        assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
+        assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
+        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
 
     def test_ins_cds_start(self):
         """

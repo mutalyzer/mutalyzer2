@@ -445,7 +445,7 @@ class GenRecord() :
         return ret
     #__constructCDS
 
-    def __maybeInvert(self, gene, string) :
+    def __maybeInvert(self, gene, string, string_reverse=None) :
         """
         Return the reverse-complement of a DNA sequence if the gene is in
         the reverse orientation.
@@ -454,13 +454,16 @@ class GenRecord() :
         @type gene: object
         @arg string: DNA sequence
         @type string: string
+        @kwarg string_reverse: DNA sequence to use (if not None) for the
+            reverse complement.
         
         @return: reverse-complement (if applicable), otherwise return the
             original.
         @rtype: string
         """
-
-        if gene.orientation == -1 :
+        if gene.orientation == -1:
+            if string_reverse:
+                string = string_reverse
             return Bio.Seq.reverse_complement(string)
         return string
     #__maybeInvert
@@ -585,10 +588,10 @@ class GenRecord() :
         #for
     #checkRecord
 
-    def name(self, start_g, stop_g, varType, arg1, arg2, roll) :
+    def name(self, start_g, stop_g, varType, arg1, arg2, roll, arg1_reverse=None):
         """
         Generate variant descriptions for all genes, transcripts, etc.
-        
+
         @arg start_g: start position
         @type start_g: integer
         @arg stop_g: stop position
@@ -601,9 +604,9 @@ class GenRecord() :
         @type arg2: string
         @arg roll: ???
         @type roll: tuple (integer, integer)
-        
+        @kwarg arg1_reverse: argument 1 to be used on reverse strand
+        @type arg1_reverse: string
         """
-
         forwardStart = start_g
         forwardStop = stop_g
         reverseStart = stop_g
@@ -668,20 +671,20 @@ class GenRecord() :
                         if orientedStart != orientedStop :
                             j.addToDescription("%s_%s%s%s" % (
                                 j.CM.g2c(orientedStart), j.CM.g2c(orientedStop),
-                                varType, self.__maybeInvert(i, arg1)))
+                                varType, self.__maybeInvert(i, arg1, arg1_reverse)))
                             self.checkIntron(i, j, orientedStart)
                             self.checkIntron(i, j, orientedStop)
                         #if
                         else :
                             j.addToDescription("%s%s%s" % (
                                 j.CM.g2c(orientedStart), varType,
-                                self.__maybeInvert(i, arg1)))
+                                self.__maybeInvert(i, arg1, arg1_reverse)))
                             self.checkIntron(i, j, orientedStart)
                         #else
                     #if
                     else :
                         j.addToDescription("%s%c>%c" % (j.CM.g2c(orientedStart),
-                            self.__maybeInvert(i, arg1),
+                            self.__maybeInvert(i, arg1, arg1_reverse),
                             self.__maybeInvert(i, arg2)))
                         self.checkIntron(i, j, orientedStart)
                     #else

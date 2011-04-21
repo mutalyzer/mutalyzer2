@@ -718,11 +718,19 @@ class Check:
 
         genomic_description = output.getIndexedOutput('genomicDescription', 0, '')
 
+        # Only show roll warnings for the strand we are currently on.
+        if output.getIndexedOutput('transcriptReverse', 0):
+            suppress_code = 'WROLLFORWARD'
+        else:
+            suppress_code = 'WROLLREVERSE'
+        messages = filter(lambda m: m.code != suppress_code,
+                          output.getMessages())
+
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
             'lastpost'           : name,
-            'messages'           : map(util.message_info, output.getMessages()),
+            'messages'           : map(util.message_info, messages),
             'summary'            : summary,
             'parseError'         : parse_error,
             'errors'             : errors,

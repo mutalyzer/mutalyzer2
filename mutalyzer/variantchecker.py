@@ -319,13 +319,14 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     @arg O: The Output object.
     @type O: Modules.Output.Output
     """
-    roll = util.roll(mutator.orig, first, last)
-    shift = roll[1]
+    reverse_roll, forward_roll = util.roll(mutator.orig, first, last)
 
     # In the case of RNA, check if we roll over a splice site. If so, make
-    # the roll shorter, just up to the splice site.
-    # We only have to consider the forward roll (roll[1]), since RNA reference
-    # sequences are always oriented in correspondence with the transcript.
+    # the roll shorter, just up to the splice site. (Effectively this always
+    # means we roll over two splice sites, since they are adjacent.)
+    # We only have to consider the forward roll, since RNA reference
+    # sequences are always orientated in correspondence with the transcript.
+    original_forward_roll = forward_roll
     if record.record.molType == 'n':
         splice_sites = record.record.geneList[0].transcriptList[0] \
                        .mRNA.positionList
@@ -333,31 +334,29 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
-            if last < acceptor and last + roll[1] >= acceptor:
-                shift = acceptor - 1 - last
+            if last < acceptor and last + forward_roll >= acceptor:
+                forward_roll = acceptor - 1 - last
                 break
-            if last <= donor and last + roll[1] > donor:
-                shift = donor - last
+            if last <= donor and last + forward_roll > donor:
+                forward_roll = donor - last
                 break
 
-    if shift:
-        new_first = first + shift
-        new_stop = last + shift
-        # Todo: Positioning in this message should be in original scheme, not
-        # always genomic. This holds for alle messages in apply_* functions.
-        O.addMessage(__file__, 2, 'WROLL',
+    if forward_roll:
+        new_first = first + forward_roll
+        new_stop = last + forward_roll
+        O.addMessage(__file__, 2, 'WROLLFORWARD',
             'Sequence "%s" at position %s was given, however, ' \
-            'the HGVS notation prescribes that it should be "%s" at ' \
-            'position %s.' % (
+            'the HGVS notation prescribes that on the forward strand ' \
+            'it should be "%s" at position %s.' % (
             mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
             util.format_range(first, last),
             mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
             util.format_range(new_first, new_stop)))
 
-    if shift != roll[1]:
+    if forward_roll != original_forward_roll:
         # The original roll was decreased because it crossed a splice site.
-        incorrect_first = first + roll[1]
-        incorrect_stop = last + roll[1]
+        incorrect_first = first + original_forward_roll
+        incorrect_stop = last + original_forward_roll
         O.addMessage(__file__, 1, 'IROLLBACK',
             'Sequence "%s" at position %s was not corrected to "%s" at ' \
             'position %s, since they reside in different exons.' % (
@@ -366,14 +365,26 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             mutator.visualiseLargeString(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
             util.format_range(incorrect_first, incorrect_stop)))
 
-    # Todo: I think we should use shifted first and last here...
-    # Likewise for other apply_* functions.
+    if reverse_roll:
+        new_first = first - reverse_roll
+        new_stop = last - reverse_roll
+        O.addMessage(__file__, 2, 'WROLLREVERSE',
+            'Sequence "%s" at position %s was given, however, ' \
+            'the HGVS notation prescribes that on the reverse strand ' \
+            'it should be "%s" at position %s.' % (
+            mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+            util.format_range(first, last),
+            mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
+            util.format_range(new_first, new_stop)))
+
+    # We don't go through the trouble of visualising the *corrected* variant
+    # and are happy with visualising what the user gave us.
     if type == 'del':
         mutator.delM(first, last)
-    else :
+    else:
         mutator.dupM(first, last)
 
-    record.name(first, last, type, '', '', (roll[0], shift))
+    record.name(first, last, type, '', '', (reverse_roll, forward_roll))
 #apply_deletion_duplication
 
 
@@ -466,15 +477,21 @@ def apply_insertion(before, after, s, mutator, record, O):
 
     insertion_length = len(s)
 
+    # We don't go through the trouble of visualising the *corrected* variant
+    # and are happy with visualising what the user gave us.
     mutator.insM(before, s)
+
     new_before = mutator.shiftpos(before)
     new_stop = mutator.shiftpos(before) + insertion_length
 
-    roll = util.roll(mutator.mutated, new_before + 1, new_stop)
-    shift = roll[1]
+    reverse_roll, forward_roll = util.roll(mutator.mutated, new_before + 1, new_stop)
 
     # In the case of RNA, check if we roll over a splice site. If so, make
-    # the roll shorter, just up to the splice site.
+    # the roll shorter, just up to the splice site. (Effectively this always
+    # means we roll over two splice sites, since they are adjacent.)
+    # We only have to consider the forward roll, since RNA reference
+    # sequences are always orientated in correspondence with the transcript.
+    original_forward_roll = forward_roll
     if record.record.molType == 'n' :
         splice_sites = record.record.geneList[0].transcriptList[0] \
                        .mRNA.positionList
@@ -482,45 +499,61 @@ def apply_insertion(before, after, s, mutator, record, O):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
             # both at different sides of the boundary.
-            if new_stop < acceptor and new_stop + roll[1] >= acceptor:
-                shift = acceptor - 1 - new_stop
+            if new_stop < acceptor and new_stop + forward_roll >= acceptor:
+                forward_roll = acceptor - 1 - new_stop
                 break
-            if new_stop <= donor and new_stop + roll[1] > donor:
-                shift = donor - new_stop
+            if new_stop <= donor and new_stop + forward_roll > donor:
+                forward_roll = donor - new_stop
                 break
 
-    if roll[0] + shift >= insertion_length:
+    if reverse_roll + forward_roll >= insertion_length:
         # Todo: Could there also be a IROLLBACK message in this case?
         O.addMessage(__file__, 2, 'WINSDUP',
             'Insertion of %s at position %i_%i was given, ' \
             'however, the HGVS notation prescribes that it should be a ' \
             'duplication of %s at position %i_%i.' % (
             s, before, before + 1,
-            mutator.mutated[new_before + shift:new_stop + shift], before + shift,
-            before + shift + insertion_length - 1))
-        after += shift - 1
+            mutator.mutated[new_before + shift:new_stop + forward_roll],
+            before + forward_roll,
+            before + forward_roll + insertion_length - 1))
+        after += forward_roll - 1
         before = after - insertion_length + 1
         record.name(before, after, 'dup', '', '',
-                    (roll[0] + shift - insertion_length, 0))
-    else:
-        if shift:
-            O.addMessage(__file__, 2, 'WROLL', 'Insertion of %s at position ' \
-                '%i_%i was given, however, the HGVS notation prescribes ' \
-                'that it should be an insertion of %s at position %i_%i.' % (
-                s, before, before + 1,
-                mutator.mutated[new_before + shift:new_stop + shift],
-                new_before + shift, new_before + shift + 1))
-        if shift != roll[1]:
-            O.addMessage(__file__, 1, 'IROLLBACK',
-                'Insertion of %s at position %i_%i was not corrected to an ' \
-                'insertion of %s at position %i_%i, since they reside in ' \
-                'different exons.' % (
-                s, before, before + 1,
-                mutator.mutated[new_before + roll[1]:new_stop + roll[1]],
-                new_before + roll[1], new_before + roll[1] + 1))
-        record.name(before, before + 1, 'ins',
-                    mutator.mutated[new_before + shift:new_stop + shift], '',
-                    (roll[0], shift))
+                    (reverse_roll + forward_roll - insertion_length, 0))
+        return
+
+    if forward_roll:
+        O.addMessage(__file__, 2, 'WROLLFORWARD', 'Insertion of %s at position ' \
+            '%i_%i was given, however, the HGVS notation prescribes ' \
+            'that on the forward strand it should be an insertion of %s ' \
+            'at position %i_%i.' % (
+            s, before, before + 1,
+            mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
+            new_before + forward_roll, new_before + forward_roll + 1))
+
+    if forward_roll != original_forward_roll:
+        # The original roll was decreased because it crossed a splice site.
+        O.addMessage(__file__, 1, 'IROLLBACK',
+            'Insertion of %s at position %i_%i was not corrected to an ' \
+            'insertion of %s at position %i_%i, since they reside in ' \
+            'different exons.' % (
+            s, before, before + 1,
+            mutator.mutated[new_before + original_forward_roll:new_stop + original_forward_roll],
+            new_before + original_forward_roll, new_before + original_forward_roll + 1))
+
+    if reverse_roll:
+        O.addMessage(__file__, 2, 'WROLLREVERSE', 'Insertion of %s at position ' \
+            '%i_%i was given, however, the HGVS notation prescribes ' \
+            'that on the reverse strand it should be an insertion of %s ' \
+            'at position %i_%i.' % (
+            s, before, before + 1,
+            mutator.mutated[new_before - reverse_roll:new_stop - reverse_roll],
+            new_before - reverse_roll, (new_before - reverse_roll) + 1))
+
+    record.name(before, before + 1, 'ins',
+                mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
+                '', (reverse_roll, forward_roll),
+                mutator.mutated[new_before - reverse_roll:new_stop - reverse_roll])
 #apply_insertion
 
 
@@ -1033,6 +1066,9 @@ def _add_static_transcript_info(transcript, output):
     # Example of non-coding transcript variant:
     # AL449423.14(CDKN2A_v004):n.42_437del
     output.addOutput('transcriptCoding', bool(transcript.CM.CDS))
+
+    # Is this transcript on the reverse strand?
+    output.addOutput('transcriptReverse', transcript.CM.orientation == -1)
 
 
 def _add_transcript_info(mutator, transcript, output):
