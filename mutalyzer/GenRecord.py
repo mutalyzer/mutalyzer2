@@ -588,6 +588,20 @@ class GenRecord() :
         #for
     #checkRecord
 
+    def current_transcript(self):
+        """
+        Return the current transcript.
+
+        @return: Current transcript if there is one, None otherwise.
+        @rtype: GenRecord.Locus
+        """
+        for i in self.record.geneList:
+            for j in i.transcriptList:
+                if j.current:
+                    return j
+        return None
+    #current_transcript
+
     def name(self, start_g, stop_g, varType, arg1, arg2, roll, arg1_reverse=None):
         """
         Generate variant descriptions for all genes, transcripts, etc.

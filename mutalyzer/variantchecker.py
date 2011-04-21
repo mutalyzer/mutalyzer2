@@ -328,6 +328,8 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     # sequences are always orientated in correspondence with the transcript.
     original_forward_roll = forward_roll
     if record.record.molType == 'n':
+        # Todo: Do we assume .geneList[0].transcriptList[0] is the selected
+        # transcript here?? Why not use record.current_transcript?
         splice_sites = record.record.geneList[0].transcriptList[0] \
                        .mRNA.positionList
         for acceptor, donor in util.grouper(splice_sites):
@@ -341,7 +343,11 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
                 forward_roll = donor - last
                 break
 
-    if forward_roll:
+    # Did we select a transcript on the reverse strand?
+    transcript = record.current_transcript()
+    reverse_strand = transcript and transcript.CM.orientation == -1
+
+    if forward_roll and not reverse_strand:
         new_first = first + forward_roll
         new_stop = last + forward_roll
         O.addMessage(__file__, 2, 'WROLLFORWARD',
@@ -353,7 +359,7 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
             util.format_range(new_first, new_stop)))
 
-    if forward_roll != original_forward_roll:
+    if forward_roll != original_forward_roll and not reverse_strand:
         # The original roll was decreased because it crossed a splice site.
         incorrect_first = first + original_forward_roll
         incorrect_stop = last + original_forward_roll
@@ -365,7 +371,7 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
             mutator.visualiseLargeString(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
             util.format_range(incorrect_first, incorrect_stop)))
 
-    if reverse_roll:
+    if reverse_roll and reverse_strand:
         new_first = first - reverse_roll
         new_stop = last - reverse_roll
         O.addMessage(__file__, 2, 'WROLLREVERSE',
@@ -522,7 +528,11 @@ def apply_insertion(before, after, s, mutator, record, O):
                     (reverse_roll + forward_roll - insertion_length, 0))
         return
 
-    if forward_roll:
+    # Did we select a transcript on the reverse strand?
+    transcript = record.current_transcript()
+    reverse_strand = transcript and transcript.CM.orientation == -1
+
+    if forward_roll and not reverse_strand:
         O.addMessage(__file__, 2, 'WROLLFORWARD', 'Insertion of %s at position ' \
             '%i_%i was given, however, the HGVS notation prescribes ' \
             'that on the forward strand it should be an insertion of %s ' \
@@ -531,7 +541,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
             new_before + forward_roll, new_before + forward_roll + 1))
 
-    if forward_roll != original_forward_roll:
+    if forward_roll != original_forward_roll and not reverse_strand:
         # The original roll was decreased because it crossed a splice site.
         O.addMessage(__file__, 1, 'IROLLBACK',
             'Insertion of %s at position %i_%i was not corrected to an ' \
@@ -541,7 +551,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             mutator.mutated[new_before + original_forward_roll:new_stop + original_forward_roll],
             new_before + original_forward_roll, new_before + original_forward_roll + 1))
 
-    if reverse_roll:
+    if reverse_roll and reverse_strand:
         O.addMessage(__file__, 2, 'WROLLREVERSE', 'Insertion of %s at position ' \
             '%i_%i was given, however, the HGVS notation prescribes ' \
             'that on the reverse strand it should be an insertion of %s ' \
