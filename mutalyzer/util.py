@@ -19,6 +19,7 @@ General utility functions.
 """
 
 
+import os
 import math
 import time
 from itertools import izip_longest
@@ -719,3 +720,22 @@ def message_info(message):
             'class':       classes[message.level],
             'description': message.description}
 #message_info
+
+
+def slow(f):
+    """
+    Decorator for slow tests. This makes them to pass immediately, without
+    running them. But only if the environment variable MUTALYZER_QUICK_TEST
+    is 1.
+
+    @todo: I don't think this actually belongs here (a separate util module
+      for the unit tests?).
+    """
+    def slow_f(*args, **kwargs):
+        if 'MUTALYZER_QUICK_TEST' in os.environ \
+               and os.environ['MUTALYZER_QUICK_TEST'] == '1':
+            return
+        else:
+            f(*args, **kwargs)
+    return slow_f
+#slow

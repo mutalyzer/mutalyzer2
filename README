@@ -25,7 +25,11 @@ The unit tests depend on a running batch daemon and SOAP webservice:
 
 Now run the tests with:
 
-  $ MUTALYZER_ENV=test nosetests
+  $ MUTALYZER_ENV=test nosetests -v
+
+Or, if you are in a hurry, skip the long-running tests with:
+
+  $ MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
 
 
 Development Notes

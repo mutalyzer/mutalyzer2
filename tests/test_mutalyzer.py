@@ -105,7 +105,6 @@ class TestMutalyzer():
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
-        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
 
     def test_roll_reverse_ins(self):
         """
@@ -115,6 +114,23 @@ class TestMutalyzer():
         check_variant('AL449423.14:g.65471_65472insACT', self.config, self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
+
+    def test_roll_message_forward(self):
+        """
+        Roll warning message should only be shown for currently selected
+        strand (forward).
+        """
+        check_variant('AL449423.14:g.65470_65471insTAC', self.config, self.output)
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
+        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 0
+
+    def test_roll_message_reverse(self):
+        """
+        Roll warning message should only be shown for currently selected
+        strand (reverse).
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.98_99insGTA', self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
         assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
 

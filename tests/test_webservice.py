@@ -3,6 +3,19 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
+# Monkey patch suds, because for some weird reason the location
+# http://www.w3.org/2001/xml.xsd is used for the XML namespace, but the W3C
+# seems to respond too slow on that url. We use therefore use
+# http://www.w3.org/2009/01/xml.xsd which fixes this.
+from suds.xsd.sxbasic import Import
+_import_open = Import.open
+def _import_open_patched(self, *args, **kwargs):
+    if self.location == 'http://www.w3.org/2001/xml.xsd':
+        self.location = 'http://www.w3.org/2009/01/xml.xsd'
+    return _import_open(self, *args, **kwargs)
+Import.open = _import_open_patched
+
+
 import os
 import logging; logging.raiseExceptions = 0
 import urllib2

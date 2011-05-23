@@ -20,6 +20,7 @@ from webtest import TestApp
 
 import mutalyzer
 from mutalyzer.wsgi import application
+from mutalyzer.util import slow
 
 
 class TestWSGI():
@@ -235,6 +236,7 @@ class TestWSGI():
         r = form.submit()
         r.mustcontain('NM_003002.2:c.204C>T')
 
+    @slow
     def _batch(self, batch_type='NameChecker', arg1=None, file="", size=0,
                header='', lines=None):
         """
@@ -414,6 +416,7 @@ class TestWSGI():
                     size=len(variants)-1,
                     header='Input\tStatus')
 
+    @slow
     def test_batch_syntaxchecker_toobig(self):
         """
         Submit the batch syntax checker with a too big input file.
@@ -440,6 +443,7 @@ facilisi."""
         r = form.submit(status=413)
         assert_equal(r.content_type, 'text/plain')
 
+    @slow
     def test_batch_multicolumn(self):
         """
         Submit the batch syntax checker with a multiple-colums input file.

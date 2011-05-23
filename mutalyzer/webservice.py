@@ -55,14 +55,18 @@ from mutalyzer import GenRecord
 from mutalyzer.models import *
 
 
-class MutalyzerService(DefinitionBase) :
+class MutalyzerService(DefinitionBase):
     """
     Mutalyzer webservices.
 
     These methods are made public via a SOAP interface.
     """
+    def __init__(self, environ=None):
+        self._config = Config()
+        super(MutalyzerService, self).__init__(environ)
+    #__init__
 
-    def __checkBuild(self, L, build, config) :
+    def __checkBuild(self, L, build) :
         """
         Check if the build is supported (hg18 or hg19).
 
@@ -73,11 +77,9 @@ class MutalyzerService(DefinitionBase) :
         @type L: object
         @arg build: The human genome build name that needs to be checked.
         @type build: string
-        @arg config: Configuration object of the Db module.
-        @type config: object
         """
 
-        if not build in config.dbNames :
+        if not build in self._config.Db.dbNames :
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -169,16 +171,14 @@ class MutalyzerService(DefinitionBase) :
         @return: A list of transcripts.
         @rtype: list
         """
-
-        C = Config()
-        L = Output(__file__, C.Output)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscripts(%s %s %s)" % (build,
                      chrom, pos))
 
-        self.__checkBuild(L, build, C.Db)
-        D = Db.Mapping(build, C.Db)
+        self.__checkBuild(L, build)
+        D = Db.Mapping(build, self._config.Db)
 
         self.__checkChrom(L, D, chrom)
         self.__checkPos(L, pos)
@@ -196,25 +196,23 @@ class MutalyzerService(DefinitionBase) :
         L.addMessage(__file__, -1, "INFO",
                      "We return %s" % ret)
 
-        del D, L, C
+        del D, L
         return ret
     #getTranscripts
 
     @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
-    def getTranscriptsByGeneName(self, build, name) :
+    def getTranscriptsByGeneName(self, build, name):
         """
         Todo: documentation.
         """
-
-        C = Config()
-        L = Output(__file__, C.Output)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscriptsByGene(%s %s)" % (build,
                      name))
 
-        self.__checkBuild(L, build, C.Db)
-        D = Db.Mapping(build, C.Db)
+        self.__checkBuild(L, build)
+        D = Db.Mapping(build, self._config.Db)
 
         ret = D.get_TranscriptsByGeneName(name)
 
@@ -247,16 +245,14 @@ class MutalyzerService(DefinitionBase) :
         @return: A list of transcripts.
         @rtype: list
         """
-
-        C = Config()
-        L = Output(__file__, C.Output)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
-        D = Db.Mapping(build, C.Db)
-        self.__checkBuild(L, build, C.Db)
+        D = Db.Mapping(build, self._config.Db)
+        self.__checkBuild(L, build)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
 
@@ -267,7 +263,7 @@ class MutalyzerService(DefinitionBase) :
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
 
-        del D, L, C
+        del D, L
         return ret
     #getTranscriptsRange
 
@@ -284,22 +280,20 @@ class MutalyzerService(DefinitionBase) :
         @return: The name of the associated gene.
         @rtype: string
         """
-
-        C = Config()
-        L = Output(__file__, C.Output)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getGeneName(%s %s)" % (build, accno))
 
-        D = Db.Mapping(build, C.Db)
-        self.__checkBuild(L, build, C.Db)
+        D = Db.Mapping(build, self._config.Db)
+        self.__checkBuild(L, build)
 
         ret = D.get_GeneName(accno.split('.')[0])
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getGeneName(%s %s)" % (build, accno))
 
-        del D, L, C
+        del D, L
         return ret
     #getGeneName
 
@@ -345,22 +339,20 @@ class MutalyzerService(DefinitionBase) :
           - type         ; The mutation type.
         @rtype: object
         """
-
-        C = Config()
-        L = Output(__file__, C.Output)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Reveived request mappingInfo(%s %s %s %s)" % (
                         LOVD_ver, build, accNo, variant))
 
-        conv = Mapper.Converter(build, C, L)
+        conv = Mapper.Converter(build, self._config, L)
         result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing mappingInfo(%s %s %s %s)" % (
                         LOVD_ver, build, accNo, variant))
 
-        del L, C
+        del L
         return result
     #mappingInfo
 
@@ -385,15 +377,13 @@ class MutalyzerService(DefinitionBase) :
           - CDS_stop     ; CDS stop in I{c.} notation.
         @rtype: object
         """
-
-        C = Config()
-        O = Output(__file__, C.Output)
+        O = Output(__file__, self._config.Output)
 
         O.addMessage(__file__, -1, "INFO",
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
-        converter = Mapper.Converter(build, C, O)
+        converter = Mapper.Converter(build, self._config, O)
         T = converter.mainTranscript(accNo)
 
         O.addMessage(__file__, -1, "INFO",
@@ -415,14 +405,13 @@ class MutalyzerService(DefinitionBase) :
         @return: The accession number of a chromosome.
         @rtype: string
         """
-        C = Config() # Read the configuration file.
-        D = Db.Mapping(build, C.Db)
-        L = Output(__file__, C.Output)
+        D = Db.Mapping(build, self._config.Db)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromAccession(%s %s)" % (build, name))
 
-        self.__checkBuild(L, build, C.Db)
+        self.__checkBuild(L, build)
         self.__checkChrom(L, D, name)
 
         result = D.chromAcc(name)
@@ -431,7 +420,7 @@ class MutalyzerService(DefinitionBase) :
                      "Finished processing chromAccession(%s %s)" % (build,
                      name))
 
-        del D,L,C
+        del D,L
         return result
     #chromAccession
 
@@ -448,14 +437,13 @@ class MutalyzerService(DefinitionBase) :
         @return: The name of a chromosome.
         @rtype: string
         """
-        C = Config() # Read the configuration file.
-        D = Db.Mapping(build, C.Db)
-        L = Output(__file__, C.Output)
+        D = Db.Mapping(build, self._config.Db)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromName(%s %s)" % (build, accNo))
 
-        self.__checkBuild(L, build, C.Db)
+        self.__checkBuild(L, build)
 #        self.__checkChrom(L, D, name)
 
         result = D.chromName(accNo)
@@ -464,7 +452,7 @@ class MutalyzerService(DefinitionBase) :
                      "Finished processing chromName(%s %s)" % (build,
                      accNo))
 
-        del D,L,C
+        del D,L
         return result
     #chromosomeName
 
@@ -481,14 +469,13 @@ class MutalyzerService(DefinitionBase) :
         @return: The name of a chromosome.
         @rtype: string
         """
-        C = Config() # Read the configuration file.
-        D = Db.Mapping(build, C.Db)
-        L = Output(__file__, C.Output)
+        D = Db.Mapping(build, self._config.Db)
+        L = Output(__file__, self._config.Output)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getchromName(%s %s)" % (build, acc))
 
-        self.__checkBuild(L, build, C.Db)
+        self.__checkBuild(L, build)
 #        self.__checkChrom(L, D, name)
 
         result = D.get_chromName(acc)
@@ -497,7 +484,7 @@ class MutalyzerService(DefinitionBase) :
                      "Finished processing getchromName(%s %s)" % (build,
                      acc))
 
-        del D,L,C
+        del D,L
         return result
     #chromosomeName
 
@@ -516,14 +503,12 @@ class MutalyzerService(DefinitionBase) :
         @return: The variant(s) in either I{g.} or I{c.} notation.
         @rtype: list
         """
-
-        C = Config() # Read the configuration file.
-        D = Db.Mapping(build, C.Db)
-        O = Output(__file__, C.Output)
+        D = Db.Mapping(build, self._config.Db)
+        O = Output(__file__, self._config.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
-        converter = Mapper.Converter(build, C, O)
+        converter = Mapper.Converter(build, self._config, O)
         variant = converter.correctChrVariant(variant)
 
         if "c." in variant :
@@ -553,8 +538,7 @@ class MutalyzerService(DefinitionBase) :
                  - messages: List of (error) messages as strings.
         @rtype: object
         """
-        C = Config() # Read the configuration file.
-        output = Output(__file__, C.Output)
+        output = Output(__file__, self._config.Output)
         output.addMessage(__file__, -1, "INFO",
                           "Received request checkSyntax(%s)" % (variant))
 
@@ -584,12 +568,10 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation.
         """
-        C = Config() # Read the configuration file.
-        O = Output(__file__, C.Output)
+        O = Output(__file__, self._config.Output)
         O.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
-        #Mutalyzer.process(variant, C, O)
-        variantchecker.check_variant(variant, C, O)
+        variantchecker.check_variant(variant, self._config, O)
 
         result = MutalyzerOutput()
 
@@ -647,17 +629,16 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation.
         """
-        C = Config()
-        O = Output(__file__, C.Output)
-        D = Db.Cache(C.Db)
+        O = Output(__file__, self._config.Output)
+        D = Db.Cache(self._config.Db)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request getGeneAndTranscript(%s, %s)" % (genomicReference,
             transcriptReference))
-        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
 
-        GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
+        GenRecordInstance = GenRecord.GenRecord(O, self._config.GenRecord)
         GenRecordInstance.record = record
         GenRecordInstance.checkRecord()
 
@@ -714,17 +695,16 @@ class MutalyzerService(DefinitionBase) :
                                       - id
                                       - product
         """
-        C = Config()
-        O = Output(__file__, C.Output)
-        D = Db.Cache(C.Db)
+        O = Output(__file__, self._config.Output)
+        D = Db.Cache(self._config.Db)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsAndInfo(%s)" % genomicReference)
-        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
         record = retriever.loadrecord(genomicReference)
 
         # Todo: If loadRecord failed (e.g. DTD missing), we should abort here.
-        GenRecordInstance = GenRecord.GenRecord(O, C.GenRecord)
+        GenRecordInstance = GenRecord.GenRecord(O, self._config.GenRecord)
         GenRecordInstance.record = record
         GenRecordInstance.checkRecord()
 
@@ -829,11 +809,9 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation, error handling, argument checking, tests.
         """
-
-        C = Config()
-        O = Output(__file__, C.Output)
-        D = Db.Cache(C.Db)
-        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        O = Output(__file__, self._config.Output)
+        D = Db.Cache(self._config.Db)
+        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosomeByGene(%s, %s, %s, %s)" % (
@@ -860,10 +838,9 @@ class MutalyzerService(DefinitionBase) :
         """
         Todo: documentation, error handling, argument checking, tests.
         """
-        C = Config()
-        O = Output(__file__, C.Output)
-        D = Db.Cache(C.Db)
-        retriever = Retriever.GenBankRetriever(C.Retriever, O, D)
+        O = Output(__file__, self._config.Output)
+        D = Db.Cache(self._config.Db)
+        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosome(%s, %s, %s, %s)" % (

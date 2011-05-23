@@ -271,8 +271,17 @@ class Retriever(object) :
             return []
 
         # Query dbSNP for the SNP.
-        response = Entrez.efetch(db='SNP', id=id, rettype='flt',
-                                 retmode='xml')
+        try:
+            response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                                     retmode='xml')
+        except IOError:
+            # Could not parse XML.
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'Error connecting to dbSNP.')
+            self._output.addMessage(__file__, -1, 'INFO',
+                                    'IOError: %s' % str(e))
+            return []
+
         response_text = response.read()
 
         try:
