@@ -350,7 +350,7 @@ class File() :
                 self.__output.addMessage(__file__, 3, "EBPARSE",
                     "New Type Batch jobs (see help) should contain one "
                     "entry per line, please check %i line(s): %s" %
-                    (len(errList), makeList(errlist)))
+                    (len(errlist), makeList(errlist)))
 
             ret = []
             for line, job in jobl:
