@@ -3,14 +3,17 @@
 # Post-install script for Mutalyzer. Run after the setuptools installation
 # (python setup.py install).
 #
+# Notice: The definitions in this file are quite specific to the standard
+# Mutalyzer environment. This consists of a Debian stable (Squeeze) system
+# with Apache and Mutalyzer using its mod_wsgi module. Debian conventions are
+# used throughout. See the README file for more information.
+#
 # Usage (from the source root directory):
 #   sudo bash extras/post-install.sh
-
+#
 # Todo:
 # - Copy doc to /usr/share/doc
 # - General cleanup
-# - Cron jobs
-# - Install init script links
 
 set -e
 
@@ -19,6 +22,8 @@ set -e
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
 BIN_BATCHD=$(which mutalyzer-batchd)
 BIN_UCSC_UPDATE=$(which mutalyzer-ucsc-update)
+BIN_WEBSITE=$(which mutalyzer-website.wsgi)
+BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
 
 if [ ! -e /etc/mutalyzer/config ]; then
     echo "Creating /etc/mutalyzer/config"
@@ -39,30 +44,23 @@ mkdir -p /var/cache/mutalyzer
 chown -R www-data:www-data /var/cache/mutalyzer
 chmod -R u=rwX,go=rX /var/cache/mutalyzer
 
-if [ ! -e /etc/init.d/mutalyzer-batchd ]; then
-    echo "Creating /etc/init.d/mutalyzer-batchd"
-    cp extras/init.d/mutalyzer-batchd /etc/init.d/mutalyzer-batchd
-    sed -i -e "s@<MUTALYZER_PACKAGE_ROOT>@${PACKAGE_ROOT}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/init.d/mutalyzer-batchd
-    chmod u=rwx,go=rx /etc/init.d/mutalyzer-batchd
-else
-    echo "Not touching /etc/init.d/mutalyzer-batchd (it exists)"
-fi
+echo "Creating /etc/init.d/mutalyzer-batchd"
+cp extras/init.d/mutalyzer-batchd /etc/init.d/mutalyzer-batchd
+sed -i -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/init.d/mutalyzer-batchd
+chmod u=rwx,go=rx /etc/init.d/mutalyzer-batchd
 
-# echo "Installing init script links"
-# update-rc.d mutalyzer-batchd defaults 98 02
+echo "Installing init script links"
+update-rc.d -f mutalyzer-batchd remove
+update-rc.d mutalyzer-batchd defaults 98 02
 
-# echo "Installing crontab"
-# cp extras/cron.d/mutalyzer-ucsc-update /etc/cron.d/mutalyzer-ucsc-update
-# sed -i -e "s@<MUTALYZER_BIN_UCSC_UPDATE>@${BIN_UCSC_UPDATE}@g" /etc/cron.d/mutalyzer-ucsc-update
+echo "Installing crontab"
+cp extras/cron.d/mutalyzer-ucsc-update /etc/cron.d/mutalyzer-ucsc-update
+sed -i -e "s@<MUTALYZER_BIN_UCSC_UPDATE>@${BIN_UCSC_UPDATE}@g" /etc/cron.d/mutalyzer-ucsc-update
 
-if [ ! -e /etc/apache2/conf.d/mutalyzer.conf ]; then
-    echo "Creating /etc/apache2/conf.d/mutalyzer.conf"
-    cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf
-    sed -i -e "s@<MUTALYZER_PACKAGE_ROOT>@${PACKAGE_ROOT}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/apache2/conf.d/mutalyzer.conf
-    chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
-else
-    echo "Not touching /etc/apache2/conf.d/mutalyzer.conf"
-fi
+echo "Creating /etc/apache2/conf.d/mutalyzer.conf"
+cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf
+sed -i -e "s@<MUTALYZER_BIN_WEBSITE>@${BIN_WEBSITE}@g" -e "s@<MUTALYZER_BIN_WEBSERVICE>@${BIN_WEBSERVICE}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/apache2/conf.d/mutalyzer.conf
+chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
 
 echo "You will now be asked for the MySQL root password"
 
@@ -324,4 +322,22 @@ CREATE TABLE mm2 (
 );
 EOF
 
-echo "kthxbye"
+# The remainder is essentially the same as post-upgrade.sh
+
+if [ ! -e /var/www/mutalyzer ]; then
+    mkdir -p /var/www/mutalyzer
+fi
+
+if [ -e /var/www/mutalyzer/base ]; then
+    echo "Removing /var/www/mutalyzer/base"
+    rm /var/www/mutalyzer/base
+fi
+
+echo "Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base"
+ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
+
+echo "Restarting Apache"
+/etc/init.d/apache2 restart
+
+echo "Restarting Mutalyzer batch daemon"
+/etc/init.d/mutalyzer-batchd restart

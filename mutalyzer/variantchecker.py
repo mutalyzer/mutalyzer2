@@ -1145,7 +1145,7 @@ def _add_transcript_info(mutator, transcript, output):
         output.addOutput('oldprotein', protein_original + '*')
 
         # Todo: Don't generate the fancy HTML protein views here, do this in
-        # wsgi.py.
+        # website.py.
         # I think it would also be nice to include the mutated list of splice
         # sites.
         if not protein_variant or protein_variant[0] != 'M':

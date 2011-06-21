@@ -1,25 +1,12 @@
 """
 Mutalyzer webservices.
 
-The SOAP webservice is exposed through a WSGI interface.
-
-Example Apache/mod_wsgi configuration:
-
-   WSGIScriptAlias /services /var/www/mutalyzer/src/webservice.py
-
-Be sure to have this line first if you also define a / alias, like this:
-
-   WSGIScriptAlias /services /var/www/mutalyzer/src/webservice.py
-   WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
-
 @todo: Do we really use namespaces correctly?
 @todo: For some reason, the server exposes its location including ?wsdl.
 @todo: More thourough input checking. The @soap decorator does not do any
        kind of strictness checks on the input. For example, in
        transcriptInfo, the build argument must really be present. (Hint:
        use __checkBuild.)
-@todo: The mutalyzer.config.Config object can just be instantiated once
-       and we should not create it on every request.
 """
 
 
@@ -711,7 +698,7 @@ class MutalyzerService(DefinitionBase):
         transcripts = []
 
         # The following loop is basically the same as building the legend in
-        # the name checker web interface (wsgi.Check).
+        # the name checker web interface (website.Check).
 
         for gene in GenRecordInstance.record.geneList:
             # Only return transcripts for requested gene (if there was one)
@@ -860,14 +847,3 @@ class MutalyzerService(DefinitionBase):
 # WSGI application for use with e.g. Apache/mod_wsgi
 soap_application = Application([MutalyzerService], mutalyzer.SOAP_NAMESPACE,
                                'Mutalyzer')
-application = wsgi.Application(soap_application)
-
-
-# We can also use the built-in webserver by executing this file directly
-#if __name__ == '__main__':
-#    # Todo: add a main() function or something, and create an executable
-#    # wrapper in bin/.
-#    from wsgiref.simple_server import make_server
-#    print 'Listening to http://localhost:8081/'
-#    print 'WDSL file is at http://localhost:8081/?wsdl'
-#    make_server('localhost', 8081, application).serve_forever()

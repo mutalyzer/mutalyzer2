@@ -1,38 +1,5 @@
 """
-General WSGI interface.
-
-The WSGI interface is exposed through the module variable 'application'.
-Static files are not handled by this interface and should be served through
-the '/base' url prefix separately.
-
-Example Apache/mod_wsgi configuration:
-
-  WSGIScriptAlias / /var/www/mutalyzer/src/wsgi.py
-  Alias /base /var/www/mutalyzer/templates/base
-
-You can also use the built-in HTTP server by running this file directly.
-Note, however, that static files are not served by this server. A common
-pattern is to use Nginx as a proxy and static file server.
-
-Example Nginx configuration (assumes the built-in HTTP server is running on
-port 8080):
-
-  server {
-    listen 80;
-    location /base/ {
-      root /var/www/mutalyzer/templates/base;
-      if (-f $request_filename) {
-        rewrite ^/base/(.*)$  /base/$1 break;
-      }
-    }
-    location / {
-      proxy_read_timeout 300;  # 5 minutes
-      proxy_pass http://127.0.0.1:8080;
-    }
-  }
-
-@todo: Integrate webservice.py (http://webpy.org/cookbook/webservice/).
-@todo: Move /templates/base to /static for web.py compatibility.
+General Mutalyzer website interface.
 """
 
 
@@ -1183,7 +1150,3 @@ class Static:
         if not page:
             page = 'index'
         return getattr(render, page)()
-
-
-# WSGI application
-application = app.wsgifunc()

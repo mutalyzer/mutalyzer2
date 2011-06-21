@@ -67,6 +67,7 @@ Todo list:
 - Perhaps the WSGI interface should be somewhere else and be called
   mutalyzer.wsgi?
 - Password for MySQL user.
+- In deployment, remove old versions of Mutalyzer package.
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).

@@ -3,6 +3,11 @@
 # Pre-install script for Mutalyzer on Debian or Debian-like systems. Run
 # before the setuptools installation (python setup.py install).
 #
+# Notice: The definitions in this file are quite specific to the standard
+# Mutalyzer environment. This consists of a Debian stable (Squeeze) system
+# with Apache and Mutalyzer using its mod_wsgi module. Debian conventions are
+# used throughout. See the README file for more information.
+#
 # Usage (from the source root directory):
 #   sudo bash extras/pre-install.sh
 
@@ -10,7 +15,7 @@ set -e
 
 echo "Installing packages with apt"
 
-apt-get install \
+apt-get install -y \
   mysql-server \
   python \
   python-mysqldb \
