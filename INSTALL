@@ -1,8 +1,8 @@
-Mutalyzer installation instructions.
-====================================
+Mutalyzer installation instructions
+===================================
 
 
-Default Configuration Notes
+Default configuration notes
 ---------------------------
 
 The instructions in this file are quite specific to the standard Mutalyzer
@@ -34,7 +34,7 @@ locations, you can read through these instructions and modify them to your
 needs.
 
 
-Short Version
+Short version
 -------------
 
 Run the following commands:
@@ -80,7 +80,7 @@ Or get the source from SVN directly:
     cd mutalyzer
 
 
-Install Dependencies
+Install dependencies
 --------------------
 
 If you are on Debian or Ubuntu, you can use the following command to install
@@ -119,7 +119,7 @@ You can now edit /etc/mutalyzer/config and /etc/apache2/conf.d/mutalyzer.conf
 to your likings.
 
 
-Test the Installation
+Test the installation
 ---------------------
 
 Note: This step is broken at the moment. Some tests write to the cache for
@@ -148,7 +148,7 @@ If you installed Mutalyzer in a development environment, you don't have to
 do anything to upgrade (apart from updating the source code).
 
 
-Additional Notes
+Additional notes
 ----------------
 
 Included below for future reference is the old install.sh script. It is a bit

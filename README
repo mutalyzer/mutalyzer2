@@ -1,5 +1,5 @@
-Mutalyzer, a HGVS variant nomenclature checker.
-===============================================
+Mutalyzer, a HGVS variant nomenclature checker
+==============================================
 
 
 Documentation
@@ -16,7 +16,7 @@ Installation
 See the INSTALL file for installation instructions.
 
 
-Unit Tests
+Unit tests
 ----------
 
 The unit tests depend on a running batch daemon and SOAP webservice:
@@ -33,7 +33,7 @@ Or, if you are in a hurry, skip the long-running tests with:
     MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
 
 
-Development Notes
+Development notes
 -----------------
 
 Todo list:
