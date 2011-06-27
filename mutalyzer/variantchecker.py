@@ -519,7 +519,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             'however, the HGVS notation prescribes that it should be a ' \
             'duplication of %s at position %i_%i.' % (
             s, before, before + 1,
-            mutator.mutated[new_before + shift:new_stop + forward_roll],
+            mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
             before + forward_roll,
             before + forward_roll + insertion_length - 1))
         after += forward_roll - 1
