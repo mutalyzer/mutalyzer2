@@ -34,31 +34,41 @@ def deploy(bootstrap='no'):
     """
     # Currently, Fabric only supports task arguments as strings.
     bootstrap = (bootstrap == 'yes')
+
     # Create a new source distribution as a tarball.
     local('python setup.py sdist --formats=gztar')
+
     # Figure out the release name and tarball filename.
     dist = local('python setup.py --fullname', capture=True).strip()
     tarball = '%s.tar.gz' % dist
+
     # Create a place where we can unzip the source tarball.
     run('mkdir /tmp/mutalyzer')
+
     # Upload the source tarball to the temporary folder on the server.
     put('dist/%s' % tarball, '/tmp/mutalyzer/%s' % tarball)
-    # Go to that directory and unzip it.
+
+    # Go to that directory, unzip and install it.
     with cd('/tmp/mutalyzer'):
         run('tar xzf %s' % tarball)
+
         # Go to the tarball's contents and do the installation.
         with cd('/tmp/mutalyzer/%s' % dist):
+
             if bootstrap:
                 # Install dependencies.
                 sudo('bash extras/pre-install.sh')
+
             # Install Mutalyzer.
             sudo('python setup.py install')
+
             if bootstrap:
                 # Configure Mutalyzer.
                 sudo('bash extras/post-install.sh')
             else:
                 # Restart services.
                 sudo('bash extras/post-upgrade.sh')
+
     # Now that all is set up, delete the folder again.
     # I don't like to 'sudo rm -Rf' but since there where files created by
     # root in this directory, we have to.

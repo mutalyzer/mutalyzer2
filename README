@@ -1,8 +1,9 @@
 Mutalyzer, a HGVS variant nomenclature checker.
+===============================================
 
 
 Documentation
-=============
+-------------
 
 See the doc/ directory for (possibly outdated) developer documentation and
 presentation slides related to Mutalyzer. See http://www.mutalyzer.nl for
@@ -10,30 +11,30 @@ user documentation.
 
 
 Installation
-============
+------------
 
 See the INSTALL file for installation instructions.
 
 
 Unit Tests
-==========
+----------
 
 The unit tests depend on a running batch daemon and SOAP webservice:
 
-  $ sudo /etc/init.d/mutalyzer-batchd start
-  $ sudo /etc/init.d/apache2 start
+    sudo /etc/init.d/mutalyzer-batchd start
+    sudo /etc/init.d/apache2 start
 
 Now run the tests with:
 
-  $ MUTALYZER_ENV=test nosetests -v
+    MUTALYZER_ENV=test nosetests -v
 
 Or, if you are in a hurry, skip the long-running tests with:
 
-  $ MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
+    MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
 
 
 Development Notes
-=================
+-----------------
 
 Todo list:
 - Improve the web interface design :)
@@ -99,7 +100,7 @@ Obsoleted features:
 
 
 Dependencies
-============
+------------
 
 Mutalyzer depends on the following (Debian/Ubuntu) packages:
 - mysql-server     >= 5.1
