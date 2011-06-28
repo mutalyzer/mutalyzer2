@@ -33,14 +33,15 @@ To start the built-in HTTP server on port 8081:
 
 import sys
 from wsgiref.simple_server import make_server
-from soaplib.core.server import wsgi
 from mutalyzer import webservice
 
 
 DEFAULT_PORT = 8081
 
 
-application = wsgi.Application(webservice.soap_application)
+# Unfortunately we cannot instantiate wsgi.Application here, see the note
+# near the bottom of mutalyzer/webservice.py.
+application = webservice.application
 
 
 if __name__ == '__main__':

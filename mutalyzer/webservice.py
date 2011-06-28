@@ -847,3 +847,8 @@ class MutalyzerService(DefinitionBase):
 # WSGI application for use with e.g. Apache/mod_wsgi
 soap_application = Application([MutalyzerService], mutalyzer.SOAP_NAMESPACE,
                                'Mutalyzer')
+# Note: We would like to create the wsgi.Application instance only in the
+# bin/mutalyer-webservice.wsgi script, but unfortunately this breaks the
+# get_wsdl method of soap_application which we use to generate API
+# documentation in website.py.
+application = wsgi.Application(soap_application)
