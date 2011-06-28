@@ -19,7 +19,7 @@ from nose.tools import *
 from webtest import TestApp
 
 import mutalyzer
-from mutalyzer.wsgi import application
+from mutalyzer import website
 from mutalyzer.util import slow
 
 
@@ -32,6 +32,7 @@ class TestWSGI():
         """
         Initialize test application.
         """
+        application = website.app.wsgifunc()
         self.app = TestApp(application)
 
     def test_root(self):
