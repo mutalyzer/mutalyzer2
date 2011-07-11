@@ -500,15 +500,6 @@ facilisi."""
         assert_equal(r.content_type, 'text/plain')
         r.mustcontain('NM_003002.1:c.3_4insG')
 
-    def test_reference(self):
-        """
-        Download a reference file.
-        """
-        r = self.app.get('/Reference/AB026906.1.gb')
-        assert_equal(r.content_type, 'text/plain')
-        assert_equal(r.content_length, 26427)
-        r.mustcontain('ggaaaaagtc tctcaaaaaa cctgctttat')
-
     def test_soap_documentation(self):
         """
         Test the SOAP documentation generated from the WSDL.
@@ -560,7 +551,8 @@ facilisi."""
         """
         Test the genbank uploader.
 
-        @todo: Test if returned genomic reference can indeed be used now.
+        @todo: Use another genbank file to get a UD number and check that
+        we can then check variants using that UD number.
         """
         test_genbank_file = os.path.join(os.path.split(mutalyzer.package_root())[0], 'tests/data/AB026906.1.gb')
         r = self.app.get('/upload')
@@ -570,3 +562,28 @@ facilisi."""
                                   open(test_genbank_file, 'r').read()))
         r = form.submit()
         r.mustcontain('Your reference sequence was uploaded successfully.')
+        print r.body
+
+    def test_reference(self):
+        """
+        Test if reference files are cached.
+
+        @todo: This test doesn't work, since for every request a new
+            temporary cache directory is created by the webserver instance
+            and thus the cached file from request i cannot be re-used in
+            request i+1.
+        """
+        return
+        r = self.app.get('/check')
+        form = r.forms[0]
+        form['mutationName'] = 'AB026906.1:c.274G>T'
+        r = form.submit()
+        r.mustcontain('0 Errors',
+                      '1 Warning',
+                      'Raw variant 1: substitution at 7872',
+                      '<a href="#bottom" class="hornav">go to bottom</a>',
+                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="mutationName" style="width:100%">')
+        r = self.app.get('/Reference/AB026906.1.gb')
+        assert_equal(r.content_type, 'text/plain')
+        assert_equal(r.content_length, 26427)
+        r.mustcontain('ggaaaaagtc tctcaaaaaa cctgctttat')

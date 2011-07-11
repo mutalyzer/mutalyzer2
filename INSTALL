@@ -53,7 +53,9 @@ Automated deployment on a remote host
 
 For deploying Mutalyzer on a remote (production or testing) host, we recommend
 to automate the steps described below by using Fabric and the included
-fabfile.
+fabfile. You need Fabric installed on your local machine:
+
+    easy_install fabric
 
 To do a deployment on a server with an existing configured Mutalyzer
 installation:
@@ -121,10 +123,6 @@ to your likings.
 
 Test the installation
 ---------------------
-
-Note: This step is broken at the moment. Some tests write to the cache for
-      which we have no rights. This should be fixed to have a temporary cache
-      for the tests I guess.
 
 You should always test the installation. The tests (for now at least) need
 the batch daemon and the webserver (the SOAP part) running.

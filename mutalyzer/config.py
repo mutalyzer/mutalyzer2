@@ -46,8 +46,8 @@ class Config():
         each class is easy to see from the code below.
 
         @kwarg filename: Optional filename to read configuration from. If
-                         present, this overrides automatic detection of
-                         configuration file location.
+            present, this overrides automatic detection of configuration file
+            location.
         @type filename: string
 
         @raise ConfigurationError: If configuration could not be read.
@@ -56,9 +56,11 @@ class Config():
             - Configuration file could not be parsed.
             - Not all variables are present in configuration file.
 
-        @todo: Store configuration filename in this object, so we can call
-               executables (e.g. the batch checker) with as argument the
-               current configuration filename.
+        @todo: Be able to have /etc/mutalyzer/config as 'base' configuration
+            and some additional configuration in ~/.mutalyzer/config to
+            overwrite the base configuration.
+            For example, a normal user could use a different cache directory
+            (writable by the user) than the system wide Mutalyzer config.
         """
         if filename is None:
             base = os.environ.get('XDG_CONFIG_HOME', None)
@@ -132,12 +134,18 @@ class Config():
             self.GenRecord.spliceWarn = int(config["spliceWarn"])
 
             # If we are in a testing environment, use a temporary file for
-            # logging.
+            # logging and a temporary directory for the cache.
+            # We don't remove these after the tests, since they might be
+            # useful for debugging.
             if mutalyzer.is_test():
                 handle, filename = tempfile.mkstemp(suffix='.log',
                                                     prefix='mutalyzer-tests-')
                 os.close(handle)
                 self.Output.log = filename
+                dirname = tempfile.mkdtemp(suffix='.cache',
+                                           prefix='mutalyzer-tests-')
+                self.Retriever.cache = dirname
+                self.Scheduler.resultsDir = dirname
 
         except KeyError as e:
             raise ConfigurationError('Missing configuration value: %s' % e)
