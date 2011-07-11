@@ -71,6 +71,8 @@ Todo list:
 - In deployment, remove old versions of Mutalyzer package?
 - Use https protocol.
 - Check for os.path.join vulnerabilities.
+- Use web.config.debug=False on production server and perhaps put this in
+  the configuration file.
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).
