@@ -199,3 +199,19 @@ class CheckSyntaxOutput(ClassModel):
     valid = Mandatory.Boolean
     messages = Array(SoapMessage)
 #CheckSyntaxOutput
+
+
+class InfoOutput(ClassModel):
+    """
+    Return type of SOAP method info.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    version = String
+    versionParts = Array(String)
+    releaseDate = String
+    nomenclatureVersion = String
+    nomenclatureVersionParts = Array(String)
+    serverName = String
+    contactEmail = String
+#MutalyzerOutput

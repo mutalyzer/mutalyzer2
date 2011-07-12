@@ -17,6 +17,7 @@ Import.open = _import_open_patched
 
 
 import os
+import mutalyzer
 import logging; logging.raiseExceptions = 0
 import urllib2
 from suds.client import Client
@@ -160,3 +161,11 @@ class TestWebservice():
                   'MTAP_v005',
                   'C9orf53_v001']:
             assert_false(t in names)
+
+    def test_info(self):
+        """
+        Running the info method should give us some version information.
+        """
+        r = self.client.service.info()
+        assert_equal(type(r.versionParts.string), list)
+        assert_equal(r.version, mutalyzer.__version__)

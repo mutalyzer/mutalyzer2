@@ -28,6 +28,7 @@ from soaplib.core.model.clazz import Array
 from soaplib.core.model.exception import Fault
 from soaplib.core.server import wsgi
 import os
+import socket
 from operator import itemgetter, attrgetter
 
 import mutalyzer
@@ -841,6 +842,44 @@ class MutalyzerService(DefinitionBase):
 
         return UD
     #sliceChromosome
+
+    @soap(_returns = InfoOutput)
+    def info(self):
+        """
+        Gives some static application information, such as the current running
+        version.
+
+        @return: Object with fields:
+            - version: A string of the current running version.
+            - versionParts: The parts of the current running version as a list
+                of strings.
+            - releaseDate: The release date for the running version as a
+                string, or the empty string in case of a development version.
+            - nomenclatureVersion: Version of the HGVS nomenclature used.
+            - nomenclatureVersionParts: The parts of the HGVS nomenclature
+                version as a list of strings.
+            - serverName: The name of the server that is being queried.
+            - contactEmail: The email address to contact for more information.
+        @rtype: object
+        """
+        output = Output(__file__, self._config.Output)
+        output.addMessage(__file__, -1, 'INFO', 'Received request info')
+
+        result = InfoOutput()
+        result.version = mutalyzer.__version__
+        result.versionParts = mutalyzer.__version_info__
+        if mutalyzer.RELEASE:
+            result.releaseDate = mutalyzer.__date__
+        else:
+            result.releaseDate = ''
+        result.nomenclatureVersion = mutalyzer.NOMENCLATURE_VERSION
+        result.nomenclatureVersionParts = mutalyzer.NOMENCLATURE_VERSION_INFO
+        result.serverName = socket.gethostname()
+        result.contactEmail = mutalyzer.__contact__
+
+        output.addMessage(__file__, -1, 'INFO', 'Finished processing info')
+        return result
+    #info
 #MutalyzerService
 
 
@@ -848,7 +887,7 @@ class MutalyzerService(DefinitionBase):
 soap_application = Application([MutalyzerService], mutalyzer.SOAP_NAMESPACE,
                                'Mutalyzer')
 # Note: We would like to create the wsgi.Application instance only in the
-# bin/mutalyer-webservice.wsgi script, but unfortunately this breaks the
+# bin/mutalyzer-webservice.wsgi script, but unfortunately this breaks the
 # get_wsdl method of soap_application which we use to generate API
 # documentation in website.py.
 application = wsgi.Application(soap_application)
