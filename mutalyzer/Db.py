@@ -1493,13 +1493,13 @@ class Batch(Db) :
 
         # To optimize this query, make sure to have two indices on the
         # table:
-        # - UNIQUE KEY (QueueID)
-        # - KEY (JobID, QueueID)
+        # - UNIQUE INDEX (QueueID)
+        # - INDEX (JobID, QueueID)
         statement = """
             SELECT QueueID, Input, Flags
             FROM BatchQueue
             WHERE QueueID = (
-                SELECT QueueID
+                SELECT MIN(QueueID)
                 FROM BatchQueue
                 GROUP BY JobID
                 HAVING JobID = %s
