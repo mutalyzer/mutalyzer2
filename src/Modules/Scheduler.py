@@ -474,7 +474,7 @@ class Scheduler() :
     def _processConversion(self, cmd, i, build, flags) :
         """
         Process an entry from the Position Converter, write the results
-        to the job-file. The Position Coverter is wrapped in a try except
+        to the job-file. The Position Converter is wrapped in a try except
         block which ensures that he Batch Process keeps running. Errors
         are caught and the user will be notified.
 
@@ -499,7 +499,7 @@ class Scheduler() :
         cNames = [""]
 
         O.addMessage(__file__, -1, "INFO",
-            "Received PositionCoverter batchvariant " + cmd)
+            "Received PositionConverter batchvariant " + cmd)
 
         skip = self.__processFlags(O, flags)
         if not skip :
@@ -565,7 +565,7 @@ class Scheduler() :
         handle.write("%s\t%s\t%s\t%s\n" % (cmd, error, gName, "\t".join(cNames)))
         handle.close()
         O.addMessage(__file__, -1, "INFO",
-            "Finisehd PositionCoverter batchvariant " + cmd)
+            "Finished PositionConverter batchvariant " + cmd)
     #_processConversion
 
 
