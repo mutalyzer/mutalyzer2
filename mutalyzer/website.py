@@ -618,16 +618,18 @@ class Check:
         - mutationName: Variant to check.
         """
         interactive = True
-        i = web.input(mutationName=None)
+        pdf = False
+        i = web.input(mutationName=None, pdf=None)
         if i.mutationName:
             # Run checker non-interactively
             interactive = False
+            pdf = bool(i.pdf)
             variant = i.mutationName
         else:
             # Run checker if cookie variant is not None
             variant = web.cookies().get('variant')
             web.setcookie('variant', '', 60)
-        return self.check(variant, interactive=interactive)
+        return self.check(variant, interactive=interactive, pdf=pdf)
 
     def POST(self):
         """
@@ -640,7 +642,7 @@ class Check:
         return self.check(i.mutationName)
 
     @staticmethod
-    def check(name=None, interactive=True):
+    def check(name=None, interactive=True, pdf=False):
         """
         Render the variant checker HTML form. If the name argument is given,
         run the name checker.
@@ -715,7 +717,22 @@ class Check:
             'reference'          : reference
         }
 
-        return render.check(args, standalone=not interactive)
+        if pdf:
+            # Todo: Implement PDF formatting of results. Probably using
+            # ReportLab Platypus.
+            # https://github.com/nbv4/flightloggin/blob/master/pdf/pdf.py
+            from reportlab.platypus import SimpleDocTemplate, Paragraph
+            from reportlab.lib.styles import getSampleStyleSheet
+
+            web.header('Content-Type', 'application/pdf')
+            web.header('Content-Disposition', 'attachment; filename=mutalyzer.pdf')
+            io = StringIO()
+            doc = SimpleDocTemplate(io)
+            style = getSampleStyleSheet()['Normal']
+            doc.build([Paragraph('Proof of concept for variant %s.' % name, style)])
+            return io.getvalue()
+        else:
+            return render.check(args, standalone=not interactive)
 #Check
 
 

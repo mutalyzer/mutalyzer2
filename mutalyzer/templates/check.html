@@ -51,7 +51,7 @@
       </div> <!-- form area -->
       <br>
       <div tal:condition = "lastpost">
-        <h3>Name checker results:</h3>
+        <h3>Name checker results: <span class="pdf" tal:condition = "not:release">(<a tal:attributes = "href string:?pdf=1&amp;mutationName=${lastpost}">as PDF</a>)</span></h3>
         <div class="messages">
         <p tal:repeat = "m messages" tal:content = "m/description"
            tal:attributes = "class m/class; title string:${m/level} (origin: ${m/origin})"></p>
