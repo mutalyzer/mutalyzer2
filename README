@@ -73,6 +73,7 @@ Todo list:
 - Check for os.path.join vulnerabilities.
 - Use web.config.debug=False on production server and perhaps put this in
   the configuration file.
+- Add database indices to extras/post-install.sh script.
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).
