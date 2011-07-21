@@ -1487,12 +1487,19 @@ class Batch(Db) :
         @rtype: triple
         """
 
+        # To optimize this query, make sure to have two indices on the
+        # table:
+        # - UNIQUE INDEX (QueueID)
+        # - INDEX (JobID, QueueID)
         statement = """
             SELECT QueueID, Input, Flags
-              FROM BatchQueue
-              WHERE JobID = %s
-              ORDER BY QueueID
-              LIMIT 1;
+            FROM BatchQueue
+            WHERE QueueID = (
+                SELECT MIN(QueueID)
+                FROM BatchQueue
+                GROUP BY JobID
+                HAVING JobID = %s
+            );
         """, jobID
 
         results = self.query(statement)
