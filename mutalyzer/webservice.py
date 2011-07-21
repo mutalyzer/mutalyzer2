@@ -23,7 +23,7 @@ import logging; logging.basicConfig()
 from soaplib.core import Application
 from soaplib.core.service import soap
 from soaplib.core.service import DefinitionBase
-from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.primitive import String, Integer, DateTime
 from soaplib.core.model.clazz import Array
 from soaplib.core.model.exception import Fault
 from soaplib.core.server import wsgi
@@ -882,8 +882,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #info
 
-    @soap(_returns = Array(CacheEntry))
-    def getCache(self):
+    @soap(DateTime, _returns = Array(CacheEntry))
+    def getCache(self, created_since=None):
         """
         Todo: documentation.
         """
@@ -895,7 +895,7 @@ class MutalyzerService(DefinitionBase):
         database = Db.Cache(self._config.Db)
         sync = CacheSync(self._config.Sync, database)
 
-        cache = sync.local_cache()
+        cache = sync.local_cache(created_since)
 
         def soap_cache_entry(entry):
             e = CacheEntry()
@@ -907,6 +907,7 @@ class MutalyzerService(DefinitionBase):
             e.chromosomeStop = entry[5]
             e.chromosomeOrientation = entry[6]
             e.url = entry[7]
+            e.created = entry[8]
             return e
 
         output.addMessage(__file__, -1, 'INFO',

@@ -303,9 +303,11 @@ CREATE TABLE GBInfo (
   ChrStop int(12) DEFAULT NULL,
   orientation int(2) DEFAULT NULL,
   url char(255) DEFAULT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (AccNo),
   UNIQUE KEY hash (hash),
-  UNIQUE KEY alias (GI)
+  UNIQUE KEY alias (GI),
+  INDEX (created)
 );
 CREATE TABLE Link (
   mrnaAcc char(20) NOT NULL,

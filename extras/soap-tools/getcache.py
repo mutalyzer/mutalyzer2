@@ -13,6 +13,7 @@ def _import_open_patched(self, *args, **kwargs):
 Import.open = _import_open_patched
 
 import sys
+from datetime import datetime, timedelta
 from suds.client import Client
 
 URL = 'http://localhost/mutalyzer/services/?wsdl'
@@ -20,9 +21,15 @@ URL = 'http://localhost/mutalyzer/services/?wsdl'
 c = Client(URL, cache=None)
 o = c.service
 
+days = 1
+if len(sys.argv) > 1:
+    days = int(sys.argv[1])
+
+created_since = datetime.today() - timedelta(minutes=days)
+
 print 'Getting cache...'
 
-cache = o.getCache()
+cache = o.getCache(created_since)
 
 if cache:
     for r in cache.CacheEntry:
@@ -40,4 +47,5 @@ if cache:
             print r.chromosomeOrientation
         if 'url' in r:
             print r.url
+        print r.created
         print
