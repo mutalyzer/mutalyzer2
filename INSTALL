@@ -107,7 +107,8 @@ Alternatively, if you want to have a development environment, use:
     sudo python setup.py develop
 
 The development environment uses symlinks to this source directory, so you can
-develop directly from here.
+develop directly from here. This command should be re-issued whenever the
+version number of Mutalyzer is updated.
 
 
 Setup Mutalyzer
