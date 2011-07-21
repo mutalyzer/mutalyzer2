@@ -138,14 +138,37 @@ class Config():
             # We don't remove these after the tests, since they might be
             # useful for debugging.
             if mutalyzer.is_test():
-                handle, filename = tempfile.mkstemp(suffix='.log',
-                                                    prefix='mutalyzer-tests-')
-                os.close(handle)
-                self.Output.log = filename
-                dirname = tempfile.mkdtemp(suffix='.cache',
-                                           prefix='mutalyzer-tests-')
-                self.Retriever.cache = dirname
-                self.Scheduler.resultsDir = dirname
+                # Todo:
+                #
+                # This needs some refactoring. The problem with the temporary
+                # file and dir names is that they will not be used by the
+                # (running) batch daemon, which will thus save its results to
+                # to 'normal' directory.
+                # Furthermore, subsequent web requests from a unit test will
+                # use different configuration instantiations, so might not
+                # see results from previous requests.
+                #
+                # We need a more robust solution for different configurations,
+                # depending of the running user/setting (e.g. unit tests).
+                #
+                # Idea: Don't create a local instance of the website in the
+                # unit tests, but only use running instances of all servers
+                # (website, webservice, batch daemon). They will use their
+                # own 'normal' configuration.
+                # All other parts of the unit tests will use temporary test
+                # configuration values. We might even decorate the tests
+                # needing server access as such and provide the option of
+                # skipping these.
+
+                #handle, filename = tempfile.mkstemp(suffix='.log',
+                #                                    prefix='mutalyzer-tests-')
+                #os.close(handle)
+                #self.Output.log = filename
+                #dirname = tempfile.mkdtemp(suffix='.cache',
+                #                           prefix='mutalyzer-tests-')
+                #self.Retriever.cache = dirname
+                #self.Scheduler.resultsDir = dirname
+                pass
 
         except KeyError as e:
             raise ConfigurationError('Missing configuration value: %s' % e)

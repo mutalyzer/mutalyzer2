@@ -15,6 +15,7 @@ I just installed webtest by 'easy_install webtest'.
 import os
 import re
 import time
+import web
 from nose.tools import *
 from webtest import TestApp
 
@@ -32,6 +33,7 @@ class TestWSGI():
         """
         Initialize test application.
         """
+        web.config.debug = False
         application = website.app.wsgifunc()
         self.app = TestApp(application)
 
@@ -448,6 +450,8 @@ facilisi."""
     def test_batch_multicolumn(self):
         """
         Submit the batch syntax checker with a multiple-colums input file.
+
+        This by the way also tests for the correct order of batch results.
         """
         variants = [('AB026906.1(SDHD):g.7872G>T', 'NM_003002.1:c.3_4insG'),
                     ('NM_003002.1:c.3_4insG', 'AB026906.1(SDHD):g.7872G>T'),
