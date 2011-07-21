@@ -35,6 +35,7 @@ import mutalyzer
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
+from mutalyzer.sync import CacheSync
 from mutalyzer import variantchecker
 from mutalyzer import Db
 from mutalyzer import Mapper
@@ -880,6 +881,39 @@ class MutalyzerService(DefinitionBase):
         output.addMessage(__file__, -1, 'INFO', 'Finished processing info')
         return result
     #info
+
+    @soap(_returns = Array(CacheEntry))
+    def getCache(self):
+        """
+        Todo: documentation.
+        """
+        output = Output(__file__, self._config.Output)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Received request getCache')
+
+        database = Db.Cache(self._config.Db)
+        sync = CacheSync(self._config.Sync, database)
+
+        cache = sync.local_cache()
+
+        def soap_cache_entry(entry):
+            e = CacheEntry()
+            e.name = entry[0]
+            e.gi = entry[1]
+            e.hash = entry[2]
+            e.chromosomeName = entry[3]
+            e.chromosomeStart = entry[4]
+            e.chromosomeStop = entry[5]
+            e.chromosomeOrientation = entry[6]
+            e.url = entry[7]
+            return e
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing getCache')
+
+        return map(soap_cache_entry, cache)
+    #getCache
 #MutalyzerService
 
 

@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+# Monkey patch suds, because for some weird reason the location
+# http://www.w3.org/2001/xml.xsd is used for the XML namespace, but the W3C
+# seems to respond too slow on that url. We use therefore use
+# http://www.w3.org/2009/01/xml.xsd which fixes this.
+from suds.xsd.sxbasic import Import
+_import_open = Import.open
+def _import_open_patched(self, *args, **kwargs):
+    if self.location == 'http://www.w3.org/2001/xml.xsd':
+        self.location = 'http://www.w3.org/2009/01/xml.xsd'
+    return _import_open(self, *args, **kwargs)
+Import.open = _import_open_patched
+
+import sys
+from suds.client import Client
+
+URL = 'http://localhost/mutalyzer/services/?wsdl'
+
+c = Client(URL, cache=None)
+o = c.service
+
+print 'Getting cache...'
+
+cache = o.getCache()
+
+if cache:
+    for r in cache.CacheEntry:
+        print r.name
+        if 'gi' in r:
+            print r.gi
+        print r.hash
+        if 'chromosomeName' in r:
+            print r.chromosomeName
+        if 'chromosomeStart' in r:
+            print r.chromosomeStart
+        if 'chromosomeStop' in r:
+            print r.chromosomeStop
+        if 'chromosomeOrientation' in r:
+            print r.chromosomeOrientation
+        if 'url' in r:
+            print r.url
+        print

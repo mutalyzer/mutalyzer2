@@ -214,4 +214,21 @@ class InfoOutput(ClassModel):
     nomenclatureVersionParts = Array(String)
     serverName = String
     contactEmail = String
-#MutalyzerOutput
+#InfoOutput
+
+
+class CacheEntry(ClassModel):
+    """
+    Used in getCache SOAP method.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    name = Mandatory.String
+    gi = String
+    hash = Mandatory.String
+    chromosomeName = String
+    chromosomeStart = Integer
+    chromosomeStop = Integer
+    chromosomeOrientation = Integer
+    url = String
+#CacheEntry

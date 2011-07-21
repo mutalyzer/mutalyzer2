@@ -1033,6 +1033,24 @@ class Cache(Db) :
         return None
     #getGBFromGI
 
+    def getGB(self):
+        """
+        Get all accession numbers from the cache.
+
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
+
+        @return: The accession number
+        @rtype: string
+        """
+        statement = """
+            SELECT *
+              FROM GBInfo;
+        """, None
+
+        return self.query(statement)
+    #getGB
+
     def getLoc(self, accNo) :
         """
         Get the slicing information of an accession number, typically this
@@ -1523,10 +1541,3 @@ class Batch(Db) :
         return inputl, flags
     #getFromQueue
 #Batch
-
-#
-# Unit test.
-#
-if __name__ == "__main__" :
-    pass
-#if

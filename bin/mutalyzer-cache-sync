@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+"""
+Synchronize the database cache with other Mutalyzer instances.
+
+This program is intended to be run daily from cron. Example:
+
+  25 5 * * *  mutalyzer-cache-sync
+"""
+
+
+from mutalyzer.config import Config
+from mutalyzer.output import Output
+
+
+def main():
+    """
+    Synchronize the database cache with other Mutalyzer instances.
+    """
+    config = Config()
+    output = Output(__file__, config.Output)
+    output.addMessage(__file__, -1, 'INFO',
+                      'Starting cache sync')
+
+    # Todo: Actually do something.
+
+    output.addMessage(__file__, -1, 'INFO', 'Cache sync end')
+
+
+if __name__ == '__main__':
+    main()

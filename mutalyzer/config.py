@@ -28,6 +28,7 @@ class Config():
     class Batch(): pass
     class File(): pass
     class GenRecord(): pass
+    class Sync(): pass
 
     def __init__(self, filename=None):
         """
