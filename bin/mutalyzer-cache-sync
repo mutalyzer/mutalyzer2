@@ -11,6 +11,8 @@ This program is intended to be run daily from cron. Example:
 
 from mutalyzer.config import Config
 from mutalyzer.output import Output
+from mutalyzer.sync import CacheSync
+from mutalyzer import Db
 
 
 def main():
@@ -22,7 +24,11 @@ def main():
     output.addMessage(__file__, -1, 'INFO',
                       'Starting cache sync')
 
-    # Todo: Actually do something.
+    database = Db.Cache(config.Db)
+    sync = CacheSync(config.Sync, database)
+
+    created_since = datetime.today() - timedelta(days=60)
+    sync.sync_with_remote(created_since)
 
     output.addMessage(__file__, -1, 'INFO', 'Cache sync end')
 

@@ -3,21 +3,14 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
-# Monkey patch suds, because for some weird reason the location
-# http://www.w3.org/2001/xml.xsd is used for the XML namespace, but the W3C
-# seems to respond too slow on that url. We use therefore use
-# http://www.w3.org/2009/01/xml.xsd which fixes this.
-from suds.xsd.sxbasic import Import
-_import_open = Import.open
-def _import_open_patched(self, *args, **kwargs):
-    if self.location == 'http://www.w3.org/2001/xml.xsd':
-        self.location = 'http://www.w3.org/2009/01/xml.xsd'
-    return _import_open(self, *args, **kwargs)
-Import.open = _import_open_patched
-
+from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
 import os
+from datetime import datetime, timedelta
 import mutalyzer
+from mutalyzer.config import Config
+from mutalyzer.sync import CacheSync
+from mutalyzer import Db
 import logging; logging.raiseExceptions = 0
 import urllib2
 from suds.client import Client
@@ -169,3 +162,17 @@ class TestWebservice():
         r = self.client.service.info()
         assert_equal(type(r.versionParts.string), list)
         assert_equal(r.version, mutalyzer.__version__)
+
+    def test_getcache(self):
+        """
+        Running the getCache method should give us the expected cache entries.
+        """
+        created_since = datetime.today() - timedelta(days=60)
+
+        config = Config()
+        database = Db.Cache(config.Db)
+        sync = CacheSync(config.Sync, database)
+        cache = sync.local_cache(created_since)
+
+        r = self.client.service.getCache(created_since)
+        assert_equal(len(r.CacheEntry), len(cache))

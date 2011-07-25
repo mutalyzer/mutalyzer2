@@ -897,23 +897,23 @@ class MutalyzerService(DefinitionBase):
 
         cache = sync.local_cache(created_since)
 
-        def soap_cache_entry(entry):
+        def cache_entry_to_soap(entry):
             e = CacheEntry()
-            e.name = entry[0]
-            e.gi = entry[1]
-            e.hash = entry[2]
-            e.chromosomeName = entry[3]
-            e.chromosomeStart = entry[4]
-            e.chromosomeStop = entry[5]
-            e.chromosomeOrientation = entry[6]
-            e.url = entry[7]
-            e.created = entry[8]
+            (e.name,
+             e.gi,
+             e.hash,
+             e.chromosomeName,
+             e.chromosomeStart,
+             e.chromosomeStop,
+             e.chromosomeOrientation,
+             e.url,
+             e.created) = entry
             return e
 
         output.addMessage(__file__, -1, 'INFO',
                           'Finished processing getCache')
 
-        return map(soap_cache_entry, cache)
+        return map(cache_entry_to_soap, cache)
     #getCache
 #MutalyzerService
 

@@ -890,6 +890,7 @@ class Cache(Db) :
 
         statement = """
             INSERT INTO GBInfo
+             (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url)
               VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """, (accNo, GI, fileHash, ChrAccVer, ChrStart, ChrStop, orientation,
               url)
@@ -913,6 +914,7 @@ class Cache(Db) :
 
         statement = """
             INSERT INTO GBInfo
+             (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url)
               VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """, (accNo, None, fileHash, None, None, None, None, url)
 
@@ -1048,7 +1050,8 @@ class Cache(Db) :
         @rtype: string
         """
         statement = """
-            SELECT *
+            SELECT
+            (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url, created)
             FROM GBInfo
             WHERE created >= %s;
         """, created_since

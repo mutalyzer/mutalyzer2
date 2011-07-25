@@ -25,7 +25,7 @@ days = 1
 if len(sys.argv) > 1:
     days = int(sys.argv[1])
 
-created_since = datetime.today() - timedelta(minutes=days)
+created_since = datetime.today() - timedelta(days=days)
 
 print 'Getting cache...'
 
