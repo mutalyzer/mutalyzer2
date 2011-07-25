@@ -907,7 +907,8 @@ class MutalyzerService(DefinitionBase):
              e.chromosomeStop,
              e.chromosomeOrientation,
              e.url,
-             e.created) = entry
+             e.created,
+             e.cached) = entry
             return e
 
         output.addMessage(__file__, -1, 'INFO',

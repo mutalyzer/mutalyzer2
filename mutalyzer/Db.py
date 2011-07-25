@@ -1050,8 +1050,8 @@ class Cache(Db) :
         @rtype: string
         """
         statement = """
-            SELECT
-            (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url, created)
+            SELECT AccNo, GI, hash, ChrAccVer, ChrStart,
+                   ChrStop, orientation, url, created
             FROM GBInfo
             WHERE created >= %s;
         """, created_since

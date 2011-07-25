@@ -4,8 +4,10 @@ Module for synchronizing the database with other Mutalyzer instances.
 
 
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
-from suds.client import Client
+
+import os
 from datetime import datetime, timedelta
+from suds.client import Client
 
 
 DEFAULT_CREATED_SINCE_DAYS = 7
@@ -29,7 +31,19 @@ class CacheSync(object):
         if not created_since:
             created_since = datetime.today() - \
                             timedelta(days=DEFAULT_CREATED_SINCE_DAYS)
-        return self._database.getGB(created_since)
+        cache = self._database.getGB(created_since)
+
+        entries = []
+
+        # For each entry, check if it is cached on our filesystem.
+        # Todo: refactor
+        for entry in cache:
+            file_path = os.path.join(self._config.cache, '%s.bz2' % entry[0])
+            e = list(entry)
+            e.append(os.path.isfile(file_path))
+            entries.append(e)
+
+        return entries
 
     def remote_cache(self, remote_wsdl, created_since=None):
         """
@@ -47,7 +61,8 @@ class CacheSync(object):
             """
             entry_dict =  {'name':    entry.name,
                            'hash':    entry.hash,
-                           'created': entry.created}
+                           'created': entry.created,
+                           'cached':  bool(entry.cached)}
             for attribute in ('gi', 'chromosomeName', 'chromosomeStart'
                               'chromosomeStop', 'chromosomeOrientation',
                               'url'):
@@ -57,7 +72,7 @@ class CacheSync(object):
 
         return map(cache_entry_from_soap, cache.CacheEntry)
 
-    def sync_with_remote(self, remote_wsdl, created_since=None):
+    def sync_with_remote(self, remote_wsdl, remote_cache, created_since=None):
         """
         Todo.
         """
@@ -74,7 +89,10 @@ class CacheSync(object):
             #                        entry['chromosomeStop'],
             #                        entry['chromosomeOrientation'],
             #                        entry['url'])
-            print 'inserting %s' % entry['name']
-            print entry
+            #print 'inserting %s' % entry['name']
+            #print entry
             if not entry['chromosomeName'] and not entry['url']:
-                print '(downloading file from remote cache...)'
+                if entry['cached']:
+                    print 'downloading file from remote cache: %s' % (remote_cache % entry['name'])
+                #else:
+                    #print 'cannot download this file from remote cache'
