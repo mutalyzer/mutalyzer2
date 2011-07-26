@@ -893,7 +893,7 @@ class MutalyzerService(DefinitionBase):
                           'Received request getCache')
 
         database = Db.Cache(self._config.Db)
-        sync = CacheSync(self._config.Sync, database)
+        sync = CacheSync(self._config, output, database)
 
         cache = sync.local_cache(created_since)
 

@@ -48,4 +48,8 @@ if cache:
         if 'url' in r:
             print r.url
         print r.created
+        if r.cached:
+            print 'cached'
+        else:
+            print 'not cached'
         print

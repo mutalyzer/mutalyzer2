@@ -1035,10 +1035,10 @@ class Cache(Db) :
         return None
     #getGBFromGI
 
-    def getGB(self, created_since):
+    def getGBSince(self, created_since):
         """
-        Get all accession number entries starting with creation date
-        {created_since}.
+        Get all accession number entries with creation date {created_since}
+        or later.
 
         SQL tables from internalDb:
             - GBInfo ; Information about cached and uploaded GenBank files.
@@ -1057,7 +1057,7 @@ class Cache(Db) :
         """, created_since
 
         return self.query(statement)
-    #getGB
+    #getGBSince
 
     def getLoc(self, accNo) :
         """

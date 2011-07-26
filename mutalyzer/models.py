@@ -233,5 +233,5 @@ class CacheEntry(ClassModel):
     chromosomeOrientation = Integer
     url = String
     created = Mandatory.DateTime
-    cached = Mandatory.Boolean
+    cached = String
 #CacheEntry
