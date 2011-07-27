@@ -16,7 +16,7 @@ import sys
 from datetime import datetime, timedelta
 from suds.client import Client
 
-URL = 'http://localhost/mutalyzer/services/?wsdl'
+URL = 'http://zwarterita/mutalyzer/services/?wsdl'
 
 c = Client(URL, cache=None)
 o = c.service
@@ -35,8 +35,8 @@ if cache:
     for r in cache.CacheEntry:
         print r.name
         if 'gi' in r:
-            print r.gi
-        print r.hash
+            print 'GI: %s' % r.gi
+        print 'Hash: %s' % r.hash
         if 'chromosomeName' in r:
             print r.chromosomeName
         if 'chromosomeStart' in r:
@@ -47,9 +47,7 @@ if cache:
             print r.chromosomeOrientation
         if 'url' in r:
             print r.url
-        print r.created
-        if r.cached:
-            print 'cached'
-        else:
-            print 'not cached'
+        print 'Created: %s' % r.created
+        if 'cached' in r:
+            print 'Cached as %s' % r.cached
         print
