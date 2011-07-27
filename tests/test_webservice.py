@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta
 import mutalyzer
 from mutalyzer.config import Config
+from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
 import logging; logging.raiseExceptions = 0
@@ -165,13 +166,15 @@ class TestWebservice():
 
     def test_getcache(self):
         """
-        Running the getCache method should give us the expected cache entries.
+        Running the getCache method should give us the expected number of
+        cache entries.
         """
-        created_since = datetime.today() - timedelta(days=60)
+        created_since = datetime.today() - timedelta(days=14)
 
         config = Config()
         database = Db.Cache(config.Db)
-        sync = CacheSync(config.Sync, database)
+        output = Output(__file__, config.Output)
+        sync = CacheSync(config.Retriever, output, database)
         cache = sync.local_cache(created_since)
 
         r = self.client.service.getCache(created_since)

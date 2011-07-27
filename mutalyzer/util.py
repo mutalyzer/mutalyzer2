@@ -749,7 +749,11 @@ def monkey_patch_suds():
     for the XML namespace, but the W3C seems to respond too slow on that url.
     We therefore use http://www.w3.org/2009/01/xml.xsd which fixes this.
 
-    Call this function before importing anything from the suds package.
+    Call this function before importing anything from the suds package. For
+    example, start your file with the following:
+
+        import monkey; monkey.monkey_patch_suds()
+        from suds.client import Client
     """
     from suds.xsd.sxbasic import Import
     _import_open = Import.open
