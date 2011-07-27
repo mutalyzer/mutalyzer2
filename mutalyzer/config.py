@@ -10,6 +10,7 @@ import tempfile
 from configobj import ConfigObj
 
 import mutalyzer
+from mutalyzer import util
 
 
 class ConfigurationError(Exception):
@@ -28,7 +29,6 @@ class Config():
     class Batch(): pass
     class File(): pass
     class GenRecord(): pass
-    class Sync(): pass
 
     def __init__(self, filename=None):
         """
@@ -134,8 +134,6 @@ class Config():
             self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
             self.GenRecord.spliceWarn = int(config["spliceWarn"])
 
-            # Set the variables needed by the sync module.
-            self.Sync.cache = config["cache"]
 
             # If we are in a testing environment, use a temporary file for
             # logging and a temporary directory for the cache.

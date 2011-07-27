@@ -1,7 +1,5 @@
 """
 Module for synchronizing the database with other Mutalyzer instances.
-
-Todo: add some logging to the output object.
 """
 
 
@@ -28,7 +26,7 @@ class CacheSync(object):
         Instantiate the object.
 
         @arg config: A configuration object.
-        @type config: mutalyzer.config.Config
+        @type config: mutalyzer.config.Config.Retriever
         @arg output: An output object.
         @type output: mutalyzer.output.Output
         @arg database: A database object.
@@ -62,7 +60,7 @@ class CacheSync(object):
         for entry in entries:
             # Note that this way we only include Genbank files, not LRG files.
             cached = None
-            if os.path.isfile(os.path.join(self._config.Retriever.cache,
+            if os.path.isfile(os.path.join(self._config.cache,
                                            '%s.gb.bz2' % entry[0])):
                 cached = '%s.gb' % entry[0]
             cache.append({'name':                  entry[0],
@@ -74,7 +72,7 @@ class CacheSync(object):
                           'chromosomeOrientation': entry[6],
                           'url':                   entry[7],
                           'created':               entry[8],
-                          'cached':                cached}
+                          'cached':                cached})
 
         return cache
 
@@ -92,6 +90,9 @@ class CacheSync(object):
         @return: List of cache entries.
         @rtype: list(dictionary)
         """
+        self._output.addMessage(__file__, -1, 'INFO', 'Getting remote cache'
+                                ' from %s' % remote_wsdl)
+
         if not created_since:
             created_since = datetime.today() - \
                             timedelta(days=DEFAULT_CREATED_SINCE_DAYS)
@@ -116,7 +117,31 @@ class CacheSync(object):
 
         return map(cache_entry_from_soap, cache.CacheEntry)
 
-    def sync_with_remote(self, remote_wsdl, url_template, created_since=None):
+    def store_remote_file(self, name, url):
+        """
+        Download a remote file located at {url} and store it as {name}.
+
+        @arg name: Name to store the file under.
+        @type name: string
+        @arg url: Url to the remote file.
+        @type url: string
+        """
+        if not re.match('^[\da-zA-Z\._-]+$', name):
+            return
+
+        # Download remote data
+        handle = urllib2.urlopen(url)
+        data = handle.read()
+        handle.close()
+
+        # Store remote data
+        retriever = Retriever.GenBankRetriever(self._config,
+                                               self._output,
+                                               self._database)
+        retriever.write(data, name, 0)
+
+    def sync_with_remote(self, remote_wsdl, url_template,
+                         days=DEFAULT_CREATED_SINCE_DAYS):
         """
         Synchronize the local cache with the remote cache.
 
@@ -130,14 +155,17 @@ class CacheSync(object):
         @arg url_template: Formatting string containing a {file} occurence,
             see examle usage above.
         @string url_template: string
-        @kwarg created_since: Only remote entries with this creation date or
+        @kwarg days: Only remote entries added this number of days ago or
             later are considered.
-        @type created_since: datatime.datetime
+        @type days: int
 
         @return: The number of entries added to the local cache and the number
             cache files downloaded from the remote site.
         @rtype: tuple(int, int)
         """
+        self._output.addMessage(__file__, -1, 'INFO', 'Starting cache sync')
+
+        created_since = datetime.today() - timedelta(days=days)
         remote_cache = self.remote_cache(remote_wsdl, created_since)
 
         inserted = downloaded = 0
@@ -164,27 +192,10 @@ class CacheSync(object):
                 self.store_remote_file(entry['name'], url)
                 downloaded += 1
 
+        self._output.addMessage(__file__, -1, 'INFO',
+                                'Inserted %d entries in the cache,'
+                                ' downloaded %d files.' \
+                                % (inserted, downloaded))
+        self._output.addMessage(__file__, -1, 'INFO', 'Finished cache sync')
+
         return inserted, downloaded
-
-    def store_remote_file(self, name, url):
-        """
-        Download a remote file located at {url} and store it as {name}.
-
-        @arg name: Name to store the file under.
-        @type name: string
-        @arg url: Url to the remote file.
-        @type url: string
-        """
-        if not re.match('^[\da-zA-Z\._-]+$', name):
-            return
-
-        # Download remote data
-        handle = urllib2.urlopen(url)
-        data = handle.read()
-        handle.close()
-
-        # Store remote data
-        retriever = Retriever.GenBankRetriever(self._config.Retriever,
-                                               self._output,
-                                               self._database)
-        retriever.write(data, name, 0)

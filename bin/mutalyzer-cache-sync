@@ -3,11 +3,22 @@
 """
 Synchronize the database cache with other Mutalyzer instances.
 
+Usage:
+  ./mutalyzer-cache-sync days remote_wsdl url_template
+
+  remote_wsdl:  Location of the remote WSDL description.
+  url_template: URL to remote downloads, where {file} is to be substituted
+                by the filename.
+  days:         Number of days to go back in the remote cache.
+
 This program is intended to be run daily from cron. Example:
 
-  25 5 * * *  mutalyzer-cache-sync
+  25 5 * * *  mutalyzer-cache-sync 'http://dom1/?wsdl' 'http://dom1/{file}' 7
+  55 5 * * *  mutalyzer-cache-sync 'http://dom2/?wsdl' 'http://dom2/{file}' 7
 """
 
+
+import sys
 
 from mutalyzer.config import Config
 from mutalyzer.output import Output
@@ -15,23 +26,25 @@ from mutalyzer.sync import CacheSync
 from mutalyzer import Db
 
 
-def main():
+def cache_sync(remote_wsdl, url_template, days):
     """
     Synchronize the database cache with other Mutalyzer instances.
     """
     config = Config()
     output = Output(__file__, config.Output)
-    output.addMessage(__file__, -1, 'INFO',
-                      'Starting cache sync')
-
     database = Db.Cache(config.Db)
-    sync = CacheSync(config.Sync, database)
 
-    created_since = datetime.today() - timedelta(days=60)
-    sync.sync_with_remote(created_since)
-
-    output.addMessage(__file__, -1, 'INFO', 'Cache sync end')
+    sync = CacheSync(config.Retriever, output, database)
+    sync.sync_with_remote(remote_wsdl, url_template, days)
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) < 4:
+        print __doc__.strip()
+        sys.exit(1)
+    try:
+        days = int(sys.argv[3])
+    except ValueError:
+        print 'Last argument must be an integer.'
+        sys.exit(1)
+    cache_sync(sys.argv[1], sys.argv[2], int(sys.argv[3]))

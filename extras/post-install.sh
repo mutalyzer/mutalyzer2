@@ -21,6 +21,7 @@ set -e
 # directory to be used.
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
 BIN_BATCHD=$(which mutalyzer-batchd)
+BIN_CACHE_SYNC=$(which mutalyzer-cache-sync)
 BIN_UCSC_UPDATE=$(which mutalyzer-ucsc-update)
 BIN_WEBSITE=$(which mutalyzer-website.wsgi)
 BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
@@ -56,6 +57,8 @@ update-rc.d mutalyzer-batchd defaults 98 02
 echo "Installing crontab"
 cp extras/cron.d/mutalyzer-ucsc-update /etc/cron.d/mutalyzer-ucsc-update
 sed -i -e "s@<MUTALYZER_BIN_UCSC_UPDATE>@${BIN_UCSC_UPDATE}@g" /etc/cron.d/mutalyzer-ucsc-update
+cp extras/cron.d/mutalyzer-cache-sync /etc/cron.d/mutalyzer-cache-sync
+sed -i -e "s@<MUTALYZER_BIN_CACHE_SYNC>@${BIN_CACHE_SYNC}@g" /etc/cron.d/mutalyzer-cache-sync
 
 echo "Creating /etc/apache2/conf.d/mutalyzer.conf"
 cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf

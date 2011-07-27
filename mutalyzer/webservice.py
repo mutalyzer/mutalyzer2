@@ -885,7 +885,10 @@ class MutalyzerService(DefinitionBase):
     @soap(DateTime, _returns = Array(CacheEntry))
     def getCache(self, created_since=None):
         """
-        Todo: documentation.
+        Get a list of entries from the local cache created since given date.
+
+        This method is intended to be used by Mutalyzer itself to synchronize
+        the cache between installations on different servers.
         """
         output = Output(__file__, self._config.Output)
 
@@ -893,22 +896,16 @@ class MutalyzerService(DefinitionBase):
                           'Received request getCache')
 
         database = Db.Cache(self._config.Db)
-        sync = CacheSync(self._config, output, database)
+        sync = CacheSync(self._config.Retriever, output, database)
 
         cache = sync.local_cache(created_since)
 
         def cache_entry_to_soap(entry):
             e = CacheEntry()
-            (e.name,
-             e.gi,
-             e.hash,
-             e.chromosomeName,
-             e.chromosomeStart,
-             e.chromosomeStop,
-             e.chromosomeOrientation,
-             e.url,
-             e.created,
-             e.cached) = entry
+            for attr in ('name', 'gi', 'hash', 'chromosomeName',
+                         'chromosomeStart', 'chromosomeStop',
+                         'chromosomeOrientation', 'url', 'created', 'cached'):
+                setattr(e, attr, entry[attr])
             return e
 
         output.addMessage(__file__, -1, 'INFO',

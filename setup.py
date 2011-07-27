@@ -18,11 +18,11 @@ setup(
     packages=find_packages(exclude=['doc', 'extras', 'tests']),
     include_package_data=True,
     scripts=['bin/mutalyzer',
-             'bin/mutalyzer-cache-sync',
              'bin/mutalyzer-batchd',
+             'bin/mutalyzer-cache-sync',
              'bin/mutalyzer-ucsc-update',
-             'bin/mutalyzer-website.wsgi',
-             'bin/mutalyzer-webservice.wsgi'],
+             'bin/mutalyzer-webservice.wsgi',
+             'bin/mutalyzer-website.wsgi'],
     zip_safe=False
 )
 
