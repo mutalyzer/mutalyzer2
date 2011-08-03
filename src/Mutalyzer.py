@@ -1243,9 +1243,18 @@ def __rv(MUU, RawVar, GenRecordInstance, parts, O, transcript) :
                                  GenRecordInstance, O)
     if RawVar.MutationType == "inv" :
         checkInversion(start_g, end_g, MUU, GenRecordInstance, O)
+
+    # TODO implement this feature.
+    if RawVar.MutationType in ["delins", "ins"] :
+        if not Arg1 :
+            O.addMessage(__file__, 4, "ENOTIMPLEMENTED", 
+                "Insertion of a range is not implemented yet.")
+            return
+        #if
+    #if
+
     if RawVar.MutationType == "ins" :
         checkInsertion(start_g, end_g, Arg1, MUU, GenRecordInstance, O)
-
 
     # DelIns.
     if RawVar.MutationType == "delins" :
