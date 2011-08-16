@@ -36,6 +36,7 @@ class _NotDNAError(_RawVariantError): pass
 class _PositionsNotConsecutiveError(_RawVariantError): pass
 class _LengthMismatchError(_RawVariantError): pass
 class _ReferenceMismatchError(_RawVariantError): pass
+class _RangeInsertionError(_RawVariantError): pass
 class _OffsetSignError(_RawVariantError):
     def __init__(self, main, offset, acceptor):
         self.main = main
@@ -136,9 +137,9 @@ def _check_argument(argument, reference, first, last, output):
 
     @raise _LengthMismatchError: The argument is a length, but it does not
                                  match the given range length.
-    @raise NotDNAError: The argument should be DNA, but it is not.
-    @raise ReferenceMismatchError: The argument is DNA, but it does not
-                                   match the given reference.
+    @raise _NotDNAError: The argument should be DNA, but it is not.
+    @raise _ReferenceMismatchError: The argument is DNA, but it does not
+                                    match the given reference.
     """
     if not argument:
         # The argument is optional, if it is not present, it is correct.
@@ -1046,6 +1047,14 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # Check if the (optional) argument is valid.
     if variant.MutationType in ['del', 'dup', 'subst', 'delins']:
         _check_argument(argument, mutator.orig, first, last, output)
+
+    # Check if the inserted sequence is not a range.
+    # Todo: Implement this feature.
+    if variant.MutationType in ['ins', 'delins']:
+        if not argument:
+            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                              'Insertion of a range is not implemented yet.')
+            raise _RangeInsertionError()
 
     # Substitution.
     if variant.MutationType == 'subst':

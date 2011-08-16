@@ -337,3 +337,17 @@ class TestVariantchecker():
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
+
+    def test_ins_range(self):
+        """
+        Insertion of a range is not implemented yet.
+        """
+        check_variant('AB026906.1:c.274_275ins262_268', self.config, self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    def test_delins_range(self):
+        """
+        Deletion/insertion of a range is not implemented yet.
+        """
+        check_variant('AB026906.1:c.274delins262_268', self.config, self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
