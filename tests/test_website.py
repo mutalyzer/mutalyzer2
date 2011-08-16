@@ -520,8 +520,8 @@ facilisi."""
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: substitution at 7055')
-        assert r.body.find('go to bottom') == -1
-        assert r.body.find('<input') == -1
+        assert_equal(r.body.find('go to bottom'), -1)
+        assert_equal(r.body.find('<input'), -1)
 
     def test_variantinfo_g2c(self):
         """

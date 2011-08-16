@@ -1,5 +1,5 @@
 """
-Tests for the Mutalyzer module.
+Tests for the variantchecker module.
 """
 
 
@@ -16,14 +16,13 @@ from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant
 
 
-class TestMutalyzer():
+class TestVariantchecker():
     """
-    Test the Mutalyzer module.
+    Test the variantchecker module.
     """
-
     def setUp(self):
         """
-        Initialize test Mutalyzer module.
+        Initialize test variantchecker module.
         """
         self.config = Config()
         self.output = Output(__file__, self.config.Output)
@@ -42,7 +41,7 @@ class TestMutalyzer():
         """
         check_variant('NM_003002.2:c.274del', self.config, self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
-        assert len(wroll) == 0
+        assert_equal(len(wroll), 0)
 
     def test_no_roll_splice(self):
         """
@@ -52,7 +51,7 @@ class TestMutalyzer():
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         assert len(wrollback) > 0
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
-        assert len(wroll) == 0
+        assert_equal(len(wroll), 0)
 
     def test_partial_roll_splice(self):
         """
@@ -104,7 +103,7 @@ class TestMutalyzer():
         check_variant('AL449423.14:g.65470_65471insTAC', self.config, self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
-        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
+        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
 
     def test_roll_reverse_ins(self):
         """
@@ -114,7 +113,7 @@ class TestMutalyzer():
         check_variant('AL449423.14:g.65471_65472insACT', self.config, self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
-        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
+        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
 
     def test_roll_message_forward(self):
         """
@@ -122,8 +121,8 @@ class TestMutalyzer():
         strand (forward).
         """
         check_variant('AL449423.14:g.65470_65471insTAC', self.config, self.output)
-        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
-        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 0
+        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
+        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 0)
 
     def test_roll_message_reverse(self):
         """
@@ -131,8 +130,8 @@ class TestMutalyzer():
         strand (reverse).
         """
         check_variant('AL449423.14(CDKN2A_v001):c.98_99insGTA', self.config, self.output)
-        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
-        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
+        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
+        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 1)
 
     def test_ins_cds_start(self):
         """
@@ -157,7 +156,7 @@ class TestMutalyzer():
         check_variant('NG_012772.1(BRCA2_v001):c.632-5_670del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) == 0
+        assert_equal(self.output.getOutput('removedSpliceSites'), [])
         # Todo: For now, the following is how to check if no protein
         # prediction is done.
         assert not self.output.getOutput('newprotein')
@@ -169,7 +168,19 @@ class TestMutalyzer():
         check_variant('NG_012772.1(BRCA2_v001):c.632-5_681+7del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        # Todo: For now, the following is how to check if protein
+        # prediction is done.
+        assert self.output.getOutput('newprotein')
+
+    def test_del_exon_exact(self):
+        """
+        Deletion of exactly an exon should be possible.
+        """
+        check_variant('NG_012772.1(BRCA2_v001):c.632_681del',
+                      self.config, self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -186,7 +197,7 @@ class TestMutalyzer():
         check_variant('NG_012772.1(BRCA2_v001):c.68-7_316+7del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -199,7 +210,7 @@ class TestMutalyzer():
         check_variant('NG_012772.1(BRCA2_v001):c.632-5_793+7del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
+        assert_equal(self.output.getOutput('removedSpliceSites'), [4])
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -212,10 +223,26 @@ class TestMutalyzer():
         check_variant('NG_012772.1(BRCA2_v001):c.622_674del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
+
+    def test_del_intron_exact(self):
+        """
+        Deletion of exactly an intron should be possible (fusion of flanking
+        exons).
+        """
+        check_variant('NG_012772.1(BRCA2_v001):c.681+1_682-1del',
+                      self.config, self.output)
+        assert_equal(self.output.getMessagesWithErrorCode('WOVERSPLICE'), [])
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        # Note: The protein prediction is done, but 'newprotein' is not set
+        # because we have no change. So to check if the prediction is done, we
+        # check if 'oldprotein' is set and to check if the prediction is
+        # correct, we check if 'newprotein' is not set.
+        assert self.output.getOutput('oldprotein')
+        assert not self.output.getOutput('newprotein')
 
     def test_del_intron_in_frame(self):
         """
@@ -225,7 +252,7 @@ class TestMutalyzer():
         check_variant('NG_012772.1(BRCA2_v001):c.622_672del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -296,3 +323,17 @@ class TestMutalyzer():
                in self.output.getOutput('descriptions')
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
+
+    def test_del_exon_transcript_reference(self):
+        """
+        Deletion of entire exon on a transcript reference should remove the
+        expected splice sites (only that of the deleted exon), and not those
+        of the flanking exons (as would happen using the mechanism for genomic
+        references).
+        """
+        check_variant('NM_018723.3:c.758_890del', self.config, self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
+        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        # Todo: For now, the following is how to check if protein
+        # prediction is done.
+        assert self.output.getOutput('newprotein')

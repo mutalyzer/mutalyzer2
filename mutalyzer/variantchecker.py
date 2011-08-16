@@ -978,9 +978,32 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     if transcript and variant.MutationType == 'del':
         removed_sites = []
         for acceptor, donor in util.grouper(transcript.CM.RNA):
-            if first <= acceptor <= last + 1:
+
+            # If we have introns, we match splice sites in a fuzzy way. This
+            # Means that in the case of
+            #
+            #               a            b
+            #     ===========------------=============
+            #
+            # with splice sites a and b, a deletion a+1_b-1 of the entire
+            # intron gets treated as a deletion of both splice sites.
+            #
+            # We don't want this behaviour on e.g. RNA, where we only have
+            # exons. In the case of
+            #
+            #              a b           c d
+            #     ========== ============= ===========
+            #
+            # with splice sites a b c d, a deletion b_c of the middle exon
+            # should only remove splice sites b and c, not a and d.
+            if record.record.molType == 'g':
+                fuzzy = 1
+            else:
+                fuzzy = 0
+
+            if first <= acceptor <= last + fuzzy:
                 removed_sites.append(acceptor)
-            if first - 1 <= donor <= last:
+            if first - fuzzy <= donor <= last:
                 removed_sites.append(donor)
 
         if len(removed_sites) and not len(removed_sites) % 2:
@@ -1004,6 +1027,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 output.addMessage(__file__, 1, 'IDELSPLICE',
                                   'Removed %i splice sites from selected ' \
                                   'transcript.' % len(removed_sites))
+                # This is primarily for use in unittests.
+                output.addOutput('removedSpliceSites', len(removed_sites))
 
     # If splice_abort is set, this basically means WOVERSPLICE was called and
     # IDELSPLICE was not called.
