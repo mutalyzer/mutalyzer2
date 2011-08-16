@@ -327,7 +327,7 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     # We only have to consider the forward roll, since RNA reference
     # sequences are always orientated in correspondence with the transcript.
     original_forward_roll = forward_roll
-    if record.record.molType == 'n':
+    if record.record.molType != 'g':
         # Todo: Do we assume .geneList[0].transcriptList[0] is the selected
         # transcript here?? Why not use record.current_transcript?
         splice_sites = record.record.geneList[0].transcriptList[0] \
@@ -498,7 +498,7 @@ def apply_insertion(before, after, s, mutator, record, O):
     # We only have to consider the forward roll, since RNA reference
     # sequences are always orientated in correspondence with the transcript.
     original_forward_roll = forward_roll
-    if record.record.molType == 'n' :
+    if record.record.molType != 'g' :
         splice_sites = record.record.geneList[0].transcriptList[0] \
                        .mRNA.positionList
         for acceptor, donor in util.grouper(splice_sites):
