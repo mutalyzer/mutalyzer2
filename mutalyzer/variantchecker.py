@@ -1217,7 +1217,7 @@ def _add_transcript_info(mutator, transcript, output):
                            IUPAC.unambiguous_dna)
         cds_variant = Seq(str(util.__nsplice(mutator.mutated,
                                         mutator.newSplice(transcript.mRNA.positionList),
-                                        mutator.newSplice(transcript.CDS.positionList),
+                                        mutator.newSplice(transcript.CDS.location),
                                         transcript.CM.orientation)),
                           IUPAC.unambiguous_dna)
 
@@ -1558,7 +1558,7 @@ def check_variant(description, config, output):
                                IUPAC.unambiguous_dna)
             cds_variant = Seq(str(util.__nsplice(mutator.mutated,
                                             mutator.newSplice(transcript.mRNA.positionList),
-                                            mutator.newSplice(transcript.CDS.positionList),
+                                            mutator.newSplice(transcript.CDS.location),
                                             transcript.CM.orientation)),
                               IUPAC.unambiguous_dna)
 

@@ -27,6 +27,21 @@ class TestVariantchecker():
         self.config = Config()
         self.output = Output(__file__, self.config.Output)
 
+    def test_deletion_in_frame(self):
+        """
+        Simple in-frame deletion should give a simple description on protein
+        level.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_163del',
+                      self.config, self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61937_61939del')
+        assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54_Gly55delinsSer)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
     def test_roll(self):
         """
         Just a variant where we should roll.
