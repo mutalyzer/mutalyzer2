@@ -1115,14 +1115,6 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     if variant.MutationType in ['del', 'dup', 'subst', 'delins']:
         _check_argument(argument, mutator.orig, first, last, output)
 
-    # Check if the inserted sequence is not a range.
-    # Todo: Implement this feature.
-    if variant.MutationType in ['ins', 'delins']:
-        if not argument:
-            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
-                              'Insertion of a range is not implemented yet.')
-            raise _RangeInsertionError()
-
     # Substitution.
     if variant.MutationType == 'subst':
         apply_substitution(first, argument, sequence, mutator, record, output)
@@ -1142,10 +1134,22 @@ def process_raw_variant(mutator, variant, record, transcript, output):
 
     # Insertion.
     if variant.MutationType == 'ins':
+        # Check if the inserted sequence is not a range.
+        # Todo: Implement this feature.
+        if not argument:
+            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                              'Insertion of a range is not implemented yet.')
+            raise _RangeInsertionError()
         apply_insertion(first, last, argument, mutator, record, output)
 
     # DelIns.
     if variant.MutationType == 'delins':
+        # Check if the inserted sequence is not a range.
+        # Todo: Implement this feature.
+        if not sequence:
+            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                              'Insertion of a range is not implemented yet.')
+            raise _RangeInsertionError()
         apply_delins(first, last, argument, sequence, mutator, record, output)
 #process_raw_variant
 

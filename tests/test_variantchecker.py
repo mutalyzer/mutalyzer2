@@ -42,6 +42,51 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
+    def test_insertion_in_frame(self):
+        """
+        Simple in-frame insertion should give a simple description on protein
+        level.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162insATC',
+                      self.config, self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61938_61939insGAT')
+        assert 'AL449423.14(CDKN2A_v001):c.161_162insATC' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsIleSer)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
+    def test_deletion_insertion_in_frame(self):
+        """
+        Simple in-frame deletion/insertion should give a simple description on
+        protein level.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162delinsATCCC',
+                      self.config, self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
+    def test_deletion_insertion_in_frame_complete(self):
+        """
+        Simple in-frame deletion/insertion should give a simple description on
+        protein level, also with the optional deleted sequence argument.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162delTGinsATCCC',
+                      self.config, self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
     def test_roll(self):
         """
         Just a variant where we should roll.
