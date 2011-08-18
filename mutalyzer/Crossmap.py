@@ -435,7 +435,7 @@ class Crossmap() :
         return int(s)
     #main2int
 
-    def int2offset(self, t) :
+    def int2offset(self, t, fuzzy=False):
         """
         Convert a tuple of integers to offset-notation. This adds a `+',
         and `u' or `d' to the offset when appropriate. The main value is
@@ -443,17 +443,22 @@ class Crossmap() :
 
         @arg t: A tuple of integers: (main, offset) in __STOP notation
         @type t: tuple
+        @kwarg fuzzy: Denotes that the coordinate is fuzzy (i.e. offset is
+            unknown).
+        @type fuzzy: bool
 
         @return: The offset in HGVS notation
         @rtype: string
         """
 
         if t[1] > 0 :                      # The exon boundary is downstream.
+            if fuzzy: return '+?'
             if t[0] >= self.__trans_end :  # It is downstream of the last exon.
                 return "+d" + str(t[1])
             return '+' + str(t[1])
         #if
         if t[1] < 0 :                       # The exon boundary is uptream.
+            if fuzzy: return '-?'
             if t[0] <= self.__trans_start : # It is upstream of the first exon.
                 return "-u" + str(-t[1])
             return str(t[1])
@@ -490,32 +495,38 @@ class Crossmap() :
         return int(s[1:])
     #offset2int
 
-    def tuple2string(self, t) :
+    def tuple2string(self, t, fuzzy=False) :
         """
         Convert a tuple (main, offset) in __STOP notation to I{c.} notation.
 
         @arg t: A tuple (main, offset) in __STOP notation
         @type t: tuple
+        @kwarg fuzzy: Denotes that the coordinate is fuzzy (i.e. offset is
+            unknown).
+        @type fuzzy: bool
 
         @return: The position in HGVS notation
         @rtype: string
         """
 
-        return str(self.int2main(t[0])) + str(self.int2offset(t))
+        return str(self.int2main(t[0])) + str(self.int2offset(t, fuzzy))
     #tuple2string
 
-    def g2c(self, a) :
+    def g2c(self, a, fuzzy=False) :
         """
         Uses both g2x() and tuple2string() to translate a genomic position
         to __STOP notation to I{c.} notation.
 
         @arg a: The genomic position that must be translated
         @type a: integer
+        @kwarg fuzzy: Denotes that the coordinate is fuzzy (i.e. offset is
+            unknown).
+        @type fuzzy: bool
 
         @return: The position in HGVS notation
         @rtype: string
         """
-        return self.tuple2string(self.g2x(a))
+        return self.tuple2string(self.g2x(a), fuzzy)
     #g2c
 
     def info(self) :

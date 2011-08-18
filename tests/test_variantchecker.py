@@ -262,7 +262,6 @@ class TestVariantchecker():
         """
         Deletion of an entire exon with unknown offsets should be possible.
         """
-        return # Todo
         check_variant('NG_012772.1(BRCA2_v001):c.632-?_681+?del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
@@ -275,6 +274,8 @@ class TestVariantchecker():
                      'NG_012772.1:g.(17550_19725)del')
         assert 'NG_012772.1(BRCA2_v001):c.632-?_681+?del' \
                in self.output.getOutput('descriptions')
+        assert 'NG_012772.1(BRCA2_i001):p.(Val211Glufs*10)' \
+               in self.output.getOutput('protDescriptions')
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
 
@@ -287,7 +288,6 @@ class TestVariantchecker():
         NG_012772.1(BRCA2_v001):c.68-?_316+?del is such a variant, since
         positions 68 through 316 are exactly one exon and (316-68+1)/3 = 83.
         """
-        return # Todo
         check_variant('NG_012772.1(BRCA2_v001):c.68-?_316+?del',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
@@ -308,8 +308,7 @@ class TestVariantchecker():
         Deletion of an entire exon with unknown offsets and another composed
         variant with exact positioning should be possible.
         """
-        return # Todo
-        check_variant('UD_129433404385(DMD_v010):c.[281-?_492+?del;492+4del]',
+        check_variant('NG_012772.1(BRCA2_v001):c.[632-?_681+?del;681+4del]',
                       self.config, self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
@@ -318,8 +317,28 @@ class TestVariantchecker():
         assert self.output.getOutput('newprotein')
         # Genomic positions should be centered in flanking introns and unsure.
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_129433404385:g.[(1640003_1675849)del;1665239del]')
-        assert 'UD_129433404385(DMD_v010):c.[281-?_492+?del;492+4del]' \
+                     'NG_012772.1:g.[(17550_19725)del;19017del]')
+        assert 'NG_012772.1(BRCA2_v001):c.[632-?_681+?del;681+4del]' \
+               in self.output.getOutput('descriptions')
+        # Todo: .c notation should still be c.632-?_681+?del, but what about
+        # other transcripts?
+
+    def test_del_exon_unknown_offsets_reverse(self):
+        """
+        Deletion of an entire exon with unknown offsets should be possible,
+        also on the reverse strand.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.151-?_457+?del',
+                      self.config, self.output)
+        assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
+        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
+        # Todo: For now, the following is how to check if protein
+        # prediction is done.
+        assert self.output.getOutput('newprotein')
+        # Genomic positions should be centered in flanking introns and unsure.
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.(60314_63683)del')
+        assert 'AL449423.14(CDKN2A_v001):c.151-?_457+?del' \
                in self.output.getOutput('descriptions')
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?

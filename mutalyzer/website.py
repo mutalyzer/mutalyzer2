@@ -685,6 +685,13 @@ class Check:
 
         genomic_description = output.getIndexedOutput('genomicDescription', 0, '')
 
+        # Create a tuple (description, link) from a description
+        def description_to_link(description):
+            link = None
+            if description[-1] != '?':
+                link = urllib.quote(description)
+            return description, link
+
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
@@ -697,7 +704,7 @@ class Check:
             'chromDescription'   : output.getIndexedOutput('genomicChromDescription', 0),
             'genomicDNA'         : genomic_dna,
             'visualisation'      : output.getOutput('visualisation'),
-            'descriptions'       : map(lambda d: (d, urllib.quote(d)), output.getOutput('descriptions')),
+            'descriptions'       : map(description_to_link, output.getOutput('descriptions')),
             'protDescriptions'   : output.getOutput('protDescriptions'),
             'oldProtein'         : output.getOutput('oldProteinFancy'),
             'altStart'           : output.getIndexedOutput('altStart', 0),

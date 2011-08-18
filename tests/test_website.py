@@ -577,7 +577,6 @@ facilisi."""
             and thus the cached file from request i cannot be re-used in
             request i+1.
         """
-        return
         r = self.app.get('/check')
         form = r.forms[0]
         form['mutationName'] = 'AB026906.1:c.274G>T'
