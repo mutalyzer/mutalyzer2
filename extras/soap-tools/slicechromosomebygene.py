@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
+
 import sys
 from suds.client import Client
 from suds import WebFault

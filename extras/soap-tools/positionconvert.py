@@ -3,6 +3,8 @@
 # Usage:
 #   ./positionconvert.py hg18 'NC_000011.9:g.111959695G>T'
 
+from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
+
 import sys
 from suds.client import Client  # https://fedorahosted.org/suds/
 

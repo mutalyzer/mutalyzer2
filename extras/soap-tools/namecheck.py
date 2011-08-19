@@ -12,6 +12,8 @@
 # This code is in the public domain; it can be used for whatever purpose
 # with absolutely no restrictions.
 
+from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
+
 import sys
 from suds.client import Client  # https://fedorahosted.org/suds/
 
