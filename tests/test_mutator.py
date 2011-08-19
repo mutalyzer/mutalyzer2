@@ -11,6 +11,7 @@ from nose.tools import *
 from Bio.Seq import Seq
 
 import mutalyzer
+from mutalyzer.util import skip
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import mutator
@@ -200,13 +201,13 @@ class TestMutator():
         m.delM(12, 13)   # g.12_13del
         assert_equal(m.newSplice(sites), [4, 9, 12, 15, 23, 25])
 
+    @skip
     def test_newSplice_acc_del2_on(self):
         """
         Deletion of 2 in intron/exon.
 
         @note: This hits a splice site, so we don't really support it.
         """
-        return   # Disabled (see docstring)
         l = 30
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
@@ -233,13 +234,13 @@ class TestMutator():
         m.delM(16, 17)   # g.16_17del
         assert_equal(m.newSplice(sites), [4, 9, 14, 15, 23, 25])
 
+    @skip
     def test_newSplice_don_del2_on(self):
         """
         Deletion of 2 in exon/intron.
 
         @note: This hits a splice site, so we don't really support it.
         """
-        return   # Disabled (see docstring)
         l = 30
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
@@ -593,6 +594,7 @@ class TestMutator():
         m.delM(16, 17)   # g.16_17del
         assert_equal(m.newSplice(sites), [4, 9, 10, 15, 16, 25])
 
+    @skip
     def test_newSplice_adj_del2_on(self):
         """
         Adjacent exons: deletion of 2 at exon/exon boundary.
@@ -600,7 +602,6 @@ class TestMutator():
         @todo: This is a special case of bug #????. Once fixed, the two
                exons will be joined to one new exon.
         """
-        return   # Disabled (see docstring)
         l = 30
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))

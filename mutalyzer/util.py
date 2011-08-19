@@ -741,6 +741,21 @@ def slow(f):
 #slow
 
 
+def skip(f):
+    """
+    Decorator to disable a unit test. This makes it pass immediately, without
+    running them.
+
+    @todo: Perhaps it's possible to indicate to nose that the test is skipped?
+    @todo: I don't think this actually belongs here (a separate util module
+      for the unit tests?).
+    """
+    def disabled_f(*args, **kwargs):
+        return
+    return disabled_f
+#skip
+
+
 def monkey_patch_suds():
     """
     Apply our monkey-patch for the suds package.
