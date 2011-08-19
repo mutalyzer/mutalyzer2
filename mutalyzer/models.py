@@ -17,7 +17,7 @@ Additional attributes values for the soaplib String model:
 """
 
 
-from soaplib.core.model.primitive import String, Integer, Boolean
+from soaplib.core.model.primitive import String, Integer, Boolean, DateTime
 from soaplib.core.model.clazz import ClassModel, Array
 
 from mutalyzer import SOAP_NAMESPACE
@@ -31,6 +31,7 @@ class Mandatory(object):
     String = String(min_occurs=1, nillable=False)
     Integer = Integer(min_occurs=1, nillable=False)
     Boolean = Boolean(min_occurs=1, nillable=False)
+    DateTime = DateTime(min_occurs=1, nillable=False)
 #Mandatory
 
 
@@ -214,4 +215,23 @@ class InfoOutput(ClassModel):
     nomenclatureVersionParts = Array(String)
     serverName = String
     contactEmail = String
-#MutalyzerOutput
+#InfoOutput
+
+
+class CacheEntry(ClassModel):
+    """
+    Used in getCache SOAP method.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    name = Mandatory.String
+    gi = String
+    hash = Mandatory.String
+    chromosomeName = String
+    chromosomeStart = Integer
+    chromosomeStop = Integer
+    chromosomeOrientation = Integer
+    url = String
+    created = Mandatory.DateTime
+    cached = String
+#CacheEntry

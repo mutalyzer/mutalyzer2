@@ -739,3 +739,34 @@ def slow(f):
             f(*args, **kwargs)
     return slow_f
 #slow
+
+
+def monkey_patch_suds():
+    """
+    Apply our monkey-patch for the suds package.
+
+    For some weird reason the location http://www.w3.org/2001/xml.xsd is used
+    for the XML namespace, but the W3C seems to respond too slow on that url.
+    We therefore use http://www.w3.org/2009/01/xml.xsd which fixes this.
+
+    Call this function before importing anything from the suds package. For
+    example, start your file with the following:
+
+        import monkey; monkey.monkey_patch_suds()
+        from suds.client import Client
+    """
+    from suds.xsd.sxbasic import Import
+    _import_open = Import.open
+
+    # Only apply the patch once.
+    if getattr(Import, 'MUTALYZER_MONKEY_PATCHED', False):
+        return
+
+    def _import_open_patched(self, *args, **kwargs):
+        if self.location == 'http://www.w3.org/2001/xml.xsd':
+            self.location = 'http://www.w3.org/2009/01/xml.xsd'
+        return _import_open(self, *args, **kwargs)
+
+    Import.open = _import_open_patched
+    Import.MUTALYZER_MONKEY_PATCHED = True
+#monkey_patch_suds

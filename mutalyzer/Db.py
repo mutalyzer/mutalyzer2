@@ -890,6 +890,7 @@ class Cache(Db) :
 
         statement = """
             INSERT INTO GBInfo
+             (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url)
               VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """, (accNo, GI, fileHash, ChrAccVer, ChrStart, ChrStop, orientation,
               url)
@@ -913,6 +914,7 @@ class Cache(Db) :
 
         statement = """
             INSERT INTO GBInfo
+             (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url)
               VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """, (accNo, None, fileHash, None, None, None, None, url)
 
@@ -1032,6 +1034,30 @@ class Cache(Db) :
             return ret[0][0]
         return None
     #getGBFromGI
+
+    def getGBSince(self, created_since):
+        """
+        Get all accession number entries with creation date {created_since}
+        or later.
+
+        SQL tables from internalDb:
+            - GBInfo ; Information about cached and uploaded GenBank files.
+
+        @arg created_since: Only entries with later creation dates are returned.
+        @type created_since: datatime.datetime
+
+        @return: The accession number
+        @rtype: string
+        """
+        statement = """
+            SELECT AccNo, GI, hash, ChrAccVer, ChrStart,
+                   ChrStop, orientation, url, created
+            FROM GBInfo
+            WHERE created >= %s;
+        """, created_since
+
+        return self.query(statement)
+    #getGBSince
 
     def getLoc(self, accNo) :
         """
@@ -1523,10 +1549,3 @@ class Batch(Db) :
         return inputl, flags
     #getFromQueue
 #Batch
-
-#
-# Unit test.
-#
-if __name__ == "__main__" :
-    pass
-#if

@@ -280,7 +280,11 @@ class TestWSGI():
         r.mustcontain(header)
         if not lines:
             lines = size
-        assert_equal(len(r.body.strip().split('\n')), lines + 1)
+        if len(r.body.strip().split('\n')) -1  != lines:
+            # Heisenbug, whenever it occurs we want to see some info.
+            print 'File: /Results_' + id + '.txt'
+            print r.body
+        assert_equal(len(r.body.strip().split('\n')) - 1, lines)
         return r.body
 
     def test_batch_namechecker(self):
