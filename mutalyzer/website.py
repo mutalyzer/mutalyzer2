@@ -42,11 +42,12 @@ from mutalyzer import Retriever
 from mutalyzer import File
 
 
-web.config.debug = True
-
-
 # Load configuration from configuration file
 config = Config()
+
+
+# Show web.py debugging information.
+web.config.debug = config.Output.debug
 
 
 # URL dispatch table

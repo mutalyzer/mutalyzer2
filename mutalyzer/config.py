@@ -61,6 +61,7 @@ class Config():
             overwrite the base configuration.
             For example, a normal user could use a different cache directory
             (writable by the user) than the system wide Mutalyzer config.
+            We could use the 'merge' method from configobj.
         """
         if filename is None:
             base = os.environ.get('XDG_CONFIG_HOME', None)
@@ -105,6 +106,7 @@ class Config():
             self.Output.datestring = config["datestring"]
             self.Output.loglevel = int(config["loglevel"])
             self.Output.outputlevel = int(config["outputlevel"])
+            self.Output.debug = config.as_bool('debug')
 
             # Set the variables needed by the Mutator module.
             self.Mutator.flanksize = int(config["flanksize"])
@@ -132,7 +134,6 @@ class Config():
             # Set the variables needed by the File module.
             self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
             self.GenRecord.spliceWarn = int(config["spliceWarn"])
-
 
             # If we are in a testing environment, use a temporary file for
             # logging and a temporary directory for the cache.

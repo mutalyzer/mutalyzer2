@@ -32,6 +32,10 @@ Or, if you are in a hurry, skip the long-running tests with:
 
     MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
 
+Note: Currently it is not advised to run the tests on a production server
+since they need write access to the main Mutalyzer cache and log. A separate
+cache and log for local users and tests is planned functionality.
+
 
 Development notes
 -----------------
@@ -45,8 +49,6 @@ Todo list:
 - Test all uses of mkstemp().
 - Use naming conventions for modules Crossmap, Db, File, GenRecord, Mapper,
   Retriever, Scheduler.
-- Integrate fuzzy offsets from this branch:
-  https://www.mutalyzer.nl/projects/mutalyzer2/changeset?old_path=%2Ftrunk&old=228&new_path=%2Fbranches%2Fexon-deletions-branch&new=228#file5
 - Use standard logging module, with rotating functionality. Race conditions
   on the log file are probably a problem in the current setup.
   Instead of that rotating, we could also use logrotate:
@@ -71,8 +73,6 @@ Todo list:
 - In deployment, remove old versions of Mutalyzer package?
 - Use https protocol.
 - Check for os.path.join vulnerabilities.
-- Use web.config.debug=False on production server and perhaps put this in
-  the configuration file.
 - Solution for database schema migration on version updates.
 
 Code style guide:

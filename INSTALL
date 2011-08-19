@@ -132,6 +132,10 @@ Now run the tests:
 
     MUTALYZER_ENV=test nosetests
 
+Note: Currently it is not advised to run the tests on a production server
+since they need write access to the main Mutalyzer cache and log. A separate
+cache and log for local users and tests is planned functionality.
+
 
 Upgrade Mutalyzer
 -----------------

@@ -78,6 +78,9 @@ loglevel = 3
 # Level of output messages.
 outputlevel = 1
 
+# Show debug info in the web interface.
+debug = yes
+
 
 #
 # These settings are used by the Mutator module.
