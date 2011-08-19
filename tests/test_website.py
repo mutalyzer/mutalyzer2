@@ -15,6 +15,7 @@ I just installed webtest by 'easy_install webtest'.
 import os
 import re
 import time
+import web
 from nose.tools import *
 from webtest import TestApp
 
@@ -32,6 +33,7 @@ class TestWSGI():
         """
         Initialize test application.
         """
+        web.config.debug = False
         application = website.app.wsgifunc()
         self.app = TestApp(application)
 
@@ -448,6 +450,8 @@ facilisi."""
     def test_batch_multicolumn(self):
         """
         Submit the batch syntax checker with a multiple-colums input file.
+
+        This by the way also tests for the correct order of batch results.
         """
         variants = [('AB026906.1(SDHD):g.7872G>T', 'NM_003002.1:c.3_4insG'),
                     ('NM_003002.1:c.3_4insG', 'AB026906.1(SDHD):g.7872G>T'),
@@ -516,8 +520,8 @@ facilisi."""
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: substitution at 7055')
-        assert r.body.find('go to bottom') == -1
-        assert r.body.find('<input') == -1
+        assert_equal(r.body.find('go to bottom'), -1)
+        assert_equal(r.body.find('<input'), -1)
 
     def test_variantinfo_g2c(self):
         """
@@ -573,7 +577,6 @@ facilisi."""
             and thus the cached file from request i cannot be re-used in
             request i+1.
         """
-        return
         r = self.app.get('/check')
         form = r.forms[0]
         form['mutationName'] = 'AB026906.1:c.274G>T'

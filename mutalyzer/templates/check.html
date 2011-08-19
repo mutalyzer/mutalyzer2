@@ -95,9 +95,10 @@
           <b>Affected transcripts:</b><br>
           <br>
           <tt tal:repeat = "i descriptions">
-            <a tal:content = "i/0"
+            <a tal:condition = "i/1" tal:content = "i/0"
                tal:attributes = 
-                 "href string:checkForward?mutationName=${i/1}"></a><br>
+                 "href string:checkForward?mutationName=${i/1}"></a><tal
+               tal:condition = "not:i/1" tal:replace = "i/0"></tal><br> 
           </tt>
           <br>
           <br>

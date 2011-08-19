@@ -36,6 +36,7 @@ class _NotDNAError(_RawVariantError): pass
 class _PositionsNotConsecutiveError(_RawVariantError): pass
 class _LengthMismatchError(_RawVariantError): pass
 class _ReferenceMismatchError(_RawVariantError): pass
+class _RangeInsertionError(_RawVariantError): pass
 class _OffsetSignError(_RawVariantError):
     def __init__(self, main, offset, acceptor):
         self.main = main
@@ -136,9 +137,9 @@ def _check_argument(argument, reference, first, last, output):
 
     @raise _LengthMismatchError: The argument is a length, but it does not
                                  match the given range length.
-    @raise NotDNAError: The argument should be DNA, but it is not.
-    @raise ReferenceMismatchError: The argument is DNA, but it does not
-                                   match the given reference.
+    @raise _NotDNAError: The argument should be DNA, but it is not.
+    @raise _ReferenceMismatchError: The argument is DNA, but it does not
+                                    match the given reference.
     """
     if not argument:
         # The argument is optional, if it is not present, it is correct.
@@ -301,7 +302,8 @@ def apply_substitution(position, original, substitute, mutator, record, O):
 #apply_substitution
 
 
-def apply_deletion_duplication(first, last, type, mutator, record, O):
+def apply_deletion_duplication(first, last, type, mutator, record, O,
+                               first_fuzzy=False, last_fuzzy=False):
     """
     Do a semantic check for a deletion or duplication, do the actual
     deletion/duplication and give it a name.
@@ -318,6 +320,13 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     @type record: Modules.GenRecord.GenRecord
     @arg O: The Output object.
     @type O: Modules.Output.Output
+
+    @kwarg first_fuzzy: Denotes that the start position is fuzzy (e.g. in the
+        case of an unknown offset in c. notation).
+    @type first_fuzzy: bool
+    @kwarg last_fuzzy: Denotes that the end position is fuzzy (e.g. in the
+        case of an unknown offset in c. notation).
+    @type last_fuzzy: bool
     """
     reverse_roll, forward_roll = util.roll(mutator.orig, first, last)
 
@@ -327,7 +336,7 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     # We only have to consider the forward roll, since RNA reference
     # sequences are always orientated in correspondence with the transcript.
     original_forward_roll = forward_roll
-    if record.record.molType == 'n':
+    if record.record.molType != 'g':
         # Todo: Do we assume .geneList[0].transcriptList[0] is the selected
         # transcript here?? Why not use record.current_transcript?
         splice_sites = record.record.geneList[0].transcriptList[0] \
@@ -390,7 +399,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O):
     else:
         mutator.dupM(first, last)
 
-    record.name(first, last, type, '', '', (reverse_roll, forward_roll))
+    record.name(first, last, type, '', '', (reverse_roll, forward_roll),
+                start_fuzzy=first_fuzzy,
+                stop_fuzzy=last_fuzzy)
 #apply_deletion_duplication
 
 
@@ -498,7 +509,7 @@ def apply_insertion(before, after, s, mutator, record, O):
     # We only have to consider the forward roll, since RNA reference
     # sequences are always orientated in correspondence with the transcript.
     original_forward_roll = forward_roll
-    if record.record.molType == 'n' :
+    if record.record.molType != 'g' :
         splice_sites = record.record.geneList[0].transcriptList[0] \
                        .mRNA.positionList
         for acceptor, donor in util.grouper(splice_sites):
@@ -643,21 +654,71 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
 #apply_delins
 
 
-def _get_offset(location):
+def _get_offset(location, main_genomic, sites, output):
     """
     Convert the offset coordinate in a location (from the Parser) to an
     integer.
 
     @arg location: A location.
     @type location: pyparsing.ParseResults
+    @arg main_genomic: Genomic main position to which the offset belongs.
+    @type main_genomic: int
+    @arg sites: List of splice sites.
+    @type sites: list
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
 
     @return: Integer representation of the offset coordinate.
     @rtype: int
     """
     if location.Offset :
-        if location.Offset == '?' : # This is highly debatable.
-            return 0
-        offset = int(location.Offset)
+        if location.Offset == '?' :
+            try:
+                # Todo: If it removes CDS start, don't do protein translation.
+                # Todo: Wrt orientation, perhaps always go to splice site
+                #     locations via the crossmapper...
+                # Todo: Also check if +? and -? are correctly used.
+                # Todo: Exactly centering might not be so nice, since the center
+                # might be closer to a neighbouring exon, making a+xxx from b-?
+                # and vice versa. This might not be fixed directly by doing a
+                # center +/- 1 because there might be rolling. Ideally we
+                # disable rolling entirely for these positions...
+                #
+                # Note that the code below might be a bit confusing, especially
+                # considering reverse strand transcripts. Magically, it works
+                # for both orientations.
+                i = sites.index(main_genomic)
+                if i == 0:
+                    # Before first exon (or last on the reverse strand).
+                    offset = main_genomic / 2
+                elif i == len(sites) - 1:
+                    # After last exon (or first on the reverse strand).
+                    # Todo: Get length of reference, and calculate a sensible
+                    # offset.
+                    #
+                    # We now use that 2000 is the default downstream length,
+                    # but of course this is bogus on the reverse strand and
+                    # just a hack anyway.
+                    offset = 1000
+                elif i % 2 == 0:
+                    # Acceptor site (or donor on the reverse strand).
+                    offset = abs(main_genomic - sites[i - 1]) / 2 - 1
+                else:
+                    # Donor site (or acceptor on the reverse strand).
+                    offset = abs(sites[i + 1] - main_genomic) / 2 - 1
+                # Todo: We would like to use the c. position in this message.
+                output.addMessage(__file__, 1, "IUNKNOWNOFFSET", "Unknown offset " \
+                                  "relative to %s interpreted as middle of " \
+                                  "flanking intron." % main_genomic)
+            except ValueError:
+                # Todo: This means we don't get an error if the main position
+                # was not on an exon boundary. We should return something else
+                # than 0 I guess.
+                #return 0  # This is highly debatable.
+                # Any non-zero value will do.
+                return 1
+        else:
+            offset = int(location.Offset)
         if location.OffSgn == '-' :
             return -offset
         return offset
@@ -760,7 +821,7 @@ def _genomic_to_genomic(first_location, last_location):
     return first, last
 
 
-def _coding_to_genomic(first_location, last_location, transcript):
+def _coding_to_genomic(first_location, last_location, transcript, output):
     """
     Get genomic range from parsed c. location.
 
@@ -770,6 +831,8 @@ def _coding_to_genomic(first_location, last_location, transcript):
     @type last_location: pyparsing.ParseResults
     @arg transcript: todo
     @type transcript: todo
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
 
     @return: A tuple of:
         - first: Genomic start location represented by given location.
@@ -791,11 +854,15 @@ def _coding_to_genomic(first_location, last_location, transcript):
 
     first_main = transcript.CM.main2int(first_location.MainSgn + \
                                         first_location.Main)
-    first_offset = _get_offset(first_location)
+    first_main_genomic = transcript.CM.x2g(first_main, 0)
+    first_offset = _get_offset(first_location, first_main_genomic,
+                               transcript.CM.RNA, output)
 
     last_main = transcript.CM.main2int(last_location.MainSgn + \
                                        last_location.Main)
-    last_offset = _get_offset(last_location)
+    last_main_genomic = transcript.CM.x2g(last_main, 0)
+    last_offset = _get_offset(last_location, last_main_genomic,
+                              transcript.CM.RNA, output)
 
     # These raise _RawVariantError exceptions on invalid positions.
     _check_intronic_position(first_main, first_offset, transcript)
@@ -911,7 +978,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
         try:
             if transcript:
                 # Coding positioning.
-                first, last = _coding_to_genomic(first_location, last_location, transcript)
+                first, last = _coding_to_genomic(first_location, last_location,
+                                                 transcript, output)
             else:
                 # Genomic positioning.
                 first, last = _genomic_to_genomic(first_location, last_location)
@@ -978,9 +1046,32 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     if transcript and variant.MutationType == 'del':
         removed_sites = []
         for acceptor, donor in util.grouper(transcript.CM.RNA):
-            if first <= acceptor <= last + 1:
+
+            # If we have introns, we match splice sites in a fuzzy way. This
+            # Means that in the case of
+            #
+            #               a            b
+            #     ===========------------=============
+            #
+            # with splice sites a and b, a deletion a+1_b-1 of the entire
+            # intron gets treated as a deletion of both splice sites.
+            #
+            # We don't want this behaviour on e.g. RNA, where we only have
+            # exons. In the case of
+            #
+            #              a b           c d
+            #     ========== ============= ===========
+            #
+            # with splice sites a b c d, a deletion b_c of the middle exon
+            # should only remove splice sites b and c, not a and d.
+            if record.record.molType == 'g':
+                fuzzy = 1
+            else:
+                fuzzy = 0
+
+            if first <= acceptor <= last + fuzzy:
                 removed_sites.append(acceptor)
-            if first - 1 <= donor <= last:
+            if first - fuzzy <= donor <= last:
                 removed_sites.append(donor)
 
         if len(removed_sites) and not len(removed_sites) % 2:
@@ -1004,6 +1095,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 output.addMessage(__file__, 1, 'IDELSPLICE',
                                   'Removed %i splice sites from selected ' \
                                   'transcript.' % len(removed_sites))
+                # This is primarily for use in unittests.
+                output.addOutput('removedSpliceSites', len(removed_sites))
 
     # If splice_abort is set, this basically means WOVERSPLICE was called and
     # IDELSPLICE was not called.
@@ -1028,8 +1121,12 @@ def process_raw_variant(mutator, variant, record, transcript, output):
 
     # Deletion or duplication.
     if variant.MutationType in ['del', 'dup']:
+        # The fuzzy flags are to support deletions of the form c.a-?_b+?del.
+        first_fuzzy = variant.StartLoc.PtLoc.Offset == '?'
+        last_fuzzy = variant.EndLoc and variant.EndLoc.PtLoc.Offset == '?'
         apply_deletion_duplication(first, last, variant.MutationType, mutator,
-                                   record, output)
+                                   record, output, first_fuzzy=first_fuzzy,
+                                   last_fuzzy=last_fuzzy)
 
     # Inversion.
     if variant.MutationType == 'inv':
@@ -1037,10 +1134,22 @@ def process_raw_variant(mutator, variant, record, transcript, output):
 
     # Insertion.
     if variant.MutationType == 'ins':
+        # Check if the inserted sequence is not a range.
+        # Todo: Implement this feature.
+        if not argument:
+            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                              'Insertion of a range is not implemented yet.')
+            raise _RangeInsertionError()
         apply_insertion(first, last, argument, mutator, record, output)
 
     # DelIns.
     if variant.MutationType == 'delins':
+        # Check if the inserted sequence is not a range.
+        # Todo: Implement this feature.
+        if not sequence:
+            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                              'Insertion of a range is not implemented yet.')
+            raise _RangeInsertionError()
         apply_delins(first, last, argument, sequence, mutator, record, output)
 #process_raw_variant
 
@@ -1112,7 +1221,7 @@ def _add_transcript_info(mutator, transcript, output):
                            IUPAC.unambiguous_dna)
         cds_variant = Seq(str(util.__nsplice(mutator.mutated,
                                         mutator.newSplice(transcript.mRNA.positionList),
-                                        mutator.newSplice(transcript.CDS.positionList),
+                                        mutator.newSplice(transcript.CDS.location),
                                         transcript.CM.orientation)),
                           IUPAC.unambiguous_dna)
 
@@ -1225,6 +1334,9 @@ def process_variant(mutator, description, record, output):
             if transcript_id:
                 transcript = gene.findLocus(transcript_id)
                 if not transcript:
+                    # Todo: Incorrect error message, it might also be that
+                    # there are no transcripts at all (e.g. N4BP2L1 on
+                    # NG_012772.1).
                     output.addMessage(__file__, 4, "ENOTRANSCRIPT",
                         "Multiple transcripts found for gene %s. Please " \
                         "choose from: %s" %(gene.name,
@@ -1268,6 +1380,9 @@ def process_variant(mutator, description, record, output):
                     # this gene.
                     transcript = gene.transcriptList[0]
                 else:
+                    # Todo: Incorrect error message, it might also be that
+                    # there are no transcripts at all (e.g. N4BP2L1 on
+                    # NG_012772.1).
                     output.addMessage(__file__, 4, "ENOTRANSCRIPT",
                         "Multiple transcripts found for gene %s. Please " \
                         "choose from: %s" %(gene.name,
@@ -1447,9 +1562,10 @@ def check_variant(description, config, output):
                                IUPAC.unambiguous_dna)
             cds_variant = Seq(str(util.__nsplice(mutator.mutated,
                                             mutator.newSplice(transcript.mRNA.positionList),
-                                            mutator.newSplice(transcript.CDS.positionList),
+                                            mutator.newSplice(transcript.CDS.location),
                                             transcript.CM.orientation)),
                               IUPAC.unambiguous_dna)
+
             if transcript.CM.orientation == -1:
                 cds_original = Bio.Seq.reverse_complement(cds_original)
                 cds_variant = Bio.Seq.reverse_complement(cds_variant)
@@ -1475,9 +1591,15 @@ def check_variant(description, config, output):
                     return
                 protein_variant = cds_variant.translate(table=transcript.txTable,
                                                         to_stop=True)
-                cds_length = util.cds_length(mutator.newSplice(transcript.CDS.positionList))
-                transcript.proteinDescription = util.protein_description(
-                    cds_length, protein_original, protein_variant)[0]
+                try:
+                    cds_length = util.cds_length(
+                        mutator.newSplice(transcript.CDS.positionList))
+                    transcript.proteinDescription = util.protein_description(
+                        cds_length, protein_original, protein_variant)[0]
+                except IndexError:
+                    # Todo: Probably CDS start was hit by removal of exon...
+                    transcript.proteinDescription = 'p.?'
+
             else:
                 output.addMessage(__file__, 2, "ECDS", "CDS length is " \
                     "not a multiple of three in gene %s, transcript " \

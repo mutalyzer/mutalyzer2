@@ -291,7 +291,8 @@ CREATE TABLE BatchQueue (
   JobID char(20) NOT NULL,
   Input char(255) NOT NULL,
   Flags char(20) DEFAULT NULL,
-  PRIMARY KEY (QueueID)
+  PRIMARY KEY (QueueID),
+  KEY JobQueue (JobID,QueueID)
 );
 CREATE TABLE GBInfo (
   AccNo char(20) NOT NULL DEFAULT '',

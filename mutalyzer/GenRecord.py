@@ -81,7 +81,7 @@ class Locus(object) :
             - exon     ; A position list object.
             - txTable  ; The translation table.
             - CM       ; A Crossmap object.
-            
+
         @arg name: identifier of the locus
         @type name: string
         """
@@ -110,20 +110,36 @@ class Locus(object) :
         self.proteinProduct = None
     #__init__
 
-    def addToDescription(self, rawVariant) :
+    def cancelDescription(self):
+        """
+        Set the description on this locus to 'unknown'.
+
+        This can be used if at some point we give up creating a sensible
+        description on this locus. It also makes sure future additions to
+        the description are ignored and it keeps the 'unknown' value.
+
+        @note: This depends on the check for the unknown value in the
+            addToDescription method. This is a not a beatiful solution.
+        """
+        self.description = '?'
+    #cancelDescription
+
+    def addToDescription(self, rawVariant):
         """
         Expands the DNA description with a new raw variant.
-        
+
         @arg rawVariant: description of a single mutation
         @type rawVariant: string
         """
-
         if self.description:
-            self.description = "%s;%s" % (self.description, rawVariant)
-        else :
+            # Don't change anything if we already have an unknown value.
+            if self.description != '?':
+                self.description = "%s;%s" % (self.description, rawVariant)
+        else:
             self.description = rawVariant
     #addToDescription
 #Locus
+
 
 class Gene(object) :
     """
@@ -150,7 +166,7 @@ class Gene(object) :
             - longName ;
         Private variables (altered):
             - __locusTag ;
-            
+
         @arg name: gene name
         @type name: string
         """
@@ -166,7 +182,7 @@ class Gene(object) :
     def newLocusTag(self) :
         """
         Generates a new Locus tag.
-        
+
         @return: Locus tag
         @rtype: integer (3 digits, if < 100 preceeded with 0's)
         """
@@ -179,10 +195,10 @@ class Gene(object) :
     def findLocus(self, name) :
         """
         Find a transcript, given its name.
-        
+
         @arg name: transcript variant number
         @type name: string
-        
+
         @return: transcript
         @rtype: object
         """
@@ -196,7 +212,7 @@ class Gene(object) :
     def listLoci(self) :
         """
         Provides a list of transcript variant numbers
-        
+
         @return: list of transcript variant numbers
         @rtype: list
         """
@@ -210,10 +226,10 @@ class Gene(object) :
     def findLink(self, protAcc) :
         """
         Look in the list of transcripts for a given protein accession number.
-        
+
         @arg protAcc: protein accession number
         @type protAcc: string
-        
+
         @return: transcript
         @rtype: object
         """
@@ -280,10 +296,10 @@ class Record(object) :
     def findGene(self, name) :
         """
         Returns a Gene object, given its name.
-        
+
         @arg name: Gene name
         @type name: string
-        
+
         @return: Gene object
         @rtype: object
         """
@@ -297,10 +313,10 @@ class Record(object) :
     def listGenes(self) :
         """
         List the names of all genes found in this record.
-        
+
         @return: Genes list
         @rtype: list
-        
+
         """
 
         ret = []
@@ -312,7 +328,7 @@ class Record(object) :
     def addToDescription(self, rawVariant) :
         """
         Expands the DNA description with a new raw variant.
-        
+
         @arg rawVariant: description of a single mutation
         @type rawVariant: string
         """
@@ -326,11 +342,11 @@ class Record(object) :
     def toChromPos(self, i) :
         """
         Converts a g. position (relative to the start of the record) to a
-        chromosomal g. position 
-        
+        chromosomal g. position
+
         @arg i: g. position (relative to the start of the record)
         @type i: integer
-        
+
         @return: chromosomal g. position
         @rtype: integer
         """
@@ -366,10 +382,10 @@ class GenRecord() :
     def __init__(self, output, config) :
         """
         Initialise the class.
-        
+
         Public variable:
             - record    ; A record object
-        
+
         @arg output: an output object
         @type output: object
         @arg config: a config object
@@ -384,13 +400,13 @@ class GenRecord() :
     def __checkExonList(self, exonList, CDSpos) :
         """
         @todo document me
-        
+
         @arg exonList: list of splice sites
         @type exonList: list (object)
         @arg CDSpos: location of the CDS
         @type CDSpos: object
-        
-        @return: 
+
+        @return:
         @rtype: boolean
         """
 
@@ -414,12 +430,12 @@ class GenRecord() :
             return True
         return False
     #__checkExonList
-            
+
     def __constructCDS(self, mRNA, CDSpos) :
         """
-        Construct a list of coordinates that contains CDS start and stop and 
+        Construct a list of coordinates that contains CDS start and stop and
         the internal splice sites.
-        
+
         @arg mRNA: mRNA positions/coordinates list
         @type mRNA: list (integer)
         @arg CDSpos: coding DNA positions/coordinates
@@ -449,14 +465,14 @@ class GenRecord() :
         """
         Return the reverse-complement of a DNA sequence if the gene is in
         the reverse orientation.
-        
-        @arg gene: Gene 
+
+        @arg gene: Gene
         @type gene: object
         @arg string: DNA sequence
         @type string: string
         @kwarg string_reverse: DNA sequence to use (if not None) for the
             reverse complement.
-        
+
         @return: reverse-complement (if applicable), otherwise return the
             original.
         @rtype: string
@@ -472,7 +488,7 @@ class GenRecord() :
         """
         Check if the record in self.record is compatible with mutalyzer.
         Update the mRNA PList with the exon and CDS data.
-        
+
         @todo: This function should really check the record for minimal
         requirements
         """
@@ -602,7 +618,8 @@ class GenRecord() :
         return None
     #current_transcript
 
-    def name(self, start_g, stop_g, varType, arg1, arg2, roll, arg1_reverse=None):
+    def name(self, start_g, stop_g, varType, arg1, arg2, roll, arg1_reverse=None,
+             start_fuzzy=False, stop_fuzzy=False):
         """
         Generate variant descriptions for all genes, transcripts, etc.
 
@@ -620,6 +637,10 @@ class GenRecord() :
         @type roll: tuple (integer, integer)
         @kwarg arg1_reverse: argument 1 to be used on reverse strand
         @type arg1_reverse: string
+        @kwarg start_fuzzy: Indicates if start position of variant is fuzzy.
+        @type start_fuzzy: bool
+        @kwarg stop_fuzzy: Indicates if stop position of variant is fuzzy.
+        @type stop_fuzzy: bool
         """
         forwardStart = start_g
         forwardStop = stop_g
@@ -634,23 +655,64 @@ class GenRecord() :
 
         if varType != "subst" :
             if forwardStart != forwardStop :
-                self.record.addToDescription("%s_%s%s%s" % (forwardStart,
-                    forwardStop, varType, arg1))
-                self.record.addToChromDescription("%s_%s%s%s" % (
-                    self.record.toChromPos(forwardStart),
-                    self.record.toChromPos(forwardStop), varType, arg1))
+                # Todo: Fuzzy offsets to genomic positions (see bug #38).
+                #
+                # The genomic positioning is problematic. We would like to
+                # have it in brackets (as fuzzy positions), like the above
+                # g.(34299_23232)del example.
+                #
+                # Now consider a variant c.a-?_b+18del where only the offset
+                # before the exon is unknown but the offset after the exon is
+                # exact. Now a genomic description like g.(34299)_23232del
+                # comes to mind, however, this notation is not allowed by the
+                # HGVS grammar.
+                #
+                # I think all we can do is to treat both positions as fuzzy in
+                # the genomic description, even if only one of them really is.
+                #
+                # Peter thinks the HGVS grammar should at some point be
+                # updated to allow the brackets around individual locations.
+                if start_fuzzy or stop_fuzzy:
+                    self.record.addToDescription("(%s_%s)%s%s" % (
+                        forwardStart, forwardStop, varType, arg1))
+                    self.record.addToChromDescription("(%s_%s)%s%s" % (
+                        self.record.toChromPos(forwardStart),
+                        self.record.toChromPos(forwardStop), varType, arg1))
+                else:
+                    self.record.addToDescription("%s_%s%s%s" % (
+                        forwardStart, forwardStop, varType, arg1))
+                    self.record.addToChromDescription("%s_%s%s%s" % (
+                        self.record.toChromPos(forwardStart),
+                        self.record.toChromPos(forwardStop), varType, arg1))
             #if
             else :
-                self.record.addToDescription("%s%s%s" % (forwardStart, varType,
-                                                         arg1))
-                self.record.addToChromDescription("%s%s%s" % (
-                    self.record.toChromPos(forwardStart), varType, arg1))
+                if start_fuzzy or stop_fuzzy:
+                    # Todo: Current HGVS does not allow for () around single
+                    # positions, only around ranges (see above and #38).
+                    self.record.addToDescription("(%s)%s%s" % (
+                        forwardStart, varType, arg1))
+                    self.record.addToChromDescription("(%s)%s%s" % (
+                        self.record.toChromPos(forwardStart), varType, arg1))
+                else:
+                    self.record.addToDescription("%s%s%s" % (
+                        forwardStart, varType, arg1))
+                    self.record.addToChromDescription("%s%s%s" % (
+                        self.record.toChromPos(forwardStart), varType, arg1))
             #else
         #if
         else :
-            self.record.addToDescription("%s%c>%c" % (forwardStart, arg1, arg2))
-            self.record.addToChromDescription("%s%c>%c" % (
-                self.record.toChromPos(forwardStart), arg1, arg2))
+            if start_fuzzy or stop_fuzzy:
+                # Todo: Current HGVS does not allow for () around single
+                # positions, only around ranges (see above and #38).
+                self.record.addToDescription("(%s)%c>%c" % (
+                    forwardStart, arg1, arg2))
+                self.record.addToChromDescription("(%s)%c>%c" % (
+                    self.record.toChromPos(forwardStart), arg1, arg2))
+            else:
+                self.record.addToDescription("%s%c>%c" % (
+                    forwardStart, arg1, arg2))
+                self.record.addToChromDescription("%s%c>%c" % (
+                    self.record.toChromPos(forwardStart), arg1, arg2))
 
         for i in self.record.geneList :
             for j in i.transcriptList :
@@ -683,24 +745,45 @@ class GenRecord() :
 
                     if varType != "subst" :
                         if orientedStart != orientedStop :
-                            j.addToDescription("%s_%s%s%s" % (
-                                j.CM.g2c(orientedStart), j.CM.g2c(orientedStop),
-                                varType, self.__maybeInvert(i, arg1, arg1_reverse)))
-                            self.checkIntron(i, j, orientedStart)
-                            self.checkIntron(i, j, orientedStop)
+                            if (start_fuzzy or stop_fuzzy) and not j.current:
+                                # Don't generate descriptions on transcripts
+                                # other than the current in the case of fuzzy
+                                # positions.
+                                j.cancelDescription()
+                            else:
+                                j.addToDescription("%s_%s%s%s" % (
+                                    j.CM.g2c(orientedStart, start_fuzzy),
+                                    j.CM.g2c(orientedStop, stop_fuzzy),
+                                    varType, self.__maybeInvert(i, arg1, arg1_reverse)))
+                                self.checkIntron(i, j, orientedStart)
+                                self.checkIntron(i, j, orientedStop)
                         #if
                         else :
-                            j.addToDescription("%s%s%s" % (
-                                j.CM.g2c(orientedStart), varType,
-                                self.__maybeInvert(i, arg1, arg1_reverse)))
-                            self.checkIntron(i, j, orientedStart)
+                            if start_fuzzy and not j.current:
+                                # Don't generate descriptions on transcripts
+                                # other than the current in the case of fuzzy
+                                # positions.
+                                j.cancelDescription()
+                            else:
+                                j.addToDescription("%s%s%s" % (
+                                    j.CM.g2c(orientedStart, start_fuzzy),
+                                    varType,
+                                    self.__maybeInvert(i, arg1, arg1_reverse)))
+                                self.checkIntron(i, j, orientedStart)
                         #else
                     #if
                     else :
-                        j.addToDescription("%s%c>%c" % (j.CM.g2c(orientedStart),
-                            self.__maybeInvert(i, arg1, arg1_reverse),
-                            self.__maybeInvert(i, arg2)))
-                        self.checkIntron(i, j, orientedStart)
+                        if start_fuzzy and not j.current:
+                            # Don't generate descriptions on transcripts
+                            # other than the current in the case of fuzzy
+                            # positions.
+                            j.cancelDescription()
+                        else:
+                            j.addToDescription("%s%c>%c" % (
+                                j.CM.g2c(orientedStart, start_fuzzy),
+                                self.__maybeInvert(i, arg1, arg1_reverse),
+                                self.__maybeInvert(i, arg2)))
+                            self.checkIntron(i, j, orientedStart)
                     #else
                 #if
             #for
@@ -710,14 +793,14 @@ class GenRecord() :
     def checkIntron(self, gene, transcript, position) :
         """
         Checks if a position is on or near a splice site
-        
+
         @arg gene: Gene
         @type gene: object
         @arg transcript: transcript
         @type transcript: object
         @arg position: g. position
         @type position: integer
-        
+
         @return:
         @todo: Also check a range properly.
         """
