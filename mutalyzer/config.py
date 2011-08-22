@@ -6,10 +6,14 @@ module.
 
 
 import os
-import tempfile
 from configobj import ConfigObj
 
-import mutalyzer
+
+SYSTEM_CONFIGURATION = '/etc/mutalyzer/config'
+USER_CONFIGURATION = os.path.join(
+    os.environ.get('XDG_CONFIG_HOME', None) or \
+    os.path.join(os.path.expanduser('~'), '.config'),
+    'mutalyzer', 'config')
 
 
 class ConfigurationError(Exception):
@@ -36,10 +40,16 @@ class Config():
         hard coded constant is used (the name and path to the configuration
         file).
 
-        The configuration file location is automatically detected, in the
-        following order:
-        1) $XDG_CONFIG_HOME/mutalyzer/config
-        2) /etc/mutalyzer/config
+        Configuration values are read from two locations, in this order:
+        1) /etc/mutalyzer/config
+        2) $XDG_CONFIG_HOME/mutalyzer/config
+
+        If both files exist, values defined in the second overwrite values
+        defined in the first.
+
+        An exception to this system is when the optional {filename} argument
+        is set. In that case, the locations listed above are ignored and the
+        configuration is read from {filename}.
 
         By the DRY-principle, we don't enumerate the configuration variables
         for each class in documentation. Instead, what variables are used by
@@ -55,32 +65,23 @@ class Config():
             - Supplied argument {filename} could not be opened.
             - Configuration file could not be parsed.
             - Not all variables are present in configuration file.
-
-        @todo: Be able to have /etc/mutalyzer/config as 'base' configuration
-            and some additional configuration in ~/.mutalyzer/config to
-            overwrite the base configuration.
-            For example, a normal user could use a different cache directory
-            (writable by the user) than the system wide Mutalyzer config.
-            We could use the 'merge' method from configobj.
         """
-        if filename is None:
-            base = os.environ.get('XDG_CONFIG_HOME', None)
-            if base is None:
-                base = os.path.join(os.path.expanduser('~'), '.config')
-            filename = os.path.join(base, 'mutalyzer', 'config')
+        config = None
 
-            if not os.path.isfile(filename):
-                filename = '/etc/mutalyzer/config'
-                if not os.path.isfile(filename):
-                    raise ConfigurationError('Could not locate configuration.')
+        if filename:
+            config = self._load_config(filename)
+        else:
+            if os.path.isfile(SYSTEM_CONFIGURATION):
+                config = self._load_config(SYSTEM_CONFIGURATION)
+            if os.path.isfile(USER_CONFIGURATION):
+                user_config = self._load_config(USER_CONFIGURATION)
+                if config:
+                    config.merge(user_config)
+                else:
+                    config = user_config
 
-        try:
-            config = ConfigObj(filename)
-        except IOError:
-            raise ConfigurationError('Could not open configuration file: %s' \
-                                     % filename)
-        except SyntaxError:
-            raise ConfigurationError('Could not parse configuration file.')
+        if not config:
+            raise ConfigurationError('Could not locate configuration.')
 
         try:
 
@@ -135,44 +136,21 @@ class Config():
             self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
             self.GenRecord.spliceWarn = int(config["spliceWarn"])
 
-            # If we are in a testing environment, use a temporary file for
-            # logging and a temporary directory for the cache.
-            # We don't remove these after the tests, since they might be
-            # useful for debugging.
-            if mutalyzer.is_test():
-                # Todo:
-                #
-                # This needs some refactoring. The problem with the temporary
-                # file and dir names is that they will not be used by the
-                # (running) batch daemon, which will thus save its results to
-                # to 'normal' directory.
-                # Furthermore, subsequent web requests from a unit test will
-                # use different configuration instantiations, so might not
-                # see results from previous requests.
-                #
-                # We need a more robust solution for different configurations,
-                # depending of the running user/setting (e.g. unit tests).
-                #
-                # Idea: Don't create a local instance of the website in the
-                # unit tests, but only use running instances of all servers
-                # (website, webservice, batch daemon). They will use their
-                # own 'normal' configuration.
-                # All other parts of the unit tests will use temporary test
-                # configuration values. We might even decorate the tests
-                # needing server access as such and provide the option of
-                # skipping these.
-
-                #handle, filename = tempfile.mkstemp(suffix='.log',
-                #                                    prefix='mutalyzer-tests-')
-                #os.close(handle)
-                #self.Output.log = filename
-                #dirname = tempfile.mkdtemp(suffix='.cache',
-                #                           prefix='mutalyzer-tests-')
-                #self.Retriever.cache = dirname
-                #self.Scheduler.resultsDir = dirname
-                pass
-
         except KeyError as e:
             raise ConfigurationError('Missing configuration value: %s' % e)
     #__init__
+
+    def _load_config(self, filename):
+        """
+        Create a ConfigObj from the configuration in {filename}.
+        """
+        try:
+            return ConfigObj(filename)
+        except IOError:
+            raise ConfigurationError('Could not open configuration file: %s' \
+                                     % filename)
+        except SyntaxError:
+            raise ConfigurationError('Could not parse configuration file: %s' \
+                                     % filename)
+    #_load_config
 #Config

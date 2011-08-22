@@ -42,10 +42,6 @@ Development notes
 
 Todo list:
 - Improve the web interface design :)
-- Running Mutalyzer as a local user (either bin/mutalyzer-website.wsgi on port
-  8080, or bin/mutalyzer for example) should be able with a partly different
-  configuration. Expecially cache and log file locations, because they are
-  owned by www-data.
 - Test all uses of mkstemp().
 - Use naming conventions for modules Crossmap, Db, File, GenRecord, Mapper,
   Retriever, Scheduler.

@@ -1,0 +1,11 @@
+#
+# Mutalyzer config file.
+#
+# Copy this file to ~/.config/mutalyzer/config to overwrite definitions from
+# /etc/mutalyzer.config.
+
+# The cache directory.
+cache = "/home/user/.cache/mutalyzer"
+
+# Name and location of the log file.
+log = "/tmp/mutalyzer.log"

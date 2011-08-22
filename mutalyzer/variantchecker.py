@@ -20,7 +20,6 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 from mutalyzer import util
-from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
 from mutalyzer import Retriever

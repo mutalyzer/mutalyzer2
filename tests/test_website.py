@@ -14,6 +14,7 @@ I just installed webtest by 'easy_install webtest'.
 #import logging; logging.basicConfig()
 import os
 import re
+import urllib2
 import time
 import web
 from nose.tools import *
@@ -22,6 +23,9 @@ from webtest import TestApp
 import mutalyzer
 from mutalyzer import website
 from mutalyzer.util import slow
+
+
+BATCH_RESULT_URL = 'http://localhost/mutalyzer/Results_{id}.txt'
 
 
 class TestWSGI():
@@ -255,6 +259,14 @@ class TestWSGI():
 
         @return: The batch result document.
         @rtype: string
+
+        @note: Since the batch files are processed by a running batch daemon
+            process, the result gets written to the directory defined by the
+            system-wide configuration (e.g. /var/mutalyzer/cache), thus
+            inaccessible for the TestApp instance under our current user.
+            The 'solution' for this is to download the results via a running
+            webserver that should be using the same configuration as the batch
+            daemon. Yes, this is a hack.
         """
         r = self.app.get('/batch')
         form = r.forms[0]
@@ -275,17 +287,19 @@ class TestWSGI():
             assert re.match('[0-9]+', r.body)
             time.sleep(2)
         assert_equal(r.body, 'OK')
-        r = self.app.get('/Results_' + id + '.txt')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain(header)
+        # This is a hack to get to the batch results (see @note above).
+        response = urllib2.urlopen(BATCH_RESULT_URL.format(id=id))
+        assert_equal(response.info().getheader('Content-Type'), 'text/plain')
+        result = response.read()
+        assert header in result
         if not lines:
             lines = size
-        if len(r.body.strip().split('\n')) -1  != lines:
+        if len(result.strip().split('\n')) -1  != lines:
             # Heisenbug, whenever it occurs we want to see some info.
             print 'File: /Results_' + id + '.txt'
-            print r.body
-        assert_equal(len(r.body.strip().split('\n')) - 1, lines)
-        return r.body
+            print result
+        assert_equal(len(result.strip().split('\n')) - 1, lines)
+        return result
 
     def test_batch_namechecker(self):
         """
