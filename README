@@ -19,7 +19,8 @@ See the INSTALL file for installation instructions.
 Unit tests
 ----------
 
-The unit tests depend on a running batch daemon and SOAP webservice:
+The unit tests depend on a running batch daemon, webserver, and SOAP
+webservice:
 
     sudo /etc/init.d/mutalyzer-batchd start
     sudo /etc/init.d/apache2 start
@@ -31,10 +32,6 @@ Now run the tests with:
 Or, if you are in a hurry, skip the long-running tests with:
 
     MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
-
-Note: Currently it is not advised to run the tests on a production server
-since they need write access to the main Mutalyzer cache and log. A separate
-cache and log for local users and tests is planned functionality.
 
 
 Development notes
@@ -130,3 +127,25 @@ Automatic remote deployment depends on Fabric:
 The unit tests depend on the following packages:
 - python-nose    >= 0.11
 - python-webtest >= 1.2.3
+
+As of 2011-08-23, snakefood reports the following imports from the Mutalyzer
+source code (excluding the standard library imports):
+
+    Bio
+    MySQLdb
+    SOAPpy
+    configobj
+    daemon
+    fabric
+    lockfile
+    lxml
+    magic
+    nose
+    pyparsing
+    setuptools
+    simpletal
+    soaplib
+    suds
+    web
+    webtest
+    xlrd
