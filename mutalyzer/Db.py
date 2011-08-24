@@ -262,7 +262,7 @@ class Mapping(Db) :
         if version is None:
             q += """
                 where acc = %s
-                order by version desc, order by chrom asc;
+                order by version desc, chrom asc;
                 """
             statement = (q, mrnaAcc)
         else:
