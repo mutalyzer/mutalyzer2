@@ -318,14 +318,6 @@ CREATE TABLE Link (
   PRIMARY KEY (mrnaAcc),
   UNIQUE KEY protAcc (protAcc)
 );
-CREATE TABLE mm1 (
-  hg18 char(50) DEFAULT NULL,
-  hg19 char(50) DEFAULT NULL
-);
-CREATE TABLE mm2 (
-  hg18 char(50) DEFAULT NULL,
-  hg19 char(50) DEFAULT NULL
-);
 EOF
 
 # The remainder is essentially the same as post-upgrade.sh
