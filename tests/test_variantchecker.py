@@ -4,13 +4,8 @@ Tests for the variantchecker module.
 
 
 #import logging; logging.basicConfig()
-import re
-import os
-import random
 from nose.tools import *
-from Bio.Seq import Seq
 
-import mutalyzer
 from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant

@@ -242,27 +242,34 @@ class Mapping(Db) :
 
         @return: The version number
         @rtype: integer
-        """
 
+        @todo: The 'order by chrom asc' is a quick hack to make sure we first
+            get a primary assembly mapping instead of some haplotype mapping
+            for genes in the HLA cluster.
+            A better fix is to return the entire list of mappings, and/or
+            remove all secondary mappings for the HLA cluster.
+            See also test_converter.test_hla_cluster and bug #58.
+        """
         q = """
                 select  acc,
                         txStart, txEnd,
                         cdsStart, cdsEnd,
                         exonStarts, exonEnds,
                         geneName, chrom,
-                        strand, protAcc,
-                        MAX(version)
+                        strand, protAcc
                 from map
         """
         if version is None:
             q += """
-                where acc = %s;
+                where acc = %s
+                version desc, order by chrom asc;
                 """
             statement = (q, mrnaAcc)
         else:
             q += """
                 where acc = %s and
-                      version = %s;
+                      version = %s
+                order by chrom asc;
                 """
             statement = q, (mrnaAcc, version)
 

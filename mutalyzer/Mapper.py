@@ -24,6 +24,8 @@ positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
 @requires: Modules.Serializers.Transcript
 @requires: Bio.Seq.reverse_complement
 @requires: collections.defaultdict
+
+@todo: Rename Mapper to converter?
 """
 
 import sys                     # argv
