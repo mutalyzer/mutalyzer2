@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+"""
+Update the database with mapping information from the NCBI.
+
+Usage:
+  {command} database mapping_file assembly
+
+  database:     Database to update (i.e. 'hg18' or 'hg19').
+  mapping_file: Path to the NCBI mapping information.
+  assembly:     Use only entries from this assembly (this is the 'group_name'
+                column in the NCBI mapping file).
+
+
+This program is intended to be run daily from cron. Example:
+
+  25 6 * * *  mutalyzer-mapping-update hg19 /tmp/seq_gene.md reference
+"""
+
+
+import sys
+
+from mutalyzer.config import Config
+from mutalyzer.output import Output
+from mutalyzer.mapping import NCBIUpdater
+from mutalyzer.util import format_usage
+
+
+def main(database, mapping_file, assembly):
+    """
+    Update the database with information from the NCBI.
+
+    @arg database: Database to update (i.e. 'hg18' or 'hg19').
+    @type database: string
+    @arg mapping_file: Path to NCBI mapping information.
+    @type mapping_file: string
+    @arg assembly: Use only entries from this assembly (this is the
+        'group_name' column in the NCBI mapping file).
+    @type assembly: string
+
+    @todo: Also report how much was added/updated.
+    """
+    config = Config()
+    output = Output(__file__, config.Output)
+    output.addMessage(__file__, -1, 'INFO',
+                      'Starting NCBI mapping data update')
+
+    updater = NCBIUpdater(database, config)
+    updater.load(mapping_file, assembly)
+    updater.merge()
+
+    output.addMessage(__file__, -1, 'INFO', 'NCBI mapping data update end')
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 4:
+        print format_usage()
+        sys.exit(1)
+    main(*sys.argv[1:])

@@ -22,7 +22,7 @@ set -e
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
 BIN_BATCHD=$(which mutalyzer-batchd)
 BIN_CACHE_SYNC=$(which mutalyzer-cache-sync)
-BIN_UCSC_UPDATE=$(which mutalyzer-ucsc-update)
+BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
 BIN_WEBSITE=$(which mutalyzer-website.wsgi)
 BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
 
@@ -55,10 +55,10 @@ update-rc.d -f mutalyzer-batchd remove
 update-rc.d mutalyzer-batchd defaults 98 02
 
 echo "Installing crontab"
-cp extras/cron.d/mutalyzer-ucsc-update /etc/cron.d/mutalyzer-ucsc-update
-sed -i -e "s@<MUTALYZER_BIN_UCSC_UPDATE>@${BIN_UCSC_UPDATE}@g" /etc/cron.d/mutalyzer-ucsc-update
 cp extras/cron.d/mutalyzer-cache-sync /etc/cron.d/mutalyzer-cache-sync
 sed -i -e "s@<MUTALYZER_BIN_CACHE_SYNC>@${BIN_CACHE_SYNC}@g" /etc/cron.d/mutalyzer-cache-sync
+cp extras/cron.d/mutalyzer-mapping-update /etc/cron.d/mutalyzer-mapping-update
+sed -i -e "s@<MUTALYZER_BIN_MAPPING_UPDATE>@${BIN_MAPPING_UPDATE}@g" /etc/cron.d/mutalyzer-mapping-update
 
 echo "Creating /etc/apache2/conf.d/mutalyzer.conf"
 cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf
@@ -79,129 +79,28 @@ cat << EOF | mysql -u root -p
   FLUSH PRIVILEGES;
 EOF
 
-mkdir -p /tmp/mutalyzer-install
-pushd /tmp/mutalyzer-install
-
-# Do hg18
-mkdir -p hg18
-pushd hg18
-
-echo "Creating and populating hg18 database"
-
-# Then retrieve the refLink table from the UCSC website (hg18)
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/refLink.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/refLink.txt.gz
-
-# For Variant_info to work, you need the following files too (hg18)
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/refGene.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/refGene.txt.gz
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/gbStatus.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/gbStatus.txt.gz
-
-# Create table and load data (hg18)
-mysql -u mutalyzer -D hg18 < refLink.sql
-zcat refLink.txt.gz | mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
-
-mysql -u mutalyzer -D hg18 < gbStatus.sql
-zgrep mRNA gbStatus.txt.gz > gbStatus.mrna.txt
-mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "gbStatus.mrna.txt" INTO TABLE gbStatus;'
-
-mysql -u mutalyzer -D hg18 < refGene.sql
-zcat refGene.txt.gz | mysql -u mutalyzer -D hg18 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
-
-# Combine the mapping info into one table (hg18)
-cat << EOF | mysql -u mutalyzer -D hg18
-  CREATE TABLE map
-    SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd,
-                    exonStarts, exonEnds, name2 AS geneName, chrom,
-                    strand, protAcc
-    FROM gbStatus, refGene, refLink
-    WHERE type = "mRNA"
-    AND refGene.name = acc
-    AND acc = mrnaAcc;
-  CREATE TABLE map_cdsBackup (
-    acc char(12) NOT NULL DEFAULT '',
-    version smallint(6) unsigned NOT NULL DEFAULT '0',
-    txStart int(11) unsigned NOT NULL DEFAULT '0',
-    txEnd int(11) unsigned NOT NULL DEFAULT '0',
-    cdsStart int(11) unsigned NOT NULL DEFAULT '0',
-    cdsEnd int(11) unsigned NOT NULL DEFAULT '0',
-    exonStarts longblob NOT NULL,
-    exonEnds longblob NOT NULL,
-    geneName varchar(255) NOT NULL DEFAULT '',
-    chrom varchar(255) NOT NULL DEFAULT '',
-    strand char(1) NOT NULL DEFAULT '',
-    protAcc varchar(255) NOT NULL DEFAULT ''
-  );
-EOF
-
-popd
-rm -Rf /tmp/mutalyzer-install/hg18
-
-# Do hg19
-mkdir -p hg19
-pushd hg19
-
-echo "Creating and populating hg19 database"
-
-# Then retrieve the refLink table from the UCSC website (hg19)
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refLink.txt.gz
-
-# For Variant_info to work, you need the following files too (hg19)
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.sql
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/gbStatus.txt.gz
-
-# Create table and load data (hg19)
-mysql -u mutalyzer -D hg19 < refLink.sql
-zcat refLink.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refLink;'
-
-mysql -u mutalyzer -D hg19 < gbStatus.sql
-zgrep mRNA gbStatus.txt.gz > gbStatus.mrna.txt
-mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "gbStatus.mrna.txt" INTO TABLE gbStatus;'
-
-mysql -u mutalyzer -D hg19 < refGene.sql
-zcat refGene.txt.gz | mysql -u mutalyzer -D hg19 -e 'LOAD DATA LOCAL INFILE "/dev/stdin" INTO TABLE refGene;'
-
-# Combine the mapping info into one table (hg19)
-cat << EOF | mysql -u mutalyzer -D hg19
-  CREATE TABLE map
-    SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd,
-                    exonStarts, exonEnds, name2 AS geneName, chrom,
-                    strand, protAcc
-    FROM gbStatus, refGene, refLink
-    WHERE type = "mRNA"
-    AND refGene.name = acc
-    AND acc = mrnaAcc;
-  CREATE TABLE map_cdsBackup (
-    acc char(12) NOT NULL DEFAULT '',
-    version smallint(5) unsigned NOT NULL DEFAULT '0',
-    txStart int(10) unsigned NOT NULL DEFAULT '0',
-    txEnd int(10) unsigned NOT NULL DEFAULT '0',
-    cdsStart int(10) unsigned NOT NULL DEFAULT '0',
-    cdsEnd int(10) unsigned NOT NULL DEFAULT '0',
-    exonStarts longblob NOT NULL,
-    exonEnds longblob NOT NULL,
-    geneName varchar(255) NOT NULL DEFAULT '',
-    chrom varchar(255) NOT NULL DEFAULT '',
-    strand char(1) NOT NULL DEFAULT '',
-    protAcc varchar(255) NOT NULL DEFAULT ''
-  );
-EOF
-
-popd
-
-popd
-rm -Rf /tmp/mutalyzer-install
-
-# Create ChrName tables (hg18)
+# Create ChrName and Mapping table (hg18)
 cat << EOF | mysql -u mutalyzer -D hg18
 CREATE TABLE ChrName (
   AccNo char(20) NOT NULL,
   name char(20) NOT NULL,
   PRIMARY KEY (AccNo)
+);
+CREATE TABLE Mapping (
+  gene varchar(255) DEFAULT NULL,
+  transcript varchar(20) NOT NULL DEFAULT '',
+  version smallint(6) DEFAULT NULL,
+  chromosome varchar(40) DEFAULT NULL,
+  orientation char(1) DEFAULT NULL,
+  start int(11) unsigned DEFAULT NULL,
+  stop int(11) unsigned DEFAULT NULL,
+  cds_start int(11) unsigned DEFAULT NULL,
+  cds_stop int(11) unsigned DEFAULT NULL,
+  exon_starts longblob NOT NULL,
+  exon_stops longblob NOT NULL,
+  protein varchar(20) DEFAULT NULL,
+  source varchar(20) DEFAULT NULL,
+  INDEX (transcript)
 );
 INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000001.9', 'chr1'),
@@ -233,12 +132,32 @@ INSERT INTO ChrName (AccNo, name) VALUES
 ('NT_113959.1', 'chr22_h2_hap1');
 EOF
 
-# Create ChrName tables (hg19)
+# Populate Mapping table with UCSC data (hg18)
+wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.36.3/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
+$(BIN_MAPPING_UPDATE hg18 /tmp/seq_gene.md reference)
+
+# Create ChrName and Mapping table (hg19)
 cat << EOF | mysql -u mutalyzer -D hg19
 CREATE TABLE ChrName (
   AccNo char(20) NOT NULL,
   name char(20) NOT NULL,
   PRIMARY KEY (AccNo)
+);
+CREATE TABLE Mapping (
+  gene varchar(255) DEFAULT NULL,
+  transcript varchar(20) NOT NULL DEFAULT '',
+  version smallint(6) DEFAULT NULL,
+  chromosome varchar(40) DEFAULT NULL,
+  orientation char(1) DEFAULT NULL,
+  start int(11) unsigned DEFAULT NULL,
+  stop int(11) unsigned DEFAULT NULL,
+  cds_start int(11) unsigned DEFAULT NULL,
+  cds_stop int(11) unsigned DEFAULT NULL,
+  exon_starts longblob NOT NULL,
+  exon_stops longblob NOT NULL,
+  protein varchar(20) DEFAULT NULL,
+  source varchar(20) DEFAULT NULL,
+  INDEX (transcript)
 );
 INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000001.10', 'chr1'),
@@ -275,6 +194,10 @@ INSERT INTO ChrName (AccNo, name) VALUES
 ('NT_167250.1', 'chr4_ctg9_hap1'),
 ('NT_167251.1', 'chr17_ctg5_hap1');
 EOF
+
+# Populate Mapping table with UCSC data (hg19)
+wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
+$(BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly'
 
 echo "Creating tables in mutalyzer database"
 

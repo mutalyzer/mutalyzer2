@@ -12,14 +12,14 @@ throughout.
 
 The following is an overview of default locations used by Mutalyzer:
 
-    Package files         /usr/local/lib/python2.6/dist-packages/...
-    Configuration         /etc/mutalyzer/config
-    Log file              /var/log/mutalyzer.log
-    Cache directory       /var/cache/mutalyzer
-    Batchd init script    /etc/init.d/mutalyzer-batchd
-    UCSC update crontab   /etc/cron.d/mutalyzer-ucsc-update
-    Apache configuration  /etc/apache2/conf.d/mutalyzer.conf
-    Static website files  /var/www/mutalyzer/base
+    Package files           /usr/local/lib/python2.6/dist-packages/...
+    Configuration           /etc/mutalyzer/config
+    Log file                /var/log/mutalyzer.log
+    Cache directory         /var/cache/mutalyzer
+    Batchd init script      /etc/init.d/mutalyzer-batchd
+    Mapping update crontab  /etc/cron.d/mutalyzer-mapping-update
+    Apache configuration    /etc/apache2/conf.d/mutalyzer.conf
+    Static website files    /var/www/mutalyzer/base
 
 The default database user is 'mutalyzer' with no password and the database
 names are 'mutalyzer', 'hg18', and 'hg19'.
@@ -144,7 +144,9 @@ directory:
     sudo bash extras/post-upgrade
 
 If you installed Mutalyzer in a development environment, you don't have to
-do anything to upgrade (apart from updating the source code).
+do anything to upgrade except for running the automated migration scripts:
+
+    for M in extras/migrations/*.migration; do sudo $M migrate; done
 
 
 Additional notes

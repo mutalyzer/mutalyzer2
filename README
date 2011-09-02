@@ -40,8 +40,8 @@ Development notes
 Todo list:
 - Improve the web interface design :)
 - Test all uses of mkstemp().
-- Use naming conventions for modules Crossmap, Db, File, GenRecord, Mapper,
-  Retriever, Scheduler.
+- Use naming conventions for modules Crossmap, Db, File, GenRecord, Retriever
+  and Scheduler.
 - Use standard logging module, with rotating functionality. Race conditions
   on the log file are probably a problem in the current setup.
   Instead of that rotating, we could also use logrotate:
@@ -49,6 +49,8 @@ Todo list:
 - Setup continuous integration. Currently, I'm most impressed with Hudson.
   http://hudson-ci.org/
   http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
+  Or perhaps Jenkins.
+  http://jenkins-ci.org/
 - Use monit on the production server.
   http://mmonit.com/monit/
 - Migrate Javascript to JQuery.
@@ -60,13 +62,16 @@ Todo list:
   for example jinja.
 - Develop a large test suite.
 - Create a web interface url to watch the progress of a batch job.
+- Create webservices for the batch jobs (steal ideas from Jeroen's DVD
+  webservice).
 - Use virtualenv?
 - Use SQLAlchemy?
 - Password for MySQL user.
 - In deployment, remove old versions of Mutalyzer package?
 - Use https protocol.
 - Check for os.path.join vulnerabilities.
-- Solution for database schema migration on version updates.
+- Use a standard solution for the database migrations in extras/migrations.
+- Use something like Sphinx to generate development documentation from code.
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).

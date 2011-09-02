@@ -1,93 +1,47 @@
-#!/usr/bin/python
-
 """
-Search for an NM number in the MySQL database, if the version number
-matches, get the start and end positions in a variant. Translate these
-positions to I{g.} notation if the variant is in I{c.} notation or vice versa.
+Work with the mappings of transcripts to chromosomes.
 
-    - If no end position is present, the start position is assumed to be the end
-    position.
-    - If the version number is not found in the database, an error message is
-    generated and a suggestion for an other version is given.
-    - If the reference sequence is not found at all, an error is returned.
-    - If no variant is present, the transcription start and end and CDS end in
-    I{c.} notation is returned.
-    - If the variant is not accepted by the nomenclature parser, a parse error
-    will be printed.
+Instances of the {Converter} class convert between transcript and chromosomal
+locations, using the 'Mapping' table.
 
-@requires: sys
-@requires: Modules.Config
-@requires: Modules.Db
-@requires: Modules.Crossmap
-@requires: Modules.Serializers.SoapMessage
-@requires: Modules.Serializers.Mapping
-@requires: Modules.Serializers.Transcript
-@requires: Bio.Seq.reverse_complement
-@requires: collections.defaultdict
-
-@todo: Rename Mapper to converter?
+The {Updater} class is an abstract base class, subclassed by {NCBIUpdater}.
+Instances of {NCBIUpdater} can load NCBI mapping information from a file and
+update the database with this information.
 """
 
-import sys                     # argv
-from mutalyzer.grammar import Grammar
-from mutalyzer import Db         # Db(), get_NM_version(), get_NM_info()
-from mutalyzer import Crossmap   # Crossmap(), g2x(), x2g(), main2int(),
-                               # offset2int(), info()
-from mutalyzer.models import SoapMessage, Mapping, Transcript
 
+import sys
 from Bio.Seq import reverse_complement
 from collections import defaultdict
 
-def _sl2il(l) :
-    """
-    Convert a list of strings to a list of integers.
+from mutalyzer.grammar import Grammar
+from mutalyzer import Db
+from mutalyzer import Crossmap
+from mutalyzer.models import SoapMessage, Mapping, Transcript
 
-    @arg l: A list of strings
-    @type l: list
-
-    @returns: A list of integers
-    @rtype: list
-    """
-
-    return [int(s) for s in l]
-#__sl2il
-
-def _getcoords(C, Loc, Type) :
-    """
-    Return main, offset and g positions given either a position in
-    I{c.} or in I{g.} notation.
-
-    @arg C: A crossmapper
-    @type C: object
-    @arg Loc: A location in either I{g.} or I{c.} notation
-    @type Loc: object
-    @arg Type: The reference type
-    @type Type: string
-    @returns: triple:
-        0. Main coordinate in I{c.} notation
-        1. Offset coordinate in I{c.} notation
-        2. Position in I{g.} notation
-    @rtype: triple (integer, integer, integer)
-    """
-
-    if Type == 'c' :
-        main = C.main2int(Loc.MainSgn +  Loc.Main)
-        offset = C.offset2int(Loc.OffSgn +  Loc.Offset)
-        g = C.x2g(main, offset)
-        main, offset = C.g2x(g)
-    #if
-    else :
-        g = int(Loc.Main)
-        main, offset = C.g2x(g)
-    #else
-    return (main, offset, g)
-#__getcoords
 
 class Converter(object) :
     """
-    Converter object docstring
-    """
+    Convert between transcript and chromosomal locations.
 
+    Search for an NM number in the MySQL database, if the version number
+    matches, get the start and end positions in a variant. Translate these
+    positions to I{g.} notation if the variant is in I{c.} notation or vice
+    versa.
+
+    - If no end position is present, the start position is assumed to be the
+      end position.
+    - If the version number is not found in the database, an error message is
+      generated and a suggestion for an other version is given.
+    - If the reference sequence is not found at all, an error is returned.
+    - If no variant is present, the transcription start and end and CDS end in
+      I{c.} notation is returned.
+    - If the variant is not accepted by the nomenclature parser, a parse error
+      will be printed.
+
+    @todo: Refactor anything using {mutalyzer.models} into the {webservice}
+    module.
+    """
     def __init__(self, build, C, O) :
         """
         Initialise the class.
@@ -100,7 +54,6 @@ class Converter(object) :
         @arg O: output object
         @type O: object
         """
-
         self.build = None
         self.__output = O
         self.__config = C
@@ -168,7 +121,6 @@ class Converter(object) :
     #_parseInput
 
     def _populateFields(self, Fields) :
-        #TODO: ADD Error Messages, unlikely that CDS info is missing
         """
         Create a Mutalyzer compatible exon list.
 
@@ -181,22 +133,17 @@ class Converter(object) :
         @return: Exon list
         @rtype: list
         """
+        Fields["exon_starts"] = map(int, Fields["exon_starts"].split(','))
+        Fields["exon_stops"] = map(int, Fields["exon_stops"].split(','))
+        assert(len(Fields["exon_starts"]) == len(Fields["exon_stops"]))
 
-        Fields["exonStarts"] =\
-            _sl2il(Fields["exonStarts"].split(',')[:-1])
-        Fields["exonEnds"] =\
-            _sl2il(Fields["exonEnds"].split(',')[:-1])
-        assert(len(Fields["exonStarts"]) == len(Fields["exonEnds"]))
-
-        Fields["cdsStart"] = int(Fields["cdsStart"])
-        Fields["cdsEnd"]   = int(Fields["cdsEnd"])
-
-        for i in range(len(Fields["exonStarts"])) :
-            Fields["exonStarts"][i] += 1
+        if Fields['cds_start'] and Fields['cds_stop']:
+            Fields["cds_start"] = int(Fields["cds_start"])
+            Fields["cds_stop"]   = int(Fields["cds_stop"])
 
         # Create Mutalyzer compatible exon list
         Fields["exons"] = []
-        for exon in zip(Fields["exonStarts"], Fields["exonEnds"]) :
+        for exon in zip(Fields["exon_starts"], Fields["exon_stops"]) :
             Fields["exons"].extend(exon)
 
         self.dbFields = Fields
@@ -218,9 +165,9 @@ class Converter(object) :
         """
 
         Fields = dict(zip(
-            ("acc", "txStart", "txEnd", "cdsStart", "cdsEnd",
-             "exonStarts", "exonEnds", "geneName",
-             "chrom", "strand", "protAcc", "version"),
+            ("transcript", "start", "stop", "cds_start", "cds_stop",
+             "exon_starts", "exon_stops", "gene",
+             "chromosome", "orientation", "protein", "version"),
             values))
         return self._populateFields(Fields)
     #_FieldsFromValues
@@ -292,21 +239,51 @@ class Converter(object) :
         if not self.dbFields: return None
 
         CDS = []
-        if self.dbFields["cdsStart"] != self.dbFields["cdsEnd"] :
-            #The counting from 0 conversion.
-            CDS = [self.dbFields["cdsStart"] + 1, self.dbFields["cdsEnd"]]
+        if self.dbFields["cds_start"] and self.dbFields["cds_stop"]:
+            CDS = [self.dbFields["cds_start"], self.dbFields["cds_stop"]]
 
         mRNA = self.dbFields["exons"]
 
         # Convert the strand information to orientation.
         orientation = 1
-        if self.dbFields["strand"] == '-' :
+        if self.dbFields["orientation"] == '-' :
             orientation = -1
 
         # Build the crossmapper.
         self.crossmap = Crossmap.Crossmap(mRNA, CDS, orientation)
         return self.crossmap
     #makeCrossmap
+
+    @staticmethod
+    def _getcoords(C, Loc, Type) :
+        """
+        Return main, offset and g positions given either a position in
+        I{c.} or in I{g.} notation.
+
+        @arg C: A crossmapper
+        @type C: object
+        @arg Loc: A location in either I{g.} or I{c.} notation
+        @type Loc: object
+        @arg Type: The reference type
+        @type Type: string
+        @returns: triple:
+            0. Main coordinate in I{c.} notation
+            1. Offset coordinate in I{c.} notation
+            2. Position in I{g.} notation
+        @rtype: triple (integer, integer, integer)
+        """
+        if Type == 'c' :
+            main = C.main2int(Loc.MainSgn +  Loc.Main)
+            offset = C.offset2int(Loc.OffSgn +  Loc.Offset)
+            g = C.x2g(main, offset)
+            main, offset = C.g2x(g)
+        #if
+        else :
+            g = int(Loc.Main)
+            main, offset = C.g2x(g)
+        #else
+        return (main, offset, g)
+    #_getcoords
 
     def _coreMapping(self) :
         """
@@ -327,14 +304,14 @@ class Converter(object) :
 
         # Get the coordinates of the start position
         startmain, startoffset, start_g = \
-                _getcoords(Cross, mutation.StartLoc.PtLoc,
-                            self.parseTree.RefType)
+                self._getcoords(Cross, mutation.StartLoc.PtLoc,
+                                self.parseTree.RefType)
 
         # If there is an end position, calculate the coordinates.
         if mutation.EndLoc :
             endmain, endoffset, end_g = \
-                _getcoords(Cross, mutation.EndLoc.PtLoc,
-                            self.parseTree.RefType)
+                self._getcoords(Cross, mutation.EndLoc.PtLoc,
+                                self.parseTree.RefType)
         else :
             end_g, endmain, endoffset = start_g, startmain, startoffset
 
@@ -456,16 +433,16 @@ class Converter(object) :
             return None
 
         # construct the variant description
-        chromAcc = self.__database.chromAcc(self.dbFields["chrom"])
+        chromAcc = self.__database.chromAcc(self.dbFields["chromosome"])
         f_change = self._constructChange(False)
         r_change = self._constructChange(True)
-        if self.dbFields["strand"] == "+" :
+        if self.dbFields["orientation"] == "+" :
             change = f_change
         else :
             change = r_change
 
         if M.start_g != M.end_g :
-            if self.dbFields["strand"] == '+' :
+            if self.dbFields["orientation"] == '+' :
                 var_in_g = "g.%s_%s%s" % (M.start_g, M.end_g, change)
             else :
                 var_in_g = "g.%s_%s%s" % (M.end_g, M.start_g, change)
@@ -554,9 +531,9 @@ class Converter(object) :
                 #balen
                 continue
             # construct the variant description
-            accNo = "%s.%s" % (self.dbFields["acc"],self.dbFields["version"])
-            geneName = self.dbFields["geneName"] or ""
-            strand = self.dbFields["strand"] == '+'
+            accNo = "%s.%s" % (self.dbFields["transcript"],self.dbFields["version"])
+            geneName = self.dbFields["gene"] or ""
+            strand = self.dbFields["orientation"] == '+'
             startp = self.crossmap.tuple2string((M.startmain, M.startoffset))
             endp = self.crossmap.tuple2string((M.endmain, M.endoffset))
 
@@ -620,3 +597,254 @@ class Converter(object) :
         return change
     #_constructChange
 #Converter
+
+
+class Updater(object):
+    """
+    Abstract base class for updating the mapping information in the database.
+
+    Subclasses should implement the {load} method, loading new mapping
+    information into the 'MappingTemp' table. The {merge} method merges this
+    table into the real 'Mapping' table.
+    """
+    def __init__(self, build, config):
+        """
+        @arg build: Human genome build (or database name), i.e. 'hg18' or
+            'hg19'.
+        @type build: string
+        @arg config: A configuration object.
+        @type config: mutalyzer.config.Config
+        """
+        self.build = build
+        self.config = config
+        self.db = Db.Mapping(build, config.Db)
+    #__init__
+
+    def load(self):
+        """
+        The implementation of this method in subclasses should load mapping
+        information in the 'MappingTemp' table.
+        """
+        raise NotImplementedError('Implement this method in subclasses')
+    #load
+
+    def merge(self):
+        """
+        Merge the 'Mapping' and 'MappingTemp' tables. The result is stored in
+        the 'Mapping' table, of which a backup is created as 'MappingBackup'.
+
+        @todo: Report how much was updated/added.
+        """
+        self.db.merge_update()
+    #merge
+#Updater
+
+
+class NCBIUpdater(Updater):
+    """
+    Update the mapping information in the database with mapping information
+    from the NCBI.
+
+    Example usage:
+
+        >>> updater = NCBIUpdater('hg19', mutalyzer.config.Config())
+        >>> updater.load('/tmp/seq_gene.md', 'GRCh37.p2-Primary Assembly')
+        >>> updater.merge()
+
+    """
+    COLUMNS = ['taxonomy', 'chromosome', 'start', 'stop', 'orientation',
+               'contig', 'ctg_start', 'ctg_stop', 'ctg_orientation',
+               'feature_name', 'feature_id', 'feature_type', 'group_label',
+               'transcript', 'evidence_code']
+
+    def __init__(self, build, config):
+        """
+        @arg build: Human genome build (or database name), i.e. 'hg18' or
+            'hg19'.
+        @type build: string
+        @arg config: A configuration object.
+        @type config: mutalyzer.config.Config
+        """
+        self.exon_backlog = {}
+        super(NCBIUpdater, self).__init__(build, config)
+    #__init__
+
+    def load(self, mapping_file, assembly):
+        """
+        Load NCBI mapping information from {mapping_file} into the database.
+
+        The NCBI mapping file consists of entries, one per line, in order of
+        their location in the genome (more specifically by start location).
+        Every entry has a 'group_name' column, denoting the assembly it is
+        from. We only use entries where this value is {assembly}.
+
+        There are four types of entries (for our purposes):
+        - Gene: Name, identifier, and location of a gene.
+        - Transcript: Name, gene id, and location of a transcript.
+        - UTR: Location and transcript of a non-coding exon (or part of it).
+        - CDS: Location and transcript of a coding exon (or part of it).
+
+        A bit troublesome for us is that exons are split in UTR exons and CDS
+        exons, with exons overlapping the UTR/CDS border defined as two
+        separate entries (one of type UTR and one of type CDS).
+
+        Another minor annoyance is that some transcripts (~ 15) are split over
+        two contigs (NT_*). In that case, they are defined by two entries in
+        the file, where we should merge them by taking the start position of
+        the first and the stop position of the second.
+
+        Our strategy is to loop over all entries and store them in three
+        temporary tables (for genes, transcripts, exons). The entries of type
+        UTR and CDS are merged to correct exon entries by keeping a backlog
+        of these entries that can still be modified before storing them in the
+        database.
+
+        The values from the three temporary tables are aggregated into the
+        'MappingTemp' table.
+
+        @arg mapping_file: Path to NCBI mapping information.
+        @type mapping_file: string
+        @arg assembly: Use only entries from this assembly (this is the
+            'group_name' column in the NCBI mapping file).
+        @type assembly: string
+        """
+        self._create_temporary_tables()
+        self._import_mapping(mapping_file, assembly)
+        self._aggregate_mapping()
+        self._drop_temporary_tables()
+    #load
+
+    def _import_mapping(self, mapping_file, assembly):
+        """
+        Import mapping information from {mapping_file} into three temporary
+        tables.
+
+        @note: We issue a separate INSERT statement to the database for every
+            entry. An alternative is to write everything to tab-separated
+            files and load those into the database with LOAD DATA LOCAL INFILE
+            statements. This alternative seems to be about twice as fast, but
+            for now we stick with the simpler solution.
+        """
+        self.exon_backlog = {}
+
+        with open(mapping_file, 'r') as mapping:
+            for line in mapping:
+                if line.startswith('#'):
+                    continue
+                entry = dict(zip(self.COLUMNS, line.rstrip().split('\t')))
+
+                # Only use entries from the given assembly.
+                if entry['group_label'] != assembly:
+                    continue
+
+                # Only use entries on the normal chromosomes.
+                try:
+                    int(entry['chromosome'])
+                except ValueError:
+                    if entry['chromosome'] not in 'XY':
+                        continue
+
+                if entry['feature_type'] == 'GENE':
+                    self._import_gene(entry)
+                elif entry['feature_type'] == 'RNA':
+                    self._import_transcript(entry)
+                elif entry['feature_type'] in ('UTR', 'CDS'):
+                    self._import_exon(entry)
+
+        self._import_exon_backlog()
+    #_import_mapping
+
+    def _import_gene(self, entry):
+        """
+        Insert a gene in the database.
+        """
+        self.db.ncbi_import_gene(entry['feature_id'], entry['feature_name'])
+    #_import_gene
+
+    def _import_transcript(self, entry):
+        """
+        Insert a transcript in the database.
+        """
+        self.db.ncbi_import_transcript(
+            entry['feature_name'], entry['feature_id'], entry['chromosome'],
+            int(entry['start']), int(entry['stop']), entry['orientation'])
+    #_import_transcript
+
+    def _import_exon(self, entry):
+        """
+        Instead of directly inserting each exon in the database, we keep them
+        in a backlog of at most one exon per transcript. Exons are taken from
+        the backlog and inserted in the database only when we passed their
+        genomic stop location by more than one position.
+
+        This way, exons in the backlog can be merged when they are on a
+        UTR/CDS boundary.
+        """
+        cds = entry['feature_type'] == 'CDS'
+        entry['start'] = int(entry['start'])
+        entry['stop'] = int(entry['stop'])
+        entry['protein'] = entry['feature_name'] if cds else None
+        entry['cds'] = cds
+
+        self._import_exon_backlog(entry['start'] - 1)
+
+        try:
+            previous = self.exon_backlog[entry['transcript']]
+            if previous['cds'] != entry['cds'] \
+                   and previous['stop'] == entry['start'] - 1:
+                if entry['cds']:
+                    entry['cds_start'] = entry['start']
+                else:
+                    entry['cds_stop'] = previous['stop']
+                    if 'cds_start' in previous:
+                        entry['cds_start'] = previous['cds_start']
+                    entry['protein'] = previous['protein']
+                entry['start'] = previous['start']
+        except KeyError:
+            pass
+
+        self.exon_backlog[entry['transcript']] = entry
+    #_import_exon
+
+    def _import_exon_backlog(self, up_to_position=None):
+        """
+        Import exons from the backlog in the database. If the optional
+        argument {up_to_position} is set, only import exons with a stop
+        position before this value.
+
+        We explicitely remove imported exons from the backlog, because it
+        might be suboptimal to keep more than 30,000 exons in there.
+        """
+        for transcript, exon in self.exon_backlog.items():
+            if not up_to_position or exon['stop'] < up_to_position:
+                del self.exon_backlog[transcript]
+                del exon['cds']
+                self.db.ncbi_import_exon(
+                    exon['transcript'], exon['start'], exon['stop'],
+                    exon['cds_start'] if 'cds_start' in exon else None,
+                    exon['cds_stop'] if 'cds_stop' in exon else None,
+                    exon['protein'] or None)
+    #_import_exon_backlog
+
+    def _aggregate_mapping(self):
+        """
+        Aggregate the genes, transcripts and exons from their temporary
+        tables into the 'MappingTemp' table.
+        """
+        self.db.ncbi_aggregate_mapping()
+    #_aggregate_mapping
+
+    def _create_temporary_tables(self):
+        """
+        Create temporary tables needed for loading the NCBI mapping data.
+        """
+        self.db.ncbi_create_temporary_tables()
+    #_create_temporary_tables
+
+    def _drop_temporary_tables(self):
+        """
+        Drop temporary tables needed for loading the NCBI mapping data.
+        """
+        self.db.ncbi_drop_temporary_tables()
+    #_drop_temporary_tables
+#NCBIUpdater

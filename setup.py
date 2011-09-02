@@ -20,7 +20,7 @@ setup(
     scripts=['bin/mutalyzer',
              'bin/mutalyzer-batchd',
              'bin/mutalyzer-cache-sync',
-             'bin/mutalyzer-ucsc-update',
+             'bin/mutalyzer-mapping-update',
              'bin/mutalyzer-webservice.wsgi',
              'bin/mutalyzer-website.wsgi'],
     zip_safe=False

@@ -42,14 +42,8 @@ LocalMySQLuser = "mutalyzer"
 # Host name for the local databases.
 LocalMySQLhost = "localhost"
 
-# MySQL username for the UCSC database.
-RemoteMySQLuser = "genome"
 
-# Host name for the UCSC database.
-RemoteMySQLhost = "genome-mysql.cse.ucsc.edu"
 
-# Retrieve all entries modified within a certain number of days.
-UpdateInterval = 7
 
 
 #

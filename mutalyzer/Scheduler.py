@@ -25,7 +25,7 @@ from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 from mutalyzer.config import Config
 from mutalyzer.output import Output
-from mutalyzer import Mapper              # Mapper.Converter
+from mutalyzer.mapping import Converter
 from mutalyzer import Retriever           # Retriever.Retriever
 
 
@@ -507,7 +507,7 @@ Mutalyzer batch checker.""" % url)
         if not skip :
             try :
                 #process
-                converter = Mapper.Converter(build, C, O)
+                converter = Converter(build, C, O)
 
                 #Also accept chr accNo
                 variant = converter.correctChrVariant(variant)

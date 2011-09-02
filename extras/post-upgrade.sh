@@ -29,6 +29,12 @@ fi
 echo "Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base"
 ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
 
+echo "Running any needed migrations"
+for MIGRATION in extras/migrations/*.migration; do
+    echo "Checking migration $(basename $MIGRATION)"
+    $MIGRATION migrate
+done
+
 echo "Restarting Apache"
 /etc/init.d/apache2 restart
 

@@ -38,7 +38,7 @@ from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
 from mutalyzer import variantchecker
 from mutalyzer import Db
-from mutalyzer import Mapper
+from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer.models import *
@@ -334,7 +334,7 @@ class MutalyzerService(DefinitionBase):
                      "Reveived request mappingInfo(%s %s %s %s)" % (
                         LOVD_ver, build, accNo, variant))
 
-        conv = Mapper.Converter(build, self._config, L)
+        conv = Converter(build, self._config, L)
         result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
@@ -372,7 +372,7 @@ class MutalyzerService(DefinitionBase):
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
-        converter = Mapper.Converter(build, self._config, O)
+        converter = Converter(build, self._config, O)
         T = converter.mainTranscript(accNo)
 
         O.addMessage(__file__, -1, "INFO",
@@ -497,7 +497,7 @@ class MutalyzerService(DefinitionBase):
         O.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
-        converter = Mapper.Converter(build, self._config, O)
+        converter = Converter(build, self._config, O)
         variant = converter.correctChrVariant(variant)
 
         if "c." in variant :

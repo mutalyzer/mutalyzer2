@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Remove UCSC update from cron and install NCBI update.
+#
+# Usage:
+#   ./004-cron-ucsc-to-ncbi.migration [migrate]
+
+if [ -e /etc/cron.d/mutalyzer-ucsc-update ] && $(grep -v -q '^#' /etc/cron.d/mutalyzer-ucsc-update); then
+    echo 'This migration is needed.'
+    if [ "$1" = 'migrate' ]; then
+        echo 'Performing migration.'
+        sed -i 's/^/#/' /etc/cron.d/mutalyzer-ucsc-update
+        echo 'Commented all lines in /etc/cron.d/mutalyzer-ucsc-update'
+        if [ ! -e /etc/cron.d/mutalyzer-mapping-update ]; then
+            BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
+            cp extras/cron.d/mutalyzer-mapping-update /etc/cron.d/mutalyzer-mapping-update
+            sed -i -e "s@<MUTALYZER_BIN_MAPPING_UPDATE>@${BIN_MAPPING_UPDATE}@g" /etc/cron.d/mutalyzer-mapping-update
+            echo 'Installed /etc/cron.d/mutalyzer-mapping-update'
+        fi
+        echo 'Performed migration.'
+    fi
+else
+    echo 'This migration is not needed.'
+fi

@@ -98,9 +98,6 @@ class Config():
             self.Db.dbNames = config["dbNames"]
             self.Db.LocalMySQLuser = config["LocalMySQLuser"]
             self.Db.LocalMySQLhost = config["LocalMySQLhost"]
-            self.Db.RemoteMySQLuser = config["RemoteMySQLuser"]
-            self.Db.RemoteMySQLhost = config["RemoteMySQLhost"]
-            self.Db.UpdateInterval = int(config["UpdateInterval"])
 
             # Set the variables needed by the Output module.
             self.Output.log = config["log"]

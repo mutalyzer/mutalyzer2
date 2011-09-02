@@ -4,7 +4,10 @@
 Command-line interface to the nomenclature checker.
 
 Usage:
-  ./check 'AB026906.1:c.274delG'
+  {command} variant
+
+  variant: The variant description to check.
+
 
 @todo: Refactor this file.
 """
@@ -16,6 +19,7 @@ import os
 import mutalyzer
 from mutalyzer.output import Output
 from mutalyzer.config import Config
+from mutalyzer.util import format_usage
 
 
 def main(cmd):
@@ -181,7 +185,7 @@ def main(cmd):
 if __name__ == '__main__':
 
     if len(sys.argv) < 2:
-        print 'Please provide a variant'
+        print format_usage()
         sys.exit(1)
 
     main(sys.argv[1])

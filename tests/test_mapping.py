@@ -1,5 +1,5 @@
 """
-Tests for the converter (Mapper) module.
+Tests for the mapping module.
 """
 
 
@@ -8,12 +8,12 @@ from nose.tools import *
 
 from mutalyzer.config import Config
 from mutalyzer.output import Output
-from mutalyzer.Mapper import Converter
+from mutalyzer.mapping import Converter
 
 
 class TestConverter():
     """
-    Test the converter (Mapper) module.
+    Test the Converter class.
     """
     def setUp(self):
         """

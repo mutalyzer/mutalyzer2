@@ -4,12 +4,13 @@
 Synchronize the database cache with other Mutalyzer instances.
 
 Usage:
-  ./mutalyzer-cache-sync remote_wsdl url_template days
+  {command} remote_wsdl url_template days
 
   remote_wsdl:  Location of the remote WSDL description.
-  url_template: URL to remote downloads, where {file} is to be substituted
+  url_template: URL to remote downloads, where {{file}} is to be substituted
                 by the filename.
   days:         Number of days to go back in the remote cache.
+
 
 This program is intended to be run daily from cron. Example:
 
@@ -24,6 +25,7 @@ from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
+from mutalyzer.util import format_usage
 
 
 def cache_sync(remote_wsdl, url_template, days):
@@ -40,7 +42,7 @@ def cache_sync(remote_wsdl, url_template, days):
 
 if __name__ == '__main__':
     if len(sys.argv) < 4:
-        print __doc__.strip()
+        print format_usage()
         sys.exit(1)
     try:
         days = int(sys.argv[3])

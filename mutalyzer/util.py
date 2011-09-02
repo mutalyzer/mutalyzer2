@@ -19,9 +19,11 @@ General utility functions.
 """
 
 
+import sys
 import os
 import math
 import time
+import inspect
 from itertools import izip_longest
 
 import Bio.Seq
@@ -720,6 +722,35 @@ def message_info(message):
             'class':       classes[message.level],
             'description': message.description}
 #message_info
+
+
+def format_usage(usage=None, keywords={}):
+    """
+    Format a usage string suitable for printing to the console. Some magic
+    is employed so you can usually just call this function without arguments
+    to have the calling module's docstring pretty-printed.
+
+    @kwarg usage: The string to format. If omitted, the calling module's
+        docstring is used.
+    @type usage: string
+    @kwarg keywords: A dictionary of (keyword, value) pairs used to format
+        the usage string. If it does not contain the key 'command', it is
+        added with the value of sys.argv[0].
+    @type keywords: dictionary(string, string)
+
+    @return: Formatted usage string. This is {usage} with any entries from
+        {keywords} replaced and cut-off at the first occurence of two
+        consecutive empty lines.
+    @rtype: string
+    """
+    if not usage:
+        caller = inspect.stack()[1]
+        usage = inspect.getmodule(caller[0]).__doc__
+    if not 'command' in keywords:
+        keywords['command'] = sys.argv[0]
+
+    return usage.split('\n\n\n')[0].strip().format(**keywords)
+#format_usage
 
 
 def slow(f):

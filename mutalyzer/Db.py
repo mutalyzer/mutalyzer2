@@ -15,8 +15,6 @@ statements.
 #Public classes:
 #    - Db      ; Log in to a database and keep it open for queries.
 #    - Mapping ; Mapping of transcripts and genes.
-#    - Remote  ; Retrieving updates for the mapping databases.
-#    - Update  ; Updating the mapping databases.
 #    - Cache   ; Cache administration.
 #    - Batch   ; Batch checker.
 
@@ -133,7 +131,7 @@ class Mapping(Db) :
         - query(statement) ; General query function.
 
     SQL tables from dbNames:
-        - map ; Accumulated mapping info.
+        - Mapping; Accumulated mapping info.
     """
 
     def __init__(self, build, config) :
@@ -150,66 +148,12 @@ class Mapping(Db) :
         Db.__init__(self, build, config.LocalMySQLuser, config.LocalMySQLhost)
     #__init__
 
-    def get_protAcc(self, mrnaAcc) :
-        """
-        Query the database for a protein ID given an mRNA ID.
-
-        SQL tables from dbNames:
-            - map ; Accumulated mapping info.
-
-        @arg mrnaAcc: The ID of an mRNA
-        @type mrnaAcc: string
-
-        @return: The protein ID
-        @rtype: string
-        """
-
-        statement = """
-            SELECT protAcc
-              FROM map
-              WHERE acc = %s;
-        """, mrnaAcc
-
-        return self.query(statement)[0][0]
-    #get_protAcc
-
-    def get_NM_info(self, mrnaAcc, version = None) :
-        """
-        Retrieve various data for an NM number.
-
-        SQL tables from dbNames:
-            - map ; Accumulated mapping info.
-
-        @arg mrnaAcc: The ID of an mRNA
-        @type mrnaAcc: string
-        @arg version: version number of the accession number (not used)
-        @type version: integer
-
-        @return: 
-                 - exonStarts ; List of exon start sites.
-                 - exonEnds   ; List of exon end sites.
-                 - cdsStart   ; Position of the start codon.
-                 - cdsEnd     ; Position of the end codon.
-                 - strand     ; Orientation of the gene (+ = forward,
-                                                         - = reverse)
-        @rtype: list
-        """
-
-        statement = """
-            SELECT exonStarts, exonEnds, cdsStart, cdsEnd, strand
-              FROM map
-              WHERE acc = %s;
-        """, mrnaAcc
-
-        return self.query(statement)[0]
-    #get_NM_info
-
     def get_NM_version(self, mrnaAcc) :
         """
         Get the version number of an accession number.
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Mapping ; Accumulated mapping info.
 
         @arg mrnaAcc: The ID of an mRNA
         @type mrnaAcc: string
@@ -220,8 +164,8 @@ class Mapping(Db) :
 
         statement = """
             SELECT version
-              FROM map
-              WHERE acc = %s;
+              FROM Mapping
+              WHERE transcript = %s;
         """, mrnaAcc
 
         return [int(i[0]) for i in self.query(statement)]
@@ -233,7 +177,7 @@ class Mapping(Db) :
         If the version number is None, use the "newest" version number.
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Mapping ; Accumulated mapping info.
 
         @arg mrnaAcc: The ID of an mRNA
         @type mrnaAcc: string
@@ -251,25 +195,25 @@ class Mapping(Db) :
             See also test_converter.test_hla_cluster and bug #58.
         """
         q = """
-                select  acc,
-                        txStart, txEnd,
-                        cdsStart, cdsEnd,
-                        exonStarts, exonEnds,
-                        geneName, chrom,
-                        strand, protAcc
-                from map
+                select  transcript,
+                        start, stop,
+                        cds_start, cds_stop,
+                        exon_starts, exon_stops,
+                        gene, chromosome,
+                        orientation, protein
+                from Mapping
         """
         if version is None:
             q += """
-                where acc = %s
-                order by version desc, chrom asc;
+                where transcript = %s
+                order by version desc, chromosome asc;
                 """
             statement = (q, mrnaAcc)
         else:
             q += """
-                where acc = %s and
+                where transcript = %s and
                       version = %s
-                order by chrom asc;
+                order by chromosome asc;
                 """
             statement = q, (mrnaAcc, version)
 
@@ -283,7 +227,7 @@ class Mapping(Db) :
         should be returned, set overlap to 0.
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Mapping ; Accumulated mapping info.
 
         @arg chrom: The chromosome (coded as "chr1", ..., "chrY")
         @type chrom: string
@@ -295,35 +239,35 @@ class Mapping(Db) :
           - 0 ; Return only the transcripts that completely fall in the
                 range [p1, p2]
           - 1 ; Return all hit transcripts
-        @type overlap: boolean 
+        @type overlap: boolean
 
         @return: All accession numbers that are hit according to the overlap
         criterium
         @rtype: list
         """
         q = """
-                select  acc,
-                        txStart, txEnd,
-                        cdsStart, cdsEnd,
-                        exonStarts, exonEnds,
-                        geneName, chrom,
-                        strand, protAcc,
+                select  transcript,
+                        start, stop,
+                        cds_start, cds_stop,
+                        exon_starts, exon_stops,
+                        gene, chromosome,
+                        orientation, protein,
                         version
-                from map
+                from Mapping
         """
         if overlap:
             q += """
-              WHERE chrom = %s AND
-                    txStart <= "%s" AND
-                    txEnd >= "%s";
+              WHERE chromosome = %s AND
+                    start <= "%s" AND
+                    stop >= "%s";
             """
             statement = q, (chrom, p2, p1)
 
         else:
             q += """
-              WHERE chrom = %s AND
-                    txStart >= "%s" AND
-                    txEnd <= "%s";
+              WHERE chromosome = %s AND
+                    start >= "%s" AND
+                    stop <= "%s";
             """
             statement = q, (chrom, p1, p2)
 
@@ -338,16 +282,16 @@ class Mapping(Db) :
                 geneName ; Name of a gene.
 
             SQL tables from dbNames:
-                map ; Accumulated mapping info.
+                Mapping ; Accumulated mapping info.
 
             Returns:
                 list ; A list of transcripts.
         """
 
         statement = """
-            SELECT acc, version
-                FROM map
-                WHERE geneName = %s;
+            SELECT transcript, version
+                FROM Mapping
+                WHERE gene = %s;
         """, geneName
 
         ret = self.query(statement)
@@ -365,7 +309,7 @@ class Mapping(Db) :
         Get the name of a gene, given a transcript identifier (NM number).
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Mapping ; Accumulated mapping info.
 
         @arg mrnaAcc: The ID of an mRNA
         @type mrnaAcc: string
@@ -375,9 +319,9 @@ class Mapping(Db) :
         """
 
         statement = """
-            SELECT geneName
-              FROM map
-              WHERE acc = %s;
+            SELECT gene
+              FROM Mapping
+              WHERE transcript = %s;
         """, mrnaAcc
 
         ret = self.query(statement)
@@ -391,7 +335,7 @@ class Mapping(Db) :
         Check if the given name is a valid chromosome name.
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Mapping ; Accumulated mapping info.
 
         @arg name: The name to be tested
         @type name: string
@@ -403,8 +347,8 @@ class Mapping(Db) :
 
         statement = """
             SELECT COUNT(*)
-              FROM map
-              WHERE chrom = %s;
+              FROM Mapping
+              WHERE chromosome = %s;
         """, name
 
         if int(self.query(statement)[0][0]) > 0 :
@@ -469,7 +413,7 @@ class Mapping(Db) :
         Get the chromosome name, given a transcript identifier (NM number).
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Mapping ; Accumulated mapping info.
 
         @arg acc: The NM accession number (version NOT included)
         @type acc: string
@@ -479,341 +423,227 @@ class Mapping(Db) :
         """
 
         statement = """
-            SELECT chrom
-              FROM map
-              WHERE acc = %s;
+            SELECT chromosome
+              FROM Mapping
+              WHERE transcript = %s;
         """, acc
-        print acc
+
         ret = self.query(statement)
         if ret :
             return ret[0][0]
         return None
     #get_chromName
-#Mapper
 
-class Remote(Db) :
-    """
-    Database functions for retrieving updates for the mapping databases.
-
-    Special methods:
-        - __init__(config) ; Initialise the class.
-
-    Public methods:
-        - get_Update()        ; Retrieve new mapping info from the UCSC.
-
-    Inherited methods from Db:
-        - query(statement) ; General query function.
-
-    SQL tables from dbNames:
-        - gbStatus ; acc -> version mapping (NM to NM + version),
-                     type, modDate
-        - refGene  ; name -> geneName mapping (NM to gene name),
-                     txStart, txEnd, cdsStart, cdsEnd, exonStarts,
-                     exonEnds, chrom, strand.
-        - refLink  ; mrnaAcc -> protAcc mapping (NM to NP).
-    """
-
-    def __init__(self, build, config) :
+    def merge_update(self):
         """
-        Initialise the Db parent class. Use the remote database for a
-        certain build.
+        Merge existing mapping information with new mapping information, which
+        should be in table 'MappingTemp'.
 
-        Private variables (altered):
-            - __config ; Configuration variables.
+        The strategy is as follows. Existing mappings (accumulated by
+        Mutalyzer in the past) that are not in the new mapping information are
+        added to the new mapping information. The resulting set is used as the
+        mapping information from now on.
 
-        @arg build: The version of the mapping database
-        @type build: string
-        @arg config: Configuration variables
-        @type config: class instance
-        """
-
-        self.__config = config
-        Db.__init__(self, build, config.RemoteMySQLuser, config.RemoteMySQLhost)
-    #__init__
-
-    def get_Update(self) :
-        """
-        Retrieve all mapping updates from the UCSC within a certain time
-        window (defined in the configuration file) and gather the results
-        into one mapping table.
-
-        The results will be written to a temporary file to be imported in
-        the local database with the load_Update() function.
-
-        Return temporary filename used to store the results.
-
-        @return: Filename used to store the results.
-        @rtype: string
+        This way, we get the latest updates for existing mappings and keep old
+        mappings not in the updated information.
 
         SQL tables from dbNames:
-            - gbStatus ; acc -> version mapping (NM to NM + version),
-                         type, modDate
-            - refGene  ; name -> geneName mapping (NM to gene name),
-                         txStart, txEnd, cdsStart, cdsEnd, exonStarts,
-                         exonEnds, chrom, strand.
-            - refLink  ; mrnaAcc -> protAcc mapping (NM to NP).
+            - Mapping ; Accumulated mapping info.
+            - MappingTemp ; New mapping info.
+            - MappingBackup ; Backup of accumulated mapping info.
+
+        @todo: Return number of entries added/updated.
         """
+        statement = """
+            CREATE TABLE IF NOT EXISTS MappingTemp LIKE Mapping;
+        """, None
+        self.query(statement)
 
         statement = """
-            SELECT DISTINCT acc, version, txStart, txEnd, cdsStart, cdsEnd,
-                            exonStarts, exonEnds, name2 AS geneName, chrom,
-                            strand, protAcc
-              FROM gbStatus, refGene, refLink
-              WHERE type = "mRNA"
-              AND refGene.name = acc
-              AND acc = mrnaAcc
-              AND time >= DATE_SUB(CURDATE(), INTERVAL %s DAY);
-        """, self.__config.UpdateInterval
+            INSERT INTO MappingTemp
+            SELECT * FROM Mapping AS OldM
+            WHERE NOT EXISTS (
+                SELECT * FROM MappingTemp AS NewM
+                WHERE OldM.transcript = NewM.transcript
+                AND OldM.version = NewM.version
+            );
+        """, None
+        self.query(statement)
 
-        handle, filename = tempfile.mkstemp(text=True)
+        statement = """
+            DROP TABLE IF EXISTS MappingBackup;
+        """, None
+        self.query(statement)
 
-        # Convert the results to a tab delimited file.
-        for i in self.query(statement) :
-            for j in i :
-                os.write(handle, str(j) + chr(0x09))  # 0x09 is a TAB.
-            os.write(handle, '\n')
-        #for
+        statement = """
+            RENAME TABLE Mapping TO MappingBackup, MappingTemp TO Mapping;
+        """, None
+        self.query(statement)
+    #merge_update
 
-        os.close(handle)
-        return filename
-    #get_Update
-#Remote
-
-class Update(Db) :
-    """
-    Database functions for updating the mapping databases.
-
-    Public methods:
-        - load_Update()       ; Load new mapping info into the local database.
-        - count_Updates()     ; Count the number of entries in the new
-                                mapping info table.
-        - backup_cdsUpdates() ; Make a backup of updates that overwrite the
-                                old mapping info.
-        - count_cdsUpdates()  ; Count the number of updates that overwrite
-                                the old mapping info.
-        - merge_cdsUpdates()  ; Merge the backup of old mapping info with the
-                                other old info.
-        - merge_Update()      ; Merge the new mapping info from the UCSC with
-                                what we already have.
-
-    Inherited methods from Db:
-        - query(statement) ; General query function.
-
-    SQL tables from dbNames:
-        - map                ; Accumulated mapping info.
-        - map_temp           ; Newly found data.
-        - map_new            ; Merge of map_temp and map.
-        - map_cdsBackup_temp ; Entries that were updated without an increment
-                               of the version number.
-        - map_cdsBackup      ; Merge of map_cdsBackup_temp and itself.
-    """
-
-    def __init__(self, build, config) :
+    def ncbi_create_temporary_tables(self):
         """
-        Initialise the Db parent class. Use the remote database for a
-        certain build.
-
-        Private variables (altered):
-            - __config ; Configuration variables.
-
-        @arg build: The version of the mapping database
-        @type build: string
-        @arg config: Configuration variables
-        @type config: class instance
-        """
-
-        self.__config = config
-        Db.__init__(self, build, config.LocalMySQLuser, config.LocalMySQLhost)
-    #__init__
-
-    def load_Update(self, filename) :
-        """
-        Load the updates from the temporary file created by the get_Update()
-        function and import it in the local database.
-
-        @arg filename: Filename to read the update from.
-        @type filename: string
-
-        SQL tables from dbNames (altered):
-            - map_temp ; Created and loaded with data from TempFile.
+        Create temporary tables to import NCBI mapping into.
 
         SQL tables from dbNames:
-            - map ; Accumulated mapping info.
+            - Genes ; Gene names from NCBI.
+            - Transcripts ; Transcript mappings from NCBI.
+            - Exons ; Exon mappings from NCBI.
         """
-
-        # The statements in this function may be combined when MYSQL_BUG is
-        # solved.
+        self.ncbi_drop_temporary_tables()
 
         statement = """
-            CREATE TABLE map_temp LIKE map;
+            CREATE TABLE Genes (
+                id varchar(20) NOT NULL DEFAULT '',
+                name varchar(255) DEFAULT NULL,
+                PRIMARY KEY (id)
+            );
         """, None
         self.query(statement)
-        statement = """
-            LOAD DATA LOCAL INFILE %s
-              INTO TABLE map_temp;
-        """, filename
 
+        statement = """
+            CREATE TABLE Transcripts (
+                name varchar(20) NOT NULL DEFAULT '',
+                gene_id varchar(20) DEFAULT NULL,
+                chromosome char(2) DEFAULT NULL,
+                start int(11) DEFAULT NULL,
+                stop int(11) DEFAULT NULL,
+                orientation char(1) DEFAULT NULL,
+                PRIMARY KEY (name,start)
+            );
+        """, None
         self.query(statement)
 
-        os.remove(filename)
-    #load_Update
-
-    def count_Updates(self) :
-        """
-        Count the number of updates. This function will only work if it
-        is preceeded by the load_Update() function. Otherwise the map_temp
-        table may not exist. This function can not be used after the
-        merge_Update() function has been executed, since it drops the
-        map_temp table.
-
-        @return: The number of entries in the table of updated mapping info
-        @rtype: integer
-        """
-
         statement = """
-            SELECT COUNT(*)
-              FROM map_temp;
+            CREATE TABLE Exons (
+                transcript varchar(20) NOT NULL DEFAULT '',
+                start int(11) DEFAULT NULL,
+                stop int(11) DEFAULT NULL,
+                cds_start int(11) DEFAULT NULL,
+                cds_stop int(11) DEFAULT NULL,
+                protein varchar(20) DEFAULT NULL,
+                PRIMARY KEY (transcript,start)
+            );
         """, None
+        self.query(statement)
+    #ncbi_create_temporary_table
 
-        return int(self.query(statement)[0][0])
-    #count_Updates
-
-    def backup_cdsUpdates(self) :
+    def ncbi_drop_temporary_tables(self):
         """
-        Copy all mapping entries where there was an update, but no
-        increment in the version number, to a backup table. Note that
-        we use acc, version, txStart as the primary key because members
-        of a gene family are mapped multiple times.
-
-        SQL tables from dbNames (altered):
-            - map_cdsBackup_temp ; Created and filled with entries that
-                                   were updated without an increment of the
-                                   version number.
+        Drop temporary tables used for importing NCBI mapping information.
 
         SQL tables from dbNames:
-            - map      ; Accumulated mapping info.
-            - map_temp ; Freshly downloaded mapping info.
+            - Genes ; Gene names from NCBI.
+            - Transcripts ; Transcript mappings from NCBI.
+            - Exons ; Exon mappings from NCBI.
         """
-
         statement = """
-            CREATE TABLE map_cdsBackup_temp
-              SELECT map.*
-                FROM map, map_temp
-                WHERE map.acc = map_temp.acc
-                AND map.version = map_temp.version
-                AND map.txStart = map_temp.txStart
-                AND (
-                  map.cdsStart != map_temp.cdsStart
-                  OR map.cdsEnd != map_temp.cdsEnd
-                );
+            DROP TABLE IF EXISTS Genes, Transcripts, Exons;
         """, None
-
         self.query(statement)
-    #backup_cdsUpdates
+    #ncbi_drop_temporary_tables
 
-    def count_cdsUpdates(self) :
+    def ncbi_import_gene(self, id, name):
         """
-        Count the number of mapping entries that have changed without an
-        increment in the version number. This function can only be called
-        after backup_cdsUpdates() has been executed and before
-        merge_cdsUpdates has been executed.
+        Import a (gene id, gene name) pair in a temporary table.
 
         SQL tables from dbNames:
-            - map_cdsBackup_temp ; Entries that wre updated without an
-                                   increment of the version number.
-
-        @return: The number of mapping entries that have changed without an
-        increment in the version number
-        @rtype: integer
+            - Genes ; Gene names from NCBI.
         """
-
         statement = """
-            SELECT COUNT(*)
-              FROM map_cdsBackup_temp;
-        """, None
+            INSERT IGNORE INTO Genes (id, name) VALUES (%s, %s);
+        """, (id, name)
 
-        return int(self.query(statement)[0][0])
-    #count_cdsUpdates
+        self.query(statement)
+    #ncbi_import_gene
 
-    def merge_cdsUpdates(self) :
+    def ncbi_import_transcript(self, name, gene, chromosome, start, stop,
+                               orientation):
         """
-        Merge the mapping entries that have changed without an increment in
-        the version number with a table that contains backups of these
-        entries.
+        Import a transcript mapping in a temporary table.
 
-        SQL tables from dbNames (altered):
-            - map_cdsBackup      ; Extended with the entries in
-                                   map_cdsBackup_temp.
-            - map_cdsBackup_temp ; Dropped.
+        SQL tables from dbNames:
+            - Transcripts ; Transcript mappings from NCBI.
         """
-
-        # The statements in this function may be combined when MYSQL_BUG is
-        # solved.
-
         statement = """
-            INSERT INTO map_cdsBackup
-              SELECT *
-                FROM map_cdsBackup_temp;
-        """, None
-        self.query(statement)
-        statement = """
-            DROP TABLE map_cdsBackup_temp;
-        """, None
+            INSERT IGNORE INTO Transcripts
+                (name, gene_id, chromosome, start, stop, orientation)
+            VALUES
+                (%s, %s, %s, %s, %s, %s);
+        """, (name, gene, chromosome, start, stop, orientation)
 
         self.query(statement)
-    #merge_cdsUpdates
+    #ncbi_import_transcript
 
-    def merge_Update(self) :
+    def ncbi_import_exon(self, transcript, start, stop, cds_start, cds_stop,
+                         protein):
         """
-        Merge the new mapping data with the old ones.
+        Import an exon mapping in a temporary table.
 
-        SQL tables from dbNames (altered):
-            - map_new  ; Created and filled with the merge of map_temp and map.
-                         Dropped after use.
-            - map_temp ; Merged with map to form map_new. Dropped after use.
-            - map      ; Overwritten with the merged info in map_new.
+        SQL tables from dbNames:
+            - Exons ; Exon mappings from NCBI.
         """
-
-        # The statements in this function may be combined when MYSQL_BUG is
-        # solved.
-
         statement = """
-            CREATE TABLE map_new
-              SELECT *
-                FROM map_temp
-              UNION
-              SELECT *
-                FROM map
-                WHERE NOT EXISTS (
-                  SELECT *
-                    FROM map_temp
-                    WHERE map.acc = map_temp.acc
-                    AND map.version = map_temp.version
-                    AND map.txStart = map_temp.txStart
-                );
-        """, None
-        self.query(statement)
-        statement = """
-            DROP TABLE map;
-        """, None
-        self.query(statement)
-        statement = """
-            CREATE TABLE map
-              SELECT *
-                FROM map_new;
-        """, None
-        self.query(statement)
-        statement = """
-            DROP TABLE map_new;
-        """, None
-        self.query(statement)
-        statement = """
-            DROP TABLE map_temp;
-        """, None
+            INSERT IGNORE INTO Exons
+                (transcript, start, stop, cds_start, cds_stop, protein)
+            VALUES
+                (%s, %s, %s, %s, %s, %s);
+        """, (transcript, start, stop, cds_start, cds_stop, protein)
 
         self.query(statement)
-    #merge_Update
-#Update
+    #ncbi_import_exon
+
+    def ncbi_aggregate_mapping(self):
+        """
+        Aggregate gene, transcript and exon mapping information from the NCBI
+        into one table.
+
+        @note: Default MySQL value for group_concat_max_len is 1024, meaning
+            that the GROUP_CONCAT aggregate function returns values of at most
+            1024 bytes long. This is not enough (currently we need around 3000
+            bytes), so we explicitely set this to a higher value.
+        @note: We use MAX(E.protein) since MySQL does not have an ANY()
+            aggregator.
+        """
+        statement = """
+            SET group_concat_max_len = 32768;
+        """, None
+        self.query(statement)
+
+        statement = """
+            DROP TABLE IF EXISTS MappingTemp;
+        """, None
+        self.query(statement)
+
+        statement = """
+            CREATE TABLE MappingTemp LIKE Mapping;
+        """, None
+        self.query(statement)
+
+        statement = """
+            INSERT INTO MappingTemp
+            SELECT
+                G.name as gene,
+                SUBSTRING(T.name FROM 1 FOR LOCATE('.', T.name) - 1) as transcript,
+                SUBSTRING(T.name FROM LOCATE('.', T.name) + 1) as version,
+                CONCAT('chr', T.chromosome) as chromosome,
+                T.orientation as orientation,
+                MIN(T.start) as start,
+                MAX(T.stop) as stop,
+                MAX(E.cds_start) as cds_start,
+                MAX(E.cds_stop) as cds_stop,
+                GROUP_CONCAT(DISTINCT E.start ORDER BY E.start ASC) as exon_starts,
+                GROUP_CONCAT(DISTINCT E.stop ORDER BY E.stop ASC) as exon_stops,
+                MAX(E.protein) as protein,
+                'NCBI' as source
+            FROM Transcripts as T, Genes as G, Exons as E
+            WHERE T.gene_id = G.id AND T.name = E.transcript
+            GROUP BY T.name;
+        """, None
+        self.query(statement)
+    #ncbi_aggregate_mapping
+#Mapping
+
 
 class Cache(Db) :
     """
@@ -908,9 +738,9 @@ class Cache(Db) :
     def insertLRG(self, accNo, fileHash, url):
         """
         Insert information about a LRG record in the internal database.
-        
+
         See insertGB() for more information.
-        
+
         @arg accNo: The name associated with this record
         @type accNo: string
         @arg fileHash: The hash of the content of the record
@@ -1160,7 +990,7 @@ class Cache(Db) :
 
         @arg accNo: The accession number
         @type accNo: string
-        
+
         @return: GI number
         @rtype: string
         """
@@ -1181,13 +1011,13 @@ class Cache(Db) :
         """
         Gets the protein accession number for the given mRNA accession
         number.
-        
+
         SQL tables from internalDb:
             - Link ; mRNA and associated protein IDs.
-        
+
         @arg mrnaAcc: The ID of an mRNA
         @type mrnaAcc: string
-        
+
         @return: The protein accession number
         @rtype: string
         """
@@ -1207,13 +1037,13 @@ class Cache(Db) :
     def getmrnaAcc(self, protAcc) :
         """
         Gets the mRNA accession number for a given protein accession number.
-        
+
         SQL tables from internalDb:
             - Link ; mRNA and associated protein IDs.
-        
+
         @arg protAcc: The protein ID
         @type protAcc: string
-        
+
         @return: The mRNA accession number
         @rtype: string
         """
@@ -1235,14 +1065,14 @@ class Cache(Db) :
         """
         Inserts the given mRNA and protein accession numbers into the Link
         table.
-        
+
         SQL tables from internalDb:
             - Link ; mRNA and associated protein IDs.
-        
+
         @arg protAcc: The protein ID
         @type protAcc: string
         @arg mrnaAcc: The ID of an mRNA
-        @type mrnaAcc: string        
+        @type mrnaAcc: string
         """
 
         statement = """

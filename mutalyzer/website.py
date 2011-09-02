@@ -35,7 +35,7 @@ from mutalyzer.grammar import Grammar
 from mutalyzer import webservice
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
-from mutalyzer import Mapper
+from mutalyzer.mapping import Converter
 from mutalyzer import Db
 from mutalyzer import Scheduler
 from mutalyzer import Retriever
@@ -300,7 +300,7 @@ class GetGS:
 
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
-        # Bio.Seq.reverse_complement in Mapper.py:607.
+        # Bio.Seq.reverse_complement in mapping.py:607.
 
         # We are only interested in the legend
         #Mutalyzer.process(str(i.mutationName), config, O)
@@ -443,7 +443,7 @@ class PositionConverter:
         i = web.input(build='', variant='')
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
-        # Bio.Seq.reverse_complement in Mapper.py:607.
+        # Bio.Seq.reverse_complement in mapping.py:607.
         return self.position_converter(i.build, str(i.variant))
 
     def position_converter(self, build='', variant=''):
@@ -472,7 +472,7 @@ class PositionConverter:
         }
 
         if build and variant:
-            converter = Mapper.Converter(build, config, output)
+            converter = Converter(build, config, output)
 
             #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
@@ -564,16 +564,16 @@ class VariantInfo:
                           'Received %s:%s (LOVD_ver %s, build %s)' \
                           % (acc, var, LOVD_ver, build))
 
-        Converter = Mapper.Converter(build, config, output)
+        converter = Converter(build, config, output)
 
         result = ''
 
         # If no variant is given, return transcription start, transcription
         # end and CDS stop in c. notation.
         if var:
-            ret = Converter.mainMapping(acc, var)
+            ret = converter.mainMapping(acc, var)
         else:
-            ret = Converter.giveInfo(acc)
+            ret = converter.giveInfo(acc)
             if ret:
                 result = '%i\n%i\n%i' % ret
 
@@ -662,7 +662,7 @@ class Check:
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s' % name)
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
-        # Bio.Seq.reverse_complement in Mapper.py:607.
+        # Bio.Seq.reverse_complement in mapping.py:607.
         variantchecker.check_variant(str(name), config, output)
         output.addMessage(__file__, -1, 'INFO',
                           'Finished processing variant %s' % name)
