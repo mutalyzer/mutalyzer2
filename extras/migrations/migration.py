@@ -9,9 +9,9 @@ import sys
 import MySQLdb
 
 
-COLOR_INFO = '\033[92m'
-COLOR_WARNING = '\033[93m'
-COLOR_ERROR = '\033[91m'
+COLOR_INFO = '\033[32m'
+COLOR_WARNING = '\033[33m'
+COLOR_ERROR = '\033[31m'
 COLOR_END = '\033[0m'
 
 
