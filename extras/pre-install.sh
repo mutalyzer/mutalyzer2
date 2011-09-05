@@ -13,7 +13,12 @@
 
 set -e
 
-echo "Installing packages with apt"
+COLOR_INFO='\033[92m'
+COLOR_WARNING='\033[93m'
+COLOR_ERROR='\033[91m'
+COLOR_END='\033[0m'
+
+echo -e "${COLOR_INFO}Installing packages with apt${COLOR_END}"
 
 apt-get install -y \
   mysql-server \
@@ -36,7 +41,7 @@ apt-get install -y \
   python-setuptools \
   git-core
 
-echo "Installing latest soaplib from git master"
+echo -e "${COLOR_INFO}Installing latest soaplib from git master${COLOR_END}"
 
 mkdir -p /tmp/mutalyzer-install
 pushd /tmp/mutalyzer-install
@@ -48,8 +53,6 @@ python setup.py install
 popd
 rm -Rf /tmp/mutalyzer-install
 
-echo "Installing suds using easy_install"
+echo -e "${COLOR_INFO}Installing suds using easy_install${COLOR_END}"
 
 easy_install suds
-
-echo "kthxbye"

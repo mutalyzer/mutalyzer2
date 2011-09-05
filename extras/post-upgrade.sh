@@ -13,6 +13,11 @@
 
 set -e
 
+COLOR_INFO='\033[92m'
+COLOR_WARNING='\033[93m'
+COLOR_ERROR='\033[91m'
+COLOR_END='\033[0m'
+
 # The 'cd /' is a hack to prevent the mutalyzer package under the current
 # directory to be used.
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
@@ -26,7 +31,7 @@ if [ -e /var/www/mutalyzer/base ]; then
     rm /var/www/mutalyzer/base
 fi
 
-echo "Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base"
+echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base${COLOR_END}"
 ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
 
 echo "Running any needed migrations"

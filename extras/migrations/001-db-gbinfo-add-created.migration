@@ -8,27 +8,14 @@ Usage:
 """
 
 
-import sys
-import MySQLdb
-
-
-def _connect():
-    try:
-        connection = MySQLdb.connect(host='localhost',
-                                     user='mutalyzer',
-                                     passwd='',
-                                     db='mutalyzer')
-    except MySQLdb.Error, e:
-        print 'Error %d: %s' % (e.args[0], e.args[1])
-        sys.exit(1)
-    return connection
+import migration
 
 
 def check():
     """
     Check if migration is needed.
     """
-    connection = _connect()
+    connection = migration.db_connect('mutalyzer')
     cursor = connection.cursor()
     cursor.execute('SHOW COLUMNS FROM GBInfo WHERE field = "created";')
     has_column = len(cursor.fetchall()) > 0
@@ -36,8 +23,7 @@ def check():
     has_index = len(cursor.fetchall()) > 0
     connection.close()
     if has_column != has_index:
-        print 'Installation is not in a recognizable state. Fix manually.'
-        sys.exit(1)
+        migration.fatal('Installation is not in a recognizable state. Fix manually.')
     return not has_column
 
 
@@ -45,25 +31,17 @@ def migrate():
     """
     Perform migration.
     """
-    connection = _connect()
+    connection = migration.db_connect('mutalyzer')
     cursor = connection.cursor()
     cursor.execute("""
-        ALTER TABLE GBInfo
-        #ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ALTER TABLE GBInfo
+        ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD INDEX created (created);""")
     connection.commit()
     connection.close()
-    print 'Added column mutalyzer.GBInfo.created'
-    print 'Added index on mutalyzer.GBInfo.created'
+    migration.info('Added column mutalyzer.GBInfo.created')
+    migration.info('Added index on mutalyzer.GBInfo.created')
 
 
 if __name__ == '__main__':
-    needed = check()
-    if needed:
-        print 'This migration is needed.'
-        if len(sys.argv) > 1 and sys.argv[1] == 'migrate':
-            print 'Performing migration.'
-            migrate()
-            print 'Performed migration.'
-    else:
-        print 'This migration is not needed.'
+    migration.main(check, migrate)

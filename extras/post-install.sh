@@ -17,6 +17,11 @@
 
 set -e
 
+COLOR_INFO='\033[92m'
+COLOR_WARNING='\033[93m'
+COLOR_ERROR='\033[91m'
+COLOR_END='\033[0m'
+
 # The 'cd /' is a hack to prevent the mutalyzer package under the current
 # directory to be used.
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
@@ -27,40 +32,40 @@ BIN_WEBSITE=$(which mutalyzer-website.wsgi)
 BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
 
 if [ ! -e /etc/mutalyzer/config ]; then
-    echo "Creating /etc/mutalyzer/config"
+    echo -e "${COLOR_INFO}Creating /etc/mutalyzer/config${COLOR_END}"
     mkdir -p /etc/mutalyzer
     cp extras/config.example /etc/mutalyzer/config
     chmod -R u=rwX,go=rX /etc/mutalyzer
 else
-    echo "Not touching /etc/mutalyzer/config (it exists)"
+    echo -e "${COLOR_WARNING}Not touching /etc/mutalyzer/config (it exists)${COLOR_END}"
 fi
 
-echo "Touching /var/log/mutalyzer.log"
+echo -e "${COLOR_INFO}Touching /var/log/mutalyzer.log${COLOR_END}"
 touch /var/log/mutalyzer.log
 chown www-data:www-data /var/log/mutalyzer.log
 chmod u=rw,go=r /var/log/mutalyzer.log
 
-echo "Touching /var/cache/mutalyzer"
+echo -e "${COLOR_INFO}Touching /var/cache/mutalyzer${COLOR_END}"
 mkdir -p /var/cache/mutalyzer
 chown -R www-data:www-data /var/cache/mutalyzer
 chmod -R u=rwX,go=rX /var/cache/mutalyzer
 
-echo "Creating /etc/init.d/mutalyzer-batchd"
+echo -e "${COLOR_INFO}Creating /etc/init.d/mutalyzer-batchd${COLOR_INFO}"
 cp extras/init.d/mutalyzer-batchd /etc/init.d/mutalyzer-batchd
 sed -i -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/init.d/mutalyzer-batchd
 chmod u=rwx,go=rx /etc/init.d/mutalyzer-batchd
 
-echo "Installing init script links"
+echo -e "${COLOR_INFO}Installing init scripts${COLOR_END}"
 update-rc.d -f mutalyzer-batchd remove
 update-rc.d mutalyzer-batchd defaults 98 02
 
-echo "Installing crontab"
+echo -e "${COLOR_INFO}Installing crontab${COLOR_END}"
 cp extras/cron.d/mutalyzer-cache-sync /etc/cron.d/mutalyzer-cache-sync
 sed -i -e "s@<MUTALYZER_BIN_CACHE_SYNC>@${BIN_CACHE_SYNC}@g" /etc/cron.d/mutalyzer-cache-sync
 cp extras/cron.d/mutalyzer-mapping-update /etc/cron.d/mutalyzer-mapping-update
 sed -i -e "s@<MUTALYZER_BIN_MAPPING_UPDATE>@${BIN_MAPPING_UPDATE}@g" /etc/cron.d/mutalyzer-mapping-update
 
-echo "Creating /etc/apache2/conf.d/mutalyzer.conf"
+echo -e "${COLOR_INFO}Creating /etc/apache2/conf.d/mutalyzer.conf${COLOR_END}"
 cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf
 sed -i -e "s@<MUTALYZER_BIN_WEBSITE>@${BIN_WEBSITE}@g" -e "s@<MUTALYZER_BIN_WEBSERVICE>@${BIN_WEBSERVICE}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/apache2/conf.d/mutalyzer.conf
 chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
@@ -199,7 +204,7 @@ EOF
 wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
 $(BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
 
-echo "Creating tables in mutalyzer database"
+echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
 
 # Create mutalyzer tables
 cat << EOF | mysql -u mutalyzer -D mutalyzer
@@ -254,7 +259,7 @@ if [ -e /var/www/mutalyzer/base ]; then
     rm /var/www/mutalyzer/base
 fi
 
-echo "Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base"
+echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base${COLOR_END}"
 ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
 
 echo "Restarting Apache"

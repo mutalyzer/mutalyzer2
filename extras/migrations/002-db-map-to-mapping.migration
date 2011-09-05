@@ -20,20 +20,7 @@ The map tables are renamed to map_backup.
 """
 
 
-import sys
-import MySQLdb
-
-
-def _connect(db):
-    try:
-        connection = MySQLdb.connect(host='localhost',
-                                     user='mutalyzer',
-                                     passwd='',
-                                     db=db)
-    except MySQLdb.Error, e:
-        print 'Error %d: %s' % (e.args[0], e.args[1])
-        sys.exit(1)
-    return connection
+import migration
 
 
 def _exon_starts(starts):
@@ -50,7 +37,7 @@ def _exon_stops(stops):
 
 def _check(db):
     # Todo: Also check if 'map' is gone.
-    connection = _connect(db)
+    connection = migration.db_connect(db)
     cursor = connection.cursor()
     cursor.execute('SHOW TABLES LIKE "Mapping";')
     ok = len(cursor.fetchall()) > 0
@@ -59,7 +46,7 @@ def _check(db):
 
 
 def _migrate(db):
-    connection = _connect(db)
+    connection = migration.db_connect(db)
     cursor = connection.cursor()
     cursor.execute("""
         CREATE TABLE Mapping (
@@ -114,13 +101,13 @@ def _migrate(db):
              r['cds_stop'], _exon_starts(r['exon_starts']), _exon_stops(r['exon_stops']),
              r['protein'], r['source']))
 
-    print 'Converted table map to table Mapping on %s (%d entries)' % (db, count)
+    migration.info('Converted table map to table Mapping on %s (%d entries)' % (db, count))
 
     cursor.execute('DROP TABLE IF EXISTS gbStatus, map_cdsBackup, refGene, refLink')
     cursor.execute('RENAME TABLE map TO map_backup')
 
-    print 'Dropped tables gbStatus, map_cdsBackup, refGene, refLink on %s' % db
-    print 'Renamed table map to map_backup on %s' % db
+    migration.info('Dropped tables gbStatus, map_cdsBackup, refGene, refLink on %s' % db)
+    migration.info('Renamed table map to map_backup on %s' % db)
 
     select_cursor.close()
     cursor.close()
@@ -135,8 +122,7 @@ def check():
     hg18_ok = _check('hg18')
     hg19_ok = _check('hg19')
     if hg18_ok != hg19_ok:
-        print 'Installation is not in a recognizable state. Fix manually.'
-        sys.exit(1)
+        migration.fatal('Installation is not in a recognizable state. Fix manually.')
     return not hg18_ok
 
 
@@ -149,12 +135,4 @@ def migrate():
 
 
 if __name__ == '__main__':
-    needed = check()
-    if needed:
-        print 'This migration is needed.'
-        if len(sys.argv) > 1 and sys.argv[1] == 'migrate':
-            print 'Performing migration.'
-            migrate()
-            print 'Performed migration.'
-    else:
-        print 'This migration is not needed.'
+    migration.main(check, migrate)
