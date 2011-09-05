@@ -197,7 +197,7 @@ EOF
 
 # Populate Mapping table with UCSC data (hg19)
 wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
-$(BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly'
+$(BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
 
 echo "Creating tables in mutalyzer database"
 

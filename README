@@ -77,6 +77,8 @@ Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).
     http://www.python.org/dev/peps/pep-0008/
     http://www.python.org/dev/peps/pep-0257/
+  Read the Google Python Style guide:
+    http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
 - Use Epydoc style documentation in docstrings.
 - End class and method definitions with their name as comment.
 - Executables are in the bin/ directory.
