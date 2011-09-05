@@ -427,6 +427,7 @@ def in_frame_description(s1, s2) :
     @rtype: tuple(string, int, int, int)
 
     @todo: More intelligently handle longest_common_prefix().
+    @todo: Refactor this code (too many return statements).
     """
     if s1 == s2:
         # Nothing happened.

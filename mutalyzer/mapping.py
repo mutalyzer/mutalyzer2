@@ -10,7 +10,6 @@ update the database with this information.
 """
 
 
-import sys
 from Bio.Seq import reverse_complement
 from collections import defaultdict
 
@@ -64,24 +63,6 @@ class Converter(object) :
         self.crossmap = None
         self.dbFields = {}
     #__init__
-
-    def _changeBuild(self, build) :
-        """
-        @todo document me (figure out what is does)
-        Change the build if it different from the one previously set?????.
-
-        @arg build: the genome build version of the organism (e.g. hg19 for
-        human genome build version 19)
-        @type build: string
-        """
-
-        if self.build != build :
-            self.crossmap = None
-            self.dbFields = {}
-            self.build = build
-            self.__database = Db.Mapping(build, C.Db)
-        #if
-    #_changeBuild
 
     def _reset(self) :
         self.crossmap = None
@@ -620,7 +601,7 @@ class Updater(object):
         self.db = Db.Mapping(build, config.Db)
     #__init__
 
-    def load(self):
+    def load(self, *args, **kwargs):
         """
         The implementation of this method in subclasses should load mapping
         information in the 'MappingTemp' table.

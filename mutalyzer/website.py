@@ -356,7 +356,7 @@ class SyntaxCheck:
             variant = variant.replace(',', '')
             #args["variant"]=variant
         grammar = Grammar(output)
-        parsetree = grammar.parse(variant)
+        grammar.parse(variant)
         pe = output.getOutput("parseError")
         if pe: pe[0] = pe[0].replace('<', "&lt;")
         args = {
@@ -481,7 +481,7 @@ class PositionConverter:
                 if not(":c." in variant or ":g." in variant):
                     #Bad name
                     grammar = Grammar(output)
-                    parsetree = grammar.parse(variant)
+                    grammar.parse(variant)
                 #if
 
                 if ":c." in variant:
@@ -765,8 +765,6 @@ class BatchProgress:
 
         @todo: The 'progress' template does not exist.
         """
-        O = Output(__file__, config.Output)
-
         attr = {"percentage": 0}
 
         i = web.input(ajax=None)
@@ -925,15 +923,16 @@ class BatchResult:
 
         Be very careful to not call this with anything but an ordinary
         filename. A possible security issue is allowing this method to be
-        called with file='../../mutalyzer.conf' for example.
+        called with result='../../mutalyzer.conf' for example.
 
         The url routing currently makes sure to only call this with filenames
         of the form \d+.
         """
-        file = 'Results_%s.txt' % result
-        handle = open(os.path.join(config.Scheduler.resultsDir, file))
+        filename = 'Results_%s.txt' % result
+        handle = open(os.path.join(config.Scheduler.resultsDir, filename))
         web.header('Content-Type', 'text/plain')
-        web.header('Content-Disposition', 'attachment; filename="%s"' % file)
+        web.header('Content-Disposition',
+                   'attachment; filename="%s"' % filename)
         return handle.read()
 #BatchResult
 
@@ -955,7 +954,7 @@ def _checkInt(inpv, refname):
     inpv = inpv.replace(',','').replace('.','').replace('-','')
     try:
         return int(inpv)
-    except ValueError, e:
+    except ValueError:
         raise InputException("Expected an integer in field: %s" % refname)
 #_checkInt
 

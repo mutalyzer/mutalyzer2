@@ -16,13 +16,11 @@ import bz2             # BZ2Compressor(), BZ2File()
 import hashlib         # md5(), update(), hexdigest()
 import urllib2         # urlopen()
 import StringIO        # StringIO()
-import ftplib          # FTP(), all_errors
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 from Bio.Seq import UnknownSeq
-from xml.dom import DOMException
-import xml.dom.minidom
-import xml.parsers.expat
+from xml.dom import DOMException, minidom
+from xml.parsers import expat
 
 from mutalyzer import util
 from mutalyzer.parsers import lrg
@@ -41,7 +39,7 @@ class Retriever(object) :
     Special methods:
         - __init__(config, output, database) ; Use variables from the
         configuration file to initialise the class private variables.
-                 
+
 
 
     Private methods:
@@ -76,7 +74,7 @@ class Retriever(object) :
         Inherited variables from Db.Output.Config:
             - email     ; The email address which we give to the NCBI.
             - cache     ; The directory where the records are stored.
-            
+
         @arg config:
         @type config:
         @arg output:
@@ -100,7 +98,7 @@ class Retriever(object) :
 
         @arg folder: Name of a directory
         @type folder: string
-        
+
         @return: The size of the directory
         @rtype: integer
         """
@@ -224,7 +222,7 @@ class Retriever(object) :
         #TODO documentation
         """
         @todo: documentation
-        
+
         @arg raw_data:
         @type raw_data:
         @arg name:
@@ -274,7 +272,7 @@ class Retriever(object) :
         try:
             response = Entrez.efetch(db='SNP', id=id, rettype='flt',
                                      retmode='xml')
-        except IOError:
+        except IOError as e:
             # Could not parse XML.
             self._output.addMessage(__file__, 4, 'EENTREZ',
                                     'Error connecting to dbSNP.')
@@ -286,10 +284,10 @@ class Retriever(object) :
 
         try:
             # Parse the output.
-            doc = xml.dom.minidom.parseString(response_text)
-            set = doc.getElementsByTagName('ExchangeSet')
-            rs = set[0].getElementsByTagName('Rs')
-        except xml.parsers.expat.ExpatError, e:
+            doc = minidom.parseString(response_text)
+            exchange_set = doc.getElementsByTagName('ExchangeSet')
+            rs = exchange_set[0].getElementsByTagName('Rs')
+        except expat.ExpatError as e:
             # Could not parse XML.
             self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
                                     'error. Error parsing result XML.')
@@ -309,7 +307,7 @@ class Retriever(object) :
         if len(rs) < 1:
             # No Rs result element.
             text = []
-            for node in set[0].childNodes:
+            for node in exchange_set[0].childNodes:
                 if node.nodeType == node.TEXT_NODE:
                     text.append(node.data)
             message = ''.join(text)
@@ -477,7 +475,7 @@ class GenBankRetriever(Retriever):
             - 1 ; Forward
             - 2 ; Reverse complement
         @type orientation: integer
-        
+
         @return: An UD number
         @rtype: string
         """
@@ -613,7 +611,7 @@ class GenBankRetriever(Retriever):
 
         @arg url: Location of a GenBank record
         @type url: string
-        
+
         @return: UD or None
         @rtype: string
         """
@@ -660,8 +658,8 @@ class GenBankRetriever(Retriever):
 
         @arg raw_data: A GenBank record
         @type raw_data: string
-        
-        @return: 
+
+        @return:
         @rtype: string?????
         """
 
@@ -748,14 +746,14 @@ class LRGRetriever(Retriever):
         #TODO documentation
         """
         Initialize the class.
-        
+
         @todo: documentation
-        @arg  config: 
-        @type  config: 
-        @arg  output: 
-        @type  output: 
-        @arg  database: 
-        @type  database: 
+        @arg  config:
+        @type  config:
+        @arg  output:
+        @type  output:
+        @arg  database:
+        @type  database:
         """
 
         # Recall init of parent
@@ -819,7 +817,7 @@ class LRGRetriever(Retriever):
 
         try:
             return self.downloadrecord(url, name)
-        except urllib2.URLError, e: #Catch error: file not found
+        except urllib2.URLError: #Catch error: file not found
             pass
 
         try:                # Try to get the file from the pending section
@@ -827,7 +825,7 @@ class LRGRetriever(Retriever):
             self._output.addMessage(__file__, 2, "WPEND",
                 "Warning: LRG file %s is a pending entry." % name)
             return filename
-        except urllib2.URLError, e:
+        except urllib2.URLError:
             self._output.addMessage(__file__, 4, "ERETR",
                                  "Could not retrieve %s." % name)
             return None             #Explicit return in case of an Error

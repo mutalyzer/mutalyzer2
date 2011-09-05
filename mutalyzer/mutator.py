@@ -165,7 +165,7 @@ class Mutator() :
         ret = []
 
         for i in d.keys() :
-            for j in d[i] :
+            for _ in d[i] :
                 ret.append(str(i))
 
         return ret

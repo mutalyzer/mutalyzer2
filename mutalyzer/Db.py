@@ -21,9 +21,6 @@ statements.
 
 import MySQLdb # connect(), escape_string()
 import types   # TupleType
-import time    # strftime()
-import os      # os.remove()
-import tempfile
 from mutalyzer import util
 
 #

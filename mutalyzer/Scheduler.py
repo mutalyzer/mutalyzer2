@@ -15,7 +15,6 @@ Module used to add and manage the Batch Jobs.
 #             - Batch Syntax Checker
 #             - Batch Position Converter
 
-import subprocess                       # subprocess.Popen
 import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
@@ -370,7 +369,7 @@ Mutalyzer batch checker.""" % url)
             #Run mutalyzer and get values from Output Object 'O'
             try :
                 variantchecker.check_variant(cmd, C, O)
-            except Exception, e :
+            except Exception:
                 #Catch all exceptions related to the processing of cmd
                 O.addMessage(__file__, 4, "EBATCHU",
                         "Unexpected error occurred, dev-team notified")
@@ -516,7 +515,7 @@ Mutalyzer batch checker.""" % url)
                 if not(":c." in variant or ":g." in variant) :
                     #Bad name
                     grammar = Grammar(O)
-                    parsetree = grammar.parse(variant)
+                    grammar.parse(variant)
                 #if
 
                 if ":c." in variant :
@@ -542,7 +541,7 @@ Mutalyzer batch checker.""" % url)
                         # variants from a nested lists and store them.
                         cNames = [cName for cName2 in variants.values() \
                                 for cName in cName2]
-            except Exception, e :
+            except Exception:
                 #Catch all exceptions related to the processing of cmd
                 O.addMessage(__file__, 4, "EBATCHU",
                         "Unexpected error occurred, dev-team notified")

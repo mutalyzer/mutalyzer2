@@ -451,7 +451,7 @@ def apply_inversion(first, last, mutator, record, O):
 
     if first == last:
         O.addMessage(__file__, 2, 'WWRONGTYPE', 'Inversion at position ' \
-            '%i is actually a substitution.' % first_g)
+            '%i is actually a substitution.' % first)
         record.name(first, first, 'subst', mutator.orig[first - 1],
             Bio.Seq.reverse_complement(mutator.orig[first - 1]), None)
     else :
