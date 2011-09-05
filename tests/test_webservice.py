@@ -12,11 +12,23 @@ from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
-import logging; logging.raiseExceptions = 0
+import logging
 import urllib2
 from suds.client import Client
 from suds import WebFault
 from nose.tools import *
+
+
+# Suds logs an awful lot of things with level=DEBUG, including entire WSDL
+# files and SOAP responses. On any error, this is all dumped to the console,
+# which is very unconvenient. The following suppresses most of this.
+logging.raiseExceptions = 0
+logging.basicConfig(level=logging.INFO)
+for logger in ('suds.metrics', 'suds.wsdl', 'suds.xsd.schema',
+               'suds.xsd.sxbasic', 'suds.xsd.sxbase', 'suds.xsd.query',
+               'suds.transport.http', 'suds.xsd.deplist', 'suds.mx.core',
+               'suds.mx.literal', 'suds.resolver'):
+    logging.getLogger(logger).setLevel(logging.ERROR)
 
 
 WSDL_URL = 'http://localhost/mutalyzer/services/?wsdl'
@@ -179,3 +191,14 @@ class TestWebservice():
 
         r = self.client.service.getCache(created_since)
         assert_equal(len(r.CacheEntry), len(cache))
+
+    def test_getdbsnpdescriptions(self):
+        """
+        Running getdbSNPDescriptions method should give us the expected HGVS
+        descriptions for the given dbSNP id.
+        """
+        r = self.client.service.getdbSNPDescriptions('rs9919552')
+        assert 'NC_000011.9:g.111959625C>T' in r.string
+        assert 'NG_012337.1:g.7055C>T' in r.string
+        assert 'NM_003002.2:c.204C>T' in r.string
+        assert 'NP_002993.1:p.Ser68=' in r.string

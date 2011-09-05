@@ -913,6 +913,38 @@ class MutalyzerService(DefinitionBase):
 
         return map(cache_entry_to_soap, cache)
     #getCache
+
+    @soap(Mandatory.String, _returns = Array(Mandatory.String))
+    def getdbSNPDescriptions(self, rs_id):
+        """
+        Lookup HGVS descriptions for a dbSNP rs identifier.
+
+        @arg rs_id: The dbSNP rs identifier, e.g. 'rs9919552'.
+        @type rs_id: string
+
+        @return: List of HGVS descriptions.
+        @rtype: list(string)
+        """
+        output = Output(__file__, self._config.Output)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Received request getdbSNPDescription(%s)' % rs_id)
+
+        retriever = Retriever.Retriever(self._config.Retriever, output, None)
+        descriptions = retriever.snpConvert(rs_id)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing getdbSNPDescription(%s)' % rs_id)
+
+        # Todo: use SOAP Fault object here (see Trac issue #41).
+        messages = output.getMessages()
+        if messages:
+            error = 'The request could not be completed\n' \
+                    + '\n'.join(map(lambda m: str(m), output.getMessages()))
+            raise Exception(error)
+
+        return descriptions
+    #getdbSNPDescriptions
 #MutalyzerService
 
 

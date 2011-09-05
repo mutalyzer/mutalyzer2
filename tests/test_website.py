@@ -202,11 +202,12 @@ class TestWSGI():
         form = r.forms[0]
         form['rsId'] = 'rs9919552'
         r = form.submit()
-        #r.mustcontain('0 Errors',
-        #              '0 Warnings',
-        #              'NG_012337.1:g.7055C>T',
-        #              'NM_003002.2:c.204C>T',
-        #              'NT_033899.8:g.15522041C>T')
+        r.mustcontain('0 Errors',
+                      '0 Warnings',
+                      'NC_000011.9:g.111959625C>T',
+                      'NG_012337.1:g.7055C>T',
+                      'NM_003002.2:c.204C>T',
+                      'NP_002993.1:p.Ser68=')
 
     def test_snp_converter_invalid(self):
         """
