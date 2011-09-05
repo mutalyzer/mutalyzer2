@@ -56,7 +56,8 @@ if r.messages:
     for m in r.messages.SoapMessage:
         print 'Error %s: %s\n' % (m.errorcode, m.message)
 
-print 'Chromosomal description: %s' % r.chromDescription
+if 'chromDescription' in r:
+    print 'Chromosomal description: %s' % r.chromDescription
 print 'Genomic description: %s' % r.genomicDescription
 
 if r.transcriptDescriptions:
