@@ -19,10 +19,20 @@ import time
 import web
 from nose.tools import *
 from webtest import TestApp
+import logging
+
 
 import mutalyzer
 from mutalyzer import website
 from mutalyzer.util import slow
+
+
+# TAL logs an awful lot of things with level=DEBUG. On any error, this is all
+# dumped to the console, which is very unconvenient. The following suppresses
+# most of this.
+logging.raiseExceptions = 0
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('simpleTAL.HTMLTemplateCompiler').setLevel(logging.ERROR)
 
 
 BATCH_RESULT_URL = 'http://localhost/mutalyzer/Results_{id}.txt'
@@ -576,6 +586,8 @@ facilisi."""
 
         @todo: Use another genbank file to get a UD number and check that
         we can then check variants using that UD number.
+        @todo: This genbank file location is bogus. The tests directory is not
+            included with the package installation.
         """
         test_genbank_file = os.path.join(os.path.split(mutalyzer.package_root())[0], 'tests/data/AB026906.1.gb')
         r = self.app.get('/upload')

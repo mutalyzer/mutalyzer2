@@ -131,14 +131,15 @@ class Retriever(object) :
         cachelist = []
         for (path, dirs, files) in os.walk(self._config.cache) :
             for filename in files :
+                filepath = os.path.join(path, filename)
                 cachelist.append(
-                    (os.stat(os.path.join(path, filename)).st_atime, filename))
+                    (os.stat(filepath).st_atime, filepath))
         cachelist.sort()
 
         # Now start removing pairs of files until the size of the folder is
         # small enough (or until the list is exhausted).
         for i in range(0, len(cachelist)) :
-            os.remove(os.path.join(path, cachelist[i][1]))
+            os.remove(cachelist[i][1])
             if self._foldersize(self._config.cache) < self._config.cachesize:
                 break;
         #for

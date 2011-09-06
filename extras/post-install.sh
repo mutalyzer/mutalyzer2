@@ -46,6 +46,7 @@ for USERNAME in $(ls /home); do
     su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
     su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
     su $USERNAME -c "cp extras/config.user.example /home/$USERNAME/.config/mutalyzer/config"
+    su $USERNAME -c "touch /tmp/mutalyzer-$USERNAME.log"
     sed -i -e "s@<USERNAME>@${USERNAME}@g" /home/$USERNAME/.config/mutalyzer/config
 done
 
@@ -220,7 +221,7 @@ echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg19)${COLOR_END}
 
 # Populate Mapping table with UCSC data (hg19)
 wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
-echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg18)${COLOR_END}"
+echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg19)${COLOR_END}"
 $($BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
 
 echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
