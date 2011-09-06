@@ -19,9 +19,13 @@ statements.
 #    - Batch   ; Batch checker.
 
 
-import MySQLdb # connect(), escape_string()
-import types   # TupleType
+import types
+import warnings
+
+import MySQLdb
+
 from mutalyzer import util
+
 
 #
 # Note that compound queries are split into single queries because of a bug
@@ -449,12 +453,17 @@ class Mapping(Db) :
             - MappingTemp ; New mapping info.
             - MappingBackup ; Backup of accumulated mapping info.
 
+        @note: We temporarily suppress warnings during some queries, since
+            they are expected and clutter the console output (e.g. warnings
+            for existing tables).
         @todo: Return number of entries added/updated.
         """
         statement = """
             CREATE TABLE IF NOT EXISTS MappingTemp LIKE Mapping;
         """, None
-        self.query(statement)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.query(statement)
 
         statement = """
             INSERT INTO MappingTemp
@@ -470,7 +479,9 @@ class Mapping(Db) :
         statement = """
             DROP TABLE IF EXISTS MappingBackup;
         """, None
-        self.query(statement)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.query(statement)
 
         statement = """
             RENAME TABLE Mapping TO MappingBackup, MappingTemp TO Mapping;
@@ -537,7 +548,9 @@ class Mapping(Db) :
         statement = """
             DROP TABLE IF EXISTS Genes, Transcripts, Exons;
         """, None
-        self.query(statement)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.query(statement)
     #ncbi_drop_temporary_tables
 
     def ncbi_import_gene(self, id, name):
@@ -610,7 +623,9 @@ class Mapping(Db) :
         statement = """
             DROP TABLE IF EXISTS MappingTemp;
         """, None
-        self.query(statement)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.query(statement)
 
         statement = """
             CREATE TABLE MappingTemp LIKE Mapping;

@@ -40,6 +40,15 @@ else
     echo -e "${COLOR_WARNING}Not touching /etc/mutalyzer/config (it exists)${COLOR_END}"
 fi
 
+for USERNAME in $(ls /home); do
+    echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.config/mutalyzer/config${COLOR_END}"
+    echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.cache/mutalyzer${COLOR_END}"
+    su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
+    su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
+    su $USERNAME -c "cp extras/config.user.example /home/$USERNAME/.config/mutalyzer/config"
+    sed -i -e "s@<USERNAME>@${USERNAME}@g" /home/$USERNAME/.config/mutalyzer/config
+done
+
 echo -e "${COLOR_INFO}Touching /var/log/mutalyzer.log${COLOR_END}"
 touch /var/log/mutalyzer.log
 chown www-data:www-data /var/log/mutalyzer.log
@@ -83,6 +92,8 @@ cat << EOF | mysql -u root -p
   GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
   FLUSH PRIVILEGES;
 EOF
+
+echo -e "${COLOR_INFO}Creating tables in hg18 database${COLOR_END}"
 
 # Create ChrName and Mapping table (hg18)
 cat << EOF | mysql -u mutalyzer -D hg18
@@ -137,9 +148,14 @@ INSERT INTO ChrName (AccNo, name) VALUES
 ('NT_113959.1', 'chr22_h2_hap1');
 EOF
 
-# Populate Mapping table with UCSC data (hg18)
+echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg18)${COLOR_END}"
+
+# Populate Mapping table with NCBI data (hg18)
 wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.36.3/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
-$(BIN_MAPPING_UPDATE hg18 /tmp/seq_gene.md reference)
+echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg18)${COLOR_END}"
+$($BIN_MAPPING_UPDATE hg18 /tmp/seq_gene.md reference)
+
+echo -e "${COLOR_INFO}Creating tables in hg19 database${COLOR_END}"
 
 # Create ChrName and Mapping table (hg19)
 cat << EOF | mysql -u mutalyzer -D hg19
@@ -200,9 +216,12 @@ INSERT INTO ChrName (AccNo, name) VALUES
 ('NT_167251.1', 'chr17_ctg5_hap1');
 EOF
 
+echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg19)${COLOR_END}"
+
 # Populate Mapping table with UCSC data (hg19)
 wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
-$(BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
+echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg18)${COLOR_END}"
+$($BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
 
 echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
 

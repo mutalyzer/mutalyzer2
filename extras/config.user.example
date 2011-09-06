@@ -5,7 +5,7 @@
 # /etc/mutalyzer.config.
 
 # The cache directory.
-cache = "/home/user/.cache/mutalyzer"
+cache = "/home/<USERNAME>/.cache/mutalyzer"
 
 # Name and location of the log file.
-log = "/tmp/mutalyzer.log"
+log = "/tmp/mutalyzer-<USERNAME>.log"
