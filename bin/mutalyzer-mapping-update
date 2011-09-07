@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 Update the database with mapping information from the NCBI.
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 Synchronize the database cache with other Mutalyzer instances.
 

@@ -1,4 +1,6 @@
-"""HGVS variant nomenclature checker."""
+"""
+HGVS variant nomenclature checker.
+"""
 
 
 import os

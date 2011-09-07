@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 Add a column and index 'created' to the 'GBInfo' table.
 

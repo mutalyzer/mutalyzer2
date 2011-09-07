@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 Convert the old 'map' tables to the new 'Mapping' tables.
 

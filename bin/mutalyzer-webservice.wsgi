@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 WSGI interface to the Mutalyzer SOAP webservice.
 
