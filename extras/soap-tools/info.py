@@ -1,34 +1,48 @@
 #!/usr/bin/env python
+"""
+Get static version information from a Mutalyzer installation.
 
-# Get Mutalyzer static version information from SOAP service.
-#
-# See http://www.mutalyzer.nl/2.0/webservices
-#
-# Usage:
-#   python info.py
-#
-# This code is in the public domain; it can be used for whatever purpose
-# with absolutely no restrictions.
+Usage:
+  {command}
+
+The version information is retrieved from the Mutalyzer SOAP webservice and
+printed to standard output.
+"""
+
 
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
 import sys
-from suds.client import Client  # https://fedorahosted.org/suds/
+from suds.client import Client
 
-URL = 'http://localhost/mutalyzer/services/?wsdl'
 
-c = Client(URL, cache=None)
-o = c.service
+from mutalyzer.util import format_usage
 
-print 'Getting version information...'
-print
 
-r = o.info()
+WSDL_LOCATION = 'http://localhost/mutalyzer/services/?wsdl'
 
-print 'Version: %s' % r.version
-print 'Version parts: %s' % ', '.join(p for p in r.versionParts.string)
-print 'Release date: %s' % r.releaseDate
-print 'Nomenclature version: %s' % r.nomenclatureVersion
-print 'Nomenclature version parts: %s' % ', '.join(p for p in r.nomenclatureVersionParts.string)
-print 'Server name: %s' % r.serverName
-print 'Contact e-mail: %s' % r.contactEmail
+
+def main():
+    """
+    Get static version information and print this to standard output.
+    """
+    service = Client(WSDL_LOCATION, cache=None).service
+    result = service.info()
+
+    if result:
+        print 'Version: %s' % result.version
+        print 'Version parts: %s' % ', '.join(
+            p for p in result.versionParts.string)
+        print 'Release date: %s' % result.releaseDate
+        print 'Nomenclature version: %s' % result.nomenclatureVersion
+        print 'Nomenclature version parts: %s' % ', '.join(
+            p for p in result.nomenclatureVersionParts.string)
+        print 'Server name: %s' % result.serverName
+        print 'Contact e-mail: %s' % result.contactEmail
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 1:
+        print format_usage()
+        sys.exit(1)
+    main()
