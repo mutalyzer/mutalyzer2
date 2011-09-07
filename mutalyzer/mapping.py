@@ -452,8 +452,8 @@ class Converter(object) :
         #Remove whitespace
         variant = variant.replace(" ","")
 
-        if variant.startswith("chr") :
-            preco, postco = variant.split(":")
+        if variant.startswith('chr') and ':' in variant:
+            preco, postco = variant.split(':', 1)
             chrom = self.__database.chromAcc(preco)
             if chrom is None :
                 self.__output.addMessage(__file__, 4, "ENOTINDB",
