@@ -40,7 +40,7 @@ import logging; logging.basicConfig()
 from soaplib.core import Application
 from soaplib.core.service import soap
 from soaplib.core.service import DefinitionBase
-from soaplib.core.model.primitive import String, Integer
+from soaplib.core.model.primitive import String, Integer, Boolean
 from soaplib.core.model.clazz import Array
 from soaplib.core.model.exception import Fault
 from soaplib.core.server import wsgi
@@ -157,9 +157,9 @@ class MutalyzerService(DefinitionBase) :
         #if
     #__checkVariant
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,
         _returns = Array(Mandatory.String))
-    def getTranscripts(self, build, chrom, pos) :
+    def getTranscripts(self, build, chrom, pos, versions = False) :
         """
         Get all the transcripts that overlap with a chromosomal position.
 
@@ -175,6 +175,8 @@ class MutalyzerService(DefinitionBase) :
         @type chrom: string
         @arg pos: A position on the chromosome.
         @type pos: integer
+        @arg versions: Also return version numbers.
+        @type versions: boolean
 
         @return: A list of transcripts.
         @rtype: list
@@ -196,8 +198,10 @@ class MutalyzerService(DefinitionBase) :
         ret = D.get_Transcripts(chrom, pos, pos, True)
 
         #filter out the accNo
-        ret = [r[0] for r in ret]
-
+        if versions :
+            ret = [r[0] + '.' + str(r[-1]) for r in ret]
+        else :
+            ret = [r[0] for r in ret]
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscripts(%s %s %s)" % (build,
