@@ -59,7 +59,7 @@ class TestWebservice():
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client(WSDL_URL) #, cache=None)
+        self.client = Client(WSDL_URL)#, cache=None)
         self.client.options.cache.setduration(seconds=120)
 
     def test_checksyntax_valid(self):
@@ -202,3 +202,36 @@ class TestWebservice():
         assert 'NG_012337.1:g.7055C>T' in r.string
         assert 'NM_003002.2:c.204C>T' in r.string
         assert 'NP_002993.1:p.Ser68=' in r.string
+
+    def test_gettranscripts(self):
+        """
+        Running getTranscriptsByGeneName should give a list of transcripts.
+        """
+        r = self.client.service.getTranscripts(build='hg19', chrom='chrX',
+                                               pos=32237295)
+        assert_equal(type(r.string), list)
+        for t in ['NM_000109',
+                  'NM_004006',
+                  'NM_004007',
+                  'NM_004009',
+                  'NM_004010',
+                  'NM_004011',
+                  'NM_004012']:
+            assert t in r.string
+
+    def test_gettranscripts_with_versions(self):
+        """
+        Running getTranscriptsByGeneName with versions=True should give a list
+        of transcripts with version numbers.
+        """
+        r = self.client.service.getTranscripts(build='hg19', chrom='chrX',
+                                               pos=32237295, versions=True)
+        assert_equal(type(r.string), list)
+        for t in ['NM_000109.3',
+                  'NM_004006.2',
+                  'NM_004007.2',
+                  'NM_004009.3',
+                  'NM_004010.3',
+                  'NM_004011.3',
+                  'NM_004012.3']:
+            assert t in r.string
