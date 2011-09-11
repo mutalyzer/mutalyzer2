@@ -882,6 +882,15 @@ class MutalyzerService(DefinitionBase) :
 
         return UD
     #sliceChromosome
+
+    @soap(_returns = Mandatory.String)
+    def ping(self) : 
+        """
+        Simple function to test the interface.
+        """
+
+        return "PONG"
+    #ping
 #MutalyzerService
 
 # WSGI application for use with e.g. Apache/mod_wsgi
