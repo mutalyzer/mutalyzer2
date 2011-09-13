@@ -285,5 +285,5 @@ ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
 echo "Restarting Apache"
 /etc/init.d/apache2 restart
 
-echo "Restarting Mutalyzer batch daemon"
-/etc/init.d/mutalyzer-batchd restart
+echo "Starting Mutalyzer batch daemon"
+/etc/init.d/mutalyzer-batchd start
