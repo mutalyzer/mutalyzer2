@@ -284,7 +284,7 @@ class TestWSGI():
         if arg1:
             form['arg1'] = arg1
         form['batchType'] = batch_type
-        form['batchEmail'] = 'm.vermaat.hg@lumc.nl'
+        form['batchEmail'] = 'test@test.test'
         form.set('batchFile', ('test_%s.txt' % batch_type,
                                file))
         r = form.submit()
