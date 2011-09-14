@@ -59,7 +59,7 @@ class TestWebservice():
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client(WSDL_URL)#, cache=None)
+        self.client = Client(WSDL_URL) #, cache=None)
         self.client.options.cache.setduration(seconds=120)
 
     def test_checksyntax_valid(self):
@@ -235,3 +235,10 @@ class TestWebservice():
                   'NM_004011.3',
                   'NM_004012.3']:
             assert t in r.string
+
+    def test_ping(self):
+        """
+        Running the ping method should return 'pong'.
+        """
+        r = self.client.service.ping()
+        assert_equal(r, 'pong')

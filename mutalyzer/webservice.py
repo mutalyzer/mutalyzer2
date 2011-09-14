@@ -886,6 +886,17 @@ class MutalyzerService(DefinitionBase):
         return result
     #info
 
+    @soap(_returns = Mandatory.String)
+    def ping(self):
+        """
+        Simple function to test the interface.
+
+        @return: Always the value 'pong'.
+        @rtype: string
+        """
+        return 'pong'
+    #ping
+
     @soap(DateTime, _returns = Array(CacheEntry))
     def getCache(self, created_since=None):
         """
