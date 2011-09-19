@@ -19,6 +19,7 @@ The map tables are renamed to map_backup.
 """
 
 
+import MySQLdb
 import migration
 
 
