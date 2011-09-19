@@ -128,7 +128,7 @@ function initActive() {
   var winLoc;
 
   winLoc = window.location.href;
-  winLoc = winLoc.replace(/http:\/\/[^\/]*\//, "");
+  winLoc = winLoc.replace(/https?:\/\/[^\/]*\//, "");
 
   if (winLoc.match("~"))
     winLoc = winLoc.replace(/[^\/]*\//, "");
