@@ -220,7 +220,8 @@ EOF
 echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg19)${COLOR_END}"
 
 # Populate Mapping table with UCSC data (hg19)
-wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
+#wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
+wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
 echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg19)${COLOR_END}"
 $($BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
 

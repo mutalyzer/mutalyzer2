@@ -72,6 +72,10 @@ Todo list:
 - Check for os.path.join vulnerabilities.
 - Use a standard solution for the database migrations in extras/migrations.
 - Use something like Sphinx to generate development documentation from code.
+- There are some problems with the batch architecture, especially that there
+  cannot be multiple workers without synchronisation problems.
+  Good read: http://news.ycombinator.com/item?id=3002861
+  Suggestion: http://celeryproject.org/
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).
