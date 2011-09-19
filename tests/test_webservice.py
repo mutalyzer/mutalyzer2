@@ -190,7 +190,8 @@ class TestWebservice():
         cache = sync.local_cache(created_since)
 
         r = self.client.service.getCache(created_since)
-        assert_equal(len(r.CacheEntry), len(cache))
+        if len(cache) > 0:
+            assert_equal(len(r.CacheEntry), len(cache))
 
     def test_getdbsnpdescriptions(self):
         """
