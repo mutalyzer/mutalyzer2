@@ -40,14 +40,16 @@ else
     echo -e "${COLOR_WARNING}Not touching /etc/mutalyzer/config (it exists)${COLOR_END}"
 fi
 
-for USERNAME in $(ls /home); do
-    echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.config/mutalyzer/config${COLOR_END}"
-    echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.cache/mutalyzer${COLOR_END}"
-    su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
-    su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
-    su $USERNAME -c "cp extras/config.user.example /home/$USERNAME/.config/mutalyzer/config"
-    su $USERNAME -c "touch /tmp/mutalyzer-$USERNAME.log"
-    sed -i -e "s@<USERNAME>@${USERNAME}@g" /home/$USERNAME/.config/mutalyzer/config
+for USERNAME in $(cut -f 1 -d : /etc/passwd); do
+    if [ -d "/home/${USERNAME}" ]; then
+        echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.config/mutalyzer/config${COLOR_END}"
+        echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.cache/mutalyzer${COLOR_END}"
+        su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
+        su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
+        su $USERNAME -c "cp extras/config.user.example /home/$USERNAME/.config/mutalyzer/config"
+        su $USERNAME -c "touch /tmp/mutalyzer-$USERNAME.log"
+        sed -i -e "s@<USERNAME>@${USERNAME}@g" /home/$USERNAME/.config/mutalyzer/config
+    fi
 done
 
 echo -e "${COLOR_INFO}Touching /var/log/mutalyzer.log${COLOR_END}"
