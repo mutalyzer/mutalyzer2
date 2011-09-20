@@ -764,6 +764,15 @@ class BatchProgress:
         - ajax: If set, return plain text result.
 
         @todo: The 'progress' template does not exist.
+        @todo: Actually, signaling 'OK' here only means the last entry was
+            taken from the database queue. It might still be processing, in
+            which case not all output is yet written to the result file.
+            For the standard use case, this is no big deal, since any user
+            will take more than a few milliseconds to actually click the
+            download link.
+            However, if we imagine some scripted batch uploader, it might get
+            bitten by this bug. (This includes our unit tests, where we work
+            around it by explicitely waiting a second.)
         """
         attr = {"percentage": 0}
 

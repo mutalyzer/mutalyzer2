@@ -379,7 +379,7 @@ class GenBankRetriever(Retriever):
         if raw_data == "\nNothing has been found\n" :
             self._output.addMessage(__file__, 4, "ENORECORD",
                 "The record could not be retrieved.")
-            return None, None
+            return None
         #if
 
         fakehandle = StringIO.StringIO() # Unfortunately, BioPython needs a
@@ -391,7 +391,7 @@ class GenBankRetriever(Retriever):
             self._output.addMessage(__file__, 4, "ENOPARSE",
                 "The file could not be parsed.")
             fakehandle.close()
-            return None, None
+            return None
         #except
 
         if type(record.seq) == UnknownSeq :
@@ -399,7 +399,7 @@ class GenBankRetriever(Retriever):
             self._output.addMessage(__file__, 4, "ENOSEQ",
                 "This record contains no sequence. Chromosomal or contig " \
                 "records should be uploaded with the GenBank uploader.")
-            return None, None
+            return None
         #if
 
         outfile = filename
@@ -442,7 +442,10 @@ class GenBankRetriever(Retriever):
             return None
         #if
         else :                      # Something is present in the file.
-            name, GI = self.write(raw_data, name, 1)
+            result = self.write(raw_data, name, 1)
+            if not result:
+                return None
+            name, GI = result
             if name :               # Processing went okay.
                 return self._updateDBmd5(raw_data, name, GI)
             else :                  # Parse error in the GenBank file.
@@ -663,18 +666,19 @@ class GenBankRetriever(Retriever):
         @return:
         @rtype: string?????
         """
-
         md5sum = self._calcHash(raw_data)
         UD = self._database.getGBFromHash(md5sum)
         if not UD :
             UD = self._newUD()
-            self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, None)
-        #if
-        else :
-            if os.path.isfile(self._nametofile(UD)) :
+            if self.write(raw_data, UD, 0):
+                self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, None)
                 return UD
-
-        return self.write(raw_data, UD, 0) and UD
+        #if
+        else:
+            if os.path.isfile(self._nametofile(UD)):
+                return UD
+            else:
+                return self.write(raw_data, UD, 0) and UD
     #uploadrecord
 
     def loadrecord(self, identifier) :

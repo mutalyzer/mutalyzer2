@@ -298,6 +298,10 @@ class TestWSGI():
             assert re.match('[0-9]+', r.body)
             time.sleep(2)
         assert_equal(r.body, 'OK')
+        # Actually, this only means the last entry was taken from the database
+        # queue. It might still be processing, in which case we miss some
+        # expected output. So let's wait a few seconds.
+        time.sleep(2)
         # This is a hack to get to the batch results (see @note above).
         response = urllib2.urlopen(BATCH_RESULT_URL.format(id=id))
         assert_equal(response.info().getheader('Content-Type'), 'text/plain')
@@ -305,10 +309,6 @@ class TestWSGI():
         assert header in result
         if not lines:
             lines = size
-        if len(result.strip().split('\n')) -1  != lines:
-            # Heisenbug, whenever it occurs we want to see some info.
-            print 'File: /Results_' + id + '.txt'
-            print result
         assert_equal(len(result.strip().split('\n')) - 1, lines)
         return result
 
@@ -597,6 +597,21 @@ facilisi."""
                                   open(test_genbank_file, 'r').read()))
         r = form.submit()
         r.mustcontain('Your reference sequence was uploaded successfully.')
+
+    def test_upload_local_file_invalid(self):
+        """
+        Test the genbank uploader with a non-genbank file.
+
+        @note: We add the current time to the file contents to make sure it is
+            not recognized by its hash.
+        """
+        r = self.app.get('/upload')
+        form = r.forms[0]
+        form['invoermethode'] = 'file'
+        form.set('bestandsveld', ('test_upload.gb',
+                                  'this is not a genbank file (%s)\n' % time.ctime()))
+        r = form.submit()
+        r.mustcontain('The file could not be parsed.')
         print r.body
 
     def test_reference(self):
