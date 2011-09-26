@@ -21,6 +21,8 @@ COLOR_END='\033[0m'
 # The 'cd /' is a hack to prevent the mutalyzer package under the current
 # directory to be used.
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
+BIN_WEBSITE=$(which mutalyzer-website.wsgi)
+BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
 
 if [ ! -e /var/www/mutalyzer ]; then
     mkdir -p /var/www/mutalyzer
@@ -40,8 +42,12 @@ for MIGRATION in extras/migrations/*.migration; do
     $MIGRATION migrate
 done
 
-echo "Restarting Apache"
-/etc/init.d/apache2 restart
+echo -e "${COLOR_INFO}Assuming mod_wsgi daemon mode, not restarting Apache${COLOR_END}"
+#/etc/init.d/apache2 restart
+
+echo "Touching WSGI entry to reload application"
+touch $BIN_WEBSITE
+touch $BIN_WEBSERVICE
 
 echo "Restarting Mutalyzer batch daemon"
 /etc/init.d/mutalyzer-batchd restart
