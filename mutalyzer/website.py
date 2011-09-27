@@ -270,6 +270,37 @@ class Reference:
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
+
+    def HEAD(self, file):
+        """
+        Do the same as in the GET case, but don't actually bunzip and send the
+        file, just check if it exists.
+
+        @arg file: Filename to download from cache.
+        @type file: string
+
+        This is used by LOVD to quickly check if a reference file is in the
+        cache. If it isn't, it will resubmit it.
+        Of course a more proper solution here would be to have some webservice
+        method which checks if the GenBank file is in the cache *or* can be
+        reconstructed from the information in the database. Because if the
+        latter is the case, Mutalyzer will add it to the cache on the fly.
+        """
+        file_path = os.path.join(config.Retriever.cache, '%s.bz2' % file)
+        if not os.path.isfile(file_path):
+            # The following is a hack to return a 404 not found status with
+            # empty body (as is checked by our unit test framework, WebTest).
+            # Just passing nothing, or the empty string, causes web.py to
+            # insert some default 'not found' message.
+            class TrueEmptyString(object):
+                def __str__(self):
+                    return ''
+                def __nonzero__( self):
+                    return True
+            raise web.notfound(message=TrueEmptyString())
+        web.header('Content-Type', 'text/plain')
+        web.header('Content-Disposition', 'attachment; filename="%s"' % file)
+        return ''
 #Reference
 
 

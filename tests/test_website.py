@@ -626,11 +626,6 @@ facilisi."""
     def test_reference(self):
         """
         Test if reference files are cached.
-
-        @todo: This test doesn't work, since for every request a new
-            temporary cache directory is created by the webserver instance
-            and thus the cached file from request i cannot be re-used in
-            request i+1.
         """
         r = self.app.get('/check')
         form = r.forms[0]
@@ -645,3 +640,28 @@ facilisi."""
         assert_equal(r.content_type, 'text/plain')
         assert_equal(r.content_length, 26427)
         r.mustcontain('ggaaaaagtc tctcaaaaaa cctgctttat')
+
+    def test_reference_head(self):
+        """
+        Test if reference files are cached, by issuing a HEAD request.
+
+        Note: The WebTest module also checks that the response to a HEAD
+            request is empty, as it should be.
+        """
+        r = self.app.get('/check')
+        form = r.forms[0]
+        form['mutationName'] = 'AB026906.1:c.274G>T'
+        r = form.submit()
+        r.mustcontain('0 Errors',
+                      '1 Warning',
+                      'Raw variant 1: substitution at 7872',
+                      '<a href="#bottom" class="hornav">go to bottom</a>',
+                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="mutationName" style="width:100%">')
+        r = self.app.head('/Reference/AB026906.1.gb')
+        assert_equal(r.content_type, 'text/plain')
+
+    def test_reference_head_none(self):
+        """
+        Test if non-existing reference files gives a 404 on a HEAD request.
+        """
+        r = self.app.head('/Reference/AB026906.78.gb', status=404)
