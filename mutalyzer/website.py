@@ -588,9 +588,10 @@ class VariantInfo:
                           'Finished processing %s:%s (LOVD_ver %s, build %s)' \
                           % (acc, var, LOVD_ver, build))
 
-        result = '%i\n%i\n%i\n%i\n%i\n%i\n%s' \
-                 % (ret.startmain, ret.startoffset, ret.endmain,
-                    ret.endoffset, ret.start_g, ret.end_g, ret.mutationType)
+        if not result and getattr(ret, 'startmain', None):
+            result = '%i\n%i\n%i\n%i\n%i\n%i\n%s' \
+                     % (ret.startmain, ret.startoffset, ret.endmain,
+                        ret.endoffset, ret.start_g, ret.end_g, ret.mutationType)
 
         web.header('Content-Type', 'text/plain')
 
