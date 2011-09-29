@@ -605,7 +605,7 @@ facilisi."""
         form.set('bestandsveld', ('test_upload.gb',
                                   open(test_genbank_file, 'r').read()))
         r = form.submit()
-        r.mustcontain('Your reference sequence was uploaded successfully.')
+        r.mustcontain('Your reference sequence was loaded successfully.')
 
     def test_upload_local_file_invalid(self):
         """

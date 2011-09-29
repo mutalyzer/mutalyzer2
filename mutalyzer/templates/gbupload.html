@@ -11,8 +11,8 @@
               updateVisibility();
         }
       </script>
-    <center><h3>Reference Sequence Uploader</h3></center>
-    The Reference Sequence Uploader allows you to use your own reference 
+    <center><h3>Reference File Loader</h3></center>
+    The Reference File Loader allows you to use your own reference 
     sequence when no appropriate RefSeq, GenBank or LRG file is available.
     <br>
     Please select one of the options below to upload or retrieve your reference
@@ -126,7 +126,7 @@
     <div tal:condition = "UD">
       <b>Output:</b><br>
       <br>
-      Your reference sequence was uploaded successfully.<br>
+      Your reference sequence was loaded successfully.<br>
       You now can use mutalyzer with the following accession number as 
       reference: <b tal:content = "UD"></b><br>
       <a tal:attributes = "href string:Reference/${UD}.gb">
