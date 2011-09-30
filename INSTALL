@@ -144,6 +144,12 @@ directory:
     sudo bash extras/post-upgrade
 
 If you installed Mutalyzer in a development environment, you don't have to
-do anything to upgrade except for running the automated migration scripts:
+do anything usually, except for the following situations.
+
+* If the database has changed, run:
 
     for M in extras/migrations/*.migration; do sudo $M migrate; done
+
+* If the Mutalyzer version has changed, run:
+
+    sudo python setup.py develop
