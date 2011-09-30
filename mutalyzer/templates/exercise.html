@@ -1,0 +1,377 @@
+<html>
+  <head>
+    <link rel="stylesheet" 
+      type="text/css" 
+      href="base/css/style.css">
+    <title></title>
+  </head>
+  <body>
+    <div metal:define-macro="content">
+      <center>
+        <h3>Sequence variation nomenclature checker demonstration</h3>
+      </center>
+
+      <h3>Checking sequence variation nomenclature</h3> 
+      <p>
+        A few tools are available to check sequence variation nomenclature:
+      </p>
+      <ul>
+        <li>
+          <a href="http://mutation.sanbi.ac.za/checker">DNA Mutation Checker
+          3</a> - Basic sequence variation check.<br> This basic mutation check
+          should be followed/supplemented by a sequence variation check
+          including splice site changes
+        </li>
+        <li>
+          <a href="index">Mutalyzer</a> - Sequence variation nomenclature
+          checker generating descriptions according to <a
+          href="http://www.hgvs.org/mutnomen/">HGVS nomenclature guidelines</a>
+        </li>
+      </ul> 
+        
+      <h3>Mutalyzer sequence variation nomenclature checker</h3> 
+      <p>
+        <a href="index">The Mutalyzer sequence variation nomenclature
+        checker</a> has been developed as the first part of an integrated
+        modular package of tools, which&nbsp; should allow users to obtain
+        information about the effect of sequence variations in genes associated
+        with human disease. The <a href="index">Mutalyzer</a> package (under
+        development) should assist decision-making in molecular diagnosis based
+        on a sequence change detected in a patient's DNA and prevent
+        misdiagnosis caused by either missing the pathogenic effect of a
+        sequence variation reported as &quot;polymorphic&quot; or, more
+        seriously, reporting a polymorphic change as non-pathogenic.
+      </p> 
+          
+      <h3>Exercise</h3>
+      <p>
+        For this exercise, it is most convenient to right-click this 
+        <a href="check">link</a> and open a separate window for Mutalyzer. The
+        exercise will demonstrate the use of the different functionalities of
+        the Mutalyzer sequence variation nomenclature checker. Its main
+        functions can be selected from the 
+        <a href="index">index page</a> or the list on the left side of any
+        Mutalyzer window. For more information, please check this 
+        <a href="help">help</a> file. Although the performance of Mutalyzer has
+        been checked using complete sequence variation database contents, some
+        changes might not be processed correctly. Please report any strange
+        results to <a href="mailto:mutalyzer@humgen.nl">mutalyzer@humgen.nl</a>
+      </p>
+
+      <h3>Selecting a reference file</h3>
+      <p>
+        Mutalyzer needs the annotation of a Genbank reference sequence file to
+        retrieve basic information for the check. Its functionality can be
+        appreciated best using well-annotated genomic reference sequences,
+        which contain information about all the transcripts and proteins
+        encoded by the reference sequence.
+      </p>
+      <p>
+        For many disease genes, LSDB curators should have specified a reference
+        sequence, preferably by listing its GenBank accession number. In many
+        cases, this will be a RefSeq record with an accession number starting
+        with NM_ (or XM_). These records describe transcript sequences and
+        cannot be used by Mutalyzer to describe intron variants. If you need to
+        check intron variants, please ask the LSDB curator to specify a
+        well-annotated genomic reference sequence. (See 
+        <a href="http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=Nucleotide&dopt=GenBank&val=16944057">AL449423.14</a> or NCBI's new 
+        <a href="http://www.ncbi.nlm.nih.gov/RefSeq/RSG/">RefSeqGene</a>
+        records for example). Alternatively, you can use the Reference File Loader
+        options described below to obtain a suitable genomic reference
+        sequence. If the annotation of this record contains information about
+        the transcript specified by the NM_ number, Mutalyzer can use the
+        genomic sequence record to describe any variant relative to this
+        transcript. Always use an Accession number (AL449423) in combination
+        with a specific version number (14). Otherwise, Mutalyzer automatically
+        uses the last version and may present unexpected results.
+      </p>
+      <p>&nbsp;</p>
+
+      <h3>
+        Before you start: Save 
+        <a href="downloads/batchtestnew.txt">this tab-delimited text file</a>
+        to your Desktop and open it in WordPad.
+      </h3>
+     
+      <p>
+        1) The Mutalyzer Name Generator
+      </p>
+      <p>
+        The Mutalyzer Name Generator provides an easy check of a sequence
+        variation by returning the correct name of the variation according to
+        HGVS nomenclature guidelines with information about the sequence
+        surrounding the variation and the transcripts and proteins affected by
+        the variation. Mutalyzer accepts in principle any Genbank sequence as a
+        reference, but its functionality can be appreciated best using
+        well-annotated genomic reference sequences.
+      </p>
+      <p>
+        <i>Enter the accession number AL449423.14 as a reference sequence,
+       select &quot;genomic DNA&quot;, enter start position &quot;1&quot;, stop
+       position &quot;1&quot;, select &quot;deletion&quot; and press
+       submit.</i>
+      </p>
+     
+      <p>
+        The legend of the results describes the transcripts and proteins
+        annotated in the reference sequence.
+      </p>
+
+      <h3>
+        Add the description generated by Mutalyzer as a new line to the
+        tab-delimited text file. Make sure that the AccNo, Gene symbol and
+        description are separated by a single tab. Repeat this for all variants
+        in this part of the exercise.
+      </h3>
+      <p>
+        <i>On the Mutalyzer page, now select &quot;coding DNA&quot;, enter one
+        of the gene symbols from the legend, and press submit to see the effect
+        of a change on the major transcript </i>(optional: enter, in addition
+        to the gene symbol, the number of a transcript variant, e.g., 2 or v002
+        for the second transcript annotated in the record)<i>.</i>
+      </p>
+      <p>
+        <i>Repeat this for the other gene symbols, additional sequence
+        variation types, changes in introns, across intron exon boundaries,
+        etc. </i>You may check the <a href="http://www.hgvs.org/mutnomen/">
+        HGVS nomenclature guidelines</a> or <a
+        href="http://www.hgvs.org/dblist/dblist.html">sequence variation
+        databases</a> for inspiration.
+      </p>
+      <p>&nbsp;</p>
+
+      <h3>
+        Save theWordPad file containing the sequence variation descriptions to
+        generate the text file for use with the batch checker in the third part
+        of the exercise.
+      </h3>
+      <p>&nbsp;</p>
+      <p>
+        2) The Mutalyzer Name Checker
+      </p>
+      <p>
+        The Name Checker is most convenient when checking a few sequence
+        variations, which have been described in a putative correct format. The
+        description made by the generator can be submitted to the name checker
+        to regenerate the additional information. It also allows you to change
+        and check descriptions fast, once you get a feeling for it.
+      </p>
+      <p>
+        <i>Submit one of the descriptions generated by the Mutalyzer Name
+        Generator by pasting it into the submission box and pressing the submit
+        button.</i>
+      </p>
+      <p>
+        <i>Repeat this after changing the positions or nucleotide(s).</i>
+      </p>
+      <p>
+        Submit these descriptions to see the importance of a version number:
+        NM_000787.3:c.61A&gt;G and NM_000787.2:c.61A&gt;G.
+      </p>
+      <p>
+        Compare the CDS annotation of the corresponding files 
+        <a href="http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?db=nuccore&id=116534899">NM_000787.3</a> and 
+        <a href="http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=18426905">
+        NM_000787.2</a> to see why Mutalyzer gives a different result.
+      </p>
+      <p>
+        How does NM_000787.3:c.61A&gt;G compare to NM_000787.2:c.19A&gt;G ?
+      </p>
+      <p>&nbsp;</p>
+      <p>
+        3) The Mutalyzer SNP converter
+      </p>
+      <p>
+        The SNP converter has been developed to convert dbSNP identifiers to
+        HGVS compliant variant descriptions, based on the GenBank nucleotide
+        reference sequence specified by the user.
+      </p>
+      <p>
+        <i>Submit</i> rs9919552 <i>as SNP Accession number and</i> NM_003002
+        <i> as Nucleotide Accession number.</i>
+      </p>
+      <p>
+        <i>Open the UCSC Human Genome Browser in a new window to see additional
+        SNPs for this gene.</i>
+      </p>
+      <p>&nbsp;</p>
+      <p>
+        4) The Mutalyzer sequence variation description batch checker
+      </p>
+      <p>
+        The batch checker has been developed for database curators, but can be
+        used with any list of sequence variations provided that they are
+        submitted in the correct format: a tab-delimited text file.
+      </p>
+      <p>
+        <i>Open the WordPad file containing the sequence variation descriptions
+        that you have checked before. </i> 
+      </p>
+      <p>
+        <i>Duplicate some of the entries and create a few mistakes in
+        numbering, sequence type (e.g., replace duplication by insertion),
+        nucleotides, description format. </i>
+      </p>
+      <p>
+        <i>Submit the file together with your e-mail address (lower case only!)
+        to see the alerts and automatic corrections created by
+        Mutalyzer.</i>
+      </p>
+      <p>&nbsp;</p>
+      <p>
+        4) The Mutalyzer reference file loader
+      </p>
+      <p>
+        <span style="font-size: 12.0pt; font-family: Times New Roman">Users can
+          upload their own reference sequence file in GenBank format, retrieve
+          the genomic sequence of a gene with its flanking regions, or specify
+          a chromosomal range for use as a reference sequence. Mutalyzer checks
+          whether the file is in valid GenBank format. If so, Mutalyzer stores
+          the file locally for a limited time and returns a unique 
+          <i> UD identifier</i> that can be used with all different forms of
+          the Mutalyzer Sequence Variation Nomenclature Checker, except the SNP
+          converter. This option allows users to use reference files, which are
+          not present in GenBank, or add information about alternative
+          transcripts or proteins or additional genes contained within or
+          derived from the reference sequence to an existing GenBank file. We
+          strongly recommend to limit your use of this option
+        </span> 
+        and to send a request for a new RefSeqGene record to 
+        <a href="mailto:rsgene@ncbi.nlm.nih.gov">rsgene@ncbi.nlm.nih.gov</a>.
+        <span style="font-size: 12.0pt; font-family: Times New Roman"> 
+          Alternatively, you can submit annotation updates and corrections of
+          existing GenBank files following <a style="color: blue;
+          text-decoration: underline; text-underline: single"
+          href="http://www.ncbi.nlm.nih.gov/Genbank/update.html">these
+          instructions</a>.
+        </span>
+      </p>
+      <p>
+        <i>
+          <span style="font-family: Times New Roman">Click the Reference File Loader
+          link in 
+          </span> the list on the left side of any Mutalyzer window to see its
+          options.
+        </i>
+      </p>
+      <p>
+        <span style="font-family: Times New Roman">
+          If you already have a well-annotated GenBank file on your computer or
+          stored on a web server, the first two Reference File Loader options
+          facilitate easy uploading and will return the 
+        </span>
+        <span style="font-size: 12.0pt; font-family: Times New Roman">
+          unique <i>UD identifier</i>. This identifier can be used in the Name
+          generator or Name Checker, which will then provide a link to download
+          the record. This record can also be used as input for the LOVD
+          reference sequence parser.
+        </span>
+      </p>
+      <p>
+        <span style="font-size: 12.0pt; font-family: Times New Roman">
+          If you do not have
+        </span>
+        <span style="font-family: Times New Roman"> 
+          a well-annotated GenBank file, the last two options can provide one.
+        </span>
+        Curators of LOVD databases can use these options to generate 
+        <span style="font-family: Times New Roman"> 
+          well-annotated 
+        </span> genomic reference sequence files for import into LOVD2.0 using
+        the Reference Sequence Parser 2.0.
+      </p>
+      <p>
+        <span style="font-family: Times New Roman"> 
+          Option 3: Retrieving a well-annotated 
+        </span>
+        genomic reference sequence file
+        <span style="font-family: Times New Roman"> 
+          using a (<a
+          href="http://www.genenames.org/guidelines.html">HGNC</a>-approved)
+          gene symbol in combination with the name of the organism (e.g. human,
+          mouse, etc.).
+        </span>
+      </p>
+      <p>
+        <span style="font-family: Times New Roman; font-style:italic">
+          Click the corresponding radio button and try this for your favourite
+          gene.
+        </span>
+      </p>
+    
+      <p>
+        <span style="font-family: Times New Roman">
+          In some cases, this may not work for your gene due to ambiguous gene
+          symbols. If Mutalyzer mentions other problems, please report them! In
+          those cases, or when you would like to include additional flanking
+          sequences (e.g., promoters) you can also specify the range of a
+          chromosomal sequence using the fourth option. The easiest way to find
+          a chromosomal range is to search 
+          <a
+          href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene">Entrez
+          Gene</a> using the gene symbol in combination with the name of the
+          organism.
+        </span>
+      </p>
+      <p>
+        <span style="font-family: Times New Roman">
+          <i>
+            Open <a
+            href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene">Entrez
+            Gene</a> in a new window and search with the gene symbol of your
+            favorite gene in combination with the name of the organism. Open
+            the correct link in the list of results and click on the link to
+            reference sequence details under the heading &quot;Genomic regions,
+            transcripts and products&quot;.
+          </i>
+        </span>
+      </p>
+      <p>
+        <span style="font-family: Times New Roman">
+          Under the header &quot;RefSeqs of Annotated Genomes&quot;, you will
+          find an&nbsp; Acc. No starting with NC_, which refers to a
+          chromosomal reference sequence. The positions behind Range refer to
+          the start of the most upstream exon and the end of the most
+          downstream exon, respectively. 
+        </span>
+      </p>
+      <p>
+        <i>
+          Click on the Genbank link to view the sequence and its annotation.
+          You can save the file by changing &quot;Send to&quot; in the Entrez
+          menu bar to &quot;Save&quot;. 
+        </i>
+      </p>
+      <p>
+        <span style="font-family: Times New Roman"> 
+          Option 4: Retrieving a well-annotated 
+        </span>
+        genomic reference sequence file
+        <span style="font-family: Times New Roman"> 
+          using chromosomal positions
+        </span>
+      </p>
+      <p>
+        <span style="font-family: Times New Roman; font-style:italic">
+          Click the corresponding radio button and 
+        </span>
+        <i>
+          enter the NC_ Accession number and the range positions corresponding
+          to the gene of interest.
+        </i>
+      </p>
+      <p>
+        You can modify the (annotation of the) genomic reference sequence file
+        obtained via 
+        <a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene">Entrez
+        Gene</a>.using 
+        <a href="http://www.ncbi.nlm.nih.gov/Sequin/netaware.html">Network
+        aware Sequin.</a>
+      </p>
+      <hr>
+      <p>
+        If you have any comments or suggestions, please let us know!<a href="mailto:mutalyzer@humgen.nl"><address>mutalyzer@humgen.nl</address></a>
+      </p>
+    </div>
+  </body>
+</html>

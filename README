@@ -1,0 +1,163 @@
+Mutalyzer, a HGVS variant nomenclature checker
+==============================================
+
+
+Documentation
+-------------
+
+See the doc/ directory for (possibly outdated) developer documentation and
+presentation slides related to Mutalyzer. See http://www.mutalyzer.nl for
+user documentation.
+
+
+Installation
+------------
+
+See the INSTALL file for installation instructions.
+
+
+Unit tests
+----------
+
+The unit tests depend on a running batch daemon, webserver, and SOAP
+webservice:
+
+    sudo /etc/init.d/mutalyzer-batchd start
+    sudo /etc/init.d/apache2 start
+
+Now run the tests with:
+
+    MUTALYZER_ENV=test nosetests -v
+
+Or, if you are in a hurry, skip the long-running tests with:
+
+    MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
+
+
+Development notes
+-----------------
+
+Todo list:
+- Improve the web interface design :)
+- Test all uses of mkstemp().
+- Use naming conventions for modules Crossmap, Db, File, GenRecord, Retriever
+  and Scheduler.
+- Use standard logging module, with rotating functionality. Race conditions
+  on the log file are probably a problem in the current setup.
+  Instead of that rotating, we could also use logrotate:
+  http://serverfault.com/questions/55610/logrotate-and-open-files
+- Setup continuous integration. Currently, I'm most impressed with Hudson.
+  http://hudson-ci.org/
+  http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
+  Or perhaps Jenkins.
+  http://jenkins-ci.org/
+- Use monit on the production server.
+  http://mmonit.com/monit/
+- Migrate Javascript to JQuery.
+- I think in the long run, the Output object is not really the way to go. It
+  obscures the control flow. The logging part should use the standard logging
+  module. The data gathering by the Output object is probably better handled
+  by explicitely returning data objects from functions.
+- Migrate from TAL to a more mondern and maintained Python template library,
+  for example jinja.
+- Develop a large test suite.
+- Create a web interface url to watch the progress of a batch job.
+- Create webservices for the batch jobs (steal ideas from Jeroen's DVD
+  webservice).
+- Use virtualenv?
+- Use SQLAlchemy?
+- Password for MySQL user.
+- In deployment, remove old versions of Mutalyzer package?
+- Use https protocol.
+- Check for os.path.join vulnerabilities.
+- Use a standard solution for the database migrations in extras/migrations.
+- Use something like Sphinx to generate development documentation from code.
+- There are some problems with the batch architecture, especially that there
+  cannot be multiple workers without synchronisation problems.
+  Good read: http://news.ycombinator.com/item?id=3002861
+  Suggestion: http://celeryproject.org/
+- Have a normal 404 page.
+
+Code style guide:
+- Follow PEP 8 (code) and PEP 257 (docstrings).
+    http://www.python.org/dev/peps/pep-0008/
+    http://www.python.org/dev/peps/pep-0257/
+  Read the Google Python Style guide:
+    http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+- Use Epydoc style documentation in docstrings.
+- End class and method definitions with their name as comment.
+- Executables are in the bin/ directory.
+- For examples, check established Python projects:
+    http://code.djangoproject.com/browser/django/trunk
+    http://twistedmatrix.com/trac/browser/trunk
+    https://github.com/webpy/webpy
+    https://github.com/mitsuhiko/jinja2
+    https://bitbucket.org/mramm/tg-21/src
+    http://bazaar.launchpad.net/~bzr-pqm/bzr/bzr.dev/files
+    https://github.com/ask/celery
+- A lot of code does not yet adhere to these points, this is an ongoing
+  effort.
+
+Obsoleted features:
+- On eu.liacs.nl:
+  /etc/apache2/mods-enabled/rewrite.load contains a rewrite rule that converts
+  "Variant_info.php" to "Variant_info".
+  When all LOVD versions are above 2.0-23, this rule can be deleted and the
+  rewrite module can be disabled.
+- In the Variant_info() function a substitution on error messages is
+  performed.
+  When all LOVD versions are above 2.0-23, this check can be deleted.
+
+
+Dependencies
+------------
+
+Mutalyzer depends on the following (Debian/Ubuntu) packages:
+- mysql-server     >= 5.1
+- python           >= 2.6
+- python-mysqldb   >= 1.2.2
+- python-biopython >= 1.54
+- python-pyparsing >= 1.5.0
+- python-configobj >= 4.4.0
+- python-magic     >= 5.04-2
+- python-psutil    >= 0.1.3-1
+- python-xlrd      >= 0.6.1-2
+- python-daemon    >= 1.5.5
+- python-soappy    >= 0.12.0-2
+- python-suds      >= 0.3.9-1
+
+The web and SOAP interfaces depend on the following packages:
+- apache2             >= 2.2.11
+- libapache2-mod-wsgi >= 2.8
+- python-webpy        >= 0.33
+- python-soaplib      >= 2.0.0-alpha1
+- python-simpletal    >= 4.1-6
+
+Automatic remote deployment depends on Fabric:
+- fabric >= 0.9.0-2
+
+The unit tests depend on the following packages:
+- python-nose    >= 0.11
+- python-webtest >= 1.2.3
+
+As of 2011-08-23, snakefood reports the following imports from the Mutalyzer
+source code (excluding the standard library imports):
+
+    Bio
+    MySQLdb
+    SOAPpy
+    configobj
+    daemon
+    fabric
+    lockfile
+    lxml
+    magic
+    nose
+    pyparsing
+    setuptools
+    simpletal
+    soaplib
+    suds
+    web
+    webtest
+    xlrd

@@ -1,0 +1,362 @@
+.tablehead {
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 11px;
+	font-weight : bold;
+	background-color : #002E65;
+	color: #ffffff;
+}
+
+.tabletext {
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 11px;
+}
+
+.tableitalic {
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 11px;
+	font-style : italic;
+}
+
+a {
+	color : #002E65;
+}
+
+a:hover {
+	color : #8096B2;
+}
+
+.importanthead {
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 10pt;
+	font-weight : bold;
+	text-decoration : none;
+	}
+	
+.importanttext {
+	border : 1px solid black;
+	background-color : #717B9D;
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 10pt;
+	font-weight : normal;
+	text-decoration : none;
+}
+
+body, div, span, font, td {
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 10pt;
+	font-weight : normal;
+	text-decoration : none;
+}
+
+.raTable tr td {
+  text-align : right;
+  border : 1px solid grey;
+  padding : 0px 4px; 
+}
+.raTable {
+  border : 1px solid grey;
+  border-collapse : collapse;
+}
+
+.laTable tr td {
+  border : 1px solid grey;
+  padding : 0px 4px; 
+}
+
+.laTable {
+  border : 1px solid grey;
+  border-collapse : collapse;
+}
+
+.helper {
+  border : 1px dotted grey;
+  background-color : #ffffcc;
+  display: inline-block;
+  vertical-align: baseline;
+  line-height: 12px;
+}
+
+ol, li, p {
+	font-family : Arial, Helvetica, sans-serif;
+	font-size : 10pt;
+	font-weight : normal;
+	text-decoration : none;
+}
+
+ul {
+	list-style-image : url(../images/bullit.gif);
+	left : -25px;
+	position : relative;
+}
+
+.inverted {
+	background-color: #002E65;
+	color: white;
+}
+
+.bullet{
+	left : -15px;
+	position : absolute;
+}
+
+.faculteitsonderdeel {
+	color : #002E65;
+	font-size : 18px;
+	font-weight : bold;
+	padding-bottom : 18px;
+	padding-top : 2px;
+}
+
+.hoofdstuk {
+	font-size : 12pt;
+	font-weight : bold;
+	padding-bottom : 5px;
+}
+
+.hoofdstuknopad {
+	font-size : 12pt;
+	font-weight : bold;
+	padding-bottom : 1px;
+}
+
+.hornav {
+	color : #002E65;
+	font-weight : bold;
+	text-decoration : none;
+}
+
+.hornav:hover {
+	color : #8096B2;
+}
+
+.navhoofdstuk {
+	color : #C2C6D5;
+}
+
+.paragraaf {
+	font-size : 11pt;
+	font-weight : bold;
+	padding-bottom : 6px;
+}
+
+.submen1{
+	left : 30px;
+	position : relative;
+}
+
+.subparagraaf {
+	font-size : 10pt;
+	font-weight : bold;
+}
+
+.test1 {
+	position : relative;
+}
+
+.th {
+	color : #FFFFFF;
+	font-weight : bold;
+}
+
+.thcontent {
+	padding-bottom : 1px;
+	padding-left : 1px;
+	padding-right : 1px;
+	padding-top : 1px;
+}
+
+.vertnav {
+	color : #C2C6D5;
+	font-weight : bold;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnav:link {
+	color : #FFFFFF;
+}
+
+.vertnav:hover {
+	color : #FFFFFF;
+}
+
+.vertnavactive {
+	color : #FFFFFF;
+	font-weight : bold;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavactive:hover {
+	color : #FFFFFF;
+	font-weight : bold;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavsub {
+	color : #002E65;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavsub:visited {
+	color : #002E65;
+}
+
+.vertnavsub:hover {
+	color : #FFFFFF;
+}
+
+.vertnavsubother {
+	color : #B2D6F5;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavsubother:visited {
+	color : #92b6c5;
+}
+
+.vertnavsubother:hover {
+	color : #FFFFFF;
+}
+
+.vertnavsubactive {
+	color : #FFFFFF;
+	font-weight : normal;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavsubactive:hover {
+	color : #FFFFFF;
+	font-weight : normal;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavsubinternal {
+	color : #F5D6B2;
+	line-height : 18px;
+	text-decoration : none;
+}
+
+.vertnavsubinternal:visited {
+	color : #c2b695;
+}
+
+.vertnavsubinternal:hover {
+	color : #FFFFFF;
+}
+
+#content{
+	left : 230px;
+	position : absolute;
+	top : 121px;
+	width : 480px;
+}
+
+#menu{
+	left : 0px;
+	width : 175px;
+	z-index : 10;
+}
+
+#menu td {
+	color : #002E65;
+}
+
+.Interface {
+	color : #FFCC00;
+	background-color : #333333;
+	font-weight : bold;
+	text-align : center;
+	font-family : Arial, Helvetica, sans-serif;
+}
+.Info {
+	color : Black;
+	background-color : #D1DBFD;
+	border : 1px solid Black;
+	text-align : justify;
+	font-family : Arial, Helvetica, sans-serif;
+}
+.Important {
+	color : Darkred;
+	background-color : #cccccc;
+	font-weight : bold;
+	font-style : italic;
+	font-family : Arial, Helvetica, sans-serif;
+}
+.Header {
+	color : Black;
+	text-align : left;
+	font-style : italic;
+	font-family : "Times New Roman", Times, serif;
+}
+
+i {
+	font-size : 10pt;
+	font-style : italic;
+	font-family : Arial, Helvetica, sans-serif;
+}
+
+.messages {
+    width: 620px;
+}
+
+.debug, .information, .warning, .error {
+    padding-left: 25px;
+    background: left top no-repeat;
+}
+
+.debug {
+    background-image: url('../images/debug.png');
+}
+
+.information {
+    background-image: url('../images/info.png');
+}
+
+.warning {
+    background-image: url('../images/warning.png');
+}
+
+.error {
+    background-image: url('../images/error.png');
+}
+
+.thnormal {  
+	font-family: Arial, Helvetica, sans-serif; 
+	font-weight: bold; 
+	color: #FFFFFF;
+	background-color : #002E65;
+}
+
+.person {
+	color: #002E65;
+	text-decoration: none;
+	font-style: italic;
+}
+
+.person:hover {
+	color : #8096B2;
+	text-decoration: none;
+	font-style: italic;
+}
+
+.person:visited {
+	text-decoration: none;
+	font-style: italic;
+}
+
+.submitLink {
+  color: #00f;
+  font-family: monospace;
+  background-color: transparent;
+  text-decoration: underline;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}

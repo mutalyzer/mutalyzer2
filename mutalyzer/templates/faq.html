@@ -1,0 +1,277 @@
+<html>
+  <head>
+    <link rel="stylesheet" 
+      type="text/css" 
+      href="base/css/style.css">
+    <title></title>
+  </head>
+  <body>
+    <div metal:define-macro="content">
+      <center>
+        <h3>Frequently Asked Questions</h3>
+      </center>
+
+      <h3>How should I refer to Mutalyzer? </h3>
+      <p>
+        Mutalyzer is described in:
+      </p>
+      <p>
+        Wildeman M, van Ophuizen E, den Dunnen JT, Taschner PE. Improving
+        sequence variant descriptions in mutation databases and literature using
+        the MUTALYZER sequence variation nomenclature checker. 
+        <a href="http://www.ncbi.nlm.nih.gov/entrez/utils/fref.fcgi?PrId=3058&amp;itool=AbstractPlus-def&amp;uid=18000842&amp;db=pubmed&amp;url=http://dx.doi.org/10.1002/humu.20654">Hum Mutat 29:6-13 (2008)</a> [
+        <a href="http://www.ncbi.nlm.nih.gov/pubmed/18000842?">PMID:
+        18000842</a>].
+      </p>
+
+      <h3>What does Mutalyzer do?</h3>
+      <p>
+        Mutalyzer checks sequence variant descriptions given a certain reference
+        sequence and, if necessary, tries to correct them according to the 
+        <a href="http://www.hgvs.org/mutnomen/">HGVS nomenclature guidelines</a>.
+        Descriptions of its functionality can be found in the 
+        <a href="help">Help file</a>.
+      </p>
+
+      <h3>Were can I find examples of Mutalyzer input data?</h3>
+      <p>
+        Most Mutalyzer web pages show an example of the input data accepted.
+        Additional descriptions of input data formats can be found in the 
+        <a href="help">Help file</a>.
+      </p>
+
+      <h3>Can Mutalyzer analyze sequence traces?</h3>
+      <p>
+        No, Mutalyzer only checks sequence variant descriptions. Sequence
+        variant descriptions can be generated from sequence traces using third
+        party software, e.g., MutationSurveyor.
+      </p>
+
+      <h3>
+        Why does Mutalyzer only accept GenBank Accession Numbers or files in
+        GenBank format?
+      </h3>
+      <p>
+        Mutalyzer has been developed to extract sequence and annotation
+        information from files in GenBank format. This extraction of
+        information will not work properly with other formats.
+      </p>
+
+      <h3>
+        Why does Mutalyzer not work directly with GenBank Accession Numbers
+        starting with NC_ or NT_?
+      </h3>
+      <p>
+        GenBank Accession Numbers starting with NC_ or NT_ refer to contigs of
+        smaller sequences, potentially interspaced with gaps. Mutalyzer will
+        try to retrieve the underlying sequences to check the sequence variant,
+        but it may lose track of the corresponding positions due to the
+        different levels of assembly and return errors. Users are advised
+        circumvent this problem by using the Reference File Loader when (part of)
+        these NC_ or NT references are used. The 
+        <a href="http://www.humgen.nl/mutalyzer_exercise.html">
+        Mutalyzer exercise</a> provides more detailed information.
+      </p>
+
+      <h3>
+        Why does Mutalyzer not accept positions outside exons when using a
+        coding DNA reference sequence?
+      </h3>
+      <p>
+        Mutalyzer uses the reference sequence to check for the presence of the
+        nucleotides at the positions specified. Since promoter sequences,
+        intron sequences and intergenic sequences are not included in a coding
+        DNA reference sequence, Mutalyzer is unable to check these and will
+        issue an "Out of bounds" error. We strongly suggest to use genomic
+        reference sequences to describe changes in promoter sequences, intron
+        sequences and intergenic sequences.
+      </p>
+
+      <h3>
+        I am using a genomic reference sequence, but I am still unable to check
+        intron variants
+      </h3>
+      <p>
+        Mutalyzer checks the annotation of the genomic reference sequence for
+        information about the genes, their exons and protein coding sequence.
+        When these features are not annotated, Mutalyzer is unable to use the
+        coding DNA numbering scheme and will return an error. Please note that
+        Mutalyzer ignores non-coding transcripts, because the coding DNA
+        numbering scheme can not be applied in the absence of a start codon.
+        The HGVS sequence variation nomenclature guidelines do not yet provide
+        guidance on this issue.
+      </p>
+
+      <h3>How do I find the correct reference sequence?</h3>
+      <p>
+        Although any file in GenBank format can be used, curated RefSeq
+        sequences are preferred (See 
+        <a href="http://www.hgvs.org/mutnomen/refseq.html">HGVS Reference
+        Sequence discussion</a>). Most locus-specific mutation databases
+        (LSDBs) specify reference sequences for the genes of interest. In many
+        cases, these will be coding DNA reference sequences. If you want to
+        check changes in promoter sequences, intron sequences and intergenic
+        sequences, you should contact the curator of the LSDB to get a genomic
+        DNA reference sequence. 
+      </p>
+      <p>
+        If you are the curator of an LSDB in need of an appropriate genomic
+        reference sequence, you can use the options on the Reference File Loader
+        page to select a genomic reference sequence. More information about the
+        selection and modification of reference sequences can be found in the
+        <a href="http://www.humgen.nl/mutalyzer_exercise.html">
+        Mutalyzer exercise</a>.
+      </p>
+
+      <h3>
+        I am using the correct RefSeq Accession number. Why is the position of
+        most or all sequence variants on transcript or protein level different
+        from what I expected?
+      </h3>
+      <p>
+        Every GenBank file has an Accession number and a version number (e.g.
+        AB026906.1). If the version number has not been specified, Mutalyzer
+        will use the last version of this file. The sequence annotation of the
+        last version may differ from that of an earlier version, leading to
+        new/changed transcripts and protein sequence information, which is
+        automatically used by Mutalyzer to describe the variants. Most
+        locus-specific mutation databases (LSDBs) specify the accession numbers
+        of reference sequences for the genes of interest, but they should also
+        include the version number to prevent unexpected Mutalyzer results. You
+        can check the influence of the version number on Mutalyzer's analysis
+        by specifying a previous version number. If this solves the problem,
+        please ask the curator of the LSDB to specify the correct version of
+        the reference sequence. 
+      </p>
+
+      <h3>Why does Mutalyzer fail to recognize my SNP descriptions?</h3>
+      <p>
+        Mutalyzer checks if
+        <span style="font-size: 12pt; font-family: Times New Roman;">
+          the nucleotide changed is present in the reference sequence. SNPs are
+          commonly indicated in dbSNP as two or more possible alleles at the
+          same position of the sequence.
+        </span>
+        According to the HGVS nomenclature guidelines, only alleles which
+        differ from the reference can be described. As a result,
+        NM_003002.1:c.204C&gt;T is approved, but NM_003002.1:c.204T&gt;C will
+        result in an error. When the dbSNP identifier is known, the SNP
+        converter can be used to generate the correct description (see the 
+        <a href="help">Help file</a> for more information.
+      </p>
+
+      <h3>
+        Why does the Reference File Loader not work with my local file or the URL
+        provided?
+      </h3>
+      <p>
+        Mutalyzer checks if it gets a 
+        <span style="font-size: 12pt; font-family: Times New Roman;">
+          <a
+          href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html">GenBank
+          Flat file</a> in both cases. Other formats can not be processed
+          correctly and will generate an error.
+        </span> 
+      </p>
+
+      <h3>
+        Why do large deletions seem shorter using coding DNA position numbering
+        than genomic position numbering?
+      </h3>
+      <p>
+        The difference in deletion size is caused by our intention to reflect
+        the effect of variations on transcript level, when coding DNA position
+        numbering is used. Therefore, ranges of deleted nucleotides are limited
+        to positions present in the coding DNA reference sequence.
+      </p>
+
+      <h3>
+        Can Mutalyzer analyze sequence variant descriptions from other
+        organisms?
+      </h3>
+      <p>
+        Yes, Mutalyzer can check sequence variant descriptions from other
+        organisms as long as a proper reference sequence is provided and the
+        HGVS sequence variation nomenclature guidelines are applied. Mutalyzer
+        will check the reference sequence annotation to determine which codon
+        table should be used for proper translation of coding sequences.
+      </p>
+
+      <h3>How do I create a batch checker file?</h3>
+      <p>
+        The easiest way to create a batch checker file is to download the 
+        <a href="downloads/batchtestnew.txt">Example</a>
+        file. Please right-click the link and select "Save as" to download the
+        example file for modification. Open the batchtest.txt file in Excel.
+        The Text Import Wizard window will open to guide you through the import
+        procedure. Click "Finish" to finalize the import. The Excel spreadsheet
+        created should have three columns and a header row containing the
+        column names. You can add your data to the batchtest.txt file by typing
+        or pasting the required information into the appropriate fields. When
+        you are finished select "Save as" from the File menu and save your file
+        using a different name (without spaces!) as type: Text (tab
+        delimited)(*.txt). 
+      </p>
+      <p>
+        In case of problems follow the separate import steps by verifying the
+        correct selections before clicking the "Next" button to go to step 2.
+        Click the "Next" button to go to step 3, click "Finish" to finalize the
+        import.
+      </p>
+
+      <h3>I am having trouble with the batch checker. What should I do?</h3>
+      <p>
+        The batch checker is relatively sensitive to unexpected file and file
+        name formats. Users are advised to check the following:
+      </p>
+      <p>
+        File name: The file name should not contain any spaces. Windows users
+        can check the file extension: if it is not .txt, but .doc or .xls, the
+        file is unlikely to be a tab-delimited textfile.
+      </p>
+      <p>
+        File format: The tab-delimited textfile should contain a header row
+        (the first line) containing the words 
+        <b><i>AccNo Genesymbol Mutation</i></b> separated by a single tab.
+      </p>
+      <p>
+        File format: The file should be a tab-delimited text file. Excel users
+        can import the file to check its format. The file should have three
+        columns with the appropriate column names, 
+        <b><i>AccNo Genesymbol Mutation</i></b>, respectively. The variant
+        information should be present in the corresponding columns. 
+      </p>
+      <p>
+        The Genesymbol column/field may be left blank, when the reference
+        sequence contains only one gene, but a tab should be present. Please
+        note that Mutalyzer does not check the correctness of the gene symbol
+        in this case.
+      </p>
+
+      <h3>Why can't I use the bugtracker?</h3>
+      <p>
+        The bugtracker can only be accessed via a secure connection. Normally,
+        when you try to connect securely, sites will present trusted
+        identification to prove that you are going to the right place. However,
+        this site's identity can't be verified by the browser because the
+        security certificate is self signed (and not signed by the proper
+        authorities).<br> 
+        A certificate that is signed by the proper authorities costs a lot of
+        money, so for the time being we have solved it in this way.<br> 
+        To get access to the bugtracker, you need to add a security exception.
+        Usually the browser presents this option.
+      </p>
+      <p>
+        &nbsp;
+      </p>
+      <hr>
+      <p>
+        If you have any comments or suggestions be sure to let us know!
+      </p>
+      <p>
+        Last modified: January 14, 2011
+      </p>
+        <a href="mailto:mutalyzer@humgen.nl"><address>mutalyzer@humgen.nl</address></a>
+    </div>
+  </body>
+</html>

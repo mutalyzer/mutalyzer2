@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Remove UCSC update from cron and install NCBI update.
+#
+# Usage:
+#   ./004-cron-ucsc-to-ncbi.migration [migrate]
+
+COLOR_INFO='\033[32m'
+COLOR_WARNING='\033[33m'
+COLOR_ERROR='\033[31m'
+COLOR_END='\033[0m'
+
+if [ -e /etc/cron.d/mutalyzer-ucsc-update ] && $(grep -v -q '^#' /etc/cron.d/mutalyzer-ucsc-update); then
+    echo -e "${COLOR_WARNING}This migration is needed.${COLOR_END}"
+    if [ "$1" = 'migrate' ]; then
+        echo 'Performing migration.'
+        sed -i 's/^/#/' /etc/cron.d/mutalyzer-ucsc-update
+        echo -e "${COLOR_INFO}Commented all lines in /etc/cron.d/mutalyzer-ucsc-update${COLOR_END}"
+        if [ ! -e /etc/cron.d/mutalyzer-mapping-update ]; then
+            BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
+            cp extras/cron.d/mutalyzer-mapping-update /etc/cron.d/mutalyzer-mapping-update
+            sed -i -e "s@<MUTALYZER_BIN_MAPPING_UPDATE>@${BIN_MAPPING_UPDATE}@g" /etc/cron.d/mutalyzer-mapping-update
+            echo -e "${COLOR_INFO}Installed /etc/cron.d/mutalyzer-mapping-update${COLOR_END}"
+        fi
+        echo 'Performed migration.'
+    fi
+else
+    echo -e "${COLOR_INFO}This migration is not needed.${COLOR_END}"
+fi
