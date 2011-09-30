@@ -15,7 +15,7 @@ Usage:
 import sys
 import os
 
-import mutalyzer
+from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer.config import Config
 from mutalyzer.util import format_usage
@@ -32,7 +32,7 @@ def main(cmd):
 
     O.addMessage(__file__, -1, "INFO", "Received variant " + cmd)
 
-    RD = Mutalyzer.process(cmd, C, O)
+    RD = variantchecker.check_variant(cmd, C, O)
 
     O.addMessage(__file__, -1, "INFO", "Finished processing variant " + cmd)
 
