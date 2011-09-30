@@ -725,6 +725,24 @@ class Check:
                 link = urllib.quote(description)
             return description, link
 
+        # Create a link to the UCSC Genome Browser
+        # This is an ugly proof of concept.
+        browser_link = None
+        if output.getIndexedOutput('organism', 0) == 'Homo sapiens':
+            converter = Converter('hg19', config, output)
+            variant = converter.c2chrom(str(name))
+            if variant:
+                import re
+                match = re.match('NC_(\d+)\.\d+:g.(\d+)_?(\d*)[^_\d]', variant)
+                if match:
+                    # Todo: convert NC_0000XX to chr1...chrY
+                    chromosome, start, stop = match.groups()
+                    if stop:
+                        position = 'chr%i:%i-%i' % (int(chromosome), int(start), int(stop))
+                    else:
+                        position = 'chr%i:%i' % (int(chromosome), int(start))
+                    browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s' % position
+
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
@@ -752,7 +770,8 @@ class Check:
             'cdsStop_c'          : output.getIndexedOutput('cdsStop_c', 0),
             'restrictionSites'   : output.getOutput('restrictionSites'),
             'legends'            : output.getOutput('legends'),
-            'reference'          : reference
+            'reference'          : reference,
+            'browserLink'        : browser_link
         }
 
         return render.check(args, standalone=not interactive)

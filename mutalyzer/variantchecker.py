@@ -1496,6 +1496,8 @@ def check_variant(description, config, output):
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
 
+    output.addOutput('organism', retrieved_record.organism)
+
     output.addOutput('reference', record_id)
 
     # Note: geneSymbol[0] is used as a filter for batch runs.

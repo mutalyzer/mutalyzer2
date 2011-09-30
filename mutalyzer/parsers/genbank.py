@@ -454,6 +454,8 @@ class GBparser():
         record.seq = biorecord.seq
 
         record.version = biorecord.id.split('.')[1]
+        # Todo: also set organism in the LRG parser
+        record.organism = biorecord.annotations['organism']
 
         exonList = []
         geneDict = {}
