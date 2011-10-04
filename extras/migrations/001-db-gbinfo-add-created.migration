@@ -36,6 +36,7 @@ def migrate():
     ALTER TABLE GBInfo
         ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ADD INDEX created (created);""")
+    cursor.execute('UPDATE GBInfo SET created = CURRENT_TIMESTAMP;')
     connection.commit()
     connection.close()
     migration.info('Added column mutalyzer.GBInfo.created')
