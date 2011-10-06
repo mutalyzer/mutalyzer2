@@ -57,12 +57,19 @@ to `FALSE`.
 
     svn commit -m 'Open development for 2.0.beta-12'
 
+Be sure to upgrade your installations to the new version as described in the
+INSTALL file (e.g. `sudo python setup.py develop` for development checkouts).
+
 
 Working with feature branches
 -----------------------------
 
 Some features are best developed isolated in a separate branch (a 'feature
-branch') before being merged into trunk.
+branch') before being merged into trunk. To make it easier to switch between
+branches, don't checkout the entire repository tree from its root. Instead,
+checkout the branch subdirectory (or trunk) directly and use `svn switch` to
+switch between them. Otherwise, you might need to update you Apache config and
+run `sudo python setup.py develop` every time you switch branches.
 
 To create the branch from current trunk:
 
@@ -70,13 +77,9 @@ To create the branch from current trunk:
       https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
       -m 'Create my-feature-branch from trunk'
 
-To work from this branch, re-install from there. You will probably also need
-to update your Apache config (this is a bit unfortunate and could be
-smoothened a bit):
+To work from this branch, switch your checkout to there:
 
-    cd branches/my-feature-branch
-    sudo python setup.py develop
-    emacs /etc/apache2/conf.d/mutalyzer.conf
+    svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
 
 To make it easier to reintegrate long-running branches, you can periodically
 merge trunk into them:
@@ -95,7 +98,7 @@ If you just want to mark a revision as being merged, you can use the
 
 Reintegrating a branch into trunk is done from the trunk checkout:
 
-    cd ../../trunk
+    svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
     svn merge --reintegrate --dry-run \
       https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
     svn rm https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
