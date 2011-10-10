@@ -428,8 +428,7 @@ class Crossmap() :
         @return: The converted notation (may be unaltered)
         @rtype: integer
         """
-
-        if s[0] == '*' :
+        if s[0] == '*':
             return self.__STOP + int(s[1:])
 
         return int(s)

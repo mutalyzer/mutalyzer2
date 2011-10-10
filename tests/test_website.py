@@ -589,6 +589,15 @@ facilisi."""
         expected = '\n'.join(['-612', '7720', '2016'])
         assert_equal(r.body, expected)
 
+    def test_variantinfo_ivs(self):
+        """
+        Test the /Variant_info interface used by LOVD2 (with IVS positioning).
+        """
+        r = self.app.get('/Variant_info?LOVD_ver=2.0-33&build=hg19&acc=NM_000249.3&var=c.IVS10%2B3A%3EG')
+        assert_equal(r.content_type, 'text/plain')
+        expected = '\n'.join(['884', '3', '884', '3', '37059093', '37059093', 'subst'])
+        assert_equal(r.body, expected)
+
     def test_upload_local_file(self):
         """
         Test the genbank uploader.
