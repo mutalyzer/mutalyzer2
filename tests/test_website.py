@@ -175,6 +175,19 @@ class TestWSGI():
                       '0 Warnings',
                       'Details of the parse error')
 
+    def test_check_protein_reference(self):
+        """
+        Submit the name checker form with a protein reference sequence (not
+        supported).
+        """
+        r = self.app.get('/check')
+        form = r.forms[0]
+        form['mutationName'] = 'BAA81889.1:c.274G>T'
+        r = form.submit()
+        r.mustcontain('1 Error',
+                      '0 Warnings',
+                      'Protein reference sequences are not supported')
+
     def test_check_noninteractive(self):
         """
         Submit the name checker form non-interactively.

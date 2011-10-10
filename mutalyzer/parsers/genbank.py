@@ -6,6 +6,7 @@ mutalyzer GenRecord. Record populated with data from a GenBank file.
 
 import bz2
 from Bio import SeqIO, Entrez
+from Bio.Alphabet import ProteinAlphabet
 
 from mutalyzer.config import Config
 from mutalyzer import Db
@@ -454,6 +455,10 @@ class GBparser():
         record.seq = biorecord.seq
 
         record.version = biorecord.id.split('.')[1]
+
+        # Todo: This will change once we support protein references
+        if isinstance(biorecord.seq.alphabet, ProteinAlphabet):
+            return record
 
         exonList = []
         geneDict = {}
