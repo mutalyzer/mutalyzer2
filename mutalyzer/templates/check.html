@@ -48,6 +48,7 @@
             </div>
           </div>
         </div> <!-- not:visualisation -->
+        <a tal:condition = "browserLink" tal:attributes = "href browserLink"><br>View region in UCSC Genome Browser</a>
       </div> <!-- form area -->
       <br>
       <div tal:condition = "lastpost">
@@ -263,8 +264,6 @@
             Download this reference sequence file: 
             <a tal:content = "reference"
                tal:attributes = "href string:Reference/${reference}"></a>
-            <br>
-            <a tal:condition = "browserLink" tal:attributes = "href browserLink">UCSC Genome Browser</a>
             <br>
             <br>
           </div> <!-- interactive -->

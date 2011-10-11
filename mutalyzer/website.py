@@ -727,21 +727,14 @@ class Check:
 
         # Create a link to the UCSC Genome Browser
         # This is an ugly proof of concept.
+        # NM_003002.2:c.274G>T
+        # http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr11:111959695
         browser_link = None
         if output.getIndexedOutput('organism', 0) == 'Homo sapiens':
-            converter = Converter('hg19', config, output)
-            variant = converter.c2chrom(str(name))
-            if variant:
-                import re
-                match = re.match('NC_(\d+)\.\d+:g.(\d+)_?(\d*)[^_\d]', variant)
-                if match:
-                    # Todo: convert NC_0000XX to chr1...chrY
-                    chromosome, start, stop = match.groups()
-                    if stop:
-                        position = 'chr%i:%i-%i' % (int(chromosome), int(start), int(stop))
-                    else:
-                        position = 'chr%i:%i' % (int(chromosome), int(start))
-                    browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s' % position
+            region = output.getIndexedOutput('chromosomalRegion', 0)
+            if region:
+                chromosome, first, last = region
+                browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i' % (chromosome, first - 10, last + 10)
 
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.

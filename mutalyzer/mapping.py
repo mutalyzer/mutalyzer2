@@ -446,6 +446,34 @@ class Converter(object) :
         return "%s:%s" % (chromAcc, var_in_g)
     #c2chrom
 
+    def positions_to_chromosomal_region(self, reference, version, positions):
+        """
+        Convert c. positions to chromosomal region.
+        """
+        #if not parseTree.RefSeqAcc: #In case of LRG for example
+        #    self.__output.addMessage(__file__, 4, "EONLYGB",
+        #        "Currently we only support GenBank Records")
+        #    return None
+
+        #if parseTree.RefType != 'c':
+        #    return None
+
+        self._FieldsFromDb(reference, version)
+
+        mapper = self.makeCrossmap()
+        if not mapper:
+            return None
+
+        g = []
+
+        for position in positions:
+            main = mapper.main2int(position.MainSgn +  position.Main)
+            offset = mapper.offset2int(position.OffSgn +  position.Offset)
+            g.append(mapper.x2g(main, offset))
+
+        return self.dbFields['chromosome'], min(g), max(g)
+    #coding_to_chromosomal
+
     def correctChrVariant(self, variant) :
         """
         @arg variant:

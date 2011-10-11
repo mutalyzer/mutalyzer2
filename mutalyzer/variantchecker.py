@@ -22,6 +22,7 @@ from Bio.Alphabet import IUPAC
 from mutalyzer import util
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
+from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Db
@@ -979,6 +980,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 # Coding positioning.
                 first, last = _coding_to_genomic(first_location, last_location,
                                                  transcript, output)
+                output.addOutput('rawCodingLocations', first_location)
+                output.addOutput('rawCodingLocations', last_location)
             else:
                 # Genomic positioning.
                 first, last = _genomic_to_genomic(first_location, last_location)
@@ -1544,6 +1547,14 @@ def check_variant(description, config, output):
 
     output.addOutput('original', str(mutator.orig))
     output.addOutput('mutated', str(mutator.mutated))
+
+    # Chromosomal region
+    locations = output.getOutput('rawCodingLocations')
+    if locations:
+        converter = Converter('hg19', config, output)
+        region = converter.positions_to_chromosomal_region(parsed_description.RefSeqAcc, parsed_description.Version, set(locations))
+        if region:
+            output.addOutput('chromosomalRegion', region)
 
     # Protein.
     for gene in record.record.geneList:
