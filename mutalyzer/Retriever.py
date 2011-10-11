@@ -19,6 +19,7 @@ import StringIO        # StringIO()
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 from Bio.Seq import UnknownSeq
+from Bio.Alphabet import ProteinAlphabet
 from xml.dom import DOMException, minidom
 from xml.parsers import expat
 
@@ -734,7 +735,15 @@ class GenBankRetriever(Retriever):
 
         # Now we have the file, so we can parse it.
         GenBankParser = genbank.GBparser()
-        return GenBankParser.create_record(filename)
+        record = GenBankParser.create_record(filename)
+
+        # Todo: This will change once we support protein references
+        if isinstance(record.seq.alphabet, ProteinAlphabet):
+            self._output.addMessage(__file__, 4, 'EPROTEINREF',
+                                    'Protein reference sequences are not supported.')
+            return None
+
+        return record
     #loadrecord
 #GenBankRetriever
 

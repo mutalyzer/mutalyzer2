@@ -20,6 +20,7 @@ COLOR_END='\033[0m'
 
 echo -e "${COLOR_INFO}Installing packages with apt${COLOR_END}"
 
+apt-get update && \
 apt-get install -y \
   mysql-server \
   python \

@@ -46,8 +46,9 @@ for USERNAME in $(cut -f 1 -d : /etc/passwd); do
         echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.cache/mutalyzer${COLOR_END}"
         su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
         su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
-        su $USERNAME -c "cp extras/config.user.example /home/$USERNAME/.config/mutalyzer/config"
+        su $USERNAME -c "touch /home/$USERNAME/.config/mutalyzer/config"
         su $USERNAME -c "touch /tmp/mutalyzer-$USERNAME.log"
+        cat extras/config.user.example > /home/$USERNAME/.config/mutalyzer/config
         sed -i -e "s@<USERNAME>@${USERNAME}@g" /home/$USERNAME/.config/mutalyzer/config
     fi
 done

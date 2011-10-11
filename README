@@ -34,6 +34,80 @@ Or, if you are in a hurry, skip the long-running tests with:
     MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
 
 
+Release management
+------------------
+
+The current Mutalyzer version is recorded in `mutalyzer/__init__.py`. See the
+comments in that file for more info of the versioning scheme.
+
+On the event of a new release, the following is done:
+
+    emacs mutalyzer/__init__.py
+
+Remove `'dev'` from `__version_info__` and set `RELEASE` to `True`.
+
+    svn commit -m 'Release 2.0.beta-11'
+    svn cp https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
+      https://humgenprojects.lumc.nl/svn/mutalyzer/tags/mutalyzer-2.0.beta-11 \
+      -m 'Tag 2.0.beta-11'
+    emacs mutalyzer/__init__.py
+
+Set `__version_info__` to a new version ending with `'dev'` and set `RELEASE`
+to `FALSE`.
+
+    svn commit -m 'Open development for 2.0.beta-12'
+
+Be sure to upgrade your installations to the new version as described in the
+INSTALL file (e.g. `sudo python setup.py develop` for development checkouts).
+
+
+Working with feature branches
+-----------------------------
+
+Some features are best developed isolated in a separate branch (a 'feature
+branch') before being merged into trunk. To make it easier to switch between
+branches, don't checkout the entire repository tree from its root. Instead,
+checkout the branch subdirectory (or trunk) directly and use `svn switch` to
+switch between them. Otherwise, you might need to update you Apache config and
+run `sudo python setup.py develop` every time you switch branches.
+
+To create the branch from current trunk:
+
+    svn cp https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
+      https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
+      -m 'Create my-feature-branch from trunk'
+
+To work from this branch, switch your checkout to there:
+
+    svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
+
+To make it easier to reintegrate long-running branches, you can periodically
+merge trunk into them:
+
+    svn merge https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
+
+Use `mergeinfo` to see which revisions are already merged. You can cherry-pick
+revisions to merge by using the `-c` option:
+
+    svn mergeinfo https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
+      --show-revs eligible
+    svn merge -c 354 https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
+
+If you just want to mark a revision as being merged, you can use the
+`--record-only` switch.
+
+Reintegrating a branch into trunk is done from the trunk checkout:
+
+    svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
+    svn merge --reintegrate --dry-run \
+      https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
+    svn rm https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
+      -m 'Delete refactor-mutalyzer-branch'
+
+All `merge` operations taken an optional `--dry-run` switch. Use it to see
+what would happen without having to actually applying.
+
+
 Development notes
 -----------------
 
@@ -77,6 +151,8 @@ Todo list:
   Good read: http://news.ycombinator.com/item?id=3002861
   Suggestion: http://celeryproject.org/
 - Have a normal 404 page.
+- Maintenance (and/or read-only) mode.
+- Cleanup this document.
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).

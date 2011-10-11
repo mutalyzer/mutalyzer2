@@ -254,15 +254,27 @@ class Converter(object) :
         @rtype: triple (integer, integer, integer)
         """
         if Type == 'c' :
-            main = C.main2int(Loc.MainSgn +  Loc.Main)
-            offset = C.offset2int(Loc.OffSgn +  Loc.Offset)
-            g = C.x2g(main, offset)
+            if Loc.IVSLoc:
+                ivs_number = int(Loc.IVSLoc.IVSNumber)
+                if ivs_number < 1 or ivs_number > C.numberOfIntrons():
+                    # Todo: Error handling in this entire module is 'suboptimal'
+                    raise Exception('Invalid intron')
+                if Loc.IVSLoc.OffSgn == '+':
+                    g = C.getSpliceSite(ivs_number * 2 - 1) + \
+                        C.orientation * int(Loc.IVSLoc.Offset)
+                else:
+                    g = C.getSpliceSite(ivs_number * 2) - \
+                        C.orientation * int(Loc.IVSLoc.Offset)
+                main, offset = C.g2x(g)
+            else:
+                main = C.main2int(Loc.PtLoc.MainSgn +  Loc.PtLoc.Main)
+                offset = C.offset2int(Loc.PtLoc.OffSgn +  Loc.PtLoc.Offset)
+                g = C.x2g(main, offset)
+                main, offset = C.g2x(g)
+        else:
+            g = int(Loc.PtLoc.Main)
             main, offset = C.g2x(g)
-        #if
-        else :
-            g = int(Loc.Main)
-            main, offset = C.g2x(g)
-        #else
+
         return (main, offset, g)
     #_getcoords
 
@@ -285,13 +297,13 @@ class Converter(object) :
 
         # Get the coordinates of the start position
         startmain, startoffset, start_g = \
-                self._getcoords(Cross, mutation.StartLoc.PtLoc,
+                self._getcoords(Cross, mutation.StartLoc,
                                 self.parseTree.RefType)
 
         # If there is an end position, calculate the coordinates.
         if mutation.EndLoc :
             endmain, endoffset, end_g = \
-                self._getcoords(Cross, mutation.EndLoc.PtLoc,
+                self._getcoords(Cross, mutation.EndLoc,
                                 self.parseTree.RefType)
         else :
             end_g, endmain, endoffset = start_g, startmain, startoffset
