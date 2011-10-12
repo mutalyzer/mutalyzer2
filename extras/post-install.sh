@@ -13,9 +13,11 @@
 #
 # Todo:
 # - Copy doc to /usr/share/doc
+# - Check if MySQL user/database exist before creating
 # - General cleanup
 
 set -e
+set -u
 
 COLOR_INFO='\033[32m'
 COLOR_WARNING='\033[33m'
@@ -155,9 +157,11 @@ EOF
 echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg18)${COLOR_END}"
 
 # Populate Mapping table with NCBI data (hg18)
-wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.36.3/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
+MAPPING=$(mktemp)
+wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.36.3/mapview/seq_gene.md.gz" -O - | zcat > $MAPPING
 echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg18)${COLOR_END}"
-$($BIN_MAPPING_UPDATE hg18 /tmp/seq_gene.md reference)
+$($BIN_MAPPING_UPDATE hg18 $MAPPING reference)
+rm $MAPPING
 
 echo -e "${COLOR_INFO}Creating tables in hg19 database${COLOR_END}"
 
@@ -223,10 +227,12 @@ EOF
 echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg19)${COLOR_END}"
 
 # Populate Mapping table with UCSC data (hg19)
-#wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
-wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md
+MAPPING=$(mktemp)
+#wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > $MAPPING
+wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_gene.md.gz" -O - | zcat > $MAPPING
 echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg19)${COLOR_END}"
-$($BIN_MAPPING_UPDATE hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly')
+$($BIN_MAPPING_UPDATE hg19 $MAPPING 'GRCh37.p2-Primary Assembly')
+rm $MAPPING
 
 echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
 

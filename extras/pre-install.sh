@@ -12,6 +12,7 @@
 #   sudo bash extras/pre-install.sh
 
 set -e
+set -u
 
 COLOR_INFO='\033[32m'
 COLOR_WARNING='\033[33m'
@@ -44,15 +45,10 @@ apt-get install -y \
 
 echo -e "${COLOR_INFO}Installing latest soaplib from git master${COLOR_END}"
 
-mkdir -p /tmp/mutalyzer-install
-pushd /tmp/mutalyzer-install
-
-git clone https://github.com/soaplib/soaplib.git
-cd soaplib
+pushd $(mktemp -d)
+git clone https://github.com/soaplib/soaplib.git .
 python setup.py install
-
 popd
-rm -Rf /tmp/mutalyzer-install
 
 echo -e "${COLOR_INFO}Installing suds using easy_install${COLOR_END}"
 

@@ -12,6 +12,7 @@
 #   sudo bash extras/post-upgrade.sh
 
 set -e
+set -u
 
 COLOR_INFO='\033[32m'
 COLOR_WARNING='\033[33m'
