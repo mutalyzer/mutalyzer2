@@ -726,15 +726,12 @@ class Check:
             return description, link
 
         # Create a link to the UCSC Genome Browser
-        # This is an ugly proof of concept.
-        # NM_003002.2:c.274G>T
-        # http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr11:111959695
         browser_link = None
-        if output.getIndexedOutput('organism', 0) == 'Homo sapiens':
-            region = output.getIndexedOutput('chromosomalRegion', 0)
-            if region:
-                chromosome, first, last = region
-                browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i' % (chromosome, first - 10, last + 10)
+        region = output.getIndexedOutput('chromosomalRegion', 0)
+        if region:
+            chromosome, first, last = region
+            browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i' \
+                           % (chromosome, first - 10, last + 10)
 
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.

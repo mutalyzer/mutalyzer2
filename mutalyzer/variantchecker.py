@@ -1548,13 +1548,16 @@ def check_variant(description, config, output):
     output.addOutput('original', str(mutator.orig))
     output.addOutput('mutated', str(mutator.mutated))
 
-    # Chromosomal region
-    locations = output.getOutput('rawCodingLocations')
-    if locations:
-        converter = Converter('hg19', config, output)
-        region = converter.positions_to_chromosomal_region(parsed_description.RefSeqAcc, parsed_description.Version, set(locations))
-        if region:
-            output.addOutput('chromosomalRegion', region)
+    # Chromosomal region (only for GenBank human transcript references)
+    if retrieved_record.organism == 'Homo sapiens' \
+           and parsed_description.RefSeqAcc \
+           and parsed_description.RefType == 'c':
+        locations = output.getOutput('rawCodingLocations')
+        if locations:
+            converter = Converter('hg19', config, output)
+            region = converter.chromosomal_region(set(locations), parsed_description.RefSeqAcc, parsed_description.Version)
+            if region:
+                output.addOutput('chromosomalRegion', region)
 
     # Protein.
     for gene in record.record.geneList:
