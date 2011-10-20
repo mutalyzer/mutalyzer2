@@ -68,6 +68,7 @@ urls = (
     '/Variant_info',        'VariantInfo',
     '/getGS',               'GetGS',
     '/check',               'Check',
+    '/bed',                 'Bed',
     '/syntaxCheck',         'SyntaxCheck',
     '/checkForward',        'CheckForward',
     '/batch([a-zA-Z]+)?',   'BatchChecker',
@@ -727,11 +728,13 @@ class Check:
 
         # Create a link to the UCSC Genome Browser
         browser_link = None
-        region = output.getIndexedOutput('chromosomalRegion', 0)
-        if region:
-            chromosome, first, last = region
-            browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i' \
-                           % (chromosome, first - 10, last + 10)
+        raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
+        if raw_variants:
+            positions = [position for description, (first, last) in raw_variants[1] for position in (first, last)]
+            bed_url = web.ctx.homedomain + web.ctx.homepath + '/bed?variant=' + urllib.quote(name)
+            #bed_url = 'https://mutalyzer.nl/base/test.bed'
+            browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i&hgt.customText=%s' \
+                           % (raw_variants[0], min(positions) - 10, max(positions) + 10, urllib.quote(bed_url))
 
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
@@ -766,6 +769,58 @@ class Check:
 
         return render.check(args, standalone=not interactive)
 #Check
+
+
+class Bed:
+    """
+    Create BED track.
+    """
+    def GET(self):
+        """
+        Create a BED track for the given variant, listing the positioning of
+        its raw variants. E.g. for use in the UCSC Genome Browser.
+
+        Parameters:
+        - mutationName: Variant to create BED track for.
+
+        This basically just runs the variant checker and extracts the raw
+        variants with positions.
+
+        @todo: Add +/- strand information.
+        """
+        web.header('Content-Type', 'text/plain')
+
+        i = web.input(variant=None)
+        variant = i.variant
+
+        if not variant:
+            web.ctx.status = '404 Not Found'
+            return 'Sorry, we have not BED track for this variant.'
+
+        output = Output(__file__, config.Output)
+
+        variantchecker.check_variant(str(variant), config, output)
+
+        raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
+        if not raw_variants:
+            web.ctx.status = '404 Not Found'
+            return 'Sorry, we have not BED track for this variant.'
+
+        #positions = [position for description, (first, last) in raw_variants[1] for position in (first, last)]
+        #browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i&hgt.customText=https://mutalyzer.nl/base/test.bed' \
+        # % (raw_variants[0], min(positions) - 10, max(positions) + 10)
+
+        fields = {'name':        'Mutalyzer', # variant
+                  'description': 'Mutalyzer track for ' + variant,
+                  'visibility':  'pack',
+                  'db':          'hg19',
+                  'url':         'https://mutalyzer.nl',
+                  'color':       '255,0,0'}
+        bed = ' '.join(['track'] + ['%s="%s"' % field for field in fields.items()]) + '\n'
+        for description, (first, last) in raw_variants[1]:
+            bed += '\t'.join([raw_variants[0], str(first - 1), str(last), description]) + '\n'
+        return bed
+#Bed
 
 
 class CheckForward:

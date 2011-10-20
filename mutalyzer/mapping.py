@@ -446,9 +446,9 @@ class Converter(object) :
         return "%s:%s" % (chromAcc, var_in_g)
     #c2chrom
 
-    def chromosomal_region(self, positions, reference, version=None):
+    def chromosomal_positions(self, positions, reference, version=None):
         """
-        Convert c. positions to chromosomal region.
+        Convert c. positions to chromosomal positions.
 
         This only works for positions on transcript references in c. notation.
         """
@@ -468,15 +468,15 @@ class Converter(object) :
         if not mapper:
             return None
 
-        region = []
+        chromosomal_positions = []
 
         for position in positions:
             main = mapper.main2int(position.MainSgn +  position.Main)
             offset = mapper.offset2int(position.OffSgn +  position.Offset)
-            region.append(mapper.x2g(main, offset))
+            chromosomal_positions.append(mapper.x2g(main, offset))
 
-        return self.dbFields['chromosome'], min(region), max(region)
-    #chromosomal_region
+        return self.dbFields['chromosome'], chromosomal_positions
+    #chromosomal_positions
 
     def correctChrVariant(self, variant) :
         """

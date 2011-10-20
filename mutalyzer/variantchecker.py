@@ -901,6 +901,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     @raise _RawVariantError: Cannot process this raw variant.
     @raise _VariantError: Cannot further process the entire variant.
     """
+    variant, original_description = variant.RawVar, variant[-1]
+
     # {argument} may be a number, or a subsequence of the reference.
     # {sequence} is the variant subsequence.
     argument = variant.Arg1
@@ -980,8 +982,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 # Coding positioning.
                 first, last = _coding_to_genomic(first_location, last_location,
                                                  transcript, output)
-                output.addOutput('rawCodingLocations', first_location)
-                output.addOutput('rawCodingLocations', last_location)
+                output.addOutput('rawVariantsCoding',
+                                 (original_description, first_location, last_location))
             else:
                 # Genomic positioning.
                 first, last = _genomic_to_genomic(first_location, last_location)
@@ -1416,17 +1418,17 @@ def process_variant(mutator, description, record, output):
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
             try:
-                process_raw_variant(mutator, var.RawVar, record, transcript,
+                process_raw_variant(mutator, var, record, transcript,
                                     output)
             except _RawVariantError:
                 #output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
                 #                  'Ignoring raw variant "%s".' % var[0])
                 output.addMessage(__file__, 1, 'IRAWVARIANTERROR',
                                   'Aborted variant check due to error in ' \
-                                  'raw variant "%s".' % var[0])
+                                  'raw variant "%s".' % var[-1])
                 raise
     else:
-        process_raw_variant(mutator, description.RawVar, record,
+        process_raw_variant(mutator, description, record,
                             transcript, output)
 
     # Add transcript-specific variant information.
@@ -1552,12 +1554,17 @@ def check_variant(description, config, output):
     if retrieved_record.organism == 'Homo sapiens' \
            and parsed_description.RefSeqAcc \
            and parsed_description.RefType == 'c':
-        locations = output.getOutput('rawCodingLocations')
-        if locations:
+        raw_variants = output.getOutput('rawVariantsCoding')
+        # rawVariantsCoding: [('29+4T>C', 29+4, 29+4), ('230_233del', 230, 233)]
+        if raw_variants:
+            locations = [position for description, first, last in raw_variants for position in (first, last)]
             converter = Converter('hg19', config, output)
-            region = converter.chromosomal_region(set(locations), parsed_description.RefSeqAcc, parsed_description.Version)
-            if region:
-                output.addOutput('chromosomalRegion', region)
+            chromosomal_positions = converter.chromosomal_positions(locations, parsed_description.RefSeqAcc, parsed_description.Version)
+            if chromosomal_positions:
+                output.addOutput('rawVariantsChromosomal', (chromosomal_positions[0],
+                                                            zip([description for description, first, last in raw_variants],
+                                                                util.grouper(chromosomal_positions[1]))))
+                # rawVariantsChromosomal: ('chr12', [('29+4T>C', 2323, 2323), ('230_233del', 5342, 5345)])
 
     # Protein.
     for gene in record.record.geneList:

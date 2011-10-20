@@ -214,7 +214,7 @@ class Grammar():
                Suppress(')')
 
     # We use originalTextFrom to retain the original (unparsed) raw variant
-    # descriptions. It can be retrieved as element[0].
+    # descriptions. It can be retrieved as element[-1].
     # See:
     # http://packages.python.org/pyparsing/pyparsing.pyparsing-module.html#originalTextFor
 
