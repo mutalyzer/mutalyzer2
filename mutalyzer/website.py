@@ -814,7 +814,7 @@ class Bed:
                   'description': 'Mutalyzer track for ' + variant,
                   'visibility':  'pack',
                   'db':          'hg19',
-                  'url':         'https://mutalyzer.nl',
+                  'url':         web.ctx.homedomain + web.ctx.homepath + '/checkForward?mutationName=' + urllib.quote(variant),
                   'color':       '255,0,0'}
         bed = ' '.join(['track'] + ['%s="%s"' % field for field in fields.items()]) + '\n'
         for description, positions in raw_variants[1]:
