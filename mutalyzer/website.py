@@ -817,8 +817,8 @@ class Bed:
                   'url':         'https://mutalyzer.nl',
                   'color':       '255,0,0'}
         bed = ' '.join(['track'] + ['%s="%s"' % field for field in fields.items()]) + '\n'
-        for description, (first, last) in raw_variants[1]:
-            bed += '\t'.join([raw_variants[0], str(first - 1), str(last), description]) + '\n'
+        for description, positions in raw_variants[1]:
+            bed += '\t'.join([raw_variants[0], str(min(positions) - 1), str(max(positions)), description]) + '\n'
         return bed
 #Bed
 
