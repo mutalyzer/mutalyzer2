@@ -5,8 +5,17 @@ A context-free grammar is defined here, the nomenclature rules are specified
 in Backus-Naur Form (BNF), which is used (with some minor modifications) as
 source of this module.
 
-@todo: Update docstrings.
+The pyparsing [1] module is used to define the grammar and parser.
+Documentation for this module seems a bit scattered over the web. For an
+informal overview, see [2].
+
+The grammar is described in [3].
+
 @todo: Automatically generate a LaTeX BNF description from this.
+
+[1] http://pyparsing.wikispaces.com/
+[2] http://pyparsing.wikispaces.com/HowToUsePyparsing
+[3] http://www.biomedcentral.com/1471-2105/12/S4/S5
 """
 
 
@@ -17,316 +26,306 @@ class Grammar():
     """
     Defines the HGVS nomenclature grammar.
 
-    Private variables:
-        - __output ; The output object.
-
-    Public variables:
-        - All variables defined below, they are all context-free grammar
-        rules.
-
-    Special methods:
-        - __init__() ; Initialise the class and enable packrat parsing.
-
     Public methods:
-        - parse(input) ; Parse the input string and return a parse tree.
+    - parse(input) ; Parse the input string and return a parse tree.
     """
-    # New:
-    # Nest -> `{' SimpleAlleleVarSet `}'
+    # Forward is used to define a recursive pattern later on (with <<).
     SimpleAlleleVarSet = Forward()
-    Nest = Suppress('{') + Group(SimpleAlleleVarSet)("Nest") + Suppress('}')
 
-    # New:
-    # Name -> ([a-z] | [a-Z] | [0-9])+
-    Name = Word(alphanums, min = 1)
+    # BNF: Nest -> `{' SimpleAlleleVarSet `}'
+    Nest = Suppress('{') + Group(SimpleAlleleVarSet)('Nest') + Suppress('}')
 
-    # Nt -> `A' | `C' | `G' | `T'
-    # and
-    # Nt -> `a' | `c' | `g' | `u'
-    # Changed to:
-    # Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' |
-    #       `m' | `s' | `w' | `b' | `d' | `h' | `v' | `i' |
-    #       `n' | `A' | `C' | `G' | `T' | `U'
-    #Nt = Word("acgtuACGTU", exact = 1)
-    Nt = Word("acgturykmswbdhvnACGTURYKMSWBDHVN", exact = 1)
+    ##########################################################################
+    # Basic lexemes
+    ##########################################################################
 
-    # New:
+    # BNF: Name -> ([a-z] | [a-Z] | [0-9])+
+    Name = Word(alphanums, min=1)
+
+    # BNF: Nt -> `a' | `c' | `g' | `u' | `A' | `C' | `G' | `T' | `U'
+    #Nt = Word('acgtuACGTU', exact=1)
+
+    # BNF: Nt -> `a' | `c' | `g' | `t' | `u' | `r' | `y' | `k' |
+    #            `m' | `s' | `w' | `b' | `d' | `h' | `v' | `n' |
+    #            `A' | `C' | `G' | `T' | `U' | `R' | `Y' | `K' |
+    #            `M' | `S' | `W' | `B' | `D' | `H' | `V' | `N'
+    #
+    # For completeness, we should also include `i' here, but since you can
+    # then generate `ins' (keyword for insertions) it is left out.
+    Nt = Word('acgturykmswbdhvnACGTURYKMSWBDHVN', exact=1)
+
+    # BNF: NtString -> Nt+
     NtString = Combine(OneOrMore(Nt))
 
-    # Number -> [0-9]+
-    #Number = Combine(OneOrMore((nums)))
+    # BNF: Number -> [0-9]+
     Number = Word(nums)
 
-    # RefSeqAcc  -> [A-Z][A-Z0-9_]+ (`.' [0-9]+)?
-    # GeneSymbol -> [A-Z][A-Z0-9_]+
-    # Changed to:
-    # TransVar   -> `_v' Number
-    # ProtIso    -> `_i' Number
-    # GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
-    # GI         -> (`GI' | `GI:')? Number
-    # Version    -> `.' Number
-    # AccNo      -> ([a-Z] Number `_')+ Version?
-    # UD         -> `UD_' [a-Z]+ (`_' Number)+
-    TransVar = Suppress("_v") + Number("TransVar")
-    ProtIso = Suppress("_i") + Number("ProtIso")
-    GeneSymbol = Suppress('(') + Group(Name("GeneSymbol") + \
-                 Optional(TransVar ^ ProtIso))("Gene") + Suppress(')')
-    GI = Suppress(Optional("GI") ^ Optional("GI:") ^ Optional("gi") ^
-         Optional("gi:")) + Number("RefSeqAcc")
-    Version = Suppress('.') + Number("Version")
-    AccNo = NotAny("LRG_") + \
-            Combine(Word(alphas + '_') + Number)("RefSeqAcc") + \
-            Optional(Version)
-    UD = Combine("UD_" + Word(alphas) + OneOrMore('_' + Number))("RefSeqAcc")
+    ##########################################################################
+    # Reference sequences
+    ##########################################################################
 
-    # LRGTranscriptID -> `t' [0-9]+
-    # LRGProteinID    -> `p' [0-9]+
-    # LRG             -> `LRG' [0-9]+ (`_' (LRGTranscriptID | LRGProteinID))?
-    LRGTranscriptID = Suppress('t') + Number("LRGTranscriptID")
-    LRGProteinID = Suppress('p') + Number("LRGProteinID")
-    LRG = Combine("LRG_" + Number)("LrgAcc") + Optional(LRGTranscriptID ^ \
+    # BNF: TransVar -> `_v' Number
+    TransVar = Suppress('_v') + Number('TransVar')
+
+    # BNF: ProtIso -> `_i' Number
+    ProtIso = Suppress('_i') + Number('ProtIso')
+
+    # BNF: GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
+    GeneSymbol = Suppress('(') + Group(Name('GeneSymbol') + \
+                 Optional(TransVar ^ ProtIso))('Gene') + Suppress(')')
+
+    # BNF: GI -> (`GI' | `GI:')? Number
+    GI = Suppress(Optional('GI') ^ Optional('GI:') ^ Optional('gi') ^
+         Optional('gi:')) + Number('RefSeqAcc')
+
+    # BNF: Version -> `.' Number
+    Version = Suppress('.') + Number('Version')
+
+    # BNF: AccNo -> ([a-Z] Number `_')+ Version?
+    AccNo = NotAny('LRG_') + \
+            Combine(Word(alphas + '_') + Number)('RefSeqAcc') + \
+            Optional(Version)
+
+    # BNF: UD -> `UD_' [a-Z]+ (`_' Number)+
+    UD = Combine('UD_' + Word(alphas) + OneOrMore('_' + Number))('RefSeqAcc')
+
+    # BNF: LRGTranscriptID -> `t' [0-9]+
+    LRGTranscriptID = Suppress('t') + Number('LRGTranscriptID')
+
+    # BNF: LRGProteinID -> `p' [0-9]+
+    LRGProteinID = Suppress('p') + Number('LRGProteinID')
+
+    # BNF: LRG -> `LRG' [0-9]+ (`_' (LRGTranscriptID | LRGProteinID))?
+    LRG = Combine('LRG_' + Number)('LrgAcc') + Optional(LRGTranscriptID ^ \
                                                         LRGProteinID)
 
     # RefSeqAcc  -> (GI | AccNo | UD | LRG) (`(' GeneSymbol `)')?
     GenBankRef = (GI ^ AccNo ^ UD) + Optional(GeneSymbol)
     RefSeqAcc = GenBankRef ^ LRG
 
-    # Chrom -> `1'..`22' | `X' | `Y'
-    # Changed to:
-    # Chrom -> Name
-    Chrom = Name("Chrom")
+    # BNF: Chrom -> Name
+    Chrom = Name('Chrom')
 
-    # AbsLoc -> Number
-    #AbsLoc = Number("AbsLoc")
+    # BNF: RefType -> (`c' | `g' | `m' | `n' | `r') `.'
+    RefType = Word('cgmnr', exact = 1)('RefType') + Suppress('.')
 
-    # Offset -> (`+' | `-') (Number | `?')
-    # Changed to:
-    # Offset -> (`+' | `-') (`u' | `d')? (Number | `?')
-    Offset = Word("+-", exact = 1)("OffSgn") + \
-             Optional(Word("ud", exact = 1))("OffOpt") + \
-             (Number ^ '?')("Offset")
-
-    # PtLoc -> AbsLoc | `-' AbsLoc Offset? | AbsLoc Offset | `*' AbsLoc Offset?
-    # Changed to:
-    # RealPtLoc -> ((`-' | `*')? Number Offset?) | `?'
-    # IVSLoc -> `IVS' Number (`+' | `-') Number
-    # PtLoc -> ((`-' | `*')? Number Offset?) | `?'
-    RealPtLoc = Group((Optional(Word("-*", exact = 1))("MainSgn") + \
-                Number("Main") + Optional(Offset)) ^ '?')
-    IVSLoc = Group(Suppress("IVS") + Number("IVSNumber") + \
-             Word("+-", exact = 1)("OffSgn") + Number("Offset"))("IVSLoc")
-    PtLoc = IVSLoc ^ RealPtLoc
-
-    # Ref -> ((RefSeqAcc | GeneSymbol) `:')? (`c.' | `g.' | `m.')
-    # Changed to:
-    # RefType -> (`c' | `g' | `m' | `n' | `r') `.'
-    # Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
-    RefType = Word("cgmnr", exact = 1)("RefType") + Suppress('.')
+    # BNF: Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
     Ref = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Optional(RefType)
+
+    # BNF: RefOne -> RefSeqAcc `:' RefType?
+    # Note that RefOne is not included in [3]. We use it in the SingleVar
+    # definition below.
     RefOne = RefSeqAcc + Suppress(':') + Optional(RefType)
 
-    # Extent -> PtLoc `_' (`o'? (RefSeqAcc | GeneSymbol) `:')? PtLoc
-    # Changed to:
-    # Extent -> PtLoc `_' (`o'? (RefSeqAcc | GeneSymbol) `:')? RefType? PtLoc
-    RealExtent = Group(PtLoc("PtLoc"))("StartLoc") + \
+    ##########################################################################
+    # Locations
+    ##########################################################################
+
+    # BNF: Offset -> (`+' | `-') (`u' | `d')? (Number | `?')
+    Offset = Word('+-', exact = 1)('OffSgn') + \
+             Optional(Word('ud', exact = 1))('OffOpt') + \
+             (Number ^ '?')('Offset')
+
+    # BNF: RealPtLoc -> ((`-' | `*')? Number Offset?) | `?'
+    RealPtLoc = Group((Optional(Word('-*', exact = 1))('MainSgn') + \
+                Number('Main') + Optional(Offset)) ^ '?')
+
+    # BNF: IVSLoc -> `IVS' Number (`+' | `-') Number
+    IVSLoc = Group(Suppress('IVS') + Number('IVSNumber') + \
+             Word('+-', exact = 1)('OffSgn') + Number('Offset'))('IVSLoc')
+
+    # BNF: PtLoc -> IVSLoc | RealPtLoc
+    PtLoc = IVSLoc ^ RealPtLoc
+
+    # BNF: RealExtent -> PtLoc `_' (`o'? (RefSeqAcc | GeneSymbol) `:')? RefType? PtLoc
+    # Note that the optional RefType is not included in [3].
+    RealExtent = Group(PtLoc('PtLoc'))('StartLoc') + \
                  Suppress('_') + Group(Optional(Group(Optional('o') + \
                  (RefSeqAcc ^ GeneSymbol) + Suppress(':') + \
-                 Optional(RefType)))("OptRef") + \
-                 PtLoc("PtLoc"))("EndLoc")
-    EXLoc = Group(Suppress("EX") + Number("EXNumberStart") + \
-            Optional(Suppress('-') + Number("EXNumberStop")))("EXLoc")
+                 Optional(RefType)))('OptRef') + \
+                 PtLoc('PtLoc'))('EndLoc')
+
+    # BNF: EXLoc -> `EX' Number (`-' Number)?
+    EXLoc = Group(Suppress('EX') + Number('EXNumberStart') + \
+            Optional(Suppress('-') + Number('EXNumberStop')))('EXLoc')
+
+    # BNF: Extent -> RealExtent | EXLoc
     Extent = RealExtent ^ EXLoc
 
-    # RangeLoc -> Extent | `(` Extent `)'
-    # Loc -> PtLoc | RangeLoc
+    # BNF: RangeLoc -> Extent | `(` Extent `)'
     RangeLoc = Extent ^ (Suppress('(') + Extent + Suppress(')'))
-    Loc = Group(PtLoc("PtLoc"))("StartLoc") ^ \
-          RangeLoc
 
-    # FarLoc -> Ref Loc
-    # Changed to:
-    # FarLoc -> (RefSeqAcc | GeneSymbol) (`:' RefType? Extent)?
+    # BNF: Loc -> PtLoc | RangeLoc
+    Loc = Group(PtLoc('PtLoc'))('StartLoc') ^ RangeLoc
+
+    # BNF: FarLoc -> (RefSeqAcc | GeneSymbol) (`:' RefType? Extent)?
     FarLoc = (RefSeqAcc ^ GeneSymbol) + Optional(Suppress(':') + \
              Optional(RefType) + Extent)
 
-    # Subst -> PtLoc Nt `>' Nt
-    Subst = Group(PtLoc("PtLoc"))("StartLoc") + Nt("Arg1") + \
-        Literal('>').setParseAction(replaceWith("subst"))("MutationType") + \
-        Nt("Arg2")
+    # BNF: ChromBand -> (`p' | `q') Number `.' Number
+    ChromBand = Suppress(Word('pq', exact = 1)) + Number + Suppress('.') + \
+                Number
 
-    # Del -> Loc `del' (Nt+ | Number)?
-    Del = Loc + Literal("del")("MutationType") + \
-          Optional(NtString ^ Number)("Arg1")
+    # BNF: ChromCoords -> `(' Chrom `;' Chrom `)' `(' ChromBand `;' ChromBand `)'
+    ChromCoords = \
+        Suppress('(') + Chrom + Suppress(';') + Chrom + Suppress(')') + \
+        Suppress('(') + ChromBand + Suppress(';') + ChromBand + Suppress(')')
 
-    # Dup -> Loc `dup' (Nt+ | Number | RangeLoc | FarLoc)?
-    # Changed to:
-    # Dup -> Loc `dup' (Nt+ | Number)? Nest?
-    Dup = Loc + Literal("dup")("MutationType") + \
+    ##########################################################################
+    # Single variations
+    ##########################################################################
+
+    # BNF: Subst -> PtLoc Nt `>' Nt
+    Subst = Group(PtLoc('PtLoc'))('StartLoc') + Nt('Arg1') + \
+            Literal('>').setParseAction(replaceWith('subst'))('MutationType') + \
+            Nt('Arg2')
+
+    # BNF: Del -> Loc `del' (Nt+ | Number)?
+    Del = Loc + Literal('del')('MutationType') + \
+          Optional(NtString ^ Number)('Arg1')
+
+    # BNF: Dup -> Loc `dup' (Nt+ | Number)? Nest?
+    Dup = Loc + Literal('dup')('MutationType') + \
           Optional(NtString ^ Number) + Optional(Nest)
 
-    # VarSSR -> PtLoc `(' Nt+ `)' Number `_' Number
-    # Changed to:
-    # AbrSSR -> PtLoc  Nt+ `(' Number `_' Number `)'
-    # VarSSR -> (PtLoc  Nt+ `[' Number `]') | (RangeLoc `[' Number `]')
+    # BNF: AbrSSR -> PtLoc Nt+ `(' Number `_' Number `)'
     AbrSSR = PtLoc + NtString + Suppress('(') + Number + \
              Suppress('_') + Number + Suppress(')')
+
+    # BNF: VarSSR -> (PtLoc Nt+ `[' Number `]') | (RangeLoc `[' Number `]') | AbrSSR
     VarSSR = (PtLoc + NtString + Suppress('[') + Number + \
              Suppress(']')) ^ (RangeLoc + Suppress('[') + Number + \
              Suppress(']')) ^ AbrSSR
 
-    # Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc)
-    # Changed to:
-    # Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
-    Ins = RangeLoc + Literal("ins")("MutationType") + \
-          ((NtString ^ Number)("Arg1") ^ RangeLoc ^ \
-          FarLoc("OptRef")) + Optional(Nest)
+    # BNF: Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
+    Ins = RangeLoc + Literal('ins')('MutationType') + \
+          ((NtString ^ Number)('Arg1') ^ RangeLoc ^ \
+          FarLoc('OptRef')) + Optional(Nest)
 
-    # Indel -> RangeLoc `del' (Nt+ | Number)?
-    #          `ins' (Nt+ | Number | RangeLoc | FarLoc)
-    # Changed to:
-    # Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)?
+    # BNF: Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)?
     #          `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
-    Indel = (RangeLoc ^ Group(PtLoc("PtLoc"))("StartLoc")) + Literal("del") + \
-        Optional(NtString ^ Number)("Arg1") + \
-        Literal("ins").setParseAction(replaceWith("delins"))("MutationType") + \
-        ((NtString ^ Number)("Arg2") ^ RangeLoc ^ FarLoc) + Optional(Nest)
+    # Note that the alternative PtLoc is not included in [3].
+    Indel = (RangeLoc ^ Group(PtLoc('PtLoc'))('StartLoc')) + Literal('del') + \
+            Optional(NtString ^ Number)('Arg1') + \
+            Literal('ins').setParseAction(replaceWith('delins'))('MutationType') + \
+            ((NtString ^ Number)('Arg2') ^ RangeLoc ^ FarLoc) + Optional(Nest)
 
-    # Inv -> RangeLoc `inv' (Nt+ | Number)?
-    # Changed to:
-    # Inv -> RangeLoc `inv' (Nt+ | Number)? Nest?
-    Inv = RangeLoc + Literal("inv")("MutationType") + \
-          Optional(NtString ^ Number)("Arg1") + Optional(Nest)
+    # BNF: Inv -> RangeLoc `inv' (Nt+ | Number)? Nest?
+    Inv = RangeLoc + Literal('inv')('MutationType') + \
+          Optional(NtString ^ Number)('Arg1') + Optional(Nest)
 
-    # Conv -> RangeLoc `con' FarLoc
-    # Changed to:
-    # Conv -> RangeLoc `con' FarLoc Nest?
-    Conv = RangeLoc + Literal("con")("MutationType") + FarLoc + \
-           Optional(Nest)
+    # BNF: Conv -> RangeLoc `con' FarLoc Nest?
+    Conv = RangeLoc + Literal('con')('MutationType') + FarLoc + Optional(Nest)
 
-    # ChromBand -> (`p' | `q') Number `.' Number
-    # ChromCoords -> `(' Chrom `;' Chrom `)' `(' ChromBand `;' ChromBand `)'
-    # TransLoc -> `t' ChromCoords `(' FarLoc `)'
-    ChromBand = Suppress(Word("pq", exact = 1)) + Number + Suppress('.') + \
-                Number
-    ChromCoords = \
-        Suppress('(') + Chrom + Suppress(';') + Chrom + Suppress(')') + \
-        Suppress('(') + ChromBand + Suppress(';') + ChromBand + Suppress(')')
+    # BNF: TransLoc -> `t' ChromCoords `(' FarLoc `)'
     TransLoc = Suppress('t') + ChromCoords + Suppress('(') + FarLoc + \
                Suppress(')')
 
-    # We use originalTextFrom to retain the original (unparsed) raw variant
-    # descriptions. It can be retrieved as element[0].
-    # See:
+    # Then RawVar rule has been changed from [3], were it is given as:
+    #
+    #     BNF: RawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
+
+    # BNF: CRawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
+    CRawVar = Group(Subst ^ Del ^ Dup ^ VarSSR ^ Ins ^ Indel ^ Inv ^ Conv)('RawVar')
+
+    # We use originalTextFor to retain the original (unparsed) raw variant
+    # descriptions. It can be retrieved as element[-1] and is useful for
+    # error messages. See:
     # http://packages.python.org/pyparsing/pyparsing.pyparsing-module.html#originalTextFor
 
-    # RawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
-    # Changed to:
-    # CRawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
-    # RawVar -> (CRawVar | (`(' CRawVar `)')) `?'?
-    CRawVar = Group(Subst ^ Del ^ Dup ^ VarSSR ^ \
-                   Ins ^ Indel ^ Inv ^ Conv)("RawVar")
+    # BNF: RawVar -> (CRawVar | (`(' CRawVar `)')) `?'?
     RawVar = originalTextFor((CRawVar ^ (Suppress('(') + CRawVar + \
                                          Suppress(')'))) + \
                              Suppress(Optional('?')), False)
 
-    # SingleVar -> Ref RawVar | TransLoc
-    # ExtendedRawVar -> RawVar | `=' | `?'
+    # BNF: SingleVar -> Ref RawVar | TransLoc
+    # Note that we diverge from [3] in that we use RefOne here instead of Ref.
     SingleVar = RefOne + RawVar ^ TransLoc
+
+    # BNF: ExtendedRawVar -> RawVar | `=' | `?'
     ExtendedRawVar = RawVar ^ '=' ^ '?'
 
-    # New:
-    # CAlleleVarSet -> ExtendedRawVar (`;' ExtendedRawVar)*
-    # UAlleleVarSet -> (CAlleleVarSet | (`(' CAlleleVarSet `)')) `?'?
-    # SimpleAlleleVarSet -> (`[' UAlleleVarSet `]') |
-    #                       ExtendedRawVar
+    # BNF: UnkEffectVar -> Ref (`(=)' | `?')
+    UnkEffectVar = Ref + (Suppress('(=)') ^ Suppress('?'))
+
+    # BNF: SplicingVar -> Ref (`spl?' | `(spl?)')
+    SplicingVar = Ref + (Suppress('spl?') ^ Suppress('(spl?)'))
+
+    # BNF: NoRNAVar -> Ref `0' `?'?
+    NoRNAVar = Ref + Suppress('0') + Optional(Suppress('?'))
+
+    ##########################################################################
+    # Multiple variations
+    ##########################################################################
+
+    # BNF: CAlleleVarSet -> ExtendedRawVar (`;' ExtendedRawVar)*
     CAlleleVarSet = ExtendedRawVar + ZeroOrMore(Suppress(';') + ExtendedRawVar)
+
+    # BNF: UAlleleVarSet -> (CAlleleVarSet | (`(' CAlleleVarSet `)')) `?'?
     UAlleleVarSet = (CAlleleVarSet ^ \
                     (Suppress('(') + CAlleleVarSet + Suppress(')'))) + \
                     Suppress(Optional('?'))
-    SimpleAlleleVarSet << (Group(Suppress('[') + UAlleleVarSet + \
-                          Suppress(']') ^ ExtendedRawVar)("SimpleAlleleVarSet"))
 
-    # New:
-    # MosaicSet -> (`[' SimpleAlleleVarSet (`/' SimpleAlleleVarSet)* `]') |
-    #              SimpleAlleleVarSet
-    # ChimeronSet -> (`[' MosaicSet (`//' MosaicSet)* `]') | MosaicSet
+    # BNF: SimpleAlleleVarSet -> (`[' UAlleleVarSet `]') | ExtendedRawVar
+    SimpleAlleleVarSet << (Group(Suppress('[') + UAlleleVarSet + \
+                          Suppress(']') ^ ExtendedRawVar)('SimpleAlleleVarSet'))
+
+    # BNF: MosaicSet -> (`[' SimpleAlleleVarSet (`/' SimpleAlleleVarSet)* `]') | SimpleAlleleVarSet
     MosaicSet = Group(Suppress('[') + SimpleAlleleVarSet + \
                 ZeroOrMore(Suppress('/') + SimpleAlleleVarSet) + \
-                Suppress(']'))("MosaicSet") ^ SimpleAlleleVarSet
-    ChimeronSet = Group(Suppress('[') + MosaicSet + \
-                ZeroOrMore(Suppress("//") + MosaicSet) + \
-                Suppress(']'))("ChimeronSet") ^ MosaicSet
+                Suppress(']'))('MosaicSet') ^ SimpleAlleleVarSet
 
-    # SingleAlleleVarSet -> `[` ExtendedRawVar (`;' ExtendedRawVar)+ `]'
-    # UnkAlleleVars -> Ref `[` RawVar `(+)' RawVar `]'
-    # Changed to:
-    # SingleAlleleVarSet -> (`[` ChimeronSet ((`;' | `^') ChimeronSet)*
-    #                        (`(;)' ChimeronSet)* `]') | ChimeronSet
+    # BNF: ChimeronSet -> (`[' MosaicSet (`//' MosaicSet)* `]') | MosaicSet
+    ChimeronSet = Group(Suppress('[') + MosaicSet + \
+                  ZeroOrMore(Suppress('//') + MosaicSet) + \
+                  Suppress(']'))('ChimeronSet') ^ MosaicSet
+
+    # BNF: SingleAlleleVarSet -> (`[` ChimeronSet ((`;' | `^') ChimeronSet)*
+    #                            (`(;)' ChimeronSet)* `]') | ChimeronSet
     SingleAlleleVarSet = Group(Suppress('[') + ChimeronSet + \
                          ZeroOrMore((Suppress(';') ^ Suppress('^')) + \
-                         ChimeronSet) + ZeroOrMore(Suppress("(;)") + \
-                         ChimeronSet) + Suppress(']'))("SingleAlleleVarSet") ^ \
+                         ChimeronSet) + ZeroOrMore(Suppress('(;)') + \
+                         ChimeronSet) + Suppress(']'))('SingleAlleleVarSet') ^ \
                          ChimeronSet
 
-    # SingleAlleleVars -> Ref SingleAlleleVarSet
+    # BNF: SingleAlleleVars -> Ref SingleAlleleVarSet
     SingleAlleleVars = Ref + SingleAlleleVarSet
 
-    # MultiAlleleVars -> Ref SingleAlleleVarSet `+' Ref? SingleAlleleVarSet
-    # Changed to:
-    # MultiAlleleVars -> Ref SingleAlleleVarSet (`;' Ref? SingleAlleleVarSet)+
+    # BNF: MultiAlleleVars -> Ref SingleAlleleVarSet (`;' Ref? SingleAlleleVarSet)+
     MultiAlleleVars = Ref + Group(SingleAlleleVarSet + \
                       OneOrMore(Suppress(';') + \
-                      SingleAlleleVarSet))("MultiAlleleVars")
+                      SingleAlleleVarSet))('MultiAlleleVars')
 
-    # MultiVar -> SingleAlleleVars | MultiAlleleVars | UnkAlleleVars
-    # Changed to:
-    # MultiVar -> SingleAlleleVars | MultiAlleleVars
+    # BNF: MultiVar -> SingleAlleleVars | MultiAlleleVars
     MultiVar = SingleAlleleVars ^ MultiAlleleVars
 
-    # MultiTranscriptVar -> Ref `[` ExtendedRawVar (`;' ExtendedRawVar)*
-    #                       (`,' ExtendedRawVar (`;' ExtendedRawVar)*)+ `]'
+    # BNF: MultiTranscriptVar -> Ref `[` ExtendedRawVar (`;' ExtendedRawVar)*
+    #                            (`,' ExtendedRawVar (`;' ExtendedRawVar)*)+ `]'
     MultiTranscriptVar = Ref + Suppress('[') + ExtendedRawVar + \
-        ZeroOrMore(Suppress(';') + ExtendedRawVar) + \
-        OneOrMore(Suppress(',') + ExtendedRawVar + ZeroOrMore(Suppress(';') + \
-        ExtendedRawVar)) + Suppress(']')
+                         ZeroOrMore(Suppress(';') + ExtendedRawVar) + \
+                         OneOrMore(Suppress(',') + ExtendedRawVar + ZeroOrMore(Suppress(';') + \
+                         ExtendedRawVar)) + Suppress(']')
 
-    # UnkEffectVar -> Ref `(=)' | Ref `?'
-    # Changed to:
-    # UnkEffectVar -> Ref (`(=)' | `?')
-    UnkEffectVar = Ref + (Suppress("(=)") ^ Suppress('?'))
+    ##########################################################################
+    # Top-level rule
+    ##########################################################################
 
-    # SplicingVar -> Ref `spl?' | Ref `(spl?)'
-    # Changed to:
-    # SplicingVar -> Ref (`spl?' | `(spl?)')
-    SplicingVar = Ref + (Suppress("spl?") ^ Suppress("(spl?)"))
-
-    # NoRNAVar -> Ref `0' `?'?
-    NoRNAVar = Ref + Suppress('0') + Optional(Suppress('?'))
-
-    # DNAVar -> SingleVar | MultiVar
-    # RNAVar -> SingleVar | MultiVar | MultiTranscriptVar |
-    #           UnkEffectVar | NoRNAVar | SplicingVar
-    # Changed to:
-    # Var -> SingleVar | MultiVar | MultiTranscriptVar |
-    #        UnkEffectVar | NoRNAVar | SplicingVar
+    # BNF: Var -> SingleVar | MultiVar | MultiTranscriptVar |
+    #             UnkEffectVar | NoRNAVar | SplicingVar
     Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
           UnkEffectVar ^ NoRNAVar ^ SplicingVar
-
 
     def __init__(self, output):
         """
         Initialise the class and enable packrat parsing. Packrat speeds up
         parsing considerably.
 
-        Private variables (altered):
-            - _output ; Set to the output object.
-
         @arg output: The output object.
-        @type output: mutalyzer.Output.Output
+        @type output: mutalyzer.output.Output
         """
         self._output = output
         ParserElement.enablePackrat()
     #__init__
-
 
     def parse(self, variant):
         """
@@ -334,21 +333,19 @@ class Grammar():
         successful. Otherwise print the parse error and the position in
         the input where the error occurred (and return None).
 
-        Private variables:
-            - _output ; The output object.
-
-        Public variables:
-            - Var ; The top-level rule of our parser.
-
         @arg variant: The input string that needs to be parsed.
         @type variant: string
 
         @return: The parse tree containing the parse results, or None in
                  case of a parsing error.
         @rtype: pyparsing.ParseResults
+
+        @todo: Use information in ParseException as described here:
+            http://pyparsing.wikispaces.com/HowToUsePyparsing
         """
         try:
             return self.Var.parseString(variant, parseAll=True)
+            # Todo: check .dump()
         except ParseException as err:
             # Log parse error and the position where it occurred.
             self._output.addMessage(__file__, 4, 'EPARSE', str(err))

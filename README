@@ -153,6 +153,7 @@ Todo list:
 - Have a normal 404 page.
 - Maintenance (and/or read-only) mode.
 - Cleanup this document.
+- Be more explicit in all the type of descriptions we don't currently support.
 
 Code style guide:
 - Follow PEP 8 (code) and PEP 257 (docstrings).
