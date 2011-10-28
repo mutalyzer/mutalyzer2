@@ -107,7 +107,7 @@ class Grammar():
     Chrom = Name('Chrom')
 
     # BNF: RefType -> (`c' | `g' | `m' | `n' | `r') `.'
-    RefType = Word('cgmnr', exact = 1)('RefType') + Suppress('.')
+    RefType = Word('cgmnr', exact=1)('RefType') + Suppress('.')
 
     # BNF: Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
     Ref = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Optional(RefType)
@@ -122,17 +122,17 @@ class Grammar():
     ##########################################################################
 
     # BNF: Offset -> (`+' | `-') (`u' | `d')? (Number | `?')
-    Offset = Word('+-', exact = 1)('OffSgn') + \
-             Optional(Word('ud', exact = 1))('OffOpt') + \
+    Offset = Word('+-', exact=1)('OffSgn') + \
+             Optional(Word('ud', exact=1))('OffOpt') + \
              (Number ^ '?')('Offset')
 
     # BNF: RealPtLoc -> ((`-' | `*')? Number Offset?) | `?'
-    RealPtLoc = Group((Optional(Word('-*', exact = 1))('MainSgn') + \
+    RealPtLoc = Group((Optional(Word('-*', exact=1))('MainSgn') + \
                 Number('Main') + Optional(Offset)) ^ '?')
 
     # BNF: IVSLoc -> `IVS' Number (`+' | `-') Number
     IVSLoc = Group(Suppress('IVS') + Number('IVSNumber') + \
-             Word('+-', exact = 1)('OffSgn') + Number('Offset'))('IVSLoc')
+             Word('+-', exact=1)('OffSgn') + Number('Offset'))('IVSLoc')
 
     # BNF: PtLoc -> IVSLoc | RealPtLoc
     PtLoc = IVSLoc ^ RealPtLoc
@@ -163,7 +163,7 @@ class Grammar():
              Optional(RefType) + Extent)
 
     # BNF: ChromBand -> (`p' | `q') Number `.' Number
-    ChromBand = Suppress(Word('pq', exact = 1)) + Number + Suppress('.') + \
+    ChromBand = Suppress(Word('pq', exact=1)) + Number + Suppress('.') + \
                 Number
 
     # BNF: ChromCoords -> `(' Chrom `;' Chrom `)' `(' ChromBand `;' ChromBand `)'
@@ -221,7 +221,7 @@ class Grammar():
     TransLoc = Suppress('t') + ChromCoords + Suppress('(') + FarLoc + \
                Suppress(')')
 
-    # Then RawVar rule has been changed from [3], were it is given as:
+    # The RawVar rule has been changed from [3], were it is given as:
     #
     #     BNF: RawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | Inv | Conv
 
@@ -307,13 +307,118 @@ class Grammar():
                          ExtendedRawVar)) + Suppress(']')
 
     ##########################################################################
+    # Protein level variants
+    ##########################################################################
+
+    # BNF: Ref -> (Name `:')? `p.'
+    #ARef = Optional(Name + Suppress(':')) + Suppress('p.')
+    ARef = AccNo + Optional(GeneSymbol) + Suppress(':') + Suppress('p.')
+
+    # BNF: AA3 -> `Ala' | `Arg' | `Asn' | `Asp' | `Cys' | `Gln' | `Glu' |
+    #             `Gly' | `His' | `Ile' | `Leu' | `Lys' | `Met' | `Phe' |
+    #             `Pro' | `Ser' | `Thr' | `Trp' | `Tyr' | `Val'
+    AA3 = Literal('Ala') ^ Literal('Arg') ^ Literal('Asn') ^ Literal('Asp') ^ \
+          Literal('Cys') ^ Literal('Gln') ^ Literal('Glu') ^ Literal('Gly') ^ \
+          Literal('His') ^ Literal('Ile') ^ Literal('Leu') ^ Literal('Lys') ^ \
+          Literal('Met') ^ Literal('Phe') ^ Literal('Pro') ^ Literal('Ser') ^ \
+          Literal('Thr') ^ Literal('Trp') ^ Literal('Tyr') ^ Literal('Val')
+
+    # BNF: AA1 -> `A' | `R' | `N' | `D' | `C' | `Q' | `E' | `G' | `H' | `I' |
+    #             `L' | `K' | `M' | `F' | `P' | `S' | `T' | `W' | `Y' | `V'
+    AA1 = Word('ARNDCQEGHILKMFPSTWYV', exact=1)
+
+    # BNF: AA -> AA1 | AA3 | `X'
+    AA = AA1 ^ AA3 ^ Word('X', exact=1)('UnknownAA')
+
+    # BNF: PtLoc -> (`-' | `*')? Number | Number (`+' | `-') Number
+    APtLoc = (Optional(Word('-*', exact=1))('MainSgn') + Number('Main')) ^ \
+             (Number('Main') + Word('+-', exact=1)('OffSgn') + Number('Offset'))
+
+    # BNF: AAPtLoc -> AA PtLoc
+    AAPtLoc = AA + APtLoc
+
+    # BNF: Extent -> AAPtLoc `_' AAPtLoc
+    AExtent = AAPtLoc + Suppress('_') + AAPtLoc
+
+    # BNF: AARange -> Extent | `(' Extent `)'
+    AARange = AExtent ^ (Suppress('(') + AExtent + Suppress(')'))
+
+    # BNF: AALoc -> AAPtLoc | AARange
+    AALoc = AAPtLoc ^ AARange
+
+    # BNF: Subst -> AAPtLoc AA (`extX' `*'? Number)? | (`Met1' | `M1') (`?' | `ext' `-' Number)
+    ASubst = (AAPtLoc + AA + Optional(Literal('extX') + Optional('*') + Number)) ^ \
+             ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))
+
+    # BNF: Del -> AALoc `del'
+    ADel = AALoc + Literal('del')('MutationType')
+
+    # BNF: Dup -> AALoc `dup'
+    ADup = AALoc + Literal('dup')('MutationType')
+
+    # BNF: VarSSR -> AALoc `(' Number `_' Number `)'
+    AVarSSR = AALoc + Suppress('(') + Number + Suppress('_') + Number + Suppress(')')
+
+    # BNF: Ins -> AARange `ins' (AA+ | Number)
+    AIns = AARange + Literal('ins')('MutationType') + (OneOrMore(AA) ^ Number)
+
+    # BNF: Indel -> AALoc `delins' (AA+ | Number)
+    AIndel = AALoc + Literal('delins')('MutationType') + (OneOrMore(AA) ^ Number)
+
+    # BNF: ShortFS -> AAPtLoc `fs'
+    ShortFS = AAPtLoc + Suppress('fs')
+
+    # BNF: LongFS -> AAPtLoc AA `fs' `X' Number
+    LongFS = AAPtLoc + AA + Suppress('fs') + Suppress('X') + Number
+
+    # BNF: FrameShift -> ShortFS | LongFS
+    FrameShift = ShortFS ^ LongFS
+
+    # The ARawVar rule has been changed from [3], were it is given as:
+    #
+    #     BNF: RawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | FrameShift |
+    #                    `=' | `?' | `0' | `0?'
+
+    # BNF: CRawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | FrameShift |
+    #                 `=' | `?' | `0' | `0?'
+    ACRawVar = Group(ASubst ^ ADel ^ ADup ^ AVarSSR ^ AIns ^ AIndel ^ FrameShift ^ \
+                     Literal('=') ^ Literal('?') ^ Literal('0') ^ Literal('0?'))('ARawVar')
+
+    # BNF: RawVar -> CRawVar | `(' CRawVar `)'
+    ARawVar = ACRawVar ^ (Suppress('(') + ACRawVar + Suppress(')'))
+
+    # BNF: SingleVar -> Ref RawVar
+    ASingleVar = ARef + ARawVar
+
+    # BNF: UnkAlleleVars -> Ref `[' RawVar `(;)' RawVar `]'
+    AUnkAlleleVars = ARef + Suppress('[') + ARawVar + Suppress('(;)') + ARawVar + Suppress(']')
+
+    # BNF: SingleAlleleVarSet -> `[' RawVar (`;' RawVar)+  | (`,' RawVar)+ `]'
+    ASingleAlleleVarSet = Suppress('[') + ARawVar + \
+                          (OneOrMore(Suppress(';') + ARawVar) ^ OneOrMore(Suppress(',') + ARawVar)) + \
+                          Suppress(']')
+
+    # BNF: MultiAlleleVars -> Ref SingleAlleleVarSet `;' Ref? SingleAlleleVarSet
+    AMultiAlleleVars = ARef + ASingleAlleleVarSet + Suppress(';') + Optional(ARef) + ASingleAlleleVarSet
+
+    # BNF: SingleAlleleVars -> Ref SingleAlleleVarSet
+    ASingleAlleleVars = ARef + ASingleAlleleVarSet
+
+    # BNF: MultiVar -> SingleAlleleVars | MultiAlleleVars | UnkAlleleVars
+    AMultiVar = ASingleAlleleVars ^ AMultiAlleleVars ^ AUnkAlleleVars
+
+    # BNF: ProteinVar -> SingleVar | MultiVar
+    ProteinVar = ASingleVar ^ AMultiVar
+
+    ##########################################################################
     # Top-level rule
     ##########################################################################
 
     # BNF: Var -> SingleVar | MultiVar | MultiTranscriptVar |
     #             UnkEffectVar | NoRNAVar | SplicingVar
-    Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
-          UnkEffectVar ^ NoRNAVar ^ SplicingVar
+    #Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
+    #      UnkEffectVar ^ NoRNAVar ^ SplicingVar
+    Var = ProteinVar
 
     def __init__(self, output):
         """
@@ -347,6 +452,9 @@ class Grammar():
             return self.Var.parseString(variant, parseAll=True)
             # Todo: check .dump()
         except ParseException as err:
+            print err.line
+            print " "*(err.column-1) + "^"
+            print err
             # Log parse error and the position where it occurred.
             self._output.addMessage(__file__, 4, 'EPARSE', str(err))
             pos = int(str(err).split(':')[-1][:-1]) - 1
