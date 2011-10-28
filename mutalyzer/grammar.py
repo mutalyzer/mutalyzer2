@@ -110,7 +110,7 @@ class Grammar():
     RefType = Word('cgmnr', exact=1)('RefType') + Suppress('.')
 
     # BNF: Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
-    Ref = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Optional(RefType)
+    DRef = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Optional(RefType)
 
     # BNF: RefOne -> RefSeqAcc `:' RefType?
     # Note that RefOne is not included in [3]. We use it in the SingleVar
@@ -246,13 +246,13 @@ class Grammar():
     ExtendedRawVar = RawVar ^ '=' ^ '?'
 
     # BNF: UnkEffectVar -> Ref (`(=)' | `?')
-    UnkEffectVar = Ref + (Suppress('(=)') ^ Suppress('?'))
+    UnkEffectVar = DRef + (Suppress('(=)') ^ Suppress('?'))
 
     # BNF: SplicingVar -> Ref (`spl?' | `(spl?)')
-    SplicingVar = Ref + (Suppress('spl?') ^ Suppress('(spl?)'))
+    SplicingVar = DRef + (Suppress('spl?') ^ Suppress('(spl?)'))
 
     # BNF: NoRNAVar -> Ref `0' `?'?
-    NoRNAVar = Ref + Suppress('0') + Optional(Suppress('?'))
+    NoRNAVar = DRef + Suppress('0') + Optional(Suppress('?'))
 
     ##########################################################################
     # Multiple variations
@@ -289,10 +289,10 @@ class Grammar():
                          ChimeronSet
 
     # BNF: SingleAlleleVars -> Ref SingleAlleleVarSet
-    SingleAlleleVars = Ref + SingleAlleleVarSet
+    SingleAlleleVars = DRef + SingleAlleleVarSet
 
     # BNF: MultiAlleleVars -> Ref SingleAlleleVarSet (`;' Ref? SingleAlleleVarSet)+
-    MultiAlleleVars = Ref + Group(SingleAlleleVarSet + \
+    MultiAlleleVars = DRef + Group(SingleAlleleVarSet + \
                       OneOrMore(Suppress(';') + \
                       SingleAlleleVarSet))('MultiAlleleVars')
 
@@ -301,7 +301,7 @@ class Grammar():
 
     # BNF: MultiTranscriptVar -> Ref `[` ExtendedRawVar (`;' ExtendedRawVar)*
     #                            (`,' ExtendedRawVar (`;' ExtendedRawVar)*)+ `]'
-    MultiTranscriptVar = Ref + Suppress('[') + ExtendedRawVar + \
+    MultiTranscriptVar = DRef + Suppress('[') + ExtendedRawVar + \
                          ZeroOrMore(Suppress(';') + ExtendedRawVar) + \
                          OneOrMore(Suppress(',') + ExtendedRawVar + ZeroOrMore(Suppress(';') + \
                          ExtendedRawVar)) + Suppress(']')
@@ -312,7 +312,9 @@ class Grammar():
 
     # BNF: Ref -> (Name `:')? `p.'
     #ARef = Optional(Name + Suppress(':')) + Suppress('p.')
-    ARef = AccNo + Optional(GeneSymbol) + Suppress(':') + Suppress('p.')
+
+    # BNF: Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
+    PRef = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Suppress('p.')
 
     # BNF: AA3 -> `Ala' | `Arg' | `Asn' | `Asp' | `Cys' | `Gln' | `Glu' |
     #             `Gly' | `His' | `Ile' | `Leu' | `Lys' | `Met' | `Phe' |
@@ -328,48 +330,52 @@ class Grammar():
     AA1 = Word('ARNDCQEGHILKMFPSTWYV', exact=1)
 
     # BNF: AA -> AA1 | AA3 | `X'
-    AA = AA1 ^ AA3 ^ Word('X', exact=1)('UnknownAA')
+    # Todo: The '*' notation is preferred.
+    AA = AA1 ^ AA3 ^ Word('X*', exact=1)('StopCodon')
 
     # BNF: PtLoc -> (`-' | `*')? Number | Number (`+' | `-') Number
-    APtLoc = (Optional(Word('-*', exact=1))('MainSgn') + Number('Main')) ^ \
+    PPtLoc = (Optional(Word('-*', exact=1))('MainSgn') + Number('Main')) ^ \
              (Number('Main') + Word('+-', exact=1)('OffSgn') + Number('Offset'))
 
     # BNF: AAPtLoc -> AA PtLoc
-    AAPtLoc = AA + APtLoc
+    AAPtLoc = AA + PPtLoc
 
     # BNF: Extent -> AAPtLoc `_' AAPtLoc
-    AExtent = AAPtLoc + Suppress('_') + AAPtLoc
+    PExtent = AAPtLoc + Suppress('_') + AAPtLoc
 
     # BNF: AARange -> Extent | `(' Extent `)'
-    AARange = AExtent ^ (Suppress('(') + AExtent + Suppress(')'))
+    AARange = PExtent ^ (Suppress('(') + PExtent + Suppress(')'))
 
     # BNF: AALoc -> AAPtLoc | AARange
     AALoc = AAPtLoc ^ AARange
 
     # BNF: Subst -> AAPtLoc AA (`extX' `*'? Number)? | (`Met1' | `M1') (`?' | `ext' `-' Number)
-    ASubst = (AAPtLoc + AA + Optional(Literal('extX') + Optional('*') + Number)) ^ \
+    # Todo: 'extX' -> 'ext*' (and loose the optional '*'?)
+    # Todo: Optional AA before 'ext' and 'fMet' after 'ext'?
+    PSubst = (AAPtLoc + AA + Optional(Literal('extX') + Optional('*') + Number)) ^ \
              ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))
 
     # BNF: Del -> AALoc `del'
-    ADel = AALoc + Literal('del')('MutationType')
+    PDel = AALoc + Literal('del')('MutationType')
 
     # BNF: Dup -> AALoc `dup'
-    ADup = AALoc + Literal('dup')('MutationType')
+    PDup = AALoc + Literal('dup')('MutationType')
 
     # BNF: VarSSR -> AALoc `(' Number `_' Number `)'
-    AVarSSR = AALoc + Suppress('(') + Number + Suppress('_') + Number + Suppress(')')
+    PVarSSR = AALoc + Suppress('(') + Number + Suppress('_') + Number + Suppress(')')
 
     # BNF: Ins -> AARange `ins' (AA+ | Number)
-    AIns = AARange + Literal('ins')('MutationType') + (OneOrMore(AA) ^ Number)
+    PIns = AARange + Literal('ins')('MutationType') + (OneOrMore(AA) ^ Number)
 
     # BNF: Indel -> AALoc `delins' (AA+ | Number)
-    AIndel = AALoc + Literal('delins')('MutationType') + (OneOrMore(AA) ^ Number)
+    PIndel = AALoc + Literal('delins')('MutationType') + (OneOrMore(AA) ^ Number)
 
     # BNF: ShortFS -> AAPtLoc `fs'
     ShortFS = AAPtLoc + Suppress('fs')
 
     # BNF: LongFS -> AAPtLoc AA `fs' `X' Number
-    LongFS = AAPtLoc + AA + Suppress('fs') + Suppress('X') + Number
+    # Todo: 'X' and '*'?
+    LongFS = AAPtLoc + AA + Suppress('fs') + Suppress(Word('X*', exact=1)) + Number
 
     # BNF: FrameShift -> ShortFS | LongFS
     FrameShift = ShortFS ^ LongFS
@@ -381,34 +387,34 @@ class Grammar():
 
     # BNF: CRawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | FrameShift |
     #                 `=' | `?' | `0' | `0?'
-    ACRawVar = Group(ASubst ^ ADel ^ ADup ^ AVarSSR ^ AIns ^ AIndel ^ FrameShift ^ \
-                     Literal('=') ^ Literal('?') ^ Literal('0') ^ Literal('0?'))('ARawVar')
+    PCRawVar = Group(PSubst ^ PDel ^ PDup ^ PVarSSR ^ PIns ^ PIndel ^ FrameShift ^ \
+                     Literal('=') ^ Literal('?') ^ Literal('0') ^ Literal('0?'))('PRawVar')
 
     # BNF: RawVar -> CRawVar | `(' CRawVar `)'
-    ARawVar = ACRawVar ^ (Suppress('(') + ACRawVar + Suppress(')'))
+    PRawVar = PCRawVar ^ (Suppress('(') + PCRawVar + Suppress(')'))
 
     # BNF: SingleVar -> Ref RawVar
-    ASingleVar = ARef + ARawVar
+    PSingleVar = PRef + PRawVar
 
     # BNF: UnkAlleleVars -> Ref `[' RawVar `(;)' RawVar `]'
-    AUnkAlleleVars = ARef + Suppress('[') + ARawVar + Suppress('(;)') + ARawVar + Suppress(']')
+    PUnkAlleleVars = PRef + Suppress('[') + PRawVar + Suppress('(;)') + PRawVar + Suppress(']')
 
     # BNF: SingleAlleleVarSet -> `[' RawVar (`;' RawVar)+  | (`,' RawVar)+ `]'
-    ASingleAlleleVarSet = Suppress('[') + ARawVar + \
-                          (OneOrMore(Suppress(';') + ARawVar) ^ OneOrMore(Suppress(',') + ARawVar)) + \
+    PSingleAlleleVarSet = Suppress('[') + PRawVar + \
+                          (OneOrMore(Suppress(';') + PRawVar) ^ OneOrMore(Suppress(',') + PRawVar)) + \
                           Suppress(']')
 
     # BNF: MultiAlleleVars -> Ref SingleAlleleVarSet `;' Ref? SingleAlleleVarSet
-    AMultiAlleleVars = ARef + ASingleAlleleVarSet + Suppress(';') + Optional(ARef) + ASingleAlleleVarSet
+    PMultiAlleleVars = PRef + PSingleAlleleVarSet + Suppress(';') + Optional(PRef) + PSingleAlleleVarSet
 
     # BNF: SingleAlleleVars -> Ref SingleAlleleVarSet
-    ASingleAlleleVars = ARef + ASingleAlleleVarSet
+    PSingleAlleleVars = PRef + PSingleAlleleVarSet
 
     # BNF: MultiVar -> SingleAlleleVars | MultiAlleleVars | UnkAlleleVars
-    AMultiVar = ASingleAlleleVars ^ AMultiAlleleVars ^ AUnkAlleleVars
+    PMultiVar = PSingleAlleleVars ^ PMultiAlleleVars ^ PUnkAlleleVars
 
     # BNF: ProteinVar -> SingleVar | MultiVar
-    ProteinVar = ASingleVar ^ AMultiVar
+    ProteinVar = PSingleVar ^ PMultiVar
 
     ##########################################################################
     # Top-level rule
@@ -416,9 +422,8 @@ class Grammar():
 
     # BNF: Var -> SingleVar | MultiVar | MultiTranscriptVar |
     #             UnkEffectVar | NoRNAVar | SplicingVar
-    #Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
-    #      UnkEffectVar ^ NoRNAVar ^ SplicingVar
-    Var = ProteinVar
+    Var = SingleVar ^ MultiVar ^ MultiTranscriptVar ^ \
+          UnkEffectVar ^ NoRNAVar ^ SplicingVar ^ ProteinVar
 
     def __init__(self, output):
         """
