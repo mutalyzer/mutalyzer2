@@ -26,8 +26,16 @@ class Grammar():
     """
     Defines the HGVS nomenclature grammar.
 
-    Public methods:
-    - parse(input) ; Parse the input string and return a parse tree.
+    Some notes about this definition of the grammar follow.
+
+    To create recursion, temporarily define a token using Forward() and later
+    on fill in its definition using << instead of =.
+
+    The syntax
+        Token('Name')
+    is a shorthand for
+        Token.setResultsName('Name', listAllMatches=False)
+    and you cannot use the shorthand if you want listAllMatches to be True.
     """
     # Forward is used to define a recursive pattern later on (with <<).
     SimpleAlleleVarSet = Forward()
@@ -314,7 +322,9 @@ class Grammar():
     #ARef = Optional(Name + Suppress(':')) + Suppress('p.')
 
     # BNF: Ref -> ((RefSeqAcc | GeneSymbol) `:')? RefType?
-    PRef = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Suppress('p.')
+    # Note that we diverge from [3] in that we accept RefSeqAcc and GeneSymbol
+    # as reference, inherited from the DNA/RNA case.
+    PRef = Optional((RefSeqAcc ^ GeneSymbol) + Suppress(':')) + Literal('p')('RefType') + Suppress('.')
 
     # BNF: AA3 -> `Ala' | `Arg' | `Asn' | `Asp' | `Cys' | `Gln' | `Glu' |
     #             `Gly' | `His' | `Ile' | `Leu' | `Lys' | `Met' | `Phe' |
@@ -338,21 +348,22 @@ class Grammar():
              (Number('Main') + Word('+-', exact=1)('OffSgn') + Number('Offset'))
 
     # BNF: AAPtLoc -> AA PtLoc
-    AAPtLoc = AA + PPtLoc
+    # Note: AA('Args') is a shorthand for AA.setResultsName('Args', listAllMatches=False)
+    AAPtLoc = AA.setResultsName('Args', listAllMatches=True) + PPtLoc
 
     # BNF: Extent -> AAPtLoc `_' AAPtLoc
-    PExtent = AAPtLoc + Suppress('_') + AAPtLoc
+    PExtent = AAPtLoc('StartLoc') + Suppress('_') + AAPtLoc('EndLoc')
 
     # BNF: AARange -> Extent | `(' Extent `)'
     AARange = PExtent ^ (Suppress('(') + PExtent + Suppress(')'))
 
     # BNF: AALoc -> AAPtLoc | AARange
-    AALoc = AAPtLoc ^ AARange
+    AALoc = AAPtLoc('StartLoc') ^ AARange
 
     # BNF: Subst -> AAPtLoc AA (`extX' `*'? Number)? | (`Met1' | `M1') (`?' | `ext' `-' Number)
     # Todo: 'extX' -> 'ext*' (and loose the optional '*'?)
     # Todo: Optional AA before 'ext' and 'fMet' after 'ext'?
-    PSubst = (AAPtLoc + AA + Optional(Literal('extX') + Optional('*') + Number)) ^ \
+    PSubst = (AAPtLoc + AA.setResultsName('Args') + Optional(Literal('extX') + Optional('*') + Number)) ^ \
              ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))
 
     # BNF: Del -> AALoc `del'
@@ -365,17 +376,17 @@ class Grammar():
     PVarSSR = AALoc + Suppress('(') + Number + Suppress('_') + Number + Suppress(')')
 
     # BNF: Ins -> AARange `ins' (AA+ | Number)
-    PIns = AARange + Literal('ins')('MutationType') + (OneOrMore(AA) ^ Number)
+    PIns = AARange + Literal('ins')('MutationType') + (OneOrMore(AA) ^ Number)('Args')
 
     # BNF: Indel -> AALoc `delins' (AA+ | Number)
-    PIndel = AALoc + Literal('delins')('MutationType') + (OneOrMore(AA) ^ Number)
+    PIndel = AALoc + Literal('delins')('MutationType') + (OneOrMore(AA) ^ Number)('Args')
 
     # BNF: ShortFS -> AAPtLoc `fs'
     ShortFS = AAPtLoc + Suppress('fs')
 
     # BNF: LongFS -> AAPtLoc AA `fs' `X' Number
     # Todo: 'X' and '*'?
-    LongFS = AAPtLoc + AA + Suppress('fs') + Suppress(Word('X*', exact=1)) + Number
+    LongFS = AAPtLoc + AA('Args') + Suppress('fs') + Suppress(Word('X*', exact=1)) + Number
 
     # BNF: FrameShift -> ShortFS | LongFS
     FrameShift = ShortFS ^ LongFS
@@ -388,7 +399,7 @@ class Grammar():
     # BNF: CRawVar -> Subst | Del | Dup | VarSSR | Ins | Indel | FrameShift |
     #                 `=' | `?' | `0' | `0?'
     PCRawVar = Group(PSubst ^ PDel ^ PDup ^ PVarSSR ^ PIns ^ PIndel ^ FrameShift ^ \
-                     Literal('=') ^ Literal('?') ^ Literal('0') ^ Literal('0?'))('PRawVar')
+                     Literal('=') ^ Literal('?') ^ Literal('0') ^ Literal('0?'))('RawVar')
 
     # BNF: RawVar -> CRawVar | `(' CRawVar `)'
     PRawVar = PCRawVar ^ (Suppress('(') + PCRawVar + Suppress(')'))
