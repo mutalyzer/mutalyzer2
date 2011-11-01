@@ -275,7 +275,7 @@ class Mapping(Db) :
         return self.query(statement)
     #get_Transcripts
 
-    def get_TranscriptsByGeneName(self, geneName) :
+    def get_TranscriptsByGeneName(self, gene):
         """
             Get a list of transcripts, given a gene name.
 
@@ -288,21 +288,19 @@ class Mapping(Db) :
             Returns:
                 list ; A list of transcripts.
         """
-
         statement = """
-            SELECT transcript, version
+                SELECT  transcript,
+                        start, stop,
+                        cds_start, cds_stop,
+                        exon_starts, exon_stops,
+                        gene, chromosome,
+                        orientation, protein,
+                        version
                 FROM Mapping
                 WHERE gene = %s;
-        """, geneName
+        """, gene
 
-        ret = self.query(statement)
-        if ret :
-            l = []
-            for i in ret :
-                l.append(i[0] + '.' + str(i[1]))
-            return l
-        #if
-        return []
+        return self.query(statement)
     #get_TranscriptsByGeneName
 
     def get_GeneName(self, mrnaAcc) :
