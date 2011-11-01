@@ -116,6 +116,40 @@ class TestWebservice():
         assert_equal(type(r.string), list)
         assert 'NC_000001.10:g.159272155del' in r.string
 
+    def test_numberconversion_gtoc_gene(self):
+        """
+        Running numberConversion with valid g variant and a gene name should
+        give a list of c variant names on transcripts for the given gene.
+        """
+        r = self.client.service.numberConversion(build='hg19',
+                                                 variant='NC_000011.9:g.111959693G>T',
+                                                 gene='C11orf57')
+        assert_equal(type(r.string), list)
+        assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
+        assert 'NM_001082970.1:c.*2178+d3819G>T' in r.string
+        assert 'NM_018195.3:c.*2178+d3819G>T' in r.string
+
+    def test_numberconversion_gtoc_no_transcripts(self):
+        """
+        Running numberConversion with valid g variant but no transcripts
+        close to it should give an empty list.
+        """
+        r = self.client.service.numberConversion(build='hg19',
+                                                 variant='chr7:g.345T>C')
+        assert_false(r)
+
+    def test_numberconversion_gtoc_required_gene(self):
+        """
+        Running numberConversion with valid g variant but no transcripts
+        close to it, but with a gene name, should give a list of c variant
+        names on transcripts for the given gene.
+        """
+        r = self.client.service.numberConversion(build='hg19',
+                                                 variant='chr7:g.345T>C',
+                                                 gene='LOC100132858')
+        assert_equal(type(r.string), list)
+        assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
+
     def test_gettranscriptsbygenename_valid(self):
         """
         Running getTranscriptsByGeneName with valid gene name should give a
@@ -132,6 +166,15 @@ class TestWebservice():
                   'NM_004018.2',
                   'NM_004022.2']:
             assert t in r.string
+
+    def test_gettranscriptsbygenename_invalid(self):
+        """
+        Running getTranscriptsByGeneName with invalid gene name should not
+        give a result.
+        """
+        r = self.client.service.getTranscriptsByGeneName(build='hg19',
+                                                         name='BOGUSGENE')
+        assert_false(r)
 
     def test_gettranscriptsandinfo_valid(self):
         """
@@ -206,7 +249,7 @@ class TestWebservice():
 
     def test_gettranscripts(self):
         """
-        Running getTranscriptsByGeneName should give a list of transcripts.
+        Running getTranscripts should give a list of transcripts.
         """
         r = self.client.service.getTranscripts(build='hg19', chrom='chrX',
                                                pos=32237295)
@@ -222,7 +265,7 @@ class TestWebservice():
 
     def test_gettranscripts_with_versions(self):
         """
-        Running getTranscriptsByGeneName with versions=True should give a list
+        Running getTranscripts with versions=True should give a list
         of transcripts with version numbers.
         """
         r = self.client.service.getTranscripts(build='hg19', chrom='chrX',

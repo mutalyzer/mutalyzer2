@@ -213,7 +213,13 @@ class MutalyzerService(DefinitionBase):
                      "Finished processing getTranscriptsByGene(%s %s)" % (
                      build, name))
 
-        return ret
+        if ret :
+            l = []
+            for i in ret :
+                l.append(i[0] + '.' + str(i[11]))
+            return l
+
+        return []
     #getTranscriptsByGene
 
     @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
@@ -481,17 +487,19 @@ class MutalyzerService(DefinitionBase):
         return result
     #chromosomeName
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
-    def numberConversion(self, build, variant) :
+    @soap(Mandatory.String, Mandatory.String, String, _returns = Array(Mandatory.String))
+    def numberConversion(self, build, variant, gene=None):
         """
         Converts I{c.} to I{g.} notation or vice versa
-
 
         @arg build: The human genome build (hg19 or hg18).
         @type build: string
         @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
-                      notation, including NM_ or NC_ accession number.
+            notation, including NM_ or NC_ accession number.
         @type variant: string
+        @kwarg gene: Optional gene name. If given, return variant descriptions
+            on all transcripts for this gene.
+        @type gene: string
 
         @return: The variant(s) in either I{g.} or I{c.} notation.
         @rtype: list
@@ -507,7 +515,7 @@ class MutalyzerService(DefinitionBase):
         if "c." in variant :
             result = [converter.c2chrom(variant)]
         elif "g." in variant :
-            result = converter.chrom2c(variant, "list")
+            result = converter.chrom2c(variant, "list", gene=gene)
         else:
             result = [""]
 
