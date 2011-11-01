@@ -479,12 +479,15 @@ class Converter(object) :
         return variant
     #correctChrVariant
 
-    def chrom2c(self, variant, rt) :
+    def chrom2c(self, variant, rt, gene=None):
         """
         @arg variant: a variant description
         @type variant: string
         @arg rt: the return type
         @type rt: string
+        @kwarg gene: Optional gene name. If given, return variant descriptions
+            on all transcripts for this gene.
+        @type gene: string
 
         @return: HGVS_notatations ;
         @rtype: dictionary or list
@@ -511,14 +514,20 @@ class Converter(object) :
             loc2 = int(self.parseTree.RawVar.EndLoc.PtLoc.Main)
         else :
             loc2 = loc
-        transcripts = self.__database.get_Transcripts(\
-                chrom, loc-5000, loc2+5000, 1)
+
+        if gene:
+            transcripts = self.__database.get_TranscriptsByGeneName(gene)
+        else:
+            transcripts = self.__database.get_Transcripts(chrom, loc-5000, loc2+5000, 1)
 
         HGVS_notatations = defaultdict(list)
         NM_list = []
         for transcript in transcripts :
             self._reset()
             self._FieldsFromValues(transcript)
+            if self.dbFields['chromosome'] != chrom:
+                # Could be the case if we got transcripts by gene name
+                continue
             M = self._coreMapping()
             if M is None :
                 #balen
