@@ -1,12 +1,25 @@
 """
-Module for reading the config file and splitting up the variables into
-subclasses. Each of these subclasses are used to configure a specific
-module.
+Module for reading the configuration values from configuration files.
+
+All communication with this module should be done by using the get function
+which returns a configuration value, given a name.
+
+Reading the configuration file is implemented lazily and as such done upon the
+first call to the get function.
+
+Configuration values are read from two locations, in this order:
+1) /etc/mutalyzer/config
+2) $XDG_CONFIG_HOME/mutalyzer/config
+
+If both files exist, values defined in the second overwrite values defined in
+the first.
 """
 
 
 import os
 from configobj import ConfigObj
+
+from mutalyzer.util import singleton
 
 
 SYSTEM_CONFIGURATION = '/etc/mutalyzer/config'
@@ -17,22 +30,36 @@ USER_CONFIGURATION = os.path.join(
 
 
 class ConfigurationError(Exception):
+    """
+    Raised when a configuration file cannot be read.
+    """
     pass
 
 
-class Config():
+def get(name):
     """
-    Read the configuration file and store the data in subclasses.
-    """
-    class Retriever(): pass
-    class Db(): pass
-    class Output(): pass
-    class Mutator(): pass
-    class Scheduler(): pass
-    class Batch(): pass
-    class File(): pass
-    class GenRecord(): pass
+    Get a configuration value by name.
 
+    @arg name: Name for the configuration value.
+    @type name: string
+
+    @raise ConfigurationError: If configuration value could not be read.
+        Reasons are:
+        - Configuration file could not be parsed.
+        - Not all variables are present in configuration file.
+        - Given configuration value name does not exist.
+    """
+    return _Config().get(name)
+
+
+@singleton
+class _Config():
+    """
+    Read the configuration file and provide access to its values.
+
+    Please note the limitations from the use of the @singleton decorator as
+    described in its docstring.
+    """
     def __init__(self, filename=None):
         """
         Initialise the class with variables read from the configuration
@@ -50,10 +77,6 @@ class Config():
         An exception to this system is when the optional {filename} argument
         is set. In that case, the locations listed above are ignored and the
         configuration is read from {filename}.
-
-        By the DRY-principle, we don't enumerate the configuration variables
-        for each class in documentation. Instead, what variables are used by
-        each class is easy to see from the code below.
 
         @kwarg filename: Optional filename to read configuration from. If
             present, this overrides automatic detection of configuration file
@@ -85,57 +108,52 @@ class Config():
 
         try:
 
-            # Set the variables needed by the Retriever module.
-            self.Retriever.email = config["email"]
-            self.Retriever.cache = config["cache"]
-            self.Retriever.cachesize = int(config["cachesize"]) * 1048576
-            self.Retriever.maxDldSize = int(config["maxDldSize"]) * 1048576
-            self.Retriever.minDldSize = int(config["minDldSize"])
-            self.Retriever.lrgURL = config["lrgurl"]
+            # We explicitely read all configuration values ad store them in
+            # our own dictionary. This makes sure we notice missing or
+            # incorrect values upon instantiation.
 
-            # Set the variables needed by the Db module.
-            self.Db.internalDb = config["internalDb"]
-            self.Db.dbNames = config["dbNames"]
-            self.Db.LocalMySQLuser = config["LocalMySQLuser"]
-            self.Db.LocalMySQLhost = config["LocalMySQLhost"]
+            # A few 'special' values.
+            self._values = {'debug':     config.as_bool('debug'),
+                            'threshold': float(config['threshold'])}
 
-            # Set the variables needed by the Output module.
-            self.Output.log = config["log"]
-            self.Output.datestring = config["datestring"]
-            self.Output.loglevel = int(config["loglevel"])
-            self.Output.outputlevel = int(config["outputlevel"])
-            self.Output.debug = config.as_bool('debug')
+            # Simple string values.
+            for name in ('email', 'cache', 'lrgurl', 'internalDb', 'dbNames',
+                         'LocalMySQLuser', 'LocalMySQLhost', 'log',
+                         'datestring', 'mailFrom', 'mailSubject',
+                         'resultsDir', 'nameCheckOutHeader',
+                         'syntaxCheckOutHeader', 'positionConverterOutHeader',
+                         'snpConverterOutHeader', 'PIDfile', 'header'):
+                self._values[name] = config[name]
 
-            # Set the variables needed by the Mutator module.
-            self.Mutator.flanksize = int(config["flanksize"])
-            self.Mutator.maxvissize = int(config["maxvissize"])
-            self.Mutator.flankclipsize = int(config["flankclipsize"])
+            # Simple integer values.
+            for name in ('minDldSize', 'loglevel', 'outputlevel', 'flanksize',
+                         'maxvissize', 'flankclipsize', 'bufSize',
+                         'spliceAlarm', 'spliceWarn'):
+                self._values[name] = int(config[name])
 
-            # Set the variables needed by the Scheduler module.
-            self.Scheduler.mailFrom = config["mailFrom"]
-            self.Scheduler.mailSubject = config["mailSubject"]
-            self.Scheduler.resultsDir = config["resultsDir"]
-            self.Scheduler.nameCheckOutHeader = config["nameCheckOutHeader"]
-            self.Scheduler.syntaxCheckOutHeader = config["syntaxCheckOutHeader"]
-            self.Scheduler.positionConverterOutHeader = config["positionConverterOutHeader"]
-            self.Scheduler.snpConverterOutHeader = config["snpConverterOutHeader"]
-
-            # Set thte variables neede for the Batch module.
-            self.Batch.PIDfile = config["PIDfile"]
-            self.Batch.batchInputMaxSize = int(config["batchInputMaxSize"]) * 1048576
-
-            # Set the variables needed by the File module.
-            self.File.bufSize = int(config["bufSize"])
-            self.File.header = config["header"]
-            self.File.threshold = float(config["threshold"])
-
-            # Set the variables needed by the File module.
-            self.GenRecord.spliceAlarm = int(config["spliceAlarm"])
-            self.GenRecord.spliceWarn = int(config["spliceWarn"])
+            # File sizes (given in megabytes, stored in bytes).
+            for name in ('cachesize', 'maxDldSize', 'batchInputMaxSize'):
+                self._values[name] = int(config[name]) * 1048576
 
         except KeyError as e:
             raise ConfigurationError('Missing configuration value: %s' % e)
     #__init__
+
+    def get(self, name):
+        """
+        Get a configuration value by name.
+
+        @arg name: Name for the configuration value.
+        @type name: string
+
+        @raise ConfigurationError: If given configuration value name does not
+            exist.
+        """
+        try:
+            return self._values[name]
+        except KeyError:
+            raise ConfigurationError('No such configuration value: %s' % name)
+    #get
 
     def _load_config(self, filename):
         """
@@ -150,4 +168,4 @@ class Config():
             raise ConfigurationError('Could not parse configuration file: %s' \
                                      % filename)
     #_load_config
-#Config
+#_Config

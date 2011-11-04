@@ -1,20 +1,20 @@
 """
 General utility functions.
 
-@todo: All these functions come from the old Mutalyzer.py file. Try to find
-       general utility functions in other modules too.
+@todo: Most of these functions come from the old Mutalyzer.py file. Try to
+    find general utility functions in other modules too.
 @todo: Use exceptions for failure handling.
 @todo: End vs stop. I guess we should use start/stop (end goes with beginning).
-       Or first/last, or acceptor/donor. Anyway, CDS is always denoted with
-       start/stop. Important thing is that the semantics should be clear.
-       Idea:
-       * CDS -> use start/stop
-       * splice sites or exons -> acceptor/donor
-       * translation -> begin/end
-       * any range of bases -> first/last
-       * interbase position (if two numbers are used) -> before/after
+    Or first/last, or acceptor/donor. Anyway, CDS is always denoted with
+    start/stop. Important thing is that the semantics should be clear.
+    Idea:
+    * CDS -> use start/stop
+    * splice sites or exons -> acceptor/donor
+    * translation -> begin/end
+    * any range of bases -> first/last
+    * interbase position (if two numbers are used) -> before/after
 @todo: We can also group this in separate files in a util/ directory, according
-       to function (e.g. util/sequences.py, util/positioning.py, etc).
+    to function (e.g. util/sequences.py, util/positioning.py, etc).
 @todo: Unit tests (some can directly be extracted from the docstring).
 """
 
@@ -786,6 +786,27 @@ def skip(f):
         return
     return disabled_f
 #skip
+
+
+def singleton(cls):
+    """
+    Decorator to define a class with a singleton instance.
+
+    Note that this decorator makes cls a function instead of a class and
+    things like super() and classmethods won't work anymore. So be carefull
+    with this and certainly don't use it with subclassing.
+
+    By Shane Hathaway, taken from PEP318 [1].
+
+    [1] http://www.python.org/dev/peps/pep-0318/#examples
+    """
+    instances = {}
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
+#singleton
 
 
 def monkey_patch_suds():

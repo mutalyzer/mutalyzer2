@@ -25,8 +25,6 @@ To start the built-in HTTP server on port 8081:
        kind of strictness checks on the input. For example, in
        transcriptInfo, the build argument must really be present. (Hint:
        use __checkBuild.)
-@todo: The mutalyzer.config.Config object can just be instantiated once
-       and we should not create it on every request.
 """
 
 

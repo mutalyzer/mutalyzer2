@@ -24,6 +24,7 @@ from xml.dom import DOMException, minidom
 from xml.parsers import expat
 
 from mutalyzer import util
+from mutalyzer import config
 from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
 
@@ -32,16 +33,9 @@ class Retriever(object) :
     """
     Retrieve a record from either the cache or the NCBI.
 
-    Inherited variables from Db.Output.Config:
-        - email     ; The email address which we give to the NCBI.
-        - cache     ; The directory where the records are stored.
-        - cachesize ; Maximum size of the cache.
-
     Special methods:
-        - __init__(config, output, database) ; Use variables from the
+        - __init__(output, database) ; Use variables from the
         configuration file to initialise the class private variables.
-
-
 
     Private methods:
         - _foldersize(folder) ; Return the size of a folder.
@@ -67,29 +61,21 @@ class Retriever(object) :
         - LogMsg(filename, message)     ; Log a message.
     """
 
-    def __init__(self, config, output, database) :
+    def __init__(self, output, database) :
         """
         Use variables from the configuration file for some simple
         settings. Make the cache directory if it does not exist yet.
 
-        Inherited variables from Db.Output.Config:
-            - email     ; The email address which we give to the NCBI.
-            - cache     ; The directory where the records are stored.
-
-        @arg config:
-        @type config:
         @arg output:
         @type output:
         @arg database:
         @type database:
         """
-
-        self._config = config
         self._output = output
         self._database = database
-        if not os.path.isdir(self._config.cache) :
-            os.mkdir(self._config.cache)
-        Entrez.email = self._config.email
+        if not os.path.isdir(config.get('cache')) :
+            os.mkdir(config.get('cache'))
+        Entrez.email = config.get('email')
         self.fileType = None
     #__init__
 
@@ -119,18 +105,13 @@ class Retriever(object) :
         First, the cache checked for its size, if it exceeds the maximum
         size the ``oldest'' files are deleted. Note that accessing a file
         makes it ``new''.
-
-        Inherited variables from Db.Output.Config:
-            - cache     ; Directory under scrutiny.
-            - cachesize ; Maximum size of the cache.
         """
-
-        if self._foldersize(self._config.cache) < self._config.cachesize:
+        if self._foldersize(config.get('cache')) < config.get('cachesize'):
             return
 
         # Build a list of files sorted by access time.
         cachelist = []
-        for (path, dirs, files) in os.walk(self._config.cache) :
+        for (path, dirs, files) in os.walk(config.get('cache')) :
             for filename in files :
                 filepath = os.path.join(path, filename)
                 cachelist.append(
@@ -141,7 +122,7 @@ class Retriever(object) :
         # small enough (or until the list is exhausted).
         for i in range(0, len(cachelist)) :
             os.remove(cachelist[i][1])
-            if self._foldersize(self._config.cache) < self._config.cachesize:
+            if self._foldersize(config.get('cache')) < config.get('cachesize'):
                 break;
         #for
     #_cleancache
@@ -150,17 +131,13 @@ class Retriever(object) :
         """
         Convert an accession number to a filename.
 
-        Inherited variables from Db.Output.Config:
-            - cache     ; Name of the cache directory.
-
         @arg name: The accession number
         @type name: string
 
         @return: A filename
         @rtype: string
         """
-
-        return self._config.cache + '/' + name + "." + self.fileType + ".bz2"
+        return config.get('cache') + '/' + name + "." + self.fileType + ".bz2"
     #_nametofile
 
     def _write(self, raw_data, filename) :
@@ -339,13 +316,12 @@ class GenBankRetriever(Retriever):
     """
     """
 
-    def __init__(self, config, output, database):
-        # TODO documentation
+    def __init__(self, output, database):
         """
+        @todo: Documentation.
         """
-
         # Recall init of parent
-        Retriever.__init__(self, config, output, database)
+        Retriever.__init__(self, output, database)
         self.fileType = "gb"
         # Child specific init
     #__init__
@@ -466,9 +442,6 @@ class GenBankRetriever(Retriever):
         The content of the slice is placed in the cache with the UD number
         as filename.
 
-        Inherited variables from Db.Output.Config:
-            - maxDldSize ; Maximum size of the slice.
-
         @arg accno: The accession number of the chromosome
         @type accno: string
         @arg start: Start position of the slice
@@ -490,7 +463,7 @@ class GenBankRetriever(Retriever):
             return None
 
         # The slice can not be too big.
-        if stop - start > self._config.maxDldSize :
+        if stop - start > config.get('maxDldSize'):
             return None
 
         # Check whether we have seen this slice before.
@@ -610,23 +583,18 @@ class GenBankRetriever(Retriever):
         If the downloaded file is recognised by its hash, the old UD number
         is used.
 
-        Inherited variables from Db.Output.Config:
-            - maxDldSize ; Maximum size of the file.
-            - minDldSize ; Minimum size of the file.
-
         @arg url: Location of a GenBank record
         @type url: string
 
         @return: UD or None
         @rtype: string
         """
-
         handle = urllib2.urlopen(url)
         info = handle.info()
         if info["Content-Type"] == "text/plain" :
             length = int(info["Content-Length"])
-            if length > self._config.minDldSize and \
-               length < self._config.maxDldSize :
+            if length > config.get('minDldSize') and \
+               length < config.get('maxDldSize'):
                 raw_data = handle.read()
                 md5sum = self._calcHash(raw_data)
                 UD = self._database.getGBFromHash(md5sum)
@@ -756,22 +724,19 @@ class LRGRetriever(Retriever):
                                    the cache and return the record.
     """
 
-    def __init__(self, config, output, database):
+    def __init__(self, output, database):
         #TODO documentation
         """
         Initialize the class.
 
         @todo: documentation
-        @arg  config:
-        @type  config:
         @arg  output:
         @type  output:
         @arg  database:
         @type  database:
         """
-
         # Recall init of parent
-        Retriever.__init__(self, config, output, database)
+        Retriever.__init__(self, output, database)
         self.fileType = "xml"
         # Child specific init
     #__init__
@@ -815,9 +780,6 @@ class LRGRetriever(Retriever):
         grab the file from the confirmed section, if this fails, get it
         from the pending section.
 
-        Inherited variables from Config.Retriever
-            - lrgURL  ; The base url from where LRG files are fetched
-
         @arg name: The name of the LRG file to fetch
         @type name: string
 
@@ -825,7 +787,7 @@ class LRGRetriever(Retriever):
         @rtype: string
         """
 
-        prefix = self._config.lrgURL
+        prefix = config.get('lrgURL')
         url        = prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
 
@@ -849,10 +811,6 @@ class LRGRetriever(Retriever):
         """
         Download an LRG record from an URL.
 
-        Inherited variables from Db.Output.Config:
-            - maxDldSize  ; Maximum size of the file.
-            - minDldSize  ; Minimum size of the file.
-
         @arg url: Location of the LRG record
         @type url: string
 
@@ -872,7 +830,7 @@ class LRGRetriever(Retriever):
         if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
 
             length = int(info["Content-Length"])
-            if self._config.minDldSize < length < self._config.maxDldSize:
+            if config.get('minDldSize') < length < config.get('maxDldSize'):
                 raw_data = handle.read()
                 handle.close()
 

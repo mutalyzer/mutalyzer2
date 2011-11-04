@@ -32,7 +32,7 @@ import socket
 from operator import itemgetter, attrgetter
 
 import mutalyzer
-from mutalyzer.config import Config
+from mutalyzer import config
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -51,7 +51,6 @@ class MutalyzerService(DefinitionBase):
     These methods are made public via a SOAP interface.
     """
     def __init__(self, environ=None):
-        self._config = Config()
         super(MutalyzerService, self).__init__(environ)
     #__init__
 
@@ -68,7 +67,7 @@ class MutalyzerService(DefinitionBase):
         @type build: string
         """
 
-        if not build in self._config.Db.dbNames :
+        if not build in config.get('dbNames'):
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -162,14 +161,14 @@ class MutalyzerService(DefinitionBase):
         @return: A list of transcripts.
         @rtype: list
         """
-        L = Output(__file__, self._config.Output)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscripts(%s %s %s %s)" % (build,
                      chrom, pos, versions))
 
         self.__checkBuild(L, build)
-        D = Db.Mapping(build, self._config.Db)
+        D = Db.Mapping(build)
 
         self.__checkChrom(L, D, chrom)
         self.__checkPos(L, pos)
@@ -198,14 +197,14 @@ class MutalyzerService(DefinitionBase):
         """
         Todo: documentation.
         """
-        L = Output(__file__, self._config.Output)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getTranscriptsByGene(%s %s)" % (build,
                      name))
 
         self.__checkBuild(L, build)
-        D = Db.Mapping(build, self._config.Db)
+        D = Db.Mapping(build)
 
         ret = D.get_TranscriptsByGeneName(name)
 
@@ -244,13 +243,13 @@ class MutalyzerService(DefinitionBase):
         @return: A list of transcripts.
         @rtype: list
         """
-        L = Output(__file__, self._config.Output)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
-        D = Db.Mapping(build, self._config.Db)
+        D = Db.Mapping(build)
         self.__checkBuild(L, build)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
@@ -279,12 +278,12 @@ class MutalyzerService(DefinitionBase):
         @return: The name of the associated gene.
         @rtype: string
         """
-        L = Output(__file__, self._config.Output)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getGeneName(%s %s)" % (build, accno))
 
-        D = Db.Mapping(build, self._config.Db)
+        D = Db.Mapping(build)
         self.__checkBuild(L, build)
 
         ret = D.get_GeneName(accno.split('.')[0])
@@ -338,13 +337,13 @@ class MutalyzerService(DefinitionBase):
           - type         ; The mutation type.
         @rtype: object
         """
-        L = Output(__file__, self._config.Output)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Reveived request mappingInfo(%s %s %s %s)" % (
                         LOVD_ver, build, accNo, variant))
 
-        conv = Converter(build, self._config, L)
+        conv = Converter(build, L)
         result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
@@ -376,13 +375,13 @@ class MutalyzerService(DefinitionBase):
           - CDS_stop     ; CDS stop in I{c.} notation.
         @rtype: object
         """
-        O = Output(__file__, self._config.Output)
+        O = Output(__file__)
 
         O.addMessage(__file__, -1, "INFO",
                      "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
                      build, accNo))
 
-        converter = Converter(build, self._config, O)
+        converter = Converter(build, O)
         T = converter.mainTranscript(accNo)
 
         O.addMessage(__file__, -1, "INFO",
@@ -404,8 +403,8 @@ class MutalyzerService(DefinitionBase):
         @return: The accession number of a chromosome.
         @rtype: string
         """
-        D = Db.Mapping(build, self._config.Db)
-        L = Output(__file__, self._config.Output)
+        D = Db.Mapping(build)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromAccession(%s %s)" % (build, name))
@@ -436,8 +435,8 @@ class MutalyzerService(DefinitionBase):
         @return: The name of a chromosome.
         @rtype: string
         """
-        D = Db.Mapping(build, self._config.Db)
-        L = Output(__file__, self._config.Output)
+        D = Db.Mapping(build)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromName(%s %s)" % (build, accNo))
@@ -468,8 +467,8 @@ class MutalyzerService(DefinitionBase):
         @return: The name of a chromosome.
         @rtype: string
         """
-        D = Db.Mapping(build, self._config.Db)
-        L = Output(__file__, self._config.Output)
+        D = Db.Mapping(build)
+        L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
                      "Received request getchromName(%s %s)" % (build, acc))
@@ -504,12 +503,12 @@ class MutalyzerService(DefinitionBase):
         @return: The variant(s) in either I{g.} or I{c.} notation.
         @rtype: list
         """
-        D = Db.Mapping(build, self._config.Db)
-        O = Output(__file__, self._config.Output)
+        D = Db.Mapping(build)
+        O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
                      "Received request cTogConversion(%s %s)" % (
                      build, variant))
-        converter = Converter(build, self._config, O)
+        converter = Converter(build, O)
         variant = converter.correctChrVariant(variant)
 
         if "c." in variant :
@@ -539,7 +538,7 @@ class MutalyzerService(DefinitionBase):
                  - messages: List of (error) messages as strings.
         @rtype: object
         """
-        output = Output(__file__, self._config.Output)
+        output = Output(__file__)
         output.addMessage(__file__, -1, "INFO",
                           "Received request checkSyntax(%s)" % (variant))
 
@@ -569,10 +568,10 @@ class MutalyzerService(DefinitionBase):
         """
         Todo: documentation.
         """
-        O = Output(__file__, self._config.Output)
+        O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
                      "Received request runMutalyzer(%s)" % (variant))
-        variantchecker.check_variant(variant, self._config, O)
+        variantchecker.check_variant(variant, O)
 
         result = MutalyzerOutput()
 
@@ -630,16 +629,16 @@ class MutalyzerService(DefinitionBase):
         """
         Todo: documentation.
         """
-        O = Output(__file__, self._config.Output)
-        D = Db.Cache(self._config.Db)
+        O = Output(__file__)
+        D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
             "Received request getGeneAndTranscript(%s, %s)" % (genomicReference,
             transcriptReference))
-        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
+        retriever = Retriever.GenBankRetriever(O, D)
         record = retriever.loadrecord(genomicReference)
 
-        GenRecordInstance = GenRecord.GenRecord(O, self._config.GenRecord)
+        GenRecordInstance = GenRecord.GenRecord(O)
         GenRecordInstance.record = record
         GenRecordInstance.checkRecord()
 
@@ -696,16 +695,16 @@ class MutalyzerService(DefinitionBase):
                                       - id
                                       - product
         """
-        O = Output(__file__, self._config.Output)
-        D = Db.Cache(self._config.Db)
+        O = Output(__file__)
+        D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsAndInfo(%s)" % genomicReference)
-        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
+        retriever = Retriever.GenBankRetriever(O, D)
         record = retriever.loadrecord(genomicReference)
 
         # Todo: If loadRecord failed (e.g. DTD missing), we should abort here.
-        GenRecordInstance = GenRecord.GenRecord(O, self._config.GenRecord)
+        GenRecordInstance = GenRecord.GenRecord(O)
         GenRecordInstance.record = record
         GenRecordInstance.checkRecord()
 
@@ -810,9 +809,9 @@ class MutalyzerService(DefinitionBase):
         """
         Todo: documentation, error handling, argument checking, tests.
         """
-        O = Output(__file__, self._config.Output)
-        D = Db.Cache(self._config.Db)
-        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
+        O = Output(__file__)
+        D = Db.Cache()
+        retriever = Retriever.GenBankRetriever(O, D)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosomeByGene(%s, %s, %s, %s)" % (
@@ -839,9 +838,9 @@ class MutalyzerService(DefinitionBase):
         """
         Todo: documentation, error handling, argument checking, tests.
         """
-        O = Output(__file__, self._config.Output)
-        D = Db.Cache(self._config.Db)
-        retriever = Retriever.GenBankRetriever(self._config.Retriever, O, D)
+        O = Output(__file__)
+        D = Db.Cache()
+        retriever = Retriever.GenBankRetriever(O, D)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosome(%s, %s, %s, %s)" % (
@@ -875,7 +874,7 @@ class MutalyzerService(DefinitionBase):
             - contactEmail: The email address to contact for more information.
         @rtype: object
         """
-        output = Output(__file__, self._config.Output)
+        output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received request info')
 
         result = InfoOutput()
@@ -913,13 +912,13 @@ class MutalyzerService(DefinitionBase):
         This method is intended to be used by Mutalyzer itself to synchronize
         the cache between installations on different servers.
         """
-        output = Output(__file__, self._config.Output)
+        output = Output(__file__)
 
         output.addMessage(__file__, -1, 'INFO',
                           'Received request getCache')
 
-        database = Db.Cache(self._config.Db)
-        sync = CacheSync(self._config.Retriever, output, database)
+        database = Db.Cache()
+        sync = CacheSync(output, database)
 
         cache = sync.local_cache(created_since)
 
@@ -948,12 +947,12 @@ class MutalyzerService(DefinitionBase):
         @return: List of HGVS descriptions.
         @rtype: list(string)
         """
-        output = Output(__file__, self._config.Output)
+        output = Output(__file__)
 
         output.addMessage(__file__, -1, 'INFO',
                           'Received request getdbSNPDescription(%s)' % rs_id)
 
-        retriever = Retriever.Retriever(self._config.Retriever, output, None)
+        retriever = Retriever.Retriever(output, None)
         descriptions = retriever.snpConvert(rs_id)
 
         output.addMessage(__file__, -1, 'INFO',
