@@ -125,8 +125,6 @@ Todo list:
   http://www.rhonabwy.com/wp/2009/11/04/setting-up-a-python-ci-server-with-hudson/
   Or perhaps Jenkins.
   http://jenkins-ci.org/
-- Use monit on the production server.
-  http://mmonit.com/monit/
 - Migrate Javascript to JQuery.
 - I think in the long run, the Output object is not really the way to go. It
   obscures the control flow. The logging part should use the standard logging
@@ -142,7 +140,6 @@ Todo list:
 - Use SQLAlchemy?
 - Password for MySQL user.
 - In deployment, remove old versions of Mutalyzer package?
-- Use https protocol.
 - Check for os.path.join vulnerabilities.
 - Use a standard solution for the database migrations in extras/migrations.
 - Use something like Sphinx to generate development documentation from code.
