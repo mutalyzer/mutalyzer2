@@ -316,14 +316,15 @@ class Retriever(object) :
             if message.find('cannot get document summary') != -1:
                 # Entrez does not have this rs ID.
                 self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'ID rs%s could be found in dbSNP.' % id)
+                                        'ID rs%s could not be found in dbSNP.' \
+                                        % id)
             else:
                 # Something else was wrong (print {message} to see more).
                 self._output.addMessage(__file__, 4, 'EENTREZ',
                                         'Unkown dbSNP error. Got no result ' \
                                         'from dbSNP.')
                 self._output.addMessage(__file__, -1, 'INFO',
-                                        'Message from dbSNP: %s'  % message)
+                                        'Message from dbSNP: %s' % message)
             return []
 
         snps = []
