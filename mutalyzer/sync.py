@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import urllib2
 from suds.client import Client
 
+from mutalyzer import config
 from mutalyzer import Retriever
 
 
@@ -21,18 +22,15 @@ class CacheSync(object):
     """
     Synchronize the database cache with other Mutalyzer instances.
     """
-    def __init__(self, config, output, database):
+    def __init__(self, output, database):
         """
         Instantiate the object.
 
-        @arg config: A configuration object.
-        @type config: mutalyzer.config.Config.Retriever
         @arg output: An output object.
         @type output: mutalyzer.output.Output
         @arg database: A database object.
         @type database: mutalyzer.Db.Cache
         """
-        self._config = config
         self._output = output
         self._database = database
 
@@ -60,7 +58,7 @@ class CacheSync(object):
         for entry in entries:
             # Note that this way we only include Genbank files, not LRG files.
             cached = None
-            if os.path.isfile(os.path.join(self._config.cache,
+            if os.path.isfile(os.path.join(config.get('cache'),
                                            '%s.gb.bz2' % entry[0])):
                 cached = '%s.gb' % entry[0]
             cache.append({'name':                  entry[0],
@@ -135,9 +133,7 @@ class CacheSync(object):
         handle.close()
 
         # Store remote data
-        retriever = Retriever.GenBankRetriever(self._config,
-                                               self._output,
-                                               self._database)
+        retriever = Retriever.GenBankRetriever(self._output, self.database)
         retriever.write(data, name, 0)
 
     def sync_with_remote(self, remote_wsdl, url_template,

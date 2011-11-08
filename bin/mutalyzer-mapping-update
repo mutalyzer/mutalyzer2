@@ -19,7 +19,6 @@ This program is intended to be run daily from cron. Example:
 
 import sys
 
-from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.mapping import NCBIUpdater
 from mutalyzer.util import format_usage
@@ -39,12 +38,11 @@ def main(database, mapping_file, assembly):
 
     @todo: Also report how much was added/updated.
     """
-    config = Config()
-    output = Output(__file__, config.Output)
+    output = Output(__file__)
     output.addMessage(__file__, -1, 'INFO',
                       'Starting NCBI mapping data update')
 
-    updater = NCBIUpdater(database, config)
+    updater = NCBIUpdater(database)
     updater.load(mapping_file, assembly)
     updater.merge()
 

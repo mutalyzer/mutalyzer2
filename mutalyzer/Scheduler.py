@@ -20,9 +20,9 @@ import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 
 import mutalyzer
+from mutalyzer import config
 from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
-from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
 from mutalyzer import Retriever           # Retriever.Retriever
@@ -34,7 +34,7 @@ __all__ = ["Scheduler"]
 class Scheduler() :
     """
     Special methods:
-        - __init__(config, database) ;
+        - __init__(database) ;
 
     Public methods:
         - addJob(outputFilter, eMail, queue, fromHost, jobType, Arg1) ; Add a
@@ -47,21 +47,16 @@ class Scheduler() :
         - Batch Position Converter
     """
 
-    def __init__(self, config, database) :
+    def __init__(self, database) :
         #TODO: documentation
         """
-        Initialize the Scheduler, which requires a config object
-        and a database connection.
+        Initialize the Scheduler, which requires a database connection.
 
         @todo: documentation
 
-        @arg config: Config object
-        @type config: object
         @arg database:
         @type database:
         """
-
-        self.__config = config
         self.__database = database
         self.__run = True
     #__init__
@@ -88,10 +83,6 @@ class Scheduler() :
     def __sendMail(self, mailTo, url) :
         """
         Send an e-mail containing an url to a batch job submitter.
-
-        Private variables:
-            - __config ; The variables mailSubject and mailFrom
-                       are used.
 
         @todo: Handle Connection errors in a try, except clause
 
@@ -127,13 +118,13 @@ Thanks for using Mutalyzer.
 With kind regards,
 Mutalyzer batch checker.""" % url)
 
-        message["Subject"] = self.__config.mailSubject
-        message["From"] = self.__config.mailFrom
+        message["Subject"] = config.get('mailSubject')
+        message["From"] = config.get('mailFrom')
         message["To"] = mailTo
 
         smtpInstance = smtplib.SMTP()
         smtpInstance.connect()
-        smtpInstance.sendmail(self.__config.mailFrom, mailTo,
+        smtpInstance.sendmail(config.get('mailFrom'), mailTo,
                               message.as_string())
         smtpInstance.quit()
     #__sendMail
@@ -364,9 +355,7 @@ Mutalyzer batch checker.""" % url)
         @arg flags: Flags of the current entry
         @type flags:
         """
-
-        C = Config()
-        O = Output(__file__, C.Output)
+        O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received NameChecker batchvariant " + cmd)
 
@@ -398,12 +387,12 @@ Mutalyzer batch checker.""" % url)
             outputline += batchOutput[0]
 
         #Output
-        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = self.__config.nameCheckOutHeader
+            header = config.get('nameCheckOutHeader')
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
@@ -436,9 +425,7 @@ Mutalyzer batch checker.""" % url)
         @arg flags: Flags of the current entry
         @type flags:
         """
-
-        C = Config()
-        output = Output(__file__, C.Output)
+        output = Output(__file__)
         grammar = Grammar(output)
 
         output.addMessage(__file__, -1, "INFO",
@@ -457,12 +444,12 @@ Mutalyzer batch checker.""" % url)
             result = "|".join(output.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = self.__config.syntaxCheckOutHeader
+            header = config.get('syntaxCheckOutHeader')
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
@@ -499,9 +486,7 @@ Mutalyzer batch checker.""" % url)
         @arg flags: Flags of the current entry
         @type flags:
         """
-
-        C = Config()
-        O = Output(__file__, C.Output)
+        O = Output(__file__)
         variant = cmd
         variants = None
         gName = ""
@@ -559,12 +544,12 @@ Mutalyzer batch checker.""" % url)
         error = "%s" % "|".join(O.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = self.__config.positionConverterOutHeader
+            header = config.get('positionConverterOutHeader')
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
@@ -598,9 +583,7 @@ Mutalyzer batch checker.""" % url)
         @arg flags: Flags of the current entry
         @type flags:
         """
-
-        C = Config()
-        O = Output(__file__, C.Output)
+        O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received SNP converter batch rs" + cmd)
 
@@ -610,7 +593,7 @@ Mutalyzer batch checker.""" % url)
 
         descriptions = []
         if not skip :
-            R = Retriever.Retriever(C.Retriever, O, None)
+            R = Retriever.Retriever(O, None)
             descriptions = R.snpConvert(cmd)
 
         # Todo: Is output ok?
@@ -619,12 +602,12 @@ Mutalyzer batch checker.""" % url)
         outputline += "%s\t" % "|".join(O.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.txt" % (self.__config.resultsDir, i)
+        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = self.__config.snpConverterOutHeader
+            header = config.get('snpConverterOutHeader')
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if

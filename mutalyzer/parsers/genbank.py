@@ -8,7 +8,7 @@ import bz2
 from Bio import SeqIO, Entrez
 from Bio.Alphabet import ProteinAlphabet
 
-from mutalyzer.config import Config
+from mutalyzer import config
 from mutalyzer import Db
 from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
 
@@ -52,17 +52,11 @@ class GBparser():
         """
         Initialise the class
 
-        Public variables:
-            - config ; Config object.
-
         Private variables:
             - __database ; Db.Cache object
-
-        @requires: Config
         """
-        config = Config()
-        Entrez.email = config.Retriever.email
-        self.__database = Db.Cache(config.Db)
+        Entrez.email = config.get('email')
+        self.__database = Db.Cache()
     #__init__
 
     def __location2pos(self, location):

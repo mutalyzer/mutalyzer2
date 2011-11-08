@@ -19,6 +19,7 @@ search for them each time.
 import Bio
 
 from mutalyzer import util
+from mutalyzer import config
 from mutalyzer import Crossmap
 from mutalyzer import Db
 
@@ -379,7 +380,7 @@ class GenRecord() :
         - checkRecord()   ;   Check and repair self.record.
     """
 
-    def __init__(self, output, config) :
+    def __init__(self, output) :
         """
         Initialise the class.
 
@@ -388,12 +389,8 @@ class GenRecord() :
 
         @arg output: an output object
         @type output: object
-        @arg config: a config object
-        @type config: object
         """
-
         self.__output = output
-        self.__config = config
         self.record = None
     #__init__
 
@@ -807,13 +804,13 @@ class GenRecord() :
         # TODO Also check a range properly.
         intronPos = abs(transcript.CM.g2x(position)[1])
         if intronPos :
-            if intronPos <= self.__config.spliceAlarm :
+            if intronPos <= config.get('spliceAlarm'):
                 self.__output.addMessage(__file__, 2, "WSPLICE",
                     "Mutation on splice site in gene %s transcript %s." % (
                     gene.name, transcript.name))
                 return
             #if
-            if intronPos <= self.__config.spliceWarn :
+            if intronPos <= config.get('spliceWarn'):
                 self.__output.addMessage(__file__, 2, "WSPLICE",
                     "Mutation near splice site in gene %s transcript %s." % (
                     gene.name, transcript.name))

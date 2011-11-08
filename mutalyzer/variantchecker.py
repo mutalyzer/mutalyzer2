@@ -1432,7 +1432,7 @@ def process_variant(mutator, description, record, output):
 #process_variant
 
 
-def check_variant(description, config, output):
+def check_variant(description, output):
     """
     Check the variant described by {description} according to the HGVS variant
     nomenclature and populate the {output} object with various information
@@ -1440,8 +1440,6 @@ def check_variant(description, config, output):
 
     @arg description: Variant description in HGVS notation.
     @type description: string
-    @arg config: A configuration object.
-    @type config: Modules.Config.Config
     @arg output: An output object.
     @type output: Modules.Output.Output
 
@@ -1471,12 +1469,12 @@ def check_variant(description, config, output):
 
     gene_symbol = transcript_id = ''
 
-    database = Db.Cache(config.Db)
+    database = Db.Cache()
     if parsed_description.LrgAcc:
         filetype = 'LRG'
         record_id = parsed_description.LrgAcc
         transcript_id = parsed_description.LRGTranscriptID
-        retriever = Retriever.LRGRetriever(config.Retriever, output, database)
+        retriever = Retriever.LRGRetriever(output, database)
     else:
         filetype = 'GB'
         if parsed_description.Gene:
@@ -1485,8 +1483,7 @@ def check_variant(description, config, output):
             if parsed_description.Gene.ProtIso:
                 output.addMessage(__file__, 4, 'EPROT', 'Indexing by ' \
                                   'protein isoform is not supported.')
-        retriever = Retriever.GenBankRetriever(config.Retriever, output,
-                                               database)
+        retriever = Retriever.GenBankRetriever(output, database)
 
     retrieved_record = retriever.loadrecord(record_id)
 
@@ -1506,7 +1503,7 @@ def check_variant(description, config, output):
     output.addOutput('preColon', description.split(':')[0])
     output.addOutput('variant', description.split(':')[-1])
 
-    record = GenRecord.GenRecord(output, config.GenRecord)
+    record = GenRecord.GenRecord(output)
     record.record = retrieved_record
     record.checkRecord()
 
@@ -1530,7 +1527,7 @@ def check_variant(description, config, output):
     # Note: The GenRecord instance is carrying the sequence in .record.seq.
     #       So is the Mutator instance in .mutator.orig.
 
-    mutator = Mutator(record.record.seq, config.Mutator, output)
+    mutator = Mutator(record.record.seq, output)
 
     # Todo: If processing of the variant fails, we might still want to show
     # information about the record, gene, transcript.
