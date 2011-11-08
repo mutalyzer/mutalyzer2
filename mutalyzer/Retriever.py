@@ -408,6 +408,10 @@ class GenBankRetriever(Retriever):
     def fetch(self, name) :
         """
         Todo: Documentation.
+
+        Todo: A better implementation would probably use an esummary query
+            first to get the length of the sequence. If this is within limits,
+            use efetch with rettype=gbwithparts to download the GenBank file.
         """
         net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gb')
         raw_data = net_handle.read()

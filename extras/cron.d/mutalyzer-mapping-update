@@ -1,5 +1,0 @@
-# Update the mapping database every sunday morning at 03:25 and 04:25
-#25 3 * * 7 www-data wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.36.3/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md; <MUTALYZER_BIN_MAPPING_UPDATE> hg18 /tmp/seq_gene.md reference
-#25 4 * * 7 www-data wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md; <MUTALYZER_BIN_MAPPING_UPDATE> hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly'
-
-##25 4 * * 7 www-data wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/mapview/seq_gene.md.gz" -O - | zcat > /tmp/seq_gene.md; <MUTALYZER_BIN_MAPPING_UPDATE> hg19 /tmp/seq_gene.md 'GRCh37.p2-Primary Assembly'
