@@ -30,7 +30,7 @@ from simpletal import simpleTAL
 
 import mutalyzer
 from mutalyzer import util
-from mutalyzer.config import Config
+from mutalyzer import config
 from mutalyzer.grammar import Grammar
 from mutalyzer import webservice
 from mutalyzer import variantchecker
@@ -42,12 +42,8 @@ from mutalyzer import Retriever
 from mutalyzer import File
 
 
-# Load configuration from configuration file
-config = Config()
-
-
 # Show web.py debugging information.
-web.config.debug = config.Output.debug
+web.config.debug = config.get('debug')
 
 
 # URL dispatch table
@@ -167,7 +163,7 @@ render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
     'nomenclatureVersion': mutalyzer.NOMENCLATURE_VERSION,
     'releaseDate': mutalyzer.__date__,
     'release': mutalyzer.RELEASE,
-    'contactEmail': config.Retriever.email})
+    'contactEmail': config.get('email')})
 
 # web.py application
 app = web.application(urls, globals(), autoreload=False)
@@ -240,7 +236,7 @@ class Downloads:
         if not os.path.isfile(file_path):
             raise web.notfound()
         handle = open(file_path)
-        F = File.File(config.File, None)
+        F = File.File(None)
         web.header('Content-Type', F.getMimeType(handle)[0])
         web.header('Content-Disposition', 'attachment; filename="%s"' % file)
         return handle.read()
@@ -263,7 +259,7 @@ class Reference:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-        file_path = os.path.join(config.Retriever.cache, '%s.bz2' % file)
+        file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
         if not os.path.isfile(file_path):
             raise web.notfound()
         handle = bz2.BZ2File(file_path, 'r')
@@ -286,7 +282,7 @@ class Reference:
         reconstructed from the information in the database. Because if the
         latter is the case, Mutalyzer will add it to the cache on the fly.
         """
-        file_path = os.path.join(config.Retriever.cache, '%s.bz2' % file)
+        file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
         if not os.path.isfile(file_path):
             # The following is a hack to return a 404 not found status with
             # empty body (as is checked by our unit test framework, WebTest).
@@ -325,7 +321,7 @@ class GetGS:
         @return: Output of name checker if forward is set, otherwise the
                  GeneSymbol with the variant notation as string.
         """
-        O = Output(__file__, config.Output)
+        output = Output(__file__)
 
         i = web.input(mutationName=None, variantRecord=None, forward=None)
 
@@ -333,11 +329,9 @@ class GetGS:
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in mapping.py:607.
 
-        # We are only interested in the legend
-        #Mutalyzer.process(str(i.mutationName), config, O)
-        variantchecker.check_variant(str(i.mutationName), config, O)
+        variantchecker.check_variant(str(i.mutationName), output)
 
-        legends = O.getOutput("legends")
+        legends = output.getOutput("legends")
 
         # Filter the transcript from the legend
         legends = [l for l in legends if "_v" in l[0]]
@@ -378,7 +372,7 @@ class SyntaxCheck:
         Parameters:
         - variant: Variant name to check.
         """
-        output = Output(__file__, config.Output)
+        output = Output(__file__)
         i = web.input()
         variant = i.variant
         if variant.find(',') >= 0:
@@ -431,13 +425,13 @@ class Snp:
         @kwarg rs_id: The dbSNP rs number (including 'rs' prefix).
         @type rs_id: string
         """
-        output = Output(__file__, config.Output)
+        output = Output(__file__)
 
         descriptions = []
 
         if rs_id:
             output.addMessage(__file__, -1, 'INFO', 'Received %s' % rs_id)
-            retriever = Retriever.Retriever(config.Retriever, output, None)
+            retriever = Retriever.Retriever(output, None)
             descriptions = retriever.snpConvert(rs_id)
             output.addMessage(__file__, -1, 'INFO',
                               'Finished processing %s' % rs_id)
@@ -484,9 +478,9 @@ class PositionConverter:
         @kwarg build: Human genome build (currently 'hg18' or 'hg19').
         @kwarg variant: Variant to convert.
         """
-        output = Output(__file__, config.Output)
+        output = Output(__file__)
 
-        avail_builds = config.Db.dbNames[::-1]
+        avail_builds = config.get('dbNames')[::-1]
 
         if build :
             avail_builds.remove(build)
@@ -503,7 +497,7 @@ class PositionConverter:
         }
 
         if build and variant:
-            converter = Converter(build, config, output)
+            converter = Converter(build, output)
 
             #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
@@ -589,13 +583,13 @@ class VariantInfo:
         acc = i.acc
         var = i.var
 
-        output = Output(__file__, config.Output)
+        output = Output(__file__)
 
         output.addMessage(__file__, -1, 'INFO',
                           'Received %s:%s (LOVD_ver %s, build %s)' \
                           % (acc, var, LOVD_ver, build))
 
-        converter = Converter(build, config, output)
+        converter = Converter(build, output)
 
         result = ''
 
@@ -682,7 +676,7 @@ class Check:
         @kwarg interactive: Run interactively, meaning we wrap the result in
             the site layout and include the HTML form.
         """
-        output = Output(__file__, config.Output)
+        output = Output(__file__)
 
         args = {
             'lastpost' : name
@@ -695,7 +689,7 @@ class Check:
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in mapping.py:607.
-        variantchecker.check_variant(str(name), config, output)
+        variantchecker.check_variant(str(name), output)
         output.addMessage(__file__, -1, 'INFO',
                           'Finished processing variant %s' % name)
 
@@ -814,7 +808,7 @@ class BatchProgress:
             total = int(i.totalJobs)
         except ValueError:
             return
-        D = Db.Batch(config.Db)
+        D = Db.Batch()
         left = D.entriesLeftForJob(jobID)
         percentage = int(100 - (100 * left / float(total)))
         if i.ajax:
@@ -876,9 +870,9 @@ class BatchChecker:
                           (default), 'SyntaxChecker', 'PositionConverter', or
                           'SnpConverter'.
         """
-        O = Output(__file__, config.Output)
+        O = Output(__file__)
 
-        maxUploadSize = config.Batch.batchInputMaxSize
+        maxUploadSize = config.get('batchInputMaxSize')
 
         attr = {"messages"      : [],
                 "errors"        : [],
@@ -891,7 +885,7 @@ class BatchChecker:
                 "hideTypes"     : batchType and 'none' or '',
                 "selected"      : "0",
                 "batchType"     : batchType or "",
-                "avail_builds"  : config.Db.dbNames[::-1],
+                "avail_builds"  : config.get('dbNames')[::-1],
                 "jobID"         : None,
                 "totalJobs"     : None
         }
@@ -923,9 +917,9 @@ class BatchChecker:
                 web.ctx.status = '413 Request entity too large'
                 return 'Sorry, only files up to %s megabytes are accepted.' % (float(maxUploadSize) / 1048576)
 
-            D = Db.Batch(config.Db)
-            S = Scheduler.Scheduler(config.Scheduler, D)
-            FileInstance = File.File(config.File, O)
+            D = Db.Batch()
+            S = Scheduler.Scheduler(D)
+            FileInstance = File.File(O)
 
             # Generate the fromhost URL from which the results can be fetched
             fromHost = web.ctx.homedomain + web.ctx.homepath + '/'
@@ -970,7 +964,7 @@ class BatchResult:
         of the form \d+.
         """
         filename = 'Results_%s.txt' % result
-        handle = open(os.path.join(config.Scheduler.resultsDir, filename))
+        handle = open(os.path.join(config.get('resultsDir'), filename))
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition',
                    'attachment; filename="%s"' % filename)
@@ -1020,7 +1014,7 @@ class Uploader:
         """
         Render reference sequence uploader form.
         """
-        maxUploadSize = config.Retriever.maxDldSize
+        maxUploadSize = config.get('maxDldSize')
         UD, errors = "", []
         args = {
             "UD"      : UD,
@@ -1063,11 +1057,11 @@ class Uploader:
         - stop: Stop position.
         - orientation: Orientation.
         """
-        maxUploadSize = config.Retriever.maxDldSize
+        maxUploadSize = config.get('maxDldSize')
 
-        O = Output(__file__, config.Output)
-        D = Db.Cache(config.Db)
-        R = Retriever.GenBankRetriever(config.Retriever, O, D)
+        O = Output(__file__)
+        D = Db.Cache()
+        R = Retriever.GenBankRetriever(O, D)
 
         UD, errors = "", []
 

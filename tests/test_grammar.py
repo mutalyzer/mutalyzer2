@@ -8,7 +8,6 @@ import os
 from nose.tools import *
 
 import mutalyzer
-from mutalyzer.config import Config
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 
@@ -22,8 +21,7 @@ class TestGrammar():
         """
         Initialize test Grammar instance.
         """
-        self.config = Config()
-        self.output = Output(__file__, self.config.Output)
+        self.output = Output(__file__)
         self.grammar = Grammar(self.output)
 
     def test_some_variants(self):

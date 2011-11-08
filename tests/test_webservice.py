@@ -8,7 +8,6 @@ from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 import os
 from datetime import datetime, timedelta
 import mutalyzer
-from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
@@ -226,10 +225,9 @@ class TestWebservice():
         """
         created_since = datetime.today() - timedelta(days=14)
 
-        config = Config()
-        database = Db.Cache(config.Db)
-        output = Output(__file__, config.Output)
-        sync = CacheSync(config.Retriever, output, database)
+        database = Db.Cache()
+        output = Output(__file__)
+        sync = CacheSync(output, database)
         cache = sync.local_cache(created_since)
 
         r = self.client.service.getCache(created_since)
