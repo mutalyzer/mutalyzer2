@@ -411,3 +411,11 @@ class TestVariantchecker():
         """
         check_variant('AB026906.1:c.274delins262_268', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    def test_contig_reference(self):
+        """
+        Variant description on a CONTIG RefSeq reference.
+        """
+        check_variant('NG_005990.1:g.1del', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_005990.1:g.1del')

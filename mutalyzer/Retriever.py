@@ -293,14 +293,15 @@ class Retriever(object) :
             if message.find('cannot get document summary') != -1:
                 # Entrez does not have this rs ID.
                 self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'ID rs%s could be found in dbSNP.' % id)
+                                        'ID rs%s could not be found in dbSNP.' \
+                                        % id)
             else:
                 # Something else was wrong (print {message} to see more).
                 self._output.addMessage(__file__, 4, 'EENTREZ',
                                         'Unkown dbSNP error. Got no result ' \
                                         'from dbSNP.')
                 self._output.addMessage(__file__, -1, 'INFO',
-                                        'Message from dbSNP: %s'  % message)
+                                        'Message from dbSNP: %s' % message)
             return []
 
         snps = []
@@ -405,28 +406,45 @@ class GenBankRetriever(Retriever):
     #write
 
     def fetch(self, name) :
-        #TODO documentation
         """
+        Todo: Documentation.
         """
-
-        net_handle = Entrez.efetch(db = "nucleotide", id = name, rettype = "gb")
+        net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gb')
         raw_data = net_handle.read()
         net_handle.close()
 
-        if raw_data == "\n" :       # Check if the file is empty or not.
-            self._output.addMessage(__file__, 4, "ERETR",
-                                     "Could not retrieve %s." % name)
+        if raw_data == '\n' :       # Check if the file is empty or not.
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve %s.' % name)
             return None
-        #if
-        else :                      # Something is present in the file.
-            result = self.write(raw_data, name, 1)
-            if not result:
+
+        # This is a hack to detect constructed references, the proper way to
+        # do this would be to check the data_file_division attribute of the
+        # parsed GenBank file (it would be 'CON').
+        if '\nCONTIG' in raw_data:
+            try:
+                # Get the length in base pairs
+                length = int(raw_data[:raw_data.index(' bp', 0, 500)].split()[-1])
+            except ValueError, IndexError:
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not retrieve %s.' % name)
                 return None
-            name, GI = result
-            if name :               # Processing went okay.
-                return self._updateDBmd5(raw_data, name, GI)
-            else :                  # Parse error in the GenBank file.
+            if length > config.get('maxDldSize'):
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not retrieve %s.' % name)
                 return None
+            net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gbwithparts')
+            raw_data = net_handle.read()
+            net_handle.close()
+
+        result = self.write(raw_data, name, 1)
+        if not result:
+            return None
+        name, GI = result
+        if name:               # Processing went okay.
+            return self._updateDBmd5(raw_data, name, GI)
+        else:                  # Parse error in the GenBank file.
+            return None
     #fetch
 
     def retrieveslice(self, accno, start, stop, orientation) :
