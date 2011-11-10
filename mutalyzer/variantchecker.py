@@ -256,6 +256,17 @@ def _add_batch_output(O):
     else:
         outputline += "\t"*2
 
+    # Add effects on restriction sites as two columns (created and deleted).
+    # The value for each column is a semicolon-separated list of
+    # comma-separated lists: for each raw variant, a list of restriction
+    # sites.
+    sites_created = []
+    sites_deleted = []
+    for variant in O.getOutput("restrictionSites"):
+        sites_created.append(','.join(variant[0]))
+        sites_deleted.append(','.join(variant[1]))
+    outputline += "%s\t%s\t" % (';'.join(sites_created), ';'.join(sites_deleted))
+
     #Link naar additional info:
     #outputline+="http://localhost/mutalyzer2/redirect?mutationName=%s" %\
     #        "todovariant"

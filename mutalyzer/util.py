@@ -768,7 +768,7 @@ def slow(f):
                and os.environ['MUTALYZER_QUICK_TEST'] == '1':
             return
         else:
-            f(*args, **kwargs)
+            return f(*args, **kwargs)
     return slow_f
 #slow
 
