@@ -419,3 +419,10 @@ class TestVariantchecker():
         check_variant('NG_005990.1:g.1del', self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'NG_005990.1:g.1del')
+
+    def test_no_reference(self):
+        """
+        Variant description without a reference.
+        """
+        check_variant('g.244355733del', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOREF')), 1)

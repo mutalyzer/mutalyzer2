@@ -1478,6 +1478,10 @@ def check_variant(description, output):
     else:
         record_id = parsed_description.RefSeqAcc
 
+    if not record_id:
+        output.addMessage(__file__, 4, 'ENOREF', 'No reference sequence given.')
+        return
+
     gene_symbol = transcript_id = ''
 
     database = Db.Cache()
