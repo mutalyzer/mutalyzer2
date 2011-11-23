@@ -581,8 +581,14 @@ class Converter(object) :
 
         if revc :
             # todo: if var.Arg1 is unicode, this crashes
-            arg1 = reverse_complement(var.Arg1 or "") #imported from Bio.Seq
-            arg2 = reverse_complement(var.Arg2 or "")
+            try:
+                arg1 = str(int(var.Arg1))
+            except ValueError:
+                arg1 = reverse_complement(var.Arg1 or "")
+            try:
+                arg2 = str(int(var.Arg2))
+            except ValueError:
+                arg2 = reverse_complement(var.Arg2 or "")
         #if
         else :
             arg1 = var.Arg1

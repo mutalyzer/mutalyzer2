@@ -50,3 +50,13 @@ class TestConverter():
         assert_equal(genomic, 'NC_000006.11:g.32006291C>T')
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_000500.5:c.92C>T' in coding
+
+    def test_converter_del_length_reverse(self):
+        """
+        Position converter on deletion (denoted by length) on transcripts
+        located on the reverse strand.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000022.10:g.51016285_51017117del123456789', 'list')
+        assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
+        assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
