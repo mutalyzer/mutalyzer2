@@ -29,6 +29,10 @@ from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
 
 
+ENTREZ_MAX_TRIES = 4
+ENTREZ_SLEEP = 1      # in seconds
+
+
 class Retriever(object) :
     """
     Retrieve a record from either the cache or the NCBI.
@@ -247,17 +251,28 @@ class Retriever(object) :
                                     'This is not a valid dbSNP id.')
             return []
 
-        # Query dbSNP for the SNP.
-        try:
-            response = Entrez.efetch(db='SNP', id=id, rettype='flt',
-                                     retmode='xml')
-        except IOError as e:
-            # Could not parse XML.
-            self._output.addMessage(__file__, 4, 'EENTREZ',
-                                    'Error connecting to dbSNP.')
-            self._output.addMessage(__file__, -1, 'INFO',
-                                    'IOError: %s' % str(e))
-            return []
+        # Query dbSNP for the SNP. The following weird construct is to catch
+        # any glitches in our Entrez connections. We try up to ENTREZ_MAX_TRIES
+        # and only then give up.
+        # Todo: maybe also implement this for other Entrez queries?
+        for i in range(ENTREZ_MAX_TRIES - 1):
+            try:
+                response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                                         retmode='xml')
+                break
+            except IOError:
+                time.sleep(ENTREZ_SLEEP)
+        else:
+            try:
+                response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                                         retmode='xml')
+            except IOError as e:
+                # Could not parse XML.
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'Error connecting to dbSNP.')
+                self._output.addMessage(__file__, -1, 'INFO',
+                                        'IOError: %s' % str(e))
+                return []
 
         response_text = response.read()
 
