@@ -12,7 +12,6 @@ from Bio.Seq import Seq
 
 import mutalyzer
 from mutalyzer.util import skip
-from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer import mutator
 
@@ -36,16 +35,13 @@ class TestMutator():
         """
         Initialize test mutator module.
         """
-        self.config = Config()
-        self.output = Output(__file__, self.config.Output)
+        self.output = Output(__file__)
 
     def _mutator(self, sequence):
         """
         Create a Mutator instance for a given sequence.
         """
-        return mutator.Mutator(sequence,
-                               self.config.Mutator,
-                               self.output)
+        return mutator.Mutator(sequence, self.output)
 
     def test_shiftpos_no_change(self):
         """

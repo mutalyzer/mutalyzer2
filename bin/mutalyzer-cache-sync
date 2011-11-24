@@ -20,7 +20,6 @@ This program is intended to be run daily from cron. Example:
 
 import sys
 
-from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
@@ -31,11 +30,10 @@ def cache_sync(remote_wsdl, url_template, days):
     """
     Synchronize the database cache with other Mutalyzer instances.
     """
-    config = Config()
-    output = Output(__file__, config.Output)
-    database = Db.Cache(config.Db)
+    output = Output(__file__)
+    database = Db.Cache()
 
-    sync = CacheSync(config.Retriever, output, database)
+    sync = CacheSync(output, database)
     sync.sync_with_remote(remote_wsdl, url_template, days)
 
 

@@ -12,11 +12,13 @@ The original as well as the mutated string are stored here.
 """
 
 
-from mutalyzer import util
 from Bio import Restriction
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
 from Bio.Seq import reverse_complement
+
+from mutalyzer import util
+from mutalyzer import config
 
 
 class Mutator() :
@@ -28,7 +30,6 @@ class Mutator() :
     'addedRestrictionSites' respectively.
 
     Private variables:
-        - __config           ; Configuration variables of this class.
         - __output           ; The output object.
         - __shift            ; A sorted list of tuples (position, shiftsize)
                                where the modifications in length are stored.
@@ -72,13 +73,11 @@ class Mutator() :
                                      position pos1 to pos2.
     """
 
-    def __init__(self, orig, config, output) :
+    def __init__(self, orig, output) :
         """
         Initialise the class with the original string.
 
         Private variables (altered):
-            - __config           ; Initialised with the configuration
-                                   variables.
             - __output           ; Initialised with the output object.
             - __shift            ; Initialised to the empty list.
             - __restrictionBatch ; Initialised to a default set of
@@ -90,13 +89,9 @@ class Mutator() :
 
         @arg orig:   The original string before mutation
         @type orig: string
-        @arg config: Configuration variables
-        @type config: object
         @arg output: The output object
         @type output: object
         """
-
-        self.__config = config
         self.__output = output
         self.__shift = []
         self.__removed_sites = set()
@@ -214,8 +209,6 @@ class Mutator() :
         we perform the alteration.
 
         Private variables:
-            - __config ; The variables maxvissize, flanksize and flankclipsize
-                         are used in the visualisation.
             - __output ; Visualisation information is added.
 
         Public variables (altered):
@@ -237,8 +230,8 @@ class Mutator() :
         # This part is for visualisation.
         #
 
-        loflank = self.orig[max(pos1 - self.__config.flanksize, 0):pos1]
-        roflank = self.orig[pos2:pos2 + self.__config.flanksize]
+        loflank = self.orig[max(pos1 - config.get('flanksize'), 0):pos1]
+        roflank = self.orig[pos2:pos2 + config.get('flanksize')]
         delPart = self.orig[pos1:pos2]
         #odel = delPart
         #if len(odel) > self.__config.maxvissize :
@@ -249,8 +242,8 @@ class Mutator() :
 
         bp1 = self.shiftpos(pos1)
         bp2 = self.shiftpos(pos2)
-        lmflank = self.mutated[max(bp1 - self.__config.flanksize, 0):bp1]
-        rmflank = self.mutated[bp2:bp2 + self.__config.flanksize]
+        lmflank = self.mutated[max(bp1 - config.get('flanksize'), 0):bp1]
+        rmflank = self.mutated[bp2:bp2 + config.get('flanksize')]
 
         #insvis = ins
         #if len(ins) > self.__config.maxvissize :
@@ -304,10 +297,10 @@ class Mutator() :
         @rtype:  string
         """
 
-        if len(string) > self.__config.maxvissize :
-            return "%s [%ibp] %s" % (string[:self.__config.flankclipsize],
-                len(string) - self.__config.flankclipsize * 2,
-                string[-self.__config.flankclipsize:])
+        if len(string) > config.get('maxvissize'):
+            return "%s [%ibp] %s" % (string[:config.get('flankclipsize')],
+                len(string) - config.get('flankclipsize') * 2,
+                string[-config.get('flankclipsize'):])
         return string
     #visualiseIns
 

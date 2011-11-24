@@ -27,13 +27,14 @@ import types           # UnicodeType
 from cStringIO import StringIO
 
 from mutalyzer import util
+from mutalyzer import config
+
 
 class File() :
     """
     Parse CSV files and spreadsheets.
 
     Private variables:
-        - __config ; Configuration variables.
         - __output ; The Output object.
 
     Special methods:
@@ -53,21 +54,16 @@ class File() :
                                    and sanitize the output.
     """
 
-    def __init__(self, config, output) :
+    def __init__(self, output) :
         """
         Initialise the class.
 
         Private variables (altered):
-            - __config ; Initialised with configuration variables.
             - __output ; Set to the Output object.
 
-        @arg config: Configuration variables
-        @type config: class instance
         @arg output: Output object
         @type output: class instance
         """
-
-        self.__config = config
         self.__output = output #: The Output object
     #__init__
 
@@ -105,9 +101,6 @@ class File() :
         """
         Parse a CSV file.
         The stream is not rewinded after use.
-
-        Private variables:
-            - __config ; The bufSize configuration variables.
 
         @arg handle: A handle to a stream
         @type handle: stream
@@ -167,7 +160,7 @@ class File() :
 
         # I don't think the .seek(0) is needed now we created a new handle
         new_handle.seek(0)
-        buf = new_handle.read(self.__config.bufSize)
+        buf = new_handle.read(config.get('bufSize'))
 
         # Default dialect
         dialect = 'excel'
@@ -270,9 +263,6 @@ class File() :
            - The first and the last element should be non-empty.
            - The first line should be the header defined in the config file.
 
-        Private variables:
-            - __config ; The header configuration variable.
-
         @todo: Add more new style old style logic
         @todo: if not inputl: try to make something out of it
 
@@ -289,7 +279,7 @@ class File() :
         jobl = [(l+1, row) for l, row in enumerate(job)]
 
         #TODO:  Add more new style old style logic
-        if jobl[0][1] == self.__config.header : #Old style NameCheckBatch job
+        if jobl[0][1] == config.get('header') : #Old style NameCheckBatch job
             ret = []
             notthree = []
             emptyfield = []
@@ -374,7 +364,7 @@ class File() :
         err = float(len(errlist))/len(ret)
         if err == 0:
             return (ret, columns)
-        elif err < self.__config.threshold:
+        elif err < config.get('threshold'):
             #allow a 5 (default) percent threshold for errors in batchfiles
             self.__output.addMessage(__file__, 3, "EBPARSE",
                     "There were errors in your batch entry file, they are "
@@ -391,19 +381,14 @@ class File() :
         Get the mime type of a stream by inspecting a fixed number of bytes.
         The stream is rewinded after use.
 
-        Private variables:
-            - __config: The bufSize configuration variables.
-
         @arg handle: A handle to a stream
         @type handle: stream
 
         @return: The mime type of a file
         @rtype: string
         """
-
         handle.seek(0)
-        buf = handle.read(self.__config.bufSize) #: The bufSize configuration variables.
-
+        buf = handle.read(config.get('bufSize')) #: The bufSize configuration variables.
 
         MagicInstance = magic.open(magic.MAGIC_MIME)
         MagicInstance.load()

@@ -475,6 +475,26 @@ class TestWSGI():
                     header='Input\tStatus')
 
     @slow
+    def test_batch_namechecker_restriction_sites(self):
+        """
+        Submit the batch name checker form and see if restriction site effects
+        are added.
+
+        Note that we use the @slow decorator here even though it is already
+        applied to self._batch. The reason is that we use the result from
+        self._batch, which does not exist if @slow checks are disabled.
+        """
+        variants=['AB026906.1:c.274G>T',
+                  'AB026906.1:c.[274G>T;143A>G;15G>T]']
+        results = self._batch('NameChecker',
+                              file='\n'.join(variants),
+                              size=len(variants),
+                              header='Input\tErrors | Messages')
+        assert 'Restriction Sites Created\tRestriction Sites Deleted' in results[0]
+        assert 'CviQI,RsaI\tBccI' in results[1]
+        assert 'CviQI,RsaI;HinP1I,HhaI;SfcI\tBccI;;BpmI,MnlI,BsaXI (2),Hpy188III' in results[2]
+
+    @slow
     def test_batch_syntaxchecker_toobig(self):
         """
         Submit the batch syntax checker with a too big input file.

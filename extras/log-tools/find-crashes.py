@@ -10,11 +10,10 @@ crashed.
 
 
 import os
-from mutalyzer.config import Config
+from mutalyzer import config
 
 
-config = Config()
-handle = open(config.Output.log, 'r')
+handle = open(config.get('log'), 'r')
 
 scanning = False
 line = handle.readline()

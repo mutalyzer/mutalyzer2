@@ -26,6 +26,7 @@ Public classes:
 import time
 
 from mutalyzer import util
+from mutalyzer import config
 from mutalyzer.models import SoapMessage
 
 
@@ -34,7 +35,6 @@ class Output() :
     Provide an output interface for errors, warnings and logging purposes.
 
     Private variables:
-        - __config     ; Configuration variables.
         - __outputdata ; The output dictionary.
         - __messages   ; The messages list.
         - __instance   ; The name of the module that made this object.
@@ -43,10 +43,9 @@ class Output() :
         - __warnings   ; The number of warnings that have been processed.
 
     Special methods:
-        - __init__(instance, config) ; Initialise the class with variables
-                                       from the config file and the calling
-                                       module.
-        - __del__()                  ; Close the logfile and clean up.
+        - __init__(instance) ; Initialise the class with the calling
+                               module.
+        - __del__()          ; Close the logfile and clean up.
 
     Public methods:
         - addMessage(filename, level, code, description) ; Add a message to
@@ -59,13 +58,11 @@ class Output() :
                                     and warnings.
     """
 
-    def __init__(self, instance, config) :
+    def __init__(self, instance):
         """
-        Initialise the class private variables with variables from the
-        config file and the calling module.
+        Initialise the class with the calling module.
 
         Private variables (altered):
-            - __config     ; Configuration variables.
             - __outputdata ; The output dictionary.
             - __messages   ; The messages list.
             - __instance   ; Initialised with the name of the module that
@@ -77,15 +74,11 @@ class Output() :
 
         @arg instance: The filename of the module that created this object
         @type instance: string
-        @arg config: The configuration object
-        @type config: object
         """
-
-        self.__config = config
         self.__outputData = {}
         self.__messages = []
         self.__instance = util.nice_filename(instance)
-        self.__loghandle = open(self.__config.log, "a+")
+        self.__loghandle = open(config.get('log'), "a+")
         self.__errors = 0
         self.__warnings = 0
     #__init__
@@ -120,7 +113,6 @@ class Output() :
         Private variables:
             - __messages  ; The messages list.
             - __instance  ; Module that created the Output object.
-            - __config    ; The variables loglevel and datestring are used.
             - __loghandle ; Handle to the log file.
 
         Private variables (altered):
@@ -145,9 +137,9 @@ class Output() :
 
         # Log the message if the message is important enough, or if it is only
         # meant to be logged (level -1).
-        if level >= self.__config.loglevel or level == -1 :
+        if level >= config.get('loglevel') or level == -1 :
             self.__loghandle.write(time.strftime(
-                self.__config.datestring + ' ') + "%s (%s) %s: %s: %s\n" % (
+                config.get('datestring') + ' ') + "%s (%s) %s: %s: %s\n" % (
                     self.__instance, nice_name, code, message.named_level(),
                     description))
             self.__loghandle.flush()
@@ -160,12 +152,11 @@ class Output() :
 
         Private variables:
             - __messages  ; The messages list.
-            - __config    ; The variable outputlevel is used.
 
         @return: A list of messages
         @rtype: list
         """
-        return filter(lambda m: m.level >= self.__config.outputlevel,
+        return filter(lambda m: m.level >= config.get('outputlevel'),
                       self.__messages)
     #getMessages
 

@@ -6,7 +6,6 @@ Tests for the variantchecker module.
 #import logging; logging.basicConfig()
 from nose.tools import *
 
-from mutalyzer.config import Config
 from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant
 
@@ -19,16 +18,14 @@ class TestVariantchecker():
         """
         Initialize test variantchecker module.
         """
-        self.config = Config()
-        self.output = Output(__file__, self.config.Output)
+        self.output = Output(__file__)
 
     def test_deletion_in_frame(self):
         """
         Simple in-frame deletion should give a simple description on protein
         level.
         """
-        check_variant('AL449423.14(CDKN2A_v001):c.161_163del',
-                      self.config, self.output)
+        check_variant('AL449423.14(CDKN2A_v001):c.161_163del', self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'AL449423.14:g.61937_61939del')
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
@@ -42,8 +39,7 @@ class TestVariantchecker():
         Simple in-frame insertion should give a simple description on protein
         level.
         """
-        check_variant('AL449423.14(CDKN2A_v001):c.161_162insATC',
-                      self.config, self.output)
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162insATC', self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'AL449423.14:g.61938_61939insGAT')
         assert 'AL449423.14(CDKN2A_v001):c.161_162insATC' \
@@ -58,7 +54,7 @@ class TestVariantchecker():
         protein level.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delinsATCCC',
-                      self.config, self.output)
+                      self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'AL449423.14:g.61938_61939delinsGGGAT')
         assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
@@ -73,7 +69,7 @@ class TestVariantchecker():
         protein level, also with the optional deleted sequence argument.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delTGinsATCCC',
-                      self.config, self.output)
+                      self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'AL449423.14:g.61938_61939delinsGGGAT')
         assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
@@ -86,7 +82,7 @@ class TestVariantchecker():
         """
         Just a variant where we should roll.
         """
-        check_variant('NM_003002.2:c.273del', self.config, self.output)
+        check_variant('NM_003002.2:c.273del', self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
@@ -94,7 +90,7 @@ class TestVariantchecker():
         """
         Just a variant where we cannot roll.
         """
-        check_variant('NM_003002.2:c.274del', self.config, self.output)
+        check_variant('NM_003002.2:c.274del', self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert_equal(len(wroll), 0)
 
@@ -102,7 +98,7 @@ class TestVariantchecker():
         """
         Here we can roll but should not, because it is over a splice site.
         """
-        check_variant('NM_000088.3:g.459del', self.config, self.output)
+        check_variant('NM_000088.3:g.459del', self.output)
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         assert len(wrollback) > 0
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
@@ -113,7 +109,7 @@ class TestVariantchecker():
         Here we can roll two positions, but should roll only one because
         otherwise it is over a splice site.
         """
-        check_variant('NM_000088.3:g.494del', self.config, self.output)
+        check_variant('NM_000088.3:g.494del', self.output)
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         assert len(wrollback) > 0
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
@@ -123,7 +119,7 @@ class TestVariantchecker():
         """
         Here we can roll and should, we stay in the same exon.
         """
-        check_variant('NM_000088.3:g.460del', self.config, self.output)
+        check_variant('NM_000088.3:g.460del', self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
@@ -155,7 +151,7 @@ class TestVariantchecker():
         of AL449423.14:g.65471_65472insACT, where only the reverse roll should
         be done.
         """
-        check_variant('AL449423.14:g.65470_65471insTAC', self.config, self.output)
+        check_variant('AL449423.14:g.65470_65471insTAC', self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
@@ -165,7 +161,7 @@ class TestVariantchecker():
         Insertion that rolls on the reverse strand should not use the same
         inserted sequence in descriptions on forward and reverse strands.
         """
-        check_variant('AL449423.14:g.65471_65472insACT', self.config, self.output)
+        check_variant('AL449423.14:g.65471_65472insACT', self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
@@ -175,7 +171,7 @@ class TestVariantchecker():
         Roll warning message should only be shown for currently selected
         strand (forward).
         """
-        check_variant('AL449423.14:g.65470_65471insTAC', self.config, self.output)
+        check_variant('AL449423.14:g.65470_65471insTAC', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 0)
 
@@ -184,7 +180,7 @@ class TestVariantchecker():
         Roll warning message should only be shown for currently selected
         strand (reverse).
         """
-        check_variant('AL449423.14(CDKN2A_v001):c.98_99insGTA', self.config, self.output)
+        check_variant('AL449423.14(CDKN2A_v001):c.98_99insGTA', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 1)
 
@@ -192,7 +188,7 @@ class TestVariantchecker():
         """
         Insertion on CDS start boundary should not be included in CDS.
         """
-        check_variant('NM_000143.3:c.-1_1insCAT', self.config, self.output)
+        check_variant('NM_000143.3:c.-1_1insCAT', self.output)
         assert_equal(self.output.getIndexedOutput("newprotein", 0), None)
         # Todo: Is this a good test?
 
@@ -200,7 +196,7 @@ class TestVariantchecker():
         """
         Insertion after CDS start boundary should be included in CDS.
         """
-        check_variant('NM_000143.3:c.1_2insCAT', self.config, self.output)
+        check_variant('NM_000143.3:c.1_2insCAT', self.output)
         assert_equal(self.output.getIndexedOutput("newprotein", 0), '?')
         # Todo: Is this a good test?
 
@@ -208,8 +204,7 @@ class TestVariantchecker():
         """
         Deletion hitting one splice site should not do a protein prediction.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.632-5_670del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.632-5_670del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert_equal(self.output.getOutput('removedSpliceSites'), [])
         # Todo: For now, the following is how to check if no protein
@@ -220,8 +215,7 @@ class TestVariantchecker():
         """
         Deletion of an entire exon should be possible.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.632-5_681+7del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.632-5_681+7del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
@@ -232,8 +226,7 @@ class TestVariantchecker():
         """
         Deletion of exactly an exon should be possible.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.632_681del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.632_681del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
@@ -249,8 +242,7 @@ class TestVariantchecker():
         NG_012772.1(BRCA2_v001):c.68-7_316+7del is such a variant, since
         positions 68 through 316 are exactly one exon and (316-68+1)/3 = 83.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.68-7_316+7del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.68-7_316+7del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
@@ -262,8 +254,7 @@ class TestVariantchecker():
         """
         Deletion of two entire exons should be possible.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.632-5_793+7del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.632-5_793+7del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert_equal(self.output.getOutput('removedSpliceSites'), [4])
         # Todo: For now, the following is how to check if protein
@@ -275,8 +266,7 @@ class TestVariantchecker():
         Deletion of an entire intron should be possible (fusion of remaining
         exonic parts).
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.622_674del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.622_674del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
@@ -288,8 +278,7 @@ class TestVariantchecker():
         Deletion of exactly an intron should be possible (fusion of flanking
         exons).
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.681+1_682-1del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.681+1_682-1del', self.output)
         assert_equal(self.output.getMessagesWithErrorCode('WOVERSPLICE'), [])
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Note: The protein prediction is done, but 'newprotein' is not set
@@ -304,8 +293,7 @@ class TestVariantchecker():
         Deletion of an entire intron should be possible (fusion of remaining
         exonic parts).
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.622_672del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.622_672del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
@@ -317,8 +305,7 @@ class TestVariantchecker():
         """
         Deletion of an entire exon with unknown offsets should be possible.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.632-?_681+?del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.632-?_681+?del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
@@ -343,8 +330,7 @@ class TestVariantchecker():
         NG_012772.1(BRCA2_v001):c.68-?_316+?del is such a variant, since
         positions 68 through 316 are exactly one exon and (316-68+1)/3 = 83.
         """
-        check_variant('NG_012772.1(BRCA2_v001):c.68-?_316+?del',
-                      self.config, self.output)
+        check_variant('NG_012772.1(BRCA2_v001):c.68-?_316+?del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
@@ -364,7 +350,7 @@ class TestVariantchecker():
         variant with exact positioning should be possible.
         """
         check_variant('NG_012772.1(BRCA2_v001):c.[632-?_681+?del;681+4del]',
-                      self.config, self.output)
+                      self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
@@ -384,7 +370,7 @@ class TestVariantchecker():
         also on the reverse strand.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.151-?_457+?del',
-                      self.config, self.output)
+                      self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
@@ -405,7 +391,7 @@ class TestVariantchecker():
         of the flanking exons (as would happen using the mechanism for genomic
         references).
         """
-        check_variant('NM_018723.3:c.758_890del', self.config, self.output)
+        check_variant('NM_018723.3:c.758_890del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
@@ -416,21 +402,36 @@ class TestVariantchecker():
         """
         Insertion of a range is not implemented yet.
         """
-        check_variant('AB026906.1:c.274_275ins262_268', self.config, self.output)
+        check_variant('AB026906.1:c.274_275ins262_268', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
     def test_delins_range(self):
         """
         Deletion/insertion of a range is not implemented yet.
         """
-        check_variant('AB026906.1:c.274delins262_268', self.config, self.output)
+        check_variant('AB026906.1:c.274delins262_268', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    def test_contig_reference(self):
+        """
+        Variant description on a CONTIG RefSeq reference.
+        """
+        check_variant('NG_005990.1:g.1del', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_005990.1:g.1del')
+
+    def test_no_reference(self):
+        """
+        Variant description without a reference.
+        """
+        check_variant('g.244355733del', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOREF')), 1)
 
     def test_chromosomal_positions(self):
         """
         Variants on transcripts in c. notation should have chromosomal positions
         defined.
         """
-        check_variant('NM_003002.2:c.274G>T', self.config, self.output)
+        check_variant('NM_003002.2:c.274G>T', self.output)
         assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
                      ('chr11', [('274G>T', (111959695, 111959695))]))

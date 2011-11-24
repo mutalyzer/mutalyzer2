@@ -23,7 +23,7 @@ import signal
 import time
 import traceback
 
-from mutalyzer.config import Config
+from mutalyzer import config
 from mutalyzer.Db import Batch
 from mutalyzer.Scheduler import Scheduler
 
@@ -40,10 +40,7 @@ def daemonize():
     Write PID file when it is not locked and daemonize a loop processing
     scheduled batch jobs.
     """
-    config = Config()
-    batch_config = config.Batch
-
-    pidfile = os.path.realpath(batch_config.PIDfile)
+    pidfile = os.path.realpath(config.get('PIDfile'))
 
     lockfile = pidlockfile.TimeoutPIDLockFile(pidfile, acquire_timeout=1,
                                               threaded=False)
@@ -68,10 +65,10 @@ def daemonize():
 
     with context:
         # Note that any opened files are now closed. This is not a problem for
-        # the Config instance, since it does not read its file again after
+        # the config module, since it does not read its file again after
         # initialisation.
-        database = Batch(config.Db)
-        scheduler = Scheduler(config.Scheduler, database)
+        database = Batch()
+        scheduler = Scheduler(database)
 
         def stop_scheduler(signum, stack_frame):
             scheduler.stop()

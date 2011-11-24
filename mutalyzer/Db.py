@@ -25,6 +25,7 @@ import warnings
 import MySQLdb
 
 from mutalyzer import util
+from mutalyzer import config
 
 
 #
@@ -115,7 +116,7 @@ class Mapping(Db) :
     Database functions for mapping of transcripts and genes.
 
     Special methods:
-        - __init__(build, config) ; Initialise the class.
+        - __init__(build) ; Initialise the class.
 
     Public methods:
         - get_protAcc(mrnaAcc)      ; Query the database for a protein ID.
@@ -135,18 +136,15 @@ class Mapping(Db) :
         - Mapping; Accumulated mapping info.
     """
 
-    def __init__(self, build, config) :
+    def __init__(self, build) :
         """
         Initialise the Db parent class. Use the local database for a certain
         build.
 
         @arg build: The version of the mapping database
         @type build: string
-        @arg config: Configuration variables
-        @type config: class instance
         """
-
-        Db.__init__(self, build, config.LocalMySQLuser, config.LocalMySQLhost)
+        Db.__init__(self, build, config.get('LocalMySQLuser'), config.get('LocalMySQLhost'))
     #__init__
 
     def get_NM_version(self, mrnaAcc) :
@@ -660,7 +658,7 @@ class Cache(Db) :
     Database functions for cache administration.
 
     Special methods:
-        - __init__(config) ; Initialise the class.
+        - __init__() ; Initialise the class.
 
     Public methods:
         - insertGB(accNo, GI, fileHash, ChrAccVer, ChrStart, ChrStop,
@@ -683,16 +681,12 @@ class Cache(Db) :
         - GBInfo ; Information about cached and uploaded GenBank files.
     """
 
-    def __init__(self, config) :
+    def __init__(self) :
         """
         Initialise the Db parent class. Use the internalDb.
-
-        @arg config: Configuration variables
-        @type config: class instance
         """
-
-        Db.__init__(self, config.internalDb, config.LocalMySQLuser,
-                    config.LocalMySQLhost)
+        Db.__init__(self, config.get('internalDb'),
+                    config.get('LocalMySQLuser'), config.get('LocalMySQLhost'))
     #__init__
 
     def insertGB(self, accNo, GI, fileHash, ChrAccVer, ChrStart,
@@ -1099,7 +1093,7 @@ class Batch(Db) :
     Database functions for the batch checker.
 
     Special methods:
-        - __init__(config) ; Initialise the class.
+        - __init__() ; Initialise the class.
 
     Public methods:
         - isJobListEmpty()     ; See if there are active jobs.
@@ -1121,16 +1115,13 @@ class Batch(Db) :
         - BatchQueue ; Requests.
     """
 
-    def __init__(self, config) :
+    def __init__(self) :
         """
         Initialise the Db parent class. Use the internalDb.
-
-        @arg config: Configuration variables
-        @type config: class instance
         """
-
-        Db.__init__(self, config.internalDb, config.LocalMySQLuser,
-                    config.LocalMySQLhost)
+        Db.__init__(self, config.get('internalDb'),
+                    config.get('LocalMySQLuser'),
+                    config.get('LocalMySQLhost'))
     #__init__
 
     def isJobListEmpty(self) :

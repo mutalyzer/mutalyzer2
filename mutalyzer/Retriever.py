@@ -24,24 +24,22 @@ from xml.dom import DOMException, minidom
 from xml.parsers import expat
 
 from mutalyzer import util
+from mutalyzer import config
 from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
+
+
+ENTREZ_MAX_TRIES = 4
+ENTREZ_SLEEP = 1      # in seconds
 
 
 class Retriever(object) :
     """
     Retrieve a record from either the cache or the NCBI.
 
-    Inherited variables from Db.Output.Config:
-        - email     ; The email address which we give to the NCBI.
-        - cache     ; The directory where the records are stored.
-        - cachesize ; Maximum size of the cache.
-
     Special methods:
-        - __init__(config, output, database) ; Use variables from the
+        - __init__(output, database) ; Use variables from the
         configuration file to initialise the class private variables.
-
-
 
     Private methods:
         - _foldersize(folder) ; Return the size of a folder.
@@ -67,29 +65,21 @@ class Retriever(object) :
         - LogMsg(filename, message)     ; Log a message.
     """
 
-    def __init__(self, config, output, database) :
+    def __init__(self, output, database) :
         """
         Use variables from the configuration file for some simple
         settings. Make the cache directory if it does not exist yet.
 
-        Inherited variables from Db.Output.Config:
-            - email     ; The email address which we give to the NCBI.
-            - cache     ; The directory where the records are stored.
-
-        @arg config:
-        @type config:
         @arg output:
         @type output:
         @arg database:
         @type database:
         """
-
-        self._config = config
         self._output = output
         self._database = database
-        if not os.path.isdir(self._config.cache) :
-            os.mkdir(self._config.cache)
-        Entrez.email = self._config.email
+        if not os.path.isdir(config.get('cache')) :
+            os.mkdir(config.get('cache'))
+        Entrez.email = config.get('email')
         self.fileType = None
     #__init__
 
@@ -119,18 +109,13 @@ class Retriever(object) :
         First, the cache checked for its size, if it exceeds the maximum
         size the ``oldest'' files are deleted. Note that accessing a file
         makes it ``new''.
-
-        Inherited variables from Db.Output.Config:
-            - cache     ; Directory under scrutiny.
-            - cachesize ; Maximum size of the cache.
         """
-
-        if self._foldersize(self._config.cache) < self._config.cachesize:
+        if self._foldersize(config.get('cache')) < config.get('cachesize'):
             return
 
         # Build a list of files sorted by access time.
         cachelist = []
-        for (path, dirs, files) in os.walk(self._config.cache) :
+        for (path, dirs, files) in os.walk(config.get('cache')) :
             for filename in files :
                 filepath = os.path.join(path, filename)
                 cachelist.append(
@@ -141,7 +126,7 @@ class Retriever(object) :
         # small enough (or until the list is exhausted).
         for i in range(0, len(cachelist)) :
             os.remove(cachelist[i][1])
-            if self._foldersize(self._config.cache) < self._config.cachesize:
+            if self._foldersize(config.get('cache')) < config.get('cachesize'):
                 break;
         #for
     #_cleancache
@@ -150,17 +135,13 @@ class Retriever(object) :
         """
         Convert an accession number to a filename.
 
-        Inherited variables from Db.Output.Config:
-            - cache     ; Name of the cache directory.
-
         @arg name: The accession number
         @type name: string
 
         @return: A filename
         @rtype: string
         """
-
-        return self._config.cache + '/' + name + "." + self.fileType + ".bz2"
+        return config.get('cache') + '/' + name + "." + self.fileType + ".bz2"
     #_nametofile
 
     def _write(self, raw_data, filename) :
@@ -270,17 +251,28 @@ class Retriever(object) :
                                     'This is not a valid dbSNP id.')
             return []
 
-        # Query dbSNP for the SNP.
-        try:
-            response = Entrez.efetch(db='SNP', id=id, rettype='flt',
-                                     retmode='xml')
-        except IOError as e:
-            # Could not parse XML.
-            self._output.addMessage(__file__, 4, 'EENTREZ',
-                                    'Error connecting to dbSNP.')
-            self._output.addMessage(__file__, -1, 'INFO',
-                                    'IOError: %s' % str(e))
-            return []
+        # Query dbSNP for the SNP. The following weird construct is to catch
+        # any glitches in our Entrez connections. We try up to ENTREZ_MAX_TRIES
+        # and only then give up.
+        # Todo: maybe also implement this for other Entrez queries?
+        for i in range(ENTREZ_MAX_TRIES - 1):
+            try:
+                response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                                         retmode='xml')
+                break
+            except IOError:
+                time.sleep(ENTREZ_SLEEP)
+        else:
+            try:
+                response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                                         retmode='xml')
+            except IOError as e:
+                # Could not parse XML.
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'Error connecting to dbSNP.')
+                self._output.addMessage(__file__, -1, 'INFO',
+                                        'IOError: %s' % str(e))
+                return []
 
         response_text = response.read()
 
@@ -316,14 +308,15 @@ class Retriever(object) :
             if message.find('cannot get document summary') != -1:
                 # Entrez does not have this rs ID.
                 self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'ID rs%s could be found in dbSNP.' % id)
+                                        'ID rs%s could not be found in dbSNP.' \
+                                        % id)
             else:
                 # Something else was wrong (print {message} to see more).
                 self._output.addMessage(__file__, 4, 'EENTREZ',
                                         'Unkown dbSNP error. Got no result ' \
                                         'from dbSNP.')
                 self._output.addMessage(__file__, -1, 'INFO',
-                                        'Message from dbSNP: %s'  % message)
+                                        'Message from dbSNP: %s' % message)
             return []
 
         snps = []
@@ -339,13 +332,12 @@ class GenBankRetriever(Retriever):
     """
     """
 
-    def __init__(self, config, output, database):
-        # TODO documentation
+    def __init__(self, output, database):
         """
+        @todo: Documentation.
         """
-
         # Recall init of parent
-        Retriever.__init__(self, config, output, database)
+        Retriever.__init__(self, output, database)
         self.fileType = "gb"
         # Child specific init
     #__init__
@@ -429,28 +421,45 @@ class GenBankRetriever(Retriever):
     #write
 
     def fetch(self, name) :
-        #TODO documentation
         """
+        Todo: Documentation.
         """
-
-        net_handle = Entrez.efetch(db = "nucleotide", id = name, rettype = "gb")
+        net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gb')
         raw_data = net_handle.read()
         net_handle.close()
 
-        if raw_data == "\n" :       # Check if the file is empty or not.
-            self._output.addMessage(__file__, 4, "ERETR",
-                                     "Could not retrieve %s." % name)
+        if raw_data == '\n' :       # Check if the file is empty or not.
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve %s.' % name)
             return None
-        #if
-        else :                      # Something is present in the file.
-            result = self.write(raw_data, name, 1)
-            if not result:
+
+        # This is a hack to detect constructed references, the proper way to
+        # do this would be to check the data_file_division attribute of the
+        # parsed GenBank file (it would be 'CON').
+        if '\nCONTIG' in raw_data:
+            try:
+                # Get the length in base pairs
+                length = int(raw_data[:raw_data.index(' bp', 0, 500)].split()[-1])
+            except ValueError, IndexError:
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not retrieve %s.' % name)
                 return None
-            name, GI = result
-            if name :               # Processing went okay.
-                return self._updateDBmd5(raw_data, name, GI)
-            else :                  # Parse error in the GenBank file.
+            if length > config.get('maxDldSize'):
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not retrieve %s.' % name)
                 return None
+            net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gbwithparts')
+            raw_data = net_handle.read()
+            net_handle.close()
+
+        result = self.write(raw_data, name, 1)
+        if not result:
+            return None
+        name, GI = result
+        if name:               # Processing went okay.
+            return self._updateDBmd5(raw_data, name, GI)
+        else:                  # Parse error in the GenBank file.
+            return None
     #fetch
 
     def retrieveslice(self, accno, start, stop, orientation) :
@@ -465,9 +474,6 @@ class GenBankRetriever(Retriever):
         make a new UD number.
         The content of the slice is placed in the cache with the UD number
         as filename.
-
-        Inherited variables from Db.Output.Config:
-            - maxDldSize ; Maximum size of the slice.
 
         @arg accno: The accession number of the chromosome
         @type accno: string
@@ -490,7 +496,7 @@ class GenBankRetriever(Retriever):
             return None
 
         # The slice can not be too big.
-        if stop - start > self._config.maxDldSize :
+        if stop - start > config.get('maxDldSize'):
             return None
 
         # Check whether we have seen this slice before.
@@ -610,23 +616,18 @@ class GenBankRetriever(Retriever):
         If the downloaded file is recognised by its hash, the old UD number
         is used.
 
-        Inherited variables from Db.Output.Config:
-            - maxDldSize ; Maximum size of the file.
-            - minDldSize ; Minimum size of the file.
-
         @arg url: Location of a GenBank record
         @type url: string
 
         @return: UD or None
         @rtype: string
         """
-
         handle = urllib2.urlopen(url)
         info = handle.info()
         if info["Content-Type"] == "text/plain" :
             length = int(info["Content-Length"])
-            if length > self._config.minDldSize and \
-               length < self._config.maxDldSize :
+            if length > config.get('minDldSize') and \
+               length < config.get('maxDldSize'):
                 raw_data = handle.read()
                 md5sum = self._calcHash(raw_data)
                 UD = self._database.getGBFromHash(md5sum)
@@ -756,22 +757,19 @@ class LRGRetriever(Retriever):
                                    the cache and return the record.
     """
 
-    def __init__(self, config, output, database):
+    def __init__(self, output, database):
         #TODO documentation
         """
         Initialize the class.
 
         @todo: documentation
-        @arg  config:
-        @type  config:
         @arg  output:
         @type  output:
         @arg  database:
         @type  database:
         """
-
         # Recall init of parent
-        Retriever.__init__(self, config, output, database)
+        Retriever.__init__(self, output, database)
         self.fileType = "xml"
         # Child specific init
     #__init__
@@ -815,9 +813,6 @@ class LRGRetriever(Retriever):
         grab the file from the confirmed section, if this fails, get it
         from the pending section.
 
-        Inherited variables from Config.Retriever
-            - lrgURL  ; The base url from where LRG files are fetched
-
         @arg name: The name of the LRG file to fetch
         @type name: string
 
@@ -825,7 +820,7 @@ class LRGRetriever(Retriever):
         @rtype: string
         """
 
-        prefix = self._config.lrgURL
+        prefix = config.get('lrgURL')
         url        = prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
 
@@ -849,10 +844,6 @@ class LRGRetriever(Retriever):
         """
         Download an LRG record from an URL.
 
-        Inherited variables from Db.Output.Config:
-            - maxDldSize  ; Maximum size of the file.
-            - minDldSize  ; Minimum size of the file.
-
         @arg url: Location of the LRG record
         @type url: string
 
@@ -872,7 +863,7 @@ class LRGRetriever(Retriever):
         if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
 
             length = int(info["Content-Length"])
-            if self._config.minDldSize < length < self._config.maxDldSize:
+            if config.get('minDldSize') < length < config.get('maxDldSize'):
                 raw_data = handle.read()
                 handle.close()
 

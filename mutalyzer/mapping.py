@@ -41,22 +41,19 @@ class Converter(object) :
     @todo: Refactor anything using {mutalyzer.models} into the {webservice}
     module.
     """
-    def __init__(self, build, C, O) :
+    def __init__(self, build, O) :
         """
         Initialise the class.
 
         @arg build: the genome build version of the organism (e.g. hg19 for
         human genome build version 19)
         @type build: string
-        @arg C: crossmapper object
-        @type C: object
         @arg O: output object
         @type O: object
         """
         self.build = None
         self.__output = O
-        self.__config = C
-        self.__database = Db.Mapping(build, C.Db)
+        self.__database = Db.Mapping(build)
 
         # Populated arguments
         self.parseTree = None
@@ -616,8 +613,14 @@ class Converter(object) :
 
         if revc :
             # todo: if var.Arg1 is unicode, this crashes
-            arg1 = reverse_complement(var.Arg1 or "") #imported from Bio.Seq
-            arg2 = reverse_complement(var.Arg2 or "")
+            try:
+                arg1 = str(int(var.Arg1))
+            except ValueError:
+                arg1 = reverse_complement(var.Arg1 or "")
+            try:
+                arg2 = str(int(var.Arg2))
+            except ValueError:
+                arg2 = reverse_complement(var.Arg2 or "")
         #if
         else :
             arg1 = var.Arg1
@@ -641,17 +644,14 @@ class Updater(object):
     information into the 'MappingTemp' table. The {merge} method merges this
     table into the real 'Mapping' table.
     """
-    def __init__(self, build, config):
+    def __init__(self, build):
         """
         @arg build: Human genome build (or database name), i.e. 'hg18' or
             'hg19'.
         @type build: string
-        @arg config: A configuration object.
-        @type config: mutalyzer.config.Config
         """
         self.build = build
-        self.config = config
-        self.db = Db.Mapping(build, config.Db)
+        self.db = Db.Mapping(build)
     #__init__
 
     def load(self, *args, **kwargs):
@@ -681,7 +681,7 @@ class NCBIUpdater(Updater):
 
     Example usage:
 
-        >>> updater = NCBIUpdater('hg19', mutalyzer.config.Config())
+        >>> updater = NCBIUpdater('hg19')
         >>> updater.load('/tmp/seq_gene.md', 'GRCh37.p2-Primary Assembly')
         >>> updater.merge()
 
@@ -691,16 +691,14 @@ class NCBIUpdater(Updater):
                'feature_name', 'feature_id', 'feature_type', 'group_label',
                'transcript', 'evidence_code']
 
-    def __init__(self, build, config):
+    def __init__(self, build):
         """
         @arg build: Human genome build (or database name), i.e. 'hg18' or
             'hg19'.
         @type build: string
-        @arg config: A configuration object.
-        @type config: mutalyzer.config.Config
         """
         self.exon_backlog = {}
-        super(NCBIUpdater, self).__init__(build, config)
+        super(NCBIUpdater, self).__init__(build)
     #__init__
 
     def load(self, mapping_file, assembly):
