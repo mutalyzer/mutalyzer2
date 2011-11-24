@@ -426,3 +426,12 @@ class TestVariantchecker():
         """
         check_variant('g.244355733del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOREF')), 1)
+
+    def test_chromosomal_positions(self):
+        """
+        Variants on transcripts in c. notation should have chromosomal positions
+        defined.
+        """
+        check_variant('NM_003002.2:c.274G>T', self.output)
+        assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
+                     ('chr11', '+', [('274G>T', (111959695, 111959695))]))

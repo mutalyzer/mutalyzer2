@@ -20,6 +20,7 @@ import web
 from nose.tools import *
 from webtest import TestApp
 import logging
+import urllib
 
 
 import mutalyzer
@@ -201,6 +202,18 @@ class TestWSGI():
                       'Raw variant 1: deletion of 1',
                       '<html>',
                       '</html>')
+
+    def test_check_browser_link(self):
+        """
+        Submit the name checker form with a coding variant on a transcript.
+        Should include link to UCSC Genome Browser.
+        """
+        r = self.app.get('/check')
+        form = r.forms[0]
+        form['mutationName'] = 'NM_003002.2:c.274G>T'
+        r = form.submit()
+        bed_track = urllib.quote(r.environ['wsgi.url_scheme'] + '://' + r.environ['HTTP_HOST'] + '/bed?variant=' + urllib.quote('NM_003002.2:c.274G>T'))
+        r.mustcontain('<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr11:111959685-111959705&amp;hgt.customText=%s"><br>View original variant in UCSC Genome Browser</a>' % bed_track)
 
     def test_checkforward(self):
         """
@@ -707,3 +720,20 @@ facilisi."""
         Test if non-existing reference files gives a 404 on a HEAD request.
         """
         r = self.app.head('/Reference/AB026906.78.gb', status=404)
+
+    def test_bed(self):
+        """
+        BED track for variant.
+        """
+        r = self.app.get('/bed?variant=NM_003002.2%3Ac.274G%3ET')
+        assert_equal(r.content_type, 'text/plain')
+        r.mustcontain('\t'.join(['chr11', '111959694', '111959695', '274G>T', '', '+']))
+
+    def test_bed_reverse(self):
+        """
+        BED track for variant on reverse strand.
+        """
+        r = self.app.get('/bed?variant=NM_000132.3%3Ac.%5B4374A%3ET%3B4380_4381del%5D')
+        assert_equal(r.content_type, 'text/plain')
+        r.mustcontain('\t'.join(['chrX', '154157690', '154157691', '4374A>T', '', '-']))
+        r.mustcontain('\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '', '-']))

@@ -443,6 +443,50 @@ class Converter(object) :
         return "%s:%s" % (chromAcc, var_in_g)
     #c2chrom
 
+    def chromosomal_positions(self, positions, reference, version=None):
+        """
+        Convert c. positions to chromosomal positions.
+
+        @arg positions: Positions in c. notation to convert.
+        @type positions: list
+        @arg reference: Transcript reference.
+        @type reference: string
+        @kwarg version: Transcript reference version. If omitted, '0' is
+            assumed.
+        @type version: string
+
+        @return: Chromosome name, orientation (+ or -), and converted
+            positions.
+        @rtype: tuple(string, string, list)
+
+        This only works for positions on transcript references in c. notation.
+        """
+        if not version:
+            version = 0
+        version = int(version)
+
+        versions = self.__database.get_NM_version(reference)
+
+        if version not in versions:
+            return None
+
+        values = self.__database.getAllFields(reference, version)
+        self._FieldsFromValues(values)
+
+        mapper = self.makeCrossmap()
+        if not mapper:
+            return None
+
+        chromosomal_positions = []
+
+        for position in positions:
+            main = mapper.main2int(position.MainSgn +  position.Main)
+            offset = mapper.offset2int(position.OffSgn +  position.Offset)
+            chromosomal_positions.append(mapper.x2g(main, offset))
+
+        return self.dbFields['chromosome'], self.dbFields['orientation'], chromosomal_positions
+    #chromosomal_positions
+
     def correctChrVariant(self, variant) :
         """
         @arg variant:

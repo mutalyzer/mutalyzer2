@@ -22,6 +22,7 @@ from Bio.Alphabet import IUPAC
 from mutalyzer import util
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
+from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Db
@@ -911,6 +912,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     @raise _RawVariantError: Cannot process this raw variant.
     @raise _VariantError: Cannot further process the entire variant.
     """
+    variant, original_description = variant.RawVar, variant[-1]
+
     # {argument} may be a number, or a subsequence of the reference.
     # {sequence} is the variant subsequence.
     argument = variant.Arg1
@@ -990,6 +993,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 # Coding positioning.
                 first, last = _coding_to_genomic(first_location, last_location,
                                                  transcript, output)
+                output.addOutput('rawVariantsCoding',
+                                 (original_description, first_location, last_location))
             else:
                 # Genomic positioning.
                 first, last = _genomic_to_genomic(first_location, last_location)
@@ -1424,17 +1429,17 @@ def process_variant(mutator, description, record, output):
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
             try:
-                process_raw_variant(mutator, var.RawVar, record, transcript,
+                process_raw_variant(mutator, var, record, transcript,
                                     output)
             except _RawVariantError:
                 #output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
                 #                  'Ignoring raw variant "%s".' % var[0])
                 output.addMessage(__file__, 1, 'IRAWVARIANTERROR',
                                   'Aborted variant check due to error in ' \
-                                  'raw variant "%s".' % var[0])
+                                  'raw variant "%s".' % var[-1])
                 raise
     else:
-        process_raw_variant(mutator, description.RawVar, record,
+        process_raw_variant(mutator, description, record,
                             transcript, output)
 
     # Add transcript-specific variant information.
@@ -1508,6 +1513,8 @@ def check_variant(description, output):
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
 
+    output.addOutput('organism', retrieved_record.organism)
+
     output.addOutput('reference', record_id)
 
     # Note: geneSymbol[0] is used as a filter for batch runs.
@@ -1554,6 +1561,28 @@ def check_variant(description, output):
 
     output.addOutput('original', str(mutator.orig))
     output.addOutput('mutated', str(mutator.mutated))
+
+    # Chromosomal region (only for GenBank human transcript references).
+    # This is still quite ugly code, and should be cleaned up once we have
+    # a refactored mapping module.
+    if retrieved_record.organism == 'Homo sapiens' \
+           and parsed_description.RefSeqAcc \
+           and parsed_description.RefType == 'c':
+        raw_variants = output.getOutput('rawVariantsCoding')
+        # Example value: [('29+4T>C', 29+4, 29+4), ('230_233del', 230, 233)]
+        if raw_variants:
+            locations = [pos
+                         for descr, first, last in raw_variants
+                         for pos in (first, last)]
+            converter = Converter('hg19', output)
+            chromosomal_positions = converter.chromosomal_positions(
+                locations, parsed_description.RefSeqAcc, parsed_description.Version)
+            if chromosomal_positions:
+                output.addOutput('rawVariantsChromosomal',
+                                 (chromosomal_positions[0], chromosomal_positions[1],
+                                  zip([descr for descr, first, last in raw_variants],
+                                      util.grouper(chromosomal_positions[2]))))
+                # Example value: ('chr12', [('29+4T>C', (2323, 2323)), ('230_233del', (5342, 5345))])
 
     # Protein.
     for gene in record.record.geneList:

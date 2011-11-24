@@ -5,6 +5,7 @@ General Mutalyzer website interface.
 
 WEBSERVICE_LOCATION = '/services'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
+GENOME_BROWSER_URL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position={chromosome}:{start}-{stop}&hgt.customText={bed_file}'
 
 
 # WSGI applications should never print anything to stdout. We redirect to
@@ -64,6 +65,7 @@ urls = (
     '/Variant_info',        'VariantInfo',
     '/getGS',               'GetGS',
     '/check',               'Check',
+    '/bed',                 'Bed',
     '/syntaxCheck',         'SyntaxCheck',
     '/checkForward',        'CheckForward',
     '/batch([a-zA-Z]+)?',   'BatchChecker',
@@ -719,6 +721,19 @@ class Check:
                 link = urllib.quote(description)
             return description, link
 
+        # Create a link to the UCSC Genome Browser
+        browser_link = None
+        raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
+        if raw_variants:
+            positions = [pos
+                         for descr, (first, last) in raw_variants[2]
+                         for pos in (first, last)]
+            bed_url = web.ctx.homedomain + web.ctx.homepath + '/bed?variant=' + urllib.quote(name)
+            browser_link = GENOME_BROWSER_URL.format(chromosome=raw_variants[0],
+                                                     start=min(positions) - 10,
+                                                     stop=max(positions) + 10,
+                                                     bed_file=urllib.quote(bed_url))
+
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
@@ -746,11 +761,60 @@ class Check:
             'cdsStop_c'          : output.getIndexedOutput('cdsStop_c', 0),
             'restrictionSites'   : output.getOutput('restrictionSites'),
             'legends'            : output.getOutput('legends'),
-            'reference'          : reference
+            'reference'          : reference,
+            'browserLink'        : browser_link
         }
 
         return render.check(args, standalone=not interactive)
 #Check
+
+
+class Bed:
+    """
+    Create BED track.
+    """
+    def GET(self):
+        """
+        Create a BED track for the given variant, listing the positioning of
+        its raw variants. E.g. for use in the UCSC Genome Browser.
+
+        Parameters:
+        - mutationName: Variant to create BED track for.
+
+        This basically just runs the variant checker and extracts the raw
+        variants with positions.
+        """
+        web.header('Content-Type', 'text/plain')
+
+        i = web.input(variant=None)
+        variant = i.variant
+
+        if not variant:
+            web.ctx.status = '404 Not Found'
+            return 'Sorry, we have not BED track for this variant.'
+
+        output = Output(__file__)
+
+        variantchecker.check_variant(str(variant), output)
+
+        raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
+        if not raw_variants:
+            web.ctx.status = '404 Not Found'
+            return 'Sorry, we have not BED track for this variant.'
+
+        fields = {'name':        'Mutalyzer',
+                  'description': 'Mutalyzer track for ' + variant,
+                  'visibility':  'pack',
+                  'db':          'hg19',
+                  'url':         web.ctx.homedomain + web.ctx.homepath + '/checkForward?mutationName=' + urllib.quote(variant),
+                  'color':       '255,0,0'}
+        bed = ' '.join(['track'] + ['%s="%s"' % field for field in fields.items()]) + '\n'
+        for description, positions in raw_variants[2]:
+            bed += '\t'.join([raw_variants[0],
+                              str(min(positions) - 1), str(max(positions)),
+                              description, '', raw_variants[1]]) + '\n'
+        return bed
+#Bed
 
 
 class CheckForward:
