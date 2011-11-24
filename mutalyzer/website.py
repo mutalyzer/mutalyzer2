@@ -5,6 +5,7 @@ General Mutalyzer website interface.
 
 WEBSERVICE_LOCATION = '/services'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
+GENOME_BROWSER_URL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position={chromosome}:{start}-{stop}&hgt.customText={bed_file}'
 
 
 # WSGI applications should never print anything to stdout. We redirect to
@@ -724,11 +725,14 @@ class Check:
         browser_link = None
         raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
         if raw_variants:
-            positions = [position for description, (first, last) in raw_variants[1] for position in (first, last)]
+            positions = [pos
+                         for descr, (first, last) in raw_variants[1]
+                         for pos in (first, last)]
             bed_url = web.ctx.homedomain + web.ctx.homepath + '/bed?variant=' + urllib.quote(name)
-            #bed_url = 'https://mutalyzer.nl/base/test.bed'
-            browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i&hgt.customText=%s' \
-                           % (raw_variants[0], min(positions) - 10, max(positions) + 10, urllib.quote(bed_url))
+            browser_link = GENOME_BROWSER_URL.format(chromosome=raw_variants[0],
+                                                     start=min(positions) - 10,
+                                                     stop=max(positions) + 10,
+                                                     bed_file=urllib.quote(bed_url))
 
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
@@ -791,20 +795,16 @@ class Bed:
             web.ctx.status = '404 Not Found'
             return 'Sorry, we have not BED track for this variant.'
 
-        output = Output(__file__, config.Output)
+        output = Output(__file__)
 
-        variantchecker.check_variant(str(variant), config, output)
+        variantchecker.check_variant(str(variant), output)
 
         raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
         if not raw_variants:
             web.ctx.status = '404 Not Found'
             return 'Sorry, we have not BED track for this variant.'
 
-        #positions = [position for description, (first, last) in raw_variants[1] for position in (first, last)]
-        #browser_link = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=%s:%i-%i&hgt.customText=https://mutalyzer.nl/base/test.bed' \
-        # % (raw_variants[0], min(positions) - 10, max(positions) + 10)
-
-        fields = {'name':        'Mutalyzer', # variant
+        fields = {'name':        'Mutalyzer',
                   'description': 'Mutalyzer track for ' + variant,
                   'visibility':  'pack',
                   'db':          'hg19',
@@ -812,7 +812,8 @@ class Bed:
                   'color':       '255,0,0'}
         bed = ' '.join(['track'] + ['%s="%s"' % field for field in fields.items()]) + '\n'
         for description, positions in raw_variants[1]:
-            bed += '\t'.join([raw_variants[0], str(min(positions) - 1), str(max(positions)), description]) + '\n'
+            bed += '\t'.join([raw_variants[0], str(min(positions) - 1),
+                              str(max(positions)), description]) + '\n'
         return bed
 #Bed
 

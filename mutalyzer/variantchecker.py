@@ -1562,21 +1562,27 @@ def check_variant(description, output):
     output.addOutput('original', str(mutator.orig))
     output.addOutput('mutated', str(mutator.mutated))
 
-    # Chromosomal region (only for GenBank human transcript references)
+    # Chromosomal region (only for GenBank human transcript references).
+    # This is still quite ugly code, and should be cleaned up once we have
+    # a refactored mapping module.
     if retrieved_record.organism == 'Homo sapiens' \
            and parsed_description.RefSeqAcc \
            and parsed_description.RefType == 'c':
         raw_variants = output.getOutput('rawVariantsCoding')
-        # rawVariantsCoding: [('29+4T>C', 29+4, 29+4), ('230_233del', 230, 233)]
+        # Example value: [('29+4T>C', 29+4, 29+4), ('230_233del', 230, 233)]
         if raw_variants:
-            locations = [position for description, first, last in raw_variants for position in (first, last)]
-            converter = Converter('hg19', config, output)
-            chromosomal_positions = converter.chromosomal_positions(locations, parsed_description.RefSeqAcc, parsed_description.Version)
+            locations = [pos
+                         for descr, first, last in raw_variants
+                         for pos in (first, last)]
+            converter = Converter('hg19', output)
+            chromosomal_positions = converter.chromosomal_positions(
+                locations, parsed_description.RefSeqAcc, parsed_description.Version)
             if chromosomal_positions:
-                output.addOutput('rawVariantsChromosomal', (chromosomal_positions[0],
-                                                            zip([description for description, first, last in raw_variants],
-                                                                util.grouper(chromosomal_positions[1]))))
-                # rawVariantsChromosomal: ('chr12', [('29+4T>C', 2323, 2323), ('230_233del', 5342, 5345)])
+                output.addOutput('rawVariantsChromosomal',
+                                 (chromosomal_positions[0],
+                                  zip([descr for descr, first, last in raw_variants],
+                                      util.grouper(chromosomal_positions[1]))))
+                # Example value: ('chr12', [('29+4T>C', (2323, 2323)), ('230_233del', (5342, 5345))])
 
     # Protein.
     for gene in record.record.geneList:

@@ -447,6 +447,17 @@ class Converter(object) :
         """
         Convert c. positions to chromosomal positions.
 
+        @arg positions: Positions in c. notation to convert.
+        @type positions: list
+        @arg reference: Transcript reference.
+        @type reference: string
+        @kwarg version: Transcript reference version. If omitted, '0' is
+            assumed.
+        @type version: string
+
+        @return: Chromosome name and converted positions.
+        @rtype: tuple(string, list)
+
         This only works for positions on transcript references in c. notation.
         """
         if not version:

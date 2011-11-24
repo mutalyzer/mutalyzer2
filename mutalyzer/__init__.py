@@ -22,7 +22,7 @@ import os
 
 RELEASE = False
 
-__version_info__ = ('2', '0', 'beta-12', 'browser-link-branch', 'dev')
+__version_info__ = ('2', '0', 'beta-12', 'dev')
 __date__ = '30 Sep 2011'
 
 
