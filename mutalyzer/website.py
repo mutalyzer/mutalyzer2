@@ -726,7 +726,7 @@ class Check:
         raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
         if raw_variants:
             positions = [pos
-                         for descr, (first, last) in raw_variants[1]
+                         for descr, (first, last) in raw_variants[2]
                          for pos in (first, last)]
             bed_url = web.ctx.homedomain + web.ctx.homepath + '/bed?variant=' + urllib.quote(name)
             browser_link = GENOME_BROWSER_URL.format(chromosome=raw_variants[0],
@@ -783,8 +783,6 @@ class Bed:
 
         This basically just runs the variant checker and extracts the raw
         variants with positions.
-
-        @todo: Add +/- strand information.
         """
         web.header('Content-Type', 'text/plain')
 
@@ -811,9 +809,10 @@ class Bed:
                   'url':         web.ctx.homedomain + web.ctx.homepath + '/checkForward?mutationName=' + urllib.quote(variant),
                   'color':       '255,0,0'}
         bed = ' '.join(['track'] + ['%s="%s"' % field for field in fields.items()]) + '\n'
-        for description, positions in raw_variants[1]:
-            bed += '\t'.join([raw_variants[0], str(min(positions) - 1),
-                              str(max(positions)), description]) + '\n'
+        for description, positions in raw_variants[2]:
+            bed += '\t'.join([raw_variants[0],
+                              str(min(positions) - 1), str(max(positions)),
+                              description, '', raw_variants[1]]) + '\n'
         return bed
 #Bed
 

@@ -455,8 +455,9 @@ class Converter(object) :
             assumed.
         @type version: string
 
-        @return: Chromosome name and converted positions.
-        @rtype: tuple(string, list)
+        @return: Chromosome name, orientation (+ or -), and converted
+            positions.
+        @rtype: tuple(string, string, list)
 
         This only works for positions on transcript references in c. notation.
         """
@@ -483,7 +484,7 @@ class Converter(object) :
             offset = mapper.offset2int(position.OffSgn +  position.Offset)
             chromosomal_positions.append(mapper.x2g(main, offset))
 
-        return self.dbFields['chromosome'], chromosomal_positions
+        return self.dbFields['chromosome'], self.dbFields['orientation'], chromosomal_positions
     #chromosomal_positions
 
     def correctChrVariant(self, variant) :

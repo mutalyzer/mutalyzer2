@@ -1579,9 +1579,9 @@ def check_variant(description, output):
                 locations, parsed_description.RefSeqAcc, parsed_description.Version)
             if chromosomal_positions:
                 output.addOutput('rawVariantsChromosomal',
-                                 (chromosomal_positions[0],
+                                 (chromosomal_positions[0], chromosomal_positions[1],
                                   zip([descr for descr, first, last in raw_variants],
-                                      util.grouper(chromosomal_positions[1]))))
+                                      util.grouper(chromosomal_positions[2]))))
                 # Example value: ('chr12', [('29+4T>C', (2323, 2323)), ('230_233del', (5342, 5345))])
 
     # Protein.

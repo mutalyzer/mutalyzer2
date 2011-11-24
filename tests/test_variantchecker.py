@@ -434,4 +434,4 @@ class TestVariantchecker():
         """
         check_variant('NM_003002.2:c.274G>T', self.output)
         assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
-                     ('chr11', [('274G>T', (111959695, 111959695))]))
+                     ('chr11', '+', [('274G>T', (111959695, 111959695))]))

@@ -727,7 +727,7 @@ facilisi."""
         """
         r = self.app.get('/bed?variant=NM_003002.2%3Ac.274G%3ET')
         assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('\t'.join(['chr11', '111959694', '111959695', '274G>T']))
+        r.mustcontain('\t'.join(['chr11', '111959694', '111959695', '274G>T', '', '+']))
 
     def test_bed_reverse(self):
         """
@@ -735,5 +735,5 @@ facilisi."""
         """
         r = self.app.get('/bed?variant=NM_000132.3%3Ac.%5B4374A%3ET%3B4380_4381del%5D')
         assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('\t'.join(['chrX', '154157690', '154157691', '4374A>T']))
-        r.mustcontain('\t'.join(['chrX', '154157683', '154157685', '4380_4381del']))
+        r.mustcontain('\t'.join(['chrX', '154157690', '154157691', '4374A>T', '', '-']))
+        r.mustcontain('\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '', '-']))
