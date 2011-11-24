@@ -99,7 +99,7 @@ If you just want to mark a revision as being merged, you can use the
 Reintegrating a branch into trunk is done from the trunk checkout:
 
     svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
-    svn merge --reintegrate --dry-run \
+    svn merge --reintegrate \
       https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
     svn rm https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
       -m 'Delete refactor-mutalyzer-branch'
