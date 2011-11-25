@@ -526,7 +526,16 @@ class GBparser():
                     if i.usable :
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
-                            myTranscript = Locus(i.locus_tag[-3:])
+                            # Note: We use the last three characters of the
+                            # locus_tag as a unique transcript version id.
+                            # This is also used to for the protein-transcript
+                            # link table.
+                            # Normally, locus_tag ends with three digits, but
+                            # for some (e.g. mobA on NC_011228, a plasmid) it
+                            # ends with two digits prepended with an
+                            # underscore. We really want a number, so 'fix'
+                            # this by substituting a zero.
+                            myTranscript = Locus(i.locus_tag[-3:].replace('_', '0'))
                         else :
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
@@ -556,7 +565,16 @@ class GBparser():
                        (i.usable or not geneDict[myGene.name].rnaList) :
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
-                            myTranscript = Locus(i.locus_tag[-3:])
+                            # Note: We use the last three characters of the
+                            # locus_tag as a unique transcript version id.
+                            # This is also used to for the protein-transcript
+                            # link table.
+                            # Normally, locus_tag ends with three digits, but
+                            # for some (e.g. mobA on NC_011228, a plasmid) it
+                            # ends with two digits prepended with an
+                            # underscore. We really want a number, so 'fix'
+                            # this by substituting a zero.
+                            myTranscript = Locus(i.locus_tag[-3:].replace('_', '0'))
                         else :
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.CDS = PList()
