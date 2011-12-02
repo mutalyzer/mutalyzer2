@@ -46,6 +46,7 @@ for USERNAME in $(cut -f 1 -d : /etc/passwd); do
     if [ -d "/home/${USERNAME}" ]; then
         echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.config/mutalyzer/config${COLOR_END}"
         echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.cache/mutalyzer${COLOR_END}"
+	# Instead of su, use chown later.
         su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
         su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
         su $USERNAME -c "touch /home/$USERNAME/.config/mutalyzer/config"

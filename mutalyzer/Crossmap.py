@@ -564,6 +564,7 @@ class Crossmap() :
         """
 
         return len(self.RNA) / 2 - 1
+    #numberOfIntrons
 
     def numberOfExons(self) :
         """
@@ -574,6 +575,7 @@ class Crossmap() :
         """
 
         return len(self.RNA) / 2
+    #numberOfExons
 #Crossmap
 
 #

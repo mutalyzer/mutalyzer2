@@ -181,13 +181,14 @@ class GBparser():
         i = 0
         while i < productList[0].count(' ') + 1 :
             for j in range(1, len(productList)) :
-                if productList[0][::direction].split(' ')[i] != \
-                   productList[j][::direction].split(' ')[i] :
-                    if direction == 1 :
-                        return i
-                    else :
-                        return productList[0].count(' ') - i + 1
-                #if
+                if i <= productList[j].count(' ') :
+                    if productList[0][::direction].split(' ')[i] != \
+                       productList[j][::direction].split(' ')[i] :
+                        if direction == 1 :
+                            return i
+                        else :
+                            return productList[0].count(' ') - i + 1
+                    #if
             i += 1
         #while
         return 0
