@@ -5,6 +5,8 @@ mutalyzer GenRecord. Record populated with data from a GenBank file.
 
 
 import bz2
+from itertools import izip_longest
+
 from Bio import SeqIO, Entrez
 from Bio.Alphabet import ProteinAlphabet
 
@@ -161,38 +163,63 @@ class GBparser():
         return proteinAcc
     #__transcriptToProtein
 
-    def __findMismatch(self, productList, direction):
+    def _find_mismatch(self, sentences):
         """
-        Find the index of the first or last word that distinguishes one
-        sentence from an other.
+        Find the indices of the first and last words that distinguishes one
+        sentence from another. The index of the last word is counted backwards.
 
-        If direction equals 1, search for the first word.
-        If direction equals -1, search for the last word.
+        @arg sentences: A list of sentences.
+        @type sentences: list of strings
 
-        @arg productList: A list of sentences
-        @type productList: list of strings
-        @arg direction: The direction in which to search
-        @type direction: integer (1 or -1)
+        @return: The indices of the words where sentences start to differ,
+            both are -1 when no mismatches are found.
+        @rtype: tuple(int, int)
 
-        @return: The index of the word where sentences start to differ
-        @rtype: integer
+        Example usage:
+
+            >>> parser._find_mismatch(['a b c d e' , 'a B c d e', 'a b C d e'])
+            (1, 2)
+            >>> parser._find_mismatch(['a b c d e' , 'a b c d e', 'a b C D e'])
+            (2, 1)
+            >>> parser._find_mismatch(['a b c' , 'a b c', 'a b c'])
+            (-1, -1)
+
+        Note: The result can be used to slice the mismatching part from the
+            sentences where you take the negative value of the second returned
+            index. For the second example above:
+
+                >>> 'a b c d e'.split()[1:-2]
+                ['b', 'c']
+
+            But be careful since the second index may be 0, but slicing syntax
+            does not permit taking the -0 index from the right:
+
+                >>> 'a b c d e'.split()[2:0] == ['c', 'd', 'e']
+                False
+
+            Although less elegant, first check the second index for 0 and in
+            that case leave it out:
+
+                >>> 'a b c d e'.split()[2:] == ['c', 'd', 'e']
+                True
+
+            The case where no mismatch is found just works, since slicing with
+            [-1:1] yields the empty list.
         """
+        # Create lists of words
+        lists = map(str.split, sentences)
 
-        i = 0
-        while i < productList[0].count(' ') + 1 :
-            for j in range(1, len(productList)) :
-                if i <= productList[j].count(' ') :
-                    if productList[0][::direction].split(' ')[i] != \
-                       productList[j][::direction].split(' ')[i] :
-                        if direction == 1 :
-                            return i
-                        else :
-                            return productList[0].count(' ') - i + 1
-                    #if
-            i += 1
-        #while
-        return 0
-    #__findMismatch
+        try:
+            forward, reverse = [next(i for i, v in
+                                     enumerate(izip_longest(*lists))
+                                     if not len(set(v)) <= 1)
+                                for lists in (lists, map(reversed, lists))]
+        except StopIteration:
+            # No mismatch found
+            forward = reverse = -1
+
+        return forward, reverse
+    #_find_mismatch
 
     def __tagByDict(self, locus, key):
         """
@@ -256,13 +283,16 @@ class GBparser():
 
         if productList :
             # Find the defining words in the product list.
-            a = self.__findMismatch(productList, 1)
-            b = self.__findMismatch(productList, -1)
+            a, b = self._find_mismatch(productList)
 
             # Add the defining words to the locus.
-            for i in range(len(locusList)) :
-                locusList[i].productTag = \
-                    ' '.join(productList[i].split(' ')[a:b])
+            for i in range(len(locusList)):
+                if b == 0:
+                    locusList[i].productTag = \
+                        ' '.join(productList[i].split()[a:])
+                else:
+                    locusList[i].productTag = \
+                        ' '.join(productList[i].split()[a:-b])
         #if
     #__tagLocus
 
