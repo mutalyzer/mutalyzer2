@@ -435,3 +435,11 @@ class TestVariantchecker():
         check_variant('NM_003002.2:c.274G>T', self.output)
         assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
                      ('chr11', '+', [('274G>T', (111959695, 111959695))]))
+
+    def test_ex_notation(self):
+        """
+        Variant description using EX notation should not crash but deletion of
+        one exon should delete two splice sites.
+        """
+        check_variant('NM_002001.2:c.EX1del', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('IDELSPLICE')), 1)

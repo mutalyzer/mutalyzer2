@@ -1137,7 +1137,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # Deletion or duplication.
     if variant.MutationType in ['del', 'dup']:
         # The fuzzy flags are to support deletions of the form c.a-?_b+?del.
-        first_fuzzy = variant.StartLoc.PtLoc.Offset == '?'
+        first_fuzzy = variant.StartLoc and variant.StartLoc.PtLoc.Offset == '?'
         last_fuzzy = variant.EndLoc and variant.EndLoc.PtLoc.Offset == '?'
         apply_deletion_duplication(first, last, variant.MutationType, mutator,
                                    record, output, first_fuzzy=first_fuzzy,
