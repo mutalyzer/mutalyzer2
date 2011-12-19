@@ -213,6 +213,7 @@ INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000022.10', 'chr22'),
 ('NC_000023.10', 'chrX'),
 ('NC_000024.9', 'chrY'),
+('NC_012920.1', 'chrM'),
 ('NT_167244.1', 'chr6_apd_hap1'),
 ('NT_113891.2', 'chr6_cox_hap2'),
 ('NT_167245.1', 'chr6_dbb_hap3'),
