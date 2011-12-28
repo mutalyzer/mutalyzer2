@@ -265,6 +265,73 @@ class MutalyzerService(DefinitionBase):
         return ret
     #getTranscriptsRange
 
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+        Mandatory.Integer, Mandatory.Integer, _returns = Array(TranscriptMappingInfo))
+    def getTranscriptsMapping(self, build, chrom, pos1, pos2, method):
+        """
+        Get all the transcripts and their info that overlap with a range on a
+        chromosome.
+
+        @arg build: The human genome build (hg19 or hg18).
+        @type build: string
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
+        @type chrom: string
+        @arg pos1: The first postion of the range.
+        @type pos1: integer
+        @arg pos2: The last postion of the range.
+        @type pos2: integer
+        @arg method: The method of determining overlap:
+            - 0 ; Return only the transcripts that completely fall in the range
+                  [pos1, pos2].
+            - 1 ; Return all hit transcripts.
+
+        @return: Array of TranscriptMappingInfo objects with fields:
+                 - name
+                 - version
+                 - gene
+                 - protein
+                 - orientation
+                 - start
+                 - stop
+                 - cds_start
+                 - cds_stop
+        """
+        output = Output(__file__)
+        output.addMessage(__file__, -1, 'INFO', 'Received request ' \
+                          'getTranscriptsRange(%s %s %s %s %s)' % \
+                          (build, chrom, pos1, pos2, method))
+
+        self.__checkBuild(output, build)
+
+        database = Db.Mapping(build)
+        transcripts = []
+
+        for transcript in database.get_Transcripts(chrom, pos1, pos2, method):
+            t = TranscriptMappingInfo()
+            d = dict(zip(('transcript', 'start', 'stop', 'cds_start', 'cds_stop',
+                          'exon_starts', 'exon_stops', 'gene', 'chromosome',
+                          'orientation', 'protein', 'version'), transcript))
+            if d['orientation'] == '-':
+                d['start'], d['stop'] = d['stop'], d['start']
+                d['cds_start'], d['cds_stop'] = d['cds_stop'], d['cds_start']
+            t.name = d['transcript']
+            t.version = d['version']
+            t.gene = d['gene']
+            t.protein = d['protein']
+            t.orientation = d['orientation']
+            t.start = d['start']
+            t.stop = d['stop']
+            t.cds_start = d['cds_start']
+            t.cds_stop = d['cds_stop']
+            transcripts.append(t)
+
+        output.addMessage(__file__, -1, 'INFO', 'Finished processing ' \
+                          'getTranscriptsRange(%s %s %s %s %s)' % \
+                          (build, chrom, pos1, pos2, method))
+
+        return transcripts
+    #getTranscriptsMapping
+
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneName(self, build, accno) :
         """
