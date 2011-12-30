@@ -435,3 +435,10 @@ class TestVariantchecker():
         check_variant('NM_003002.2:c.274G>T', self.output)
         assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
                      ('chr11', '+', [('274G>T', (111959695, 111959695))]))
+
+    def test_non_numeric_locus_tag_ending(self):
+        """
+        Locus tag in NC_002128 does not end in an underscore and three digits
+        but we should not crash on it.
+        """
+        check_variant('NC_002128(tagA):c.3del', self.output)
