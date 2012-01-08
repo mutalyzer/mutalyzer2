@@ -800,7 +800,7 @@ class Bed:
         raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
         if not raw_variants:
             web.ctx.status = '404 Not Found'
-            return 'Sorry, we have not BED track for this variant.'
+            return 'Sorry, we have no BED track for this variant.'
 
         fields = {'name':        'Mutalyzer',
                   'description': 'Mutalyzer track for ' + variant,
@@ -812,7 +812,7 @@ class Bed:
         for description, positions in raw_variants[2]:
             bed += '\t'.join([raw_variants[0],
                               str(min(positions) - 1), str(max(positions)),
-                              description, '', raw_variants[1]]) + '\n'
+                              description, '0', raw_variants[1]]) + '\n'
         return bed
 #Bed
 
