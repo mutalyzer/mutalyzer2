@@ -15,6 +15,7 @@ from suds.client import Client
 
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 from mutalyzer.util import longest_common_prefix, longest_common_suffix
+from mutalyzer.util import palinsnoop, roll
 
 WSDL_LOCATION = "http://localhost/mutalyzer/services/?wsdl"
 
@@ -49,8 +50,6 @@ def LongestCommonSubstring(s1, s2) :
 def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     """
     """
-    # TODO: Roll the variants to the 3' end.
-    # TODO: Palindrome snooping.
 
     # Nothing happened.
     if s1 == s2:
@@ -59,6 +58,12 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     # Insertion / Duplication.
     if s1_start == s1_end :
         ins_length = s2_end - s2_start
+        dummy, shift = roll(s2, s2_start + 1, s2_end + 1)
+
+        s1_start += shift + 1
+        s1_end += shift + 1
+        s2_start += shift + 1
+        s2_end += shift + 1
 
         if s2_start - ins_length >= 0 and \
             s1[s1_start - ins_length:s1_start] == s2[s2_start:s2_end] :
@@ -72,9 +77,11 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
 
     # Deletion.
     if s2_start == s2_end :
+        dummy, shift = roll(s1, s1_start + 1, s1_end)
+
         if s1_start + 1 == s1_end :
-            return "%idel" % (s1_start + 1)
-        return "%i_%idel" % (s1_start + 1, s1_end) 
+            return "%idel" % (s1_start + shift + 1)
+        return "%i_%idel" % (s1_start + shift + 1, s1_end + shift) 
     #if
 
     # Substitution.
@@ -87,11 +94,15 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
 
     # At this stage, we either have an inversion, an indel or a Compound
     # variant.
-    # NOTE: We might want to do a palindrome snoop in the second line.
     s1_end_f, s2_end_f, lcs_f_len = LongestCommonSubstring(s1[s1_start:s1_end],
         s2[s2_start:s2_end])
     s1_end_r, s2_end_r, lcs_r_len = LongestCommonSubstring(s1[s1_start:s1_end],
         Bio.Seq.reverse_complement(s2[s2_start:s2_end]))
+
+    # Palindrome snooping.
+    trim = palinsnoop(s1[s1_start + s1_end_r - lcs_r_len:s1_start + s1_end_r])
+    if trim < 0 :     # Full palindrome.
+        lcs_r_len = 0 # s1_end_r and s2_end_r should not be used after this.
 
     # Inversion or Compound variant.
     if max(lcs_f_len, lcs_r_len) > 3 : # TODO: This is not a good criterium.
@@ -99,8 +110,15 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
         # Inversion.
         if lcs_f_len <= lcs_r_len :
 
+            if trim > 0 :     # Partial palindrome.
+                s1_end_r -= trim
+                s2_end_r -= trim
+                lcs_r_len -= 2 * trim
+            #if
+
             # Simple Inversion.
-            if s1_end - s1_start == lcs_r_len :
+            if s2_end - s2_start == lcs_r_len and \
+                s1_end - s1_start == lcs_r_len :
                 return "%i_%iinv" % (s1_start + 1, s1_end)
 
             r1_len = s1_end_r - lcs_r_len
@@ -165,6 +183,11 @@ def describe(description) :
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
 
+    for i in result.rawVariants.RawVariant :
+        print i.description
+        print i.visualisation
+        print
+    #for
     print(result.genomicDescription)
     print(DNA_description(s1, s2, lcp, s1_end, lcp, s2_end))
 #describe
