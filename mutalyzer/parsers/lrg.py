@@ -103,9 +103,6 @@ def create_record(data):
     fixed = data.getElementsByTagName("fixed_annotation")[0]
     updatable = data.getElementsByTagName("updatable_annotation")[0]
 
-    # Get organism
-    record.organism = _get_content(data, 'organism')
-
     # Get all raw information from updatable section into a nested dict
     updParsed = parseUpdatable(updatable)
 

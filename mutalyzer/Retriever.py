@@ -820,7 +820,7 @@ class LRGRetriever(Retriever):
         @rtype: string
         """
 
-        prefix = config.get('lrgurl')
+        prefix = config.get('lrgURL')
         url        = prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
 
