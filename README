@@ -44,7 +44,8 @@ On the event of a new release, the following is done:
 
     emacs mutalyzer/__init__.py
 
-Remove `'dev'` from `__version_info__` and set `RELEASE` to `True`.
+Update `__date__`, remove `'dev'` from `__version_info__` and set `RELEASE` to
+`True`.
 
     svn commit -m 'Release 2.0.beta-11'
     svn cp https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
