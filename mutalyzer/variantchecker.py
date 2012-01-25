@@ -1478,7 +1478,9 @@ def check_variant(description, output):
     else:
         output.addOutput('geneOfInterest', dict())
 
-    if parsed_description.Version:
+    if parsed_description.LrgAcc:
+        record_id = parsed_description.LrgAcc
+    elif parsed_description.Version:
         record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
     else:
         record_id = parsed_description.RefSeqAcc
@@ -1492,7 +1494,6 @@ def check_variant(description, output):
     database = Db.Cache()
     if parsed_description.LrgAcc:
         filetype = 'LRG'
-        record_id = parsed_description.LrgAcc
         transcript_id = parsed_description.LRGTranscriptID
         retriever = Retriever.LRGRetriever(output, database)
     else:

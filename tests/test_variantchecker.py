@@ -443,3 +443,13 @@ class TestVariantchecker():
         """
         check_variant('NM_002001.2:c.EX1del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('IDELSPLICE')), 1)
+
+    def test_lrg_reference(self):
+        """
+        We should be able to use LRG reference sequence without error.
+        """
+        check_variant('LRG_1t1:c.266G>T', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'LRG_1:g.6855G>T')
