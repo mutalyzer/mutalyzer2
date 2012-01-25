@@ -442,3 +442,12 @@ class TestVariantchecker():
         but we should not crash on it.
         """
         check_variant('NC_002128(tagA):c.3del', self.output)
+
+    def test_lrg_reference(self):
+        """
+        We should be able to use LRG reference sequence without error.
+        """
+        check_variant('LRG_1t1:c.266G>T', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        'LRG_1:g.6855G>T'
