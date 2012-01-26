@@ -213,7 +213,7 @@ class TestWSGI():
         form['mutationName'] = 'NM_003002.2:c.274G>T'
         r = form.submit()
         bed_track = urllib.quote(r.environ['wsgi.url_scheme'] + '://' + r.environ['HTTP_HOST'] + '/bed?variant=' + urllib.quote('NM_003002.2:c.274G>T'))
-        r.mustcontain('<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr11:111959685-111959705&amp;hgt.customText=%s"><br>View original variant in UCSC Genome Browser</a>' % bed_track)
+        r.mustcontain('<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr11:111959685-111959705&amp;hgt.customText=%s">View original variant in UCSC Genome Browser</a>' % bed_track)
 
     def test_checkforward(self):
         """
