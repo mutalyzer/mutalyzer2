@@ -210,6 +210,20 @@ class TestWebservice():
                   'C9orf53_v001']:
             assert_false(t in names)
 
+    def test_gettranscriptsmapping(self):
+        """
+        Running getTranscriptsMapping should give a list of
+        TranscriptMappingInfo objects.
+        """
+        r = self.client.service.getTranscriptsMapping('hg19', 'chr16', 70680470, 70807150, 1)
+        assert_equal(type(r.TranscriptMappingInfo), list)
+        names = [t.name for t in r.TranscriptMappingInfo]
+        for t in ('NM_152456',
+                  'NM_138383',
+                  'NM_018052',
+                  'NR_034083'):
+            assert t in names
+
     def test_info(self):
         """
         Running the info method should give us some version information.

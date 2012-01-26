@@ -191,6 +191,26 @@ class TranscriptInfo(ClassModel):
 #TranscriptInfo
 
 
+class TranscriptMappingInfo(ClassModel):
+    """
+    Used in return type of SOAP method getTranscriptsRange.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    name = Mandatory.String
+    version = Mandatory.Integer
+    gene = Mandatory.String
+    protein = Mandatory.String
+    orientation = Mandatory.String
+
+    start = Mandatory.Integer
+    stop = Mandatory.Integer
+
+    cds_start = Mandatory.Integer
+    cds_stop = Mandatory.Integer
+#TranscriptMappingInfo
+
+
 class CheckSyntaxOutput(ClassModel):
     """
     Return type of SOAP method checkSyntax.
