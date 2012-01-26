@@ -23,6 +23,7 @@ from Bio.Seq import UnknownSeq
 from Bio.Alphabet import ProteinAlphabet
 from xml.dom import DOMException, minidom
 from xml.parsers import expat
+from httplib import HTTPException
 
 from mutalyzer import util
 from mutalyzer import config
@@ -261,13 +262,13 @@ class Retriever(object) :
                 response = Entrez.efetch(db='SNP', id=id, rettype='flt',
                                          retmode='xml')
                 break
-            except IOError:
+            except (IOError, HTTPException):
                 time.sleep(ENTREZ_SLEEP)
         else:
             try:
                 response = Entrez.efetch(db='SNP', id=id, rettype='flt',
                                          retmode='xml')
-            except IOError as e:
+            except (IOError, HTTPException) as e:
                 # Could not parse XML.
                 self._output.addMessage(__file__, 4, 'EENTREZ',
                                         'Error connecting to dbSNP.')
