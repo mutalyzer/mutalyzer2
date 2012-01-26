@@ -453,3 +453,10 @@ class TestVariantchecker():
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'LRG_1:g.6855G>T')
+
+    def test_non_numeric_locus_tag_ending(self):
+        """
+        Locus tag in NC_002128 does not end in an underscore and three digits
+        but we should not crash on it.
+        """
+        check_variant('NC_002128(tagA):c.3del', self.output)

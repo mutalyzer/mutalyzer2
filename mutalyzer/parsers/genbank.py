@@ -4,6 +4,7 @@ mutalyzer GenRecord. Record populated with data from a GenBank file.
 """
 
 
+import re
 import bz2
 from itertools import izip_longest
 
@@ -13,6 +14,10 @@ from Bio.Alphabet import ProteinAlphabet
 from mutalyzer import config
 from mutalyzer import Db
 from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
+
+
+# Regular expression used to find version number in locus tag
+LOCUS_TAG_VERSION = re.compile('\d{1,3}$')
 
 
 class tempGene():
@@ -564,9 +569,15 @@ class GBparser():
                             # Normally, locus_tag ends with three digits, but
                             # for some (e.g. mobA on NC_011228, a plasmid) it
                             # ends with two digits prepended with an
-                            # underscore. We really want a number, so 'fix'
-                            # this by substituting a zero.
-                            myTranscript = Locus(i.locus_tag[-3:].replace('_', '0'))
+                            # underscore. Or prepended with a letter. We
+                            # really want a number, so 'fix' this by only
+                            # looking for a numeric part.
+                            try:
+                                version = LOCUS_TAG_VERSION.findall(
+                                    i.locus_tag)[0].zfill(3)
+                            except IndexError:
+                                version = '000'
+                            myTranscript = Locus(version)
                         else :
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
@@ -603,9 +614,15 @@ class GBparser():
                             # Normally, locus_tag ends with three digits, but
                             # for some (e.g. mobA on NC_011228, a plasmid) it
                             # ends with two digits prepended with an
-                            # underscore. We really want a number, so 'fix'
-                            # this by substituting a zero.
-                            myTranscript = Locus(i.locus_tag[-3:].replace('_', '0'))
+                            # underscore. Or prepended with a letter. We
+                            # really want a number, so 'fix' this by only
+                            # looking for a numeric part.
+                            try:
+                                version = LOCUS_TAG_VERSION.findall(
+                                    i.locus_tag)[0].zfill(3)
+                            except IndexError:
+                                version = '000'
+                            myTranscript = Locus(version)
                         else :
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.CDS = PList()
