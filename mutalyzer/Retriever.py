@@ -12,6 +12,7 @@ Public classes:
 
 import os              # path.isfile(), link() path.isdir(), path.mkdir(),
                        # walk(), path.getsize(), path.join(), stat(), remove()
+import time
 import bz2             # BZ2Compressor(), BZ2File()
 import hashlib         # md5(), update(), hexdigest()
 import urllib2         # urlopen()
