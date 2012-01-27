@@ -166,8 +166,8 @@ class Converter(object) :
         versions = self.__database.get_NM_version(acc)
         if not versions :
             self.__output.addMessage(__file__, 4, "EACCNOTINDB",
-                    "The accession number: %s could not be "
-                    "found in our database." % acc)
+                    "The accession number %s could not be "
+                    "found in our database (or is not a transcript)." % acc)
             self.__output.addOutput("LOVDERR",
                     "Reference sequence not found.")
             return None     #Explicit return of None in case of error
@@ -182,8 +182,8 @@ class Converter(object) :
                     "Version number missing for %s" % acc)
             else :
                 self.__output.addMessage(__file__, 4, "EACCNOTINDB",
-                    "The accession number: %s version %s "
-                    "could not be found in our database." %
+                    "The accession number %s version %s "
+                    "could not be found in our database (or is not a transcript)." %
                     (acc, version))
             self.__output.addMessage(__file__, 2, "WDIFFFOUND",
                 "We found these versions: %s" %
@@ -510,7 +510,7 @@ class Converter(object) :
             chrom = self.__database.chromAcc(preco)
             if chrom is None :
                 self.__output.addMessage(__file__, 4, "ENOTINDB",
-                    "Chromosome %s could not be found in our database" %
+                    "The accession number %s could not be found in our database (or is not a chromosome)." %
                     preco)
                 return None
             #if
@@ -542,7 +542,7 @@ class Converter(object) :
         chrom = self.__database.chromName("%s.%s" % (acc, version))
         if not chrom :
             self.__output.addMessage(__file__, 4, "ENOTINDB",
-                    "Accession number: %s could not be found in our database" %
+                "The Accession number %s could not be found in our database (or is not a chromosome)." %
                 acc)
             return None
         #if
