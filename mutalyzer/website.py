@@ -327,11 +327,19 @@ class GetGS:
 
         i = web.input(mutationName=None, variantRecord=None, forward=None)
 
+        output.addMessage(__file__, -1, 'INFO',
+                          'Started request getGS(%s, %s, %s)' % \
+                          (i.mutationName, i.variantRecord, i.forward))
+
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in mapping.py:607.
 
         variantchecker.check_variant(str(i.mutationName), output)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished request getGS(%s, %s, %s)' % \
+                          (i.mutationName, i.variantRecord, i.forward))
 
         legends = output.getOutput("legends")
 
@@ -376,6 +384,10 @@ class SyntaxCheck:
         """
         output = Output(__file__)
         i = web.input()
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Started request syntaxCheck(%s)' % i.variant)
+
         variant = i.variant
         if variant.find(',') >= 0:
             output.addMessage(__file__, 2, "WCOMMASYNTAX",
@@ -392,6 +404,10 @@ class SyntaxCheck:
             "parseError"    : pe,
             "debug"         : ""
         }
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished request syntaxCheck(%s)' % i.variant)
+
         return render.parse(args)
 #SyntaxCheck
 
@@ -499,6 +515,11 @@ class PositionConverter:
         }
 
         if build and variant:
+
+            output.addMessage(__file__, -1, 'INFO',
+                              'Started request positionConverter(%s, %s)' % \
+                              (build, variant))
+
             converter = Converter(build, output)
 
             #Convert chr accNo to NC number
@@ -529,6 +550,11 @@ class PositionConverter:
             #if
 
             attr['messages'] = map(util.message_info, output.getMessages())
+
+            output.addMessage(__file__, -1, 'INFO',
+                              'Finished request positionConverter(%s, %s)' % \
+                              (build, variant))
+
         return render.converter(attr)
 #PositionConverter
 
@@ -688,12 +714,11 @@ class Check:
             return render.check(args, standalone=not interactive)
 
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s' % name)
+
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in mapping.py:607.
         variantchecker.check_variant(str(name), output)
-        output.addMessage(__file__, -1, 'INFO',
-                          'Finished processing variant %s' % name)
 
         errors, warnings, summary = output.Summary()
         record_type = output.getIndexedOutput('recordType', 0, '')
@@ -764,6 +789,9 @@ class Check:
             'reference'          : reference,
             'browserLink'        : browser_link
         }
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing variant %s' % name)
 
         return render.check(args, standalone=not interactive)
 #Check
@@ -1133,6 +1161,11 @@ class Uploader:
                       genesymbol='', organism='', fiveutr='', threeutr='',
                       chracc='', start='', stop='', orientation='')
 
+        O.addMessage(__file__, -1, 'INFO',
+                     'Started request upload(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' % \
+                     (i.invoermethode, i.urlveld, i.genesymbol, i.organism,
+                      i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation))
+
         try:
             if i.invoermethode == "file" :
                 if not 'CONTENT_LENGTH' in web.ctx.environ.keys():
@@ -1196,6 +1229,12 @@ class Uploader:
             "maxSize" : float(maxUploadSize) / 1048576,
             "errors"  : errors
         }
+
+        O.addMessage(__file__, -1, 'INFO',
+                     'Finished request upload(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' % \
+                     (i.invoermethode, i.urlveld, i.genesymbol, i.organism,
+                      i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation))
+
         return render.gbupload(args)
 #Uploader
 
