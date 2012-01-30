@@ -737,6 +737,11 @@ class NCBIUpdater(Updater):
         the file, where we should merge them by taking the start position of
         the first and the stop position of the second.
 
+        To complicate this annoyance, some genes (e.g. in the PAR) are mapped
+        on both the X and Y chromosomes, but stored in the file just like the
+        transcripts split over two contigs. However, these ones should of
+        course not be merged.
+
         Our strategy is to loop over all entries and store them in three
         temporary tables (for genes, transcripts, exons). The entries of type
         UTR and CDS are merged to correct exon entries by keeping a backlog
@@ -864,7 +869,7 @@ class NCBIUpdater(Updater):
                 del self.exon_backlog[transcript]
                 del exon['cds']
                 self.db.ncbi_import_exon(
-                    exon['transcript'], exon['start'], exon['stop'],
+                    exon['transcript'], exon['chromosome'], exon['start'], exon['stop'],
                     exon['cds_start'] if 'cds_start' in exon else None,
                     exon['cds_stop'] if 'cds_stop' in exon else None,
                     exon['protein'] or None)
