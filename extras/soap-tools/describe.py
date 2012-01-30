@@ -1,22 +1,27 @@
 #!/usr/bin/python
 
 """
+Prototype of a module that can generate a HGVS description of the variant(s)
+leading from one sequence to an other.
+
 @requires: sys
 @requires: argparse
 @requires: Bio.Seq
 @requires: suds.client.Client
 """
 
+# NOTE: The following modules are not needed once this is an integrated module.
 import sys
 import argparse
-import Bio.Seq
 from suds.client import Client
-
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
-from mutalyzer.util import longest_common_prefix, longest_common_suffix
-from mutalyzer.util import palinsnoop, roll
 
 WSDL_LOCATION = "http://localhost/mutalyzer/services/?wsdl"
+
+# NOTE: The following modules are really needed.
+import Bio.Seq
+from mutalyzer.util import longest_common_prefix, longest_common_suffix
+from mutalyzer.util import palinsnoop, roll
 
 def LongestCommonSubstring(s1, s2) :
     """
@@ -60,10 +65,41 @@ def LongestCommonSubstring(s1, s2) :
 #LongestCommonSubstring
 
 class RawVar() :
+    """
+    Container for a raw variant.
+
+    To use this class correctly, do not supply more than the minimum amount of
+    data. The {description()} function may not work properly if too much
+    information is given.
+
+    Example: if {end} is initialised for a substitution, a range will be
+      retuned, resulting in a description like: 100_100A>T
+    """
+
     def __init__(self, start = 0, start_offset = 0, end = 0, end_offset = 0,
-        type = "none", deleted = "", inserted = "") :
+        type = "none", deleted = "", inserted = "", shift = 0) :
         """
+        Initialise the class with the appropriate values.
+
+        @arg start: Start position.
+        @type start: int
+        @arg start_offset:
+        @type start_offset: int
+        @arg end: End position.
+        @type end: int
+        @arg end_offset:
+        @type end_offset: int
+        @arg type: Variant type.
+        @type type: str
+        @arg deleted: Deleted part of the reference sequence.
+        @type deleted: str
+        @arg inserted: Inserted part.
+        @type inserted: str
+        @arg shift: Amount of freedom.
+        @type shift: int
         """
+        # TODO: Will this container be used for all variants, or only genomic?
+        #       start_offset and end_offset may be never used.
 
         self.start = start
         self.start_offset = start_offset
@@ -72,10 +108,18 @@ class RawVar() :
         self.type = type
         self.deleted = deleted
         self.inserted = inserted
+        self.shift = shift
     #__init__
 
     def description(self) :
         """
+        Give the HGVS description of the raw variant stored in this class.
+
+        Note that this function relies on the absence of values to make the
+        correct description. Also see the comment in the class definition.
+
+        @returns: The HGVS description of the raw variant stored in this class.
+        @rtype: str
         """
 
         if not self.start :
@@ -100,10 +144,12 @@ class RawVar() :
 
 def alleleDescription(allele) :
     """
-    @arg allele:
+    Convert a list of raw variants to an HGVS allele description.
+
+    @arg allele: A list of raw variants representing an allele description.
     @type allele: list(RawVar)
 
-    @returns:
+    @returns: The HGVS description of {allele}.
     @rval: str
     """
 
@@ -112,18 +158,22 @@ def alleleDescription(allele) :
     return allele[0].description()
 #alleleDescription
 
-def printpos(s, start, end) :
+def printpos(s, start, end, fill = 0) :
     """
+    For debugging purposes.
     """
+    # TODO: See if this can partially replace or be merged with the
+    #       visualisation in the __mutate() function of mutator.py
 
     fs = 10 # Flank size.
 
-    print("  %s %s %s" % (s[start - fs:start], s[start:end], s[end:end + fs]))
+    return "%s %s%s %s" % (s[start - fs:start], s[start:end], '-' * fill,
+        s[end:end + fs])
 #printpos
 
 def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     """
-    Give the HGVS description of the change from {s1} to {s2} in the range
+    Give an allele description of the change from {s1} to {s2} in the range
     {s1_start}..{s1_end} on {s1} and {s2_start}..{s2_end} on {s2}.
 
     arg s1: Sequence 1.
@@ -142,6 +192,9 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     @returns: A list of RawVar objects, representing the allele.
     @rval: list(RawVar)
     """
+    # TODO: Instead of copying this function and adjusting it to make it work
+    #       for proteins, consider disabling parts like the inversion.
+    # TODO: Think about frameshift descriptions.
 
     # Nothing happened.
     if s1 == s2:
@@ -150,43 +203,38 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     # Insertion / Duplication.
     if s1_start == s1_end :
         ins_length = s2_end - s2_start
-        dummy, shift = roll(s2, s2_start - 1, s2_end - 1) # Starts at 0.
+        shift5, shift3 = roll(s2, s2_start + 1, s2_end)
+        shift = shift5 + shift3
 
-        print dummy, shift
-        printpos(s2, s2_start, s2_end)
-
-
-        # FIXME This needs to be checked.
-        # NM_002001.2:c.2_3insAT ok
-        # NM_002001.2:c.3dup     ok
-        # NM_002001.2:c.3_4insCC
-        # NM_002001.2:c.3_4insT
-        # NM_002001.2:c.3_4insGA
-        #s1_start += shift + 1
-        #s1_end += shift + 1
-        #s2_start += shift + 1
-        #s2_end += shift + 1
+        s1_start += shift3
+        s1_end += shift3
+        s2_start += shift3
+        s2_end += shift3
 
         if s2_start - ins_length >= 0 and \
             s1[s1_start - ins_length:s1_start] == s2[s2_start:s2_end] :
 
             if ins_length == 1 :
-                return [RawVar(start = s1_start, type = "dup")]
+                return [RawVar(start = s1_start, type = "dup", shift = shift)]
             return [RawVar(start = s1_start - ins_length + 1, end = s1_end,
-                type = "dup")]
+                type = "dup", shift = shift)]
         #if
         return [RawVar(start = s1_start, end = s1_start + 1,
-            inserted = s2[s2_start:s2_end], type = "ins")]
+            inserted = s2[s2_start:s2_end], type = "ins", shift = shift)]
     #if
 
     # Deletion.
     if s2_start == s2_end :
-        dummy, shift = roll(s1, s1_start + 1, s1_end)
+        shift5, shift3 = roll(s1, s1_start + 1, s1_end)
+        shift = shift5 + shift3
 
-        if s1_start + 1 == s1_end :
-            return [RawVar(start = s1_start + shift + 1, type = "del")]
-        return [RawVar(start = s1_start + shift + 1,
-            s1_end = s1_end + shift, type = "del")]
+        s1_start += shift3 + 1
+        s1_end += shift3
+
+        if s1_start == s1_end :
+            return [RawVar(start = s1_start, type = "del", shift = shift)]
+        return [RawVar(start = s1_start, end = s1_end, type = "del",
+            shift = shift)]
     #if
 
     # Substitution.
@@ -198,6 +246,8 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     if s1_start + 1 == s1_end :
         return [RawVar(start = s1_start + 1, inserted = s2[s2_start:s2_end],
             type = "delins")]
+
+    # TODO: Refactor the code after this point.
 
     # At this stage, we either have an inversion, an indel or a Compound
     # variant.
@@ -274,18 +324,43 @@ def DNA_description(s1, s2, s1_start, s1_end, s2_start, s2_end) :
     return default
 #DNA_description
 
-def describe(description) :
+def describeDNA(original, mutated) :
     """
-    """
-    service = Client(WSDL_LOCATION, cache = None).service
-    result = service.runMutalyzer(description)
+    Convenience function for DNA_description().
 
-    s1 = str(result.original)
-    s2 = str(result.mutated)
+    @arg original:
+    @type original: str
+    @arg mutated:
+    @type mutated: str
+
+    @returns: A list of RawVar objects, representing the allele.
+    @rval: list(RawVar)
+    """
+
+    s1 = str(original)
+    s2 = str(mutated)
     lcp = len(longest_common_prefix(s1, s2))
     lcs = len(longest_common_suffix(s1[lcp:], s2[lcp:]))
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
+
+    return DNA_description(s1, s2, lcp, s1_end, lcp, s2_end)
+#describeDNA
+
+# NOTE: Everything below this point is not needed once this is an integrated
+#       module.
+
+def describe(description) :
+    """
+    Call Mutalyzer with a variant description to get the original and the
+    mutated sequence and make our own description.
+
+    @arg description: A HGVS description of the variant to be checked.
+    @type description: str
+    """
+
+    service = Client(WSDL_LOCATION, cache = None).service
+    result = service.runMutalyzer(description)
 
     if result.rawVariants :
         for i in result.rawVariants.RawVariant :
@@ -294,15 +369,16 @@ def describe(description) :
             print
         #for
 
-    newDescription = DNA_description(s1, s2, lcp, s1_end, lcp, s2_end)
+    newDescription = describeDNA(result.original, result.mutated)
 
     print("old: %s" % result.genomicDescription)
     print("new: XX_XXXXXX.X:X.%s" % alleleDescription(newDescription))
 
-    print("\nstart\tend\ttype\tdel\tins\thgvs")
+    # NOTE: Maybe save this part for making a nice table?
+    print("\nstart\tend\ttype\tdel\tins\tshift\thgvs")
     for i in newDescription :
-        print("%i\t%i\t%s\t%s\t%s\t%s" % (i.start, i.end, i.type,
-            i.deleted, i.inserted, i.description()))
+        print("%i\t%i\t%s\t%s\t%s\t%i\t%s" % (i.start, i.end, i.type,
+            i.deleted, i.inserted, i.shift, i.description()))
 #describe
 
 def main() :
