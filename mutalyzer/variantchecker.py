@@ -1223,7 +1223,7 @@ def _add_transcript_info(mutator, transcript, output):
     """
     # Add transcript info to output.
     if transcript.transcribe:
-        output.addOutput('myTranscriptDescription', transcript.description)
+        output.addOutput('myTranscriptDescription', transcript.description or '=')
         output.addOutput('origMRNA',
             str(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
@@ -1661,7 +1661,7 @@ def check_variant(description, output):
     if ';' in record.record.description:
         generated_description = '[' + record.record.description + ']'
     else:
-        generated_description = record.record.description
+        generated_description = record.record.description or '='
 
     output.addOutput('genomicDescription', '%s:%c.%s' % \
                      (reference, record.record.molType, generated_description))
@@ -1673,7 +1673,7 @@ def check_variant(description, output):
         if ';' in record.record.chromDescription:
             chromosomal_description = '[' + record.record.chromDescription + ']'
         else:
-            chromosomal_description = record.record.chromDescription
+            chromosomal_description = record.record.chromDescription or '='
         output.addOutput('genomicChromDescription', '%s:%c.%s' % \
                          (record.record.recordId,
                           record.record.molType, chromosomal_description))
@@ -1694,7 +1694,7 @@ def check_variant(description, output):
             if ';' in transcript.description:
                 generated_description = '[' + transcript.description + ']'
             else:
-                generated_description = transcript.description
+                generated_description = transcript.description or '='
 
             if record.record._sourcetype == 'LRG':
                 if transcript.name:

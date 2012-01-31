@@ -8,6 +8,7 @@ from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 import os
 from datetime import datetime, timedelta
 import mutalyzer
+from mutalyzer.util import skip
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
@@ -334,9 +335,13 @@ class TestWebservice():
         assert_equal(r.sourceGi, '222352156')
         assert_equal(r.molecule, 'n')
 
+    @skip
     def test_runmutalyzer_reference_info_ud(self):
         """
         Get reference info for a UD variant.
+
+        Todo: We cannot use UD references in unit tests, unless we implement
+           a way to create them inside the unit test.
         """
         r = self.client.service.runMutalyzer('UD_129433404385:g.1del')
         assert_equal(r.errors, 0)

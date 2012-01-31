@@ -6,6 +6,7 @@ Tests for the variantchecker module.
 #import logging; logging.basicConfig()
 from nose.tools import *
 
+from mutalyzer.util import skip
 from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant
 
@@ -495,4 +496,34 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      '31317229:n.105del')
         assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
+
+    def test_nop_nm(self):
+        """
+        Variant on NM without effect should be described as '='.
+        """
+        check_variant('NM_002001.2:c.1_3delinsATG', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NM_002001.2:n.=')
+        assert 'NM_002001.2(FCER1A_v001):c.=' \
+               in self.output.getOutput('descriptions')
+
+    @skip
+    def test_nop_ud(self):
+        """
+        Variant on UD without effect should be described as '='.
+
+        Todo: We cannot use UD references in unit tests, unless we implement
+            a way to create them inside the unit test.
+        """
+        check_variant('UD_127955523176:g.5T>T', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
+                     'NC_000023.10:g.=')
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'UD_127955523176:g.=')
+        assert 'UD_127955523176(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
