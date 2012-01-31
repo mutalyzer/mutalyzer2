@@ -1675,7 +1675,7 @@ def check_variant(description, output):
         else:
             chromosomal_description = record.record.chromDescription or '='
         output.addOutput('genomicChromDescription', '%s:%c.%s' % \
-                         (record.record.recordId,
+                         (record.record.source_id,
                           record.record.molType, chromosomal_description))
 
     # Now we add variant descriptions for all transcripts, including protein
