@@ -460,3 +460,39 @@ class TestVariantchecker():
         but we should not crash on it.
         """
         check_variant('NC_002128(tagA):c.3del', self.output)
+
+    def test_gi_reference_plain(self):
+        """
+        Test reference sequence notation with GI number.
+        """
+        check_variant('31317229:c.6del', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     '31317229:n.105del')
+        assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
+
+    def test_gi_reference_prefix(self):
+        """
+        Test reference sequence notation with GI number and prefix.
+        """
+        check_variant('GI31317229:c.6del', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     '31317229:n.105del')
+        assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
+
+    def test_gi_reference_prefix_colon(self):
+        """
+        Test reference sequence notation with GI number and prefix with colon.
+        """
+        check_variant('GI:31317229:c.6del', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     '31317229:n.105del')
+        assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
