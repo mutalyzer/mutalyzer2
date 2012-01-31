@@ -633,7 +633,44 @@ class MutalyzerService(DefinitionBase):
     @soap(Mandatory.String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
         """
-        Todo: documentation.
+        Run the Mutalyzer name checker.
+
+        @arg variant: The variant description to check.
+        @type variant: string
+
+        @return: Object with fields:
+            - referenceId: Identifier of the reference sequence used.
+            - sourceId: Identifier of the reference sequence source, e.g. the
+                chromosomal accession number and version in case referenceId
+                is a  UD reference created as a chromosomal slice.
+            - sourceAccession: Accession number of the reference sequence
+                source (only for genbank references).
+            - sourceVersion: Version number of the reference sequence source
+                (only for genbank references).
+            - sourceGi: GI number of the reference sequence source (only for
+                genbank references).
+            - molecule: Molecular type of the reference sequence.
+            - original: Original sequence.
+            - mutated: Mutated sequence.
+            - origMRNA: Original transcript sequence.
+            - mutatedMRNA: Mutated transcript sequence.
+            - origCDS: Original CDS.
+            - newCDS: Mutated CDS.
+            - origProtein: Original protein sequence.
+            - newProtein: Mutated protein sequence.
+            - altProtein: Alternative mutated protein sequence.
+            - errors: Number of errors.
+            - warnings: Number of warnings.
+            - summary: Summary of messages.
+            - chromDescription: Chromosomal description.
+            - genomicDescription: Genomic description.
+            - transcriptDescriptions: List of transcript descriptions.
+            - proteinDescriptions: List of protein descriptions.
+            - rawVariants: List of raw variants where each raw variant is
+                represented by an object with fields:
+                - description: Description of the raw variant.
+                - visualisation: ASCII visualisation of the raw variant.
+            - messages: List of (error) messages.
         """
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
@@ -641,6 +678,13 @@ class MutalyzerService(DefinitionBase):
         variantchecker.check_variant(variant, O)
 
         result = MutalyzerOutput()
+
+        result.referenceId = O.getIndexedOutput('reference_id', 0)
+        result.sourceId = O.getIndexedOutput('source_id', 0)
+        result.sourceAccession = O.getIndexedOutput('source_accession', 0)
+        result.sourceVersion = O.getIndexedOutput('source_version', 0)
+        result.sourceGi = O.getIndexedOutput('source_gi', 0)
+        result.molecule = O.getIndexedOutput('molecule', 0)
 
         # We force the results to strings here, because some results
         # may be of type Bio.Seq.Seq which soaplib doesn't like.

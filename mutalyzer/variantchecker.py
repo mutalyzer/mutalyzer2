@@ -1513,10 +1513,20 @@ def check_variant(description, output):
 
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
-
     output.addOutput('organism', retrieved_record.organism)
-
     output.addOutput('reference', record_id)
+
+    # Add some more reference info.
+    # Todo: Add selected transcript (LRGTranscriptID for LRGs, Gene for
+    #     genbank files), but I think this is part of the variant and not
+    #     part of the reference.
+    output.addOutput('reference_id', retrieved_record.id)
+    output.addOutput('source_id', retrieved_record.source_id)
+    if filetype == 'GB':
+        output.addOutput('source_accession', retrieved_record.source_accession)
+        output.addOutput('source_version', retrieved_record.source_version)
+        output.addOutput('source_gi', retrieved_record.source_gi)
+    output.addOutput('molecule', retrieved_record.molType)
 
     # Note: geneSymbol[0] is used as a filter for batch runs.
     output.addOutput('geneSymbol', (gene_symbol, transcript_id))

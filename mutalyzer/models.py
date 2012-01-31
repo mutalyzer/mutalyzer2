@@ -93,6 +93,13 @@ class MutalyzerOutput(ClassModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
+    referenceId = Mandatory.String
+    sourceId = Mandatory.String
+    sourceAccession = String
+    sourceVersion = String
+    sourceGi = String
+    molecule = Mandatory.String
+
     original = String
     mutated = String
 

@@ -31,6 +31,16 @@ def main(description, verbosity=None):
     service = Client(WSDL_LOCATION, cache=None).service
     result = service.runMutalyzer(description)
 
+    print 'Reference id: %s' % result.referenceId
+    print 'Source id: %s' % result.sourceId
+    if 'sourceAccession' in result:
+        print 'Source accession number: %s' % result.sourceAccession
+    if 'sourceVersion' in result:
+        print 'Source version: %s' % result.sourceVersion
+    if 'sourceGi' in result:
+        print 'Source GI number: %s' % result.sourceGi
+    print 'Molecule type: %s\n' % result.molecule
+
     if result.rawVariants:
         for v in result.rawVariants.RawVariant:
             print 'Raw variant: %s' % v.description

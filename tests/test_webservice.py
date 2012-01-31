@@ -58,8 +58,8 @@ class TestWebservice():
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client(WSDL_URL) #, cache=None)
-        self.client.options.cache.setduration(seconds=120)
+        self.client = Client(WSDL_URL, cache=None)
+        #self.client.options.cache.setduration(seconds=120)
 
     def test_checksyntax_valid(self):
         """
@@ -298,3 +298,100 @@ class TestWebservice():
         """
         r = self.client.service.ping()
         assert_equal(r, 'pong')
+
+    def test_runmutalyzer(self):
+        """
+        Just a runMutalyzer test.
+        """
+        r = self.client.service.runMutalyzer('NM_003002.2:c.274G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.genomicDescription, 'NM_003002.2:n.335G>T')
+        assert 'NM_003002.2(SDHD_v001):c.274G>T' in r.transcriptDescriptions.string
+
+    def test_runmutalyzer_reference_info_nm(self):
+        """
+        Get reference info for an NM variant without version.
+        """
+        r = self.client.service.runMutalyzer('NM_003002:c.274G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NM_003002')
+        assert_equal(r.sourceId, 'NM_003002.2')
+        assert_equal(r.sourceAccession, 'NM_003002')
+        assert_equal(r.sourceVersion, '2')
+        assert_equal(r.sourceGi, '222352156')
+        assert_equal(r.molecule, 'n')
+
+    def test_runmutalyzer_reference_info_nm_version(self):
+        """
+        Get reference info for an NM variant with version.
+        """
+        r = self.client.service.runMutalyzer('NM_003002.2:c.274G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NM_003002.2')
+        assert_equal(r.sourceId, 'NM_003002.2')
+        assert_equal(r.sourceAccession, 'NM_003002')
+        assert_equal(r.sourceVersion, '2')
+        assert_equal(r.sourceGi, '222352156')
+        assert_equal(r.molecule, 'n')
+
+    def test_runmutalyzer_reference_info_ud(self):
+        """
+        Get reference info for a UD variant.
+        """
+        r = self.client.service.runMutalyzer('UD_129433404385:g.1del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'UD_129433404385')
+        assert_equal(r.sourceId, 'NC_000023.10')
+        assert_equal(r.sourceAccession, 'NC_000023')
+        assert_equal(r.sourceVersion, '10')
+        assert_equal(r.sourceGi, '224589822')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_lrg(self):
+        """
+        Get reference info for an LRG variant.
+        """
+        r = self.client.service.runMutalyzer('LRG_1t1:c.266G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'LRG_1')
+        assert_equal(r.sourceId, 'LRG_1')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_ng(self):
+        """
+        Get reference info for an NG variant without version.
+        """
+        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NG_012772')
+        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceAccession, 'NG_012772')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_ng_version(self):
+        """
+        Get reference info for an NG variant with version.
+        """
+        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NG_012772')
+        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceAccession, 'NG_012772')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_gi(self):
+        """
+        Get reference info for a GI variant.
+        """
+        r = self.client.service.runMutalyzer('gi256574794:g.18964del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NG_012772.1')
+        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceAccession, 'NG_012772')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.molecule, 'g')

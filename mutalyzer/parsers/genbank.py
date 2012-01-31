@@ -484,8 +484,13 @@ class GBparser():
         record = Record()
         record.seq = biorecord.seq
 
-        record.version = biorecord.id.split('.')[1]
-        # Todo: also set organism in the LRG parser
+        # Note: The .source_* values may be different from the values we are
+        #     working with, e.g. for UD slices where these values (taken from
+        #     the genbank file) are from the original NC reference. We try to
+        #     set the .id field to the working value in the caller.
+        record.source_id = biorecord.id
+        record.source_accession, record.source_version = biorecord.id.split('.')[:2]
+        record.source_gi = biorecord.annotations['gi']
         record.organism = biorecord.annotations['organism']
 
         # Todo: This will change once we support protein references
@@ -505,7 +510,6 @@ class GBparser():
             else :
                 record.chromOffset = int(accInfo[2].split('.')[0])
         #if
-        record.recordId = biorecord.id
         for i in biorecord.features :
             if i.qualifiers :
                 if i.type == "source" :

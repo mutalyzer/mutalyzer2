@@ -739,6 +739,7 @@ class GenBankRetriever(Retriever):
         # Now we have the file, so we can parse it.
         GenBankParser = genbank.GBparser()
         record = GenBankParser.create_record(filename)
+        record.id = name
 
         # Todo: This will change once we support protein references
         if isinstance(record.seq.alphabet, ProteinAlphabet):
@@ -805,6 +806,11 @@ class LRGRetriever(Retriever):
         #create GenRecord.Record from LRG file
         record = lrg.create_record(file_handle.read())
         file_handle.close()
+
+        # We don't create LRGs from other sources, so id is always the same
+        # as source_id.
+        record.id = identifier
+        record.source_id = identifier
 
         return record
     #loadrecord
