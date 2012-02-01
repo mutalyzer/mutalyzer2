@@ -59,8 +59,8 @@ class TestWebservice():
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
         """
-        self.client = Client(WSDL_URL, cache=None)
-        #self.client.options.cache.setduration(seconds=120)
+        self.client = Client(WSDL_URL) #, cache=None)
+        self.client.options.cache.setduration(seconds=120)
 
     def test_checksyntax_valid(self):
         """
@@ -400,3 +400,37 @@ class TestWebservice():
         assert_equal(r.sourceVersion, '1')
         assert_equal(r.sourceGi, '256574794')
         assert_equal(r.molecule, 'g')
+
+    @skip
+    def test_gettranscriptsandinfo_slice(self):
+        """
+        Running getTranscriptsAndInfo on a chromosomal slice should include
+        chromosomal positions.
+
+        slice: 48284000 - 48259456 (COL1A1 with 5001 and 2001 borders)
+        translation start: 48284000 - 5001 + 1 = 48279000
+        translation end: 48259456 + 2001 = 48261457
+
+        Todo: We cannot use UD references in unit tests, unless we implement
+           a way to create them inside the unit test.
+        """
+        r = self.client.service.getTranscriptsAndInfo('UD_129646580028')
+        assert_equal(type(r.TranscriptInfo), list)
+        names = [t.name for t in r.TranscriptInfo]
+        assert 'COL1A1_v001' in names
+        for t in r.TranscriptInfo:
+            if t.name != 'COL1A1_v001':
+                continue
+            assert_equal(t.cTransStart, '-126')
+            assert_equal(t.gTransStart, 5001)
+            assert_equal(t.chromTransStart, 48279000)
+            assert_equal(t.cTransEnd, '*1406')
+            assert_equal(t.gTransEnd, 22544)
+            assert_equal(t.chromTransEnd, 48261457)
+            assert_equal(t.sortableTransEnd, 5801)
+            assert_equal(t.cCDSStart, '1')
+            assert_equal(t.gCDSStart, 5127)
+            assert_equal(t.chromCDSStart, 48278874)
+            assert_equal(t.cCDSStop, '4395')
+            assert_equal(t.gCDSStop, 21138)
+            assert_equal(t.chromCDSStop, 48262863)

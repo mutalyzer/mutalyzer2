@@ -787,20 +787,26 @@ class MutalyzerService(DefinitionBase):
                  - product
                  - cTransStart
                  - gTransStart
+                 - chromTransStart
                  - cTransEnd
                  - gTransEnd
+                 - chromTransEnd
                  - sortableTransEnd
                  - cCDSStart
                  - gCDSStart
+                 - chromCDSStart
                  - cCDSStop
                  - gCDSStop
+                 - chromCDSStop
                  - locusTag
                  - linkMethod
                  - exons: Array of ExonInfo objects with fields:
                           - cStart
                           - gStart
+                          - chromStart
                           - cStop
                           - gStop
+                          - chromStop
                  - proteinTranscript: ProteinTranscript object with fields:
                                       - name
                                       - id
@@ -847,8 +853,10 @@ class MutalyzerService(DefinitionBase):
                     exon = ExonInfo()
                     exon.gStart = transcript.CM.getSpliceSite(i)
                     exon.cStart = transcript.CM.g2c(exon.gStart)
+                    exon.chromStart = GenRecordInstance.record.toChromPos(exon.gStart)
                     exon.gStop = transcript.CM.getSpliceSite(i + 1)
                     exon.cStop = transcript.CM.g2c(exon.gStop)
+                    exon.chromStop = GenRecordInstance.record.toChromPos(exon.gStop)
                     t.exons.append(exon)
 
                 # Beware that CM.info() gives a made-up value for trans_end,
@@ -861,6 +869,7 @@ class MutalyzerService(DefinitionBase):
 
                 t.cTransEnd = str(t.exons[-1].cStop)
                 t.gTransEnd = t.exons[-1].gStop
+                t.chromTransEnd = GenRecordInstance.record.toChromPos(t.gTransEnd)
                 t.sortableTransEnd = sortable_trans_end
 
                 # Todo: If we have no CDS info, CM.info() gives trans_end as
@@ -873,10 +882,13 @@ class MutalyzerService(DefinitionBase):
                 t.product = transcript.transcriptProduct
                 t.cTransStart = str(trans_start)
                 t.gTransStart = transcript.CM.x2g(trans_start, 0)
+                t.chromTransStart = GenRecordInstance.record.toChromPos(t.gTransStart)
                 t.cCDSStart = str(cds_start)
                 t.gCDSStart = transcript.CM.x2g(cds_start, 0)
+                t.chromCDSStart = GenRecordInstance.record.toChromPos(t.gCDSStart)
                 t.cCDSStop = str(cds_stop)
                 t.gCDSStop = transcript.CM.x2g(cds_stop, 0)
+                t.chromCDSStop = GenRecordInstance.record.toChromPos(t.gCDSStop)
                 t.locusTag = transcript.locusTag
                 t.linkMethod = transcript.linkMethod
 
@@ -948,6 +960,10 @@ class MutalyzerService(DefinitionBase):
     def sliceChromosome(self, chromAccNo, start, end, orientation) :
         """
         Todo: documentation, error handling, argument checking, tests.
+
+        @arg orientation: Orientation of the slice. 1 for forward, 2 for
+            reverse complement.
+        @type orientation: integer
         """
         O = Output(__file__)
         D = Db.Cache()

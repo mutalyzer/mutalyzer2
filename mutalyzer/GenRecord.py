@@ -351,6 +351,8 @@ class Record(object) :
         @return: chromosomal g. position
         @rtype: integer
         """
+        if not self.chromOffset:
+            return None
 
         if self.orientation == 1 :
             return self.chromOffset + i - 1

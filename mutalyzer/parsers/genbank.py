@@ -501,7 +501,11 @@ class GBparser():
         geneDict = {}
 
         accInfo = biorecord.annotations['accessions']
-        if len(accInfo) >= 3 and accInfo[1] == "REGION:" :
+        if len(accInfo) >= 3 and accInfo[1] == "REGION:":
+            # Todo: This information is present in the genbank file if it is a
+            #     UD sliced from a chromosome. We can get the same information
+            #     for NM references from our mapping database and that way
+            #     also provide chromosomal variant descriptions for those.
             region = accInfo[2]
             if "complement" in region :
                 record.orientation = -1

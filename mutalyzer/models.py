@@ -147,8 +147,10 @@ class ExonInfo(ClassModel):
 
     cStart = Mandatory.String
     gStart = Mandatory.Integer
+    chromStart = Integer
     cStop = Mandatory.String
     gStop = Mandatory.Integer
+    chromStop = Integer
 #ExonInfo
 
 
@@ -168,9 +170,11 @@ class TranscriptInfo(ClassModel):
     """
     Used in return type of SOAP method getTranscriptsAndInfo.
 
-    @todo: Decide on 'stop' versus 'end'. Web interface uses 'stop' for
-           both trans and CDS. Ivar asked for 'end'. Internally, we have
-           trans 'end' and CDS 'stop'.
+    @todo: Decide on 'stop' versus 'end'. Web interface uses 'stop' for both
+        trans and CDS. Ivar asked for 'end'. Internally, we have trans 'end'
+        and CDS 'stop'.
+    @todo: We should really also provide the chromosome (or its accession
+        number) next to the chromosomal positions, if available.
     """
     __namespace__ = SOAP_NAMESPACE
 
@@ -180,14 +184,18 @@ class TranscriptInfo(ClassModel):
 
     cTransStart = Mandatory.String
     gTransStart = Mandatory.Integer
+    chromTransStart = Integer
     cTransEnd = Mandatory.String
     gTransEnd = Mandatory.Integer
+    chromTransEnd = Integer
     sortableTransEnd = Mandatory.Integer
 
     cCDSStart = Mandatory.String
     gCDSStart = Mandatory.Integer
+    chromCDSStart = Integer
     cCDSStop = Mandatory.String
     gCDSStop = Mandatory.Integer
+    chromCDSStop = Integer
 
     locusTag = Mandatory.String
     linkMethod = Mandatory.String
