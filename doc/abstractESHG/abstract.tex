@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{fullpage}
+
+\author{J.F.J. Laros \and M. Vermaat \and J.T. den Dunnen \and P.E.M. Taschner}
+\title{Disambiguating complex HGVS variant descriptions}
+
+\frenchspacing
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract} \noindent
+The \emph{Human Genome Variation Society} (HGVS)~\cite{NOM1} nomenclature for
+the description of sequence variations \ldots
+
+\paragraph{Background}
+The recent formalisation of the HGVS nomenclature syntax~\cite{hgvs_bnf} makes
+it possible to automatically interpret the variant description and reconstruct
+the observed sequence. This formalisation however, tells us nothing about how
+to make such a description.
+
+\paragraph{Problem description}
+Formally, a variant description is, together with the reference sequence, the
+input of a function that transforms the reference sequence into the observed
+sequence. This function is not injective; multiple descriptions can generate
+the same observed sequence. If for example, we observe a change from
+\texttt{ATGCTTCAGG} to \texttt{CTGAAGCATT}. The untrained eye might see this
+change as \texttt{1\_10delinsCTGAAGCATT}, while the preferred description would
+be \texttt{1\_9inv;10G>T}. We call the set of descriptions that result in the
+same observed sequence the set of \emph{equivalent descriptions}.
+
+\paragraph{Solution}
+We present an algorithm that, given a reference sequence and an observed
+sequence, will generate the HGVS description of the variant. Because there is
+no direct link between the variant description that is used to reconstruct the
+observed sequence and the generated variant description, this algorithm will
+always generate the same description, no matter which description in the set of
+equivalent descriptions is used.
+
+\paragraph{Implementation}
+We start with finding the smallest indel that describes the change by removing
+the longest common prefix and the longest common suffix from the reference- and
+the observed sequence. Next, we recursively try to find a shorter description
+using the following strategy:
+
+First we determine the \emph{longest common substring} (LCS) in both the
+forward and the reverse strand. If the LCS is found on the forward strand, we
+split the description in two parts and recursively describe the separate parts.
+If the LCS is found on the reverse strand, we split the description in three
+parts, the same two parts that we would get in the former case, plus an
+inversion in between.
+
+The recursion ends if an elementary description (substitution, insertion,
+deletion, etc.) is found. If a variant was split, the length of the description
+is compared to the length of the indel that was split and the shortest of the
+two is returned.
+
+\paragraph{Conclusion}
+It works.
+
+\bibliographystyle{plain}
+\bibliography{/home/jfjlaros/projects/bibliography.bib}
+\end{abstract}
+
+\end{document}
