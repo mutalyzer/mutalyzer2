@@ -278,11 +278,17 @@ class Retriever(object) :
 
         response_text = response.read()
 
+        if response_text == '\n':
+            # This is apparently what dbSNP returns for non-existing dbSNP id
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'ID rs%s could not be found in dbSNP.' \
+                                    % id)
+            return []
+
         try:
             # Parse the output.
             doc = minidom.parseString(response_text)
-            exchange_set = doc.getElementsByTagName('ExchangeSet')
-            rs = exchange_set[0].getElementsByTagName('Rs')
+            rs = doc.getElementsByTagName('Rs')[0]
         except expat.ExpatError as e:
             # Could not parse XML.
             self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
@@ -300,29 +306,8 @@ class Retriever(object) :
                                     'Result from dbSNP: %s' % response_text)
             return []
 
-        if len(rs) < 1:
-            # No Rs result element.
-            text = []
-            for node in exchange_set[0].childNodes:
-                if node.nodeType == node.TEXT_NODE:
-                    text.append(node.data)
-            message = ''.join(text)
-            if message.find('cannot get document summary') != -1:
-                # Entrez does not have this rs ID.
-                self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'ID rs%s could not be found in dbSNP.' \
-                                        % id)
-            else:
-                # Something else was wrong (print {message} to see more).
-                self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'Unkown dbSNP error. Got no result ' \
-                                        'from dbSNP.')
-                self._output.addMessage(__file__, -1, 'INFO',
-                                        'Message from dbSNP: %s' % message)
-            return []
-
         snps = []
-        for i in rs[0].getElementsByTagName('hgvs'):
+        for i in rs.getElementsByTagName('hgvs'):
             snps.append(i.lastChild.data.encode('utf8'))
 
         return snps
