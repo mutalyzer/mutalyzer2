@@ -11,10 +11,6 @@ import Bio.Seq
 from mutalyzer.util import longest_common_prefix, longest_common_suffix
 from mutalyzer.util import palinsnoop, roll
 
-def printMatrix(M) :
-    for i in M :
-        print i
-
 def LCSMatrix(s1, s2) :
     """
     """
@@ -22,7 +18,6 @@ def LCSMatrix(s1, s2) :
     y_max = len(s1) + 1
     x_max = len(s2) + 1
     M = [[0] * x_max for i in xrange(y_max)]
-    #printMatrix(M)
 
     for x in xrange(1, y_max) :
         for y in xrange(1, x_max) :
@@ -51,7 +46,6 @@ def findMax(M, x1, x2, y1, y2) :
         for y in xrange(y1, y2) :
             y_relative = y - y1
             realVal = min(x_relative, y_relative, M[x][y])
-            #print realVal,
 
             if realVal > longest :
                 longest = realVal
@@ -59,7 +53,6 @@ def findMax(M, x1, x2, y1, y2) :
                 y_longest = y_relative
             #if
         #for
-        #print
     #for
 
     return x_longest, y_longest, longest
@@ -103,8 +96,6 @@ def LongestCommonSubstring(s1, s2) :
         #for
     #for
 
-    #print s1, s2
-    #printMatrix(M)
     return x_longest, y_longest, longest
 #LongestCommonSubstring
 
@@ -119,10 +110,6 @@ class RawVar() :
     Example: if {end} is initialised for a substitution, a range will be
       retuned, resulting in a description like: 100_100A>T
     """
-    # TODO: We now use the length of the variant as a measure of its
-    #       ``length'', but that makes it a bit context dependent, e.g., c.1A>T
-    #       and g.100A>T may be the same variant giving different lengths.
-    #       Maybe we should ignore the positions in a description. 
 
     def __init__(self, start = 0, start_offset = 0, end = 0, end_offset = 0,
         type = "none", deleted = "", inserted = "", shift = 0) :
@@ -188,6 +175,38 @@ class RawVar() :
 
         return descr + "%s>%s" % (self.deleted, self.inserted)
     #description
+
+    def descriptionLength(self) :
+        """
+        Give the standardised length of the HGVS description of the raw variant
+        stored in this class.
+
+        Note that this function relies on the absence of values to make the
+        correct description. Also see the comment in the class definition.
+
+        @returns: The standardised length of the HGVS description of the raw
+            variant stored in this class.
+        @rtype: int
+        """
+
+        if not self.start : # =
+            return 1
+
+        descrLen = 1 # Start position
+
+        if self.end : # '_' and end position.
+            descrLen += 2
+
+        if self.type != "subst" :
+            descrLen += len(self.type)
+
+            if self.inserted :
+                return descrLen + len(self.inserted)
+            return descrLen
+        #if
+
+        return 4 # Start position, '>' and end position.
+    #descriptionLength
 #RawVar
 
 def alleleDescription(allele) :
@@ -205,6 +224,20 @@ def alleleDescription(allele) :
         return "[%s]" % ';'.join(map(lambda x : x.description(), allele))
     return allele[0].description()
 #alleleDescription
+
+def alleleDescriptionLength(allele) :
+    """
+    Calculate the standardised length of an HGVS allele description.
+
+    @arg allele: A list of raw variants representing an allele description.
+    @type allele: list(RawVar)
+
+    @returns: The standardised length of the HGVS description of {allele}.
+    @rval: int
+    """
+
+    return sum(map(lambda x : x.descriptionLength(), allele))
+#alleleDescriptionLength
 
 def printpos(s, start, end, fill = 0) :
     """
@@ -299,13 +332,10 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end) :
 
     # At this stage, we either have an inversion, an indel or a Compound
     # variant.
-    a, b, c = findMax(M, s1_start, s1_end, s2_start, s2_end)
     s1_end_f, s2_end_f, lcs_f_len = LongestCommonSubstring(s1[s1_start:s1_end],
         s2[s2_start:s2_end])
     s1_end_r, s2_end_r, lcs_r_len = LongestCommonSubstring(s1[s1_start:s1_end],
         Bio.Seq.reverse_complement(s2[s2_start:s2_end]))
-    print "N:", a, b, c
-    print "O:", s1_end_f, s2_end_f, lcs_f_len
 
     # Palindrome snooping.
     trim = palinsnoop(s1[s1_start + s1_end_r - lcs_r_len:s1_start + s1_end_r])
@@ -370,7 +400,7 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end) :
             s1_end - r2_len, s1_end, s2_end - m2_len, s2_end)
     #else
 
-    if len(alleleDescription(partial)) - 2 <= len(alleleDescription(default)) :
+    if alleleDescriptionLength(partial) <= alleleDescriptionLength(default) :
         return partial
     return default
 #DNA_description
@@ -395,7 +425,6 @@ def describeDNA(original, mutated) :
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
     
-    #M = LCSMatrix(s1[lcp:s1_end], s2[lcp:s2_end])
     M = LCSMatrix(s1, s2)
 
     return DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)

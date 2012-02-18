@@ -50,29 +50,36 @@
       <div tal:condition = "description">
         <br>
         <h3>Variant Description Extractor results:</h3>
-        <br>
-        <b>Genomic description:</b><br>
-        <br>
-        <tt>g.<div tal:replace = "description"></div></tt>
-        <br>
-        <br>
-        <br>
-        <b>Overview of the raw variants:</b><br>
-        <br>
-        <table class = "laTable">
-          <tr>
-            <td>Start</td>
-            <td>End</td>
-            <td>Type</td>
-            <td>Deleted</td>
-            <td>Inserted</td>
-            <td>Shift</td>
-            <td>Description</td>
-          </tr>
-          <tr tal:repeat = "i visualisation">
-            <td tal:repeat = "j i" tal:content = "j"></td>
-          </tr>
-        </table>
+        <div class="messages">
+          <p tal:repeat = "m messages" tal:content = "m/description"
+            tal:attributes = "class m/class; title string:${m/level} (origin: ${m/origin})"></p>
+          <p tal:content = "summary"></p>
+        </div>
+        <div tal:condition = "not:errors">
+          <br>
+          <b>Genomic description:</b><br>
+          <br>
+          <tt>g.<div tal:replace = "description"></div></tt>
+          <br>
+          <br>
+          <br>
+          <b>Overview of the raw variants:</b><br>
+          <br>
+          <table class = "laTable">
+            <tr>
+              <td>Start</td>
+              <td>End</td>
+              <td>Type</td>
+              <td>Deleted</td>
+              <td>Inserted</td>
+              <td>Shift</td>
+              <td>Description</td>
+            </tr>
+            <tr tal:repeat = "i visualisation">
+              <td tal:repeat = "j i" tal:content = "j"></td>
+            </tr>
+          </table>
+        </div>
       </div> <!-- description -->
       <br>
     </div>

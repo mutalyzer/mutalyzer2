@@ -1502,8 +1502,8 @@ def check_variant(description, output):
             gene_symbol = parsed_description.Gene.GeneSymbol or ''
             transcript_id = parsed_description.Gene.TransVar or ''
             if parsed_description.Gene.ProtIso:
-                output.addMessage(__file__, 4, 'EPROT', 'Indexing by ' \
-                                  'protein isoform is not supported.')
+                output.addMessage(__file__, 4, 'EPROT',
+                    'Indexing by protein isoform is not supported.')
         retriever = Retriever.GenBankRetriever(output, database)
 
     retrieved_record = retriever.loadrecord(record_id)

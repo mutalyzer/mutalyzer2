@@ -967,8 +967,18 @@ class DescriptionExtractor :
         output.addMessage(__file__, -1, 'INFO',
             "Received Description Extract request from %s" % IP)
 
+        # Move this to the describe module.
+        if not util.is_dna(referenceSeq) :
+            output.addMessage(__file__, 3, "ENODNA",
+                "Reference sequence is not DNA.")
+        if not util.is_dna(variantSeq) :
+            output.addMessage(__file__, 3, "ENODNA",
+                "Variant sequence is not DNA.")
+
         result = describe.describeDNA(referenceSeq, variantSeq)
         description = describe.alleleDescription(result)
+
+        errors, warnings, summary = output.Summary()
 
         visualisation = []
         for i in result :
@@ -979,7 +989,11 @@ class DescriptionExtractor :
             'lastReferenceSeq' : referenceSeq,
             'lastVariantSeq'   : variantSeq,
             'description'      : description,
-            'visualisation'    : visualisation
+            'visualisation'    : visualisation,
+            'errors'           : errors,
+            'summary'          : summary,
+            'messages'         : map(util.message_info,
+                output.getMessages())
         }
 
         output.addMessage(__file__, -1, 'INFO',
