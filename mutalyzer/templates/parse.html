@@ -1,33 +1,42 @@
 <html>
   <head>
+    <link rel="stylesheet"
+      type="text/css"
+      href="base/css/style.css">
     <title></title>
   </head>
   <body>
     <div metal:define-macro="content">
-      <center><h3>Variant syntax checker</h3></center>
-      <div>
-      Please insert the mutation name using the 
-      <span class = "helper" 
-        title = "Human Genome Variation Society standard variant nomenclature">
-        <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
-        &lt;Accession Number&gt;.&lt;version 
-        number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
-        type&gt;.&lt;mutation&gt;
-      </div><br>
-      Example: AB026906.1:c.274G&gt;T<br>
+      <center>
+        <h3>Variant syntax checker</h3>
+      </center>
+      <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
+        <div>
+        Please insert the mutation name using the 
+        <span class = "helper" title =
+          "Human Genome Variation Society standard variant nomenclature">
+          <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
+          &lt;Accession Number&gt;.&lt;version 
+          number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
+          type&gt;.&lt;mutation&gt;
+        </div><br>
+        Example: AB026906.1:c.274G&gt;T<br>
+        <br>
+        <form action = "" method = "post">
+          <input 
+            type = "text" 
+            name = "variant" 
+            tal:attributes = "value variant"
+            style = "width:100%"><br>
+          <input 
+            type="submit" 
+            value="Submit">
+          <input type="button" value="Clear field" 
+                 onClick = "clearForm(this.form, 'variant');">
+        </form>
+        <br>
+      </div>
       <br>
-      <form action = "" method = "post">
-        <input 
-          type = "text" 
-          name = "variant" 
-          tal:attributes = "value variant"
-          size = "100%"><br>
-        <input 
-          type="submit" 
-          value="Submit">
-        <input type="button" value="Clear field" 
-               onClick = "clearForm(this.form, 'variant');">
-      </form><br>
       <div tal:condition = "variant">
         <h3>Variant syntax checker results:</h3>
         <div tal:condition = "parseError">
@@ -46,6 +55,7 @@
         <div tal:condition = "not:parseError">
           The syntax of this variant is OK!
         </div>
+        <br>
       </div>
     </div>
   </body>

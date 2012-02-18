@@ -878,7 +878,7 @@ class LRGRetriever(Retriever):
                 else:
                     # This can only occur if synchronus calls to mutalyzer are
                     # made to recover a file that did not exist. Still leaves
-					# a window in between the check and the write.
+                    # a window in between the check and the write.
                     return filename
             #if
             else :

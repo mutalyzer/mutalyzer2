@@ -4,21 +4,9 @@
 Prototype of a module that can generate a HGVS description of the variant(s)
 leading from one sequence to an other.
 
-@requires: sys
-@requires: argparse
 @requires: Bio.Seq
-@requires: suds.client.Client
 """
 
-# NOTE: The following modules are not needed once this is an integrated module.
-import sys
-import argparse
-from suds.client import Client
-from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
-
-WSDL_LOCATION = "http://localhost/mutalyzer/services/?wsdl"
-
-# NOTE: The following modules are really needed.
 import Bio.Seq
 from mutalyzer.util import longest_common_prefix, longest_common_suffix
 from mutalyzer.util import palinsnoop, roll
@@ -412,67 +400,3 @@ def describeDNA(original, mutated) :
 
     return DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
 #describeDNA
-
-# NOTE: Everything below this point is not needed once this is an integrated
-#       module.
-
-def describe(description) :
-    """
-    Call Mutalyzer with a variant description to get the original and the
-    mutated sequence and make our own description.
-
-    @arg description: A HGVS description of the variant to be checked.
-    @type description: str
-    """
-
-    service = Client(WSDL_LOCATION, cache = None).service
-    result = service.runMutalyzer(description)
-
-    if result.rawVariants :
-        for i in result.rawVariants.RawVariant :
-            print i.description
-            print i.visualisation
-            print
-        #for
-
-    newDescription = describeDNA(result.original, result.mutated)
-
-    print("old: %s" % result.genomicDescription)
-    print("new: XX_XXXXXX.X:X.%s" % alleleDescription(newDescription))
-
-    for i in newDescription :
-        print("%s" % printpos(result.original, i.start, i.end + 1))
-
-    # NOTE: Maybe save this part for making a nice table?
-    print("\nstart\tend\ttype\tdel\tins\tshift\thgvs")
-    for i in newDescription :
-        print("%i\t%i\t%s\t%s\t%s\t%i\t%s" % (i.start, i.end, i.type,
-            i.deleted, i.inserted, i.shift, i.description()))
-#describe
-
-def main() :
-    """
-    Main entry point.
-    """
-
-    parser = argparse.ArgumentParser(
-        prog = "describe",
-        formatter_class = argparse.RawDescriptionHelpFormatter,
-        description = "",
-        epilog = """
-examples:
-  NM_002001.2:c.1_10delinsCTGGATCCTC
-  NM_002001.2:c.1_5delinsCCATG
-  NM_002001.2:c.[1_5delinsCCATG;15del]
-""")
-
-    parser.add_argument("-d", dest = "description", type = str,
-        required = True, help = "HGVS description of a variant.")
-
-    arguments = parser.parse_args()
-
-    describe(arguments.description)
-#main
-
-if __name__ == "__main__" :
-    main()

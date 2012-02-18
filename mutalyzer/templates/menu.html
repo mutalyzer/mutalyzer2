@@ -224,6 +224,38 @@
 
       <tr>
         <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_descriptionExtract">
+        </td>
+        <td colspan="3">
+          <a id="page_descriptionExtract"
+            onclick="swapActive('descriptionExtract');"
+            href="descriptionExtract"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'descriptionExtract');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'descriptionExtract');"
+            class="vertnavsub">Description Extractor</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
+          <img src="base/images/bullitdonker.gif" id="b_upload">
+        </td>
+        <td colspan="3">
+          <a id="page_upload" 
+            onclick="swapActive('upload');" 
+            href="upload" 
+            onmouseover="navAct('base/images/bullitlicht1.gif', 
+                                'upload');" 
+            onmouseout="navDeAct('base/images/bullitdonker.gif', 
+                                 'upload');" 
+            class="vertnavsub">Reference File Loader</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="20">
           <img src="base/images/bullitdonker.gif" id="b_batch">
         </td>
         <td colspan="3">
@@ -283,22 +315,6 @@
           <a id="page_batchSnpConverter" 
             href="batchSnpConverter" 
             class="vertnavsub">SNP Converter</a>
-        </td>
-      </tr>
-
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_upload">
-        </td>
-        <td colspan="3">
-          <a id="page_upload" 
-            onclick="swapActive('upload');" 
-            href="upload" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'upload');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'upload');" 
-            class="vertnavsub">Reference File Loader</a>
         </td>
       </tr>
 
@@ -564,7 +580,8 @@
         </td>
         <td align="middle">
           <img src = "base/images/LUMC_24x24.png" align = "middle">
-          &nbsp; &copy; 2007-2011 <a href = "http://www.lumc.nl">LUMC</a>
+          &nbsp; &copy; 2007-<tal tal:replace = "copyrightYear"></tal>
+          <a href = "http://www.lumc.nl">LUMC</a>
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
           &nbsp; &nbsp; 
         </td>

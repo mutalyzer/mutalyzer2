@@ -4,6 +4,7 @@ HGVS variant nomenclature checker.
 
 
 import os
+import time
 
 
 # On the event of a new release, we update the __version_info__ and __date__
@@ -24,6 +25,7 @@ RELEASE = False
 
 __version_info__ = ('2', '0', 'beta-15', 'dev')
 __date__ = '26 Jan 2012'
+__copyrightYear__ = time.strftime("%Y") # Fixate after final release.
 
 
 __version__ = '.'.join(__version_info__)

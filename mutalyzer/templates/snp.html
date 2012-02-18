@@ -10,26 +10,28 @@
       <center>
         <h3>SNP converter</h3>
       </center>
-      Please insert the 
-      <a href = "http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
-      number below. Mutalyzer will retrieve the HGVS description of the SNP
-      specified on the reference sequence(s) used by dbSNP.<br>
-      <br>
-      Example: rs9919552<br>
-      <br>
-      <form action = "" method = "post">
-        <input 
-          type = "text" 
-          name = "rsId" 
-          style = "width:25%"
-        ><br>
-        <input 
-          type="submit" 
-          value="Submit"
-        >
-        <input type="button" value="Clear field" 
-               onClick = "clearForm(this.form, 'rsId');">
-      </form>
+      <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
+        Please insert the 
+        <a href = "http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
+        number below. Mutalyzer will retrieve the HGVS description of the SNP
+        specified on the reference sequence(s) used by dbSNP.<br>
+        <br>
+        Example: rs9919552<br>
+        <br>
+        <form action = "" method = "post">
+          <input 
+            type = "text" 
+            name = "rsId" 
+            style = "width:25%"
+          ><br>
+          <input 
+            type="submit" 
+            value="Submit"
+          >
+          <input type="button" value="Clear field" 
+                 onClick = "clearForm(this.form, 'rsId');">
+        </form>
+      </div>
       <div tal:condition = "lastpost">
         <br>
         <h3>SNP converter results:</h3>
