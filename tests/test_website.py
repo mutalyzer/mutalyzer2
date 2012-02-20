@@ -117,6 +117,17 @@ class TestWSGI():
                 href = '/' + href
             self.app.get(href)
 
+    def test_description_extractor(self):
+        """
+        Submit the variant description extractor.
+        """
+        r = self.app.get('/descriptionExtract')
+        form = r.forms[0]
+        form['referenceSeq'] = 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA'
+        form['variantSeq'] = 'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA'
+        r = form.submit()
+        r.mustcontain('g.[5_6insTT;17del;26A&gt;C;35dup]')
+
     def test_checksyntax_valid(self):
         """
         Submit the check syntax form with a valid variant.

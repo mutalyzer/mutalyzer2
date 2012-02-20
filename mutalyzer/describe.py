@@ -13,6 +13,7 @@ from mutalyzer.util import palinsnoop, roll
 
 def LCSMatrix(s1, s2) :
     """
+    Todo: Not yet in use.
     """
 
     y_max = len(s1) + 1
@@ -36,6 +37,8 @@ def findMax(M, x1, x2, y1, y2) :
 
     N = describe.LCSMatrix("banaan", "na")
     describe.findMax(M, 1, 7, 2, 4)
+
+    Todo: Not yet in use.
     """
 
     longest, x_longest, y_longest = 0, 0, 0
@@ -424,7 +427,7 @@ def describeDNA(original, mutated) :
     lcs = len(longest_common_suffix(s1[lcp:], s2[lcp:]))
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
-    
+
     M = LCSMatrix(s1, s2)
 
     return DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
