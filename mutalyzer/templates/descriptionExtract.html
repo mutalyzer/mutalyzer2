@@ -10,6 +10,29 @@
       <center>
         <h3>Variant Description Extractor</h3>
       </center>
+      <div> <!-- Remove this div later. -->
+        <b style="color: red">Note that this is an experimental service.</b>
+        <br>
+        <br>
+        Extract the HGVS variant description from a reference sequence and an
+        observed sequence. For now, we require the user to fill in two
+        sequences. After the testing phase, we plan to use the underlying
+        algorithm for:
+        <ul>
+          <li>
+            Disambiguation in the name checker. This will enable full support
+            for complex variants.
+          </li>
+          <li>
+            Comparison of two reference sequences. Useful for migrating a
+            variant description to an other reference sequence.
+          </li>
+          <li>
+            Implementation of a Reference Sequence Editor.
+          </li>
+        </ul>
+        <br>
+      </div>
       <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
         <form action = "" method = "post">
           Please supply a reference sequence and an observed sequence.<br>
