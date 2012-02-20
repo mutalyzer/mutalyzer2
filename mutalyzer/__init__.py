@@ -20,10 +20,10 @@ import os
 #
 # [1] http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version
 
-RELEASE = False
+RELEASE = True
 
-__version_info__ = ('2', '0', 'beta-15', 'dev')
-__date__ = '26 Jan 2012'
+__version_info__ = ('2', '0', 'beta-15')
+__date__ = '20 Feb 2012'
 
 
 __version__ = '.'.join(__version_info__)
