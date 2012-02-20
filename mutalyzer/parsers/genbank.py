@@ -156,8 +156,7 @@ class GBparser():
 
             proteinGI = result[0]["LinkSetDb"][0]["Link"][0]["Id"]
 
-            handle = Entrez.efetch(db = "protein", id = proteinGI,
-                                   rettype = "acc")
+            handle = Entrez.efetch(db='protein', id=proteinGI, rettype='acc', retmode='text')
 
             proteinAcc = handle.read().split('.')[0]
             handle.close()

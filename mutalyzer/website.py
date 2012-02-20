@@ -518,6 +518,8 @@ class Snp :
 
         output = Output(__file__)
 
+        IP = web.ctx["ip"]
+
         descriptions = []
 
         if rs_id :
@@ -1048,7 +1050,7 @@ class Bed :
             'description': 'Mutalyzer track for ' + variant,
             'visibility' : 'pack',
             'db'         : 'hg19',
-            'url'        : web.ctx.homedomain + web.ctx.homepath + 
+            'url'        : web.ctx.homedomain + web.ctx.homepath +
                 '/checkForward?mutationName=' + urllib.quote(variant),
             'color':       '255,0,0'}
 

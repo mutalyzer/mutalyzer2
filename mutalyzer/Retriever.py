@@ -259,14 +259,14 @@ class Retriever(object) :
         # Todo: maybe also implement this for other Entrez queries?
         for i in range(ENTREZ_MAX_TRIES - 1):
             try:
-                response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                response = Entrez.efetch(db='snp', id=id, rettype='flt',
                                          retmode='xml')
                 break
             except (IOError, HTTPException):
                 time.sleep(ENTREZ_SLEEP)
         else:
             try:
-                response = Entrez.efetch(db='SNP', id=id, rettype='flt',
+                response = Entrez.efetch(db='snp', id=id, rettype='flt',
                                          retmode='xml')
             except (IOError, HTTPException) as e:
                 # Could not parse XML.
@@ -411,7 +411,7 @@ class GenBankRetriever(Retriever):
         """
         Todo: Documentation.
         """
-        net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gb')
+        net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gb', retmode='text')
         raw_data = net_handle.read()
         net_handle.close()
 
@@ -435,7 +435,7 @@ class GenBankRetriever(Retriever):
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
                 return None
-            net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gbwithparts')
+            net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gbwithparts', retmode='text')
             raw_data = net_handle.read()
             net_handle.close()
 
@@ -493,9 +493,8 @@ class GenBankRetriever(Retriever):
                 return UD
 
         # It's not present, so download it.
-        handle = Entrez.efetch(db = "nucleotide", rettype = "gb",
-                               id = accno, seq_start = start, seq_stop = stop,
-                               strand = orientation)
+        handle = Entrez.efetch(db='nuccore', rettype='gb', retmode='text',
+            id=accno, seq_start=start, seq_stop=stop, strand=orientation)
         raw_data = handle.read()
         handle.close()
 

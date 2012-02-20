@@ -31,6 +31,8 @@ def deploy(bootstrap='no'):
     Additionally, if bootstrap=yes, install all dependencies before Mutalyzer
     installation, and bootstrap the Mutalyzer configuration afterwards (i.e.
     create and fill database, add cron script, create cache directory, etc).
+
+    Todo: Instead of using /tmp/mutalyzer, use mktemp or something.
     """
     # Currently, Fabric only supports task arguments as strings.
     bootstrap = (bootstrap == 'yes')
