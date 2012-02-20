@@ -136,7 +136,6 @@ class render_tal :
             context = simpleTALES.Context()
 
             context.addGlobal("interactive", not standalone)
-            context.addGlobal("copyrightYear", mutalyzer.__copyrightYear__)
 
             for name, value in self.globals.items() :
                 context.addGlobal(name, value)
@@ -177,6 +176,7 @@ render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
     'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
     'releaseDate'         : mutalyzer.__date__,
     'release'             : mutalyzer.RELEASE,
+    'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
     'contactEmail'        : config.get('email')})
 
 # web.py application

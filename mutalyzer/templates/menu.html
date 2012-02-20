@@ -1,84 +1,84 @@
 <html>
   <head>
-    <link rel="shortcut icon" 
-      href="base/images/favicon.ico" 
+    <link rel="shortcut icon"
+      href="base/images/favicon.ico"
       type="image/x-icon">
-    <link rel="stylesheet" 
-      type="text/css" 
+    <link rel="stylesheet"
+      type="text/css"
       href="base/css/style.css">
-    <script 
-      type="text/javascript" 
-      language="JavaScript" 
+    <script
+      type="text/javascript"
+      language="JavaScript"
       src="base/js/index.js">
     </script>
-    <script 
-      type="text/javascript" 
-      language="javascript" 
+    <script
+      type="text/javascript"
+      language="javascript"
       src="base/js/menu.js">
     </script>
-    <script 
-      type="text/javascript" 
-      language="javascript" 
+    <script
+      type="text/javascript"
+      language="javascript"
       src="base/js/interface.js">
     </script>
-    <script 
-      type="text/javascript" 
-      language="javascript" 
+    <script
+      type="text/javascript"
+      language="javascript"
       src="base/js/generator.js">
     </script>
-    <meta http-equiv="Content-Type" 
+    <meta http-equiv="Content-Type"
       content="text/html; charset=iso-8859-1">
     <title tal:content = "structure string:Mutalyzer ${version}"></title>
   </head>
-  <body 
+  <body
     style="background-image: url('base/images/background.gif');
            background-repeat: repeat-y;"
-    leftmargin="0" 
-    topmargin="0" 
-    marginwidth="0" 
+    leftmargin="0"
+    topmargin="0"
+    marginwidth="0"
     marginheight="0"
-    onload="initActive(); 
+    onload="initActive();
             preloadImages('base/images/bullitlicht1.gif',
                           'base/images/bullitlicht2.gif',
                           'base/images/mutalyzer_logo_bw.png',
-                          'base/images/mutalyzer_logo.png');"> 
+                          'base/images/mutalyzer_logo.png');">
     <!-- Header -->
     <a id = "top" name = "top"></a>
-    
-    <table width="98%" 
-      border="0" 
-      cellspacing="0" 
+
+    <table width="98%"
+      border="0"
+      cellspacing="0"
       cellpadding="0">
       <tr>
         <!-- Corner logo -->
-        <td rowspan="2" 
-          valign="bottom" 
+        <td rowspan="2"
+          valign="bottom"
           width="180">
-          <a href="index" 
-            target="_top"><img 
-              src="base/images/mutalyzer_logo_bw.png" width="180" height="112" 
+          <a href="index"
+            target="_top"><img
+              src="base/images/mutalyzer_logo_bw.png" width="180" height="112"
               alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
-        <td valign="top" 
-          bgcolor="#FFFFFF" 
-          width="20"><img 
+        <td valign="top"
+          bgcolor="#FFFFFF"
+          width="20"><img
             src="base/images/1x1b.gif" height="1" width="20" border="0">
         </td>
-        <td align="left" 
-          valign="bottom" 
-          bgcolor="White" 
+        <td align="left"
+          valign="bottom"
+          bgcolor="White"
           width="98%">
           <!-- Banner -->
           <center>
-            <a href="index"><img 
-                src="base/images/mutalyzer_logo.png" 
-                width="90%" 
-                height="90" 
-                alt="Rauzy color fractal" 
+            <a href="index"><img
+                src="base/images/mutalyzer_logo.png"
+                width="90%"
+                height="90"
+                alt="Rauzy color fractal"
                 border="0"></a>
           </center>
         </td>
       </tr>
-  
+
       <tr>
         <td>
         </td>
@@ -86,13 +86,13 @@
         <table width = "100%" style = "padding:0; border:0; margin:0">
           <tr>
             <td align="left">
-              <a href="javascript:history.back(-1);" 
+              <a href="javascript:history.back(-1);"
                  class="hornav">previous page</a>&nbsp;&nbsp;&nbsp;
             </td>
             <td align="right">
-              <a href="index" 
+              <a href="index"
                  class="hornav">home</a>&nbsp;&nbsp;&nbsp;
-              <a href="about" 
+              <a href="about"
                  class="hornav">about</a>&nbsp;&nbsp;&nbsp;
               <a tal:attributes = "href string:mailto:${contactEmail}"
                  class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
@@ -102,23 +102,23 @@
         </table>
         </td>
       </tr>
-  
+
       <tr>
-        <td colspan="3" 
-          bgcolor="#000000"><img 
-            src="base/images/1x1b.gif" 
-            height="1" 
+        <td colspan="3"
+          bgcolor="#000000"><img
+            src="base/images/1x1b.gif"
+            height="1"
             border="0"></td>
       </tr>
     </table>
-  
-    <table width="98%" 
-      border="0" 
-      cellspacing="0" 
+
+    <table width="98%"
+      border="0"
+      cellspacing="0"
       cellpadding="0">
     <tr>
       <td width="180" valign="top">
-    
+
       <table id="menu" width="180" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td valign="top" width="20">
@@ -131,13 +131,13 @@
           <img src="base/images/bullitdonker.gif" id="b_index">
         </td>
         <td colspan="3">
-          <a id="page_index" 
-            onclick="swapActive('index');" 
-            href="index" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'index');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'index');" 
+          <a id="page_index"
+            onclick="swapActive('index');"
+            href="index"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'index');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'index');"
             class="vertnavsub">Home</a>
         </td>
       </tr>
@@ -147,13 +147,13 @@
           <img src="base/images/bullitdonker.gif" id="b_check">
         </td>
         <td colspan="3">
-          <a id="page_check" 
-            onclick="swapActive('check');" 
-            href="check" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'check');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'check');" 
+          <a id="page_check"
+            onclick="swapActive('check');"
+            href="check"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'check');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'check');"
             class="vertnavsub">Name Checker</a>
         </td>
       </tr>
@@ -164,12 +164,12 @@
         </td>
         <td colspan="3">
           <a id="page_syntaxCheck"
-            onclick="swapActive('syntaxCheck');" 
-            href="syntaxCheck" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'syntaxCheck');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'syntaxCheck');" 
+            onclick="swapActive('syntaxCheck');"
+            href="syntaxCheck"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'syntaxCheck');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'syntaxCheck');"
             class="vertnavsub">Syntax Checker</a>
         </td>
       </tr>
@@ -179,13 +179,13 @@
           <img src="base/images/bullitdonker.gif" id="b_positionConverter">
         </td>
         <td colspan="3">
-          <a id="page_positionConverter" 
-            onclick="swapActive('positionConverter');" 
-            href="positionConverter" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'positionConverter');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'positionConverter');" 
+          <a id="page_positionConverter"
+            onclick="swapActive('positionConverter');"
+            href="positionConverter"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'positionConverter');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'positionConverter');"
             class="vertnavsub">Position Converter</a>
         </td>
       </tr>
@@ -195,13 +195,13 @@
           <img src="base/images/bullitdonker.gif" id="b_snp">
         </td>
         <td colspan="3">
-          <a id="page_snp" 
-            onclick="swapActive('snp');" 
-            href="snp" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'snp');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'snp');" 
+          <a id="page_snp"
+            onclick="swapActive('snp');"
+            href="snp"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'snp');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'snp');"
             class="vertnavsub">SNP Converter</a>
         </td>
       </tr>
@@ -243,13 +243,13 @@
           <img src="base/images/bullitdonker.gif" id="b_upload">
         </td>
         <td colspan="3">
-          <a id="page_upload" 
-            onclick="swapActive('upload');" 
-            href="upload" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'upload');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'upload');" 
+          <a id="page_upload"
+            onclick="swapActive('upload');"
+            href="upload"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'upload');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'upload');"
             class="vertnavsub">Reference File Loader</a>
         </td>
       </tr>
@@ -259,13 +259,13 @@
           <img src="base/images/bullitdonker.gif" id="b_batch">
         </td>
         <td colspan="3">
-          <a id="page_batch" 
-            onclick="swapActive('batch');" 
-            href="batch" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'batch');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'batch');" 
+          <a id="page_batch"
+            onclick="swapActive('batch');"
+            href="batch"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'batch');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'batch');"
             class="vertnavsub">Batch Jobs</a>
         </td>
       </tr>
@@ -276,8 +276,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_batchNameChecker">
         </td>
         <td colspan="2">
-          <a id="page_batchNameChecker" 
-            href="batchNameChecker" 
+          <a id="page_batchNameChecker"
+            href="batchNameChecker"
             class="vertnavsub">Name Checker</a>
         </td>
       </tr>
@@ -288,8 +288,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_batchSyntaxChecker">
         </td>
         <td colspan="2">
-          <a id="page_batchSyntaxChecker" 
-            href="batchSyntaxChecker" 
+          <a id="page_batchSyntaxChecker"
+            href="batchSyntaxChecker"
             class="vertnavsub">Syntax Checker</a>
         </td>
       </tr>
@@ -300,8 +300,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_batchPositionConverter">
         </td>
         <td colspan="2">
-          <a id="page_batchPositionConverter" 
-            href="batchPositionConverter" 
+          <a id="page_batchPositionConverter"
+            href="batchPositionConverter"
             class="vertnavsub">Position Converter</a>
         </td>
       </tr>
@@ -312,8 +312,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_batchSnpConverter">
         </td>
         <td colspan="2">
-          <a id="page_batchSnpConverter" 
-            href="batchSnpConverter" 
+          <a id="page_batchSnpConverter"
+            href="batchSnpConverter"
             class="vertnavsub">SNP Converter</a>
         </td>
       </tr>
@@ -323,13 +323,13 @@
           <img src="base/images/bullitdonker.gif" id="b_webservices">
         </td>
         <td colspan="3">
-          <a id="page_webservices" 
-            onclick="swapActive('webservices');" 
-            href="webservices" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'webservices');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'webservices');" 
+          <a id="page_webservices"
+            onclick="swapActive('webservices');"
+            href="webservices"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'webservices');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'webservices');"
             class="vertnavsub">Webservices</a>
         </td>
       </tr>
@@ -341,13 +341,13 @@
           <img src="base/images/bullitdonker.gif" id="b_help">
         </td>
         <td colspan="3">
-          <a id="page_help" 
-            onclick="swapActive('help');" 
-            href="help" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'help');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'help');" 
+          <a id="page_help"
+            onclick="swapActive('help');"
+            href="help"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'help');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'help');"
             class="vertnavsub">Help</a>
         </td>
       </tr>
@@ -357,13 +357,13 @@
           <img src="base/images/bullitdonker.gif" id="b_faq">
         </td>
         <td colspan="3">
-          <a id="page_faq" 
-            onclick="swapActive('faq');" 
-            href="faq" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'faq');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'faq');" 
+          <a id="page_faq"
+            onclick="swapActive('faq');"
+            href="faq"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'faq');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'faq');"
             class="vertnavsub">FAQ</a>
         </td>
       </tr>
@@ -373,13 +373,13 @@
           <img src="base/images/bullitdonker.gif" id="b_exercise">
         </td>
         <td colspan="3">
-          <a id="page_exercise" 
-            onclick="swapActive('exercise');" 
-            href="exercise" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'exercise');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'exercise');" 
+          <a id="page_exercise"
+            onclick="swapActive('exercise');"
+            href="exercise"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'exercise');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'exercise');"
             class="vertnavsub">Exercise</a>
         </td>
       </tr>
@@ -389,13 +389,13 @@
           <img src="base/images/bullitdonker.gif" id="b_disclaimer">
         </td>
         <td colspan="3">
-          <a id="page_disclaimer" 
-            onclick="swapActive('disclaimer');" 
-            href="disclaimer" 
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'disclaimer');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'disclaimer');" 
+          <a id="page_disclaimer"
+            onclick="swapActive('disclaimer');"
+            href="disclaimer"
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'disclaimer');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'disclaimer');"
             class="vertnavsub">Disclaimer</a>
         </td>
       </tr>
@@ -405,17 +405,17 @@
           <img src="base/images/bullitdonker.gif" id="b_bugTrack">
         </td>
         <td colspan="3">
-          <a id="page_bugTrack" 
-            onclick="swapActive('bugTrack');" 
+          <a id="page_bugTrack"
+            onclick="swapActive('bugTrack');"
             href="https://humgenprojects.lumc.nl/trac/mutalyzer"
-            onmouseover="navAct('base/images/bullitlicht1.gif', 
-                                'bugTrack');" 
-            onmouseout="navDeAct('base/images/bullitdonker.gif', 
-                                 'bugTrack');" 
+            onmouseover="navAct('base/images/bullitlicht1.gif',
+                                'bugTrack');"
+            onmouseout="navDeAct('base/images/bullitdonker.gif',
+                                 'bugTrack');"
             class="vertnavsub">Feedback</a>
         </td>
       </tr>
-      
+
       <tr><td>&nbsp;</td></tr>
 
       <tr>
@@ -433,8 +433,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_external_hgb">
         </td>
         <td colspan="2">
-          <a id="page_external_hgb" 
-            href="http://www.genenames.org/guidelines.html" 
+          <a id="page_external_hgb"
+            href="http://www.genenames.org/guidelines.html"
             class="vertnavsub">Human Gene Nomenclature</a>
         </td>
       </tr>
@@ -445,8 +445,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_external_hgvs">
         </td>
         <td colspan="2">
-          <a id="page_external_hgvs" 
-            href="http://www.hgvs.org/mutnomen/" 
+          <a id="page_external_hgvs"
+            href="http://www.hgvs.org/mutnomen/"
             class="vertnavsub">HGVS Variation Nomenclature</a>
         </td>
       </tr>
@@ -457,8 +457,8 @@
           <img src="base/images/bullitmiddel.gif" id="b_external_hgvsext">
         </td>
         <td colspan="2">
-          <a id="page_external_hgvsext" 
-            href="http://www.hgvs.org/mutnomen/HGVS_extend_PT.doc" 
+          <a id="page_external_hgvsext"
+            href="http://www.hgvs.org/mutnomen/HGVS_extend_PT.doc"
             class="vertnavsub">HGVS Nomenclature Extension Proposal</a>
         </td>
       </tr>
@@ -469,9 +469,9 @@
           <img src="base/images/bullitmiddel.gif" id="b_external_lovd">
         </td>
         <td colspan="2">
-          <a id="page_external_lovd" 
-            onclick="swapActive('external_lovd');" 
-            href="http://www.lovd.nl/" 
+          <a id="page_external_lovd"
+            onclick="swapActive('external_lovd');"
+            href="http://www.lovd.nl/"
             class="vertnavsub">LOVD</a>
         </td>
       </tr>
@@ -482,58 +482,58 @@
           <img src="base/images/bullitmiddel.gif" id="b_external_oldmut">
         </td>
         <td colspan="2">
-          <a id="page_external_oldmut" 
-            onclick="swapActive('external_oldmut');" 
-            href="http://132.229.137.14/1.0.4_old/" 
+          <a id="page_external_oldmut"
+            onclick="swapActive('external_oldmut');"
+            href="http://132.229.137.14/1.0.4_old/"
             class="vertnavsub">Mutalyzer 1.0.4</a>
         </td>
       </tr>
 
       <tr>
-        <td width="20"><img 
-          src="base/images/1x1b.gif" 
-          height="10" 
-          width="20" 
+        <td width="20"><img
+          src="base/images/1x1b.gif"
+          height="10"
+          width="20"
           border="0">
         </td>
-        <td width="12"><img 
-          src="base/images/1x1b.gif" 
-          height="10" 
-          width="10" 
+        <td width="12"><img
+          src="base/images/1x1b.gif"
+          height="10"
+          width="10"
           border="0">
         </td>
-        <td valign="top" width="12"><img 
-          src="base/images/1x1b.gif" 
-          height="10" 
-          width="10" 
+        <td valign="top" width="12"><img
+          src="base/images/1x1b.gif"
+          height="10"
+          width="10"
           border="0">
         </td>
-        <td valign="top" width="136"><img 
-          src="base/images/1x1b.gif" 
-          height="10" 
-          width="136" 
+        <td valign="top" width="136"><img
+          src="base/images/1x1b.gif"
+          height="10"
+          width="136"
           border="0">
         </td>
       </tr>
       </table>
-    
+
     </td>
-    <td width="20"><img 
-      src="base/images/1x1b.gif" 
-      height="1" 
-      width="20" 
+    <td width="20"><img
+      src="base/images/1x1b.gif"
+      height="1"
+      width="20"
       border="0">
     </td>
     <td width="98%" valign="top"><br>
-    
+
     <!-- Content -->
-    
+
     <table cellpadding="0" cellspacing="0" width="100%" border="0">
     <tbody onMouseover="resetAll();"><tr>
     <td width="0"></td>
     <td width="0">
-  
-  
+
+
     <center>
       <h2 tal:condition = "release"
           tal:content = "structure string:Mutalyzer ${version}<br>
@@ -545,45 +545,45 @@
         <small><small><small><small>
           development version
         </small></small></small></small>"></h2>
-      HGVS nomenclature version 
+      HGVS nomenclature version
       <span tal:content = "nomenclatureVersion"></span>
     </center>
     <p>
-  
+
     <div metal:use-macro = "sitemacros/macros/content"></div>
-  
+
       <!-- Navigation bar -->
-      <table border="0" 
-        cellspacing="0" 
-        cellpadding="0" 
-          width="100%" 
+      <table border="0"
+        cellspacing="0"
+        cellpadding="0"
+          width="100%"
         align="center">
       <tr>
-        <td colspan="2"><img 
-          src="base/images/1x1b.gif" 
-          width="1" 
-          height="20"  
+        <td colspan="2"><img
+          src="base/images/1x1b.gif"
+          width="1"
+          height="20"
           border="0">
         </td>
       </tr>
       <tr>
-        <td bgcolor="#000000" colspan="3"><img 
-          src="base/images/1x1b.gif" 
-          width="100%" 
-          height="1" 
+        <td bgcolor="#000000" colspan="3"><img
+          src="base/images/1x1b.gif"
+          width="100%"
+          height="1"
           border="0"></td>
       </tr>
       <tr>
         <td align="left">
-          &nbsp;<a href="javascript:history.back(-1);" 
+          &nbsp;<a href="javascript:history.back(-1);"
              class="hornav">previous page</a>
         </td>
         <td align="middle">
           <img src = "base/images/LUMC_24x24.png" align = "middle">
-          &nbsp; &copy; 2007-<tal tal:replace = "copyrightYear"></tal>
+          &nbsp; &copy; <tal tal:replace = "copyrightYears/0"></tal>-<tal tal:replace = "copyrightYears/1"></tal>
           <a href = "http://www.lumc.nl">LUMC</a>
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-          &nbsp; &nbsp; 
+          &nbsp; &nbsp;
         </td>
         <td align="right">
           <a href="#top" class="hornav">go to top</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -591,16 +591,16 @@
       </tr>
       <tr>
   <!--
-        <td colspan="2" 
+        <td colspan="2"
           align="center">Last edited by:  with /usr/bin/vim
         </td>
   -->
       </tr>
       <tr>
-        <td colspan="2"><img 
-          src="base/images/1x1b.gif" 
-          width="1" 
-          height="10" 
+        <td colspan="2"><img
+          src="base/images/1x1b.gif"
+          width="1"
+          height="10"
           border="0">
         </td>
       </tr>
