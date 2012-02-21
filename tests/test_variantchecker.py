@@ -527,3 +527,65 @@ class TestVariantchecker():
                      'UD_127955523176:g.=')
         assert 'UD_127955523176(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
+
+    def test_deletion_with_sequence_forward_genomic(self):
+        """
+        Specify the deleted sequence in a deletion.
+        """
+        check_variant('AL449423.14:g.65471_65472delTC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.65471_65472del')
+        assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_length_forward_genomic(self):
+        """
+        Specify the deleted sequence length in a deletion.
+        """
+        check_variant('AL449423.14:g.65471_65472del2', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.65471_65472del')
+        assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_sequence_reverse_coding(self):
+        """
+        Specify the deleted sequence in a deletion on the reverse strand.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_163delTGG', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61937_61939del')
+        assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_length_reverse_coding(self):
+        """
+        Specify the deleted sequence length in a deletion on the reverse strand.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_163del3', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61937_61939del')
+        assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_sequence_reverse_ng_coding(self):
+        """
+        Specify the deleted sequence in a deletion on the reverse strand
+        using a genomic reference.
+        """
+        check_variant('NG_008939.1:c.155_157delAAC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5206_5208del')
+        assert 'NG_008939.1(PCCB_v001):c.155_157del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_length_reverse_ng_coding(self):
+        """
+        Specify the deleted sequence length in a deletion on the reverse strand
+        using a genomic reference.
+        """
+        check_variant('NG_008939.1:c.155_157del3', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5206_5208del')
+        assert 'NG_008939.1(PCCB_v001):c.155_157del' \
+               in self.output.getOutput('descriptions')

@@ -149,7 +149,7 @@ def _check_argument(argument, reference, first, last, output):
         # If it is a digit (3_9del7 for example), the digit must be equal to
         # the length of the given range.
         length = int(argument)
-        interval = first - last + 1
+        interval = last - first + 1
         if length != interval:
             output.addMessage(__file__, 3, 'EARGLEN',
                               'The length (%i) differed from that of the ' \
