@@ -133,7 +133,7 @@ class CacheSync(object):
         handle.close()
 
         # Store remote data
-        retriever = Retriever.GenBankRetriever(self._output, self.database)
+        retriever = Retriever.GenBankRetriever(self._output, self._database)
         retriever.write(data, name, 0)
 
     def sync_with_remote(self, remote_wsdl, url_template,
