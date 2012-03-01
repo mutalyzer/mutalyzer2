@@ -644,7 +644,7 @@ class Mapping(Db) :
                 T.orientation as orientation,
                 MIN(T.start) as start,
                 MAX(T.stop) as stop,
-                MAX(E.cds_start) as cds_start,
+                REPLACE(MIN(COALESCE(E.cds_start, 1000000000)), 1000000000, NULL) as cds_start,
                 MAX(E.cds_stop) as cds_stop,
                 GROUP_CONCAT(DISTINCT E.start ORDER BY E.start ASC) as exon_starts,
                 GROUP_CONCAT(DISTINCT E.stop ORDER BY E.stop ASC) as exon_stops,

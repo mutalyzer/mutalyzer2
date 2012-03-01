@@ -60,3 +60,19 @@ class TestConverter():
         coding = converter.chrom2c('NC_000022.10:g.51016285_51017117del123456789', 'list')
         assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
         assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
+
+    def test_S_Venkata_Suresh_Kumar(self):
+        """
+        Test for correct mapping information on genes where CDS start or stop
+        is exactly on the border of an exon.
+
+        Bug reported February 24 by S Venkata Suresh Kumartest.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000001.10:g.115259837_115259837delT', 'list')
+        assert 'NM_001007553.1:c.3863delA' not in coding
+        assert 'NM_001007553.2:c.3863delA' not in coding
+        assert 'NM_001007553.1:c.*953delA' in coding
+        assert 'NM_001130523.1:c.*953delA' in coding
+        assert 'NM_001007553.2:c.*953delA' in coding
+        assert 'NM_001130523.2:c.*953delA' in coding

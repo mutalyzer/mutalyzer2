@@ -833,6 +833,8 @@ class NCBIUpdater(Updater):
         entry['start'] = int(entry['start'])
         entry['stop'] = int(entry['stop'])
         entry['protein'] = entry['feature_name'] if cds else None
+        entry['cds_start'] = entry['start'] if cds else None
+        entry['cds_stop'] = entry['stop'] if cds else None
         entry['cds'] = cds
 
         self._import_exon_backlog(entry['start'] - 1)
@@ -841,12 +843,9 @@ class NCBIUpdater(Updater):
             previous = self.exon_backlog[entry['transcript']]
             if previous['cds'] != entry['cds'] \
                    and previous['stop'] == entry['start'] - 1:
-                if entry['cds']:
-                    entry['cds_start'] = entry['start']
-                else:
-                    entry['cds_stop'] = previous['stop']
-                    if 'cds_start' in previous:
-                        entry['cds_start'] = previous['cds_start']
+                if previous['cds']:
+                    entry['cds_start'] = previous['cds_start']
+                    entry['cds_stop'] = previous['cds_stop']
                     entry['protein'] = previous['protein']
                 entry['start'] = previous['start']
         except KeyError:
@@ -870,9 +869,7 @@ class NCBIUpdater(Updater):
                 del exon['cds']
                 self.db.ncbi_import_exon(
                     exon['transcript'], exon['chromosome'], exon['start'], exon['stop'],
-                    exon['cds_start'] if 'cds_start' in exon else None,
-                    exon['cds_stop'] if 'cds_stop' in exon else None,
-                    exon['protein'] or None)
+                    exon['cds_start'], exon['cds_stop'], exon['protein'] or None)
     #_import_exon_backlog
 
     def _aggregate_mapping(self):
