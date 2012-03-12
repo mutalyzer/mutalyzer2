@@ -411,9 +411,16 @@ class GenBankRetriever(Retriever):
         """
         Todo: Documentation.
         """
-        net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gb', retmode='text')
-        raw_data = net_handle.read()
-        net_handle.close()
+        try:
+            net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gb', retmode='text')
+            raw_data = net_handle.read()
+            net_handle.close()
+        except (IOError, urllib2.HTTPError, HTTPException) as e:
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'Error connecting to Entrez nuccore database: %s' % str(e))
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve %s.' % name)
+            return None
 
         if raw_data == '\n' :       # Check if the file is empty or not.
             self._output.addMessage(__file__, 4, 'ERETR',
@@ -435,9 +442,16 @@ class GenBankRetriever(Retriever):
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
                 return None
-            net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gbwithparts', retmode='text')
-            raw_data = net_handle.read()
-            net_handle.close()
+            try:
+                net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gbwithparts', retmode='text')
+                raw_data = net_handle.read()
+                net_handle.close()
+            except (IOError, urllib2.HTTPError, HTTPException) as e:
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'Error connecting to Entrez nuccore database: %s' % str(e))
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not retrieve %s.' % name)
+                return None
 
         result = self.write(raw_data, name, 1)
         if not result:
@@ -493,10 +507,18 @@ class GenBankRetriever(Retriever):
                 return UD
 
         # It's not present, so download it.
-        handle = Entrez.efetch(db='nuccore', rettype='gb', retmode='text',
-            id=accno, seq_start=start, seq_stop=stop, strand=orientation)
-        raw_data = handle.read()
-        handle.close()
+        try:
+            handle = Entrez.efetch(db='nuccore', rettype='gb', retmode='text',
+                                   id=accno, seq_start=start, seq_stop=stop,
+                                   strand=orientation)
+            raw_data = handle.read()
+            handle.close()
+        except (IOError, urllib2.HTTPError, HTTPException) as e:
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'Error connecting to Entrez nuccore database: %s' % str(e))
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve slice.')
+            return None
 
         # Calculate the hash of the downloaded file.
         md5sum = self._calcHash(raw_data)
@@ -538,16 +560,31 @@ class GenBankRetriever(Retriever):
 
         # Search the NCBI for a specific gene in an organism.
         query = "%s[Gene] AND %s[Orgn]" % (gene, organism)
-        handle = Entrez.esearch(db = "gene", term = query)
-        searchresult = Entrez.read(handle)
-        handle.close()
+        try:
+            handle = Entrez.esearch(db = "gene", term = query)
+            searchresult = Entrez.read(handle)
+            handle.close()
+        except (IOError, urllib2.HTTPError, HTTPException) as e:
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'Error connecting to Entrez esearch: %s' % str(e))
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not search for gene %s.' % gene)
+            return None
 
         ChrAccVer = None        # We did not find anything yet.
         aliases = []            # A list of aliases in case we find them.
         for i in searchresult["IdList"] :                 # Inspect all results.
-            handle = Entrez.esummary(db = "gene", id = i)
-            summary = Entrez.read(handle)
-            handle.close()
+            try:
+                handle = Entrez.esummary(db = "gene", id = i)
+                summary = Entrez.read(handle)
+                handle.close()
+            except (IOError, urllib2.HTTPError, HTTPException) as e:
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'Error connecting to Entrez esummary: %s' % str(e))
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not get mapping information for gene %s.' % gene)
+                return None
+
             if summary[0]["NomenclatureSymbol"] == gene : # Found it.
                 if not summary[0]["GenomicInfo"] :
                     self._output.addMessage(__file__, 4, "ENOMAPPING",
