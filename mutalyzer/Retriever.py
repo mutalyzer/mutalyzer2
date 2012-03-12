@@ -416,7 +416,7 @@ class GenBankRetriever(Retriever):
             raw_data = net_handle.read()
             net_handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
-            self._output.addMessage(__file__, 4, 'EENTREZ',
+            self._output.addMessage(__file__, -1, 'INFO',
                                     'Error connecting to Entrez nuccore database: %s' % str(e))
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not retrieve %s.' % name)
@@ -447,7 +447,7 @@ class GenBankRetriever(Retriever):
                 raw_data = net_handle.read()
                 net_handle.close()
             except (IOError, urllib2.HTTPError, HTTPException) as e:
-                self._output.addMessage(__file__, 4, 'EENTREZ',
+                self._output.addMessage(__file__, -1, 'INFO',
                                         'Error connecting to Entrez nuccore database: %s' % str(e))
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
@@ -514,7 +514,7 @@ class GenBankRetriever(Retriever):
             raw_data = handle.read()
             handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
-            self._output.addMessage(__file__, 4, 'EENTREZ',
+            self._output.addMessage(__file__, -1, 'INFO',
                                     'Error connecting to Entrez nuccore database: %s' % str(e))
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not retrieve slice.')
@@ -565,7 +565,7 @@ class GenBankRetriever(Retriever):
             searchresult = Entrez.read(handle)
             handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
-            self._output.addMessage(__file__, 4, 'EENTREZ',
+            self._output.addMessage(__file__, -1, 'INFO',
                                     'Error connecting to Entrez esearch: %s' % str(e))
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not search for gene %s.' % gene)
@@ -579,7 +579,7 @@ class GenBankRetriever(Retriever):
                 summary = Entrez.read(handle)
                 handle.close()
             except (IOError, urllib2.HTTPError, HTTPException) as e:
-                self._output.addMessage(__file__, 4, 'EENTREZ',
+                self._output.addMessage(__file__, -1, 'INFO',
                                         'Error connecting to Entrez esummary: %s' % str(e))
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not get mapping information for gene %s.' % gene)
