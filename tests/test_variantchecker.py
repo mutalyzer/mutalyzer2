@@ -6,8 +6,9 @@ Tests for the variantchecker module.
 #import logging; logging.basicConfig()
 from nose.tools import *
 
-from mutalyzer.util import skip
 from mutalyzer.output import Output
+from mutalyzer.Db import Cache
+from mutalyzer.Retriever import GenBankRetriever
 from mutalyzer.variantchecker import check_variant
 
 
@@ -20,6 +21,22 @@ class TestVariantchecker():
         Initialize test variantchecker module.
         """
         self.output = Output(__file__)
+        self.cache_database = Cache()
+        self.retriever = GenBankRetriever(self.output, self.cache_database)
+
+    def _slice(self, chromosome, start, stop, orientation):
+        """
+        Get a UD slice.
+
+        Orientation: 1 for forward, 2 for reverse.
+        """
+        return self.retriever.retrieveslice(chromosome, start, stop, orientation)
+
+    def _slice_gene(self, gene, organism='human', upstream=5000, downstream=2000):
+        """
+        Get a UD slice for a gene.
+        """
+        return self.retriever.retrievegene(gene, organism, upstream, downstream)
 
     def test_deletion_in_frame(self):
         """
@@ -510,117 +527,94 @@ class TestVariantchecker():
         assert 'NM_002001.2(FCER1A_v001):c.=' \
                in self.output.getOutput('descriptions')
 
-    @skip
     def test_nop_ud(self):
         """
         Variant on UD without effect should be described as '='.
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_127955523176:g.5T>T', self.output)
+        ud = self._slice_gene('DMD')
+        check_variant(ud + ':g.5T>T', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000023.10:g.=')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_127955523176:g.=')
-        assert 'UD_127955523176(DMD_v001):c.=' \
+                     ud + ':g.=')
+        assert ud + '(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
 
-    @skip
     def test_ud_reverse_sequence(self):
         """
         Variant on UD from reverse strand should have reverse complement
         sequence.
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_132680290559(DPYD_v1):c.85C>T', self.output)
+        ud = self._slice_gene('DPYD')
+        check_variant(ud + '(DPYD_v1):c.85C>T', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000001.10:g.98348885G>A')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_132680290559:g.42731C>T')
-        assert 'UD_132680290559(DPYD_v001):c.85C>T' \
+                     ud + ':g.42731C>T')
+        assert ud + '(DPYD_v001):c.85C>T' \
                in self.output.getOutput('descriptions')
 
-    @skip
     def test_ud_forward_sequence(self):
         """
         Variant on UD from forward strand should have forward sequence.
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_132680514783(MARK1_v001):c.400T>C', self.output)
+        ud = self._slice_gene('MARK1')
+        check_variant(ud + '(MARK1_v001):c.400T>C', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000001.10:g.220773181T>C')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_132680514783:g.76614T>C')
-        assert 'UD_132680514783(MARK1_v001):c.400T>C' \
+                     ud + ':g.76614T>C')
+        assert ud + '(MARK1_v001):c.400T>C' \
                in self.output.getOutput('descriptions')
 
-    @skip
     def test_ud_reverse_range(self):
         """
         Variant on UD from reverse strand should have reversed range
         positions.
-
-        This UD number is for DPYD.
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_133130716532:g.10624_78132del', self.output)
+        ud = self._slice('NC_000009.11', 32922603, 33006639, 2)
+        check_variant(ud + ':g.10624_78132del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000009.11:g.32928508_32996016del')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_133130716532:g.10624_78132del')
+                     ud + ':g.10624_78132del')
 
-    @skip
     def test_ud_forward_range(self):
         """
         Variant on UD from forward strand should have forward range positions.
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_132680514783(MARK1_v001):c.400_415del', self.output)
+        ud = self._slice_gene('MARK1')
+        check_variant(ud + '(MARK1_v001):c.400_415del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000001.10:g.220773181_220773196del')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_132680514783:g.76614_76629del')
+                     ud + ':g.76614_76629del')
 
-    @skip
     def test_ud_reverse_del_length(self):
         """
         Variant on UD from reverse strand should have reversed range
         positions, but not reverse complement of first argument (it is not a
         sequence, but a length).
-
-        This UD number is for DPYD.
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_133130716532:g.10624_78132del67509', self.output)
+        ud = self._slice('NC_000009.11', 32922603, 33006639, 2)
+        check_variant(ud + ':g.10624_78132del67509', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000009.11:g.32928508_32996016del')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_133130716532:g.10624_78132del')
+                     ud + ':g.10624_78132del')
 
-    @skip
     def test_ud_reverse_roll(self):
         """
         Variant on UD from reverse strand should roll the oposite direction.
@@ -631,21 +625,18 @@ class TestVariantchecker():
                 c.   102  103  104  105  106  107
                 g.   748  749  750  751  752  753
             chr g.   868  867  866  865  864  863
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_132680290559(DPYD_v001):c.104del', self.output)
+        ud = self._slice_gene('DPYD')
+        check_variant(ud + '(DPYD_v001):c.104del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000001.10:g.98348867del')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_132680290559:g.42751del')
-        assert 'UD_132680290559(DPYD_v001):c.105del' \
+                     ud + ':g.42751del')
+        assert ud + '(DPYD_v001):c.105del' \
                in self.output.getOutput('descriptions')
 
-    @skip
     def test_ud_forward_roll(self):
         """
         Variant on UD from forward strand should roll the same.
@@ -656,18 +647,16 @@ class TestVariantchecker():
                 c.   398  399  400  401  402
                 g.   612  613  614  615  616
             chr g.   179  180  181  182  183
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-            a way to create them inside the unit test.
         """
-        check_variant('UD_132680514783(MARK1_v001):c.400del', self.output)
+        ud = self._slice_gene('MARK1')
+        check_variant(ud + '(MARK1_v001):c.400del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
         assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
                      'NC_000001.10:g.220773182del')
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'UD_132680514783:g.76615del')
-        assert 'UD_132680514783(MARK1_v001):c.401del' \
+                     ud + ':g.76615del')
+        assert ud + '(MARK1_v001):c.401del' \
                in self.output.getOutput('descriptions')
 
     def test_deletion_with_sequence_forward_genomic(self):

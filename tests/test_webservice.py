@@ -8,7 +8,6 @@ from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 import os
 from datetime import datetime, timedelta
 import mutalyzer
-from mutalyzer.util import skip
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
@@ -335,17 +334,16 @@ class TestWebservice():
         assert_equal(r.sourceGi, '222352156')
         assert_equal(r.molecule, 'n')
 
-    @skip
     def test_runmutalyzer_reference_info_ud(self):
         """
-        Get reference info for a UD variant.
+        Get reference info for a UD variant after creating it.
 
-        Todo: We cannot use UD references in unit tests, unless we implement
-           a way to create them inside the unit test.
+            UD_129433404385: NC_000023.10 31135344 33362726 2 NULL 2011-10-04 13:15:04
         """
-        r = self.client.service.runMutalyzer('UD_129433404385:g.1del')
+        ud = str(self.client.service.sliceChromosome('NC_000023.10', 31135344, 33362726, 2))
+        r = self.client.service.runMutalyzer(ud + ':g.1del')
         assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'UD_129433404385')
+        assert_equal(r.referenceId, ud)
         assert_equal(r.sourceId, 'NC_000023.10')
         assert_equal(r.sourceAccession, 'NC_000023')
         assert_equal(r.sourceVersion, '10')
@@ -401,7 +399,6 @@ class TestWebservice():
         assert_equal(r.sourceGi, '256574794')
         assert_equal(r.molecule, 'g')
 
-    @skip
     def test_gettranscriptsandinfo_slice(self):
         """
         Running getTranscriptsAndInfo on a chromosomal slice should include
@@ -410,11 +407,9 @@ class TestWebservice():
         slice: 48284000 - 48259456 (COL1A1 with 5001 and 2001 borders)
         translation start: 48284000 - 5001 + 1 = 48279000
         translation end: 48259456 + 2001 = 48261457
-
-        Todo: We cannot use UD references in unit tests, unless we implement
-           a way to create them inside the unit test.
         """
-        r = self.client.service.getTranscriptsAndInfo('UD_129646580028')
+        ud = str(self.client.service.sliceChromosomeByGene('COL1A1', 'human', 5000, 2000))
+        r = self.client.service.getTranscriptsAndInfo(ud)
         assert_equal(type(r.TranscriptInfo), list)
         names = [t.name for t in r.TranscriptInfo]
         assert 'COL1A1_v001' in names
