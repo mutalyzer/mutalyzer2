@@ -28,6 +28,15 @@ from mutalyzer import util
 from mutalyzer import config
 
 
+# Automatically reconnect to the MySQL server. This is expecially useful for
+# long-running processes such as the batch deamon, which would otherwise loose
+# their connection on an event such as restarting the MySQL server. Also see
+# Trac ticket #91.
+# Be alarmed though, that this messes up transactions. Fortunately, Mutalyzer
+# doesn't use transactions at the moment.
+AUTO_RECONNECT = True
+
+
 #
 # Note that compound queries are split into single queries because of a bug
 # in MySQLdb. The functions load_Update(),  merge_cdsUpdates() and
@@ -64,8 +73,8 @@ class Db() :
         @type mySqlHost: string
         """
 
-        self.__db = MySQLdb.connect(user = mySqlUser, db = dbName,
-                                    host = mySqlHost)
+        self.__db = MySQLdb.connect(user=mySqlUser, db=dbName, host=mySqlHost,
+                                    reconnect=AUTO_RECONNECT)
     #__init__
 
     def query(self, statement) :
