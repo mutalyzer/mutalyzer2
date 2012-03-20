@@ -1375,10 +1375,14 @@ def process_variant(mutator, description, record, output):
             if gene_symbol in genes:
                 # We found our gene.
                 gene = record.record.findGene(gene_symbol)
-            elif (len(genes) == 1) and not(gene_symbol):
-                # No gene given and there is only one gene in the record.
-                # Todo: message?
-                gene = record.record.geneList[0]
+            elif not gene_symbol:
+                if len(genes) == 1:
+                    # No gene given and there is only one gene in the record.
+                    # Todo: message?
+                    gene = record.record.geneList[0]
+                else:
+                    output.addMessage(__file__, 4, "EINVALIDGENE",
+                        "No gene specified. Please choose from: %s" % ", ".join(genes))
             else:
                 output.addMessage(__file__, 4, "EINVALIDGENE",
                     "Gene %s not found. Please choose from: %s" % (
