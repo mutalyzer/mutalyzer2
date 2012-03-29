@@ -66,7 +66,7 @@ class TestConverter():
         Test for correct mapping information on genes where CDS start or stop
         is exactly on the border of an exon.
 
-        Bug reported February 24 by S Venkata Suresh Kumartest.
+        Bug reported February 24, 2012 by S Venkata Suresh Kumar.
         """
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000001.10:g.115259837_115259837delT', 'list')
@@ -76,3 +76,17 @@ class TestConverter():
         assert 'NM_001130523.1:c.*953delA' in coding
         assert 'NM_001007553.2:c.*953delA' in coding
         assert 'NM_001130523.2:c.*953delA' in coding
+
+    def test_S_Venkata_Suresh_Kumar_more(self):
+        """
+        Another test for correct mapping information on genes where CDS start
+        or stop is exactly on the border of an exon.
+
+        Bug reported March 21, 2012 by S Venkata Suresh Kumar.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000001.10:g.160012314_160012329del16', 'list')
+        assert 'NM_002241.4:c.-27250-7_-27242del16' not in coding
+        assert 'NM_002241.3:c.-27340-7_-27332del16' not in coding
+        assert 'NM_002241.4:c.1-7_9del16' in coding
+        assert 'NM_002241.3:c.1-7_9del16' in coding
