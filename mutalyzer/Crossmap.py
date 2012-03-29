@@ -226,7 +226,7 @@ class Crossmap() :
                       # CDS start.
             i = y - c
             # Find CDS start.
-            while d * (self.RNA[i] - ((i + 1) % 2)) < d * self.CDS[c] :
+            while d * (self.RNA[i] - ((i + 1) % 2)) < d * self.CDS[c] + c :
                 i += d
             cPos = d * (self.RNA[i] - self.CDS[c] + (d * 2)) # Get the right
                                                              # boundary.
