@@ -256,20 +256,6 @@ class TestCrossmap():
         assert_equal(cm.tuple2string(cm.g2x(2123)), '-156-u23752936')
         assert_equal(cm.tuple2string(cm.g2x(2124)), '-156-u23752935')
 
-    def test_cds_start_on_splice_site_more(self):
-        """
-        Test a gene some more that has a CDS that starts on an exon splice
-        site.
-        """
-        rna = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
-               23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
-               23898506, 23899304]
-        cds = [23755214, 23898680]
-        cm = Crossmap(rna, cds, 1)
-        assert_equal(cm._Crossmap__crossmapping,
-                     [-155, 1, 2, 197, 198, 300, 301, 389, 390,
-                      510, 511, 584, 585, 709, 710, 1508])
-
     def test_cds_start_on_splice_site_reverse(self):
         """
         Test a gene on the reverse strand that has a CDS that starts on an
@@ -283,6 +269,33 @@ class TestCrossmap():
         assert_equal(cm._Crossmap__crossmapping,
                      [196, 1, -1, -103, -104, -192, -193, -313, -314, -387,
                       -388, -512, -513, -1311])
+
+    def test_cds_start_on_splice_site_other(self):
+        """
+        Test a gene that has a CDS that starts on an other exon splice site.
+        """
+        rna = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851,
+               23824768, 23824856, 23853497, 23853617, 23869553, 23869626,
+               23894775, 23894899, 23898506, 23899304]
+        cds = [23755214, 23898680]
+        cm = Crossmap(rna, cds, 1)
+        assert_equal(cm._Crossmap__crossmapping,
+                     [-155, 1, 2, 197, 198, 300, 301, 389, 390, 510, 511, 584,
+                      585, 709, 710, 1508])
+
+    def test_cds_start_on_splice_site_other_reverse(self):
+        """
+        Test a gene on the reverse strand that has a CDS that starts on an
+        other exon splice site.
+        """
+        rna = [23777833, 23778028, 23808749, 23808851, 23824768, 23824856,
+               23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
+               23898506, 23899304]
+        cds = [23755214, 23808749]
+        cm = Crossmap(rna, cds, -1)
+        assert_equal(cm._Crossmap__crossmapping,
+                     [197, 2, 1, -102, -103, -191, -192, -312, -313, -386,
+                      -387, -511, -512, -1310])
 
     def test_cds_start_on_transcript_start(self):
         """
