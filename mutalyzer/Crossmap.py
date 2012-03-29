@@ -13,7 +13,7 @@ and stop and the orientation of a transcript.
 class Crossmap() :
     """
     Convert from I{g.} to I{c.} or I{n.} notation or vice versa.
-    
+
     Private variables:
         - __STOP         ; CDS stop in I{c.} notation.
         - __crossmapping ; A list that contains either I{c.} or I{n.} positions
@@ -181,19 +181,19 @@ class Crossmap() :
         For option 3 only provide an list with RNA splice sites.
 
         Examples:
-        
+
         Crossmap(RNA, [], 1)
             - Get the I{n.} notation of the RNA splice sites. The input is in
               forward notation.
-        
+
         Crossmap(CDS, [], 1)
             - Get the I{c.} notation of the CDS start and stop, and the internal
               splice sites. The input is in forward notation.
-        
+
         Crossmap(RNA, CDS, -1)
             - Get the I{c.} notation of the RNA splice sites. The input is in
               reverse complement.
-        
+
 
         The output is straightforward, except for the I{c.} notation of the
         downstream RNA splice sites. This is denoted by __STOP + the
@@ -267,7 +267,7 @@ class Crossmap() :
         stop.
 
         Examples:
-        
+
         Crossmap(RNA, [], 1)
         g2x(i)
             - Get the I{n.} notation of a I{g.} position i. The input is in forward
@@ -345,12 +345,12 @@ class Crossmap() :
 
         Crossmap(RNA, [], 1)
         x2g(i)
-            - Get the I{g.} notation of a I{n.} position i. The input is in forward 
+            - Get the I{g.} notation of a I{n.} position i. The input is in forward
             notation.
 
         Crossmap(mRNA, CDS, -1);
         x2g(i, j);
-            - Get the I{g.} notation of a I{c.} position i with offset j. The input 
+            - Get the I{g.} notation of a I{c.} position i with offset j. The input
             is in reverse notation.
 
         Private variables:
@@ -542,7 +542,7 @@ class Crossmap() :
     def getSpliceSite(self, number) :
         """
         Return the coordinate of a splice site.
-        
+
         @arg number: the number of the RNA splice site counting from
             transcription start.
         @type number: integer
@@ -558,7 +558,7 @@ class Crossmap() :
     def numberOfIntrons(self) :
         """
         Returns the number of introns.
-        
+
         @return: number of introns
         @rtype: integer
         """
@@ -569,7 +569,7 @@ class Crossmap() :
     def numberOfExons(self) :
         """
         Returns the number of exons.
-        
+
         @return: number of exons
         @rtype: integer
         """
@@ -577,217 +577,3 @@ class Crossmap() :
         return len(self.RNA) / 2
     #numberOfExons
 #Crossmap
-
-#
-# Unit test. Todo: move to /tests
-#
-if __name__ == "__main__" :
-    # Build a crossmapper for a hypothetical gene.
-    mRNAf = [5002, 5125, 27745, 27939, 58661, 58762, 74680, 74767, 103409,
-             103528, 119465, 119537, 144687, 144810, 148418, 149215]
-    CDSf = [27925, 74736]
-    Cf = Crossmap(mRNAf, CDSf, 1)
-
-    # Build a crossmapper for a hypothetical gene on the reverse strand.
-    mRNAr = [2000, 2797, 6405, 6528, 31678, 31750, 47687, 47806, 76448, 76535,
-             92453, 92554, 123276, 123470, 146090, 146213]
-    CDSr = [76479, 123290]
-    Cr = Crossmap(mRNAr, CDSr, -1)
-
-    # Check whether the gene on the forward strand has the right splice sites
-    #   in c. notation.
-    if Cf._Crossmap__crossmapping != [-304, -181, -180, 15, 16, 117, 118, 205,
-                                      206, 325, 326, 398, 399, 522, 523, 1320] :
-        print "Crossmapping list not built correctly (c. notation)."
-
-    # Check whether the splice sites in c. notation are the same as the ones on
-    #   the reverse strand.
-    if Cf._Crossmap__crossmapping != Cr._Crossmap__crossmapping[::-1] :
-        print "Forward/reverse discrepancy (c. notation)."
-
-    # Do some g. to c. conversion checking for the gene on the forward strand.
-    if Cf.tuple2string(Cf.g2x(5001)) != "-304-u1" or\
-       Cf.tuple2string(Cf.g2x(5124)) != "-182" or \
-       Cf.tuple2string(Cf.g2x(5126)) != "-181+1" or \
-       Cf.tuple2string(Cf.g2x(27924)) != "-1" or \
-       Cf.tuple2string(Cf.g2x(27925)) != "1" or \
-       Cf.tuple2string(Cf.g2x(58660)) != "16-1" or \
-       Cf.tuple2string(Cf.g2x(74736)) != "174" or \
-       Cf.tuple2string(Cf.g2x(74737)) != "*1" or \
-       Cf.tuple2string(Cf.g2x(103408)) != "*32-1" or \
-       Cf.tuple2string(Cf.g2x(103410)) != "*33" or \
-       Cf.tuple2string(Cf.g2x(149216)) != "*1146+d1" :
-        print "Forward g. to c. conversion incorrect."
-
-    # Do some g. to c. conversion checking for the gene on the reverse strand.
-    if Cr.tuple2string(Cr.g2x(146214)) != "-304-u1" or \
-       Cr.tuple2string(Cr.g2x(146091)) != "-182" or \
-       Cr.tuple2string(Cr.g2x(146089)) != "-181+1" or \
-       Cr.tuple2string(Cr.g2x(123291)) != "-1" or \
-       Cr.tuple2string(Cr.g2x(123290)) != "1" or \
-       Cr.tuple2string(Cr.g2x(92555)) != "16-1" or \
-       Cr.tuple2string(Cr.g2x(76479)) != "174" or \
-       Cr.tuple2string(Cr.g2x(76478)) != "*1" or \
-       Cr.tuple2string(Cr.g2x(47807)) != "*32-1" or \
-       Cr.tuple2string(Cr.g2x(47805)) != "*33" or \
-       Cr.tuple2string(Cr.g2x(1999)) != "*1146+d1" :
-        print "Reverse g. to c. conversion incorrect."
-
-    # Do some c. to g. conversion checking for the gene on the forward strand.
-    if Cf.x2g(-304, -1) != 5001 or \
-       Cf.x2g(-182, 0) != 5124 or \
-       Cf.x2g(-181, 1) !=  5126 or \
-       Cf.x2g(-1, 0) != 27924 or \
-       Cf.x2g(1, 0) != 27925 or \
-       Cf.x2g(16, -1) != 58660 or \
-       Cf.x2g(174, 0) != 74736 or \
-       Cf.x2g(Cf.main2int("*1"), 0) != 74737 or \
-       Cf.x2g(Cf.main2int("*32"), -1) != 103408 or \
-       Cf.x2g(Cf.main2int("*33"), 0) != 103410 or \
-       Cf.x2g(Cf.main2int("*1146"), 1) != 149216 :
-        print "Forward c. to g. conversion incorrect."
-
-    # Do some c. to g. conversion checking for the gene on the reverse strand.
-    if Cr.x2g(-304, -1) != 146214 or \
-       Cr.x2g(-182, 0) != 146091 or \
-       Cr.x2g(-181, 1) !=  146089 or \
-       Cr.x2g(-1, 0) != 123291 or \
-       Cr.x2g(1, 0) != 123290 or \
-       Cr.x2g(16, -1) != 92555 or \
-       Cr.x2g(174, 0) != 76479 or \
-       Cr.x2g(Cf.main2int("*1"), 0) != 76478 or \
-       Cr.x2g(Cf.main2int("*32"), -1) != 47807 or \
-       Cr.x2g(Cf.main2int("*33"), 0) != 47805 or \
-       Cr.x2g(Cf.main2int("*1146"), 1) != 1999 :
-        print "Reverse c. to g. conversion incorrect."
-
-    # Build a crossmapper for the hypothetical gene, missing the first exon and
-    #   the last two exons.
-    mRNAf2 = [27745, 27939, 58661, 58762, 74680, 74767, 103409,
-             103528, 119465, 119537]
-    CDSf2 = [27925, 74736]
-    Cf2 = Crossmap(mRNAf2, CDSf2, 1)
-
-    # Build a crossmapper for the hypothetical gene on the reverse strand,
-    #   missing the first exon and the last two exons.
-    mRNAr2 = [31678, 31750, 47687, 47806, 76448, 76535,
-              92453, 92554, 123276, 123470]
-    CDSr2 = [76479, 123290]
-    Cr2 = Crossmap(mRNAr2, CDSr2, -1)
-
-    if Cf.g2x(27925) != Cf2.g2x(27925) or \
-       Cr.g2x(123290) != Cr2.g2x(123290) :
-        print "Failed missing UTR exon test."
-    del Cr2
-    del Cf2
-    del Cr
-    del Cf
-
-    # Build a crossmapper for the hypothetical gene, but now non-coding.
-    Cf3 = Crossmap(mRNAf, [], 1)
-
-    # Build a crossmapper for the hypothetical gene on the reverse strand, but
-    #   now non-coding.
-    Cr3 = Crossmap(mRNAr, [], -1)
-
-    # Check whether the gene on the forward strand has the right splice sites
-    #   in n. notation.
-    if Cf3._Crossmap__crossmapping != [1, 124, 125, 319, 320, 421, 422, 509,
-                                       510, 629, 630, 702, 703, 826, 827,
-                                       1624] :
-        print "Crossmapping list not built correctly (n. notation)."
-
-    # Check whether the splice sites in n. notation are the same as the ones on
-    #   the reverse strand.
-    if Cf3._Crossmap__crossmapping != Cr3._Crossmap__crossmapping[::-1] :
-        print "Forward/reverse discrepancy (n. notation)."
-
-    # Do some g. to n. conversion checking for the gene on the forward strand.
-    if Cf3.tuple2string(Cf3.g2x(5001)) != "1-u1" or \
-       Cf3.tuple2string(Cf3.g2x(5002)) != "1" or \
-       Cf3.tuple2string(Cf3.g2x(5126)) != "124+1" or \
-       Cf3.tuple2string(Cf3.g2x(149216)) != "1624+d1" :
-        print "Forward g. to n. conversion incorrect."
-
-    # Do some g. to n. conversion checking for the gene on the reverse strand.
-    if Cr3.tuple2string(Cr3.g2x(146214)) != "1-u1" or \
-       Cr3.tuple2string(Cr3.g2x(146213)) != "1" or \
-       Cr3.tuple2string(Cr3.g2x(146089)) != "124+1" or \
-       Cr3.tuple2string(Cr3.g2x(1999)) != "1624+d1" :
-        print "Reverse g. to n. conversion incorrect."
-
-    # Do some n. to g. conversion checking for the gene on the forward strand.
-    if Cf3.x2g(1, -1) != 5001 or \
-       Cf3.x2g(1, 0) != 5002 or \
-       Cf3.x2g(124, 1) !=  5126 or \
-       Cf3.x2g(1624, 1) != 149216 :
-        print "Forward n. to g. conversion incorrect."
-
-    # Do some n. to g. conversion checking for the gene on the reverse strand.
-    if Cr3.x2g(1, -1) != 146214 or \
-       Cr3.x2g(1, 0) != 146213 or \
-       Cr3.x2g(124, 1) !=  146089 or \
-       Cr3.x2g(1624, 1) != 1999 :
-        print "Reverse n. to g. conversion incorrect."
-    del Cr3
-    del Cf3
-
-    # This is a test for a gene that has a CDS that lies entirely in one exon.
-    tm = [1, 80, 81, 3719]
-    tc = [162, 2123]
-    T = Crossmap(tm, tc, 1)
-    if T._Crossmap__crossmapping != [-161, -82, -81, 3558] :
-        print "Crossmapping list not built correctly (c. notation) in " + \
-              "small CDS test."
-    if T.x2g(1, 0) != 162 :
-        print "c. to g. conversion failed in small CDS test."
-    if T.tuple2string(T.g2x(2123)) != "1962" or \
-       T.tuple2string(T.g2x(2124)) != "*1" :
-        print "g. to c. conversion failed in small CDS test."
-    del T
-
-    # This is a test for a gene that has a CDS that starts on an exon splice
-    # site.
-    tm2 = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
-           23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
-           23898506, 23899304]
-    tc2 = [23777833, 23898680]
-    T2 = Crossmap(tm2, tc2, 1)
-    if T2._Crossmap__crossmapping != [-156, -1, 1, 196, 197, 299, 300, 388, 389,
-                                     509, 510, 583, 584, 708, 709, 1507] :
-        print "Crossmapping list not built correctly (c. notation) in CDS " + \
-              "start on splice site test."
-
-    if T2.x2g(1, 0) != 23777833 :
-        print "c. to g. conversion failed in CDS start on splice site test."
-    if T2.tuple2string(T2.g2x(2123)) != "-156-u23752936" or \
-       T2.tuple2string(T2.g2x(2124)) != "-156-u23752935" :
-        print "g. to c. conversion failed in CDS start on splice site test."
-    del T2
-
-    tm3 = [23755059, 23755214, 23777833, 23778028, 23808749, 23808851, 23824768,
-           23824856, 23853497, 23853617, 23869553, 23869626, 23894775, 23894899,
-           23898506, 23899304]
-    tc3 = [23755214, 23898680]
-    T3 = Crossmap(tm3, tc3, 1)
-    if T3._Crossmap__crossmapping != [-155, 1, 2, 197, 198, 300, 301, 389, 390,
-                                      510, 511, 584, 585, 709, 710, 1508]:
-        print "Crossmapping list not built correctly (c. notation) in CDS " + \
-              "start on splice site test (test 2)."
-    del T3
-
-    tm2 = [23777833, 23778028, 23808749, 23808851, 23824768, 23824856, 23853497,
-           23853617, 23869553, 23869626, 23894775, 23894899, 23898506, 23899304]
-    tc2 = [23777833, 23899304]
-    T2 = Crossmap(tm2, tc2, 1)
-    if T2.x2g(-1, 0) != T2.x2g(1, -1) :
-        print "Upstream correction (forward) for CDS start at the start of " + \
-              "transcript failed."
-    del T2
-
-    T2 = Crossmap(tm2, tc2, -1)
-    if T2.x2g(-1, 0) != T2.x2g(1, -1) :
-        print "Upstream correction (reverse) for CDS start at the start of " + \
-              "transcript failed."
-    del T2
-#if
