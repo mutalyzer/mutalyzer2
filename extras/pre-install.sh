@@ -43,10 +43,10 @@ apt-get install -y \
   python-setuptools \
   git-core
 
-echo -e "${COLOR_INFO}Installing latest soaplib from git master${COLOR_END}"
+echo -e "${COLOR_INFO}Installing latest soaplib from mirrored git master${COLOR_END}"
 
 pushd $(mktemp -d)
-git clone https://github.com/soaplib/soaplib.git .
+git clone https://github.com/martijnvermaat/soaplib.git .
 python setup.py install
 popd
 
