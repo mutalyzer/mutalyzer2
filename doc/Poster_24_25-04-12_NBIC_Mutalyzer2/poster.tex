@@ -1,0 +1,154 @@
+\documentclass[final, slidestop]{beamer}
+
+\title{Generating variant descriptions based on sequence comparison}
+\author{Jeroen F.J. Laros, Martijn Vermaat Johan T. den Dunnen,
+  Peter E.M. Taschner}
+\institute{Center for Human and Clinical Genetics, Leiden University Medical
+  Center, Leiden, The Netherlands}
+\providecommand{\centerLogo}{
+  \includegraphics[height = 3cm]{gen2phen_logo}
+}
+\providecommand{\rightLogo}{
+  \includegraphics[height = 3cm]{nbic_logo}
+}
+\providecommand{\colOneWidth}{0.48}
+\providecommand{\colTwoWidth}{0.48}
+
+\usetheme{lumc}
+
+\begin{document}
+
+\begin{frame}{}
+  \begin{myPoster}
+    \colorBlock{Background}{Introduction}{1}{
+      Unambiguous and correct sequence variant descriptions are of utmost
+      importance for DNA diagnostics. The free Mutalyzer sequence variation
+      nomenclature checker
+      (\color{red}\bt{http://www.mutalyzer.nl/}\color{LUMCBlue}) names variants
+      following the Human Genome Variation Society (HGVS) sequence variant
+      nomenclature recommendations~\cite{HGVS}.
+
+      \begin{figure}
+        \vspace{2cm}
+        \setlength{\unitlength}{0.12cm}
+        \input{positionpicture}
+        \caption{Gene-centred key positions in HGVS numbering scheme.}
+        \label{fig:positions}
+      \end{figure}
+
+      \begin{table}
+        \caption{HGVS positions in genomic (g.), non-coding (n.) and coding DNA
+          (c.) notations.}
+        \colorbox{white}{
+        {\small
+          \begin{tabular}{l|r|r|r}
+            Key position        & \bt{g.}  & \bt{n.}      & \bt{c.} \\
+            \hline
+            Genomic start       & \bt{1}    & \bt{1-u470}   & \bt{-29-u470} \\
+            Transcription start & \bt{471}  & \bt{1}        & \bt{-29} \\
+            CDS start           & \bt{501}  & \bt{30}       & \bt{1} \\
+            Intron 1 start      & \bt{513}  & \bt{41+1}     & \bt{12+1} \\
+            Intron 1 end        & \bt{612}  & \bt{42-1}     & \bt{13-1} \\
+            CDS stop            & \bt{1830} & \bt{359}      & \bt{330} \\
+            Transcription end   & \bt{2050} & \bt{579}      & \bt{*220} \\
+            Genomic end         & \bt{2670} & \bt{579+d620} & \bt{*220+d620} \\
+          \end{tabular}
+          }
+        }
+      \end{table}
+    }
+    \colorBlock{WhiteBg}{Conclusions}{1}{
+      Variants at intergenic, exonic, intronic, CDS and UTR positions can be
+      easily distinguished based on their gene-centered HGVS descriptions.
+      Mutalyzer facilitates batch-wise conversion from dbSNP rsIDs or
+      chromosomal position numbering of next generation sequencing data to
+      transcript position numbering, as well as sequence variant checking of
+      locus-specific sequence variant databases (LSDBs)~\cite{LOVD}.
+    }
+    \colorBlock{SalmonBg}{Description Extraction}{1}{
+      The description extractor can be used to construct variant descriptions
+      according to the HGVS recommendations. The algorithm closely follows the
+      human approach to describe a variant. It will first find the ``area of
+      change'' and then finds the largest overlap between the original area
+      and the area in the observed sequence. This process is repeated until
+      the smallest description is found. This not only helps clinicians to
+      generate the correct description, but its implementation also allows
+      automation of the description process.
+
+      \vspace{1cm}
+
+      As an example, consider the following two DNA sequences:
+
+      \vspace{1cm}
+
+      \centerline{\texttt{ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA}}
+      \centerline{\texttt{ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA}}
+
+      \vspace{1cm}
+
+      By comparing the sequences, the following HGVS description will be
+      extracted: \texttt{g.[5\_6insTT;17del;26A>C;35dup]}
+
+      \vspace{1cm}
+
+      \begin{table}
+        \caption{Overview of the raw variants as provided by the description
+          extractor.}
+        \colorbox{white}{
+        {\small
+          \begin{tabular}{l|l|l|l|l|l|l}
+            Start & End & Type  & Deleted    & Inserted    & Shift & Description \\
+            \hline
+            5     & 6   & ins   &            & \texttt{TT} & 1     & \texttt{5\_6insTT} \\
+            17    & 0   & del   &            &             & 0     & \texttt{17del} \\
+            26    & 0   & subst & \texttt{A} & \texttt{C}  & 0     & \texttt{26A>C} \\
+            35    & 0   & dup   &            &             & 1     & \texttt{35dup} \\
+          \end{tabular}
+          }
+        }
+      \end{table}
+    }
+    \colorBlock{YellowBg}{Acknowledgements}{1}{
+      {\small
+        Funded by the European Community's Seventh Framework Programme
+        (FP7/2007-2013) under grant agreement no. 200754 - the GEN2PHEN project.
+      }
+
+    }
+    \nextColumn
+    \colorBlock{BlueBg}{Name Checking}{1}{
+      \begin{figure}
+        {
+          \includegraphics[width = 0.95\textwidth, height = 57cm]{mutalyzerNameCheck}
+        }
+        \caption{Mutalyzer 2.0 Name Checker results using the CDKN2A LRG
+          reference sequence~\cite{LRG}}
+        \label{figure:namecheck}
+      \end{figure}
+    }
+    \colorBlock{GreenBg}{Interfaces}{1}{
+
+      \begin{tabular}{l@{\ \ --\ \ }p{25cm}}
+        Name Checker          & Syntactic and semantic checks.$^*$
+                               (Fig.~\ref{figure:namecheck}) \\
+        Syntax Checker        & Syntactic checks only.$^*$ \\
+        Position Converter    & Convert chromosomal positions to gene-centered
+                               notation (no semantic check).$^*$ \\
+        SNP Converter         & Convert a dbSNP rsId to HGVS notation.$^*$ \\
+        Name Generator        & Contruct a HGVS notation. \\
+        Description Extractor & Extract HGVS notation from sequences. \\
+        Reference File Loader & Upload custom GenBank files. \\
+        Webservices           & Programmatic (SOAP) interface. \\
+      \end{tabular}
+      \bigskip
+
+      $^*$ {\small Also available as a batch interface.}
+    }
+    \colorBlock{Background}{References}{1}{
+      {\small
+        \bibliography{$HOME/projects/bibliography}{}
+      }
+    }
+  \end{myPoster}
+\end{frame}
+\end{document}
