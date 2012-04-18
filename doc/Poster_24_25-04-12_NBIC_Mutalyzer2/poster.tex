@@ -1,7 +1,7 @@
 \documentclass[final, slidestop]{beamer}
 
 \title{Generating variant descriptions based on sequence comparison}
-\author{Jeroen F.J. Laros, Martijn Vermaat Johan T. den Dunnen,
+\author{Jeroen F.J. Laros, Martijn Vermaat, Johan T. den Dunnen,
   Peter E.M. Taschner}
 \institute{Center for Human and Clinical Genetics, Leiden University Medical
   Center, Leiden, The Netherlands}
@@ -22,48 +22,20 @@
   \begin{myPoster}
     \colorBlock{Background}{Introduction}{1}{
       Unambiguous and correct sequence variant descriptions are of utmost
-      importance for DNA diagnostics. The free Mutalyzer sequence variation
-      nomenclature checker
-      (\color{red}\bt{http://www.mutalyzer.nl/}\color{LUMCBlue}) names variants
+      importance for DNA diagnostics. Descriptions can be checked and corrected
+      with the {\em Mutalyzer sequence variation nomenclature checker}
+      (Fig.~\ref{figure:namecheck}) (\color{red}\bt{http://www.mutalyzer.nl/}\color{LUMCBlue})
       following the Human Genome Variation Society (HGVS) sequence variant
       nomenclature recommendations~\cite{HGVS}.
 
-      \begin{figure}
-        \vspace{2cm}
-        \setlength{\unitlength}{0.12cm}
-        \input{positionpicture}
-        \caption{Gene-centred key positions in HGVS numbering scheme.}
-        \label{fig:positions}
-      \end{figure}
+      \vspace{1cm}
 
-      \begin{table}
-        \caption{HGVS positions in genomic (g.), non-coding (n.) and coding DNA
-          (c.) notations.}
-        \colorbox{white}{
-        {\small
-          \begin{tabular}{l|r|r|r}
-            Key position        & \bt{g.}  & \bt{n.}      & \bt{c.} \\
-            \hline
-            Genomic start       & \bt{1}    & \bt{1-u470}   & \bt{-29-u470} \\
-            Transcription start & \bt{471}  & \bt{1}        & \bt{-29} \\
-            CDS start           & \bt{501}  & \bt{30}       & \bt{1} \\
-            Intron 1 start      & \bt{513}  & \bt{41+1}     & \bt{12+1} \\
-            Intron 1 end        & \bt{612}  & \bt{42-1}     & \bt{13-1} \\
-            CDS stop            & \bt{1830} & \bt{359}      & \bt{330} \\
-            Transcription end   & \bt{2050} & \bt{579}      & \bt{*220} \\
-            Genomic end         & \bt{2670} & \bt{579+d620} & \bt{*220+d620} \\
-          \end{tabular}
-          }
-        }
-      \end{table}
-    }
-    \colorBlock{WhiteBg}{Conclusions}{1}{
-      Variants at intergenic, exonic, intronic, CDS and UTR positions can be
-      easily distinguished based on their gene-centered HGVS descriptions.
-      Mutalyzer facilitates batch-wise conversion from dbSNP rsIDs or
-      chromosomal position numbering of next generation sequencing data to
-      transcript position numbering, as well as sequence variant checking of
-      locus-specific sequence variant databases (LSDBs)~\cite{LOVD}.
+      Initial construction of variant descriptions, however, requires comparison
+      of the reference sequence and the variant sequence and basic knowledge of
+      the HGVS recommendations. With the arrival of long read sequencers (e.g.
+      PacBio) and the rise of sophisticated variant callers, the chance of
+      finding a complex variant increases and so does the need to describe these
+      variants.
     }
     \colorBlock{SalmonBg}{Description Extraction}{1}{
       The description extractor can be used to construct variant descriptions
@@ -108,6 +80,23 @@
         }
       \end{table}
     }
+    \colorBlock{GreenBg}{Mutalyzer Interfaces}{1}{
+      \begin{tabular}{l@{\ \ --\ \ }p{25cm}}
+        Name Checker       & Syntactic and semantic checks.$^*$
+                               (Fig.~\ref{figure:namecheck}) \\
+        Syntax Checker     & Syntactic checks only.$^*$ \\
+        Position Converter & Convert chromosomal positions to gene-centered
+                               notation (no semantic check).$^*$ \\
+        SNP Converter      & Convert a dbSNP rsId to HGVS notation.$^*$ \\
+        Name Generator     & Contruct a HGVS notation. \\
+        Description Extractor & Extract HGVS notation from sequences. \\
+        GenBank Uploader   & Upload custom GenBank files. \\
+        Webservices        & Programmatic (SOAP) interface. \\
+      \end{tabular}
+      \bigskip
+
+      $^*$ {\small Also available as a batch interface.}
+    }
     \colorBlock{YellowBg}{Acknowledgements}{1}{
       {\small
         Funded by the European Community's Seventh Framework Programme
@@ -126,23 +115,13 @@
         \label{figure:namecheck}
       \end{figure}
     }
-    \colorBlock{GreenBg}{Interfaces}{1}{
-
-      \begin{tabular}{l@{\ \ --\ \ }p{25cm}}
-        Name Checker          & Syntactic and semantic checks.$^*$
-                               (Fig.~\ref{figure:namecheck}) \\
-        Syntax Checker        & Syntactic checks only.$^*$ \\
-        Position Converter    & Convert chromosomal positions to gene-centered
-                               notation (no semantic check).$^*$ \\
-        SNP Converter         & Convert a dbSNP rsId to HGVS notation.$^*$ \\
-        Name Generator        & Contruct a HGVS notation. \\
-        Description Extractor & Extract HGVS notation from sequences. \\
-        Reference File Loader & Upload custom GenBank files. \\
-        Webservices           & Programmatic (SOAP) interface. \\
-      \end{tabular}
-      \bigskip
-
-      $^*$ {\small Also available as a batch interface.}
+    \colorBlock{WhiteBg}{Conclusions}{1}{
+      Variants at intergenic, exonic, intronic, CDS and UTR positions can be
+      easily distinguished based on their gene-centered HGVS descriptions.
+      Mutalyzer facilitates batch-wise conversion from dbSNP rsIDs or
+      chromosomal position numbering of next generation sequencing data to
+      transcript position numbering, as well as sequence variant checking of
+      locus-specific sequence variant databases (LSDBs)~\cite{LOVD}.
     }
     \colorBlock{Background}{References}{1}{
       {\small
