@@ -11,10 +11,4 @@ R.~Dalgleish and et~al.
 \newblock {\em Genome Med}, 2:24, 2010.
 \newblock See also {\small\texttt{http://www.lrg-sequence.org/}}.
 
-\bibitem{LOVD}
-I.F.A.C Fokkema, J.T. {den}~Dunnen, and P.E.M. Taschner.
-\newblock {LOVD}: easy creation of a locus-specific sequence variation database
-  using an ``{LSDB-in-a-Box}'' approach.
-\newblock {\em Human Mutation}, 26(2):63--68, 2005.
-
 \end{thebibliography}

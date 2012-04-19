@@ -36,16 +36,36 @@
       PacBio) and the rise of sophisticated variant callers, the chance of
       finding a complex variant increases and so does the need to describe these
       variants.
+
+      \vspace{1cm}
+
+      \begin{figure}
+        {
+          \includegraphics[width = 0.8\textwidth, height = 19cm]{mutalyzerNameGenerator}
+        }
+        \caption{Name Generator describing an insertion on a genomic reference
+          sequence}
+        \label{figure:namegenerator}
+      \end{figure}
+
+      \vspace{1cm}
+
+      To aid in the construction of a variant description, Mutalyzer includes
+      the Name Generator (Fig.~\ref{figure:namegenerator}), alleviating the
+      need for knowledge of the HGVS recommendations. However, comparison of
+      reference and variant sequences still has to be done by the user and can
+      be a complex task.
     }
     \colorBlock{SalmonBg}{Description Extraction}{1}{
-      The description extractor can be used to construct variant descriptions
-      according to the HGVS recommendations. The algorithm closely follows the
-      human approach to describe a variant. It will first find the ``area of
-      change'' and then finds the largest overlap between the original area
-      and the area in the observed sequence. This process is repeated until
-      the smallest description is found. This not only helps clinicians to
-      generate the correct description, but its implementation also allows
-      automation of the description process.
+      The new Description Extractor can be used to automatically construct
+      variant descriptions according to the HGVS recommendations by sequence
+      comparison. The algorithm closely follows the human approach to
+      describe a variant. It will first find the ``area of change'' and then
+      finds the largest overlap between the original area and the area in the
+      variant sequence. This process is repeated until  the smallest
+      description is found. This not only helps clinicians to generate the
+      correct description, but its implementation also allows automation of
+      the description process.
 
       \vspace{1cm}
 
@@ -53,8 +73,9 @@
 
       \vspace{1cm}
 
-      \centerline{\texttt{ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA}}
-      \centerline{\texttt{ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA}}
+      \centerline{\texttt{\textcolor{blue}{A}\textcolor{red}{T}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}~~\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{green}{C}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{green}{C}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{green}{C}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{orange}{G}~\textcolor{blue}{A}\textcolor{green}{C}\textcolor{blue}{A}\textcolor{blue}{A}}}
+      \centerline{\texttt{|||||~~|||||||||||~||||||||~|||||||||~||||}}
+      \centerline{\texttt{\textcolor{blue}{A}\textcolor{red}{T}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{red}{T}\textcolor{red}{T}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{green}{C}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{green}{C}\textcolor{blue}{A}~\textcolor{red}{T}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{green}{C}\textcolor{green}{C}\textcolor{orange}{G}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{red}{T}\textcolor{red}{T}\textcolor{blue}{A}\textcolor{orange}{G}\textcolor{orange}{G}\textcolor{blue}{A}\textcolor{green}{C}\textcolor{blue}{A}\textcolor{blue}{A}}}
 
       \vspace{1cm}
 
@@ -64,8 +85,8 @@
       \vspace{1cm}
 
       \begin{table}
-        \caption{Overview of the raw variants as provided by the description
-          extractor.}
+        \caption{Overview of the raw variants as provided by the Description
+          Extractor}
         \colorbox{white}{
         {\small
           \begin{tabular}{l|l|l|l|l|l|l}
@@ -80,23 +101,6 @@
         }
       \end{table}
     }
-    \colorBlock{GreenBg}{Mutalyzer Interfaces}{1}{
-      \begin{tabular}{l@{\ \ --\ \ }p{25cm}}
-        Name Checker       & Syntactic and semantic checks.$^*$
-                               (Fig.~\ref{figure:namecheck}) \\
-        Syntax Checker     & Syntactic checks only.$^*$ \\
-        Position Converter & Convert chromosomal positions to gene-centered
-                               notation (no semantic check).$^*$ \\
-        SNP Converter      & Convert a dbSNP rsId to HGVS notation.$^*$ \\
-        Name Generator     & Contruct a HGVS notation. \\
-        Description Extractor & Extract HGVS notation from sequences. \\
-        GenBank Uploader   & Upload custom GenBank files. \\
-        Webservices        & Programmatic (SOAP) interface. \\
-      \end{tabular}
-      \bigskip
-
-      $^*$ {\small Also available as a batch interface.}
-    }
     \colorBlock{YellowBg}{Acknowledgements}{1}{
       {\small
         Funded by the European Community's Seventh Framework Programme
@@ -105,24 +109,48 @@
 
     }
     \nextColumn
+    \colorBlock{WhiteBg}{Conclusions}{1}{
+      With this proof-of-concept we have shown that it is feasible to
+      automatically generate correct variant descriptions following the HGVS
+      recommendations based on a comparison of the original sequence and the
+      observed sequence. The implementation relieves the user from the often
+      complex task of manually creating a description and guarantees
+      conformity to HGVS.
+
+      \vspace{1cm}
+
+      As future work we plan to implement description extraction from reference
+      sequences either identified by accession number or manually uploaded.
+      This will enable, for example, easy construction of descriptions for the
+      difference between two transcript reference sequences.
+    }
     \colorBlock{BlueBg}{Name Checking}{1}{
       \begin{figure}
         {
           \includegraphics[width = 0.95\textwidth, height = 57cm]{mutalyzerNameCheck}
         }
-        \caption{Mutalyzer 2.0 Name Checker results using the CDKN2A LRG
-          reference sequence~\cite{LRG}}
+        \caption{Name Checker results using the CDKN2A LRG reference
+          sequence~\cite{LRG}}
         \label{figure:namecheck}
       \end{figure}
     }
-    \colorBlock{WhiteBg}{Conclusions}{1}{
-      Variants at intergenic, exonic, intronic, CDS and UTR positions can be
-      easily distinguished based on their gene-centered HGVS descriptions.
-      Mutalyzer facilitates batch-wise conversion from dbSNP rsIDs or
-      chromosomal position numbering of next generation sequencing data to
-      transcript position numbering, as well as sequence variant checking of
-      locus-specific sequence variant databases (LSDBs)~\cite{LOVD}.
-    }
+    %\colorBlock{GreenBg}{Mutalyzer Interfaces (a Selection)}{1}{
+    %  \begin{tabular}{l@{\ \ --\ \ }p{25cm}}
+    %    Name Checker       & Syntactic and semantic checks.$^*$
+    %                           (Fig.~\ref{figure:namecheck}) \\
+    %    %Syntax Checker     & Syntactic checks only.$^*$ \\
+    %    Position Converter & Convert chromosomal positions to gene-centered
+    %                           notation (no semantic check).$^*$ \\
+    %    %SNP Converter      & Convert a dbSNP rsId to HGVS notation.$^*$ \\
+    %    Name Generator     & Contruct a HGVS notation. \\
+    %    Description Extractor & Extract HGVS notation from sequences. \\
+    %    %GenBank Uploader   & Upload custom GenBank files. \\
+    %    Webservices        & Programmatic (SOAP) interface. \\
+    %  \end{tabular}
+    %  \bigskip
+    %
+    %  $^*$ {\small Also available as a batch interface.}
+    %}
     \colorBlock{Background}{References}{1}{
       {\small
         \bibliography{$HOME/projects/bibliography}{}
