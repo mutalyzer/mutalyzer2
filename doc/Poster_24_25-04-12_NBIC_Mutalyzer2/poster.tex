@@ -30,12 +30,12 @@
 
       \vspace{1cm}
 
-      Initial construction of variant descriptions, however, requires comparison
-      of the reference sequence and the variant sequence and basic knowledge of
-      the HGVS recommendations. With the arrival of long read sequencers (e.g.
-      PacBio) and the rise of sophisticated variant callers, the chance of
-      finding a complex variant increases and so does the need to describe these
-      variants.
+      Initial construction of variant descriptions, however, requires
+      comparison of reference sequences and variant sequences and basic
+      knowledge of the HGVS recommendations. With the arrival of long read
+      sequencers (e.g., PacBio) and the rise of sophisticated variant callers,
+      the chance of finding complex variants increases and so does the need to
+      describe these variants.
 
       \vspace{1cm}
 
@@ -50,7 +50,7 @@
 
       \vspace{1cm}
 
-      To aid in the construction of a variant description, Mutalyzer includes
+      To aid in the construction of variant descriptions, Mutalyzer includes
       the Name Generator (Fig.~\ref{figure:namegenerator}), alleviating the
       need for knowledge of the HGVS recommendations. However, comparison of
       reference and variant sequences still has to be done by the user and can
@@ -60,11 +60,11 @@
       The new Description Extractor can be used to automatically construct
       variant descriptions according to the HGVS recommendations by sequence
       comparison. The algorithm closely follows the human approach to
-      describe a variant. It will first find the ``area of change'' and then
+      describe variants. It will first find the ``area of change'' and then
       finds the largest overlap between the original area and the area in the
       variant sequence. This process is repeated until  the smallest
-      description is found. This not only helps clinicians to generate the
-      correct description, but its implementation also allows automation of
+      description is found. This not only helps clinicians to generate
+      correct descriptions, but its implementation also allows automation of
       the description process.
 
       \vspace{1cm}
@@ -109,12 +109,12 @@
 
     }
     \nextColumn
-    \colorBlock{WhiteBg}{Conclusions}{1}{
+    \colorBlock{WhiteBg}{Conclusions and further research}{1}{
       With this proof-of-concept we have shown that it is feasible to
       automatically generate correct variant descriptions following the HGVS
-      recommendations based on a comparison of the original sequence and the
-      observed sequence. The implementation relieves the user from the often
-      complex task of manually creating a description and guarantees
+      recommendations based on comparisons of reference sequences and 
+      observed sequences. The implementation relieves the user from the often
+      complex task of manually creating descriptions and guarantees
       conformity to HGVS.
 
       \vspace{1cm}
@@ -122,8 +122,8 @@
       As future work we plan to implement description extraction from reference
       sequences either identified by accession number or manually uploaded.
       This will enable, for example, easy construction of descriptions for the
-      difference between different versions of reference sequence, either
-      genomic or transcript.
+      difference between different versions of genomic or transcript reference
+      sequences.
     }
     \colorBlock{BlueBg}{Name Checking}{1}{
       \begin{figure}
