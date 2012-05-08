@@ -807,7 +807,7 @@ class GenRecord() :
         #for
     #name
 
-    def checkIntron(self, gene, transcript, position) :
+    def checkIntron(self, gene, transcript, position):
         """
         Checks if a position is on or near a splice site
 
@@ -817,25 +817,26 @@ class GenRecord() :
         @type transcript: object
         @arg position: g. position
         @type position: integer
-
-        @return:
-        @todo: Also check a range properly.
         """
-        # TODO Also check a range properly.
         intronPos = abs(transcript.CM.g2x(position)[1])
+
         if intronPos :
+            # It should be easy for SOAP clients to filter out all warnings
+            # related to other transcripts, so we use two codes here.
+            if transcript.current:
+                warning = 'WSPLICESELECTED'
+                str_transcript = 'transcript %s (selected)' % transcript.name
+            else:
+                warning = 'WSPLICE'
+                str_transcript = 'transcript %s' % transcript.name
+
             if intronPos <= config.get('spliceAlarm'):
-                self.__output.addMessage(__file__, 2, "WSPLICE",
-                    "Mutation on splice site in gene %s transcript %s." % (
-                    gene.name, transcript.name))
-                return
-            #if
-            if intronPos <= config.get('spliceWarn'):
-                self.__output.addMessage(__file__, 2, "WSPLICE",
-                    "Mutation near splice site in gene %s transcript %s." % (
-                    gene.name, transcript.name))
-                return
-            #if
-        #if
+                self.__output.addMessage(__file__, 2, warning,
+                    "Mutation on splice site in gene %s %s." % (
+                    gene.name, str_transcript))
+            elif intronPos <= config.get('spliceWarn'):
+                self.__output.addMessage(__file__, 2, warning,
+                    "Mutation near splice site in gene %s %s." % (
+                    gene.name, str_transcript))
     #checkIntron
 #GenRecord
