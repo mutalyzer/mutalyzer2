@@ -31,6 +31,7 @@ apt-get install -y \
   python-configobj \
   python-simpletal \
   python-soappy \
+  python-suds \
   python-magic \
   python-psutil \
   python-xlrd \
