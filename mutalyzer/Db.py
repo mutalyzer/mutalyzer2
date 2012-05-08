@@ -28,15 +28,6 @@ from mutalyzer import util
 from mutalyzer import config
 
 
-# Automatically reconnect to the MySQL server. This is expecially useful for
-# long-running processes such as the batch deamon, which would otherwise loose
-# their connection on an event such as restarting the MySQL server. Also see
-# Trac ticket #91.
-# Be alarmed though, that this messes up transactions. Fortunately, Mutalyzer
-# doesn't use transactions at the moment.
-AUTO_RECONNECT = True
-
-
 #
 # Note that compound queries are split into single queries because of a bug
 # in MySQLdb. The functions load_Update(),  merge_cdsUpdates() and
@@ -57,7 +48,6 @@ class Db() :
     Public methods:
         - query(statement) ; General query function.
     """
-
     def __init__(self, dbName, mySqlUser, mySqlHost) :
         """
         Log in to the database.
@@ -71,10 +61,22 @@ class Db() :
         @type mySqlUser: string
         @arg mySqlHost: Host name for the database
         @type mySqlHost: string
-        """
 
-        self.__db = MySQLdb.connect(user=mySqlUser, db=dbName, host=mySqlHost,
-                                    reconnect=AUTO_RECONNECT)
+        Note: Depending on a configuration setting, we automatically reconnect
+            to the MySQL server. This is expecially useful for long-running
+            processes such as the batch deamon, which would otherwise loose
+            their connection on an event such as restarting the MySQL server.
+            Also see Trac ticket #91.
+            Be alarmed though, that this messes up transactions. Fortunately,
+            Mutalyzer doesn't use transactions at the moment.
+            Additionally, this feature has been removed from the MySQLdb
+            library starting from Debian Wheezy. Again, see #91.
+        """
+        kwargs = dict(user=mySqlUser, db=dbName, host=mySqlHost)
+        if config.get('autoReconnect'):
+            kwargs.update(reconnect=True)
+
+        self.__db = MySQLdb.connect(**kwargs)
     #__init__
 
     def query(self, statement) :

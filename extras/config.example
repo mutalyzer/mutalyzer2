@@ -42,8 +42,8 @@ LocalMySQLuser = "mutalyzer"
 # Host name for the local databases.
 LocalMySQLhost = "localhost"
 
-
-
+# Automatically reconnect to MySQL server (see Trac issue #91).
+autoReconnect = yes
 
 
 #
