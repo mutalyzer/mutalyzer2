@@ -23,16 +23,16 @@
           </div><br>
           Example: AB026906.1:c.274G&gt;T<br>
           <br>
-          <form action = "" method = "post">
+          <form action = "" method = "get">
             <input
               type = "text"
-              name = "mutationName"
-              tal:attributes = "value lastpost"
+              name = "name"
+              tal:attributes = "value name"
               style = "width:100%"
             ><br>
             <input type="submit" value="Submit">
             <input type="button" value="Clear field"
-                   onClick = "clearForm(this.form, 'mutationName');">
+                   onClick = "clearForm(this.form, 'name');">
           </form>
         </div>
         <div tal:condition = "visualisation">
@@ -52,7 +52,7 @@
         <a tal:condition = "browserLink" tal:attributes = "href browserLink">View original variant in UCSC Genome Browser</a>
       </div> <!-- form area -->
       <br>
-      <div tal:condition = "lastpost">
+      <div tal:condition = "name">
         <h3>Name checker results:</h3>
         <div class="messages">
         <p tal:repeat = "m messages" tal:content = "m/description"
@@ -80,7 +80,7 @@
           <tt>
             <a tal:content = "genomicDescription/0"
                tal:attributes = "href
-                 string:checkForward?mutationName=${genomicDescription/1}">
+                 string:check?name=${genomicDescription/1}">
             </a><br>
           </tt>
           <br>
@@ -99,7 +99,7 @@
           <tt tal:repeat = "i descriptions">
             <a tal:condition = "i/1" tal:content = "i/0"
                tal:attributes =
-                 "href string:checkForward?mutationName=${i/1}"></a><tal
+                 "href string:check?name=${i/1}"></a><tal
                tal:condition = "not:i/1" tal:replace = "i/0"></tal><br>
           </tt>
           <br>
@@ -269,7 +269,7 @@
             <br>
           </div> <!-- interactive -->
         </div> <!-- reference -->
-      </div> <!-- lastpost -->
+      </div> <!-- name -->
     </div>
   </body>
 </html>

@@ -67,6 +67,10 @@ class TestConverter():
         is exactly on the border of an exon.
 
         Bug reported February 24, 2012 by S Venkata Suresh Kumar.
+
+        Note: You need the full hg18 and hg19 databases for these tests to
+            pass (i.e. the one used on the production server, possibly
+            updated with newer mappings from the NCBI).
         """
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000001.10:g.115259837_115259837delT', 'list')

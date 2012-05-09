@@ -65,11 +65,11 @@ urls = (
     '/positionConverter',                       'PositionConverter',
     '/Variant_info',                            'VariantInfo',
     '/getGS',                                   'GetGS',
+    '/checkForward',                            'CheckForward',
     '/check',                                   'Check',
     '/descriptionExtract',                      'DescriptionExtractor',
     '/bed',                                     'Bed',
     '/syntaxCheck',                             'SyntaxCheck',
-    '/checkForward',                            'CheckForward',
     '/batch([a-zA-Z]+)?',                       'BatchChecker',
     '/progress',                                'BatchProgress',
     '/Results_(\d+)\.txt',                      'BatchResult',
@@ -80,7 +80,7 @@ urls = (
 )
 
 
-class render_tal :
+class render_tal:
     """
     Render interface to TAL templates.
 
@@ -89,28 +89,26 @@ class render_tal :
         >>> render = render_tal('templates')
         >>> render.hello('alice')
     """
-
-    def __init__(self, path, globals = {}) :
+    def __init__(self, path, globals={}):
         """
         @arg path: Path to templates directory.
         @kwarg globals: Dictionary of global template variables.
         """
-
         self.path = path
         self.globals = globals
     #__init__
 
-    def __getattr__(self, name) :
+    def __getattr__(self, name):
         """
         Returns a template. Call the template to get a render.
 
         @arg name: Template name (usually a HTML filename without '.html').
         @return: Template render function.
         """
-
         filename = name
 
-        def template(args = {}, scheme = 'html', standalone = False) :
+        def template(args={}, scheme='html', standalone=False,
+                     prevent_caching=False):
             """
             Template render function.
 
@@ -127,20 +125,19 @@ class render_tal :
                                argument for template.
             @return: Render of template.
             """
-
             file = filename
-            if scheme == 'html' :
+            if scheme == 'html':
                 file += '.html'
             path = os.path.join(self.path, file)
 
             context = simpleTALES.Context()
 
-            context.addGlobal("interactive", not standalone)
+            context.addGlobal('interactive', not standalone)
 
-            for name, value in self.globals.items() :
+            for name, value in self.globals.items():
                 context.addGlobal(name, value)
 
-            for name, value in args.items() :
+            for name, value in args.items():
                 context.addGlobal(name, value)
 
             templateFile = open(path, 'r')
@@ -148,15 +145,18 @@ class render_tal :
             templateFile.close()
 
             # Wrap in site layout with menu
-            if scheme == 'html' and not standalone :
+            if scheme == 'html' and not standalone:
                 context.addGlobal('sitemacros', template)
                 templateFile = open(os.path.join(self.path, 'menu.html'), 'r')
                 template = simpleTAL.compileHTMLTemplate(templateFile)
                 templateFile.close()
-            #if
 
-            if scheme == 'html' :
+            if scheme == 'html':
                 web.header('Content-Type', 'text/html')
+
+            if prevent_caching:
+                web.header('Cache-Control', 'no-cache')
+                web.header('Expires', '-1')
 
             io = StringIO()
             template.expand(context, io)
@@ -396,7 +396,7 @@ class GetGS :
                 if i.forward :
                     p, a = i.mutationName.split(':')
 
-                    return Check.check(p+'('+l[0]+'):'+a, interactive = False)
+                    return Check.check(p+'('+l[0]+'):'+a, standalone=True)
                 #if
                 else :
                     web.header('Content-Type', 'text/plain')
@@ -749,57 +749,59 @@ class VariantInfo :
     #GET
 #VariantInfo
 
-class Check :
+
+class CheckForward:
+    """
+    Old entrypoint to the namechecker. We keep it to not break existing
+    bookmarks (but this could also be done with an Apache rewrite rule).
+    """
+    def GET(self):
+        """
+        Permanently redirect to the name checker.
+
+        Parameters:
+        - mutationName: Variant to check.
+        """
+        i = web.input(mutationName=None)
+        raise web.redirect('/check?name=' + urllib.quote(i.mutationName))
+    #GET
+#CheckForward
+
+
+class Check:
     """
     The variant checker.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Render the variant checker HTML form.
 
-        There are two modes of invoking the checker with a GET request:
-        1. Provide the 'mutationName' parameter. In this case, the checker is
-           called non-interactively, meaning the result is rendered without
-           the HTML form, site layout, and menu.
-        2. By having a 'variant' value in the cookie. The value is removed.
+        For backwards compatibility with older LOVD versions, we support the
+        'mutationName' argument. If present, we redirect and add standalone=1.
 
         Parameters:
-        - mutationName: Variant to check.
+        - name: Variant to check.
         """
+        i = web.input(name=None, mutationName=None, standalone=False)
 
-        interactive = True
-        i = web.input(mutationName = None)
+        if i.mutationName:
+            raise web.redirect('/check?name=%s&standalone=1'
+                               % urllib.quote(i.mutationName))
 
-        if i.mutationName :
-            # Run checker non-interactively
-            interactive = False
-            variant = i.mutationName
-        #if
-        else :
-            # Run checker if cookie variant is not None
-            variant = web.cookies().get('variant')
-            web.setcookie('variant', '', 60)
-        #else
-
-        return self.check(variant, interactive = interactive)
+        return self.check(i.name, standalone=bool(i.standalone))
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
-        Run the name checker and render the variant checker HTML form.
-
-        Parameters:
-        - mutationName: Variant to check.
+        For now we also accept POST requests with a permanent redirect.
         """
-
-        i = web.input(mutationName = None)
-
-        return self.check(i.mutationName)
+        i = web.input(name=None, mutationName=None, standalone=False)
+        raise web.redirect('/check?name=%s'
+                           % urllib.quote(i.name or i.mutationName))
     #POST
 
     @staticmethod
-    def check(name = None, interactive = True) :
+    def check(name=None, standalone=False):
         """
         Render the variant checker HTML form. If the name argument is given,
         run the name checker.
@@ -808,19 +810,12 @@ class Check :
         @kwarg interactive: Run interactively, meaning we wrap the result in
             the site layout and include the HTML form.
         """
+        if not name:
+            return render.check(dict(name=None), standalone=standalone)
 
         output = Output(__file__)
-        IP = web.ctx["ip"]
-
-        args = {
-            'lastpost' : name
-        }
-
-        if not name :
-            return render.check(args, standalone = not interactive)
-
-        output.addMessage(__file__, -1, 'INFO',
-            'Received variant %s from %s' % (name, IP))
+        output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
+                          % (name, web.ctx['ip']))
 
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
@@ -831,73 +826,60 @@ class Check :
         record_type = output.getIndexedOutput('recordType', 0, '')
         reference = output.getIndexedOutput('reference', 0, '')
 
-        if reference :
-            if record_type == 'LRG' :
+        if reference:
+            if record_type == 'LRG':
                 reference = reference + '.xml'
             else :
                 reference = reference + '.gb'
-        #if
 
-        # This is a tuple (variant, position)
+        # This is a tuple (variant, position) if we have a parse error
         parse_error = output.getOutput('parseError')
-        if parse_error :
+        if parse_error:
             parse_error[0] = parse_error[0].replace('<', '&lt;')
 
         genomic_dna = output.getIndexedOutput('molType', 0) != 'n'
-
-        genomic_description = output.getIndexedOutput('genomicDescription', 0,
-            '')
+        genomic_description = output.getIndexedOutput('genomicDescription', 0, '')
 
         # Create a tuple (description, link) from a description
-        def description_to_link(description) :
+        def description_to_link(description):
             link = None
-
-            if description[-1] != '?' :
+            if description[-1] != '?':
                 link = urllib.quote(description)
-
             return description, link
-        #description_to_link
 
         # Create a link to the UCSC Genome Browser
         browser_link = None
         raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
-        if raw_variants :
+        if raw_variants:
             positions = [pos
                 for descr, (first, last) in raw_variants[2]
                 for pos in (first, last)]
             bed_url = web.ctx.homedomain + web.ctx.homepath + \
-                '/bed?variant=' + urllib.quote(name)
+                '/bed?name=' + urllib.quote(name)
             browser_link = GENOME_BROWSER_URL.format(
-                chromosome = raw_variants[0], start = min(positions) - 10,
-                stop = max(positions) + 10, bed_file = urllib.quote(bed_url))
-        #if
+                chromosome=raw_variants[0], start=min(positions) - 10,
+                stop=max(positions) + 10, bed_file=urllib.quote(bed_url))
 
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
-            'lastpost'           : name,
-            'messages'           : map(util.message_info,
-                output.getMessages()),
+            'name'               : name,
+            'messages'           : map(util.message_info, output.getMessages()),
             'summary'            : summary,
             'parseError'         : parse_error,
             'errors'             : errors,
-            'genomicDescription' : (genomic_description,
-                urllib.quote(genomic_description)),
-            'chromDescription'   : output.getIndexedOutput(
-                'genomicChromDescription', 0),
+            'genomicDescription' : (genomic_description, urllib.quote(genomic_description)),
+            'chromDescription'   : output.getIndexedOutput('genomicChromDescription', 0),
             'genomicDNA'         : genomic_dna,
             'visualisation'      : output.getOutput('visualisation'),
-            'descriptions'       : map(description_to_link,
-                output.getOutput('descriptions')),
+            'descriptions'       : map(description_to_link, output.getOutput('descriptions')),
             'protDescriptions'   : output.getOutput('protDescriptions'),
             'oldProtein'         : output.getOutput('oldProteinFancy'),
             'altStart'           : output.getIndexedOutput('altStart', 0),
             'altProtein'         : output.getOutput('altProteinFancy'),
             'newProtein'         : output.getOutput('newProteinFancy'),
-            'transcriptInfo'     : output.getIndexedOutput('hasTranscriptInfo',
-                0, False),
-            'transcriptCoding'   : output.getIndexedOutput('transcriptCoding',
-                0, False),
+            'transcriptInfo'     : output.getIndexedOutput('hasTranscriptInfo', 0, False),
+            'transcriptCoding'   : output.getIndexedOutput('transcriptCoding', 0, False),
             'exonInfo'           : output.getOutput('exonInfo'),
             'cdsStart_g'         : output.getIndexedOutput('cdsStart_g', 0),
             'cdsStart_c'         : output.getIndexedOutput('cdsStart_c', 0),
@@ -911,7 +893,7 @@ class Check :
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
 
-        return render.check(args, standalone = not interactive)
+        return render.check(args, standalone=standalone, prevent_caching=True)
     #check
 #Check
 
@@ -1006,88 +988,58 @@ class DescriptionExtractor :
 #DescriptionExtract
 
 
-class Bed :
+class Bed:
     """
     Create BED track.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Create a BED track for the given variant, listing the positioning of
         its raw variants. E.g. for use in the UCSC Genome Browser.
 
         Parameters:
-        - mutationName: Variant to create BED track for.
+        - name: Variant to create BED track for.
 
         This basically just runs the variant checker and extracts the raw
         variants with positions.
         """
-
         web.header('Content-Type', 'text/plain')
 
-        i = web.input(variant = None)
-        variant = i.variant
+        i = web.input(name=None)
+        name = i.name
 
-        if not variant :
+        if not name:
             web.ctx.status = '404 Not Found'
-
             return 'Sorry, we have not BED track for this variant.'
-        #if
 
         output = Output(__file__)
 
-        variantchecker.check_variant(str(variant), output)
+        variantchecker.check_variant(str(name), output)
 
         raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
-        if not raw_variants :
+        if not raw_variants:
             web.ctx.status = '404 Not Found'
-
             return 'Sorry, we have no BED track for this variant.'
-        #if
 
         fields = {
             'name'       : 'Mutalyzer',
-            'description': 'Mutalyzer track for ' + variant,
+            'description': 'Mutalyzer track for ' + name,
             'visibility' : 'pack',
             'db'         : 'hg19',
             'url'        : web.ctx.homedomain + web.ctx.homepath +
-                '/checkForward?mutationName=' + urllib.quote(variant),
+                '/check?name=' + urllib.quote(name),
             'color':       '255,0,0'}
 
         bed = ' '.join(['track'] + [
             '%s="%s"' % field for field in fields.items()]) + '\n'
 
-        for description, positions in raw_variants[2] :
+        for description, positions in raw_variants[2]:
             bed += '\t'.join([raw_variants[0], str(min(positions) - 1),
                 str(max(positions)), description, '0', raw_variants[1]]) + '\n'
 
         return bed
     #GET
 #Bed
-
-
-class CheckForward :
-    """
-    Set the given variant in the cookie and redirect to the name checker.
-
-    @todo: Cleaner solution (one without using a cookie).
-    """
-
-    def GET(self) :
-        """
-        Set the 'variant' cookie value to the given variant and redirect
-        to the name checker (where we will arrive by a GET request).
-
-        Parameters:
-        - mutationName: Variant to set in the cookie.
-        """
-
-        i = web.input(mutationName = None)
-        web.setcookie('variant', i.mutationName, 5 * 60)  # Five minutes
-
-        raise web.seeother('check')
-    #GET
-#CheckForward
 
 
 class BatchProgress :
