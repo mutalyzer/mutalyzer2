@@ -60,23 +60,23 @@ urls = (
     '/(nameGenerator)',                         'Static',
     '/(webservices)',                           'Static',
     '/(webservdoc)',                            'Static',
-    '/documentation',                           'Documentation',
-    '/snp',                                     'Snp',
-    '/positionConverter',                       'PositionConverter',
-    '/Variant_info',                            'VariantInfo',
-    '/getGS',                                   'GetGS',
     '/checkForward',                            'CheckForward',
     '/check',                                   'Check',
-    '/descriptionExtract',                      'DescriptionExtractor',
     '/bed',                                     'Bed',
     '/syntaxCheck',                             'SyntaxCheck',
+    '/positionConverter',                       'PositionConverter',
+    '/snp',                                     'Snp',
+    '/descriptionExtract',                      'DescriptionExtractor',
+    '/upload',                                  'Uploader',
     '/batch([a-zA-Z]+)?',                       'BatchChecker',
     '/progress',                                'BatchProgress',
     '/Results_(\d+)\.txt',                      'BatchResult',
+    '/documentation',                           'Documentation',
+    '/Variant_info',                            'VariantInfo',
+    '/getGS',                                   'GetGS',
     '/download/([a-zA-Z-]+\.(?:py|cs|php|rb))', 'Download',
     '/downloads/([a-zA-Z\._-]+)',               'Downloads',
-    '/Reference/([\da-zA-Z\._-]+)',             'Reference',
-    '/upload',                                  'Uploader'
+    '/Reference/([\da-zA-Z\._-]+)',             'Reference'
 )
 
 
@@ -183,34 +183,31 @@ render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
 app = web.application(urls, globals(), autoreload = False)
 
 
-class RedirectHome :
+class RedirectHome:
     """
     Permanent redirect to the homepage.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Redirect to / and include the query string.
         """
-
         raise web.redirect('/' + web.ctx.query)
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
         Redirect to / and include the query string.
         """
-
         raise web.redirect('/' + web.ctx.query)
     #POST
 #RedirectHome
 
-class Download :
+
+class Download:
     """
     Download file from template directory, formatting it first.
     """
-
-    def GET(self, file) :
+    def GET(self, file):
         """
         @arg file: Filename to download.
         @type file: string
@@ -222,10 +219,9 @@ class Download :
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z-]+\.(?:py|cs).
         """
-
         file_path = os.path.join(mutalyzer.package_root(), 'templates', file)
 
-        if not os.path.isfile(file_path) :
+        if not os.path.isfile(file_path):
             raise web.notfound()
 
         content = open(file_path, 'r').read()
@@ -239,12 +235,11 @@ class Download :
 #Download
 
 
-class Downloads :
+class Downloads:
     """
     Download plain text files from /templates/downloads directory.
     """
-
-    def GET(self, file) :
+    def GET(self, file):
         """
         @arg file: Filename to download.
         @type file: string
@@ -256,11 +251,10 @@ class Downloads :
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-
         file_path = os.path.join(mutalyzer.package_root(), 'templates',
-            'downloads', file)
+                                 'downloads', file)
 
-        if not os.path.isfile(file_path) :
+        if not os.path.isfile(file_path):
             raise web.notfound()
 
         handle = open(file_path)
@@ -273,12 +267,11 @@ class Downloads :
 #Downloads
 
 
-class Reference :
+class Reference:
     """
     Download reference file from cache.
     """
-
-    def GET(self, file) :
+    def GET(self, file):
         """
         @arg file: Filename to download from cache.
         @type file: string
@@ -290,10 +283,9 @@ class Reference :
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-
         file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
 
-        if not os.path.isfile(file_path) :
+        if not os.path.isfile(file_path):
             raise web.notfound()
 
         handle = bz2.BZ2File(file_path, 'r')
@@ -303,7 +295,7 @@ class Reference :
         return handle.read()
     #GET
 
-    def HEAD(self, file) :
+    def HEAD(self, file):
         """
         Do the same as in the GET case, but don't actually bunzip and send the
         file, just check if it exists.
@@ -318,18 +310,17 @@ class Reference :
         reconstructed from the information in the database. Because if the
         latter is the case, Mutalyzer will add it to the cache on the fly.
         """
-
         file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
 
-        if not os.path.isfile(file_path) :
+        if not os.path.isfile(file_path):
             # The following is a hack to return a 404 not found status with
             # empty body (as is checked by our unit test framework, WebTest).
             # Just passing nothing, or the empty string, causes web.py to
             # insert some default 'not found' message.
-            class TrueEmptyString(object) :
-                def __str__(self) :
+            class TrueEmptyString(object):
+                def __str__(self):
                     return ''
-                def __nonzero__( self) :
+                def __nonzero__( self):
                     return True
             #TrueEmptyString
 
@@ -344,7 +335,7 @@ class Reference :
 #Reference
 
 
-class GetGS :
+class GetGS:
     """
     LOVD bypass to get the correct GeneSymbol incl Transcript variant.
 
@@ -355,8 +346,7 @@ class GetGS :
     this was ignored. This helper allows LOVD to get the requested
     transcript variant from a genomic reference.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Parameters:
         - mutationName: The mutationname without gene symbol.
@@ -366,12 +356,10 @@ class GetGS :
         @return: Output of name checker if forward is set, otherwise the
                  GeneSymbol with the variant notation as string.
         """
-
         output = Output(__file__)
         IP = web.ctx["ip"]
 
-        i = web.input(mutationName = None, variantRecord = None,
-            forward = None)
+        i = web.input(mutationName=None, variantRecord=None, forward=None)
 
         output.addMessage(__file__, -1, 'INFO',
             'Received request getGS(%s, %s, %s) from %s' % (i.mutationName,
@@ -391,20 +379,14 @@ class GetGS :
 
         # Filter the transcript from the legend
         legends = [l for l in legends if "_v" in l[0]]
-        for l in legends :
-            if l[1] == i.variantRecord :
-                if i.forward :
+        for l in legends:
+            if l[1] == i.variantRecord:
+                if i.forward:
                     p, a = i.mutationName.split(':')
-
                     return Check.check(p+'('+l[0]+'):'+a, standalone=True)
-                #if
-                else :
+                else:
                     web.header('Content-Type', 'text/plain')
-
                     return l[0]
-                #else
-            #if
-        #for
 
         web.header('Content-Type', 'text/plain')
 
@@ -413,34 +395,30 @@ class GetGS :
 #GetGS
 
 
-class SyntaxCheck :
+class SyntaxCheck:
     """
     Syntax checker.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Render syntax checker HTML form.
         """
-
         args = {
             "variant"       : '',
             "messages"      : [],
             "parseError"    : None,
             "debug"         : ""
         }
-
         return render.parse(args)
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
         Parse the given variant and render the syntax checker HTML form.
 
         Parameters:
         - variant: Variant name to check.
         """
-
         output = Output(__file__)
         IP = web.ctx["ip"]
         i = web.input()
@@ -449,18 +427,17 @@ class SyntaxCheck :
             'Received request syntaxCheck(%s) from %s' % (i.variant, IP))
 
         variant = i.variant
-        if variant.find(',') >= 0 :
+        if variant.find(',') >= 0:
             output.addMessage(__file__, 2, "WCOMMASYNTAX",
                 "Comma's are not allowed in the syntax, autofixed.")
             variant = variant.replace(',', '')
             #args["variant"]=variant
-        #if
 
         grammar = Grammar(output)
         grammar.parse(variant)
 
         pe = output.getOutput("parseError")
-        if pe :
+        if pe:
             pe[0] = pe[0].replace('<', "&lt;")
 
         args = {
@@ -478,36 +455,32 @@ class SyntaxCheck :
 #SyntaxCheck
 
 
-class Snp :
+class Snp:
     """
     SNP converter.
 
     Convert a dbSNP rs number to HGVS description(s) of the SNP specified on
     the reference sequence(s) used by dbSNP.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Render SNP converter HTML form.
         """
-
         return self.snp()
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
         Convert to HGVS description(s) and render SNP converter HTML form.
 
         Parameters:
           - rsId: The dbSNP rs number.
         """
-
-        i = web.input(rsId = None)
-
+        i = web.input(rsId=None)
         return self.snp(i.rsId)
     #POST
 
-    def snp(self, rs_id = None) :
+    def snp(self, rs_id=None):
         """
         Convert {rs_id} to HGVS description(s) and render SNP converter HTML
         form.
@@ -515,21 +488,19 @@ class Snp :
         @kwarg rs_id: The dbSNP rs number (including 'rs' prefix).
         @type rs_id: string
         """
-
         output = Output(__file__)
 
         IP = web.ctx["ip"]
 
         descriptions = []
 
-        if rs_id :
+        if rs_id:
             output.addMessage(__file__, -1, 'INFO',
                 'Received request snpConvert(%s) from %s' % (rs_id, IP))
             retriever = Retriever.Retriever(output, None)
             descriptions = retriever.snpConvert(rs_id)
             output.addMessage(__file__, -1, 'INFO',
                 'Finished request snpConvert(%s)' % rs_id)
-        #if
 
         args = {
             'snp'      : descriptions,
@@ -543,20 +514,18 @@ class Snp :
 #Snp
 
 
-class PositionConverter :
+class PositionConverter:
     """
     Convert a variant between genomic and coding positions.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Render position converter HTML form.
         """
-
         return self.position_converter()
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
         Convert a variant and render position converter HTML form.
 
@@ -564,22 +533,20 @@ class PositionConverter :
         - build: Human genome build (currently 'hg18' or 'hg19').
         - variant: Variant to convert.
         """
-
-        i = web.input(build = '', variant = '')
+        i = web.input(build='', variant='')
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in mapping.py:607.
         return self.position_converter(i.build, str(i.variant))
     #POST
 
-    def position_converter(self, build = '', variant = '') :
+    def position_converter(self, build='', variant=''):
         """
         Convert a variant and render position converter HTML form.
 
         @kwarg build: Human genome build (currently 'hg18' or 'hg19').
         @kwarg variant: Variant to convert.
         """
-
         output = Output(__file__)
         IP = web.ctx["ip"]
 
@@ -588,7 +555,6 @@ class PositionConverter :
         if build :
             avail_builds.remove(build)
             avail_builds.insert(0, build)
-        #if
 
         attr = {
             "avail_builds" : avail_builds,
@@ -599,7 +565,7 @@ class PositionConverter :
             "posted"       : build and variant
         }
 
-        if build and variant :
+        if build and variant:
 
             output.addMessage(__file__, -1, 'INFO',
                 'Received request positionConverter(%s, %s) from %s' % (
@@ -610,43 +576,38 @@ class PositionConverter :
             #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
 
-            if variant :
-                if not(":c." in variant or ":g." in variant) :
+            if variant:
+                if not(":c." in variant or ":g." in variant):
                     #Bad name
                     grammar = Grammar(output)
                     grammar.parse(variant)
-                #if
 
-                if ":c." in variant :
+                if ":c." in variant:
                     # Do the c2chrom dance
                     variant = converter.c2chrom(variant)
 
                 attr["gName"] = variant
 
-                if variant and ":g." in variant :
+                if variant and ":g." in variant:
                     # Do the g2c dance
                     variants = converter.chrom2c(variant, "dict")
-                    if variants :
+                    if variants:
                         out = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))
                             for key, value in variants.items()]
                         attr["cNames"].extend(out)
-                    #if
-                #if
-            #if
 
             attr['messages'] = map(util.message_info, output.getMessages())
 
             output.addMessage(__file__, -1, 'INFO',
                 'Finished request positionConverter(%s, %s)' % (build,
                 variant))
-        #if
 
         return render.converter(attr)
     #position_converter
 #PositionConverter
 
 
-class VariantInfo :
+class VariantInfo:
     """
     The I{g.} to I{c.} and vice versa interface for LOVD.
 
@@ -664,8 +625,7 @@ class VariantInfo :
     - If the variant is not accepted by the nomenclature parser, a parse error
       will be printed.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Get variant info and return the result as plain text.
 
@@ -693,7 +653,6 @@ class VariantInfo :
         - trans_stop   ; Transcription stop in I{c.} notation.
         - CDS_stop     ; CDS stop in I{c.} notation.
         """
-
         i = web.input(var = '')
         LOVD_ver = i.LOVD_ver
         build = i.build
@@ -713,36 +672,32 @@ class VariantInfo :
 
         # If no variant is given, return transcription start, transcription
         # end and CDS stop in c. notation.
-        if var :
+        if var:
             ret = converter.mainMapping(acc, var)
-        else :
+        else:
             ret = converter.giveInfo(acc)
-
-            if ret :
+            if ret:
                 result = '%i\n%i\n%i' % ret
-        #else
 
-        if not result and not getattr(ret, 'startmain', None) :
+        if not result and not getattr(ret, 'startmain', None):
             out = output.getOutput('LOVDERR')
-
-            if out :
+            if out:
                 result = out[0]
-            else :
+            else:
                 result = 'Unknown error occured'
-        #if
 
         output.addMessage(__file__, -1, 'INFO',
             'Finished request variantInfo(%s:%s (LOVD_ver %s, build %s))' % (
             acc, var, LOVD_ver, build))
 
-        if not result and getattr(ret, 'startmain', None) :
+        if not result and getattr(ret, 'startmain', None):
             result = '%i\n%i\n%i\n%i\n%i\n%i\n%s' % (ret.startmain,
             ret.startoffset, ret.endmain, ret.endoffset, ret.start_g,
             ret.end_g, ret.mutationType)
 
         web.header('Content-Type', 'text/plain')
 
-        if LOVD_ver == "2.0-23" : # Obsoleted error messages, remove soon.
+        if LOVD_ver == "2.0-23": # Obsoleted error messages, remove soon.
             return re.sub("^Error \(.*\):", "Error:", result)
 
         return result
@@ -897,20 +852,19 @@ class Check:
     #check
 #Check
 
-class DescriptionExtractor :
+
+class DescriptionExtractor:
     """
     The Variant Description Extractor.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Render the description extractor HTML form.
         """
-
         return self.descriptionExtract()
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
         Run the description extractor and render the description extractor HTML
         form.
@@ -919,14 +873,12 @@ class DescriptionExtractor :
         - referenceSeq:
         - variantSeq:
         """
-
-        i = web.input(referenceSeq = None, variantSeq = None)
-
+        i = web.input(referenceSeq=None, variantSeq=None)
         return self.descriptionExtract(i.referenceSeq, i.variantSeq)
     #POST
 
     @staticmethod
-    def descriptionExtract(referenceSeq = None, variantSeq = None) :
+    def descriptionExtract(referenceSeq=None, variantSeq=None):
         """
         Render the description extractor HTML form. If the referenceSeq and
         variantSeq argument are given, run the description extractor.
@@ -936,7 +888,6 @@ class DescriptionExtractor :
         @kwarg variantSeq: The observed sequence.
         @type variantSeq: string
         """
-
         output = Output(__file__)
         IP = web.ctx["ip"]
 
@@ -945,17 +896,17 @@ class DescriptionExtractor :
             'lastVariantSeq'   : variantSeq
         }
 
-        if not (referenceSeq and variantSeq) :
+        if not (referenceSeq and variantSeq):
             return render.descriptionExtract(args)
 
         output.addMessage(__file__, -1, 'INFO',
             "Received Description Extract request from %s" % IP)
 
         # Move this to the describe module.
-        if not util.is_dna(referenceSeq) :
+        if not util.is_dna(referenceSeq):
             output.addMessage(__file__, 3, "ENODNA",
                 "Reference sequence is not DNA.")
-        if not util.is_dna(variantSeq) :
+        if not util.is_dna(variantSeq):
             output.addMessage(__file__, 3, "ENODNA",
                 "Variant sequence is not DNA.")
 
@@ -965,7 +916,7 @@ class DescriptionExtractor :
         errors, warnings, summary = output.Summary()
 
         visualisation = []
-        for i in result :
+        for i in result:
             visualisation.append([i.start, i.end, i.type, i.deleted,
                 i.inserted, i.shift, i.description()])
 
@@ -1042,15 +993,14 @@ class Bed:
 #Bed
 
 
-class BatchProgress :
+class BatchProgress:
     """
     Batch jobs progress viewer.
 
     Used from the 'batch' template by AJAX to get the progress of a batch
     job.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Progress for a batch job.
 
@@ -1070,52 +1020,46 @@ class BatchProgress :
             bitten by this bug. (This includes our unit tests, where we work
             around it by explicitely waiting a second.)
         """
-
         attr = {"percentage": 0}
 
         i = web.input(ajax = None)
-        try :
+        try:
             jobID = int(i.jobID)
             total = int(i.totalJobs)
-        #try
-        except ValueError :
+        except ValueError:
             return
 
         D = Db.Batch()
         left = D.entriesLeftForJob(jobID)
         percentage = int(100 - (100 * left / float(total)))
-        if i.ajax :
-            if percentage == 100 :
+        if i.ajax:
+            if percentage == 100:
                 #download url, check if file still exists
                 ret = "OK"
-            else :
+            else:
                 ret = percentage
             web.header('Content-Type', 'text/plain')
-
             return ret
-        #if
 
         return render.progress(attr)
     #GET
 #BatchProgress
 
 
-class BatchChecker :
+class BatchChecker:
     """
     Run batch jobs.
     """
-
-    def GET(self, batchType = None) :
+    def GET(self, batchType = None):
         """
         Render batch checker HTML form.
 
         @kwarg batchType: Type of batch job.
         """
-
-        return self.batch(batchType = batchType)
+        return self.batch(batchType=batchType)
     #GET
 
-    def POST(self, bt = None) :
+    def POST(self, bt=None):
         """
         Run batch jobs and render batch checker HTML form.
 
@@ -1129,15 +1073,13 @@ class BatchChecker :
         - batchType: Type of batch job to run. One of 'NameChecker' (default),
                      'SyntaxChecker', 'PositionConverter', or 'SnpConverter'.
         """
+        i = web.input(batchEmail=None, batchFile={}, arg1='', batchType=None)
 
-        i = web.input(batchEmail = None, batchFile = {}, arg1 = '',
-                      batchType = None)
-
-        return self.batch(email = i.batchEmail, inFile = i.batchFile, arg1 =
-            i.arg1, batchType = i.batchType)
+        return self.batch(email=i.batchEmail, inFile=i.batchFile, arg1=i.arg1,
+                          batchType=i.batchType)
     #POST
 
-    def batch(self, email = None, inFile = None, arg1 = '', batchType = None) :
+    def batch(self, email=None, inFile=None, arg1='', batchType=None):
         """
         Run batch jobs and render batch checker HTML form. The batch jobs are
         added to the database by the scheduler and ran by the BatchChecker
@@ -1161,7 +1103,7 @@ class BatchChecker :
             "debug"         : [],
             "maxSize"       : float(maxUploadSize) / 1048576,
             "batchTypes"    : ["NameChecker", "SyntaxChecker",
-                "PositionConverter", "SnpConverter"],
+                               "PositionConverter", "SnpConverter"],
             "hideTypes"     : batchType and 'none' or '',
             "selected"      : "0",
             "batchType"     : batchType or "",
@@ -1170,38 +1112,35 @@ class BatchChecker :
             "totalJobs"     : None
         }
 
-        #Make sure the correct page is displayed for an entrypoint
-        if not batchType: batchType = 'NameChecker'
+        # Make sure the correct page is displayed for an entrypoint
+        if not batchType:
+            batchType = 'NameChecker'
 
-        if batchType in attr["batchTypes"] :
+        if batchType in attr["batchTypes"]:
             attr["selected"] = str(attr["batchTypes"].index(batchType))
 
         # Todo: I think this test is kindof bogus
-        def isEMail(a) :
+        def isEMail(a):
             return bool(
                 re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$",
                     a))
-        #isEMail
 
         # Note: A FieldStorage instance (like inFile) seems to always test
         # to the truth value False, so 'if inFile: ...' is not useful.
 
-        if email and isEMail(email) and not inFile == None and inFile.file :
+        if email and isEMail(email) and not inFile == None and inFile.file:
 
             # Todo: These error messages could be delivered trough a template
-            if not 'CONTENT_LENGTH' in web.ctx.environ.keys() :
+            if not 'CONTENT_LENGTH' in web.ctx.environ.keys():
                 web.header('Content-Type', 'text/plain')
                 web.ctx.status = '411 Length required'
-
                 return 'Content length required'
-            #if
-            if int(web.ctx.environ.get('CONTENT_LENGTH')) > maxUploadSize :
+
+            if int(web.ctx.environ.get('CONTENT_LENGTH')) > maxUploadSize:
                 web.header('Content-Type', 'text/plain')
                 web.ctx.status = '413 Request entity too large'
-
                 return 'Sorry, only files up to %s megabytes are accepted.' % (
                     float(maxUploadSize) / 1048576)
-            #if
 
             D = Db.Batch()
             S = Scheduler.Scheduler(D)
@@ -1213,10 +1152,10 @@ class BatchChecker :
             #    req.hostname, req.uri.rsplit("/", 1)[0]+"/")
 
             job, columns = FileInstance.parseBatchFile(inFile.file)
-            if job is None :
+            if job is None:
                 O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
                     " file, please check your file format.")
-            else :
+            else:
                 #TODO: Add Binair Switches to toggle some events
                 attr["jobID"] = S.addJob("BINSWITHCES", email, job, columns,
                     fromHost, batchType, arg1)
@@ -1224,22 +1163,19 @@ class BatchChecker :
                 attr["messages"].append("Your file has been parsed and the job"
                     " is scheduled, you will receive an email when the job is"
                     " finished.")
-            #else
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
-        #if
 
         return render.batch(attr)
     #batch
 #BatchChecker
 
 
-class BatchResult :
+class BatchResult:
     """
     Download result from the batch checker.
     """
-
-    def GET(self, result) :
+    def GET(self, result):
         """
         Return raw content (for batch checker results).
 
@@ -1253,7 +1189,6 @@ class BatchResult :
         The url routing currently makes sure to only call this with filenames
         of the form \d+.
         """
-
         filename = 'Results_%s.txt' % result
         handle = open(os.path.join(config.get('resultsDir'), filename))
         web.header('Content-Type', 'text/plain')
@@ -1265,7 +1200,7 @@ class BatchResult :
 #BatchResult
 
 
-def _checkInt(inpv, refname) :
+def _checkInt(inpv, refname):
     """
     Remove [,.-] from inpv and try to convert the result to an integer value.
     Raise InputException if the conversion fails.
@@ -1279,26 +1214,24 @@ def _checkInt(inpv, refname) :
 
     @raise InputException: If the converting to an integer value fails.
     """
-
     inpv = inpv.replace(',', '').replace('.', '').replace('-', '')
 
-    try :
+    try:
         return int(inpv)
-    except ValueError :
+    except ValueError:
         raise InputException("Expected an integer in field: %s" % refname)
 #_checkInt
 
 
-class InputException(Exception) :
+class InputException(Exception):
     """
     This exception is raised by Uploader.
     """
-
     pass
 #InputException
 
 
-class Uploader :
+class Uploader:
     """
     Reference sequence uploader.
 
@@ -1306,12 +1239,10 @@ class Uploader :
 
     @todo: Test this class.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         Render reference sequence uploader form.
         """
-
         maxUploadSize = config.get('maxDldSize')
         UD, errors = "", []
         args = {
@@ -1319,11 +1250,10 @@ class Uploader :
             "maxSize" : float(maxUploadSize) / 1048576,
             "errors"  : errors
         }
-
         return render.gbupload(args)
     #GET
 
-    def POST(self) :
+    def POST(self):
         """
         Render reference sequence uploader form and handle a reference
         sequence upload or retrieval.
@@ -1357,7 +1287,6 @@ class Uploader :
         - stop: Stop position.
         - orientation: Orientation.
         """
-
         maxUploadSize = config.get('maxDldSize')
 
         O = Output(__file__)
@@ -1367,9 +1296,9 @@ class Uploader :
 
         UD, errors = "", []
 
-        i = web.input(invoermethode = '', bestandsveld = {}, urlveld = '',
-            genesymbol = '', organism = '', fiveutr = '', threeutr = '',
-            chracc = '', start = '', stop = '', orientation = '')
+        i = web.input(invoermethode='', bestandsveld={}, urlveld='',
+                      genesymbol='', organism='', fiveutr='', threeutr='',
+                      chracc='', start='', stop='', orientation='')
 
         O.addMessage(__file__, -1, 'INFO',
             'Received request'
@@ -1377,63 +1306,57 @@ class Uploader :
             i.invoermethode, i.urlveld, i.genesymbol, i.organism, i.fiveutr,
             i.threeutr, i.chracc, i.start, i.stop, i.orientation, IP))
 
-        try :
-            if i.invoermethode == "file" :
-                if not 'CONTENT_LENGTH' in web.ctx.environ.keys() :
+        try:
+            if i.invoermethode == "file":
+                if not 'CONTENT_LENGTH' in web.ctx.environ.keys():
                     web.header('Content-Type', 'text/plain')
                     web.ctx.status = '411 Length required'
-
                     return 'Content length required.'
-                #if
-                if int(web.ctx.environ.get('CONTENT_LENGTH')) > maxUploadSize :
+
+                if int(web.ctx.environ.get('CONTENT_LENGTH')) > maxUploadSize:
                     web.header('Content-Type', 'text/plain')
                     web.ctx.status = '413 Request entity too large'
-
                     return 'Upload limit exceeded.'
-                #if
+
                 # Non-conforming clients (read: LOVD) might send the form
                 # request urlencoded (and not as the requested multipart/
                 # form-data). We try to support this anyway.
                 if web.ctx.env.get('CONTENT_TYPE', '') == \
                     'application/x-www-form-urlencoded' and \
-                    isinstance(i.bestandsveld, str) :
+                    isinstance(i.bestandsveld, str):
                     UD = R.uploadrecord(i.bestandsveld)
-                elif not i.bestandsveld == None and i.bestandsveld.file :
+                elif not i.bestandsveld == None and i.bestandsveld.file:
                     # Todo: actually we should check if .file exists
                     UD = R.uploadrecord(i.bestandsveld.file.read())
-                else :
+                else:
                     raise web.badrequest()
-            #if
-            elif i.invoermethode == "url" :
+
+            elif i.invoermethode == "url":
                 UD = R.downloadrecord(i.urlveld)
-            elif i.invoermethode == "gene" :
+            elif i.invoermethode == "gene":
                 geneName = i.genesymbol
                 organism = i.organism
                 upStream = _checkInt(i.fiveutr, "5' flanking nucleotides")
                 downStream = _checkInt(i.threeutr, "3' flanking nucleotides")
                 UD = R.retrievegene(geneName, organism, upStream, downStream)
-            #elif
-            elif i.invoermethode == "chr" :
+            elif i.invoermethode == "chr":
                 accNo = i.chracc
                 start = _checkInt(i.start, "Start position")
                 stop = _checkInt(i.stop, "Stop position")
                 orientation = int(i.orientation)
                 UD = R.retrieveslice(accNo, start, stop, orientation)
-            #if
-            else :
+            else:
                 #unknown "invoermethode"
                 raise InputException("Wrong method selected")
-        #try
-        except InputException, e :
+
+        except InputException, e:
             #DUMB USERS
             errors.append(e)
-        finally :
-            if not UD :
+        finally:
+            if not UD:
                 #Something went wrong
                 errors += ["The request could not be completed"]
                 errors.extend(map(lambda m: str(m), O.getMessages()))
-            #if
-        #finally
 
         args = {
             "UD"      : UD,
@@ -1451,11 +1374,11 @@ class Uploader :
 #Uploader
 
 
-class Documentation :
+class Documentation:
     """
+    SOAP webservice documentation.
     """
-
-    def GET(self) :
+    def GET(self):
         """
         HTML documentation for the webservice.
 
@@ -1478,27 +1401,25 @@ class Documentation :
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """
-
         url = web.ctx.homedomain + web.ctx.homepath + WEBSERVICE_LOCATION
         wsdl_handle = StringIO(webservice.soap_application.get_wsdl(url))
         xsl_handle = open(os.path.join(mutalyzer.package_root(), WSDL_VIEWER),
-            'r')
+                          'r')
         wsdl_doc = etree.parse(wsdl_handle)
         xsl_doc = etree.parse(xsl_handle)
         transform = etree.XSLT(xsl_doc)
-        web.header('Content-Type', 'text/html')
 
+        web.header('Content-Type', 'text/html')
         return str(transform(wsdl_doc))
     #GET
 #Documentation
 
 
-class Static :
+class Static:
     """
     Static page, just render a TAL template on GET.
     """
-
-    def GET(self, page = None) :
+    def GET(self, page=None):
         """
         Render a TAL template as HTML.
 
@@ -1511,8 +1432,7 @@ class Static :
         template name. For example, make sure this is not called with page
         value '../forbidden'. This check is implemented in the url routing.
         """
-
-        if not page :
+        if not page:
             page = 'index'
 
         return getattr(render, page)()
