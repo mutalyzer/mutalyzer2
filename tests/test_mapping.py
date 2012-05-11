@@ -94,3 +94,54 @@ class TestConverter():
         assert 'NM_002241.3:c.-27340-7_-27332del16' not in coding
         assert 'NM_002241.4:c.1-7_9del16' in coding
         assert 'NM_002241.3:c.1-7_9del16' in coding
+
+    def test_range_order_forward_correct(self):
+        """
+        Just a normal position converter call, both directions.  See Trac #95.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.-1_274del')
+        assert_equal(genomic, 'NC_000011.9:g.111957631_111959695del')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.-1_274del' in coding
+
+    def test_range_order_forward_incorrect_c2chrom(self):
+        """
+        Incorrect order of a range on the forward strand. See Trac #95.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.274_-1del')
+        assert_equal(genomic, None)
+        erange = self.output.getMessagesWithErrorCode('ERANGE')
+        assert_equal(len(erange), 1)
+
+    def test_range_order_reverse_correct(self):
+        """
+        Just a normal position converter call on the reverse strand, both
+        directions. See Trac #95.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_001162505.1:c.-1_40del')
+        assert_equal(genomic, 'NC_000020.10:g.48770135_48770175del')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_001162505.1:c.-1_40del' in coding
+
+    def test_range_order_reverse_incorrect_c2chrom(self):
+        """
+        Incorrect order of a range on the reverse strand. See Trac #95.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_001162505.1:c.40_-1del')
+        assert_equal(genomic, None)
+        erange = self.output.getMessagesWithErrorCode('ERANGE')
+        assert_equal(len(erange), 1)
+
+    def test_range_order_incorrect_chrom2c(self):
+        """
+        Incorrect order of a chromosomal range. See Trac #95.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111959695_111957631del', 'list')
+        assert_equal(coding, None)
+        erange = self.output.getMessagesWithErrorCode('ERANGE')
+        assert_equal(len(erange), 1)

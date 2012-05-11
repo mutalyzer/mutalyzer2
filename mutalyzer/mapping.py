@@ -431,11 +431,16 @@ class Converter(object) :
         else :
             change = r_change
 
-        if M.start_g != M.end_g :
-            if self.dbFields["orientation"] == '+' :
-                var_in_g = "g.%s_%s%s" % (M.start_g, M.end_g, change)
-            else :
-                var_in_g = "g.%s_%s%s" % (M.end_g, M.start_g, change)
+        if M.start_g != M.end_g:
+            if self.dbFields["orientation"] == '-':
+                last_g, first_g = M.start_g, M.end_g
+            else:
+                first_g, last_g = M.start_g, M.end_g
+            if last_g < first_g:
+                self.__output.addMessage(__file__, 3, 'ERANGE', 'End position '
+                                         'is smaller than the begin position.')
+                return None
+            var_in_g = "g.%s_%s%s" % (first_g, last_g, change)
         #if
         else :
             var_in_g = "g.%s%s" % (M.start_g, change)
@@ -555,6 +560,11 @@ class Converter(object) :
             loc2 = int(self.parseTree.RawVar.EndLoc.PtLoc.Main)
         else :
             loc2 = loc
+
+        if loc2 < loc:
+            self.__output.addMessage(__file__, 3, 'ERANGE', 'End position is '
+                                     'smaller than the begin position.')
+            return None
 
         if gene:
             transcripts = self.__database.get_TranscriptsByGeneName(gene)
