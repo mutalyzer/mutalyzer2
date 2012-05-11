@@ -591,9 +591,11 @@ class PositionConverter:
                 if variant and ":g." in variant:
                     # Do the g2c dance
                     variants = converter.chrom2c(variant, "dict")
-                    if variants:
+                    if variants is None:
+                        attr['gName'] = None
+                    elif variants:
                         out = ["%-10s:\t%s" % (key[:10], "\n\t\t".join(value))
-                            for key, value in variants.items()]
+                               for key, value in variants.items()]
                         attr["cNames"].extend(out)
 
             attr['messages'] = map(util.message_info, output.getMessages())
