@@ -36,7 +36,10 @@
             Retrieve part of the reference genome for a (HGNC) gene symbol<br>
             <input type="radio" name="invoermethode" value='chr'
                    onClick="updateVisibility();">
-            Retrieve a range of a chromosome<br>
+            Retrieve a range of a chromosome by accession number<br>
+            <input type="radio" name="invoermethode" value='chrname'
+                   onClick="updateVisibility();">
+            Retrieve a range of a chromosome by name<br>
           </td>
         </tr>
         <tr height="20px"></tr>
@@ -80,21 +83,59 @@
               and specify the range</i><br>
               <table>
                 <tr>
-                  <td>Chromosome Accession Number</td>
+                  <td>Chromosome accession number</td>
                   <td><input type='text' name="chracc"></td>
                 </tr>
                 <tr>
-                  <td>Start Position</td>
+                  <td>Start position</td>
                   <td><input type='text' name="start"></td>
                 </tr>
                 <tr>
-                  <td>Stop Position</td>
+                  <td>Stop position</td>
                   <td><input type='text' name="stop"></td>
                 </tr>
                 <tr>
                   <td>Orientation</td>
                   <td>
-                    <select name = "orientation">
+                    <select name="orientation">
+                      <option value="1">Forward</option>
+                      <option value="2">Reverse</option>
+                    </select>
+                  </td>
+                </tr>
+              </table>
+            </span>
+            <span id="chrname_label">
+              <i>Please enter the name of the chromosome
+              and specify the range</i><br>
+              <table>
+                <tr>
+                  <td>Assembly</td>
+                  <td>
+                    <select name="chrnameassembly">
+                      <option tal:repeat = "i available_assemblies"
+                              tal:content = "i"
+                              tal:attributes = "value i">
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Chromosome name</td>
+                  <td><input type='text' name="chrname"></td>
+                </tr>
+                <tr>
+                  <td>Start position</td>
+                  <td><input type='text' name="chrnamestart"></td>
+                </tr>
+                <tr>
+                  <td>Stop position</td>
+                  <td><input type='text' name="chrnamestop"></td>
+                </tr>
+                <tr>
+                  <td>Orientation</td>
+                  <td>
+                    <select name="chrnameorientation">
                       <option value="1">Forward</option>
                       <option value="2">Reverse</option>
                     </select>

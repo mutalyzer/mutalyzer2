@@ -3,21 +3,25 @@ function updateVisibility() {
   document.getElementById('url_label').style.display = "none";
   document.getElementById('gene_label').style.display = "none";
   document.getElementById('range_label').style.display = "none";
+  document.getElementById('chrname_label').style.display = "none";
 
   for (i = 0; i < document.invoer.invoermethode.length; i++) {
     if (document.invoer.invoermethode[i].checked) {
       if (document.invoer.invoermethode[i].value == 'file') {
-        file_label.style.display = "";
+          document.getElementById('file_label').style.display = "";
       }
       else if (document.invoer.invoermethode[i].value == 'url') {
-        url_label.style.display = "";
+          document.getElementById('url_label').style.display = "";
       }
       else if (document.invoer.invoermethode[i].value == 'gene') {
-        gene_label.style.display = "";
+          document.getElementById('gene_label').style.display = "";
       }
       else if (document.invoer.invoermethode[i].value == 'chr') {
-        range_label.style.display = "";
-      }                        
+          document.getElementById('range_label').style.display = "";
+      }
+      else if (document.invoer.invoermethode[i].value == 'chrname') {
+          document.getElementById('chrname_label').style.display = "";
+      }
     }//if
   }//for
 }//updateVisibility
@@ -52,7 +56,7 @@ function onloadBatch() {
 function getHTTPObject(){
     if (window.ActiveXObject)
         return new ActiveXObject("Microsoft.XMLHTTP");
-    else if (window.XMLHttpRequest) 
+    else if (window.XMLHttpRequest)
         return new XMLHttpRequest();
     else {
         alert("Your browser does not support AJAX.");

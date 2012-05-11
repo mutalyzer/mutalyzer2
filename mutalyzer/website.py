@@ -571,6 +571,7 @@ class PositionConverter:
                 'Received request positionConverter(%s, %s) from %s' % (
                 build, variant, IP))
 
+            # Todo: check for correct build.
             converter = Converter(build, output)
 
             #Convert chr accNo to NC number
@@ -1246,11 +1247,13 @@ class Uploader:
         Render reference sequence uploader form.
         """
         maxUploadSize = config.get('maxDldSize')
+        available_assemblies = config.get('dbNames')[::-1]
         UD, errors = "", []
         args = {
-            "UD"      : UD,
-            "maxSize" : float(maxUploadSize) / 1048576,
-            "errors"  : errors
+            'UD'                   : UD,
+            'available_assemblies' : available_assemblies,
+            'maxSize'              : float(maxUploadSize) / 1048576,
+            'errors'               : errors
         }
         return render.gbupload(args)
     #GET
@@ -1264,10 +1267,12 @@ class Uploader:
         1. The reference sequence file is a local file.
         2. The reference sequence file can be found at the following URL.
         3. Retrieve part of the reference genome for a (HGNC) gene symbol.
-        4. Retrieve a range of a chromosome.
+        4. Retrieve a range of a chromosome by accession number.
+        5. Retrieve a range of a chromosome by name.
 
         Parameters:
-        - invoermethode: Input method. One of 'file', 'url', 'gene', 'chr'.
+        - invoermethode: Input method. One of 'file', 'url', 'gene', 'chr',
+          'chrname'.
 
         Depending on the input method, additional parameters are expected.
 
@@ -1288,8 +1293,16 @@ class Uploader:
         - start: Start position.
         - stop: Stop position.
         - orientation: Orientation.
+
+        Parameters (method 'chrname'):
+        - chrnameassembly: Genome assembly (probably 'hg18' or 'hg19').
+        - chrname: Chromosome name.
+        - chrnamestart: Start position.
+        - chrnamestop: Stop position.
+        - chrnameorientation: Orientation.
         """
         maxUploadSize = config.get('maxDldSize')
+        available_assemblies = config.get('dbNames')[::-1]
 
         O = Output(__file__)
         IP = web.ctx["ip"]
@@ -1300,13 +1313,16 @@ class Uploader:
 
         i = web.input(invoermethode='', bestandsveld={}, urlveld='',
                       genesymbol='', organism='', fiveutr='', threeutr='',
-                      chracc='', start='', stop='', orientation='')
+                      chracc='', start='', stop='', orientation='',
+                      chrnameassembly='', chrname='', chrnamestart='',
+                      chrnamestop='', chrnameorientation='')
 
         O.addMessage(__file__, -1, 'INFO',
             'Received request'
-            ' upload(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) from %s' % (
+            ' upload(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) from %s' % (
             i.invoermethode, i.urlveld, i.genesymbol, i.organism, i.fiveutr,
-            i.threeutr, i.chracc, i.start, i.stop, i.orientation, IP))
+            i.threeutr, i.chracc, i.start, i.stop, i.orientation, i.chrnameassembly,
+            i.chrname, i.chrnamestart, i.chrnamestop, i.chrnameorientation, IP))
 
         try:
             if i.invoermethode == "file":
@@ -1347,6 +1363,27 @@ class Uploader:
                 stop = _checkInt(i.stop, "Stop position")
                 orientation = int(i.orientation)
                 UD = R.retrieveslice(accNo, start, stop, orientation)
+            elif i.invoermethode == "chrname":
+                build = i.chrnameassembly
+                name = i.chrname
+                start = _checkInt(i.chrnamestart, "Start position")
+                stop = _checkInt(i.chrnamestop, "Stop position")
+                orientation = int(i.chrnameorientation)
+
+                if build not in available_assemblies:
+                    raise InputException('Assembly not available: %s' % build)
+
+                if not name.startswith('chr'):
+                    name = 'chr%s' % name
+
+                database = Db.Mapping(build)
+                accession = database.chromAcc(name)
+
+                if not accession:
+                    raise InputException('Chromosome not available for build %s: %s' %
+                                         (build, name))
+
+                UD = R.retrieveslice(accession, start, stop, orientation)
             else:
                 #unknown "invoermethode"
                 raise InputException("Wrong method selected")
@@ -1361,15 +1398,17 @@ class Uploader:
                 errors.extend(map(lambda m: str(m), O.getMessages()))
 
         args = {
-            "UD"      : UD,
-            "maxSize" : float(maxUploadSize) / 1048576,
-            "errors"  : errors
+            "UD"                   : UD,
+            'available_assemblies' : available_assemblies,
+            "maxSize"              : float(maxUploadSize) / 1048576,
+            "errors"               : errors
         }
 
         O.addMessage(__file__, -1, 'INFO',
-            'Finished request upload(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
+            'Finished request upload(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
             % (i.invoermethode, i.urlveld, i.genesymbol, i.organism,
-            i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation))
+               i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation,
+               i.chrnameassembly, i.chrname, i.chrnamestart, i.chrnamestop, i.chrnameorientation))
 
         return render.gbupload(args)
     #POST
