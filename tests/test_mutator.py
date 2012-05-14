@@ -30,7 +30,6 @@ class TestMutator():
     """
     Test the mutator module.
     """
-
     def setUp(self):
         """
         Initialize test mutator module.
@@ -659,3 +658,224 @@ class TestMutator():
         m = self._mutator(_seq(l))
         m.insM(18, 'AT')   # g.18_19insAT
         assert_equal(m.newSplice(sites), [4, 9, 10, 17, 18, 29])
+
+    def test_del(self):
+        """
+        Simple deletion 2del.
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 2)
+        assert_equal(str(m.mutated), str(Seq('ACGATCG')))
+
+    def test_largedel(self):
+        """
+        Simple large deletion 2_7del.
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 7)
+        assert_equal(str(m.mutated), str(Seq('AG')))
+
+    def test_ins(self):
+        """
+        Simple insertion 2_3insA.
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'A')
+        assert_equal(str(m.mutated), str(Seq('ATACGATCG')))
+
+    def test_largeins(self):
+        """
+        Simple large insertion 2_3insATCG.
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'ATCG')
+        assert_equal(str(m.mutated), str(Seq('ATATCGCGATCG')))
+
+    def test_sub(self):
+        """
+        Simple substitution 3C>G.
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.subM(3, 'G')
+        assert_equal(str(m.mutated), str(Seq('ATGGATCG')))
+
+    def test_adjecent_del_sub_1(self):
+        """
+        Deletion and substitution directly adjecent to each other [2del;3C>G].
+
+        See Trac #83.
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 2)
+        m.subM(3, 'G')
+        assert_equal(str(m.mutated), str(Seq('AGGATCG')))
+
+    def test_adjecent_del_sub_2(self):
+        """
+        Deletion and substitution directly adjecent to each other [3del;2T>G].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(3, 3)
+        m.subM(2, 'G')
+        assert_equal(str(m.mutated), str(Seq('AGGATCG')))
+
+    def test_near_adjecent_del_sub_1(self):
+        """
+        Deletion and substitution almost adjecent to each other [2del;4G>T].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 2)
+        m.subM(4, 'T')
+        assert_equal(str(m.mutated), str(Seq('ACTATCG')))
+
+    def test_near_adjecent_del_sub_2(self):
+        """
+        Deletion and substitution almost adjecent to each other [4del;2T>G].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(4, 4)
+        m.subM(2, 'G')
+        assert_equal(str(m.mutated), str(Seq('AGCATCG')))
+
+    def test_adjecent_largedel_sub_1(self):
+        """
+        Large deletion and substitution directly adjecent to each other
+        [2_6del;7C>T].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 6)
+        m.subM(7, 'T')
+        assert_equal(str(m.mutated), str(Seq('ATG')))
+
+    def test_adjecent_largedel_sub_2(self):
+        """
+        Large deletion and substitution directly adjecent to each other
+        [3_7del;2T>C].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(3, 7)
+        m.subM(2, 'C')
+        assert_equal(str(m.mutated), str(Seq('ACG')))
+
+    def test_near_adjecent_largedel_sub_1(self):
+        """
+        Large deletion and substitution almost adjecent to each other [2_5del;7C>T].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 5)
+        m.subM(7, 'T')
+        assert_equal(str(m.mutated), str(Seq('ATTG')))
+
+    def test_near_adjecent_largedel_sub_2(self):
+        """
+        Large deletion and substitution almost adjecent to each other [4_7del;2T>C].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(4, 7)
+        m.subM(2, 'C')
+        assert_equal(str(m.mutated), str(Seq('ACCG')))
+
+    def test_adjectent_del_ins_1(self):
+        """
+        Deletion and insertion adjecent to each other [2del;2_3insG].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 2)
+        m.insM(2, 'G')
+        assert_equal(str(m.mutated), str(Seq('AGCGATCG')))
+
+    def test_adjectent_del_ins_2(self):
+        """
+        Deletion and insertion adjecent to each other [3del;2_3insA].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(3, 3)
+        m.insM(2, 'A')
+        assert_equal(str(m.mutated), str(Seq('ATAGATCG')))
+
+    def test_near_adjectent_del_ins(self):
+        """
+        Deletion and insertion almost adjecent to each other [2del;3_4insG].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 2)
+        m.insM(3, 'T')
+        assert_equal(str(m.mutated), str(Seq('ACTGATCG')))
+
+    def test_adjecent_ins_sub_1(self):
+        """
+        Insertion and substitution directly adjecent to each other
+        [2_3insA;3C>G].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'A')
+        m.subM(3, 'G')
+        assert_equal(str(m.mutated), str(Seq('ATAGGATCG')))
+
+    def test_adjecent_ins_sub_2(self):
+        """
+        Insertion and substitution directly adjecent to each other
+        [2_3insA;2T>G].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'A')
+        m.subM(2, 'G')
+        assert_equal(str(m.mutated), str(Seq('AGACGATCG')))
+
+    def test_near_adjecent_ins_sub(self):
+        """
+        Insertion and substitution almost adjecent to each other
+        [2_3insA;4C>T].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'A')
+        m.subM(4, 'T')
+        assert_equal(str(m.mutated), str(Seq('ATACTATCG')))
+
+    def test_adjecent_largeins_sub_1(self):
+        """
+        Large insertion and substitution directly adjecent to each other
+        [2_3insATCG;3C>G].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'ATCG')
+        m.subM(3, 'G')
+        assert_equal(str(m.mutated), str(Seq('ATATCGGGATCG')))
+
+    def test_adjecent_largeins_sub_2(self):
+        """
+        Large insertion and substitution directly adjecent to each other
+        [2_3insATCG;2T>G].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'ATCG')
+        m.subM(2, 'G')
+        assert_equal(str(m.mutated), str(Seq('AGATCGCGATCG')))
+
+    def test_near_adjecent_largeins_sub(self):
+        """
+        Large insertion and substitution almost adjecent to each other
+        [2_3insATCG;4C>T].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.insM(2, 'ATCG')
+        m.subM(4, 'T')
+        assert_equal(str(m.mutated), str(Seq('ATATCGCTATCG')))
+
+    def test_adjecent_del_del_1(self):
+        """
+        Deletion and deletion directly adjecent to each other [2del;3del].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(2, 2)
+        m.delM(3, 3)
+        assert_equal(str(m.mutated), str(Seq('AGATCG')))
+
+    def test_adjecent_del_del_2(self):
+        """
+        Deletion and deletion directly adjecent to each other [3del;2del].
+        """
+        m = self._mutator(Seq('ATCGATCG'))
+        m.delM(3, 3)
+        m.delM(2, 2)
+        assert_equal(str(m.mutated), str(Seq('AGATCG')))
