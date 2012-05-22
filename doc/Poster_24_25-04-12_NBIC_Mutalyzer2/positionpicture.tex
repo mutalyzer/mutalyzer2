@@ -1,0 +1,51 @@
+\vspace{-0.5cm}
+\begin{center}
+  \colorbox{white}{
+    \begin{picture}(300, 60)(0, 0)
+      \put(0, 30){\line(1, 0){300}}  % Genomic sequence.
+      \linethickness{4pt}
+      \put(50, 30){\line(1, 0){30}}  % Non-coding parts of the exons.
+      \put(220, 30){\line(1, 0){10}}
+      \linethickness{12pt}
+      \put(80, 30){\line(1, 0){20}}  % Coding parts of the exons.
+      \put(150, 30){\line(1, 0){20}}
+      \put(200, 30){\line(1, 0){20}}
+
+      \linethickness{0.5pt}
+      \put(20, 50){\scriptsize{Transcription start}}
+      \put(50, 45){\vector(0, -1){10}}
+      \put(200, 50){\scriptsize{Transcription end}}
+      \put(230, 45){\vector(0, -1){10}}
+
+      \put(50, 20){\scriptsize{5' UTR}}
+      \put(70, 35){\scriptsize{Exon 1}}
+      \put(153, 20){\scriptsize{Exon 2}}
+      \put(210, 35){\scriptsize{Exon 3}}
+      \put(115, 20){\scriptsize{Intron 1}}
+      \put(175, 20){\scriptsize{Intron 2}}
+      \put(225, 20){\scriptsize{3' UTR}}
+
+      \put(70, 0){\scriptsize{CDS start}}
+      \put(80, 10){\vector(0, 1){10}}
+      \put(210, 0){\scriptsize{CDS stop}}
+      \put(220, 10){\vector(0, 1){10}}
+
+      \put(90, 9){\scriptsize{Intron 1 start}}
+      \put(100, 15){\vector(0, 1){10}}
+      \put(130, 9){\scriptsize{Intron 1 end}}
+      \put(150, 15){\vector(0, 1){10}}
+
+      \put(0, 0){\scriptsize{Genomic start}}
+      \put(0, 10){\vector(0, 1){10}}
+      \put(270, 0){\scriptsize{Genomic end}}
+      \put(300, 10){\vector(0, 1){10}}
+
+      \put(95, 50){\color{red}\scriptsize{Variant A}\color{black}}
+      \put(115, 45){\color{red}\vector(0, -1){10}\color{black}}
+
+      \put(140, 50){\color{red}\scriptsize{Variant B}\color{black}}
+      \put(160, 45){\color{red}\vector(0, -1){10}\color{black}}
+    \end{picture}
+  }
+\end{center}
+\bigskip

@@ -10,7 +10,7 @@ function isNumber(x){
     return re.test(x);
 }
 
-function isTranscript(x){ 
+function isTranscript(x){
     return isNumber(x);
 }
 
@@ -65,7 +65,7 @@ function isGeneSymbol(s){
 
 /* Reference Object
  * ----------------
- * Holds the information of five fields. 
+ * Holds the information of five fields.
  *      Reference
  *      Seqeuente Type
  *      Gene Symbol
@@ -121,7 +121,7 @@ var reference = {
 				 'errStr'   : "must be a postive integer"},
 		'tlc' : 1,
 		'number': "",
-		
+
 		getType :  function(){
                     var translate = {'c':'cod', 'g':'gen','n':'non','r':'rna',
                                  'm':'mit', 'e':'est','p1':'pr1','p3':'pr3'};
@@ -158,7 +158,7 @@ var reference = {
 
 /* seqTypes Object
  * ---------------
- *  Holds the references to the different field checks depending on 
+ *  Holds the references to the different field checks depending on
  *  the type of sequence that is selected.
  *
  * Each key has three members
@@ -186,7 +186,7 @@ var seqTypes = {
 		'non'	: {	'pCheck' 	: isPosition,
 					'sCheck'	: isDNASequence,
 					'errorStr'	: "must consist of nucleotides [ACTG]"},
-				
+
 		'est'	: {	'pCheck' 	: isPosition,
 					'sCheck'	: isDNASequence,
 					'errorStr'	: "must consist of nucleotides [ACTG]"},
@@ -202,7 +202,7 @@ var seqTypes = {
 
 /* mutTypes Object
  * ---------------
- *  Holds the information needed to display and check 
+ *  Holds the information needed to display and check
  *  the fields of selected mutation.
  *
  * Each key has three members:
@@ -212,7 +212,7 @@ var seqTypes = {
  *                  P1 = Position 1
  *                  P2 = Position 2
  *
- *                The usage of the 0, 1, + and * is identical to 
+ *                The usage of the 0, 1, + and * is identical to
  *                that of the reference object
  *      S1      - The partial name to display for the selected mutation
  *                  in front of the first sequence field
@@ -263,16 +263,16 @@ var variants = new Array(); //global storage of the variants
 
 /* VariantField Object
  * -------------------
- *  Holds the boilerplate for setting up a new variant and storing the 
+ *  Holds the boilerplate for setting up a new variant and storing the
  *  values associated with that variant. The five fields that are stored
  *  include Position 1 & 2, Sequence 1 & 2 and the mutation type.
  *
  *  Each key has four members:
  *      value   - The form value
  *      ok      - boolean to store if check & len are both met
- *      check   - placeholder to make this object checkable by the 
+ *      check   - placeholder to make this object checkable by the
  *                  main CheckElement function
- *      index   - int to fetch the correct len setings of a field, 
+ *      index   - int to fetch the correct len setings of a field,
  *                  which depends on the type of mutation that is set
  *
  *  This is a dynamic object, which means that the values of the members
@@ -350,7 +350,7 @@ var VariantField = {
 function clone(obj){
     if(obj == null || typeof(obj) != 'object')
         return obj;
-    var temp = new obj.constructor(); 
+    var temp = new obj.constructor();
     for(var tkey in obj)
         temp[tkey] = clone(obj[tkey]);
     return temp;
@@ -382,7 +382,7 @@ function checkElement(elem){
 
 		//check if obj is checkable
 		if (obj.check==undefined) continue;
-		
+
 		//Get the value from the form
 		var IDt = elem["number"];
         if(IDt === "")
@@ -396,7 +396,7 @@ function checkElement(elem){
         var name = elem.getName(key)+optional;
         var check = elem.getCheck(key);
         var errStr = elem.getErr(key);
-		
+
 		//check if the value is ok
 		obj.ok = check(obj.value);
 
@@ -447,9 +447,9 @@ function update(){
     var hgvs = generateHGVS();
     var ref = hgvs[0];
     var vari = hgvs[1];
-    
+
     var encVar = encodeURIComponent(vari);
-    var url = "checkForward?mutationName="+ref+encVar;
+    var url = "check?name="+ref+encVar;
     var link = ref+vari;
     var Output = "<a href=\""+url+"\">"+link+"</a>";
 
@@ -488,7 +488,7 @@ function updateVariant(variant){
                     "Interbase positions must be consecutive positions. <br />";
             }
         }
-    } 
+    }
 }
 
 function updateReference(){
@@ -502,7 +502,7 @@ function updateReference(){
         hide("tVar");
     else
         show("tVar");
-    
+
     if(reference.seqT.value == "g"){
         hide("gSym");
         reference.gSym.value = "";
@@ -648,5 +648,3 @@ function removeVariant(nmbr){
     variants[nmbr].removed = true;
     update();
 }
-
-

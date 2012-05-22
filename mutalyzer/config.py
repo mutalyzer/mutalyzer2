@@ -113,8 +113,9 @@ class _Config():
             # incorrect values upon instantiation.
 
             # A few 'special' values.
-            self._values = {'debug':     config.as_bool('debug'),
-                            'threshold': float(config['threshold'])}
+            self._values = {'autoReconnect': config.as_bool('autoReconnect'),
+                            'debug':         config.as_bool('debug'),
+                            'threshold':     float(config['threshold'])}
 
             # Simple string values.
             for name in ('email', 'cache', 'lrgurl', 'internalDb', 'dbNames',

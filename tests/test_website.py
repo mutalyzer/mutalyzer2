@@ -156,21 +156,50 @@ class TestWSGI():
         """
         r = self.app.get('/check')
         form = r.forms[0]
-        form['mutationName'] = 'NM_002001.2:g.1del'
+        form['name'] = 'NM_002001.2:g.1del'
         r = form.submit()
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">')
+                      '<input value="NM_002001.2:g.1del" type="text" name="name" style="width:100%">')
 
     def test_check_more_valid(self):
         """
         Test the name checker for some more variants.
         """
         def check_name(name):
-            r = self.app.post('/check', {'mutationName': name})
+            r = self.app.get('/check?name=%s' % name)
             r.mustcontain('0 Errors')
+        names = ['NG_012337.1:g.7055C>T']
+        for name in names:
+            check_name(name)
+
+    def test_check_post(self):
+        """
+        Test the name checker for a POST request.
+
+        We accept POST requests for backwards compatibility.
+        """
+        def check_name(name):
+            r = self.app.post('/check', {'name': name})
+            assert_equal(r.status, '301 Moved Permanently')
+            assert r.location.endswith('/check?name=%s' % urllib.quote(name))
+        names = ['NG_012337.1:g.7055C>T']
+        for name in names:
+            check_name(name)
+
+    def test_check_post_old(self):
+        """
+        Test the name checker for a POST request with the old parameter
+        name.
+
+        We accept POST requests for backwards compatibility.
+        """
+        def check_name(name):
+            r = self.app.post('/check', {'mutationName': name})
+            assert_equal(r.status, '301 Moved Permanently')
+            assert r.location.endswith('/check?name=%s' % urllib.quote(name))
         names = ['NG_012337.1:g.7055C>T']
         for name in names:
             check_name(name)
@@ -181,7 +210,7 @@ class TestWSGI():
         """
         r = self.app.get('/check')
         form = r.forms[0]
-        form['mutationName'] = 'NM_002001.2'
+        form['name'] = 'NM_002001.2'
         r = form.submit()
         r.mustcontain('1 Error',
                       '0 Warnings',
@@ -194,7 +223,7 @@ class TestWSGI():
         """
         r = self.app.get('/check')
         form = r.forms[0]
-        form['mutationName'] = 'BAA81889.1:c.274G>T'
+        form['name'] = 'BAA81889.1:c.274G>T'
         r = form.submit()
         r.mustcontain('1 Error',
                       '0 Warnings',
@@ -205,14 +234,23 @@ class TestWSGI():
         Submit the name checker form non-interactively.
         Should not include form and main layout HTML.
         """
-        r = self.app.get('/check?mutationName=NM_002001.2:g.1del')
+        r = self.app.get('/check?name=NM_002001.2:g.1del&standalone=1')
         assert_false('<a href="#bottom" class="hornav">go to bottom</a>' in r)
-        assert_false('<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">' in r)
+        assert_false('<input value="NM_002001.2:g.1del" type="text" name="name" style="width:100%">' in r)
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
                       '<html>',
                       '</html>')
+
+    def test_check_noninteractive_old(self):
+        """
+        Submit the name checker form non-interactively in the old style.
+        Should redirect to new style.
+        """
+        r = self.app.get('/check?mutationName=NM_002001.2:g.1del')
+        assert_equal(r.status, '301 Moved Permanently')
+        assert r.location.endswith('/check?name=%s&standalone=1' % urllib.quote('NM_002001.2:g.1del'))
 
     def test_check_browser_link(self):
         """
@@ -221,25 +259,27 @@ class TestWSGI():
         """
         r = self.app.get('/check')
         form = r.forms[0]
-        form['mutationName'] = 'NM_003002.2:c.274G>T'
+        form['name'] = 'NM_003002.2:c.274G>T'
         r = form.submit()
-        bed_track = urllib.quote(r.environ['wsgi.url_scheme'] + '://' + r.environ['HTTP_HOST'] + '/bed?variant=' + urllib.quote('NM_003002.2:c.274G>T'))
+        # Note: the r.environ does not work in versions higher than webob 1.1.1
+        bed_track = urllib.quote(r.environ['wsgi.url_scheme'] + '://' + r.environ['HTTP_HOST'] + '/bed?name=' + urllib.quote('NM_003002.2:c.274G>T'))
         r.mustcontain('<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr11:111959685-111959705&amp;hgt.customText=%s">View original variant in UCSC Genome Browser</a>' % bed_track)
 
     def test_checkforward(self):
         """
-        A checkForward request should set the given variant in the session and
-        redirect to the name checker.
+        A checkForward request should redirect to the name checker.
+
+        This is for backwards compatibility with old bookmarks.
         """
-        r = self.app.get('/checkForward?mutationName=NM_002001.2:g.1del')
-        assert_equal(r.status, '303 See Other')
-        assert r.location.endswith('/check')
+        r = self.app.get('/checkForward?mutationName=%s' % urllib.quote('NM_002001.2:g.1del'))
+        assert_equal(r.status, '301 Moved Permanently')
+        assert r.location.endswith('/check?name=%s' % urllib.quote('NM_002001.2:g.1del'))
         r = r.follow()
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="NM_002001.2:g.1del" type="text" name="mutationName" style="width:100%">')
+                      '<input value="NM_002001.2:g.1del" type="text" name="name" style="width:100%">')
 
     def test_snp_converter_valid(self):
         """
@@ -695,13 +735,13 @@ facilisi."""
         """
         r = self.app.get('/check')
         form = r.forms[0]
-        form['mutationName'] = 'AB026906.1:c.274G>T'
+        form['name'] = 'AB026906.1:c.274G>T'
         r = form.submit()
         r.mustcontain('0 Errors',
                       '1 Warning',
                       'Raw variant 1: substitution at 7872',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="mutationName" style="width:100%">')
+                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="name" style="width:100%">')
         r = self.app.get('/Reference/AB026906.1.gb')
         assert_equal(r.content_type, 'text/plain')
         assert_equal(r.content_length, 26427)
@@ -716,13 +756,13 @@ facilisi."""
         """
         r = self.app.get('/check')
         form = r.forms[0]
-        form['mutationName'] = 'AB026906.1:c.274G>T'
+        form['name'] = 'AB026906.1:c.274G>T'
         r = form.submit()
         r.mustcontain('0 Errors',
                       '1 Warning',
                       'Raw variant 1: substitution at 7872',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="mutationName" style="width:100%">')
+                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="name" style="width:100%">')
         r = self.app.head('/Reference/AB026906.1.gb')
         assert_equal(r.content_type, 'text/plain')
 
@@ -736,7 +776,7 @@ facilisi."""
         """
         BED track for variant.
         """
-        r = self.app.get('/bed?variant=NM_003002.2%3Ac.274G%3ET')
+        r = self.app.get('/bed?name=NM_003002.2%3Ac.274G%3ET')
         assert_equal(r.content_type, 'text/plain')
         r.mustcontain('\t'.join(['chr11', '111959694', '111959695', '274G>T', '0', '+']))
 
@@ -744,7 +784,7 @@ facilisi."""
         """
         BED track for variant on reverse strand.
         """
-        r = self.app.get('/bed?variant=NM_000132.3%3Ac.%5B4374A%3ET%3B4380_4381del%5D')
+        r = self.app.get('/bed?name=NM_000132.3%3Ac.%5B4374A%3ET%3B4380_4381del%5D')
         assert_equal(r.content_type, 'text/plain')
         r.mustcontain('\t'.join(['chrX', '154157690', '154157691', '4374A>T', '0', '-']))
         r.mustcontain('\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '0', '-']))

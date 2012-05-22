@@ -1,0 +1,14 @@
+\begin{thebibliography}{1}
+
+\bibitem{HGVS}
+{Human Genome Variation Society}.
+\newblock \begin{small}\texttt{http://www.hgvs.org/mutnomen/}\end{small}.
+
+\bibitem{LRG}
+R.~Dalgleish and et~al.
+\newblock {Locus Reference Genomic} sequences: an improved basis for describing
+  human {DNA} variants.
+\newblock {\em Genome Med}, 2:24, 2010.
+\newblock See also {\small\texttt{http://www.lrg-sequence.org/}}.
+
+\end{thebibliography}

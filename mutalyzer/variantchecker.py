@@ -19,6 +19,7 @@ import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
+from mutalyzer import config
 from mutalyzer import util
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
@@ -306,7 +307,7 @@ def apply_substitution(position, original, substitute, mutator, record, O):
                      (original, substitute, position))
         return
 
-    mutator.subM(position, substitute)
+    mutator.substitution(position, substitute)
 
     record.name(position, position, 'subst', mutator.orig[position - 1],
                 substitute, None)
@@ -374,9 +375,13 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that on the forward strand ' \
             'it should be "%s" at position %s.' % (
-            mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+            util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                    config.get('maxvissize'),
+                                    config.get('flankclipsize')),
             util.format_range(first, last),
-            mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
+            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop]),
+                                    config.get('maxvissize'),
+                                    config.get('flankclipsize')),
             util.format_range(new_first, new_stop)))
 
     if forward_roll != original_forward_roll and not reverse_strand:
@@ -386,9 +391,13 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
         O.addMessage(__file__, 1, 'IROLLBACK',
             'Sequence "%s" at position %s was not corrected to "%s" at ' \
             'position %s, since they reside in different exons.' % (
-            mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+            util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                    config.get('maxvissize'),
+                                    config.get('flankclipsize')),
             util.format_range(first, last),
-            mutator.visualiseLargeString(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
+            util.visualise_sequence(str(mutator.orig[incorrect_first - 1:incorrect_stop]),
+                                    config.get('maxvissize'),
+                                    config.get('flankclipsize')),
             util.format_range(incorrect_first, incorrect_stop)))
 
     if reverse_roll and reverse_strand:
@@ -398,17 +407,21 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that on the reverse strand ' \
             'it should be "%s" at position %s.' % (
-            mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+            util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                    config.get('maxvissize'),
+                                    config.get('flankclipsize')),
             util.format_range(first, last),
-            mutator.visualiseLargeString(str(mutator.orig[new_first - 1:new_stop])),
+            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop]),
+                                    config.get('maxvissize'),
+                                    config.get('flankclipsize')),
             util.format_range(new_first, new_stop)))
 
     # We don't go through the trouble of visualising the *corrected* variant
     # and are happy with visualising what the user gave us.
     if type == 'del':
-        mutator.delM(first, last)
+        mutator.deletion(first, last)
     else:
-        mutator.dupM(first, last)
+        mutator.duplication(first, last)
 
     record.name(first, last, type, '', '', (reverse_roll, forward_roll),
                 start_fuzzy=first_fuzzy,
@@ -442,7 +455,9 @@ def apply_inversion(first, last, mutator, record, O):
             O.addMessage(__file__, 2, 'WNOCHANGE',
                 'Sequence "%s" at position %i_%i is a palindrome ' \
                 '(its own reverse complement).' % (
-                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                        config.get('maxvissize'),
+                                        config.get('flankclipsize')),
                 first, last))
             return
         else:
@@ -451,10 +466,13 @@ def apply_inversion(first, last, mutator, record, O):
                 'palindrome (the first %i nucleotide(s) are the reverse ' \
                 'complement of the last one(s)), the HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                        config.get('maxvissize'),
+                                        config.get('flankclipsize')),
                 first, last, snoop,
-                mutator.visualiseLargeString(
-                    str(mutator.orig[first + snoop - 1: last - snoop])),
+                util.visualise_sequence(
+                    str(mutator.orig[first + snoop - 1: last - snoop]),
+                    config.get('maxvissize'), config.get('flankclipsize')),
                 first + snoop, last - snoop))
             first += snoop
             last -= snoop
@@ -507,10 +525,10 @@ def apply_insertion(before, after, s, mutator, record, O):
 
     # We don't go through the trouble of visualising the *corrected* variant
     # and are happy with visualising what the user gave us.
-    mutator.insM(before, s)
+    mutator.insertion(before, s)
 
-    new_before = mutator.shiftpos(before)
-    new_stop = mutator.shiftpos(before) + insertion_length
+    new_before = mutator.shift(before)
+    new_stop = mutator.shift(before) + insertion_length
 
     reverse_roll, forward_roll = util.roll(mutator.mutated, new_before + 1, new_stop)
 
@@ -617,8 +635,10 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
         output.addMessage(__file__, 2, 'WNOCHANGE',
                           'Sequence "%s" at position %i_%i is identical to ' \
                           'the variant.' % (
-                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
-                              first, last))
+                util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                        config.get('maxvissize'),
+                                        config.get('flankclipsize')),
+                first, last))
         return
 
     delete_trimmed, insert_trimmed, lcp, lcs = util.trim_common(delete, insert)
@@ -656,10 +676,12 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
                 'Sequence "%s" at position %i_%i has the same prefix or ' \
                 'suffix as the inserted sequence "%s". The HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                mutator.visualiseLargeString(str(mutator.orig[first - 1:last])),
+                util.visualise_sequence(str(mutator.orig[first - 1:last]),
+                                        config.get('maxvissize'),
+                                        config.get('flankclipsize')),
                 first, last, insert, insert_trimmed, first + lcp, last - lcs))
 
-    mutator.delinsM(first + lcp, last - lcs, insert_trimmed)
+    mutator.delins(first + lcp, last - lcs, insert_trimmed)
 
     record.name(first + lcp, last - lcs, 'delins', insert_trimmed, '', None)
 #apply_delins
@@ -1228,15 +1250,15 @@ def _add_transcript_info(mutator, transcript, output):
             str(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
             str(util.splice(mutator.mutated,
-                        mutator.newSplice(transcript.mRNA.positionList))))
+                        mutator.shift_sites(transcript.mRNA.positionList))))
 
     # Add protein prediction to output.
     if transcript.translate:
         cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                            IUPAC.unambiguous_dna)
         cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                        mutator.newSplice(transcript.mRNA.positionList),
-                                        mutator.newSplice(transcript.CDS.location),
+                                        mutator.shift_sites(transcript.mRNA.positionList),
+                                        mutator.shift_sites(transcript.CDS.location),
                                         transcript.CM.orientation)),
                           IUPAC.unambiguous_dna)
 
@@ -1294,7 +1316,7 @@ def _add_transcript_info(mutator, transcript, output):
 
         else:
             cds_length = util.cds_length(
-                mutator.newSplice(transcript.CDS.positionList))
+                mutator.shift_sites(transcript.CDS.positionList))
             descr, first, last_original, last_variant = \
                    util.protein_description(cds_length, protein_original,
                                             protein_variant)
@@ -1375,10 +1397,14 @@ def process_variant(mutator, description, record, output):
             if gene_symbol in genes:
                 # We found our gene.
                 gene = record.record.findGene(gene_symbol)
-            elif (len(genes) == 1) and not(gene_symbol):
-                # No gene given and there is only one gene in the record.
-                # Todo: message?
-                gene = record.record.geneList[0]
+            elif not gene_symbol:
+                if len(genes) == 1:
+                    # No gene given and there is only one gene in the record.
+                    # Todo: message?
+                    gene = record.record.geneList[0]
+                else:
+                    output.addMessage(__file__, 4, "EINVALIDGENE",
+                        "No gene specified. Please choose from: %s" % ", ".join(genes))
             else:
                 output.addMessage(__file__, 4, "EINVALIDGENE",
                     "Gene %s not found. Please choose from: %s" % (
@@ -1612,8 +1638,8 @@ def check_variant(description, output):
             cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
                                IUPAC.unambiguous_dna)
             cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                            mutator.newSplice(transcript.mRNA.positionList),
-                                            mutator.newSplice(transcript.CDS.location),
+                                            mutator.shift_sites(transcript.mRNA.positionList),
+                                            mutator.shift_sites(transcript.CDS.location),
                                             transcript.CM.orientation)),
                               IUPAC.unambiguous_dna)
 
@@ -1644,7 +1670,7 @@ def check_variant(description, output):
                                                         to_stop=True)
                 try:
                     cds_length = util.cds_length(
-                        mutator.newSplice(transcript.CDS.positionList))
+                        mutator.shift_sites(transcript.CDS.positionList))
                     transcript.proteinDescription = util.protein_description(
                         cds_length, protein_original, protein_variant)[0]
                 except IndexError:

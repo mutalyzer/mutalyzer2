@@ -35,45 +35,58 @@ from mutalyzer import config
 # rewritten when this bug is fixed.
 #
 
-class Db() :
+class Db():
     """
-    Log in to a database and keep it open for queries.
+    Query the database server (and lazily keep a connection open to it).
 
-    Private variables:
-        - __db ; Interface to the database.
-
-    Special methods:
-        - __init__(dbName, mySqlUser, mySqlHost) ; Do the login.
-
-    Public methods:
-        - query(statement) ; General query function.
+    This class is subclassed below to create specific interfaces to the
+    database.
     """
-
-    def __init__(self, dbName, mySqlUser, mySqlHost) :
+    def __init__(self, database, user, host):
         """
-        Log in to the database.
+        Create an interface to the database.
 
-        Private variables (altered):
-            - __db ; The interface to the database.
-
-        @arg dbName: The name of the database to use
-        @type dbName: string
-        @arg mySqlUser: User name for the database
-        @type mySqlUser: string
-        @arg mySqlHost: Host name for the database
-        @type mySqlHost: string
+        @arg database: Name of the database to use.
+        @type database: str
+        @arg user: User name for the database.
+        @type user: str
+        @arg host: Host name for the database.
+        @type host: str
         """
+        self._database = database
+        self._user = user
+        self._host = host
 
-        self.__db = MySQLdb.connect(user = mySqlUser, db = dbName,
-                                    host = mySqlHost)
+        # The connection to the database server is created lazily in the query
+        # method.
+        self._connection = None
     #__init__
 
-    def query(self, statement) :
+    def _connect(self):
+        """
+        Connect to the database server.
+
+        Note: We would like to automatically reconnect to the database server.
+            This is especially useful for long-running processes such as the
+            batch deamon, which would otherwise loose their connection on an
+            event such as restarting the database server.
+            The MySQL client libraries provide a reconnect option, but this
+            is unfortunately not implemented in (most versions of) the Python
+            MySQLdb module.
+            Therefore we manually implement automatic reconnects in the query
+            method, but also optionally use the reconnect option from MySQLdb
+            if specified in the Mutalyzer configuration.
+            Also see Trac ticket #91.
+        """
+        kwargs = dict(user=self._user, db=self._database, host=self._host)
+        if config.get('autoReconnect'):
+            kwargs.update(reconnect=True)
+        self._connection = MySQLdb.connect(**kwargs)
+    #_connect
+
+    def query(self, statement):
         """
         Query the database.
-
-        Private variables:
-            - __db ; Interface to the database.
 
         @arg statement: The statement that is to be queried
         @type statement: tuple (string, (args))
@@ -101,9 +114,17 @@ class Db() :
                     escaped_args.append(None)
         #if
 
-        # And do the query.
-        cursor = self.__db.cursor()
-        cursor.execute(statement[0], tuple(escaped_args))
+        # Do the query, but first connect to the database server if needed.
+        # This makes sure lost connections are re-created automatically (e.g.
+        # in case the server was restarted for maintenance).
+        try:
+            cursor = self._connection.cursor()
+            cursor.execute(statement[0], tuple(escaped_args))
+        except (AttributeError, MySQLdb.OperationalError):
+            self._connect()
+            cursor = self._connection.cursor()
+            cursor.execute(statement[0], tuple(escaped_args))
+
         result = cursor.fetchall()
         cursor.close()
 
@@ -644,7 +665,7 @@ class Mapping(Db) :
                 T.orientation as orientation,
                 MIN(T.start) as start,
                 MAX(T.stop) as stop,
-                MAX(E.cds_start) as cds_start,
+                REPLACE(MIN(COALESCE(E.cds_start, 1000000000)), 1000000000, NULL) as cds_start,
                 MAX(E.cds_stop) as cds_stop,
                 GROUP_CONCAT(DISTINCT E.start ORDER BY E.start ASC) as exon_starts,
                 GROUP_CONCAT(DISTINCT E.stop ORDER BY E.stop ASC) as exon_stops,

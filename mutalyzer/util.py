@@ -595,6 +595,29 @@ def protein_description(cds_stop, s1, s2) :
 #protein_description
 
 
+def visualise_sequence(sequence, max_length=25, flank_size=6):
+    """
+    If the length of a sequence is larger than a certain maxvissize, the
+    string is clipped; otherwise the string is just returned.
+
+    @arg sequence: DNA sequence.
+    @type sequence: str
+    @arg max_length: Maximum length of visualised sequence.
+    @type max_length: int
+    @arg flank_size: Length of the flanks in clipped visualised sequence.
+    @type flank_size: int
+
+    @return: Either the original sequence, or an abbreviation of it.
+    @rtype: str
+    """
+    if len(sequence) > max_length:
+        return '%s [%ibp] %s' % (sequence[:flank_size],
+                                 len(sequence) - flank_size * 2,
+                                 sequence[-flank_size:])
+    return sequence
+#visualise_sequence
+
+
 # Todo: cleanup
 def _insert_tag(s, pos1, pos2, tag1, tag2):
     """

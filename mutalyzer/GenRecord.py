@@ -645,11 +645,31 @@ class GenRecord() :
         forwardStop = stop_g
         reverseStart = stop_g
         reverseStop = start_g
+
+        if self.record.orientation == 1:
+            chromStart = self.record.toChromPos(start_g)
+            chromStop = self.record.toChromPos(stop_g)
+            chromArg1 = arg1
+            chromArg2 = arg2
+        else:
+            chromStart = self.record.toChromPos(stop_g)
+            chromStop = self.record.toChromPos(start_g)
+            chromArg1 = Bio.Seq.reverse_complement(arg1)
+            chromArg2 = Bio.Seq.reverse_complement(arg2)
+            # Todo: Should we use arg1_reverse here?
+
         if roll :
             forwardStart += roll[1]
             forwardStop += roll[1]
             reverseStart -= roll[0]
             reverseStop -= roll[0]
+            if chromStart is not None:
+                if self.record.orientation == 1:
+                    chromStart += roll[1]
+                    chromStop += roll[1]
+                else:
+                    chromStart += roll[0]
+                    chromStop += roll[0]
         #if
 
         if varType != "subst" :
@@ -675,14 +695,12 @@ class GenRecord() :
                     self.record.addToDescription("(%s_%s)%s%s" % (
                         forwardStart, forwardStop, varType, arg1))
                     self.record.addToChromDescription("(%s_%s)%s%s" % (
-                        self.record.toChromPos(forwardStart),
-                        self.record.toChromPos(forwardStop), varType, arg1))
+                        chromStart, chromStop, varType, chromArg1))
                 else:
                     self.record.addToDescription("%s_%s%s%s" % (
                         forwardStart, forwardStop, varType, arg1))
                     self.record.addToChromDescription("%s_%s%s%s" % (
-                        self.record.toChromPos(forwardStart),
-                        self.record.toChromPos(forwardStop), varType, arg1))
+                        chromStart, chromStop, varType, chromArg1))
             #if
             else :
                 if start_fuzzy or stop_fuzzy:
@@ -691,12 +709,12 @@ class GenRecord() :
                     self.record.addToDescription("(%s)%s%s" % (
                         forwardStart, varType, arg1))
                     self.record.addToChromDescription("(%s)%s%s" % (
-                        self.record.toChromPos(forwardStart), varType, arg1))
+                        chromStart, varType, chromArg1))
                 else:
                     self.record.addToDescription("%s%s%s" % (
                         forwardStart, varType, arg1))
                     self.record.addToChromDescription("%s%s%s" % (
-                        self.record.toChromPos(forwardStart), varType, arg1))
+                        chromStart, varType, chromArg1))
             #else
         #if
         else :
@@ -706,12 +724,12 @@ class GenRecord() :
                 self.record.addToDescription("(%s)%c>%c" % (
                     forwardStart, arg1, arg2))
                 self.record.addToChromDescription("(%s)%c>%c" % (
-                    self.record.toChromPos(forwardStart), arg1, arg2))
+                    chromStart, chromArg1, chromArg2))
             else:
                 self.record.addToDescription("%s%c>%c" % (
                     forwardStart, arg1, arg2))
                 self.record.addToChromDescription("%s%c>%c" % (
-                    self.record.toChromPos(forwardStart), arg1, arg2))
+                    chromStart, chromArg1, chromArg2))
 
         for i in self.record.geneList :
             for j in i.transcriptList :
@@ -789,7 +807,7 @@ class GenRecord() :
         #for
     #name
 
-    def checkIntron(self, gene, transcript, position) :
+    def checkIntron(self, gene, transcript, position):
         """
         Checks if a position is on or near a splice site
 
@@ -799,25 +817,26 @@ class GenRecord() :
         @type transcript: object
         @arg position: g. position
         @type position: integer
-
-        @return:
-        @todo: Also check a range properly.
         """
-        # TODO Also check a range properly.
         intronPos = abs(transcript.CM.g2x(position)[1])
+
         if intronPos :
+            # It should be easy for SOAP clients to filter out all warnings
+            # related to other transcripts, so we use two codes here.
+            if transcript.current:
+                warning = 'WSPLICESELECTED'
+                str_transcript = 'transcript %s (selected)' % transcript.name
+            else:
+                warning = 'WSPLICE'
+                str_transcript = 'transcript %s' % transcript.name
+
             if intronPos <= config.get('spliceAlarm'):
-                self.__output.addMessage(__file__, 2, "WSPLICE",
-                    "Mutation on splice site in gene %s transcript %s." % (
-                    gene.name, transcript.name))
-                return
-            #if
-            if intronPos <= config.get('spliceWarn'):
-                self.__output.addMessage(__file__, 2, "WSPLICE",
-                    "Mutation near splice site in gene %s transcript %s." % (
-                    gene.name, transcript.name))
-                return
-            #if
-        #if
+                self.__output.addMessage(__file__, 2, warning,
+                    "Mutation on splice site in gene %s %s." % (
+                    gene.name, str_transcript))
+            elif intronPos <= config.get('spliceWarn'):
+                self.__output.addMessage(__file__, 2, warning,
+                    "Mutation near splice site in gene %s %s." % (
+                    gene.name, str_transcript))
     #checkIntron
 #GenRecord
