@@ -12,6 +12,7 @@ Public classes:
 
 import os              # path.isfile(), link() path.isdir(), path.mkdir(),
                        # walk(), path.getsize(), path.join(), stat(), remove()
+import time
 import bz2             # BZ2Compressor(), BZ2File()
 import hashlib         # md5(), update(), hexdigest()
 import urllib2         # urlopen()
@@ -22,11 +23,16 @@ from Bio.Seq import UnknownSeq
 from Bio.Alphabet import ProteinAlphabet
 from xml.dom import DOMException, minidom
 from xml.parsers import expat
+from httplib import HTTPException
 
 from mutalyzer import util
 from mutalyzer import config
 from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
+
+
+ENTREZ_MAX_TRIES = 4
+ENTREZ_SLEEP = 1      # in seconds
 
 
 class Retriever(object) :
@@ -247,25 +253,42 @@ class Retriever(object) :
                                     'This is not a valid dbSNP id.')
             return []
 
-        # Query dbSNP for the SNP.
-        try:
-            response = Entrez.efetch(db='SNP', id=id, rettype='flt',
-                                     retmode='xml')
-        except IOError as e:
-            # Could not parse XML.
-            self._output.addMessage(__file__, 4, 'EENTREZ',
-                                    'Error connecting to dbSNP.')
-            self._output.addMessage(__file__, -1, 'INFO',
-                                    'IOError: %s' % str(e))
-            return []
+        # Query dbSNP for the SNP. The following weird construct is to catch
+        # any glitches in our Entrez connections. We try up to ENTREZ_MAX_TRIES
+        # and only then give up.
+        # Todo: maybe also implement this for other Entrez queries?
+        for i in range(ENTREZ_MAX_TRIES - 1):
+            try:
+                response = Entrez.efetch(db='snp', id=id, rettype='flt',
+                                         retmode='xml')
+                break
+            except (IOError, HTTPException):
+                time.sleep(ENTREZ_SLEEP)
+        else:
+            try:
+                response = Entrez.efetch(db='snp', id=id, rettype='flt',
+                                         retmode='xml')
+            except (IOError, HTTPException) as e:
+                # Could not parse XML.
+                self._output.addMessage(__file__, 4, 'EENTREZ',
+                                        'Error connecting to dbSNP.')
+                self._output.addMessage(__file__, -1, 'INFO',
+                                        'IOError: %s' % str(e))
+                return []
 
         response_text = response.read()
+
+        if response_text == '\n':
+            # This is apparently what dbSNP returns for non-existing dbSNP id
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'ID rs%s could not be found in dbSNP.' \
+                                    % id)
+            return []
 
         try:
             # Parse the output.
             doc = minidom.parseString(response_text)
-            exchange_set = doc.getElementsByTagName('ExchangeSet')
-            rs = exchange_set[0].getElementsByTagName('Rs')
+            rs = doc.getElementsByTagName('Rs')[0]
         except expat.ExpatError as e:
             # Could not parse XML.
             self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
@@ -283,29 +306,8 @@ class Retriever(object) :
                                     'Result from dbSNP: %s' % response_text)
             return []
 
-        if len(rs) < 1:
-            # No Rs result element.
-            text = []
-            for node in exchange_set[0].childNodes:
-                if node.nodeType == node.TEXT_NODE:
-                    text.append(node.data)
-            message = ''.join(text)
-            if message.find('cannot get document summary') != -1:
-                # Entrez does not have this rs ID.
-                self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'ID rs%s could not be found in dbSNP.' \
-                                        % id)
-            else:
-                # Something else was wrong (print {message} to see more).
-                self._output.addMessage(__file__, 4, 'EENTREZ',
-                                        'Unkown dbSNP error. Got no result ' \
-                                        'from dbSNP.')
-                self._output.addMessage(__file__, -1, 'INFO',
-                                        'Message from dbSNP: %s' % message)
-            return []
-
         snps = []
-        for i in rs[0].getElementsByTagName('hgvs'):
+        for i in rs.getElementsByTagName('hgvs'):
             snps.append(i.lastChild.data.encode('utf8'))
 
         return snps
@@ -413,7 +415,7 @@ class GenBankRetriever(Retriever):
             first to get the length of the sequence. If this is within limits,
             use efetch with rettype=gbwithparts to download the GenBank file.
         """
-        net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gb')
+        net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gb', retmode='text')
         raw_data = net_handle.read()
         net_handle.close()
 
@@ -437,7 +439,7 @@ class GenBankRetriever(Retriever):
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
                 return None
-            net_handle = Entrez.efetch(db='nucleotide', id=name, rettype='gbwithparts')
+            net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gbwithparts', retmode='text')
             raw_data = net_handle.read()
             net_handle.close()
 
@@ -495,9 +497,8 @@ class GenBankRetriever(Retriever):
                 return UD
 
         # It's not present, so download it.
-        handle = Entrez.efetch(db = "nucleotide", rettype = "gb",
-                               id = accno, seq_start = start, seq_stop = stop,
-                               strand = orientation)
+        handle = Entrez.efetch(db='nuccore', rettype='gb', retmode='text',
+            id=accno, seq_start=start, seq_stop=stop, strand=orientation)
         raw_data = handle.read()
         handle.close()
 
@@ -726,6 +727,7 @@ class GenBankRetriever(Retriever):
         # Now we have the file, so we can parse it.
         GenBankParser = genbank.GBparser()
         record = GenBankParser.create_record(filename)
+        record.id = name
 
         # Todo: This will change once we support protein references
         if isinstance(record.seq.alphabet, ProteinAlphabet):
@@ -793,6 +795,11 @@ class LRGRetriever(Retriever):
         record = lrg.create_record(file_handle.read())
         file_handle.close()
 
+        # We don't create LRGs from other sources, so id is always the same
+        # as source_id.
+        record.id = identifier
+        record.source_id = identifier
+
         return record
     #loadrecord
 
@@ -809,7 +816,7 @@ class LRGRetriever(Retriever):
         @rtype: string
         """
 
-        prefix = config.get('lrgURL')
+        prefix = config.get('lrgurl')
         url        = prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
 
@@ -874,7 +881,7 @@ class LRGRetriever(Retriever):
                 else:
                     # This can only occur if synchronus calls to mutalyzer are
                     # made to recover a file that did not exist. Still leaves
-					# a window in between the check and the write.
+                    # a window in between the check and the write.
                     return filename
             #if
             else :

@@ -20,6 +20,7 @@ import web
 from nose.tools import *
 from webtest import TestApp
 import logging
+import urllib
 
 
 import mutalyzer
@@ -116,6 +117,17 @@ class TestWSGI():
                 href = '/' + href
             self.app.get(href)
 
+    def test_description_extractor(self):
+        """
+        Submit the variant description extractor.
+        """
+        r = self.app.get('/descriptionExtract')
+        form = r.forms[0]
+        form['referenceSeq'] = 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA'
+        form['variantSeq'] = 'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA'
+        r = form.submit()
+        r.mustcontain('g.[5_6insTT;17del;26A&gt;C;35dup]')
+
     def test_checksyntax_valid(self):
         """
         Submit the check syntax form with a valid variant.
@@ -201,6 +213,18 @@ class TestWSGI():
                       'Raw variant 1: deletion of 1',
                       '<html>',
                       '</html>')
+
+    def test_check_browser_link(self):
+        """
+        Submit the name checker form with a coding variant on a transcript.
+        Should include link to UCSC Genome Browser.
+        """
+        r = self.app.get('/check')
+        form = r.forms[0]
+        form['mutationName'] = 'NM_003002.2:c.274G>T'
+        r = form.submit()
+        bed_track = urllib.quote(r.environ['wsgi.url_scheme'] + '://' + r.environ['HTTP_HOST'] + '/bed?variant=' + urllib.quote('NM_003002.2:c.274G>T'))
+        r.mustcontain('<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr11:111959685-111959705&amp;hgt.customText=%s">View original variant in UCSC Genome Browser</a>' % bed_track)
 
     def test_checkforward(self):
         """
@@ -462,6 +486,26 @@ class TestWSGI():
                     header='Input\tStatus')
 
     @slow
+    def test_batch_namechecker_restriction_sites(self):
+        """
+        Submit the batch name checker form and see if restriction site effects
+        are added.
+
+        Note that we use the @slow decorator here even though it is already
+        applied to self._batch. The reason is that we use the result from
+        self._batch, which does not exist if @slow checks are disabled.
+        """
+        variants=['AB026906.1:c.274G>T',
+                  'AB026906.1:c.[274G>T;143A>G;15G>T]']
+        results = self._batch('NameChecker',
+                              file='\n'.join(variants),
+                              size=len(variants),
+                              header='Input\tErrors | Messages')
+        assert 'Restriction Sites Created\tRestriction Sites Deleted' in results[0]
+        assert 'CviQI,RsaI\tBccI' in results[1]
+        assert 'CviQI,RsaI;HinP1I,HhaI;SfcI\tBccI;;BpmI,MnlI,BsaXI (2),Hpy188III' in results[2]
+
+    @slow
     def test_batch_syntaxchecker_toobig(self):
         """
         Submit the batch syntax checker with a too big input file.
@@ -687,3 +731,20 @@ facilisi."""
         Test if non-existing reference files gives a 404 on a HEAD request.
         """
         r = self.app.head('/Reference/AB026906.78.gb', status=404)
+
+    def test_bed(self):
+        """
+        BED track for variant.
+        """
+        r = self.app.get('/bed?variant=NM_003002.2%3Ac.274G%3ET')
+        assert_equal(r.content_type, 'text/plain')
+        r.mustcontain('\t'.join(['chr11', '111959694', '111959695', '274G>T', '0', '+']))
+
+    def test_bed_reverse(self):
+        """
+        BED track for variant on reverse strand.
+        """
+        r = self.app.get('/bed?variant=NM_000132.3%3Ac.%5B4374A%3ET%3B4380_4381del%5D')
+        assert_equal(r.content_type, 'text/plain')
+        r.mustcontain('\t'.join(['chrX', '154157690', '154157691', '4374A>T', '0', '-']))
+        r.mustcontain('\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '0', '-']))

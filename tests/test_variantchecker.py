@@ -6,6 +6,7 @@ Tests for the variantchecker module.
 #import logging; logging.basicConfig()
 from nose.tools import *
 
+from mutalyzer.util import skip
 from mutalyzer.output import Output
 from mutalyzer.variantchecker import check_variant
 
@@ -419,3 +420,172 @@ class TestVariantchecker():
         check_variant('NG_005990.1:g.1del', self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'NG_005990.1:g.1del')
+
+    def test_no_reference(self):
+        """
+        Variant description without a reference.
+        """
+        check_variant('g.244355733del', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOREF')), 1)
+
+    def test_chromosomal_positions(self):
+        """
+        Variants on transcripts in c. notation should have chromosomal positions
+        defined.
+        """
+        check_variant('NM_003002.2:c.274G>T', self.output)
+        assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
+                     ('chr11', '+', [('274G>T', (111959695, 111959695))]))
+
+    def test_ex_notation(self):
+        """
+        Variant description using EX notation should not crash but deletion of
+        one exon should delete two splice sites.
+        """
+        check_variant('NM_002001.2:c.EX1del', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('IDELSPLICE')), 1)
+
+    def test_lrg_reference(self):
+        """
+        We should be able to use LRG reference sequence without error.
+        """
+        check_variant('LRG_1t1:c.266G>T', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'LRG_1:g.6855G>T')
+
+    def test_non_numeric_locus_tag_ending(self):
+        """
+        Locus tag in NC_002128 does not end in an underscore and three digits
+        but we should not crash on it.
+        """
+        check_variant('NC_002128(tagA):c.3del', self.output)
+
+    def test_gi_reference_plain(self):
+        """
+        Test reference sequence notation with GI number.
+        """
+        check_variant('31317229:c.6del', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     '31317229:n.105del')
+        assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
+
+    def test_gi_reference_prefix(self):
+        """
+        Test reference sequence notation with GI number and prefix.
+        """
+        check_variant('GI31317229:c.6del', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     '31317229:n.105del')
+        assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
+
+    def test_gi_reference_prefix_colon(self):
+        """
+        Test reference sequence notation with GI number and prefix with colon.
+        """
+        check_variant('GI:31317229:c.6del', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     '31317229:n.105del')
+        assert '31317229(FCER1A_v001):c.6del' \
+               in self.output.getOutput('descriptions')
+
+    def test_nop_nm(self):
+        """
+        Variant on NM without effect should be described as '='.
+        """
+        check_variant('NM_002001.2:c.1_3delinsATG', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NM_002001.2:n.=')
+        assert 'NM_002001.2(FCER1A_v001):c.=' \
+               in self.output.getOutput('descriptions')
+
+    @skip
+    def test_nop_ud(self):
+        """
+        Variant on UD without effect should be described as '='.
+
+        Todo: We cannot use UD references in unit tests, unless we implement
+            a way to create them inside the unit test.
+        """
+        check_variant('UD_127955523176:g.5T>T', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
+                     'NC_000023.10:g.=')
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'UD_127955523176:g.=')
+        assert 'UD_127955523176(DMD_v001):c.=' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_sequence_forward_genomic(self):
+        """
+        Specify the deleted sequence in a deletion.
+        """
+        check_variant('AL449423.14:g.65471_65472delTC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.65471_65472del')
+        assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_length_forward_genomic(self):
+        """
+        Specify the deleted sequence length in a deletion.
+        """
+        check_variant('AL449423.14:g.65471_65472del2', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.65471_65472del')
+        assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_sequence_reverse_coding(self):
+        """
+        Specify the deleted sequence in a deletion on the reverse strand.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_163delTGG', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61937_61939del')
+        assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_length_reverse_coding(self):
+        """
+        Specify the deleted sequence length in a deletion on the reverse strand.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_163del3', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61937_61939del')
+        assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_sequence_reverse_ng_coding(self):
+        """
+        Specify the deleted sequence in a deletion on the reverse strand
+        using a genomic reference.
+        """
+        check_variant('NG_008939.1:c.155_157delAAC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5206_5208del')
+        assert 'NG_008939.1(PCCB_v001):c.155_157del' \
+               in self.output.getOutput('descriptions')
+
+    def test_deletion_with_length_reverse_ng_coding(self):
+        """
+        Specify the deleted sequence length in a deletion on the reverse strand
+        using a genomic reference.
+        """
+        check_variant('NG_008939.1:c.155_157del3', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5206_5208del')
+        assert 'NG_008939.1(PCCB_v001):c.155_157del' \
+               in self.output.getOutput('descriptions')

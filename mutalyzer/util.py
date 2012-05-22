@@ -218,6 +218,24 @@ def format_range(first, last):
     return '%i_%i' % (first, last)
 #format_range
 
+def roll_(s, start, end) :
+    """
+    Different (and easier) way of finding the variability of a substring.
+    """
+    # TODO: Start counting at 1, testing, etc.
+
+    l = len(s)
+
+    i = 0
+    while end + i + 1 < l and s[start + i] == s[end + i + 1] :
+        i += 1
+
+    j = 0
+    while start - j and s[start - j - 1] == s[end - j] :
+        j += 1
+
+    return j, i
+#roll
 
 def roll(s, first, last):
     """
@@ -768,7 +786,7 @@ def slow(f):
                and os.environ['MUTALYZER_QUICK_TEST'] == '1':
             return
         else:
-            f(*args, **kwargs)
+            return f(*args, **kwargs)
     return slow_f
 #slow
 

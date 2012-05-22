@@ -39,7 +39,7 @@ Short version
 
 Run the following commands:
 
-    svn https://www.mutalyzer.nl/svn/mutalyzer2/trunk .
+    svn co https://www.mutalyzer.nl/svn/mutalyzer2/trunk .
     sudo bash extras/pre-install.sh
     sudo python setup.py install
     sudo bash extras/post-install.sh

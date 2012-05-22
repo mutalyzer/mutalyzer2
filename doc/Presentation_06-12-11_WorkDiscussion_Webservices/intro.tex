@@ -1,0 +1,99 @@
+\input{picture}
+
+\section{Introduction}
+\begin{frame}
+  \frametitle{Mutalyzer: a curational tool for \emph{Locus Specific Mutation
+    Databases (LsdBs)}}
+  \medskip
+
+  Variant nomenclature checker applying \emph{Human Genome Variation Society}
+  (HGVS) guidelines.
+  \medskip
+  \pause
+  \begin{itemize}
+    \item Is the syntax of the variant description valid?
+    \item Does the reference sequence exist?
+    \item Is the variant possible on this reference sequence?
+    \item Is this variant description the recommended one?
+  \end{itemize}
+  \bigskip
+  \medskip
+  \pause
+
+  Basic effect prediction.
+  \medskip
+  \begin{itemize}
+    \item Is the description of the transcript product as expected?
+    \item Is the predicted protein as expected?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{HGVS nomenclature}
+
+  \emph{Genomic} orientated positions:
+  \begin{center}
+    \bt{AL449423.14:g.[65449\_65463del;65564\color{yellow}T\color{white}>\color{yellow}C\color{white}]}
+  \end{center}
+  \pause
+  \bigskip
+  \emph{Coding sequence} orientated positions:
+  \begin{center}
+    \bt{AL449423.14(CDKN2A\_v001):c.[5\color{yellow}A\color{white}>\color{yellow}G\color{white}
+      ;106\_120del]}
+  \end{center}
+  \bigskip
+  \pause
+  \begin{itemize}
+    \item \bt{AL449423.14} -- reference sequence.
+    \item \bt{CDKN2A\_v001}$\;$ -- transcript variant \bt{1} of gene CDKN2A.
+    \item \bt{c.[5\color{yellow}A\color{white}>\color{yellow}G\color{white};106\_120del]}
+    \begin{itemize}
+      \item A \emph{substitution} at position \bt{5} counting from the start
+        codon.
+      \item A \emph{deletion} from position \bt{106} to position \bt{120}.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Coordinate systems}
+
+  \setlength{\unitlength}{1pt}
+  \positionpicture
+
+  \renewcommand{\arraystretch}{1}
+  \begin{center}
+    \begin{tabular}{l|r|r|r}
+      Name                              & \bt{g.}  & \bt{n.}      & \bt{c.} \\
+      \hline
+      {\scriptsize Genomic start}       & \bt{1}   & \bt{100+d70} &
+        \bt{*10+d70} \\
+      {\scriptsize Genomic end}         & \bt{300} & \bt{1-u50}   &
+        \bt{-30-u50} \\
+      {\scriptsize Transcription start} & \bt{250} & \bt{1}       & \bt{-30} \\
+      {\scriptsize Transcription end}   & \bt{70}  & \bt{100}     & \bt{*10} \\
+      {\scriptsize CDS start}           & \bt{220} & \bt{30}      & \bt{1} \\
+      {\scriptsize CDS stop}            & \bt{80}  & \bt{90}      & \bt{60} \\
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Coordinate systems}
+
+  \setlength{\unitlength}{1pt}
+  \positionpicture
+
+  \bt{c.} positions:
+  \begin{itemize}
+    \item Positions in introns are relative to the nearest exonic position.
+    \item Positions before the CDS are indicated with a \bt{-} sign.
+    \item Positions after the CDS are indicated with a \bt{*} sign.
+    \medskip
+    \pause
+    \item Position \bt{-1} and \bt{1} are adjacent.
+    \item If \bt{60} is the last position of the CDS, then \bt{60} and \bt{*1}
+      are adjacent.
+  \end{itemize}
+\end{frame}

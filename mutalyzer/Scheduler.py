@@ -365,7 +365,7 @@ Mutalyzer batch checker.""" % url)
         if not skip :
             #Run mutalyzer and get values from Output Object 'O'
             try :
-                variantchecker.check_variant(cmd, C, O)
+                variantchecker.check_variant(cmd, O)
             except Exception:
                 #Catch all exceptions related to the processing of cmd
                 O.addMessage(__file__, 4, "EBATCHU",
@@ -499,7 +499,7 @@ Mutalyzer batch checker.""" % url)
         if not skip :
             try :
                 #process
-                converter = Converter(build, C, O)
+                converter = Converter(build, O)
 
                 #Also accept chr accNo
                 variant = converter.correctChrVariant(variant)

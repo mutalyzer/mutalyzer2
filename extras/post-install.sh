@@ -46,6 +46,7 @@ for USERNAME in $(cut -f 1 -d : /etc/passwd); do
     if [ -d "/home/${USERNAME}" ]; then
         echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.config/mutalyzer/config${COLOR_END}"
         echo -e "${COLOR_INFO}Creating /home/${USERNAME}/.cache/mutalyzer${COLOR_END}"
+	# Instead of su, use chown later.
         su $USERNAME -c "mkdir -p /home/$USERNAME/.config/mutalyzer"
         su $USERNAME -c "mkdir -p /home/$USERNAME/.cache/mutalyzer"
         su $USERNAME -c "touch /home/$USERNAME/.config/mutalyzer/config"
@@ -213,6 +214,7 @@ INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000022.10', 'chr22'),
 ('NC_000023.10', 'chrX'),
 ('NC_000024.9', 'chrY'),
+('NC_012920.1', 'chrM'),
 ('NT_167244.1', 'chr6_apd_hap1'),
 ('NT_113891.2', 'chr6_cox_hap2'),
 ('NT_167245.1', 'chr6_dbb_hap3'),

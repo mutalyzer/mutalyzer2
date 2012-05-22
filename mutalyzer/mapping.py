@@ -166,8 +166,8 @@ class Converter(object) :
         versions = self.__database.get_NM_version(acc)
         if not versions :
             self.__output.addMessage(__file__, 4, "EACCNOTINDB",
-                    "The accession number: %s could not be "
-                    "found in our database." % acc)
+                    "The accession number %s could not be "
+                    "found in our database (or is not a transcript)." % acc)
             self.__output.addOutput("LOVDERR",
                     "Reference sequence not found.")
             return None     #Explicit return of None in case of error
@@ -182,8 +182,8 @@ class Converter(object) :
                     "Version number missing for %s" % acc)
             else :
                 self.__output.addMessage(__file__, 4, "EACCNOTINDB",
-                    "The accession number: %s version %s "
-                    "could not be found in our database." %
+                    "The accession number %s version %s "
+                    "could not be found in our database (or is not a transcript)." %
                     (acc, version))
             self.__output.addMessage(__file__, 2, "WDIFFFOUND",
                 "We found these versions: %s" %
@@ -443,6 +443,50 @@ class Converter(object) :
         return "%s:%s" % (chromAcc, var_in_g)
     #c2chrom
 
+    def chromosomal_positions(self, positions, reference, version=None):
+        """
+        Convert c. positions to chromosomal positions.
+
+        @arg positions: Positions in c. notation to convert.
+        @type positions: list
+        @arg reference: Transcript reference.
+        @type reference: string
+        @kwarg version: Transcript reference version. If omitted, '0' is
+            assumed.
+        @type version: string
+
+        @return: Chromosome name, orientation (+ or -), and converted
+            positions.
+        @rtype: tuple(string, string, list)
+
+        This only works for positions on transcript references in c. notation.
+        """
+        if not version:
+            version = 0
+        version = int(version)
+
+        versions = self.__database.get_NM_version(reference)
+
+        if version not in versions:
+            return None
+
+        values = self.__database.getAllFields(reference, version)
+        self._FieldsFromValues(values)
+
+        mapper = self.makeCrossmap()
+        if not mapper:
+            return None
+
+        chromosomal_positions = []
+
+        for position in positions:
+            main = mapper.main2int(position.MainSgn +  position.Main)
+            offset = mapper.offset2int(position.OffSgn +  position.Offset)
+            chromosomal_positions.append(mapper.x2g(main, offset))
+
+        return self.dbFields['chromosome'], self.dbFields['orientation'], chromosomal_positions
+    #chromosomal_positions
+
     def correctChrVariant(self, variant) :
         """
         @arg variant:
@@ -466,7 +510,7 @@ class Converter(object) :
             chrom = self.__database.chromAcc(preco)
             if chrom is None :
                 self.__output.addMessage(__file__, 4, "ENOTINDB",
-                    "Chromosome %s could not be found in our database" %
+                    "The accession number %s could not be found in our database (or is not a chromosome)." %
                     preco)
                 return None
             #if
@@ -498,7 +542,7 @@ class Converter(object) :
         chrom = self.__database.chromName("%s.%s" % (acc, version))
         if not chrom :
             self.__output.addMessage(__file__, 4, "ENOTINDB",
-                    "Accession number: %s could not be found in our database" %
+                "The Accession number %s could not be found in our database (or is not a chromosome)." %
                 acc)
             return None
         #if
@@ -581,8 +625,14 @@ class Converter(object) :
 
         if revc :
             # todo: if var.Arg1 is unicode, this crashes
-            arg1 = reverse_complement(var.Arg1 or "") #imported from Bio.Seq
-            arg2 = reverse_complement(var.Arg2 or "")
+            try:
+                arg1 = str(int(var.Arg1))
+            except ValueError:
+                arg1 = reverse_complement(var.Arg1 or "")
+            try:
+                arg2 = str(int(var.Arg2))
+            except ValueError:
+                arg2 = reverse_complement(var.Arg2 or "")
         #if
         else :
             arg1 = var.Arg1
@@ -686,6 +736,11 @@ class NCBIUpdater(Updater):
         two contigs (NT_*). In that case, they are defined by two entries in
         the file, where we should merge them by taking the start position of
         the first and the stop position of the second.
+
+        To complicate this annoyance, some genes (e.g. in the PAR) are mapped
+        on both the X and Y chromosomes, but stored in the file just like the
+        transcripts split over two contigs. However, these ones should of
+        course not be merged.
 
         Our strategy is to loop over all entries and store them in three
         temporary tables (for genes, transcripts, exons). The entries of type
@@ -814,7 +869,7 @@ class NCBIUpdater(Updater):
                 del self.exon_backlog[transcript]
                 del exon['cds']
                 self.db.ncbi_import_exon(
-                    exon['transcript'], exon['start'], exon['stop'],
+                    exon['transcript'], exon['chromosome'], exon['start'], exon['stop'],
                     exon['cds_start'] if 'cds_start' in exon else None,
                     exon['cds_stop'] if 'cds_stop' in exon else None,
                     exon['protein'] or None)

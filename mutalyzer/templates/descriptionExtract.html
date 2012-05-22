@@ -1,0 +1,110 @@
+<html>
+  <head>
+    <link rel="stylesheet"
+      type="text/css"
+      href="base/css/style.css">
+    <title></title>
+  </head>
+  <body>
+    <div metal:define-macro="content">
+      <center>
+        <h3>Variant Description Extractor</h3>
+      </center>
+      <div> <!-- Remove this div later. -->
+        <b style="color: red">Note that this is an experimental service.</b>
+        <br>
+        <br>
+        Extract the HGVS variant description from a reference sequence and an
+        observed sequence. For now, we require the user to fill in two
+        sequences. After the testing phase, we plan to use the underlying
+        algorithm for:
+        <ul>
+          <li>
+            Disambiguation in the name checker. This will enable full support
+            for complex variants.
+          </li>
+          <li>
+            Comparison of two reference sequences. Useful for migrating a
+            variant description to an other reference sequence.
+          </li>
+          <li>
+            Implementation of a Reference Sequence Editor.
+          </li>
+        </ul>
+        <br>
+      </div>
+      <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
+        <form action = "" method = "post">
+          Please supply a reference sequence and an observed sequence.<br>
+          <br>
+          <div style="border: 1px solid grey; padding: 20px">
+            <b>Reference sequence:</b><br>
+            <br>
+            Example: <tt>ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</tt><br>
+            <br>
+            <input
+              type = "text"
+              name = "referenceSeq"
+              tal:attributes = "value lastReferenceSeq"
+              style = "width:100%"
+            ><br>
+          <input type="button" value="Clear field"
+                 onClick = "clearForm(this.form, 'referenceSeq');"><br>
+          </div>
+          <br>
+          <div style="border: 1px solid grey; padding: 20px">
+            <b>Observed sequence:</b><br>
+            <br>
+            Example: <tt>ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</tt><br>
+            <br>
+            <input
+              type = "text"
+              name = "variantSeq"
+              tal:attributes = "value lastVariantSeq"
+              style = "width:100%"
+            ><br>
+            <input type="button" value="Clear field"
+                   onClick = "clearForm(this.form, 'variantSeq');"><br>
+          </div>
+          <br>
+          <input type="submit" value="Submit">
+        </form>
+      </div>
+      <div tal:condition = "description">
+        <br>
+        <h3>Variant Description Extractor results:</h3>
+        <div class="messages">
+          <p tal:repeat = "m messages" tal:content = "m/description"
+            tal:attributes = "class m/class; title string:${m/level} (origin: ${m/origin})"></p>
+          <p tal:content = "summary"></p>
+        </div>
+        <div tal:condition = "not:errors">
+          <br>
+          <b>Genomic description:</b><br>
+          <br>
+          <tt>g.<div tal:replace = "description"></div></tt>
+          <br>
+          <br>
+          <br>
+          <b>Overview of the raw variants:</b><br>
+          <br>
+          <table class = "laTable">
+            <tr>
+              <td>Start</td>
+              <td>End</td>
+              <td>Type</td>
+              <td>Deleted</td>
+              <td>Inserted</td>
+              <td>Shift</td>
+              <td>Description</td>
+            </tr>
+            <tr tal:repeat = "i visualisation">
+              <td tal:repeat = "j i" tal:content = "j"></td>
+            </tr>
+          </table>
+        </div>
+      </div> <!-- description -->
+      <br>
+    </div>
+  </body>
+</html>

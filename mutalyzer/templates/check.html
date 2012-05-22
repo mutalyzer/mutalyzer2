@@ -1,7 +1,7 @@
 <html>
   <head>
-    <link rel="stylesheet" 
-      type="text/css" 
+    <link rel="stylesheet"
+      type="text/css"
       href="base/css/style.css">
     <title></title>
   </head>
@@ -13,26 +13,26 @@
       <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
         <div id = "output" tal:condition = "interactive">
           <div>
-          Please insert the mutation name using the 
-          <span class = "helper" 
+          Please insert the mutation name using the
+          <span class = "helper"
           title = "Human Genome Variation Society standard variant nomenclature">
             <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
-            &lt;Accession Number&gt;.&lt;version 
-            number&gt;(&lt;Gene symbol&gt;):&lt;sequence 
+            &lt;Accession Number&gt;.&lt;version
+            number&gt;(&lt;Gene symbol&gt;):&lt;sequence
             type&gt;.&lt;mutation&gt;
           </div><br>
           Example: AB026906.1:c.274G&gt;T<br>
           <br>
           <form action = "" method = "post">
-            <input 
-              type = "text" 
-              name = "mutationName" 
+            <input
+              type = "text"
+              name = "mutationName"
               tal:attributes = "value lastpost"
               style = "width:100%"
             ><br>
             <input type="submit" value="Submit">
-            <input type="button" value="Clear field" 
-                   onClick = "clearForm(this.form, 'mutationName');">  
+            <input type="button" value="Clear field"
+                   onClick = "clearForm(this.form, 'mutationName');">
           </form>
         </div>
         <div tal:condition = "visualisation">
@@ -40,14 +40,16 @@
           <div tal:repeat = "i visualisation">
             <br>
             <div tal:repeat = "j i">
-              <div tal:condition = "repeat/j/start" 
-                   tal:content = "structure string:Raw variant 
+              <div tal:condition = "repeat/j/start"
+                   tal:content = "structure string:Raw variant
                                   ${repeat/i/number}: ${j}"></div>
               <tt tal:condition = "not: repeat/j/start" tal:content = "j">
               </tt>
             </div>
           </div>
         </div> <!-- not:visualisation -->
+        <br>
+        <a tal:condition = "browserLink" tal:attributes = "href browserLink">View original variant in UCSC Genome Browser</a>
       </div> <!-- form area -->
       <br>
       <div tal:condition = "lastpost">
@@ -60,7 +62,7 @@
         <br>
         <div tal:condition = "parseError">
           <h4>Details of the parse error:</h4>
-          <pre tal:content = 
+          <pre tal:content =
             "structure string:${parseError/0}<br>${parseError/1}">
           </pre>
           The &quot;^&quot; indicates the position where the error occurred.
@@ -77,7 +79,7 @@
           <br>
           <tt>
             <a tal:content = "genomicDescription/0"
-               tal:attributes = "href 
+               tal:attributes = "href
                  string:checkForward?mutationName=${genomicDescription/1}">
             </a><br>
           </tt>
@@ -96,9 +98,9 @@
           <br>
           <tt tal:repeat = "i descriptions">
             <a tal:condition = "i/1" tal:content = "i/0"
-               tal:attributes = 
+               tal:attributes =
                  "href string:checkForward?mutationName=${i/1}"></a><tal
-               tal:condition = "not:i/1" tal:replace = "i/0"></tal><br> 
+               tal:condition = "not:i/1" tal:replace = "i/0"></tal><br>
           </tt>
           <br>
           <br>
@@ -138,7 +140,7 @@
               </div> <!-- newProtein -->
               <br>
               <div tal:condition = "altStart">
-                <b tal:content = "structure string:Alternative protein 
+                <b tal:content = "structure string:Alternative protein
                   using start codon ${altStart}:"></b><br>
                 <div tal:condition = "altProtein">
                   <pre><div tal:repeat = "i altProtein"
@@ -176,7 +178,7 @@
             </table>
             <div tal:condition="transcriptCoding" tal:omit-tag="">
               <br>
-              <b><span class = "helper" title = "Coding Sequence">CDS</span> 
+              <b><span class = "helper" title = "Coding Sequence">CDS</span>
               information:</b><br>
               <table class = "raTable">
                 <tr>
@@ -260,7 +262,7 @@
           <div tal:condition = "interactive">
             <b>Links:</b><br>
             <br>
-            Download this reference sequence file: 
+            Download this reference sequence file:
             <a tal:content = "reference"
                tal:attributes = "href string:Reference/${reference}"></a>
             <br>

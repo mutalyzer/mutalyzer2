@@ -93,6 +93,13 @@ class MutalyzerOutput(ClassModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
+    referenceId = Mandatory.String
+    sourceId = Mandatory.String
+    sourceAccession = String
+    sourceVersion = String
+    sourceGi = String
+    molecule = Mandatory.String
+
     original = String
     mutated = String
 
@@ -140,8 +147,10 @@ class ExonInfo(ClassModel):
 
     cStart = Mandatory.String
     gStart = Mandatory.Integer
+    chromStart = Integer
     cStop = Mandatory.String
     gStop = Mandatory.Integer
+    chromStop = Integer
 #ExonInfo
 
 
@@ -161,9 +170,11 @@ class TranscriptInfo(ClassModel):
     """
     Used in return type of SOAP method getTranscriptsAndInfo.
 
-    @todo: Decide on 'stop' versus 'end'. Web interface uses 'stop' for
-           both trans and CDS. Ivar asked for 'end'. Internally, we have
-           trans 'end' and CDS 'stop'.
+    @todo: Decide on 'stop' versus 'end'. Web interface uses 'stop' for both
+        trans and CDS. Ivar asked for 'end'. Internally, we have trans 'end'
+        and CDS 'stop'.
+    @todo: We should really also provide the chromosome (or its accession
+        number) next to the chromosomal positions, if available.
     """
     __namespace__ = SOAP_NAMESPACE
 
@@ -173,14 +184,18 @@ class TranscriptInfo(ClassModel):
 
     cTransStart = Mandatory.String
     gTransStart = Mandatory.Integer
+    chromTransStart = Integer
     cTransEnd = Mandatory.String
     gTransEnd = Mandatory.Integer
+    chromTransEnd = Integer
     sortableTransEnd = Mandatory.Integer
 
     cCDSStart = Mandatory.String
     gCDSStart = Mandatory.Integer
+    chromCDSStart = Integer
     cCDSStop = Mandatory.String
     gCDSStop = Mandatory.Integer
+    chromCDSStop = Integer
 
     locusTag = Mandatory.String
     linkMethod = Mandatory.String
@@ -189,6 +204,26 @@ class TranscriptInfo(ClassModel):
 
     proteinTranscript = ProteinTranscript
 #TranscriptInfo
+
+
+class TranscriptMappingInfo(ClassModel):
+    """
+    Used in return type of SOAP method getTranscriptsRange.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    name = Mandatory.String
+    version = Mandatory.Integer
+    gene = Mandatory.String
+    protein = Mandatory.String
+    orientation = Mandatory.String
+
+    start = Mandatory.Integer
+    stop = Mandatory.Integer
+
+    cds_start = Mandatory.Integer
+    cds_stop = Mandatory.Integer
+#TranscriptMappingInfo
 
 
 class CheckSyntaxOutput(ClassModel):

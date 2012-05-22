@@ -265,6 +265,73 @@ class MutalyzerService(DefinitionBase):
         return ret
     #getTranscriptsRange
 
+    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+        Mandatory.Integer, Mandatory.Integer, _returns = Array(TranscriptMappingInfo))
+    def getTranscriptsMapping(self, build, chrom, pos1, pos2, method):
+        """
+        Get all the transcripts and their info that overlap with a range on a
+        chromosome.
+
+        @arg build: The human genome build (hg19 or hg18).
+        @type build: string
+        @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
+        @type chrom: string
+        @arg pos1: The first postion of the range.
+        @type pos1: integer
+        @arg pos2: The last postion of the range.
+        @type pos2: integer
+        @arg method: The method of determining overlap:
+            - 0 ; Return only the transcripts that completely fall in the range
+                  [pos1, pos2].
+            - 1 ; Return all hit transcripts.
+
+        @return: Array of TranscriptMappingInfo objects with fields:
+                 - name
+                 - version
+                 - gene
+                 - protein
+                 - orientation
+                 - start
+                 - stop
+                 - cds_start
+                 - cds_stop
+        """
+        output = Output(__file__)
+        output.addMessage(__file__, -1, 'INFO', 'Received request ' \
+                          'getTranscriptsRange(%s %s %s %s %s)' % \
+                          (build, chrom, pos1, pos2, method))
+
+        self.__checkBuild(output, build)
+
+        database = Db.Mapping(build)
+        transcripts = []
+
+        for transcript in database.get_Transcripts(chrom, pos1, pos2, method):
+            t = TranscriptMappingInfo()
+            d = dict(zip(('transcript', 'start', 'stop', 'cds_start', 'cds_stop',
+                          'exon_starts', 'exon_stops', 'gene', 'chromosome',
+                          'orientation', 'protein', 'version'), transcript))
+            if d['orientation'] == '-':
+                d['start'], d['stop'] = d['stop'], d['start']
+                d['cds_start'], d['cds_stop'] = d['cds_stop'], d['cds_start']
+            t.name = d['transcript']
+            t.version = d['version']
+            t.gene = d['gene']
+            t.protein = d['protein']
+            t.orientation = d['orientation']
+            t.start = d['start']
+            t.stop = d['stop']
+            t.cds_start = d['cds_start']
+            t.cds_stop = d['cds_stop']
+            transcripts.append(t)
+
+        output.addMessage(__file__, -1, 'INFO', 'Finished processing ' \
+                          'getTranscriptsRange(%s %s %s %s %s)' % \
+                          (build, chrom, pos1, pos2, method))
+
+        return transcripts
+    #getTranscriptsMapping
+
     @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
     def getGeneName(self, build, accno) :
         """
@@ -566,7 +633,44 @@ class MutalyzerService(DefinitionBase):
     @soap(Mandatory.String, _returns = MutalyzerOutput)
     def runMutalyzer(self, variant) :
         """
-        Todo: documentation.
+        Run the Mutalyzer name checker.
+
+        @arg variant: The variant description to check.
+        @type variant: string
+
+        @return: Object with fields:
+            - referenceId: Identifier of the reference sequence used.
+            - sourceId: Identifier of the reference sequence source, e.g. the
+                chromosomal accession number and version in case referenceId
+                is a  UD reference created as a chromosomal slice.
+            - sourceAccession: Accession number of the reference sequence
+                source (only for genbank references).
+            - sourceVersion: Version number of the reference sequence source
+                (only for genbank references).
+            - sourceGi: GI number of the reference sequence source (only for
+                genbank references).
+            - molecule: Molecular type of the reference sequence.
+            - original: Original sequence.
+            - mutated: Mutated sequence.
+            - origMRNA: Original transcript sequence.
+            - mutatedMRNA: Mutated transcript sequence.
+            - origCDS: Original CDS.
+            - newCDS: Mutated CDS.
+            - origProtein: Original protein sequence.
+            - newProtein: Mutated protein sequence.
+            - altProtein: Alternative mutated protein sequence.
+            - errors: Number of errors.
+            - warnings: Number of warnings.
+            - summary: Summary of messages.
+            - chromDescription: Chromosomal description.
+            - genomicDescription: Genomic description.
+            - transcriptDescriptions: List of transcript descriptions.
+            - proteinDescriptions: List of protein descriptions.
+            - rawVariants: List of raw variants where each raw variant is
+                represented by an object with fields:
+                - description: Description of the raw variant.
+                - visualisation: ASCII visualisation of the raw variant.
+            - messages: List of (error) messages.
         """
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
@@ -574,6 +678,13 @@ class MutalyzerService(DefinitionBase):
         variantchecker.check_variant(variant, O)
 
         result = MutalyzerOutput()
+
+        result.referenceId = O.getIndexedOutput('reference_id', 0)
+        result.sourceId = O.getIndexedOutput('source_id', 0)
+        result.sourceAccession = O.getIndexedOutput('source_accession', 0)
+        result.sourceVersion = O.getIndexedOutput('source_version', 0)
+        result.sourceGi = O.getIndexedOutput('source_gi', 0)
+        result.molecule = O.getIndexedOutput('molecule', 0)
 
         # We force the results to strings here, because some results
         # may be of type Bio.Seq.Seq which soaplib doesn't like.
@@ -676,20 +787,26 @@ class MutalyzerService(DefinitionBase):
                  - product
                  - cTransStart
                  - gTransStart
+                 - chromTransStart
                  - cTransEnd
                  - gTransEnd
+                 - chromTransEnd
                  - sortableTransEnd
                  - cCDSStart
                  - gCDSStart
+                 - chromCDSStart
                  - cCDSStop
                  - gCDSStop
+                 - chromCDSStop
                  - locusTag
                  - linkMethod
                  - exons: Array of ExonInfo objects with fields:
                           - cStart
                           - gStart
+                          - chromStart
                           - cStop
                           - gStop
+                          - chromStop
                  - proteinTranscript: ProteinTranscript object with fields:
                                       - name
                                       - id
@@ -736,8 +853,10 @@ class MutalyzerService(DefinitionBase):
                     exon = ExonInfo()
                     exon.gStart = transcript.CM.getSpliceSite(i)
                     exon.cStart = transcript.CM.g2c(exon.gStart)
+                    exon.chromStart = GenRecordInstance.record.toChromPos(exon.gStart)
                     exon.gStop = transcript.CM.getSpliceSite(i + 1)
                     exon.cStop = transcript.CM.g2c(exon.gStop)
+                    exon.chromStop = GenRecordInstance.record.toChromPos(exon.gStop)
                     t.exons.append(exon)
 
                 # Beware that CM.info() gives a made-up value for trans_end,
@@ -750,6 +869,7 @@ class MutalyzerService(DefinitionBase):
 
                 t.cTransEnd = str(t.exons[-1].cStop)
                 t.gTransEnd = t.exons[-1].gStop
+                t.chromTransEnd = GenRecordInstance.record.toChromPos(t.gTransEnd)
                 t.sortableTransEnd = sortable_trans_end
 
                 # Todo: If we have no CDS info, CM.info() gives trans_end as
@@ -762,10 +882,13 @@ class MutalyzerService(DefinitionBase):
                 t.product = transcript.transcriptProduct
                 t.cTransStart = str(trans_start)
                 t.gTransStart = transcript.CM.x2g(trans_start, 0)
+                t.chromTransStart = GenRecordInstance.record.toChromPos(t.gTransStart)
                 t.cCDSStart = str(cds_start)
                 t.gCDSStart = transcript.CM.x2g(cds_start, 0)
+                t.chromCDSStart = GenRecordInstance.record.toChromPos(t.gCDSStart)
                 t.cCDSStop = str(cds_stop)
                 t.gCDSStop = transcript.CM.x2g(cds_stop, 0)
+                t.chromCDSStop = GenRecordInstance.record.toChromPos(t.gCDSStop)
                 t.locusTag = transcript.locusTag
                 t.linkMethod = transcript.linkMethod
 
@@ -837,6 +960,10 @@ class MutalyzerService(DefinitionBase):
     def sliceChromosome(self, chromAccNo, start, end, orientation) :
         """
         Todo: documentation, error handling, argument checking, tests.
+
+        @arg orientation: Orientation of the slice. 1 for forward, 2 for
+            reverse complement.
+        @type orientation: integer
         """
         O = Output(__file__)
         D = Db.Cache()

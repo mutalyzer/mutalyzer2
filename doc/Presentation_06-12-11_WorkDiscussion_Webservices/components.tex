@@ -1,0 +1,35 @@
+\section{Components}
+\begin{frame}
+  \frametitle{Core components and their usage}
+
+  \only<2->{\color{gray}}
+  \renewcommand{\arraystretch}{0.9}
+  \begin{tabular}{l@{\ \ -\ \ }l}
+    \color<2,3,4,5,7>{white}{Config}   & Parsing config file.\\
+    \color<2,4>{white}{Crossmap}       & Position conversions.\\
+    \color<2,4,7>{white}{Db}           & Mapping, linking, queues, caching info.\\
+    \color<0,8>{white}{File}           & CSV, Excel, OpenOffice tables.\\
+    \color<2,7>{white}{GenRecord}      & Abstraction of annotated reference sequences.\\
+    \color<2,7>{white}{GBparser}       & Instance of GenRecord (GenBank files).\\
+    \color<2>{white}{LRGparser}        & Instance of GenRecord (LRG files).\\
+    \color<2,7>{white}{Misc}           & \\
+    \color<2>{white}{Mutator}          & Modify the reference sequence and annotation.\\
+    \color<2,3,4,5,6,7>{white}{Output} & Communication with the interfaces.\\
+    \color<2,3,4>{white}{Parser}       & HGVS nomenclature parser.\\
+    \color<2,5,7>{white}{Retriever}    & Retrieve / cache reference sequences.\\    \color<8>{white}{Scheduler}        & Batch jobs scheduler.\\
+    \color<9>{white}{Serializers}      & SOAP definitions of complex objects.
+  \end{tabular}
+  \only<2->{\color{white}}
+  \vspace{-0.25cm}
+
+  \begin{center}
+    \only<2>{Name checker.}
+    \only<3>{Syntax checker.}
+    \only<4>{Position converter.}
+    \only<5>{SNP converter.}
+    \only<6>{Name generator.}
+    \only<7>{GenBank Uploader.}
+    \only<8>{Added when using a batch interface.}
+    \only<9>{Added when using webservices.}
+  \end{center}
+\end{frame}

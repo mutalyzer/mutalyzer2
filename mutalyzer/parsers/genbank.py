@@ -4,13 +4,20 @@ mutalyzer GenRecord. Record populated with data from a GenBank file.
 """
 
 
+import re
 import bz2
+from itertools import izip_longest
+
 from Bio import SeqIO, Entrez
 from Bio.Alphabet import ProteinAlphabet
 
 from mutalyzer import config
 from mutalyzer import Db
 from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
+
+
+# Regular expression used to find version number in locus tag
+LOCUS_TAG_VERSION = re.compile('\d{1,3}$')
 
 
 class tempGene():
@@ -149,8 +156,7 @@ class GBparser():
 
             proteinGI = result[0]["LinkSetDb"][0]["Link"][0]["Id"]
 
-            handle = Entrez.efetch(db = "protein", id = proteinGI,
-                                   rettype = "acc")
+            handle = Entrez.efetch(db='protein', id=proteinGI, rettype='acc', retmode='text')
 
             proteinAcc = handle.read().split('.')[0]
             handle.close()
@@ -161,37 +167,63 @@ class GBparser():
         return proteinAcc
     #__transcriptToProtein
 
-    def __findMismatch(self, productList, direction):
+    def _find_mismatch(self, sentences):
         """
-        Find the index of the first or last word that distinguishes one
-        sentence from an other.
+        Find the indices of the first and last words that distinguishes one
+        sentence from another. The index of the last word is counted backwards.
 
-        If direction equals 1, search for the first word.
-        If direction equals -1, search for the last word.
+        @arg sentences: A list of sentences.
+        @type sentences: list of strings
 
-        @arg productList: A list of sentences
-        @type productList: list of strings
-        @arg direction: The direction in which to search
-        @type direction: integer (1 or -1)
+        @return: The indices of the words where sentences start to differ,
+            both are -1 when no mismatches are found.
+        @rtype: tuple(int, int)
 
-        @return: The index of the word where sentences start to differ
-        @rtype: integer
+        Example usage:
+
+            >>> parser._find_mismatch(['a b c d e' , 'a B c d e', 'a b C d e'])
+            (1, 2)
+            >>> parser._find_mismatch(['a b c d e' , 'a b c d e', 'a b C D e'])
+            (2, 1)
+            >>> parser._find_mismatch(['a b c' , 'a b c', 'a b c'])
+            (-1, -1)
+
+        Note: The result can be used to slice the mismatching part from the
+            sentences where you take the negative value of the second returned
+            index. For the second example above:
+
+                >>> 'a b c d e'.split()[1:-2]
+                ['b', 'c']
+
+            But be careful since the second index may be 0, but slicing syntax
+            does not permit taking the -0 index from the right:
+
+                >>> 'a b c d e'.split()[2:0] == ['c', 'd', 'e']
+                False
+
+            Although less elegant, first check the second index for 0 and in
+            that case leave it out:
+
+                >>> 'a b c d e'.split()[2:] == ['c', 'd', 'e']
+                True
+
+            The case where no mismatch is found just works, since slicing with
+            [-1:1] yields the empty list.
         """
+        # Create lists of words
+        lists = map(str.split, sentences)
 
-        i = 0
-        while i < productList[0].count(' ') + 1 :
-            for j in range(1, len(productList)) :
-                if productList[0][::direction].split(' ')[i] != \
-                   productList[j][::direction].split(' ')[i] :
-                    if direction == 1 :
-                        return i
-                    else :
-                        return productList[0].count(' ') - i + 1
-                #if
-            i += 1
-        #while
-        return 0
-    #__findMismatch
+        try:
+            forward, reverse = [next(i for i, v in
+                                     enumerate(izip_longest(*lists))
+                                     if not len(set(v)) <= 1)
+                                for lists in (lists, map(reversed, lists))]
+        except StopIteration:
+            # No mismatch found
+            forward = reverse = -1
+
+        return forward, reverse
+    #_find_mismatch
 
     def __tagByDict(self, locus, key):
         """
@@ -255,13 +287,16 @@ class GBparser():
 
         if productList :
             # Find the defining words in the product list.
-            a = self.__findMismatch(productList, 1)
-            b = self.__findMismatch(productList, -1)
+            a, b = self._find_mismatch(productList)
 
             # Add the defining words to the locus.
-            for i in range(len(locusList)) :
-                locusList[i].productTag = \
-                    ' '.join(productList[i].split(' ')[a:b])
+            for i in range(len(locusList)):
+                if b == 0:
+                    locusList[i].productTag = \
+                        ' '.join(productList[i].split()[a:])
+                else:
+                    locusList[i].productTag = \
+                        ' '.join(productList[i].split()[a:-b])
         #if
     #__tagLocus
 
@@ -448,7 +483,14 @@ class GBparser():
         record = Record()
         record.seq = biorecord.seq
 
-        record.version = biorecord.id.split('.')[1]
+        # Note: The .source_* values may be different from the values we are
+        #     working with, e.g. for UD slices where these values (taken from
+        #     the genbank file) are from the original NC reference. We try to
+        #     set the .id field to the working value in the caller.
+        record.source_id = biorecord.id
+        record.source_accession, record.source_version = biorecord.id.split('.')[:2]
+        record.source_gi = biorecord.annotations['gi']
+        record.organism = biorecord.annotations['organism']
 
         # Todo: This will change once we support protein references
         if isinstance(biorecord.seq.alphabet, ProteinAlphabet):
@@ -458,7 +500,11 @@ class GBparser():
         geneDict = {}
 
         accInfo = biorecord.annotations['accessions']
-        if len(accInfo) >= 3 and accInfo[1] == "REGION:" :
+        if len(accInfo) >= 3 and accInfo[1] == "REGION:":
+            # Todo: This information is present in the genbank file if it is a
+            #     UD sliced from a chromosome. We can get the same information
+            #     for NM references from our mapping database and that way
+            #     also provide chromosomal variant descriptions for those.
             region = accInfo[2]
             if "complement" in region :
                 record.orientation = -1
@@ -467,7 +513,6 @@ class GBparser():
             else :
                 record.chromOffset = int(accInfo[2].split('.')[0])
         #if
-        record.recordId = biorecord.id
         for i in biorecord.features :
             if i.qualifiers :
                 if i.type == "source" :
@@ -524,7 +569,22 @@ class GBparser():
                     if i.usable :
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
-                            myTranscript = Locus(i.locus_tag[-3:])
+                            # Note: We use the last three characters of the
+                            # locus_tag as a unique transcript version id.
+                            # This is also used to for the protein-transcript
+                            # link table.
+                            # Normally, locus_tag ends with three digits, but
+                            # for some (e.g. mobA on NC_011228, a plasmid) it
+                            # ends with two digits prepended with an
+                            # underscore. Or prepended with a letter. We
+                            # really want a number, so 'fix' this by only
+                            # looking for a numeric part.
+                            try:
+                                version = LOCUS_TAG_VERSION.findall(
+                                    i.locus_tag)[0].zfill(3)
+                            except IndexError:
+                                version = '000'
+                            myTranscript = Locus(version)
                         else :
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
@@ -554,7 +614,22 @@ class GBparser():
                        (i.usable or not geneDict[myGene.name].rnaList) :
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
-                            myTranscript = Locus(i.locus_tag[-3:])
+                            # Note: We use the last three characters of the
+                            # locus_tag as a unique transcript version id.
+                            # This is also used to for the protein-transcript
+                            # link table.
+                            # Normally, locus_tag ends with three digits, but
+                            # for some (e.g. mobA on NC_011228, a plasmid) it
+                            # ends with two digits prepended with an
+                            # underscore. Or prepended with a letter. We
+                            # really want a number, so 'fix' this by only
+                            # looking for a numeric part.
+                            try:
+                                version = LOCUS_TAG_VERSION.findall(
+                                    i.locus_tag)[0].zfill(3)
+                            except IndexError:
+                                version = '000'
+                            myTranscript = Locus(version)
                         else :
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.CDS = PList()

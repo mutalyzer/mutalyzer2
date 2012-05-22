@@ -40,15 +40,18 @@ def main(genomic_reference, gene=None):
   Locus tag: %s
   Link method: %s
   Translation:
-    Start: %s (c), %s (g)
-    End: %s (c), %s (g)
+    Start: %s (c), %s (g), %s (chrom)
+    End: %s (c), %s (g), %s (chrom)
     Sortable end: %s
   CDS:
-    Start: %s (c), %s (g)
-    End: %s (c), %s (g)""" % \
+    Start: %s (c), %s (g), %s (chrom)
+    End: %s (c), %s (g), %s (chrom)""" % \
             (t.name, t.id, t.product, t.locusTag, t.linkMethod, t.cTransStart,
-             t.gTransStart, t.cTransEnd, t.gTransEnd, t.sortableTransEnd,
-             t.cCDSStart, t.gCDSStart, t.cCDSStop, t.gCDSStop)
+             t.gTransStart, t.chromTransStart if 'chromTransStart' in t else '-',
+             t.cTransEnd, t.gTransEnd, t.chromTransEnd if 'chromTransEnd' in t else '-',
+             t.sortableTransEnd, t.cCDSStart, t.gCDSStart,
+             t.chromCDSStart if 'chromCDSStart' in t else '-', t.cCDSStop, t.gCDSStop,
+             t.chromCDSStop if 'chromCDSStop' in t else '-')
 
             if 'proteinTranscript' in t:
                 print """  Protein:
@@ -61,8 +64,10 @@ def main(genomic_reference, gene=None):
             if 'exons' in t:
                 print '  Exons:'
                 for e in t.exons.ExonInfo:
-                    print '    %s - %s (c), %s - %s (g)' % \
-                          (e.cStart, e.cStop, e.gStart, e.gStop)
+                    print '    %s - %s (c), %s - %s (g), %s - %s (chrom)' % \
+                          (e.cStart, e.cStop, e.gStart, e.gStop,
+                           e.chromStart if 'chromStart' in e else '-',
+                           e.chromStop if 'chromStop' in e else '-')
 
 
 if __name__ == '__main__':

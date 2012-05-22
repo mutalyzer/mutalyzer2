@@ -521,6 +521,7 @@ class Mapping(Db) :
         statement = """
             CREATE TABLE Exons (
                 transcript varchar(20) NOT NULL DEFAULT '',
+                chromosome char(2) DEFAULT NULL,
                 start int(11) DEFAULT NULL,
                 stop int(11) DEFAULT NULL,
                 cds_start int(11) DEFAULT NULL,
@@ -581,8 +582,8 @@ class Mapping(Db) :
         self.query(statement)
     #ncbi_import_transcript
 
-    def ncbi_import_exon(self, transcript, start, stop, cds_start, cds_stop,
-                         protein):
+    def ncbi_import_exon(self, transcript, chromosome, start, stop, cds_start,
+                         cds_stop, protein):
         """
         Import an exon mapping in a temporary table.
 
@@ -591,10 +592,10 @@ class Mapping(Db) :
         """
         statement = """
             INSERT IGNORE INTO Exons
-                (transcript, start, stop, cds_start, cds_stop, protein)
+                (transcript, chromosome, start, stop, cds_start, cds_stop, protein)
             VALUES
-                (%s, %s, %s, %s, %s, %s);
-        """, (transcript, start, stop, cds_start, cds_stop, protein)
+                (%s, %s, %s, %s, %s, %s, %s);
+        """, (transcript, chromosome, start, stop, cds_start, cds_stop, protein)
 
         self.query(statement)
     #ncbi_import_exon
@@ -610,6 +611,11 @@ class Mapping(Db) :
             bytes), so we explicitely set this to a higher value.
         @note: We use MAX(E.protein) since MySQL does not have an ANY()
             aggregator.
+        @note: Some genes (e.g. in the PAR) are mapped on both the X and Y
+            chromosomes. Therefore, we group not only by transcript name, but
+            also by chromosome, and add conditions on exon positions. The flaw
+            here is that we miss genes that are mapped to two locations on one
+            chromosome, but I don't think we have any of those.
         """
         statement = """
             SET group_concat_max_len = 32768;
@@ -646,7 +652,8 @@ class Mapping(Db) :
                 'NCBI' as source
             FROM Transcripts as T, Genes as G, Exons as E
             WHERE T.gene_id = G.id AND T.name = E.transcript
-            GROUP BY T.name;
+            AND E.chromosome = T.chromosome AND E.start >= T.start AND E.stop <= T.stop
+            GROUP BY T.name, T.chromosome;
         """, None
         self.query(statement)
     #ncbi_aggregate_mapping

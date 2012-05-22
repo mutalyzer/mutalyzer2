@@ -22,6 +22,7 @@ from Bio.Alphabet import IUPAC
 from mutalyzer import util
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
+from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Db
@@ -148,7 +149,7 @@ def _check_argument(argument, reference, first, last, output):
         # If it is a digit (3_9del7 for example), the digit must be equal to
         # the length of the given range.
         length = int(argument)
-        interval = first - last + 1
+        interval = last - first + 1
         if length != interval:
             output.addMessage(__file__, 3, 'EARGLEN',
                               'The length (%i) differed from that of the ' \
@@ -255,6 +256,17 @@ def _add_batch_output(O):
         outputline += "%s\t" % "|".join(e[-1] for e in tList)
     else:
         outputline += "\t"*2
+
+    # Add effects on restriction sites as two columns (created and deleted).
+    # The value for each column is a semicolon-separated list of
+    # comma-separated lists: for each raw variant, a list of restriction
+    # sites.
+    sites_created = []
+    sites_deleted = []
+    for variant in O.getOutput("restrictionSites"):
+        sites_created.append(','.join(variant[0]))
+        sites_deleted.append(','.join(variant[1]))
+    outputline += "%s\t%s\t" % (';'.join(sites_created), ';'.join(sites_deleted))
 
     #Link naar additional info:
     #outputline+="http://localhost/mutalyzer2/redirect?mutationName=%s" %\
@@ -900,6 +912,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     @raise _RawVariantError: Cannot process this raw variant.
     @raise _VariantError: Cannot further process the entire variant.
     """
+    variant, original_description = variant.RawVar, variant[-1]
+
     # {argument} may be a number, or a subsequence of the reference.
     # {sequence} is the variant subsequence.
     argument = variant.Arg1
@@ -979,6 +993,8 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 # Coding positioning.
                 first, last = _coding_to_genomic(first_location, last_location,
                                                  transcript, output)
+                output.addOutput('rawVariantsCoding',
+                                 (original_description, first_location, last_location))
             else:
                 # Genomic positioning.
                 first, last = _genomic_to_genomic(first_location, last_location)
@@ -1121,7 +1137,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # Deletion or duplication.
     if variant.MutationType in ['del', 'dup']:
         # The fuzzy flags are to support deletions of the form c.a-?_b+?del.
-        first_fuzzy = variant.StartLoc.PtLoc.Offset == '?'
+        first_fuzzy = variant.StartLoc and variant.StartLoc.PtLoc.Offset == '?'
         last_fuzzy = variant.EndLoc and variant.EndLoc.PtLoc.Offset == '?'
         apply_deletion_duplication(first, last, variant.MutationType, mutator,
                                    record, output, first_fuzzy=first_fuzzy,
@@ -1207,7 +1223,7 @@ def _add_transcript_info(mutator, transcript, output):
     """
     # Add transcript info to output.
     if transcript.transcribe:
-        output.addOutput('myTranscriptDescription', transcript.description)
+        output.addOutput('myTranscriptDescription', transcript.description or '=')
         output.addOutput('origMRNA',
             str(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
@@ -1413,17 +1429,17 @@ def process_variant(mutator, description, record, output):
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
             try:
-                process_raw_variant(mutator, var.RawVar, record, transcript,
+                process_raw_variant(mutator, var, record, transcript,
                                     output)
             except _RawVariantError:
                 #output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
                 #                  'Ignoring raw variant "%s".' % var[0])
                 output.addMessage(__file__, 1, 'IRAWVARIANTERROR',
                                   'Aborted variant check due to error in ' \
-                                  'raw variant "%s".' % var[0])
+                                  'raw variant "%s".' % var[-1])
                 raise
     else:
-        process_raw_variant(mutator, description.RawVar, record,
+        process_raw_variant(mutator, description, record,
                             transcript, output)
 
     # Add transcript-specific variant information.
@@ -1462,17 +1478,22 @@ def check_variant(description, output):
     else:
         output.addOutput('geneOfInterest', dict())
 
-    if parsed_description.Version:
+    if parsed_description.LrgAcc:
+        record_id = parsed_description.LrgAcc
+    elif parsed_description.Version:
         record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
     else:
         record_id = parsed_description.RefSeqAcc
+
+    if not record_id:
+        output.addMessage(__file__, 4, 'ENOREF', 'No reference sequence given.')
+        return
 
     gene_symbol = transcript_id = ''
 
     database = Db.Cache()
     if parsed_description.LrgAcc:
         filetype = 'LRG'
-        record_id = parsed_description.LrgAcc
         transcript_id = parsed_description.LRGTranscriptID
         retriever = Retriever.LRGRetriever(output, database)
     else:
@@ -1481,8 +1502,8 @@ def check_variant(description, output):
             gene_symbol = parsed_description.Gene.GeneSymbol or ''
             transcript_id = parsed_description.Gene.TransVar or ''
             if parsed_description.Gene.ProtIso:
-                output.addMessage(__file__, 4, 'EPROT', 'Indexing by ' \
-                                  'protein isoform is not supported.')
+                output.addMessage(__file__, 4, 'EPROT',
+                    'Indexing by protein isoform is not supported.')
         retriever = Retriever.GenBankRetriever(output, database)
 
     retrieved_record = retriever.loadrecord(record_id)
@@ -1492,8 +1513,20 @@ def check_variant(description, output):
 
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
-
+    output.addOutput('organism', retrieved_record.organism)
     output.addOutput('reference', record_id)
+
+    # Add some more reference info.
+    # Todo: Add selected transcript (LRGTranscriptID for LRGs, Gene for
+    #     genbank files), but I think this is part of the variant and not
+    #     part of the reference.
+    output.addOutput('reference_id', retrieved_record.id)
+    output.addOutput('source_id', retrieved_record.source_id)
+    if filetype == 'GB':
+        output.addOutput('source_accession', retrieved_record.source_accession)
+        output.addOutput('source_version', retrieved_record.source_version)
+        output.addOutput('source_gi', retrieved_record.source_gi)
+    output.addOutput('molecule', retrieved_record.molType)
 
     # Note: geneSymbol[0] is used as a filter for batch runs.
     output.addOutput('geneSymbol', (gene_symbol, transcript_id))
@@ -1539,6 +1572,28 @@ def check_variant(description, output):
 
     output.addOutput('original', str(mutator.orig))
     output.addOutput('mutated', str(mutator.mutated))
+
+    # Chromosomal region (only for GenBank human transcript references).
+    # This is still quite ugly code, and should be cleaned up once we have
+    # a refactored mapping module.
+    if retrieved_record.organism == 'Homo sapiens' \
+           and parsed_description.RefSeqAcc \
+           and parsed_description.RefType == 'c':
+        raw_variants = output.getOutput('rawVariantsCoding')
+        # Example value: [('29+4T>C', 29+4, 29+4), ('230_233del', 230, 233)]
+        if raw_variants:
+            locations = [pos
+                         for descr, first, last in raw_variants
+                         for pos in (first, last)]
+            converter = Converter('hg19', output)
+            chromosomal_positions = converter.chromosomal_positions(
+                locations, parsed_description.RefSeqAcc, parsed_description.Version)
+            if chromosomal_positions:
+                output.addOutput('rawVariantsChromosomal',
+                                 (chromosomal_positions[0], chromosomal_positions[1],
+                                  zip([descr for descr, first, last in raw_variants],
+                                      util.grouper(chromosomal_positions[2]))))
+                # Example value: ('chr12', [('29+4T>C', (2323, 2323)), ('230_233del', (5342, 5345))])
 
     # Protein.
     for gene in record.record.geneList:
@@ -1606,7 +1661,7 @@ def check_variant(description, output):
     if ';' in record.record.description:
         generated_description = '[' + record.record.description + ']'
     else:
-        generated_description = record.record.description
+        generated_description = record.record.description or '='
 
     output.addOutput('genomicDescription', '%s:%c.%s' % \
                      (reference, record.record.molType, generated_description))
@@ -1618,9 +1673,9 @@ def check_variant(description, output):
         if ';' in record.record.chromDescription:
             chromosomal_description = '[' + record.record.chromDescription + ']'
         else:
-            chromosomal_description = record.record.chromDescription
+            chromosomal_description = record.record.chromDescription or '='
         output.addOutput('genomicChromDescription', '%s:%c.%s' % \
-                         (record.record.recordId,
+                         (record.record.source_id,
                           record.record.molType, chromosomal_description))
 
     # Now we add variant descriptions for all transcripts, including protein
@@ -1639,7 +1694,7 @@ def check_variant(description, output):
             if ';' in transcript.description:
                 generated_description = '[' + transcript.description + ']'
             else:
-                generated_description = transcript.description
+                generated_description = transcript.description or '='
 
             if record.record._sourcetype == 'LRG':
                 if transcript.name:

@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{fullpage}
+
+\newcommand{\superscript}[1]{\ensuremath{^{\textrm{#1}}}}
+\frenchspacing
+
+\author{J.F.J. Laros \and M. Vermaat \and J.T. den Dunnen \and P.E.M. Taschner}
+\title{Generating complex descriptions of sequence variants using HGVS
+  nomenclature based on sequence comparison.\footnote{Funded in part by the
+  European Community's Seventh Framework Programme (FP7/2007-2013) under grant
+  agreement n\superscript{o} 200754 - the GEN2PHEN project.}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract} \noindent
+Descriptions of sequence variants can be checked and corrected with the
+\emph{Mutalyzer sequence variation nomenclature
+checker}\footnote{\texttt{https://mutalyzer.nl/}} to prevent mistakes and
+uncertainties which might contribute to undesired errors in clinical diagnosis.
+Construction of variant descriptions accepted by Mutalyzer requires comparison
+of the reference sequence and the variant sequence and basic knowledge of the
+\emph{Human Genome Variation Society sequence variant nomenclature
+recommendations}\footnote{\texttt{http://www.hgvs.org/mutnomen/}}. With the
+advert of sophisticated variant callers (e.g., Pindel) and the rise of long
+read sequencers (e.g., PacBio), the chance of finding a complex variant
+increases and so does the need to describe these variants. An algorithm
+performing the sequence comparison would help users to describe complex
+variants.
+
+The algorithm closely follows the human approach to describe a variant. It will
+first find the ``area of change'', and then finds the largest overlap between
+the original area and the area in the observed sequence. This process is
+repeated until the smallest description is found.
+
+This algorithm ensures that the same description will be generated every time
+researchers observe this variant. Furthermore, no knowledge of the HGVS
+nomenclature is required to generate this description. This not only helps
+clinicians to generate the correct description, but its implementation also
+allows automation of the description process.
+
+We have incorporated this algorithm in the Mutalyzer suite under the name
+\emph{Description
+Extractor}\footnote{\texttt{https://mutalyzer.nl/descriptionExtract}}.
+\end{abstract}
+
+\end{document}

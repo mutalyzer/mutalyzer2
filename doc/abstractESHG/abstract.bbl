@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+
+\bibitem{NOM1}
+J.T. {den}~Dunnen and S.E. Antonarakis.
+\newblock Mutation nomenclature extensions and suggestions to describe complex
+  mutations: {A} discussion.
+\newblock {\em Human Mutation}, 15:7--12, 2000.
+
+\bibitem{hgvs_bnf}
+J.F.J. Laros, A.~Blavier, J.T. den Dunnen, and P.E.M. Taschner.
+\newblock A formalized description of the standard human variant nomenclature
+  in extended backus-naur form.
+\newblock {\em BMC Bioinformatics}, 12(Suppl 4):S5, 2011.
+
+\end{thebibliography}

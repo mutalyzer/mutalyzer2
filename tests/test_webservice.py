@@ -8,6 +8,7 @@ from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 import os
 from datetime import datetime, timedelta
 import mutalyzer
+from mutalyzer.util import skip
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
@@ -210,6 +211,20 @@ class TestWebservice():
                   'C9orf53_v001']:
             assert_false(t in names)
 
+    def test_gettranscriptsmapping(self):
+        """
+        Running getTranscriptsMapping should give a list of
+        TranscriptMappingInfo objects.
+        """
+        r = self.client.service.getTranscriptsMapping('hg19', 'chr16', 70680470, 70807150, 1)
+        assert_equal(type(r.TranscriptMappingInfo), list)
+        names = [t.name for t in r.TranscriptMappingInfo]
+        for t in ('NM_152456',
+                  'NM_138383',
+                  'NM_018052',
+                  'NR_034083'):
+            assert t in names
+
     def test_info(self):
         """
         Running the info method should give us some version information.
@@ -284,3 +299,138 @@ class TestWebservice():
         """
         r = self.client.service.ping()
         assert_equal(r, 'pong')
+
+    def test_runmutalyzer(self):
+        """
+        Just a runMutalyzer test.
+        """
+        r = self.client.service.runMutalyzer('NM_003002.2:c.274G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.genomicDescription, 'NM_003002.2:n.335G>T')
+        assert 'NM_003002.2(SDHD_v001):c.274G>T' in r.transcriptDescriptions.string
+
+    def test_runmutalyzer_reference_info_nm(self):
+        """
+        Get reference info for an NM variant without version.
+        """
+        r = self.client.service.runMutalyzer('NM_003002:c.274G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NM_003002')
+        assert_equal(r.sourceId, 'NM_003002.2')
+        assert_equal(r.sourceAccession, 'NM_003002')
+        assert_equal(r.sourceVersion, '2')
+        assert_equal(r.sourceGi, '222352156')
+        assert_equal(r.molecule, 'n')
+
+    def test_runmutalyzer_reference_info_nm_version(self):
+        """
+        Get reference info for an NM variant with version.
+        """
+        r = self.client.service.runMutalyzer('NM_003002.2:c.274G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NM_003002.2')
+        assert_equal(r.sourceId, 'NM_003002.2')
+        assert_equal(r.sourceAccession, 'NM_003002')
+        assert_equal(r.sourceVersion, '2')
+        assert_equal(r.sourceGi, '222352156')
+        assert_equal(r.molecule, 'n')
+
+    @skip
+    def test_runmutalyzer_reference_info_ud(self):
+        """
+        Get reference info for a UD variant.
+
+        Todo: We cannot use UD references in unit tests, unless we implement
+           a way to create them inside the unit test.
+        """
+        r = self.client.service.runMutalyzer('UD_129433404385:g.1del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'UD_129433404385')
+        assert_equal(r.sourceId, 'NC_000023.10')
+        assert_equal(r.sourceAccession, 'NC_000023')
+        assert_equal(r.sourceVersion, '10')
+        assert_equal(r.sourceGi, '224589822')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_lrg(self):
+        """
+        Get reference info for an LRG variant.
+        """
+        r = self.client.service.runMutalyzer('LRG_1t1:c.266G>T')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'LRG_1')
+        assert_equal(r.sourceId, 'LRG_1')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_ng(self):
+        """
+        Get reference info for an NG variant without version.
+        """
+        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NG_012772')
+        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceAccession, 'NG_012772')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_ng_version(self):
+        """
+        Get reference info for an NG variant with version.
+        """
+        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NG_012772')
+        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceAccession, 'NG_012772')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.molecule, 'g')
+
+    def test_runmutalyzer_reference_info_gi(self):
+        """
+        Get reference info for a GI variant.
+        """
+        r = self.client.service.runMutalyzer('gi256574794:g.18964del')
+        assert_equal(r.errors, 0)
+        assert_equal(r.referenceId, 'NG_012772.1')
+        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceAccession, 'NG_012772')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.molecule, 'g')
+
+    @skip
+    def test_gettranscriptsandinfo_slice(self):
+        """
+        Running getTranscriptsAndInfo on a chromosomal slice should include
+        chromosomal positions.
+
+        slice: 48284000 - 48259456 (COL1A1 with 5001 and 2001 borders)
+        translation start: 48284000 - 5001 + 1 = 48279000
+        translation end: 48259456 + 2001 = 48261457
+
+        Todo: We cannot use UD references in unit tests, unless we implement
+           a way to create them inside the unit test.
+        """
+        r = self.client.service.getTranscriptsAndInfo('UD_129646580028')
+        assert_equal(type(r.TranscriptInfo), list)
+        names = [t.name for t in r.TranscriptInfo]
+        assert 'COL1A1_v001' in names
+        for t in r.TranscriptInfo:
+            if t.name != 'COL1A1_v001':
+                continue
+            assert_equal(t.cTransStart, '-126')
+            assert_equal(t.gTransStart, 5001)
+            assert_equal(t.chromTransStart, 48279000)
+            assert_equal(t.cTransEnd, '*1406')
+            assert_equal(t.gTransEnd, 22544)
+            assert_equal(t.chromTransEnd, 48261457)
+            assert_equal(t.sortableTransEnd, 5801)
+            assert_equal(t.cCDSStart, '1')
+            assert_equal(t.gCDSStart, 5127)
+            assert_equal(t.chromCDSStart, 48278874)
+            assert_equal(t.cCDSStop, '4395')
+            assert_equal(t.gCDSStop, 21138)
+            assert_equal(t.chromCDSStop, 48262863)

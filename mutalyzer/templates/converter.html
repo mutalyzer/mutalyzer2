@@ -5,45 +5,47 @@
   <body>
     <div metal:define-macro="content">
       <center><h3>Position Conversion</h3></center>
-      Please supply the build which you want to use to convert your
-      position, available builds at the moment are: hg18 (NCBI 36) and hg19
-      (GRCh37).<br>
-      <br>
-      Example: NM_003002.2:c.274G&gt;T<br>
-      or: chr11:g.111959693G&gt;T<br>
-      or: NC_000011.9:g.111959693G&gt;T<br>
-      <br>
-      <table id="inputform">
-          <form action = "" method = "post" enctype = "multipart/form-data">
-              <tr>
-                  <td><b>Build</b></td>
-                  <div tal:content = "build"></div>
-                  <td>
-                      <select name="build">
-                        <option tal:repeat = "i avail_builds"
-                        tal:content = "i"
-                        tal:attributes = "value i">
-                        </option>
-                      </select>
-                  </td>
-              </tr>
-              <tr>
-                  <td><b>Variant</b></td>
-                  <td><input type = "text" 
-                             name = "variant" 
-                             tal:attributes = "value variant"
-                             style = "width:500px"></td>
-              </tr>
-              <tr>
-                  <td colspan="2">
-                    <input type="submit" value="Submit">
-                    <input type="button" value="Clear field" 
-                           onClick = "clearForm(this.form, 'variant');">
-                  </td>
+      <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
+        Please supply the build which you want to use to convert your
+        position, available builds at the moment are: hg18 (NCBI 36) and hg19
+        (GRCh37).<br>
+        <br>
+        Example: NM_003002.2:c.274G&gt;T<br>
+        or: chr11:g.111959693G&gt;T<br>
+        or: NC_000011.9:g.111959693G&gt;T<br>
+        <br>
+        <table id="inputform">
+            <form action = "" method = "post" enctype = "multipart/form-data">
+                <tr>
+                    <td><b>Build</b></td>
+                    <div tal:content = "build"></div>
+                    <td>
+                        <select name="build">
+                          <option tal:repeat = "i avail_builds"
+                          tal:content = "i"
+                          tal:attributes = "value i">
+                          </option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Variant</b></td>
+                    <td><input type = "text" 
+                               name = "variant" 
+                               tal:attributes = "value variant"
+                               style = "width:500px"></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                      <input type="submit" value="Submit">
+                      <input type="button" value="Clear field" 
+                             onClick = "clearForm(this.form, 'variant');">
+                    </td>
 
-              </tr>
-          </form>
-      </table> <!-- inputform -->
+                </tr>
+            </form>
+        </table> <!-- inputform -->
+      </div>
 
       <div tal:condition = "posted">
         <h3>Results:</h3>
