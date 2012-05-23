@@ -28,6 +28,7 @@ from lxml import etree
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
+from rpclib.interface.wsdl import Wsdl11
 
 import mutalyzer
 from mutalyzer import util
@@ -1443,7 +1444,9 @@ class Documentation:
         @todo: Cache this transformation.
         """
         url = web.ctx.homedomain + web.ctx.homepath + WEBSERVICE_LOCATION
-        wsdl_handle = StringIO(webservice.soap_application.get_wsdl(url))
+        wsdl = Wsdl11(webservice.soap_application.interface)
+        wsdl.build_interface_document(url)
+        wsdl_handle = StringIO(wsdl.get_interface_document())
         xsl_handle = open(os.path.join(mutalyzer.package_root(), WSDL_VIEWER),
                           'r')
         wsdl_doc = etree.parse(wsdl_handle)
