@@ -34,7 +34,7 @@ import mutalyzer
 from mutalyzer import util
 from mutalyzer import config
 from mutalyzer.grammar import Grammar
-from mutalyzer import webservice
+from mutalyzer.services import soap
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
@@ -1444,7 +1444,7 @@ class Documentation:
         @todo: Cache this transformation.
         """
         url = web.ctx.homedomain + web.ctx.homepath + WEBSERVICE_LOCATION
-        wsdl = Wsdl11(webservice.soap_application.interface)
+        wsdl = Wsdl11(soap.application.interface)
         wsdl.build_interface_document(url)
         wsdl_handle = StringIO(wsdl.get_interface_document())
         xsl_handle = open(os.path.join(mutalyzer.package_root(), WSDL_VIEWER),

@@ -1,8 +1,6 @@
 """
-Mutalyzer webservices.
+Mutalyzer RPC services.
 
-@todo: Do we really use namespaces correctly?
-@todo: For some reason, the server exposes its location including ?wsdl.
 @todo: More thourough input checking. The @soap decorator does not do any
        kind of strictness checks on the input. For example, in
        transcriptInfo, the build argument must really be present. (Hint:
@@ -10,24 +8,11 @@ Mutalyzer webservices.
 """
 
 
-# WSGI applications should never print anything to stdout. We redirect to
-# stderr, but eventually Mutalyzer should be fixed to never just 'print'
-# anything.
-# http://code.google.com/p/modwsgi/wiki/DebuggingTechniques
-import sys
-sys.stdout = sys.stderr
-
-# Log exceptions to stdout
-import logging; logging.basicConfig()
-
-from rpclib.application import Application
-from rpclib.protocol.soap import Soap11
 from rpclib.decorator import srpc
 from rpclib.service import ServiceBase
 from rpclib.model.primitive import String, Integer, Boolean, DateTime
 from rpclib.model.complex import Array
 from rpclib.model.fault import Fault
-from rpclib.server.wsgi import WsgiApplication
 import os
 import socket
 from operator import itemgetter, attrgetter
@@ -1100,14 +1085,3 @@ class MutalyzerService(ServiceBase):
         return descriptions
     #getdbSNPDescriptions
 #MutalyzerService
-
-
-# WSGI application for use with e.g. Apache/mod_wsgi
-soap_application = Application([MutalyzerService], mutalyzer.SOAP_NAMESPACE,
-                               in_protocol=Soap11(), out_protocol=Soap11(),
-                               name='Mutalyzer')
-# Note: We would like to create the wsgi.Application instance only in the
-# bin/mutalyzer-webservice.wsgi script, but unfortunately this breaks the
-# get_wsdl method of soap_application which we use to generate API
-# documentation in website.py.
-application = WsgiApplication(soap_application)
