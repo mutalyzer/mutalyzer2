@@ -367,23 +367,23 @@ class TestWebservice():
         r = self.client.service.runMutalyzer('NG_012772:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772')
-        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceId, 'NG_012772.3')
         assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.sourceVersion, '3')
+        assert_equal(r.sourceGi, '388428999')
         assert_equal(r.molecule, 'g')
 
     def test_runmutalyzer_reference_info_ng_version(self):
         """
         Get reference info for an NG variant with version.
         """
-        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        r = self.client.service.runMutalyzer('NG_012772.3:g.18964del')
         assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_012772')
-        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.referenceId, 'NG_012772.3')
+        assert_equal(r.sourceId, 'NG_012772.3')
         assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.sourceVersion, '3')
+        assert_equal(r.sourceGi, '388428999')
         assert_equal(r.molecule, 'g')
 
     def test_runmutalyzer_reference_info_gi(self):
