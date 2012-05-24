@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 for logger in ('suds.metrics', 'suds.wsdl', 'suds.xsd.schema',
                'suds.xsd.sxbasic', 'suds.xsd.sxbase', 'suds.xsd.query',
                'suds.transport.http', 'suds.xsd.deplist', 'suds.mx.core',
-               'suds.mx.literal', 'suds.resolver'):
+               'suds.mx.literal', 'suds.resolver', 'suds.client'):
     logging.getLogger(logger).setLevel(logging.ERROR)
 
 
