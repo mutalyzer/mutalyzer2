@@ -23,7 +23,8 @@ COLOR_END='\033[0m'
 # directory to be used.
 PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
 BIN_WEBSITE=$(which mutalyzer-website.wsgi)
-BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
+BIN_SOAP_SERVICE=$(which mutalyzer-soap-service.wsgi)
+BIN_JSON_SERVICE=$(which mutalyzer-json-service.wsgi)
 
 if [ ! -e /var/www/mutalyzer ]; then
     mkdir -p /var/www/mutalyzer
@@ -48,7 +49,8 @@ echo -e "${COLOR_INFO}Assuming mod_wsgi daemon mode, not restarting Apache${COLO
 
 echo "Touching WSGI entry to reload application"
 touch $BIN_WEBSITE
-touch $BIN_WEBSERVICE
+touch $BIN_SOAP_SERVICE
+touch $BIN_JSON_SERVICE
 
 echo "Restarting Mutalyzer batch daemon"
 /etc/init.d/mutalyzer-batchd restart
