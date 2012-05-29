@@ -204,7 +204,7 @@ The web and SOAP interfaces depend on the following packages:
 - apache2             >= 2.2.11
 - libapache2-mod-wsgi >= 2.8
 - python-webpy        >= 0.33
-- python-soaplib      >= 2.0.0-alpha1
+- python-rpclib       >= 2.8.0-beta
 - python-simpletal    >= 4.1-6
 
 Automatic remote deployment depends on Fabric:
@@ -230,7 +230,7 @@ source code (excluding the standard library imports):
     pyparsing
     setuptools
     simpletal
-    soaplib
+    rpclib
     suds
     web
     webtest
