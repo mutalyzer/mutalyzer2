@@ -46,11 +46,10 @@ class TestWSDL():
         assert 'name="Mutalyzer"' in wsdl
 
 
-class TestWebservice():
+class TestServicesSoap():
     """
     Test the Mutalyzer SOAP interface.
     """
-
     def setUp(self):
         """
         Initialize webservice entrypoint.
