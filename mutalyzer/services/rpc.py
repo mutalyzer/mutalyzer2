@@ -806,7 +806,7 @@ class MutalyzerService(ServiceBase):
         D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
-            "Received request getTranscriptsAndInfo(%s)" % genomicReference)
+            "Received request getTranscriptsAndInfo(%s, %s)" % (genomicReference, geneName))
         retriever = Retriever.GenBankRetriever(O, D)
         record = retriever.loadrecord(genomicReference)
 
