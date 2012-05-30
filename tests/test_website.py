@@ -630,11 +630,11 @@ facilisi."""
         assert_equal(r.content_type, 'text/plain')
         r.mustcontain('NM_003002.1:c.3_4insG')
 
-    def test_soap_documentation(self):
+    def test_annotated_soap_api(self):
         """
         Test the SOAP documentation generated from the WSDL.
         """
-        r = self.app.get('/documentation')
+        r = self.app.get('/soap-api')
         assert_equal(r.content_type, 'text/html')
         r.mustcontain('Web Service: Mutalyzer')
 
