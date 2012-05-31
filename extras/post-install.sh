@@ -31,7 +31,8 @@ BIN_BATCHD=$(which mutalyzer-batchd)
 BIN_CACHE_SYNC=$(which mutalyzer-cache-sync)
 BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
 BIN_WEBSITE=$(which mutalyzer-website.wsgi)
-BIN_WEBSERVICE=$(which mutalyzer-webservice.wsgi)
+BIN_SOAP_SERVICE=$(which mutalyzer-soap-service.wsgi)
+BIN_JSON_SERVICE=$(which mutalyzer-json-service.wsgi)
 
 if [ ! -e /etc/mutalyzer/config ]; then
     echo -e "${COLOR_INFO}Creating /etc/mutalyzer/config${COLOR_END}"
@@ -83,7 +84,7 @@ sed -i -e "s@<MUTALYZER_BIN_MAPPING_UPDATE>@${BIN_MAPPING_UPDATE}@g" /etc/cron.d
 
 echo -e "${COLOR_INFO}Creating /etc/apache2/conf.d/mutalyzer.conf${COLOR_END}"
 cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf
-sed -i -e "s@<MUTALYZER_BIN_WEBSITE>@${BIN_WEBSITE}@g" -e "s@<MUTALYZER_BIN_WEBSERVICE>@${BIN_WEBSERVICE}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/apache2/conf.d/mutalyzer.conf
+sed -i -e "s@<MUTALYZER_BIN_WEBSITE>@${BIN_WEBSITE}@g" -e "s@<MUTALYZER_BIN_SOAP_SERVICE>@${BIN_SOAP_SERVICE}@g" -e "s@<MUTALYZER_BIN_JSON_SERVICE>@${BIN_JSON_SERVICE}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/apache2/conf.d/mutalyzer.conf
 chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
 
 echo "You will now be asked for the MySQL root password"

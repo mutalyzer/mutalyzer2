@@ -44,10 +44,10 @@ apt-get install -y \
   python-setuptools \
   git-core
 
-echo -e "${COLOR_INFO}Installing latest soaplib from mirrored git master${COLOR_END}"
+echo -e "${COLOR_INFO}Installing latest rpclib from git master${COLOR_END}"
 
 pushd $(mktemp -d)
-git clone https://github.com/martijnvermaat/soaplib.git .
+git clone https://github.com/arskom/rpclib.git .
 python setup.py install
 popd
 
