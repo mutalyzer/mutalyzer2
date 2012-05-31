@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 for logger in ('suds.metrics', 'suds.wsdl', 'suds.xsd.schema',
                'suds.xsd.sxbasic', 'suds.xsd.sxbase', 'suds.xsd.query',
                'suds.transport.http', 'suds.xsd.deplist', 'suds.mx.core',
-               'suds.mx.literal', 'suds.resolver'):
+               'suds.mx.literal', 'suds.resolver', 'suds.client'):
     logging.getLogger(logger).setLevel(logging.ERROR)
 
 
@@ -46,11 +46,10 @@ class TestWSDL():
         assert 'name="Mutalyzer"' in wsdl
 
 
-class TestWebservice():
+class TestServicesSoap():
     """
     Test the Mutalyzer SOAP interface.
     """
-
     def setUp(self):
         """
         Initialize webservice entrypoint.
@@ -367,23 +366,23 @@ class TestWebservice():
         r = self.client.service.runMutalyzer('NG_012772:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772')
-        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.sourceId, 'NG_012772.3')
         assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.sourceVersion, '3')
+        assert_equal(r.sourceGi, '388428999')
         assert_equal(r.molecule, 'g')
 
     def test_runmutalyzer_reference_info_ng_version(self):
         """
         Get reference info for an NG variant with version.
         """
-        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        r = self.client.service.runMutalyzer('NG_012772.3:g.18964del')
         assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_012772')
-        assert_equal(r.sourceId, 'NG_012772.1')
+        assert_equal(r.referenceId, 'NG_012772.3')
+        assert_equal(r.sourceId, 'NG_012772.3')
         assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '256574794')
+        assert_equal(r.sourceVersion, '3')
+        assert_equal(r.sourceGi, '388428999')
         assert_equal(r.molecule, 'g')
 
     def test_runmutalyzer_reference_info_gi(self):

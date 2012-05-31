@@ -1,8 +1,6 @@
 """
-Mutalyzer webservices.
+Mutalyzer RPC services.
 
-@todo: Do we really use namespaces correctly?
-@todo: For some reason, the server exposes its location including ?wsdl.
 @todo: More thourough input checking. The @soap decorator does not do any
        kind of strictness checks on the input. For example, in
        transcriptInfo, the build argument must really be present. (Hint:
@@ -10,23 +8,11 @@ Mutalyzer webservices.
 """
 
 
-# WSGI applications should never print anything to stdout. We redirect to
-# stderr, but eventually Mutalyzer should be fixed to never just 'print'
-# anything.
-# http://code.google.com/p/modwsgi/wiki/DebuggingTechniques
-import sys
-sys.stdout = sys.stderr
-
-# Log exceptions to stdout
-import logging; logging.basicConfig()
-
-from soaplib.core import Application
-from soaplib.core.service import soap
-from soaplib.core.service import DefinitionBase
-from soaplib.core.model.primitive import String, Integer, Boolean, DateTime
-from soaplib.core.model.clazz import Array
-from soaplib.core.model.exception import Fault
-from soaplib.core.server import wsgi
+from rpclib.decorator import srpc
+from rpclib.service import ServiceBase
+from rpclib.model.primitive import String, Integer, Boolean, DateTime
+from rpclib.model.complex import Array
+from rpclib.model.fault import Fault
 import os
 import socket
 from operator import itemgetter, attrgetter
@@ -44,7 +30,94 @@ from mutalyzer import GenRecord
 from mutalyzer.models import *
 
 
-class MutalyzerService(DefinitionBase):
+def _checkBuild(L, build) :
+    """
+    Check if the build is supported (hg18 or hg19).
+
+    Returns:
+        - Nothing (but raises an EARG exception).
+
+    @arg L: An output object for logging.
+    @type L: object
+    @arg build: The human genome build name that needs to be checked.
+    @type build: string
+    """
+
+    if not build in config.get('dbNames'):
+        L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+        raise Fault("EARG",
+                    "The build argument (%s) was not a valid " \
+                    "build name." % build)
+    #if
+#_checkBuild
+
+
+def _checkChrom(L, D, chrom) :
+    """
+    Check if the chromosome is in our database.
+
+    Returns:
+        - Nothing (but raises an EARG exception).
+
+    @arg L: An output object for logging.
+    @type L: object
+    @arg D: A handle to the database.
+    @type D: object
+    @arg chrom: The name of the chromosome.
+    @type chrom: string
+    """
+
+    if not D.isChrom(chrom) :
+        L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
+        raise Fault("EARG",
+                    "The chrom argument (%s) was not a valid " \
+                    "chromosome name." % chrom)
+    #if
+#_checkChrom
+
+
+def _checkPos(L, pos) :
+    """
+    Check if the position is valid.
+
+    Returns:
+        - Nothing (but raises an ERANGE exception).
+
+    @arg L: An output object for logging.
+    @type L: object
+    @arg pos: The position.
+    @type pos: integer
+    """
+
+    if pos < 1 :
+        L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
+        raise Fault("ERANGE",
+                    "The pos argument (%i) is out of range." % pos)
+    #if
+#_checkPos
+
+
+def _checkVariant(L, variant) :
+    """
+    Check if a variant is provided.
+
+    Returns:
+        - Nothing (but raises an EARG exception).
+
+    @arg L: An output object for logging.
+    @type L: object
+    @arg variant: The variant.
+    @type variant: string
+    """
+
+    if not variant :
+        L.addMessage(__file__, 4, "EARG", "EARG no variant")
+        raise Fault("EARG", "The variant argument is not provided.")
+    #if
+#_checkVariant
+
+
+class MutalyzerService(ServiceBase):
     """
     Mutalyzer webservices.
 
@@ -54,92 +127,9 @@ class MutalyzerService(DefinitionBase):
         super(MutalyzerService, self).__init__(environ)
     #__init__
 
-    def __checkBuild(self, L, build) :
-        """
-        Check if the build is supported (hg18 or hg19).
-
-        Returns:
-            - Nothing (but raises an EARG exception).
-
-        @arg L: An output object for logging.
-        @type L: object
-        @arg build: The human genome build name that needs to be checked.
-        @type build: string
-        """
-
-        if not build in config.get('dbNames'):
-            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
-            raise Fault("EARG",
-                        "The build argument (%s) was not a valid " \
-                        "build name." % build)
-        #if
-    #__checkBuild
-
-    def __checkChrom(self, L, D, chrom) :
-        """
-        Check if the chromosome is in our database.
-
-        Returns:
-            - Nothing (but raises an EARG exception).
-
-        @arg L: An output object for logging.
-        @type L: object
-        @arg D: A handle to the database.
-        @type D: object
-        @arg chrom: The name of the chromosome.
-        @type chrom: string
-        """
-
-        if not D.isChrom(chrom) :
-            L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
-            raise Fault("EARG",
-                        "The chrom argument (%s) was not a valid " \
-                        "chromosome name." % chrom)
-        #if
-    #__checkChrom
-
-    def __checkPos(self, L, pos) :
-        """
-        Check if the position is valid.
-
-        Returns:
-            - Nothing (but raises an ERANGE exception).
-
-        @arg L: An output object for logging.
-        @type L: object
-        @arg pos: The position.
-        @type pos: integer
-        """
-
-        if pos < 1 :
-            L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
-            raise Fault("ERANGE",
-                        "The pos argument (%i) is out of range." % pos)
-        #if
-    #__checkPos
-
-    def __checkVariant(self, L, variant) :
-        """
-        Check if a variant is provided.
-
-        Returns:
-            - Nothing (but raises an EARG exception).
-
-        @arg L: An output object for logging.
-        @type L: object
-        @arg variant: The variant.
-        @type variant: string
-        """
-
-        if not variant :
-            L.addMessage(__file__, 4, "EARG", "EARG no variant")
-            raise Fault("EARG", "The variant argument is not provided.")
-        #if
-    #__checkVariant
-
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,
+    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,
         _returns = Array(Mandatory.String))
-    def getTranscripts(self, build, chrom, pos, versions=False) :
+    def getTranscripts(build, chrom, pos, versions=False) :
         """
         Get all the transcripts that overlap with a chromosomal position.
 
@@ -167,11 +157,11 @@ class MutalyzerService(DefinitionBase):
                      "Received request getTranscripts(%s %s %s %s)" % (build,
                      chrom, pos, versions))
 
-        self.__checkBuild(L, build)
+        _checkBuild(L, build)
         D = Db.Mapping(build)
 
-        self.__checkChrom(L, D, chrom)
-        self.__checkPos(L, pos)
+        _checkChrom(L, D, chrom)
+        _checkPos(L, pos)
 
         ret = D.get_Transcripts(chrom, pos, pos, True)
 
@@ -192,8 +182,8 @@ class MutalyzerService(DefinitionBase):
         return ret
     #getTranscripts
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
-    def getTranscriptsByGeneName(self, build, name):
+    @srpc(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
+    def getTranscriptsByGeneName(build, name):
         """
         Todo: documentation.
         """
@@ -203,7 +193,7 @@ class MutalyzerService(DefinitionBase):
                      "Received request getTranscriptsByGene(%s %s)" % (build,
                      name))
 
-        self.__checkBuild(L, build)
+        _checkBuild(L, build)
         D = Db.Mapping(build)
 
         ret = D.get_TranscriptsByGeneName(name)
@@ -221,9 +211,9 @@ class MutalyzerService(DefinitionBase):
         return []
     #getTranscriptsByGene
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
         Mandatory.Integer, Mandatory.Integer, _returns = Array(Mandatory.String))
-    def getTranscriptsRange(self, build, chrom, pos1, pos2, method) :
+    def getTranscriptsRange(build, chrom, pos1, pos2, method) :
         """
         Get all the transcripts that overlap with a range on a chromosome.
 
@@ -250,7 +240,7 @@ class MutalyzerService(DefinitionBase):
             chrom, pos1, pos2, method))
 
         D = Db.Mapping(build)
-        self.__checkBuild(L, build)
+        _checkBuild(L, build)
 
         ret = D.get_Transcripts(chrom, pos1, pos2, method)
 
@@ -265,9 +255,9 @@ class MutalyzerService(DefinitionBase):
         return ret
     #getTranscriptsRange
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
         Mandatory.Integer, Mandatory.Integer, _returns = Array(TranscriptMappingInfo))
-    def getTranscriptsMapping(self, build, chrom, pos1, pos2, method):
+    def getTranscriptsMapping(build, chrom, pos1, pos2, method):
         """
         Get all the transcripts and their info that overlap with a range on a
         chromosome.
@@ -301,7 +291,7 @@ class MutalyzerService(DefinitionBase):
                           'getTranscriptsRange(%s %s %s %s %s)' % \
                           (build, chrom, pos1, pos2, method))
 
-        self.__checkBuild(output, build)
+        _checkBuild(output, build)
 
         database = Db.Mapping(build)
         transcripts = []
@@ -332,8 +322,8 @@ class MutalyzerService(DefinitionBase):
         return transcripts
     #getTranscriptsMapping
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
-    def getGeneName(self, build, accno) :
+    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    def getGeneName(build, accno) :
         """
         Find the gene name associated with a transcript.
 
@@ -351,7 +341,7 @@ class MutalyzerService(DefinitionBase):
                      "Received request getGeneName(%s %s)" % (build, accno))
 
         D = Db.Mapping(build)
-        self.__checkBuild(L, build)
+        _checkBuild(L, build)
 
         ret = D.get_GeneName(accno.split('.')[0])
 
@@ -363,9 +353,9 @@ class MutalyzerService(DefinitionBase):
     #getGeneName
 
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.String,
+    @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
         Mandatory.String, _returns = Mapping)
-    def mappingInfo(self, LOVD_ver, build, accNo, variant) :
+    def mappingInfo(LOVD_ver, build, accNo, variant) :
         """
         Search for an NM number in the MySQL database, if the version
         number matches, get the start and end positions in a variant and
@@ -421,9 +411,9 @@ class MutalyzerService(DefinitionBase):
         return result
     #mappingInfo
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.String,
+    @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
         _returns = Transcript)
-    def transcriptInfo(self, LOVD_ver, build, accNo) :
+    def transcriptInfo(LOVD_ver, build, accNo) :
         """
         Search for an NM number in the MySQL database, if the version
         number matches, the transcription start and end and CDS end
@@ -457,8 +447,8 @@ class MutalyzerService(DefinitionBase):
         return T
     #transcriptInfo
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
-    def chromAccession(self, build, name) :
+    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    def chromAccession(build, name) :
         """
         Get the accession number of a chromosome, given a name.
 
@@ -476,8 +466,8 @@ class MutalyzerService(DefinitionBase):
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromAccession(%s %s)" % (build, name))
 
-        self.__checkBuild(L, build)
-        self.__checkChrom(L, D, name)
+        _checkBuild(L, build)
+        _checkChrom(L, D, name)
 
         result = D.chromAcc(name)
 
@@ -489,8 +479,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #chromAccession
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
-    def chromosomeName(self, build, accNo) :
+    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    def chromosomeName(build, accNo) :
         """
         Get the name of a chromosome, given a chromosome accession number.
 
@@ -508,8 +498,8 @@ class MutalyzerService(DefinitionBase):
         L.addMessage(__file__, -1, "INFO",
                      "Received request chromName(%s %s)" % (build, accNo))
 
-        self.__checkBuild(L, build)
-#        self.__checkChrom(L, D, name)
+        _checkBuild(L, build)
+#        self._checkChrom(L, D, name)
 
         result = D.chromName(accNo)
 
@@ -521,8 +511,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #chromosomeName
 
-    @soap(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
-    def getchromName(self, build, acc) :
+    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    def getchromName(build, acc) :
         """
         Get the chromosome name, given a transcript identifier (NM number).
 
@@ -540,8 +530,8 @@ class MutalyzerService(DefinitionBase):
         L.addMessage(__file__, -1, "INFO",
                      "Received request getchromName(%s %s)" % (build, acc))
 
-        self.__checkBuild(L, build)
-#        self.__checkChrom(L, D, name)
+        _checkBuild(L, build)
+#        self._checkChrom(L, D, name)
 
         result = D.get_chromName(acc)
 
@@ -553,8 +543,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #chromosomeName
 
-    @soap(Mandatory.String, Mandatory.String, String, _returns = Array(Mandatory.String))
-    def numberConversion(self, build, variant, gene=None):
+    @srpc(Mandatory.String, Mandatory.String, String, _returns = Array(Mandatory.String))
+    def numberConversion(build, variant, gene=None):
         """
         Converts I{c.} to I{g.} notation or vice versa
 
@@ -591,8 +581,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #numberConversion
 
-    @soap(Mandatory.String, _returns = CheckSyntaxOutput)
-    def checkSyntax(self, variant):
+    @srpc(Mandatory.String, _returns = CheckSyntaxOutput)
+    def checkSyntax(variant):
         """
         Checks the syntax of a variant.
 
@@ -611,7 +601,7 @@ class MutalyzerService(DefinitionBase):
 
         result = CheckSyntaxOutput()
 
-        self.__checkVariant(output, variant)
+        _checkVariant(output, variant)
 
         grammar = Grammar(output)
         parsetree = grammar.parse(variant)
@@ -630,8 +620,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #checkSyntax
 
-    @soap(Mandatory.String, _returns = MutalyzerOutput)
-    def runMutalyzer(self, variant) :
+    @srpc(Mandatory.String, _returns = MutalyzerOutput)
+    def runMutalyzer(variant) :
         """
         Run the Mutalyzer name checker.
 
@@ -687,7 +677,7 @@ class MutalyzerService(DefinitionBase):
         result.molecule = O.getIndexedOutput('molecule', 0)
 
         # We force the results to strings here, because some results
-        # may be of type Bio.Seq.Seq which soaplib doesn't like.
+        # may be of type Bio.Seq.Seq which rpclib doesn't like.
         #
         # todo: We might have to also do this elsewhere.
 
@@ -735,8 +725,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #runMutalyzer
 
-    @soap(Mandatory.String, Mandatory.String, _returns = TranscriptNameInfo)
-    def getGeneAndTranscript(self, genomicReference, transcriptReference) :
+    @srpc(Mandatory.String, Mandatory.String, _returns = TranscriptNameInfo)
+    def getGeneAndTranscript(genomicReference, transcriptReference) :
         """
         Todo: documentation.
         """
@@ -768,8 +758,8 @@ class MutalyzerService(DefinitionBase):
         return ret
     #getGeneAndTranscript
 
-    @soap(Mandatory.String, String, _returns = Array(TranscriptInfo))
-    def getTranscriptsAndInfo(self, genomicReference, geneName=None):
+    @srpc(Mandatory.String, String, _returns = Array(TranscriptInfo))
+    def getTranscriptsAndInfo(genomicReference, geneName=None):
         """
         Given a genomic reference, return all its transcripts with their
         transcription/cds start/end sites and exons.
@@ -816,7 +806,7 @@ class MutalyzerService(DefinitionBase):
         D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
-            "Received request getTranscriptsAndInfo(%s)" % genomicReference)
+            "Received request getTranscriptsAndInfo(%s, %s)" % (genomicReference, geneName))
         retriever = Retriever.GenBankRetriever(O, D)
         record = retriever.loadrecord(genomicReference)
 
@@ -909,25 +899,25 @@ class MutalyzerService(DefinitionBase):
         return transcripts
     #getTranscriptsAndInfo
 
-    @soap(Mandatory.String, _returns = Mandatory.String)
-    def upLoadGenBankLocalFile(self, content) :
+    @srpc(Mandatory.String, _returns = Mandatory.String)
+    def upLoadGenBankLocalFile(content) :
         """
         Not implemented yet.
         """
         raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
     #upLoadGenBankLocalFile
 
-    @soap(Mandatory.String, _returns = Mandatory.String)
-    def upLoadGenBankRemoteFile(self, url) :
+    @srpc(Mandatory.String, _returns = Mandatory.String)
+    def upLoadGenBankRemoteFile(url) :
         """
         Not implemented yet.
         """
         raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
     #upLoadGenBankRemoteFile
 
-    @soap(Mandatory.String, Mandatory.String, Mandatory.Integer,
+    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
         Mandatory.Integer, _returns = Mandatory.String)
-    def sliceChromosomeByGene(self, geneSymbol, organism, upStream,
+    def sliceChromosomeByGene(geneSymbol, organism, upStream,
         downStream) :
         """
         Todo: documentation, error handling, argument checking, tests.
@@ -955,9 +945,9 @@ class MutalyzerService(DefinitionBase):
         return UD
     #sliceChromosomeByGene
 
-    @soap(Mandatory.String, Mandatory.Integer, Mandatory.Integer,
+    @srpc(Mandatory.String, Mandatory.Integer, Mandatory.Integer,
         Mandatory.Integer, _returns = Mandatory.String)
-    def sliceChromosome(self, chromAccNo, start, end, orientation) :
+    def sliceChromosome(chromAccNo, start, end, orientation) :
         """
         Todo: documentation, error handling, argument checking, tests.
 
@@ -982,8 +972,8 @@ class MutalyzerService(DefinitionBase):
         return UD
     #sliceChromosome
 
-    @soap(_returns = InfoOutput)
-    def info(self):
+    @srpc(_returns = InfoOutput)
+    def info():
         """
         Gives some static application information, such as the current running
         version.
@@ -1020,8 +1010,8 @@ class MutalyzerService(DefinitionBase):
         return result
     #info
 
-    @soap(_returns = Mandatory.String)
-    def ping(self):
+    @srpc(_returns = Mandatory.String)
+    def ping():
         """
         Simple function to test the interface.
 
@@ -1031,8 +1021,8 @@ class MutalyzerService(DefinitionBase):
         return 'pong'
     #ping
 
-    @soap(DateTime, _returns = Array(CacheEntry))
-    def getCache(self, created_since=None):
+    @srpc(DateTime, _returns = Array(CacheEntry))
+    def getCache(created_since=None):
         """
         Get a list of entries from the local cache created since given date.
 
@@ -1063,8 +1053,8 @@ class MutalyzerService(DefinitionBase):
         return map(cache_entry_to_soap, cache)
     #getCache
 
-    @soap(Mandatory.String, _returns = Array(Mandatory.String))
-    def getdbSNPDescriptions(self, rs_id):
+    @srpc(Mandatory.String, _returns = Array(Mandatory.String))
+    def getdbSNPDescriptions(rs_id):
         """
         Lookup HGVS descriptions for a dbSNP rs identifier.
 
@@ -1095,13 +1085,3 @@ class MutalyzerService(DefinitionBase):
         return descriptions
     #getdbSNPDescriptions
 #MutalyzerService
-
-
-# WSGI application for use with e.g. Apache/mod_wsgi
-soap_application = Application([MutalyzerService], mutalyzer.SOAP_NAMESPACE,
-                               'Mutalyzer')
-# Note: We would like to create the wsgi.Application instance only in the
-# bin/mutalyzer-webservice.wsgi script, but unfortunately this breaks the
-# get_wsdl method of soap_application which we use to generate API
-# documentation in website.py.
-application = wsgi.Application(soap_application)

@@ -21,7 +21,8 @@ setup(
              'bin/mutalyzer-batchd',
              'bin/mutalyzer-cache-sync',
              'bin/mutalyzer-mapping-update',
-             'bin/mutalyzer-webservice.wsgi',
+             'bin/mutalyzer-soap-service.wsgi',
+             'bin/mutalyzer-json-service.wsgi',
              'bin/mutalyzer-website.wsgi'],
     zip_safe=False
 )

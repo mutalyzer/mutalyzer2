@@ -1,13 +1,13 @@
 """
 Collection of serilizable objects used by the SOAP webservice. They extend
-from the soaplib ClassModel.
+from the rpclib ClassModel.
 
-Default attributes for the soaplib ClassModel:
+Default attributes for the rpclib ClassModel:
 - nillable = True
 - min_occurs = 0
 - max_occurs = 1
 
-Additional attributes values for the soaplib String model:
+Additional attributes values for the rpclib String model:
 - min_len = 0
 - max_len = 'unbounded'
 - pattern = None
@@ -17,15 +17,15 @@ Additional attributes values for the soaplib String model:
 """
 
 
-from soaplib.core.model.primitive import String, Integer, Boolean, DateTime
-from soaplib.core.model.clazz import ClassModel, Array
+from rpclib.model.primitive import String, Integer, Boolean, DateTime
+from rpclib.model.complex import ComplexModel, Array
 
 from mutalyzer import SOAP_NAMESPACE
 
 
 class Mandatory(object):
     """
-    This is soaplib.model.primitive.Mandatory, but without min_length=1 for
+    This is rpclib.model.primitive.Mandatory, but without min_length=1 for
     the String model.
     """
     String = String(min_occurs=1, nillable=False)
@@ -35,7 +35,7 @@ class Mandatory(object):
 #Mandatory
 
 
-class SoapMessage(ClassModel):
+class SoapMessage(ComplexModel):
     """
     Type of messages used in SOAP method return values.
     """
@@ -46,7 +46,7 @@ class SoapMessage(ClassModel):
 #SoapMessage
 
 
-class Mapping(ClassModel):
+class Mapping(ComplexModel):
     """
     Return type of SOAP method mappingInfo.
     """
@@ -64,7 +64,7 @@ class Mapping(ClassModel):
 #Mapping
 
 
-class Transcript(ClassModel):
+class Transcript(ComplexModel):
     """
     Return type of SOAP method transcriptInfo.
     """
@@ -76,7 +76,7 @@ class Transcript(ClassModel):
 #Transcript
 
 
-class RawVariant(ClassModel):
+class RawVariant(ComplexModel):
     """
     Used in MutalyzerOutput data type.
     """
@@ -87,7 +87,7 @@ class RawVariant(ClassModel):
 #RawVariant
 
 
-class MutalyzerOutput(ClassModel):
+class MutalyzerOutput(ComplexModel):
     """
     Return type of SOAP method runMutalyzer.
     """
@@ -128,7 +128,7 @@ class MutalyzerOutput(ClassModel):
 #MutalyzerOutput
 
 
-class TranscriptNameInfo(ClassModel):
+class TranscriptNameInfo(ComplexModel):
     """
     Return type of SOAP method getGeneAndTranscript.
     """
@@ -139,7 +139,7 @@ class TranscriptNameInfo(ClassModel):
 #TranscriptNameInfo
 
 
-class ExonInfo(ClassModel):
+class ExonInfo(ComplexModel):
     """
     Used in TranscriptInfo data type.
     """
@@ -154,7 +154,7 @@ class ExonInfo(ClassModel):
 #ExonInfo
 
 
-class ProteinTranscript(ClassModel):
+class ProteinTranscript(ComplexModel):
     """
     Used in TranscriptInfo data type.
     """
@@ -166,7 +166,7 @@ class ProteinTranscript(ClassModel):
 #ProteinTranscript
 
 
-class TranscriptInfo(ClassModel):
+class TranscriptInfo(ComplexModel):
     """
     Used in return type of SOAP method getTranscriptsAndInfo.
 
@@ -206,7 +206,7 @@ class TranscriptInfo(ClassModel):
 #TranscriptInfo
 
 
-class TranscriptMappingInfo(ClassModel):
+class TranscriptMappingInfo(ComplexModel):
     """
     Used in return type of SOAP method getTranscriptsRange.
     """
@@ -226,7 +226,7 @@ class TranscriptMappingInfo(ClassModel):
 #TranscriptMappingInfo
 
 
-class CheckSyntaxOutput(ClassModel):
+class CheckSyntaxOutput(ComplexModel):
     """
     Return type of SOAP method checkSyntax.
     """
@@ -237,7 +237,7 @@ class CheckSyntaxOutput(ClassModel):
 #CheckSyntaxOutput
 
 
-class InfoOutput(ClassModel):
+class InfoOutput(ComplexModel):
     """
     Return type of SOAP method info.
     """
@@ -253,7 +253,7 @@ class InfoOutput(ClassModel):
 #InfoOutput
 
 
-class CacheEntry(ClassModel):
+class CacheEntry(ComplexModel):
     """
     Used in getCache SOAP method.
     """

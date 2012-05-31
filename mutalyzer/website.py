@@ -3,7 +3,8 @@ General Mutalyzer website interface.
 """
 
 
-WEBSERVICE_LOCATION = '/services'
+SERVICE_SOAP_LOCATION = '/services'
+SERVICE_JSON_LOCATION = '/json'
 WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 GENOME_BROWSER_URL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position={chromosome}:{start}-{stop}&hgt.customText={bed_file}'
 
@@ -28,12 +29,13 @@ from lxml import etree
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
+from rpclib.interface.wsdl import Wsdl11
 
 import mutalyzer
 from mutalyzer import util
 from mutalyzer import config
 from mutalyzer.grammar import Grammar
-from mutalyzer import webservice
+from mutalyzer.services import soap
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
@@ -59,7 +61,6 @@ urls = (
     '/(disclaimer)',                            'Static',
     '/(nameGenerator)',                         'Static',
     '/(webservices)',                           'Static',
-    '/(webservdoc)',                            'Static',
     '/checkForward',                            'CheckForward',
     '/check',                                   'Check',
     '/bed',                                     'Bed',
@@ -71,7 +72,7 @@ urls = (
     '/batch([a-zA-Z]+)?',                       'BatchChecker',
     '/progress',                                'BatchProgress',
     '/Results_(\d+)\.txt',                      'BatchResult',
-    '/documentation',                           'Documentation',
+    '/soap-api',                                'SoapApi',
     '/Variant_info',                            'VariantInfo',
     '/getGS',                                   'GetGS',
     '/download/([a-zA-Z-]+\.(?:py|cs|php|rb))', 'Download',
@@ -134,6 +135,8 @@ class render_tal:
 
             context.addGlobal('interactive', not standalone)
 
+            context.addGlobal('location', web.ctx.homedomain + web.ctx.homepath)
+
             for name, value in self.globals.items():
                 context.addGlobal(name, value)
 
@@ -177,7 +180,10 @@ render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
     'releaseDate'         : mutalyzer.__date__,
     'release'             : mutalyzer.RELEASE,
     'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
-    'contactEmail'        : config.get('email')})
+    'contactEmail'        : config.get('email'),
+    'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
+    'serviceJsonLocation' : SERVICE_JSON_LOCATION
+})
 
 # web.py application
 app = web.application(urls, globals(), autoreload = False)
@@ -1415,7 +1421,7 @@ class Uploader:
 #Uploader
 
 
-class Documentation:
+class SoapApi:
     """
     SOAP webservice documentation.
     """
@@ -1442,8 +1448,10 @@ class Documentation:
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """
-        url = web.ctx.homedomain + web.ctx.homepath + WEBSERVICE_LOCATION
-        wsdl_handle = StringIO(webservice.soap_application.get_wsdl(url))
+        url = web.ctx.homedomain + web.ctx.homepath + SERVICE_SOAP_LOCATION
+        wsdl = Wsdl11(soap.application.interface)
+        wsdl.build_interface_document(url)
+        wsdl_handle = StringIO(wsdl.get_interface_document())
         xsl_handle = open(os.path.join(mutalyzer.package_root(), WSDL_VIEWER),
                           'r')
         wsdl_doc = etree.parse(wsdl_handle)
@@ -1453,7 +1461,7 @@ class Documentation:
         web.header('Content-Type', 'text/html')
         return str(transform(wsdl_doc))
     #GET
-#Documentation
+#SoapApi
 
 
 class Static:
