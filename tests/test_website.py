@@ -21,11 +21,12 @@ from nose.tools import *
 from webtest import TestApp
 import logging
 import urllib
+import cgi
 
 
 import mutalyzer
 from mutalyzer import website
-from mutalyzer.util import slow
+from mutalyzer.util import slow, skip
 
 
 # TAL logs an awful lot of things with level=DEBUG. On any error, this is all
@@ -242,6 +243,32 @@ class TestWSGI():
                       'Raw variant 1: deletion of 1',
                       '<html>',
                       '</html>')
+
+    def test_check_interactive_links(self):
+        """
+        Submitting interactively should have links to transcripts also
+        interactive.
+        """
+        r = self.app.get('/check?name=%s' % urllib.quote('NG_012337.1:g.7055C>T'))
+        r.mustcontain('0 Errors')
+        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1:g.7055C>T')))
+        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
+        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(SDHD_v001):c.204C>T')))
+
+    @skip
+    def test_check_noninteractive_links(self):
+        """
+        Submitting non-interactively should have links to transcripts also
+        non-interactive.
+
+        Todo: This is hard to implement in TAL, do this when we move to
+            another template language. See Trac issue #97.
+        """
+        r = self.app.get('/check?name=%s&standalone=1' % urllib.quote('NG_012337.1:g.7055C>T'))
+        r.mustcontain('0 Errors')
+        r.mustcontain('"check?name=%s&standalone=1"' % cgi.escape(urllib.quote('NG_012337.1:g.7055C>T')))
+        r.mustcontain('"check?name=%s&standalone=1"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
+        r.mustcontain('"check?name=%s&standalone=1"' % cgi.escape(urllib.quote('NG_012337.1(SDHD_v001):c.204C>T')))
 
     def test_check_noninteractive_old(self):
         """

@@ -44,10 +44,12 @@ apt-get install -y \
   python-setuptools \
   git-core
 
-echo -e "${COLOR_INFO}Installing latest rpclib from git master${COLOR_END}"
+echo -e "${COLOR_INFO}Installing known-working rpclib from git master${COLOR_END}"
 
+# For now we use a specific known-working version of rpclib
 pushd $(mktemp -d)
 git clone https://github.com/arskom/rpclib.git .
+git checkout -b mutalyzer df285a0304fe80fb4afd19995a963774e6a661bc
 python setup.py install
 popd
 
