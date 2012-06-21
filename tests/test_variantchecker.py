@@ -38,6 +38,12 @@ class TestVariantchecker():
         """
         return self.retriever.retrievegene(gene, organism, upstream, downstream)
 
+    def _load_record(self, identifier):
+        """
+        Load a record in the database and cache.
+        """
+        return self.retriever.loadrecord(identifier)
+
     def test_deletion_in_frame(self):
         """
         Simple in-frame deletion should give a simple description on protein
@@ -483,6 +489,7 @@ class TestVariantchecker():
         """
         Test reference sequence notation with GI number.
         """
+        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -495,6 +502,7 @@ class TestVariantchecker():
         """
         Test reference sequence notation with GI number and prefix.
         """
+        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('GI31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -507,6 +515,7 @@ class TestVariantchecker():
         """
         Test reference sequence notation with GI number and prefix with colon.
         """
+        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('GI:31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
