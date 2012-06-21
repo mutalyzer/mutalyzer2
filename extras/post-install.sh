@@ -90,16 +90,6 @@ chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
 echo "You will now be asked for the MySQL root password"
 
 # Create databases
-cat << EOF | mysql -u root -p
-  CREATE USER mutalyzer;
-  CREATE DATABASE mutalyzer;
-  CREATE DATABASE hg18;
-  CREATE DATABASE hg19;
-  GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
-  GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
-  GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
-  FLUSH PRIVILEGES;
-EOF
 
 echo -e "${COLOR_INFO}Creating tables in hg18 database${COLOR_END}"
 
@@ -109,7 +99,7 @@ CREATE TABLE ChrName (
   AccNo char(20) NOT NULL,
   name char(20) NOT NULL,
   PRIMARY KEY (AccNo)
-);
+) ENGINE = MYISAM;
 CREATE TABLE Mapping (
   gene varchar(255) DEFAULT NULL,
   transcript varchar(20) NOT NULL DEFAULT '',
@@ -125,7 +115,7 @@ CREATE TABLE Mapping (
   protein varchar(20) DEFAULT NULL,
   source varchar(20) DEFAULT NULL,
   INDEX (transcript)
-);
+) ENGINE = MYISAM;
 INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000001.9', 'chr1'),
 ('NC_000002.10', 'chr2'),
@@ -173,7 +163,7 @@ CREATE TABLE ChrName (
   AccNo char(20) NOT NULL,
   name char(20) NOT NULL,
   PRIMARY KEY (AccNo)
-);
+) ENGINE = MYISAM;
 CREATE TABLE Mapping (
   gene varchar(255) DEFAULT NULL,
   transcript varchar(20) NOT NULL DEFAULT '',
@@ -189,7 +179,7 @@ CREATE TABLE Mapping (
   protein varchar(20) DEFAULT NULL,
   source varchar(20) DEFAULT NULL,
   INDEX (transcript)
-);
+) ENGINE = MYISAM;
 INSERT INTO ChrName (AccNo, name) VALUES
 ('NC_000001.10', 'chr1'),
 ('NC_000002.11', 'chr2'),
@@ -249,7 +239,7 @@ CREATE TABLE BatchJob (
   JobType char(20) DEFAULT NULL,
   Arg1 char(20) DEFAULT NULL,
   PRIMARY KEY (JobID)
-);
+) ENGINE = MYISAM;
 CREATE TABLE BatchQueue (
   QueueID int(5) NOT NULL AUTO_INCREMENT,
   JobID char(20) NOT NULL,
@@ -257,7 +247,7 @@ CREATE TABLE BatchQueue (
   Flags char(20) DEFAULT NULL,
   PRIMARY KEY (QueueID),
   KEY JobQueue (JobID,QueueID)
-);
+) ENGINE = MYISAM;
 CREATE TABLE GBInfo (
   AccNo char(20) NOT NULL DEFAULT '',
   GI char(13) DEFAULT NULL,
@@ -272,13 +262,13 @@ CREATE TABLE GBInfo (
   UNIQUE KEY hash (hash),
   UNIQUE KEY alias (GI),
   INDEX (created)
-);
+) ENGINE = MYISAM;
 CREATE TABLE Link (
   mrnaAcc char(20) NOT NULL,
   protAcc char(20) NOT NULL,
   PRIMARY KEY (mrnaAcc),
   UNIQUE KEY protAcc (protAcc)
-);
+) ENGINE = MYISAM;
 EOF
 
 # The remainder is essentially the same as post-upgrade.sh
