@@ -389,6 +389,7 @@ class TestServicesSoap():
         """
         Get reference info for a GI variant.
         """
+        self.client.service.runMutalyzer('NG_012772.1:g.1del') # Make sure the server has this reference cached
         r = self.client.service.runMutalyzer('gi256574794:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772.1')
