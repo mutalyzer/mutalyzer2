@@ -729,3 +729,13 @@ class TestVariantchecker():
                      'NG_008939.1:g.5206_5208del')
         assert 'NG_008939.1(PCCB_v001):c.155_157del' \
                in self.output.getOutput('descriptions')
+
+    def test_inversion(self):
+        """
+        Inversion variant.
+        """
+        check_variant('AB026906.1:c.274_275inv', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AB026906.1:g.7872_7873inv')
+        assert 'AB026906.1(SDHD_v001):c.274_275inv' \
+            in self.output.getOutput('descriptions')

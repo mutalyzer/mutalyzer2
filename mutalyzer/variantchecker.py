@@ -477,7 +477,7 @@ def apply_inversion(first, last, mutator, record, O):
             first += snoop
             last -= snoop
 
-    mutator.invM(first, last)
+    mutator.inversion(first, last)
 
     if first == last:
         O.addMessage(__file__, 2, 'WWRONGTYPE', 'Inversion at position ' \
