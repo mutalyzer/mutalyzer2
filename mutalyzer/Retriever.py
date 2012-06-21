@@ -720,6 +720,10 @@ class GenBankRetriever(Retriever):
         """
         if (identifier[0].isdigit()) : # This is a GI identifier.
             name = self._database.getGBFromGI(identifier)
+            if name is None:
+                self._output.addMessage(__file__, 4, "ERETR",
+                                        "Unknown reference: %s" % identifier)
+                return
         else :
             name = identifier
 
