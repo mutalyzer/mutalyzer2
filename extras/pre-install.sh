@@ -46,10 +46,11 @@ apt-get install -y \
 
 echo -e "${COLOR_INFO}Installing known-working rpclib from git master${COLOR_END}"
 
-# For now we use a specific known-working version of rpclib
+# For now we use a specific known-working version of rpclib. The project has
+# in the meantime been renamed to Spyne and we should update some time.
 pushd $(mktemp -d)
-git clone https://github.com/arskom/rpclib.git .
-git checkout -b mutalyzer df285a0304fe80fb4afd19995a963774e6a661bc
+git clone https://github.com/martijnvermaat/rpclib.git .
+git checkout mutalyzer
 python setup.py install
 popd
 
