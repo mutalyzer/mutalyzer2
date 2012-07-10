@@ -508,6 +508,8 @@ class Crossmap() :
         @rtype: string
         """
 
+        if t[0] >= self.__trans_end or t[0] <= self.__trans_start:
+            return str(self.int2main(t[0] + t[1]))
         return str(self.int2main(t[0])) + str(self.int2offset(t, fuzzy))
     #tuple2string
 
