@@ -48,7 +48,9 @@ class TestCrossmap():
                103528, 119465, 119537, 144687, 144810, 148418, 149215]
         cds = [27925, 74736]
         cm = Crossmap(rna, cds, 1)
-        assert_equal(cm.tuple2string(cm.g2x(5001)), '-304-u1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(5001)), '-304-u1')
+        assert_equal(cm.tuple2string(cm.g2x(5001)), '-305')
         assert_equal(cm.tuple2string(cm.g2x(5124)), '-182')
         assert_equal(cm.tuple2string(cm.g2x(5126)), '-181+1')
         assert_equal(cm.tuple2string(cm.g2x(27924)), '-1')
@@ -58,7 +60,9 @@ class TestCrossmap():
         assert_equal(cm.tuple2string(cm.g2x(74737)), '*1')
         assert_equal(cm.tuple2string(cm.g2x(103408)), '*32-1')
         assert_equal(cm.tuple2string(cm.g2x(103410)), '*33')
-        assert_equal(cm.tuple2string(cm.g2x(149216)), '*1146+d1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(149216)), '*1146+d1')
+        assert_equal(cm.tuple2string(cm.g2x(149216)), '*1147')
 
     def test_g2x_reverse(self):
         """
@@ -69,7 +73,9 @@ class TestCrossmap():
                76535, 92453, 92554, 123276, 123470, 146090, 146213]
         cds = [76479, 123290]
         cm = Crossmap(rna, cds, -1)
-        assert_equal(cm.tuple2string(cm.g2x(146214)), '-304-u1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(146214)), '-304-u1')
+        assert_equal(cm.tuple2string(cm.g2x(146214)), '-305')
         assert_equal(cm.tuple2string(cm.g2x(146091)), '-182')
         assert_equal(cm.tuple2string(cm.g2x(146089)), '-181+1')
         assert_equal(cm.tuple2string(cm.g2x(123291)), '-1')
@@ -79,7 +85,9 @@ class TestCrossmap():
         assert_equal(cm.tuple2string(cm.g2x(76478)), '*1')
         assert_equal(cm.tuple2string(cm.g2x(47807)), '*32-1')
         assert_equal(cm.tuple2string(cm.g2x(47805)), '*33')
-        assert_equal(cm.tuple2string(cm.g2x(1999)), '*1146+d1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(1999)), '*1146+d1')
+        assert_equal(cm.tuple2string(cm.g2x(1999)), '*1147')
 
     def test_x2g_more(self):
         """
@@ -184,10 +192,14 @@ class TestCrossmap():
         rna = [5002, 5125, 27745, 27939, 58661, 58762, 74680, 74767, 103409,
                103528, 119465, 119537, 144687, 144810, 148418, 149215]
         cm = Crossmap(rna, [], 1)
-        assert_equal(cm.tuple2string(cm.g2x(5001)), '1-u1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(5001)), '1-u1')
+        assert_equal(cm.tuple2string(cm.g2x(5001)), '-1')
         assert_equal(cm.tuple2string(cm.g2x(5002)), '1')
         assert_equal(cm.tuple2string(cm.g2x(5126)), '124+1')
-        assert_equal(cm.tuple2string(cm.g2x(149216)), '1624+d1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(149216)), '1624+d1')
+        assert_equal(cm.tuple2string(cm.g2x(149216)), '*1')
 
     def test_g2x_noncoding_reverse(self):
         """
@@ -197,10 +209,14 @@ class TestCrossmap():
         rna = [2000, 2797, 6405, 6528, 31678, 31750, 47687, 47806, 76448,
                76535, 92453, 92554, 123276, 123470, 146090, 146213]
         cm = Crossmap(rna, [], -1)
-        assert_equal(cm.tuple2string(cm.g2x(146214)), '1-u1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(146214)), '1-u1')
+        assert_equal(cm.tuple2string(cm.g2x(146214)), '-1')
         assert_equal(cm.tuple2string(cm.g2x(146213)), '1')
         assert_equal(cm.tuple2string(cm.g2x(146089)), '124+1')
-        assert_equal(cm.tuple2string(cm.g2x(1999)), '1624+d1')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(1999)), '1624+d1')
+        assert_equal(cm.tuple2string(cm.g2x(1999)), '*1')
 
     def test_x2g_noncoding(self):
         """
@@ -253,8 +269,11 @@ class TestCrossmap():
                      [-156, -1, 1, 196, 197, 299, 300, 388, 389, 509, 510,
                       583, 584, 708, 709, 1507])
         assert_equal(cm.x2g(1, 0), 23777833)
-        assert_equal(cm.tuple2string(cm.g2x(2123)), '-156-u23752936')
-        assert_equal(cm.tuple2string(cm.g2x(2124)), '-156-u23752935')
+        # Fix for r536: disable the -u and +d convention.
+        #assert_equal(cm.tuple2string(cm.g2x(2123)), '-156-u23752936')
+        #assert_equal(cm.tuple2string(cm.g2x(2124)), '-156-u23752935')
+        assert_equal(cm.tuple2string(cm.g2x(2123)), '-23753092')
+        assert_equal(cm.tuple2string(cm.g2x(2124)), '-23753091')
 
     def test_cds_start_on_splice_site_reverse(self):
         """

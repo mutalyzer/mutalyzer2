@@ -123,9 +123,13 @@ class TestServicesSoap():
                                                  variant='NC_000011.9:g.111959693G>T',
                                                  gene='C11orf57')
         assert_equal(type(r.string), list)
-        assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
-        assert 'NM_001082970.1:c.*2178+d3819G>T' in r.string
-        assert 'NM_018195.3:c.*2178+d3819G>T' in r.string
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
+        #assert 'NM_001082970.1:c.*2178+d3819G>T' in r.string
+        #assert 'NM_018195.3:c.*2178+d3819G>T' in r.string
+        assert 'NM_001082969.1:c.*5997G>T' in r.string
+        assert 'NM_001082970.1:c.*5997G>T' in r.string
+        assert 'NM_018195.3:c.*5997G>T' in r.string
 
     def test_numberconversion_gtoc_no_transcripts(self):
         """
@@ -146,7 +150,9 @@ class TestServicesSoap():
                                                  variant='chr7:g.345T>C',
                                                  gene='LOC100132858')
         assert_equal(type(r.string), list)
-        assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
+        assert 'XM_001715131.2:c.*19483A>G' in r.string
 
     def test_gettranscriptsbygenename_valid(self):
         """

@@ -252,7 +252,9 @@ class TestWSGI():
         r = self.app.get('/check?name=%s' % urllib.quote('NG_012337.1:g.7055C>T'))
         r.mustcontain('0 Errors')
         r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1:g.7055C>T')))
-        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
+        # Fix for r536: disable the -u and +d convention.
+        #r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
+        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-2133G>A')))
         r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(SDHD_v001):c.204C>T')))
 
     @skip

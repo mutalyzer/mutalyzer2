@@ -58,8 +58,11 @@ class TestConverter():
         """
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000022.10:g.51016285_51017117del123456789', 'list')
-        assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
-        assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
+        #assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
+        assert 'NM_001145134.1:c.-159_60del123456789' in coding
+        assert 'NR_021492.1:c.-5170_-4338del123456789' in coding
 
     def test_S_Venkata_Suresh_Kumar(self):
         """
