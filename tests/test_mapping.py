@@ -148,3 +148,39 @@ class TestConverter():
         assert_equal(coding, None)
         erange = self.output.getMessagesWithErrorCode('ERANGE')
         assert_equal(len(erange), 1)
+
+    def test_delins_large_ins_c2chrom(self):
+        """
+        Delins with multi-base insertion c. to chrom.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.274delinsTAAA')
+        assert_equal(genomic, 'NC_000011.9:g.111959695delinsTAAA')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_delins_large_ins_explicit_c2chrom(self):
+        """
+        Delins with multi-base insertion and explicit deleted sequence c. to chrom.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.274delGinsTAAA')
+        assert_equal(genomic, 'NC_000011.9:g.111959695delinsTAAA')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_delins_large_ins_chrom2c(self):
+        """
+        Delins with multi-base insertion chrom to c.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111959695delinsTAAA', 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_delins_large_ins_explicit_chrom2c(self):
+        """
+        Delins with multi-base insertion and explicit deleted sequence chrom to c.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111959695delGinsTAAA', 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding

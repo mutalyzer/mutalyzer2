@@ -300,7 +300,7 @@ class Retriever(object) :
             return []
         except IndexError:
             # The expected root element is not present.
-            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unkown dbSNP ' \
+            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
                                     'error. Result XML was not as expected.')
             self._output.addMessage(__file__, -1, 'INFO',
                                     'Result from dbSNP: %s' % response_text)

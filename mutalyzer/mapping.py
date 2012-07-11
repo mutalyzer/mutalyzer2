@@ -651,6 +651,8 @@ class Converter(object) :
 
         if var.MutationType == "subst" :
             change = "%s>%s" % (arg1, arg2)
+        elif var.MutationType == 'delins' and arg2:
+            change = "%s%s" % (var.MutationType, arg2)
         else :
             change = "%s%s" % (var.MutationType, arg1 or arg2 or "")
         return change
