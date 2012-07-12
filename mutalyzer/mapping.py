@@ -19,6 +19,43 @@ from mutalyzer import Crossmap
 from mutalyzer.models import SoapMessage, Mapping, Transcript
 
 
+def _construct_change(var, reverse=False):
+    """
+    Construct mutation description.
+
+    @arg var: RawVar object.
+    @type var: pyparsing.ParseResults
+    @var reverse: Variant is on the reverse strand.
+    @type reverse: bool
+
+    @return: Description of mutation (without reference and positions).
+    @rtype: string
+    """
+    if reverse:
+        # todo: if var.Arg1 is unicode, this crashes
+        try:
+            arg1 = str(int(var.Arg1))
+        except ValueError:
+            arg1 = reverse_complement(var.Arg1 or '')
+        try:
+            arg2 = str(int(var.Arg2))
+        except ValueError:
+            arg2 = reverse_complement(var.Arg2 or '')
+    else:
+        arg1 = var.Arg1
+        arg2 = var.Arg2
+
+    if var.MutationType == 'subst':
+        change = '%s>%s' % (arg1, arg2)
+    elif var.MutationType == 'delins' and arg2:
+        change = '%s%s' % (var.MutationType, arg2)
+    else:
+        change = '%s%s' % (var.MutationType, arg1 or arg2 or '')
+
+    return change
+#_construct_change
+
+
 class Converter(object) :
     """
     Convert between transcript and chromosomal locations.
@@ -81,12 +118,6 @@ class Converter(object) :
         if not parseTree :
             self.__output.addMessage(__file__, 4, "EPARSE",
                     "Could not parse the given variant")
-            return None
-        #if
-        if parseTree.SingleAlleleVarSet :
-            #Only simple mutations
-            self.__output.addMessage(__file__, 4, "EPARSE",
-                    "Can not process multiple mutation variant")
             return None
         #if
         if not parseTree.RefSeqAcc: #In case of LRG for example
@@ -287,35 +318,44 @@ class Converter(object) :
         if not Cross :
             return None
 
-        mutation = self.parseTree.RawVar
+        if self.parseTree.SingleAlleleVarSet:
+            mutations = [v.RawVar for v in self.parseTree.SingleAlleleVarSet]
+        else:
+            mutations = [self.parseTree.RawVar]
 
-        if not mutation.StartLoc :
-            return None
+        mappings = []
 
-        # Get the coordinates of the start position
-        startmain, startoffset, start_g = \
-                self._getcoords(Cross, mutation.StartLoc,
-                                self.parseTree.RefType)
+        for mutation in mutations:
 
-        # If there is an end position, calculate the coordinates.
-        if mutation.EndLoc :
-            endmain, endoffset, end_g = \
-                self._getcoords(Cross, mutation.EndLoc,
-                                self.parseTree.RefType)
-        else :
-            end_g, endmain, endoffset = start_g, startmain, startoffset
+            if not mutation.StartLoc :
+                return None
 
-        # Assign these values to the Mapping ClassSerializer
-        V = Mapping()
-        V.startmain     = startmain
-        V.startoffset   = startoffset
-        V.endmain       = endmain
-        V.endoffset     = endoffset
-        V.start_g       = start_g
-        V.end_g         = end_g
-        V.mutationType  = mutation.MutationType
+            # Get the coordinates of the start position
+            startmain, startoffset, start_g = \
+                    self._getcoords(Cross, mutation.StartLoc,
+                                    self.parseTree.RefType)
 
-        return V
+            # If there is an end position, calculate the coordinates.
+            if mutation.EndLoc :
+                endmain, endoffset, end_g = \
+                    self._getcoords(Cross, mutation.EndLoc,
+                                    self.parseTree.RefType)
+            else :
+                end_g, endmain, endoffset = start_g, startmain, startoffset
+
+            # Assign these values to the Mapping ClassSerializer
+            V = Mapping()
+            V.startmain     = startmain
+            V.startoffset   = startoffset
+            V.endmain       = endmain
+            V.endoffset     = endoffset
+            V.start_g       = start_g
+            V.end_g         = end_g
+            V.mutationType  = mutation.MutationType
+
+            mappings.append(V)
+
+        return mappings
     #_coreMapping
 
     def giveInfo(self, accNo) :
@@ -375,14 +415,13 @@ class Converter(object) :
         @return: ClassSerializer object
         @rtype: object
         """
-
         variant = "%s:%s" % (accNo, mutation)
         if self._parseInput(variant) :
             acc = self.parseTree.RefSeqAcc
             version = self.parseTree.Version
             self._FieldsFromDb(acc, version)
 
-        mapping = self._coreMapping()
+        mappings = self._coreMapping()
 
         errors = []
         for message in self.__output.getMessages():
@@ -391,13 +430,61 @@ class Converter(object) :
             soap_message.message = message.description
             errors.append(soap_message)
 
-        if mapping is None :         # Something went wrong
-            mapping = Mapping()
-            mapping.errorcode = len(errors)
-        else :
-            mapping.errorcode = 0
+        mapping = Mapping()
 
         mapping.messages = errors
+
+        if not mappings:         # Something went wrong
+            mapping.errorcode = len(errors)
+            return mapping
+
+        mapping.errorcode = 0
+
+        if len(mappings) == 1:
+            return mappings[0]
+
+        mapping.mutationType = 'compound'
+
+        # Now we have to do some tricks to combine the information from
+        # possibly multiple variants into one Mapping object.
+        # Todo: Maybe it is better to use self.dbFields['orientation'] here.
+        min_g = 9000000000
+        max_g = 0
+        forward = True
+        for m in mappings:
+            if m.start_g > m.end_g:
+                forward = False
+            if m.start_g < min_g:
+                min_g = m.start_g
+                min_main = m.startmain
+                min_offset = m.startoffset
+            if m.end_g < min_g:
+                min_g = m.end_g
+                min_main = m.endmain
+                min_offset = m.endoffset
+            if m.start_g > max_g:
+                max_g = m.start_g
+                max_main = m.startmain
+                max_offset = m.startoffset
+            if m.end_g > max_g:
+                max_g = m.end_g
+                max_main = m.endmain
+                max_offset = m.endoffset
+
+        if forward:
+            mapping.startmain = min_main
+            mapping.startoffset = min_offset
+            mapping.endmain = max_main
+            mapping.endoffset = max_offset
+            mapping.start_g = min_g
+            mapping.end_g = max_g
+        else:
+            mapping.startmain = max_main
+            mapping.startoffset = max_offset
+            mapping.endmain = min_main
+            mapping.endoffset = min_offset
+            mapping.start_g = max_g
+            mapping.end_g = min_g
 
         return mapping
     #main_Mapping
@@ -412,40 +499,52 @@ class Converter(object) :
         @return: var_in_g ; The variant in HGVS I{g.} notation
         @rtype: string
         """
-
-        if self._parseInput(variant) :
+        if self._parseInput(variant):
             acc = self.parseTree.RefSeqAcc
             version = self.parseTree.Version
             self._FieldsFromDb(acc, version)
-        #if
-        M = self._coreMapping()
-        if M is None :
+
+        mappings = self._coreMapping()
+        if not mappings:
             return None
 
-        # construct the variant description
+        if self.parseTree.SingleAlleleVarSet:
+            variants = [v.RawVar for v in self.parseTree.SingleAlleleVarSet]
+        else:
+            variants = [self.parseTree.RawVar]
+
         chromAcc = self.__database.chromAcc(self.dbFields["chromosome"])
-        f_change = self._constructChange(False)
-        r_change = self._constructChange(True)
-        if self.dbFields["orientation"] == "+" :
-            change = f_change
-        else :
-            change = r_change
 
-        if M.start_g != M.end_g:
-            if self.dbFields["orientation"] == '-':
-                last_g, first_g = M.start_g, M.end_g
-            else:
-                first_g, last_g = M.start_g, M.end_g
-            if last_g < first_g:
-                self.__output.addMessage(__file__, 3, 'ERANGE', 'End position '
-                                         'is smaller than the begin position.')
-                return None
-            var_in_g = "g.%s_%s%s" % (first_g, last_g, change)
-        #if
-        else :
-            var_in_g = "g.%s%s" % (M.start_g, change)
+        # Construct the variant descriptions
+        descriptions = []
+        for variant, mapping in zip(variants, mappings):
+            f_change = _construct_change(variant)
+            r_change = _construct_change(variant, reverse=True)
+            if self.dbFields["orientation"] == "+" :
+                change = f_change
+            else :
+                change = r_change
 
-        return "%s:%s" % (chromAcc, var_in_g)
+            if mapping.start_g != mapping.end_g:
+                if self.dbFields["orientation"] == '-':
+                    last_g, first_g = mapping.start_g, mapping.end_g
+                else:
+                    first_g, last_g = mapping.start_g, mapping.end_g
+                if last_g < first_g:
+                    self.__output.addMessage(__file__, 3, 'ERANGE', 'End position '
+                                             'is smaller than the begin position.')
+                    return None
+                descriptions.append('%s_%s%s' % (first_g, last_g, change))
+            #if
+            else :
+                descriptions.append('%s%s' % (mapping.start_g, change))
+
+        if len(descriptions) == 1:
+            description = descriptions[0]
+        else:
+            description = '[' + ';'.join(descriptions) + ']'
+
+        return "%s:g.%s" % (chromAcc, description)
     #c2chrom
 
     def chromosomal_positions(self, positions, reference, version=None):
@@ -551,25 +650,34 @@ class Converter(object) :
                 acc)
             return None
         #if
-        f_change = self._constructChange(False)
-        r_change = self._constructChange(True)
 
-        #FIXME This should be a proper conversion.
-        loc = int(self.parseTree.RawVar.StartLoc.PtLoc.Main)
-        if self.parseTree.RawVar.EndLoc :
-            loc2 = int(self.parseTree.RawVar.EndLoc.PtLoc.Main)
-        else :
-            loc2 = loc
+        if self.parseTree.SingleAlleleVarSet:
+            variants = [v.RawVar for v in self.parseTree.SingleAlleleVarSet]
+        else:
+            variants = [self.parseTree.RawVar]
 
-        if loc2 < loc:
-            self.__output.addMessage(__file__, 3, 'ERANGE', 'End position is '
-                                     'smaller than the begin position.')
-            return None
+        min_loc = 9000000000
+        max_loc = 0
+        for variant in variants:
+            #FIXME This should be a proper conversion.
+            loc = int(variant.StartLoc.PtLoc.Main)
+            if variant.EndLoc :
+                loc2 = int(variant.EndLoc.PtLoc.Main)
+            else :
+                loc2 = loc
+
+            if loc2 < loc:
+                self.__output.addMessage(__file__, 3, 'ERANGE', 'End position is '
+                                         'smaller than the begin position.')
+                return None
+
+            min_loc = min(min_loc, loc)
+            max_loc = max(max_loc, loc2)
 
         if gene:
             transcripts = self.__database.get_TranscriptsByGeneName(gene)
         else:
-            transcripts = self.__database.get_Transcripts(chrom, loc-5000, loc2+5000, 1)
+            transcripts = self.__database.get_Transcripts(chrom, min_loc - 5000, max_loc + 5000, 1)
 
         HGVS_notatations = defaultdict(list)
         NM_list = []
@@ -579,22 +687,14 @@ class Converter(object) :
             if self.dbFields['chromosome'] != chrom:
                 # Could be the case if we got transcripts by gene name
                 continue
-            M = self._coreMapping()
-            if M is None :
+            mappings = self._coreMapping()
+            if not mappings:
                 #balen
                 continue
             # construct the variant description
             accNo = "%s.%s" % (self.dbFields["transcript"],self.dbFields["version"])
             geneName = self.dbFields["gene"] or ""
             strand = self.dbFields["orientation"] == '+'
-            startp = self.crossmap.tuple2string((M.startmain, M.startoffset))
-            endp = self.crossmap.tuple2string((M.endmain, M.endoffset))
-
-            if strand :
-                change = f_change
-            else :
-                change = r_change
-                startp, endp = endp, startp
 
             #Check if n or c type
             info = self.crossmap.info()
@@ -603,60 +703,40 @@ class Converter(object) :
             else :
                 mtype = 'c'
 
-            if M.start_g != M.end_g :
-                loca = "%s_%s" % (startp, endp)
-            else :
-                loca = "%s" % startp
+            mutations = []
+            for variant, mapping in zip(variants, mappings):
+                f_change = _construct_change(variant)
+                r_change = _construct_change(variant, reverse=True)
 
-            variant = "%s:%c.%s%s" % (accNo, mtype, loca, change)
-            HGVS_notatations[geneName].append(variant)
-            NM_list.append(variant)
+                startp = self.crossmap.tuple2string((mapping.startmain, mapping.startoffset))
+                endp = self.crossmap.tuple2string((mapping.endmain, mapping.endoffset))
+
+                if strand :
+                    change = f_change
+                else :
+                    change = r_change
+                    startp, endp = endp, startp
+
+                if mapping.start_g != mapping.end_g :
+                    loca = "%s_%s" % (startp, endp)
+                else :
+                    loca = "%s" % startp
+
+                mutations.append('%s%s' % (loca, change))
+
+            if len(mutations) == 1:
+                mutation = mutations[0]
+            else:
+                mutation = '[' + ';'.join(mutations) + ']'
+
+            description = "%s:%c.%s" % (accNo, mtype, mutation)
+            HGVS_notatations[geneName].append(description)
+            NM_list.append(description)
         #for
         if rt == "list" :
             return NM_list
         return HGVS_notatations
     #chrom2c
-
-    def _constructChange(self, revc = False) :
-        """
-        @todo document me
-
-        @arg revc:
-        @type revc:
-
-        @return:
-        @rtype: string
-        """
-
-        p = self.parseTree
-        if not p or p.SingleAlleleVarSet :
-            return None
-        var = p.RawVar
-
-        if revc :
-            # todo: if var.Arg1 is unicode, this crashes
-            try:
-                arg1 = str(int(var.Arg1))
-            except ValueError:
-                arg1 = reverse_complement(var.Arg1 or "")
-            try:
-                arg2 = str(int(var.Arg2))
-            except ValueError:
-                arg2 = reverse_complement(var.Arg2 or "")
-        #if
-        else :
-            arg1 = var.Arg1
-            arg2 = var.Arg2
-        #else
-
-        if var.MutationType == "subst" :
-            change = "%s>%s" % (arg1, arg2)
-        elif var.MutationType == 'delins' and arg2:
-            change = "%s%s" % (var.MutationType, arg2)
-        else :
-            change = "%s%s" % (var.MutationType, arg1 or arg2 or "")
-        return change
-    #_constructChange
 #Converter
 
 

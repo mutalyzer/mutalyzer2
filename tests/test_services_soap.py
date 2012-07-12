@@ -229,6 +229,71 @@ class TestServicesSoap():
                   'NR_034083'):
             assert t in names
 
+    def test_mappinginfo(self):
+        """
+        Running mappingInfo should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001100.3', 'g.112037014G>T')
+        assert_equal(r.endoffset, 117529978)
+        assert_equal(r.start_g, 112037014)
+        assert_equal(r.startoffset, 117529978)
+        assert_equal(r.mutationType, "subst")
+        assert_equal(r.end_g, 112037014)
+        assert_equal(r.startmain, 1388)
+        assert_equal(r.endmain, 1388)
+
+    def test_mappinginfo(self):
+        """
+        Running mappingInfo should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.112039014G>T')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 112039014)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'subst')
+        assert_equal(r.end_g, 112039014)
+        assert_equal(r.startmain, 175)
+        assert_equal(r.endmain, 175)
+
+    def test_mappinginfo_compound(self):
+        """
+        Running mappingInfo with compound variant should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.[112039014G>T;112039018T>A]')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 112039014)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'compound')
+        assert_equal(r.end_g, 112039018)
+        assert_equal(r.startmain, 175)
+        assert_equal(r.endmain, 179)
+
+    def test_mappinginfo_reverse(self):
+        """
+        Running mappingInfo on a reverse transcript should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_000035.3', 'g.104184170_104184179del')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 104184170)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'del')
+        assert_equal(r.end_g, 104184179)
+        assert_equal(r.startmain, 1016)
+        assert_equal(r.endmain, 1007)
+
+    def test_mappinginfo_compound_reverse(self):
+        """
+        Running mappingInfo with compound variant on a reverse transcript should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_000035.3', 'g.[104184170_104184179del;104184182_104184183del]')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 104184170)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'compound')
+        assert_equal(r.end_g, 104184183)
+        assert_equal(r.startmain, 1016)
+        assert_equal(r.endmain, 1003)
+
     def test_info(self):
         """
         Running the info method should give us some version information.

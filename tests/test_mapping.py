@@ -35,6 +35,20 @@ class TestConverter():
         assert_equal(genomic, 'NC_000011.9:g.111959695G>T')
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.274G>T' in coding
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NR_028383.1:c.1-u2173C>A' in coding
+        assert 'NR_028383.1:c.-2173C>A' in coding
+
+    def test_converter_compound(self):
+        """
+        Test with compound variant.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.[274G>T;278A>G]')
+        assert_equal(genomic, 'NC_000011.9:g.[111959695G>T;111959699A>G]')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.[274G>T;278A>G]' in coding
+        assert 'NR_028383.1:c.[-2173C>A;-2177T>C]' in coding
 
     def test_hla_cluster(self):
         """
