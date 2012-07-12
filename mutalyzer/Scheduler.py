@@ -505,13 +505,13 @@ Mutalyzer batch checker.""" % url)
                 variant = converter.correctChrVariant(variant)
 
                 #TODO: Parse the variant and check for c or g. This is ugly
-                if not(":c." in variant or ":g." in variant) :
+                if not(":c." in variant or ":n." in variant or ":g." in variant) :
                     #Bad name
                     grammar = Grammar(O)
                     grammar.parse(variant)
                 #if
 
-                if ":c." in variant :
+                if ":c." in variant or ":n." in variant :
                     # Do the c2chrom dance
                     variant = converter.c2chrom(variant)
                     # NOTE:

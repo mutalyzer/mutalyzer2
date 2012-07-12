@@ -281,7 +281,7 @@ class Converter(object) :
             2. Position in I{g.} notation
         @rtype: triple (integer, integer, integer)
         """
-        if Type == 'c' :
+        if Type in 'cn' :
             if Loc.IVSLoc:
                 ivs_number = int(Loc.IVSLoc.IVSNumber)
                 if ivs_number < 1 or ivs_number > C.numberOfIntrons():
@@ -698,7 +698,7 @@ class Converter(object) :
 
             #Check if n or c type
             info = self.crossmap.info()
-            if info[0] == '1' and info[1] == info[2] :
+            if info[0] == 1 and info[1] == info[2] :
                 mtype = 'n'
             else :
                 mtype = 'c'

@@ -584,12 +584,12 @@ class PositionConverter:
             variant = converter.correctChrVariant(variant)
 
             if variant:
-                if not(":c." in variant or ":g." in variant):
+                if not(":c." in variant or ":n." in variant or ":g." in variant):
                     #Bad name
                     grammar = Grammar(output)
                     grammar.parse(variant)
 
-                if ":c." in variant:
+                if ":c." in variant or ":n." in variant:
                     # Do the c2chrom dance
                     variant = converter.c2chrom(variant)
 

@@ -568,7 +568,7 @@ class MutalyzerService(ServiceBase):
         converter = Converter(build, O)
         variant = converter.correctChrVariant(variant)
 
-        if "c." in variant :
+        if "c." in variant or "n." in variant:
             result = [converter.c2chrom(variant)]
         elif "g." in variant :
             result = converter.chrom2c(variant, "list", gene=gene)

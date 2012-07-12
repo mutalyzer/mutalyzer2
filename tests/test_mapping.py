@@ -37,7 +37,20 @@ class TestConverter():
         assert 'NM_003002.2:c.274G>T' in coding
         # Fix for r536: disable the -u and +d convention.
         #assert 'NR_028383.1:c.1-u2173C>A' in coding
-        assert 'NR_028383.1:c.-2173C>A' in coding
+        assert 'NR_028383.1:n.-2173C>A' in coding
+
+    def test_converter_non_coding(self):
+        """
+        Test with variant on non-coding transcript.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NR_028383.1:n.-2173C>A')
+        assert_equal(genomic, 'NC_000011.9:g.111959695G>T')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.274G>T' in coding
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NR_028383.1:c.1-u2173C>A' in coding
+        assert 'NR_028383.1:n.-2173C>A' in coding
 
     def test_converter_compound(self):
         """
@@ -48,7 +61,7 @@ class TestConverter():
         assert_equal(genomic, 'NC_000011.9:g.[111959695G>T;111959699A>G]')
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.[274G>T;278A>G]' in coding
-        assert 'NR_028383.1:c.[-2173C>A;-2177T>C]' in coding
+        assert 'NR_028383.1:n.[-2173C>A;-2177T>C]' in coding
 
     def test_hla_cluster(self):
         """
@@ -76,7 +89,7 @@ class TestConverter():
         #assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
         #assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
         assert 'NM_001145134.1:c.-159_60del123456789' in coding
-        assert 'NR_021492.1:c.-5170_-4338del123456789' in coding
+        assert 'NR_021492.1:n.-5170_-4338del123456789' in coding
 
     def test_S_Venkata_Suresh_Kumar(self):
         """
