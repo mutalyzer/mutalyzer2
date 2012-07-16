@@ -861,7 +861,7 @@ def monkey_patch_suds():
     Call this function before importing anything from the suds package. For
     example, start your file with the following:
 
-        import monkey; monkey.monkey_patch_suds()
+        from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
         from suds.client import Client
     """
     from suds.xsd.sxbasic import Import
@@ -891,13 +891,14 @@ def monkey_patch_spyne():
     Call this function before importing anything from the spyne package. For
     example, start your file with the following:
 
-        import monkey; monkey.monkey_patch_spyne()
+        from mutalyzer.util import monkey_patch_spyne; monkey_patch_spyne()
         from spyne.protocol.json import JsonObject
     """
     from spyne.model.fault import Fault
 
     def _to_dict(self, *args, **kwargs):
-        return dict(faultcode=self.faultcode, faultstring=self.faultstring)
+        return dict(Fault=dict(faultcode=self.faultcode,
+                               faultstring=self.faultstring))
 
     Fault._to_dict = _to_dict
 #monkey_patch_spyne
