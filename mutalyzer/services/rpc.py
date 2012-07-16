@@ -8,11 +8,11 @@ Mutalyzer RPC services.
 """
 
 
-from rpclib.decorator import srpc
-from rpclib.service import ServiceBase
-from rpclib.model.primitive import String, Integer, Boolean, DateTime
-from rpclib.model.complex import Array
-from rpclib.model.fault import Fault
+from spyne.decorator import srpc
+from spyne.service import ServiceBase
+from spyne.model.primitive import String, Integer, Boolean, DateTime
+from spyne.model.complex import Array
+from spyne.model.fault import Fault
 import os
 import socket
 from operator import itemgetter, attrgetter
@@ -677,7 +677,7 @@ class MutalyzerService(ServiceBase):
         result.molecule = O.getIndexedOutput('molecule', 0)
 
         # We force the results to strings here, because some results
-        # may be of type Bio.Seq.Seq which rpclib doesn't like.
+        # may be of type Bio.Seq.Seq which spyne doesn't like.
         #
         # todo: We might have to also do this elsewhere.
 

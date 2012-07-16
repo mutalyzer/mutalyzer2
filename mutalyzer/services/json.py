@@ -3,9 +3,9 @@ Mutalyzer webservice HTTP/RPC with JSON response payloads.
 """
 
 
-from rpclib.application import Application
-from rpclib.protocol.http import HttpRpc
-from rpclib.protocol.json import JsonObject
+from spyne.application import Application
+from spyne.protocol.http import HttpRpc
+from spyne.protocol.json import JsonObject
 
 import mutalyzer
 from mutalyzer.services import rpc

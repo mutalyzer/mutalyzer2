@@ -1,13 +1,13 @@
 """
 Collection of serilizable objects used by the SOAP webservice. They extend
-from the rpclib ClassModel.
+from the spyne ClassModel.
 
-Default attributes for the rpclib ClassModel:
+Default attributes for the spyne ClassModel:
 - nillable = True
 - min_occurs = 0
 - max_occurs = 1
 
-Additional attributes values for the rpclib String model:
+Additional attributes values for the spyne String model:
 - min_len = 0
 - max_len = 'unbounded'
 - pattern = None
@@ -17,21 +17,21 @@ Additional attributes values for the rpclib String model:
 """
 
 
-from rpclib.model.primitive import String, Integer, Boolean, DateTime
-from rpclib.model.complex import ComplexModel, Array
+from spyne.model.primitive import String, Integer, Boolean, DateTime
+from spyne.model.complex import ComplexModel, Array
 
 from mutalyzer import SOAP_NAMESPACE
 
 
 class Mandatory(object):
     """
-    This is rpclib.model.primitive.Mandatory, but without min_length=1 for
+    This is spyne.model.primitive.Mandatory, but without min_length=1 for
     the String model.
     """
-    String = String(min_occurs=1, nillable=False)
-    Integer = Integer(min_occurs=1, nillable=False)
-    Boolean = Boolean(min_occurs=1, nillable=False)
-    DateTime = DateTime(min_occurs=1, nillable=False)
+    String = String(type_name='mandatory_string', min_occurs=1, nillable=False)
+    Integer = Integer(type_name='mandatory_integer', min_occurs=1, nillable=False)
+    Boolean = Boolean(type_name='mandatory_boolean', min_occurs=1, nillable=False)
+    DateTime = DateTime(type_name='mandatory_date_time', min_occurs=1, nillable=False)
 #Mandatory
 
 
