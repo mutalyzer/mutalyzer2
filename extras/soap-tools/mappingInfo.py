@@ -22,8 +22,7 @@ from suds.client import Client
 from mutalyzer.util import format_usage
 
 
-#WSDL_LOCATION = 'http://localhost/mutalyzer/services/?wsdl'
-WSDL_LOCATION = 'https://mutalyzer.nl/services/?wsdl'
+WSDL_LOCATION = 'http://localhost/mutalyzer/services/?wsdl'
 
 
 def main(transcript, variant, build='hg19'):
@@ -34,7 +33,6 @@ def main(transcript, variant, build='hg19'):
     result = service.mappingInfo(LOVD_ver='3.0-beta-06', build=build,
                                  accNo=transcript, variant=variant)
 
-    print result
     if result:
         print 'Genomic start: %s' % result.start_g
         print 'Genomic end: %s' % result.end_g
