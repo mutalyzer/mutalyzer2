@@ -896,6 +896,9 @@ def monkey_patch_spyne():
     """
     from spyne.model.fault import Fault
 
+    if hasattr(Fault, '_to_dict'):
+        return
+
     def _to_dict(self, *args, **kwargs):
         return dict(Fault=dict(faultcode=self.faultcode,
                                faultstring=self.faultstring))
