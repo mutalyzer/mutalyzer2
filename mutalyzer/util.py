@@ -861,7 +861,7 @@ def monkey_patch_suds():
     Call this function before importing anything from the suds package. For
     example, start your file with the following:
 
-        import monkey; monkey.monkey_patch_suds()
+        from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
         from suds.client import Client
     """
     from suds.xsd.sxbasic import Import
@@ -879,3 +879,29 @@ def monkey_patch_suds():
     Import.open = _import_open_patched
     Import.MUTALYZER_MONKEY_PATCHED = True
 #monkey_patch_suds
+
+
+def monkey_patch_spyne():
+    """
+    Apply our monkey-patch for the spyne package.
+
+    Fault objects cannot be serialized by the JsonObject output protocol,
+    this fixes it.
+
+    Call this function before importing anything from the spyne package. For
+    example, start your file with the following:
+
+        from mutalyzer.util import monkey_patch_spyne; monkey_patch_spyne()
+        from spyne.protocol.json import JsonObject
+    """
+    from spyne.model.fault import Fault
+
+    if hasattr(Fault, '_to_dict'):
+        return
+
+    def _to_dict(self, *args, **kwargs):
+        return dict(Fault=dict(faultcode=self.faultcode,
+                               faultstring=self.faultstring))
+
+    Fault._to_dict = _to_dict
+#monkey_patch_spyne

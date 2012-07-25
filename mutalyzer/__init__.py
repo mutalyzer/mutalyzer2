@@ -22,8 +22,8 @@ import os
 
 RELEASE = False
 
-__version_info__ = ('2', '0', 'beta-21', 'dev')
-__date__ = '11 Jul 2012'
+__version_info__ = ('2', '0', 'beta-22', 'dev')
+__date__ = '23 Jul 2012'
 
 
 __version__ = '.'.join(__version_info__)

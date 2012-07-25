@@ -29,7 +29,7 @@ from lxml import etree
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
-from rpclib.interface.wsdl import Wsdl11
+from spyne.interface.wsdl import Wsdl11
 
 import mutalyzer
 from mutalyzer import util

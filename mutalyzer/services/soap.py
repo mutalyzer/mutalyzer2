@@ -3,9 +3,9 @@ Mutalyzer SOAP/1.1 webservice.
 """
 
 
-from rpclib.application import Application
-from rpclib.protocol.soap import Soap11
-from rpclib.server.wsgi import WsgiApplication
+from spyne.application import Application
+from spyne.protocol.soap import Soap11
+from spyne.server.wsgi import WsgiApplication
 
 import mutalyzer
 from mutalyzer.services import rpc
@@ -20,6 +20,6 @@ application = Application([rpc.MutalyzerService], tns=mutalyzer.SOAP_NAMESPACE,
 # Below we define WSGI applications for use with e.g. Apache/mod_wsgi.
 # Note: We would like to create the wsgi.Application instance only in the
 #     bin/mutalyzer-webservice.wsgi script, but unfortunately this breaks the
-#     get_interface_document method of rpclib which we use to generate API
+#     get_interface_document method of spyne which we use to generate API
 #     documentation in website.py.
 wsgi_application = WsgiApplication(application)

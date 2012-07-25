@@ -23,7 +23,7 @@ To start the built-in HTTP server on port 8082:
 
 import sys
 from wsgiref.simple_server import make_server
-from rpclib.server.wsgi import WsgiApplication
+from spyne.server.wsgi import WsgiApplication
 from mutalyzer.services import json
 
 
