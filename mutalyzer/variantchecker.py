@@ -607,7 +607,7 @@ def apply_insertion(before, after, s, mutator, record, O):
 #apply_insertion
 
 
-def apply_delins(first, last, delete, insert, mutator, record, output):
+def apply_delins(first, last, insert, mutator, record, output):
     """
     Do a semantic check for an delins, do the actual delins, and give
     it a name.
@@ -616,9 +616,6 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
     @type first: int
     @arg last: Genomic end position of the delins.
     @type last: int
-    @arg delete: Sequence to delete (may be None, in which case it will be
-                 constructed from the reference sequence).
-    @type delete: string
     @arg insert: Sequence to insert.
     @type insert: string
     @arg mutator: A Mutator instance.
@@ -628,8 +625,7 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
     @arg output: The Output object.
     @type output: Modules.Output.Output
     """
-    if not delete:
-        delete = mutator.orig[first - 1:last]
+    delete = mutator.orig[first - 1:last]
 
     if str(delete) == str(insert):
         output.addMessage(__file__, 2, 'WNOCHANGE',
@@ -1187,7 +1183,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
                               'Insertion of a range is not implemented yet.')
             raise _RangeInsertionError()
-        apply_delins(first, last, argument, sequence, mutator, record, output)
+        apply_delins(first, last, sequence, mutator, record, output)
 #process_raw_variant
 
 
