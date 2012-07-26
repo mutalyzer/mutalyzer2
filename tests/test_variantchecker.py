@@ -739,3 +739,10 @@ class TestVariantchecker():
                      'AB026906.1:g.7872_7873inv')
         assert 'AB026906.1(SDHD_v001):c.274_275inv' \
             in self.output.getOutput('descriptions')
+
+    def test_delins_with_length(self):
+        """
+        Delins with explicit length of deleted sequence (bug #108).
+        """
+        check_variant('NM_000193.2:c.108_109del2insG', self.output)
+        assert 'NM_000193.2(SHH_i001):p.(Lys38Serfs*2)' in self.output.getOutput('protDescriptions')
