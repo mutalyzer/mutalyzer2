@@ -10,6 +10,7 @@ leading from one sequence to an other.
 import Bio.Seq
 from mutalyzer.util import longest_common_prefix, longest_common_suffix
 from mutalyzer.util import palinsnoop, roll
+from mutalyzer import models
 
 def LCSMatrix(s1, s2) :
     """
@@ -102,7 +103,7 @@ def LongestCommonSubstring(s1, s2) :
     return x_longest, y_longest, longest
 #LongestCommonSubstring
 
-class RawVar() :
+class RawVar(models.RawVar) :
     """
     Container for a raw variant.
 
@@ -142,7 +143,7 @@ class RawVar() :
         self.start = start
         self.start_offset = start_offset
         self.end = end
-        self.end_offset= end_offset
+        self.end_offset = end_offset
         self.type = type
         self.deleted = deleted
         self.inserted = inserted

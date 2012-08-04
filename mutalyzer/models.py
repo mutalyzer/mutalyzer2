@@ -87,6 +87,34 @@ class RawVariant(ComplexModel):
 #RawVariant
 
 
+class RawVar(ComplexModel):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    start = Mandatory.Integer
+    start_offset = Mandatory.Integer
+    end = Mandatory.Integer
+    end_offset = Mandatory.Integer
+    type = Mandatory.String
+    deleted = Mandatory.String
+    inserted = Mandatory.String
+    shift = Mandatory.Integer
+#RawVar
+
+
+class Allele(ComplexModel):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    description = Mandatory.String
+    allele = Array(RawVar)
+#Allele
+
+
 class MutalyzerOutput(ComplexModel):
     """
     Return type of SOAP method runMutalyzer.

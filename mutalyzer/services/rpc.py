@@ -28,6 +28,7 @@ from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer.models import *
+from mutalyzer import describe
 
 
 def _checkBuild(L, build) :
@@ -69,9 +70,8 @@ def _checkChrom(L, D, chrom) :
 
     if not D.isChrom(chrom) :
         L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
-        raise Fault("EARG",
-                    "The chrom argument (%s) was not a valid " \
-                    "chromosome name." % chrom)
+        raise Fault("EARG", "The chrom argument (%s) was not a valid " \
+            "chromosome name." % chrom)
     #if
 #_checkChrom
 
@@ -91,8 +91,7 @@ def _checkPos(L, pos) :
 
     if pos < 1 :
         L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
-        raise Fault("ERANGE",
-                    "The pos argument (%i) is out of range." % pos)
+        raise Fault("ERANGE", "The pos argument (%i) is out of range." % pos)
     #if
 #_checkPos
 
@@ -128,7 +127,7 @@ class MutalyzerService(ServiceBase):
     #__init__
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,
-        _returns = Array(Mandatory.String))
+        _returns=Array(Mandatory.String))
     def getTranscripts(build, chrom, pos, versions=False) :
         """
         Get all the transcripts that overlap with a chromosomal position.
@@ -154,8 +153,8 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Received request getTranscripts(%s %s %s %s)" % (build,
-                     chrom, pos, versions))
+            "Received request getTranscripts(%s %s %s %s)" % (build, chrom,
+            pos, versions))
 
         _checkBuild(L, build)
         D = Db.Mapping(build)
@@ -172,17 +171,16 @@ class MutalyzerService(ServiceBase):
             ret = [r[0] for r in ret]
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing getTranscripts(%s %s %s %s)" % (build,
-                     chrom, pos, versions))
+            "Finished processing getTranscripts(%s %s %s %s)" % (build, chrom,
+            pos, versions))
 
-        L.addMessage(__file__, -1, "INFO",
-                     "We return %s" % ret)
+        L.addMessage(__file__, -1, "INFO", "We return %s" % ret)
 
         del D, L
         return ret
     #getTranscripts
 
-    @srpc(Mandatory.String, Mandatory.String, _returns = Array(Mandatory.String))
+    @srpc(Mandatory.String, Mandatory.String, _returns=Array(Mandatory.String))
     def getTranscriptsByGeneName(build, name):
         """
         Todo: documentation.
@@ -190,8 +188,7 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Received request getTranscriptsByGene(%s %s)" % (build,
-                     name))
+            "Received request getTranscriptsByGene(%s %s)" % (build, name))
 
         _checkBuild(L, build)
         D = Db.Mapping(build)
@@ -199,8 +196,7 @@ class MutalyzerService(ServiceBase):
         ret = D.get_TranscriptsByGeneName(name)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing getTranscriptsByGene(%s %s)" % (
-                     build, name))
+            "Finished processing getTranscriptsByGene(%s %s)" % (build, name))
 
         if ret :
             l = []
@@ -212,7 +208,7 @@ class MutalyzerService(ServiceBase):
     #getTranscriptsByGene
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns = Array(Mandatory.String))
+        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.String))
     def getTranscriptsRange(build, chrom, pos1, pos2, method) :
         """
         Get all the transcripts that overlap with a range on a chromosome.
@@ -256,7 +252,8 @@ class MutalyzerService(ServiceBase):
     #getTranscriptsRange
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns = Array(TranscriptMappingInfo))
+        Mandatory.Integer, Mandatory.Integer,
+        _returns=Array(TranscriptMappingInfo))
     def getTranscriptsMapping(build, chrom, pos1, pos2, method):
         """
         Get all the transcripts and their info that overlap with a range on a
@@ -288,8 +285,8 @@ class MutalyzerService(ServiceBase):
         """
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received request ' \
-                          'getTranscriptsRange(%s %s %s %s %s)' % \
-                          (build, chrom, pos1, pos2, method))
+            'getTranscriptsRange(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
+            method))
 
         _checkBuild(output, build)
 
@@ -298,9 +295,9 @@ class MutalyzerService(ServiceBase):
 
         for transcript in database.get_Transcripts(chrom, pos1, pos2, method):
             t = TranscriptMappingInfo()
-            d = dict(zip(('transcript', 'start', 'stop', 'cds_start', 'cds_stop',
-                          'exon_starts', 'exon_stops', 'gene', 'chromosome',
-                          'orientation', 'protein', 'version'), transcript))
+            d = dict(zip(('transcript', 'start', 'stop', 'cds_start',
+                'cds_stop', 'exon_starts', 'exon_stops', 'gene', 'chromosome',
+                'orientation', 'protein', 'version'), transcript))
             if d['orientation'] == '-':
                 d['start'], d['stop'] = d['stop'], d['start']
                 d['cds_start'], d['cds_stop'] = d['cds_stop'], d['cds_start']
@@ -316,13 +313,13 @@ class MutalyzerService(ServiceBase):
             transcripts.append(t)
 
         output.addMessage(__file__, -1, 'INFO', 'Finished processing ' \
-                          'getTranscriptsRange(%s %s %s %s %s)' % \
-                          (build, chrom, pos1, pos2, method))
+            'getTranscriptsRange(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
+            method))
 
         return transcripts
     #getTranscriptsMapping
 
-    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
     def getGeneName(build, accno) :
         """
         Find the gene name associated with a transcript.
@@ -338,7 +335,7 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Received request getGeneName(%s %s)" % (build, accno))
+            "Received request getGeneName(%s %s)" % (build, accno))
 
         D = Db.Mapping(build)
         _checkBuild(L, build)
@@ -346,7 +343,7 @@ class MutalyzerService(ServiceBase):
         ret = D.get_GeneName(accno.split('.')[0])
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing getGeneName(%s %s)" % (build, accno))
+            "Finished processing getGeneName(%s %s)" % (build, accno))
 
         del D, L
         return ret
@@ -354,7 +351,7 @@ class MutalyzerService(ServiceBase):
 
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
-        Mandatory.String, _returns = Mapping)
+        Mandatory.String, _returns=Mapping)
     def mappingInfo(LOVD_ver, build, accNo, variant) :
         """
         Search for an NM number in the MySQL database, if the version
@@ -364,9 +361,11 @@ class MutalyzerService(ServiceBase):
 
           - If no end position is present, the start position is assumed to be
             the end position.
-          - If the version number is not found in the database, an error message
-            is generated and a suggestion for an other version is given.
-          - If the reference sequence is not found at all, an error is returned.
+          - If the version number is not found in the database, an error
+            message is generated and a suggestion for an other version is
+            given.
+          - If the reference sequence is not found at all, an error is
+            returned.
           - If no variant is present, an error is returned.
           - If the variant is not accepted by the nomenclature parser, a parse
             error will be printed.
@@ -397,22 +396,22 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Reveived request mappingInfo(%s %s %s %s)" % (
-                        LOVD_ver, build, accNo, variant))
+            "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver, build,
+            accNo, variant))
 
         conv = Converter(build, L)
         result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing mappingInfo(%s %s %s %s)" % (
-                        LOVD_ver, build, accNo, variant))
+            "Finished processing mappingInfo(%s %s %s %s)" % (LOVD_ver, build,
+            accNo, variant))
 
         del L
         return result
     #mappingInfo
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
-        _returns = Transcript)
+        _returns=Transcript)
     def transcriptInfo(LOVD_ver, build, accNo) :
         """
         Search for an NM number in the MySQL database, if the version
@@ -435,19 +434,19 @@ class MutalyzerService(ServiceBase):
         O = Output(__file__)
 
         O.addMessage(__file__, -1, "INFO",
-                     "Received request transcriptInfo(%s %s %s)" % (LOVD_ver,
-                     build, accNo))
+            "Received request transcriptInfo(%s %s %s)" % (LOVD_ver, build,
+            accNo))
 
         converter = Converter(build, O)
         T = converter.mainTranscript(accNo)
 
         O.addMessage(__file__, -1, "INFO",
-                     "Finished processing transcriptInfo(%s %s %s)" % (
-                     LOVD_ver, build, accNo))
+            "Finished processing transcriptInfo(%s %s %s)" % (LOVD_ver, build,
+            accNo))
         return T
     #transcriptInfo
 
-    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
     def chromAccession(build, name) :
         """
         Get the accession number of a chromosome, given a name.
@@ -464,7 +463,7 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Received request chromAccession(%s %s)" % (build, name))
+            "Received request chromAccession(%s %s)" % (build, name))
 
         _checkBuild(L, build)
         _checkChrom(L, D, name)
@@ -472,14 +471,13 @@ class MutalyzerService(ServiceBase):
         result = D.chromAcc(name)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing chromAccession(%s %s)" % (build,
-                     name))
+            "Finished processing chromAccession(%s %s)" % (build, name))
 
         del D,L
         return result
     #chromAccession
 
-    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
     def chromosomeName(build, accNo) :
         """
         Get the name of a chromosome, given a chromosome accession number.
@@ -496,7 +494,7 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Received request chromName(%s %s)" % (build, accNo))
+            "Received request chromName(%s %s)" % (build, accNo))
 
         _checkBuild(L, build)
 #        self._checkChrom(L, D, name)
@@ -504,14 +502,13 @@ class MutalyzerService(ServiceBase):
         result = D.chromName(accNo)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing chromName(%s %s)" % (build,
-                     accNo))
+            "Finished processing chromName(%s %s)" % (build, accNo))
 
         del D,L
         return result
     #chromosomeName
 
-    @srpc(Mandatory.String, Mandatory.String, _returns = Mandatory.String)
+    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
     def getchromName(build, acc) :
         """
         Get the chromosome name, given a transcript identifier (NM number).
@@ -528,7 +525,7 @@ class MutalyzerService(ServiceBase):
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Received request getchromName(%s %s)" % (build, acc))
+            "Received request getchromName(%s %s)" % (build, acc))
 
         _checkBuild(L, build)
 #        self._checkChrom(L, D, name)
@@ -536,14 +533,14 @@ class MutalyzerService(ServiceBase):
         result = D.get_chromName(acc)
 
         L.addMessage(__file__, -1, "INFO",
-                     "Finished processing getchromName(%s %s)" % (build,
-                     acc))
+            "Finished processing getchromName(%s %s)" % (build, acc))
 
         del D,L
         return result
     #chromosomeName
 
-    @srpc(Mandatory.String, Mandatory.String, String, _returns = Array(Mandatory.String))
+    @srpc(Mandatory.String, Mandatory.String, String, 
+        _returns=Array(Mandatory.String))
     def numberConversion(build, variant, gene=None):
         """
         Converts I{c.} to I{g.} notation or vice versa
@@ -563,8 +560,7 @@ class MutalyzerService(ServiceBase):
         D = Db.Mapping(build)
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
-                     "Received request cTogConversion(%s %s)" % (
-                     build, variant))
+            "Received request cTogConversion(%s %s)" % (build, variant))
         converter = Converter(build, O)
         variant = converter.correctChrVariant(variant)
 
@@ -576,12 +572,11 @@ class MutalyzerService(ServiceBase):
             result = [""]
 
         O.addMessage(__file__, -1, "INFO",
-                     "Finished processing cTogConversion(%s %s)" % (
-                     build, variant))
+            "Finished processing cTogConversion(%s %s)" % (build, variant))
         return result
     #numberConversion
 
-    @srpc(Mandatory.String, _returns = CheckSyntaxOutput)
+    @srpc(Mandatory.String, _returns=CheckSyntaxOutput)
     def checkSyntax(variant):
         """
         Checks the syntax of a variant.
@@ -597,7 +592,7 @@ class MutalyzerService(ServiceBase):
         """
         output = Output(__file__)
         output.addMessage(__file__, -1, "INFO",
-                          "Received request checkSyntax(%s)" % (variant))
+            "Received request checkSyntax(%s)" % (variant))
 
         result = CheckSyntaxOutput()
 
@@ -608,7 +603,7 @@ class MutalyzerService(ServiceBase):
         result.valid = bool(parsetree)
 
         output.addMessage(__file__, -1, "INFO",
-                          "Finished processing checkSyntax(%s)" % (variant))
+            "Finished processing checkSyntax(%s)" % (variant))
 
         result.messages = []
         for message in output.getMessages():
@@ -620,7 +615,7 @@ class MutalyzerService(ServiceBase):
         return result
     #checkSyntax
 
-    @srpc(Mandatory.String, _returns = MutalyzerOutput)
+    @srpc(Mandatory.String, _returns=MutalyzerOutput)
     def runMutalyzer(variant) :
         """
         Run the Mutalyzer name checker.
@@ -664,7 +659,7 @@ class MutalyzerService(ServiceBase):
         """
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
-                     "Received request runMutalyzer(%s)" % (variant))
+            "Received request runMutalyzer(%s)" % (variant))
         variantchecker.check_variant(variant, O)
 
         result = MutalyzerOutput()
@@ -713,7 +708,7 @@ class MutalyzerService(ServiceBase):
         result.errors, result.warnings, result.summary = O.Summary()
 
         O.addMessage(__file__, -1, "INFO",
-                     "Finished processing runMutalyzer(%s)" % (variant))
+            "Finished processing runMutalyzer(%s)" % (variant))
 
         result.messages = []
         for message in O.getMessages():
@@ -725,7 +720,7 @@ class MutalyzerService(ServiceBase):
         return result
     #runMutalyzer
 
-    @srpc(Mandatory.String, Mandatory.String, _returns = TranscriptNameInfo)
+    @srpc(Mandatory.String, Mandatory.String, _returns=TranscriptNameInfo)
     def getGeneAndTranscript(genomicReference, transcriptReference) :
         """
         Todo: documentation.
@@ -734,8 +729,8 @@ class MutalyzerService(ServiceBase):
         D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
-            "Received request getGeneAndTranscript(%s, %s)" % (genomicReference,
-            transcriptReference))
+            "Received request getGeneAndTranscript(%s, %s)" % (
+            genomicReference, transcriptReference))
         retriever = Retriever.GenBankRetriever(O, D)
         record = retriever.loadrecord(genomicReference)
 
@@ -758,7 +753,7 @@ class MutalyzerService(ServiceBase):
         return ret
     #getGeneAndTranscript
 
-    @srpc(Mandatory.String, String, _returns = Array(TranscriptInfo))
+    @srpc(Mandatory.String, String, _returns=Array(TranscriptInfo))
     def getTranscriptsAndInfo(genomicReference, geneName=None):
         """
         Given a genomic reference, return all its transcripts with their
@@ -806,7 +801,8 @@ class MutalyzerService(ServiceBase):
         D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
-            "Received request getTranscriptsAndInfo(%s, %s)" % (genomicReference, geneName))
+            "Received request getTranscriptsAndInfo(%s, %s)" % (
+            genomicReference, geneName))
         retriever = Retriever.GenBankRetriever(O, D)
         record = retriever.loadrecord(genomicReference)
 
@@ -835,7 +831,8 @@ class MutalyzerService(ServiceBase):
                 # Some raw info we don't use directly:
                 # - transcript.CDS.location        CDS start and stop (g)
                 # - transcript.CDS.positionList:   CDS splice sites (g) ?
-                # - transcript.mRNA.location:      translation start and stop (g)
+                # - transcript.mRNA.location:      translation start and stop
+                #                                  (g)
                 # - transcript.mRNA.positionList:  splice sites (g)
 
                 t.exons = []
@@ -843,10 +840,12 @@ class MutalyzerService(ServiceBase):
                     exon = ExonInfo()
                     exon.gStart = transcript.CM.getSpliceSite(i)
                     exon.cStart = transcript.CM.g2c(exon.gStart)
-                    exon.chromStart = GenRecordInstance.record.toChromPos(exon.gStart)
+                    exon.chromStart = GenRecordInstance.record.toChromPos(
+                        exon.gStart)
                     exon.gStop = transcript.CM.getSpliceSite(i + 1)
                     exon.cStop = transcript.CM.g2c(exon.gStop)
-                    exon.chromStop = GenRecordInstance.record.toChromPos(exon.gStop)
+                    exon.chromStop = GenRecordInstance.record.toChromPos(
+                        exon.gStop)
                     t.exons.append(exon)
 
                 # Beware that CM.info() gives a made-up value for trans_end,
@@ -854,12 +853,14 @@ class MutalyzerService(ServiceBase):
                 # it in our output and use the end position of the last exon
                 # instead. The made-up value is still useful for sorting, so
                 # we return it as sortableTransEnd.
-                trans_start, sortable_trans_end, cds_stop = transcript.CM.info()
+                trans_start, sortable_trans_end, cds_stop = \
+                    transcript.CM.info()
                 cds_start = 1
 
                 t.cTransEnd = str(t.exons[-1].cStop)
                 t.gTransEnd = t.exons[-1].gStop
-                t.chromTransEnd = GenRecordInstance.record.toChromPos(t.gTransEnd)
+                t.chromTransEnd = GenRecordInstance.record.toChromPos(
+                    t.gTransEnd)
                 t.sortableTransEnd = sortable_trans_end
 
                 # Todo: If we have no CDS info, CM.info() gives trans_end as
@@ -872,10 +873,12 @@ class MutalyzerService(ServiceBase):
                 t.product = transcript.transcriptProduct
                 t.cTransStart = str(trans_start)
                 t.gTransStart = transcript.CM.x2g(trans_start, 0)
-                t.chromTransStart = GenRecordInstance.record.toChromPos(t.gTransStart)
+                t.chromTransStart = GenRecordInstance.record.toChromPos(
+                    t.gTransStart)
                 t.cCDSStart = str(cds_start)
                 t.gCDSStart = transcript.CM.x2g(cds_start, 0)
-                t.chromCDSStart = GenRecordInstance.record.toChromPos(t.gCDSStart)
+                t.chromCDSStart = GenRecordInstance.record.toChromPos(
+                    t.gCDSStart)
                 t.cCDSStop = str(cds_stop)
                 t.gCDSStop = transcript.CM.x2g(cds_stop, 0)
                 t.chromCDSStop = GenRecordInstance.record.toChromPos(t.gCDSStop)
@@ -899,7 +902,7 @@ class MutalyzerService(ServiceBase):
         return transcripts
     #getTranscriptsAndInfo
 
-    @srpc(Mandatory.String, _returns = Mandatory.String)
+    @srpc(Mandatory.String, _returns=Mandatory.String)
     def upLoadGenBankLocalFile(content) :
         """
         Not implemented yet.
@@ -907,7 +910,7 @@ class MutalyzerService(ServiceBase):
         raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
     #upLoadGenBankLocalFile
 
-    @srpc(Mandatory.String, _returns = Mandatory.String)
+    @srpc(Mandatory.String, _returns=Mandatory.String)
     def upLoadGenBankRemoteFile(url) :
         """
         Not implemented yet.
@@ -916,7 +919,7 @@ class MutalyzerService(ServiceBase):
     #upLoadGenBankRemoteFile
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        Mandatory.Integer, _returns = Mandatory.String)
+        Mandatory.Integer, _returns=Mandatory.String)
     def sliceChromosomeByGene(geneSymbol, organism, upStream,
         downStream) :
         """
@@ -946,7 +949,7 @@ class MutalyzerService(ServiceBase):
     #sliceChromosomeByGene
 
     @srpc(Mandatory.String, Mandatory.Integer, Mandatory.Integer,
-        Mandatory.Integer, _returns = Mandatory.String)
+        Mandatory.Integer, _returns=Mandatory.String)
     def sliceChromosome(chromAccNo, start, end, orientation) :
         """
         Todo: documentation, error handling, argument checking, tests.
@@ -972,7 +975,7 @@ class MutalyzerService(ServiceBase):
         return UD
     #sliceChromosome
 
-    @srpc(_returns = InfoOutput)
+    @srpc(_returns=InfoOutput)
     def info():
         """
         Gives some static application information, such as the current running
@@ -1010,7 +1013,7 @@ class MutalyzerService(ServiceBase):
         return result
     #info
 
-    @srpc(_returns = Mandatory.String)
+    @srpc(_returns=Mandatory.String)
     def ping():
         """
         Simple function to test the interface.
@@ -1021,7 +1024,28 @@ class MutalyzerService(ServiceBase):
         return 'pong'
     #ping
 
-    @srpc(DateTime, _returns = Array(CacheEntry))
+    @srpc(Mandatory.String, Mandatory.String, _returns=Allele)
+    def descriptionExtract(reference, observed):
+        """
+        Extract the HGVS variant description from a reference sequence and an
+        observed sequence.
+        """
+        output = Output(__file__)
+
+        output.addMessage(__file__, -1, 'INFO',
+            'Received request descriptionExtract')
+
+        result = Allele()
+        result.allele = describe.describeDNA(reference, observed)
+        result.description = describe.alleleDescription(result.allele)
+
+        output.addMessage(__file__, -1, 'INFO',
+            'Finished processing descriptionExtract')
+
+        return result
+    #descriptionExtract
+
+    @srpc(DateTime, _returns=Array(CacheEntry))
     def getCache(created_since=None):
         """
         Get a list of entries from the local cache created since given date.
@@ -1031,8 +1055,7 @@ class MutalyzerService(ServiceBase):
         """
         output = Output(__file__)
 
-        output.addMessage(__file__, -1, 'INFO',
-                          'Received request getCache')
+        output.addMessage(__file__, -1, 'INFO', 'Received request getCache')
 
         database = Db.Cache()
         sync = CacheSync(output, database)
@@ -1042,18 +1065,17 @@ class MutalyzerService(ServiceBase):
         def cache_entry_to_soap(entry):
             e = CacheEntry()
             for attr in ('name', 'gi', 'hash', 'chromosomeName',
-                         'chromosomeStart', 'chromosomeStop',
-                         'chromosomeOrientation', 'url', 'created', 'cached'):
+                'chromosomeStart', 'chromosomeStop', 'chromosomeOrientation',
+                'url', 'created', 'cached'):
                 setattr(e, attr, entry[attr])
             return e
 
-        output.addMessage(__file__, -1, 'INFO',
-                          'Finished processing getCache')
+        output.addMessage(__file__, -1, 'INFO', 'Finished processing getCache')
 
         return map(cache_entry_to_soap, cache)
     #getCache
 
-    @srpc(Mandatory.String, _returns = Array(Mandatory.String))
+    @srpc(Mandatory.String, _returns=Array(Mandatory.String))
     def getdbSNPDescriptions(rs_id):
         """
         Lookup HGVS descriptions for a dbSNP rs identifier.
@@ -1067,19 +1089,19 @@ class MutalyzerService(ServiceBase):
         output = Output(__file__)
 
         output.addMessage(__file__, -1, 'INFO',
-                          'Received request getdbSNPDescription(%s)' % rs_id)
+            'Received request getdbSNPDescription(%s)' % rs_id)
 
         retriever = Retriever.Retriever(output, None)
         descriptions = retriever.snpConvert(rs_id)
 
         output.addMessage(__file__, -1, 'INFO',
-                          'Finished processing getdbSNPDescription(%s)' % rs_id)
+            'Finished processing getdbSNPDescription(%s)' % rs_id)
 
         # Todo: use SOAP Fault object here (see Trac issue #41).
         messages = output.getMessages()
         if messages:
-            error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: str(m), output.getMessages()))
+            error = 'The request could not be completed\n' + \
+                '\n'.join(map(lambda m: str(m), output.getMessages()))
             raise Exception(error)
 
         return descriptions
