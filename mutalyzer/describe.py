@@ -212,6 +212,9 @@ class RawVar(models.RawVar) :
 
         return 4 # Start position, '>' and end position.
     #descriptionLength
+
+    def putHGVS(self):
+        self.hgvs = self.description()
 #RawVar
 
 def alleleDescription(allele) :
@@ -226,8 +229,8 @@ def alleleDescription(allele) :
     """
 
     if len(allele) > 1 :
-        return "[%s]" % ';'.join(map(lambda x : x.description(), allele))
-    return allele[0].description()
+        return "[%s]" % ';'.join(map(lambda x : x.hgvs, allele))
+    return allele[0].hgvs
 #alleleDescription
 
 def alleleDescriptionLength(allele) :
@@ -434,6 +437,7 @@ def describeDNA(original, mutated) :
 
     description = DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
     for i in description:
-        i.hgvs = i.description()
+        i.putHGVS()
+
     return description
 #describeDNA
