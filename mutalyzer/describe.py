@@ -115,8 +115,8 @@ class RawVar(models.RawVar) :
       retuned, resulting in a description like: 100_100A>T
     """
 
-    def __init__(self, start = 0, start_offset = 0, end = 0, end_offset = 0,
-        type = "none", deleted = "", inserted = "", shift = 0) :
+    def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
+        type="none", deleted="", inserted="", shift=0, hgvs="") :
         """
         Initialise the class with the appropriate values.
 
@@ -148,6 +148,7 @@ class RawVar(models.RawVar) :
         self.deleted = deleted
         self.inserted = inserted
         self.shift = shift
+        self.hgvs = hgvs
     #__init__
 
     def description(self) :
@@ -431,5 +432,8 @@ def describeDNA(original, mutated) :
 
     M = LCSMatrix(s1, s2)
 
-    return DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
+    description = DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
+    for i in description:
+        i.hgvs = i.description()
+    return description
 #describeDNA

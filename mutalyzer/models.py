@@ -101,6 +101,7 @@ class RawVar(ComplexModel):
     deleted = Mandatory.String
     inserted = Mandatory.String
     shift = Mandatory.Integer
+    hgvs = Mandatory.String
 #RawVar
 
 

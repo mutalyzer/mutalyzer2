@@ -927,7 +927,7 @@ class DescriptionExtractor:
         visualisation = []
         for i in result:
             visualisation.append([i.start, i.end, i.type, i.deleted,
-                i.inserted, i.shift, i.description()])
+                i.inserted, i.shift, i.hgvs])
 
         args = {
             'lastReferenceSeq' : referenceSeq,
