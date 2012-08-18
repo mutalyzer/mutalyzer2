@@ -7,7 +7,11 @@ leading from one sequence to an other.
 @requires: Bio.Seq
 """
 
+import collections
 import Bio.Seq
+from Bio.SeqUtils import seq3
+from Bio.Data import CodonTable
+
 from mutalyzer.util import longest_common_prefix, longest_common_suffix
 from mutalyzer.util import palinsnoop, roll
 from mutalyzer import models
@@ -100,6 +104,108 @@ def LongestCommonSubstring(s1, s2):
     return x_longest, y_longest, longest
 #LongestCommonSubstring
 
+def makeFSTables(table_id):
+    """
+    For every pair of amino acids, calculate the set of possible amino acids in
+    a different reading frame. Do this for both alternative reading frames (+1
+    and +2).
+
+    @arg table_id: Coding table ID.
+    @type table_id: int
+    @returns: Two dictionaries for the two alternative reading frames.
+    @rtype: tuple(dict, dict)
+    """
+    # Make the forward translation table.
+    table = dict(CodonTable.unambiguous_dna_by_id[table_id].forward_table)
+    for i in CodonTable.unambiguous_dna_by_id[table_id].stop_codons:
+        table[i] = '*'
+
+    # Make the reverse translation table.
+    reverse_table = collections.defaultdict(list)
+    for i in table:
+        reverse_table[table[i]].append(i)
+
+    # Make the frame shift tables.
+    FS1 = collections.defaultdict(set)
+    FS2 = collections.defaultdict(set)
+    for AA_i in reverse_table:
+        for AA_j in reverse_table:
+            for codon_i in reverse_table[AA_i]:
+                for codon_j in reverse_table[AA_j]:
+                    FS1[AA_i + AA_j].add(table[(codon_i + codon_j)[1:4]]) # +1.
+                    FS2[AA_i + AA_j].add(table[(codon_i + codon_j)[2:5]]) # +2.
+                #for
+    return FS1, FS2
+#makeFSTables
+
+def __makeOverlaps(peptide):
+    """
+    Make a list of overlapping 2-mers of {peptide} in order of appearance.
+
+    @arg peptide: A peptide sequence.
+    @type peptide: str
+    @returns: All 2-mers of {peptide} in order of appearance.
+    @rtype: list(str)
+    """
+    return map(lambda x: peptide[x:x+2], range(len(peptide) - 1))
+#__makeOverlaps
+
+def __options(pList, peptidePrefix, FS, output):
+    """
+    Enumerate all peptides that could result from a frame shift.
+
+    @arg pList: List of overlapping 2-mers of a peptide.
+    @type pList: list(str)
+    @arg peptidePrefix: Prefix of a peptide in the alternative reading frame.
+    @type peptidePrefix: str
+    @arg FS: Frame shift table.
+    @type FS: dict
+    @arg output: List of peptides, should be empty initially.
+    @type output: list(str)
+    """
+    if not pList:
+        output.append(peptidePrefix)
+        return
+    #if
+    for i in FS[pList[0]]:
+        __options(pList[1:], peptidePrefix + i, FS, output)
+#__options
+
+def enumFS(peptide, FS):
+    """
+    Enumerate all peptides that could result from a frame shift.
+
+    @arg peptide: Original peptide sequence.
+    @type peptide: str
+    @arg FS: Frame shift table.
+    @type FS: dict
+    """
+    output = []
+
+    __options(__makeOverlaps(peptide), "", FS, output)
+    return output
+#enumFS
+
+def fitFS(peptide, altPeptide, FS):
+    """
+    Check whether peptide {altPeptide} is a possible frame shift of peptide
+    {peptide}.
+
+    @arg peptide: Original peptide sequence.
+    @type peptide: str
+    @arg altPeptide: Observed peptide sequence.
+    @type altPeptide: str
+    @arg FS: Frame shift table.
+    @type FS: dict
+    """
+    pList = __makeOverlaps(peptide)
+
+    for i in range(len(altPeptide)):
+        if not altPeptide[i] in FS[pList[i]]:
+            return False
+    return True
+#fitFS
+
 class RawVar(models.RawVar):
     """
     Container for a raw variant.
@@ -112,8 +218,9 @@ class RawVar(models.RawVar):
       retuned, resulting in a description like: 100_100A>T
     """
 
-    def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
-        type="none", deleted="", inserted="", shift=0):
+    def __init__(self, DNA=True, start=0, start_offset=0, end=0, end_offset=0,
+        type="none", deleted="", inserted="", shift=0, startAA="", endAA="",
+        term=0):
         """
         Initialise the class with the appropriate values.
 
@@ -136,6 +243,7 @@ class RawVar(models.RawVar):
         """
         # TODO: Will this container be used for all variants, or only genomic?
         #       start_offset and end_offset may be never used.
+        self.DNA = DNA
         self.start = start
         self.start_offset = start_offset
         self.end = end
@@ -144,10 +252,14 @@ class RawVar(models.RawVar):
         self.deleted = deleted
         self.inserted = inserted
         self.shift = shift
+        self.startAA = startAA
+        self.endAA = endAA
+        self.term = term
         self.hgvs = self.description()
+        self.hgvsLength = self.descriptionLength()
     #__init__
 
-    def description(self):
+    def __DNADescription(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
@@ -174,9 +286,45 @@ class RawVar(models.RawVar):
         #if
 
         return descr + "%s>%s" % (self.deleted, self.inserted)
-    #description
+    #__DNADescription
 
-    def descriptionLength(self):
+    def __proteinDescription(self):
+        """
+        Give the HGVS description of the raw variant stored in this class.
+
+        Note that this function relies on the absence of values to make the
+        correct description. Also see the comment in the class definition.
+
+        @returns: The HGVS description of the raw variant stored in this class.
+        @rtype: str
+        """
+        if not self.start:
+            return "="
+
+        descr = ""
+        if not self.deleted:
+            if self.type == "ext":
+                descr += '*'
+            else:
+                descr += "%s" % seq3(self.startAA)
+        #if
+        else:
+            descr += "%s" % seq3(self.deleted)
+        descr += "%i" % self.start
+        if self.end:
+            descr += "_%s%i" % (seq3(self.endAA), self.end)
+        if self.type not in ["subst", "stop", "ext", "fs"]:
+            descr += self.type
+        if self.inserted:
+            descr += "%s" % seq3(self.inserted)
+        if self.type == "stop":
+            return descr + '*'
+        if self.term:
+            return descr + "%s*%i" % (self.type, self.term)
+        return descr
+    #__proteinDescription
+
+    def __DNADescriptionLength(self):
         """
         Give the standardised length of the HGVS description of the raw variant
         stored in this class.
@@ -191,7 +339,7 @@ class RawVar(models.RawVar):
         if not self.start : # =
             return 1
 
-        descrLen = 1 # Start position
+        descrLen = 1 # Start position.
 
         if self.end : # '_' and end position.
             descrLen += 2
@@ -205,6 +353,61 @@ class RawVar(models.RawVar):
         #if
 
         return 4 # Start position, '>' and end position.
+    #__DNAdescriptionLength
+
+    def __proteinDescriptionLength(self):
+        """
+        Give the standardised length of the HGVS description of the raw variant
+        stored in this class.
+
+        Note that this function relies on the absence of values to make the
+        correct description. Also see the comment in the class definition.
+
+        @returns: The standardised length of the HGVS description of the raw
+            variant stored in this class.
+        @rtype: int
+        """
+        if not self.start: # =
+            return 1
+
+        descrLen = 1      # Start position.
+        if not self.deleted and self.type == "ext":
+            descrLen += 1 # *
+        else:
+            descrLen += 3 # One amino acid.
+        if self.end:
+            descrLen += 5 # `_' + one amino acid + end position.
+        if self.type not in ["subst", "stop", "ext", "fs"]:
+            descrLen += len(self.type)
+        if self.inserted:
+            descrLen += 3 * len(self.inserted)
+        if self.type == "stop":
+            return descrLen + 1 # *
+        if self.term:
+            return descrLen + len(self.type) + 2 # `*' + length until stop.
+        return descrLen
+    #__proteinDescriptionLength
+
+    def description(self):
+        """
+        """
+        if self.DNA:
+            return self.__DNADescription()
+        return self.__proteinDescription()
+    #description
+
+    def descriptionLength(self):
+        """
+        Give the standardised length of the HGVS description of the raw variant
+        stored in this class.
+
+        @returns: The standardised length of the HGVS description of the raw
+            variant stored in this class.
+        @rtype: int
+        """
+        if self.DNA:
+            return self.__DNADescriptionLength()
+        return self.__proteinDescriptionLength()
     #descriptionLength
 #RawVar
 
@@ -233,7 +436,8 @@ def alleleDescriptionLength(allele):
     @returns: The standardised length of the HGVS description of {allele}.
     @rval: int
     """
-    return sum(map(lambda x : x.descriptionLength(), allele))
+    # NOTE: Do we need to count the ; and [] ?
+    return sum(map(lambda x : x.hgvsLength, allele))
 #alleleDescriptionLength
 
 def printpos(s, start, end, fill = 0):
@@ -400,7 +604,127 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     return default
 #DNA_description
 
-def describeDNA(original, mutated):
+def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
+    """
+    Give an allele description of the change from {s1} to {s2} in the range
+    {s1_start}..{s1_end} on {s1} and {s2_start}..{s2_end} on {s2}.
+
+    arg s1: Sequence 1.
+    type s1: str
+    arg s2: Sequence 2.
+    type s2: str
+    arg s1_start: Start of the range on {s1}.
+    type s1_start: int
+    arg s1_end: End of the range on {s1}.
+    type s1_end: int
+    arg s2_start: Start of the range on {s2}.
+    type s2_start: int
+    arg s2_end: End of the range on {s2}.
+    type s2_end: int
+
+    @returns: A list of RawVar objects, representing the allele.
+    @rval: list(RawVar)
+    """
+    # Nothing happened.
+    if s1 == s2:
+        return [RawVar(DNA=False)]
+
+    # Substitution.
+    if s1_start + 1 == s1_end and  s2_start + 1 == s2_end:
+        return [RawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
+            inserted=s2[s2_start], type="subst")]
+
+    # Insertion / Duplication / Extention.
+    if s1_start == s1_end:
+        if len(s1) == s1_start + 1:
+            return [RawVar(DNA=False, start=s1_start + 1,
+                inserted=s2[s2_start], term=abs(len(s1) - len(s2)),
+                type="ext")]
+        ins_length = s2_end - s2_start
+        shift5, shift3 = roll(s2, s2_start + 1, s2_end)
+        shift = shift5 + shift3
+
+        s1_start += shift3
+        s1_end += shift3
+        s2_start += shift3
+        s2_end += shift3
+
+        if s2_start - ins_length >= 0 and \
+            s1[s1_start - ins_length:s1_start] == s2[s2_start:s2_end]:
+
+            if ins_length == 1:
+                return [RawVar(DNA=False, start=s1_start,
+                    startAA=s1[s1_start - 1], type="dup", shift=shift)]
+            return [RawVar(DNA=False, start=s1_start - ins_length + 1,
+                startAA=s1[s1_start - ins_length], end=s1_end,
+                endAA=s1[s1_end - 1], type="dup", shift=shift)]
+        #if
+        return [RawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
+            end=s1_start + 1, endAA=s1[s1_end], inserted=s2[s2_start:s2_end],
+            type="ins", shift=shift)]
+    #if
+
+    # Deletion / Inframe stop.
+    if s2_start == s2_end:
+        if len(s2) == s2_end + 1:
+            return [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
+                type="stop")]
+        shift5, shift3 = roll(s1, s1_start + 1, s1_end)
+        shift = shift5 + shift3
+
+        s1_start += shift3 + 1
+        s1_end += shift3
+
+        if s1_start == s1_end:
+            return [RawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
+                 type="del", shift=shift)]
+        return [RawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
+            end=s1_end, endAA=s1[s1_end - 1], type="del", shift=shift)]
+    #if
+
+    # Simple InDel.
+    if s1_start + 1 == s1_end:
+        return [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
+            inserted=s2[s2_start:s2_end], type="delins")]
+
+    # Frameshift.
+    if len(s1) == s1_end + 1 and len(s2) == s2_end + 1:
+        # TODO: the FS tables should be made for all coding tables in advance.
+        FS1, FS2 = makeFSTables(1) # Standard coding table.
+
+        if (fitFS(s1[s1_start + 1:], s2[s2_start + 1:], FS1) or
+            fitFS(s1[s1_start + 1:], s2[s2_start + 1:], FS2)):
+            return [RawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
+                inserted=s2[s2_start], term=len(s2) - s2_start, type="fs")]
+    #if
+
+    # At this point, we have an indel.
+    s1_end_f, s2_end_f, lcs_f_len = LongestCommonSubstring(s1[s1_start:s1_end],
+        s2[s2_start:s2_end])
+
+    # InDel.
+    default = [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
+        end=s1_end, endAA=s1[s1_end], inserted=s2[s2_start:s2_end],
+        type="delins")]
+
+    if not lcs_f_len : # Optimisation, not really needed.
+        return default
+
+    r1_len = s1_end_f - lcs_f_len
+    r2_len = s1_end - s1_start - s1_end_f
+    m1_len = s2_end_f - lcs_f_len
+    m2_len = s2_end - s2_start - s2_end_f
+
+    partial = protein_description(M, s1, s2, s1_start, s1_start + r1_len,
+        s2_start, s2_start + m1_len) + protein_description(M, s1, s2,
+        s1_end - r2_len, s1_end, s2_end - m2_len, s2_end)
+
+    if alleleDescriptionLength(partial) <= alleleDescriptionLength(default):
+        return partial
+    return default
+#protein_description
+
+def describe(original, mutated, DNA=True):
     """
     Convenience function for DNA_description().
 
@@ -421,5 +745,7 @@ def describeDNA(original, mutated):
 
     M = LCSMatrix(s1, s2)
 
+    if not DNA:
+        return protein_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
     return DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
-#describeDNA
+#describe

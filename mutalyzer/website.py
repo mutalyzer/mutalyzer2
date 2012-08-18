@@ -919,7 +919,7 @@ class DescriptionExtractor:
             output.addMessage(__file__, 3, "ENODNA",
                 "Variant sequence is not DNA.")
 
-        result = describe.describeDNA(referenceSeq, variantSeq)
+        result = describe.describe(referenceSeq, variantSeq)
         description = describe.alleleDescription(result)
 
         errors, warnings, summary = output.Summary()

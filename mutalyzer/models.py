@@ -93,6 +93,7 @@ class RawVar(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
+    DNA = Mandatory.Boolean
     start = Mandatory.Integer
     start_offset = Mandatory.Integer
     end = Mandatory.Integer
@@ -101,7 +102,11 @@ class RawVar(ComplexModel):
     deleted = Mandatory.String
     inserted = Mandatory.String
     shift = Mandatory.Integer
+    startAA = Mandatory.String
+    endAA = Mandatory.String
+    term = Mandatory.Integer
     hgvs = Mandatory.String
+    hgvsLength = Mandatory.Integer
 #RawVar
 
 
