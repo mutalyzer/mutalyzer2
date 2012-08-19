@@ -8,7 +8,7 @@ leading from one sequence to an other.
 """
 
 import collections
-import Bio.Seq
+from Bio import Seq
 from Bio.SeqUtils import seq3
 from Bio.Data import CodonTable
 
@@ -16,93 +16,123 @@ from mutalyzer.util import longest_common_prefix, longest_common_suffix
 from mutalyzer.util import palinsnoop, roll
 from mutalyzer import models
 
-def LCSMatrix(s1, s2):
+class LCS(object):
     """
-    Todo: Not yet in use.
+    Class that calculates a Longest Common Substring matrix once and provides
+    a function to find the LCS of a submatrix.
     """
-    y_max = len(s1) + 1
-    x_max = len(s2) + 1
-    M = [[0] * x_max for i in xrange(y_max)]
 
-    for x in xrange(1, y_max):
-        for y in xrange(1, x_max):
-            if s1[x - 1] == s2[y - 1]:
-                M[x][y] = M[x - 1][y - 1] + 1
+    __delim = ' '
 
-    return M
-#LCSMatrix
+    def __init__(self, s1, s2, lcp, s1_end, s2_end, DNA=False):
+        """
+        Initialise the class.
 
-def findMax(M, x1, x2, y1, y2):
-    """
-    M = describe.LCSMatrix("banaan", "ana")
+        @arg s1: A string.
+        @type s1: str
+        @arg s2: A string.
+        @type s2: str
+        @arg lcp: The length of the longest common prefix of {s1} and {s2}.
+        @type lcp: int
+        @arg s1_end: End of the substring in {s1}.
+        @type s1_end: 
+        @arg s2_end: End of the substring in {s2}.
+        @type s2_end: int
+        @arg DNA:
+        @type DNA: bool
+        """
+        self.__lcp = lcp
+        self.__s1 = s1[self.__lcp:s1_end]
+        self.__s2 = s2[self.__lcp:s2_end]
+        self.__s2_rc = None
+        self.__matrix = self.LCSMatrix(self.__s1, self.__s2)
+        self.__matrix_rc = None
 
-    N = describe.LCSMatrix("banaan", "n")
-    describe.findMax(M, 1, 7, 2, 3)
+        if DNA:
+            self.__s2_rc = Seq.reverse_complement(s2[self.__lcp:s2_end])
+            self.__matrix_rc = self.LCSMatrix(self.__s1, self.__s2_rc)
+        #if
+    #__init__
 
-    N = describe.LCSMatrix("banaan", "na")
-    describe.findMax(M, 1, 7, 2, 4)
+    def __str__(self):
+        """
+        Return a graphical representation of the LCS matrix, mainly for
+        debugging.
 
-    Todo: Not yet in use.
-    """
-    longest, x_longest, y_longest = 0, 0, 0
+        @returns: A graphical representation of the LCS matrix.
+        @rtype: str
+        """
+        out = self.__delim.join(self.__delim + '-' + self.__s2) + '\n'
 
-    for x in xrange(x1, x2):
-        x_relative = x - x1
+        for i in range(len(self.__matrix)):
+            out += (('-' + self.__s1)[i] + self.__delim +
+                self.__delim.join(map(str, self.__matrix[i])) + '\n')
 
-        for y in xrange(y1, y2):
-            y_relative = y - y1
-            realVal = min(x_relative, y_relative, M[x][y])
+        return out
+    #__str__
 
-            if realVal > longest:
-                longest = realVal
-                x_longest = x_relative
-                y_longest = y_relative
-            #if
+    def LCSMatrix(self, s1, s2):
+        """
+        Calculate the Longest Common Substring matrix.
+
+        @arg s1: A string.
+        @type s1: str
+        @arg s2: A string.
+        @type s2: str
+
+        @returns: A matrix with the LCS of {s1}[i], {s2}[j] at position i, j.
+        @rval: list[list[int]]
+        """
+        y_max = len(s1) + 1
+        x_max = len(s2) + 1
+        M = [[0] * x_max for i in range(y_max)]
+
+        for x in range(1, y_max):
+            for y in range(1, x_max):
+                if s1[x - 1] == s2[y - 1]:
+                    M[x][y] = M[x - 1][y - 1] + 1
+
+        return M
+    #LCSMatrix
+
+    def findMax(self, r1, r2, rc=False):
+        """
+        Find the LCS in a submatrix of {M}, given by the ranges {r1} and {r2}.
+
+        @arg r1: A range for the first dimension of M.
+        @type r1: tuple(int, int)
+        @arg r2: A range for the second dimension of M.
+        @type r2: tuple(int, int)
+        @arg rc: Use the reverse complement matrix.
+        @type rc: bool
+
+        @returns:
+        @rtype: tuple(int, int, int)
+        """
+        longest, x_longest, y_longest = 0, 0, 0
+        nr1 = r1[0] - self.__lcp, r1[1] - self.__lcp
+        nr2 = r2[0] - self.__lcp, r2[1] - self.__lcp
+
+        M = self.__matrix
+        if rc:
+            M = self.__matrix_rc
+
+        for i in range(nr1[0], nr1[1] + 1):
+            x_relative = i - nr1[0]
+
+            for j in range(nr2[0], nr2[1] + 1):
+                y_relative = j - nr2[0]
+                realVal = min(M[i][j], x_relative, y_relative)
+
+                if realVal > longest:
+                    longest, x_longest, y_longest = (realVal, x_relative,
+                        y_relative)
+            #for
         #for
-    #for
 
-    return x_longest, y_longest, longest
-#findMax
-
-def LongestCommonSubstring(s1, s2):
-    """
-    Find the longest common substring between {s1} and {s2}.
-
-    Mainly copied from:
-    http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/
-        Longest_common_substring#Python
-
-    @arg s1: String 1.
-    @type s1: str
-    @arg s2: String 2.
-    @type s2: str
-
-    @returns: The end locations and the length of the longest common substring.
-    @rtype: tuple(int, int, int)
-    """
-    len_s1 = len(s1)
-    len_s2 = len(s2)
-    M = [[0] * (len_s2 + 1) for i in xrange(len_s1 + 1)]
-    longest, x_longest, y_longest = 0, 0, 0
-
-    for x in xrange(1, len_s1 + 1):
-        for y in xrange(1, len_s2 + 1):
-            if s1[x - 1] == s2[y - 1]:
-                M[x][y] = M[x - 1][y - 1] + 1
-
-                if M[x][y] > longest:
-                    longest = M[x][y]
-                    x_longest = x
-                    y_longest = y
-                #if
-            #if
-            else : # Doesn't seem to do anything?
-                M[x][y] = 0
-        #for
-    #for
-
-    return x_longest, y_longest, longest
-#LongestCommonSubstring
+        return x_longest, y_longest, longest
+    #findMax
+#LCS
 
 def makeFSTables(table_id):
     """
@@ -534,10 +564,10 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
 
     # At this stage, we either have an inversion, an indel or a Compound
     # variant.
-    s1_end_f, s2_end_f, lcs_f_len = LongestCommonSubstring(s1[s1_start:s1_end],
-        s2[s2_start:s2_end])
-    s1_end_r, s2_end_r, lcs_r_len = LongestCommonSubstring(s1[s1_start:s1_end],
-        Bio.Seq.reverse_complement(s2[s2_start:s2_end]))
+    s1_end_f, s2_end_f, lcs_f_len = M.findMax((s1_start, s1_end),
+        (s2_start, s2_end))
+    s1_end_r, s2_end_r, lcs_r_len = M.findMax((s1_start, s1_end),
+        (s2_start, s2_end), rc=True)
 
     # Palindrome snooping.
     trim = palinsnoop(s1[s1_start + s1_end_r - lcs_r_len:s1_start + s1_end_r])
@@ -709,8 +739,8 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     #if
 
     # At this point, we have an indel.
-    s1_end_f, s2_end_f, lcs_f_len = LongestCommonSubstring(s1[s1_start:s1_end],
-        s2[s2_start:s2_end])
+    s1_end_f, s2_end_f, lcs_f_len = M.findMax((s1_start, s1_end),
+        (s2_start, s2_end))
 
     # InDel.
     default = [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
@@ -753,12 +783,10 @@ def describe(original, mutated, DNA=True):
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
 
-    # TODO: use only the altered part for the rest of the analysis.
-    # the lcp and lcs can be ignored.
-    #M = LCSMatrix(s1, s2)
-    M = []
-
     if not DNA:
+        M = LCS(s1, s2, lcp, s1_end, s2_end)
         return protein_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
+    #if
+    M = LCS(s1, s2, lcp, s1_end, s2_end, DNA=True)
     return DNA_description(M, s1, s2, lcp, s1_end, lcp, s2_end)
 #describe
