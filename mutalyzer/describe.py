@@ -298,6 +298,8 @@ class RawVar(models.RawVar):
         @returns: The HGVS description of the raw variant stored in this class.
         @rtype: str
         """
+        if self.type == "unknown":
+            return "?"
         if not self.start:
             return "="
 
@@ -317,6 +319,7 @@ class RawVar(models.RawVar):
             descr += self.type
         if self.inserted:
             descr += "%s" % seq3(self.inserted)
+
         if self.type == "stop":
             return descr + '*'
         if self.term:
@@ -336,7 +339,7 @@ class RawVar(models.RawVar):
             variant stored in this class.
         @rtype: int
         """
-        if not self.start : # =
+        if not self.start : # `=' or `?'
             return 1
 
         descrLen = 1 # Start position.
@@ -625,6 +628,13 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     @returns: A list of RawVar objects, representing the allele.
     @rval: list(RawVar)
     """
+    if s1 == '?' or s2 == '?':
+        return [RawVar(DNA=False, type="unknown")]
+
+    # One of the sequences is missing.
+    if not (s1 and s2):
+        return [RawVar(DNA=False)]
+
     # Nothing happened.
     if s1 == s2:
         return [RawVar(DNA=False)]
@@ -743,7 +753,10 @@ def describe(original, mutated, DNA=True):
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
 
-    M = LCSMatrix(s1, s2)
+    # TODO: use only the altered part for the rest of the analysis.
+    # the lcp and lcs can be ignored.
+    #M = LCSMatrix(s1, s2)
+    M = []
 
     if not DNA:
         return protein_description(M, s1, s2, lcp, s1_end, lcp, s2_end)

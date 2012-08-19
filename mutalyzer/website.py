@@ -824,6 +824,15 @@ class Check:
                 chromosome=raw_variants[0], start=min(positions) - 10,
                 stop=max(positions) + 10, bed_file=urllib.quote(bed_url))
 
+        extracted = describe.alleleDescription(
+            describe.describe(output.getIndexedOutput("original", 0),
+            output.getIndexedOutput("mutated", 0)))
+
+        extractedProt = describe.alleleDescription(
+            describe.describe(output.getIndexedOutput("oldprotein", 0),
+            output.getIndexedOutput("newprotein", 0, default=""), DNA=False))
+
+
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
@@ -852,7 +861,9 @@ class Check:
             'restrictionSites'   : output.getOutput('restrictionSites'),
             'legends'            : output.getOutput('legends'),
             'reference'          : reference,
-            'browserLink'        : browser_link
+            'browserLink'        : browser_link,
+            'extractedDescription' : (extracted, urllib.quote(extracted)),
+            'extractedProtein'   : (extractedProt, urllib.quote(extractedProt))
         }
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
