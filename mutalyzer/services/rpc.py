@@ -539,7 +539,7 @@ class MutalyzerService(ServiceBase):
         return result
     #chromosomeName
 
-    @srpc(Mandatory.String, Mandatory.String, String, 
+    @srpc(Mandatory.String, Mandatory.String, String,
         _returns=Array(Mandatory.String))
     def numberConversion(build, variant, gene=None):
         """
@@ -1029,6 +1029,8 @@ class MutalyzerService(ServiceBase):
         """
         Extract the HGVS variant description from a reference sequence and an
         observed sequence.
+
+        Note that this only works on DNA sequences for now.
         """
         output = Output(__file__)
 
@@ -1036,7 +1038,7 @@ class MutalyzerService(ServiceBase):
             'Received request descriptionExtract')
 
         result = Allele()
-        result.allele = describe.describeDNA(reference, observed)
+        result.allele = describe.describe(reference, observed)
         result.description = describe.alleleDescription(result.allele)
 
         output.addMessage(__file__, -1, 'INFO',
