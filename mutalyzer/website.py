@@ -24,6 +24,7 @@ import os
 import bz2
 import web
 import urllib
+from collections import defaultdict
 
 from lxml import etree
 from cStringIO import StringIO
@@ -109,7 +110,7 @@ class render_tal:
         filename = name
 
         def template(args={}, scheme='html', standalone=False,
-                     prevent_caching=False):
+                     prevent_caching=False, page=None):
             """
             Template render function.
 
@@ -126,6 +127,7 @@ class render_tal:
                                argument for template.
             @return: Render of template.
             """
+            page = page or filename
             file = filename
             if scheme == 'html':
                 file += '.html'
@@ -150,6 +152,11 @@ class render_tal:
             # Wrap in site layout with menu
             if scheme == 'html' and not standalone:
                 context.addGlobal('sitemacros', template)
+                # The following three lines are a hack to get class="active"
+                # on the active menu item, working around TAL.
+                active = defaultdict(lambda: 'menu')
+                active[page] = 'menu active'
+                context.addGlobal('active', active)
                 templateFile = open(os.path.join(self.path, 'menu.html'), 'r')
                 template = simpleTAL.compileHTMLTemplate(templateFile)
                 templateFile.close()
@@ -1133,7 +1140,10 @@ class BatchChecker:
         }
 
         # Make sure the correct page is displayed for an entrypoint
-        if not batchType:
+        if batchType:
+            page = 'batch' + batchType
+        else:
+            page = 'batch'
             batchType = 'NameChecker'
 
         if batchType in attr["batchTypes"]:
@@ -1186,7 +1196,7 @@ class BatchChecker:
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
-        return render.batch(attr)
+        return render.batch(attr, page=page)
     #batch
 #BatchChecker
 

@@ -8,16 +8,6 @@
       href="base/css/style.css">
     <script
       type="text/javascript"
-      language="JavaScript"
-      src="base/js/index.js">
-    </script>
-    <script
-      type="text/javascript"
-      language="javascript"
-      src="base/js/menu.js">
-    </script>
-    <script
-      type="text/javascript"
       language="javascript"
       src="base/js/interface.js?20120511">
     </script>
@@ -36,12 +26,7 @@
     leftmargin="0"
     topmargin="0"
     marginwidth="0"
-    marginheight="0"
-    onload="initActive();
-            preloadImages('base/images/bullitlicht1.gif',
-                          'base/images/bullitlicht2.gif',
-                          'base/images/mutalyzer_logo_bw.png',
-                          'base/images/mutalyzer_logo.png');">
+    marginheight="0">
     <!-- Header -->
     <a id = "top" name = "top"></a>
 
@@ -126,353 +111,186 @@
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_index">
-        </td>
+      <tr tal:attributes="class active/index">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_index"
-            onclick="swapActive('index');"
-            href="index"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'index');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'index');"
-            class="vertnavsub">Home</a>
+          <a href="index">Home</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_check">
-        </td>
+      <tr tal:attributes="class active/check">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_check"
-            onclick="swapActive('check');"
-            href="check"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'check');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'check');"
-            class="vertnavsub">Name Checker</a>
+          <a href="check">Name Checker</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_syntaxCheck">
-        </td>
+      <tr tal:attributes="class active/parse">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_syntaxCheck"
-            onclick="swapActive('syntaxCheck');"
-            href="syntaxCheck"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'syntaxCheck');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'syntaxCheck');"
-            class="vertnavsub">Syntax Checker</a>
+          <a href="syntaxCheck">Syntax Checker</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_positionConverter">
-        </td>
+      <tr tal:attributes="class active/converter">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_positionConverter"
-            onclick="swapActive('positionConverter');"
-            href="positionConverter"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'positionConverter');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'positionConverter');"
-            class="vertnavsub">Position Converter</a>
+          <a href="positionConverter">Position Converter</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_snp">
-        </td>
+      <tr tal:attributes="class active/snp">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_snp"
-            onclick="swapActive('snp');"
-            href="snp"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'snp');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'snp');"
-            class="vertnavsub">SNP Converter</a>
+          <a href="snp">SNP Converter</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_nameGenerator">
-        </td>
+      <tr tal:attributes="class active/nameGenerator">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_nameGenerator"
-            onclick="swapActive('nameGenerator');"
-            href="nameGenerator"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'nameGenerator');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'nameGenerator');"
-            class="vertnavsub">Name Generator</a>
+          <a href="nameGenerator">Name Generator</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_descriptionExtract">
-        </td>
+      <tr tal:attributes="class active/descriptionExtract">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_descriptionExtract"
-            onclick="swapActive('descriptionExtract');"
-            href="descriptionExtract"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'descriptionExtract');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'descriptionExtract');"
-            class="vertnavsub">Description Extractor</a>
+          <a href="descriptionExtract">Description Extractor</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_upload">
-        </td>
+      <tr tal:attributes="class active/gbupload">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_upload"
-            onclick="swapActive('upload');"
-            href="upload"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'upload');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'upload');"
-            class="vertnavsub">Reference File Loader</a>
+          <a href="upload">Reference File Loader</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_batch">
-        </td>
+      <tr tal:attributes="class active/batch">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_batch"
-            onclick="swapActive('batch');"
-            href="batch"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'batch');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'batch');"
-            class="vertnavsub">Batch Jobs</a>
+          <a href="batch">Batch Jobs</a>
         </td>
       </tr>
 
-      <tr>
+      <tr tal:attributes="class active/batchNameChecker">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_batchNameChecker">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_batchNameChecker"
-            href="batchNameChecker"
-            class="vertnavsub">Name Checker</a>
+          <a href="batchNameChecker">Name Checker</a>
         </td>
       </tr>
 
-      <tr>
+      <tr tal:attributes="class active/batchSyntaxChecker">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_batchSyntaxChecker">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_batchSyntaxChecker"
-            href="batchSyntaxChecker"
-            class="vertnavsub">Syntax Checker</a>
+          <a href="batchSyntaxChecker">Syntax Checker</a>
         </td>
       </tr>
 
-      <tr>
+      <tr tal:attributes="class active/batchPositionConverter">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_batchPositionConverter">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_batchPositionConverter"
-            href="batchPositionConverter"
-            class="vertnavsub">Position Converter</a>
+          <a href="batchPositionConverter">Position Converter</a>
         </td>
       </tr>
 
-      <tr>
+      <tr tal:attributes="class active/batchSnpConverter">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_batchSnpConverter">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_batchSnpConverter"
-            href="batchSnpConverter"
-            class="vertnavsub">SNP Converter</a>
+          <a href="batchSnpConverter">SNP Converter</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_webservices">
-        </td>
+      <tr tal:attributes="class active/webservices">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_webservices"
-            onclick="swapActive('webservices');"
-            href="webservices"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'webservices');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'webservices');"
-            class="vertnavsub">Webservices</a>
+          <a href="webservices">Webservices</a>
         </td>
       </tr>
 
       <tr><td>&nbsp;</td></tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_help">
-        </td>
+      <tr tal:attributes="class active/help">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_help"
-            onclick="swapActive('help');"
-            href="help"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'help');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'help');"
-            class="vertnavsub">Help</a>
+          <a href="help">Help</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_faq">
-        </td>
+      <tr tal:attributes="class active/faq">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_faq"
-            onclick="swapActive('faq');"
-            href="faq"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'faq');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'faq');"
-            class="vertnavsub">FAQ</a>
+          <a href="faq">FAQ</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_exercise">
-        </td>
+      <tr tal:attributes="class active/exercise">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_exercise"
-            onclick="swapActive('exercise');"
-            href="exercise"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'exercise');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'exercise');"
-            class="vertnavsub">Exercise</a>
+          <a href="exercise">Exercise</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_disclaimer">
-        </td>
+      <tr tal:attributes="class active/disclaimer">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_disclaimer"
-            onclick="swapActive('disclaimer');"
-            href="disclaimer"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'disclaimer');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'disclaimer');"
-            class="vertnavsub">Disclaimer</a>
+          <a href="disclaimer">Disclaimer</a>
         </td>
       </tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_bugTrack">
-        </td>
+      <tr class="menu">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
-          <a id="page_bugTrack"
-            onclick="swapActive('bugTrack');"
-            href="https://humgenprojects.lumc.nl/trac/mutalyzer"
-            onmouseover="navAct('base/images/bullitlicht1.gif',
-                                'bugTrack');"
-            onmouseout="navDeAct('base/images/bullitdonker.gif',
-                                 'bugTrack');"
-            class="vertnavsub">Feedback</a>
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer">Feedback</a>
         </td>
       </tr>
 
       <tr><td>&nbsp;</td></tr>
 
-      <tr>
-        <td valign="top" width="20">
-          <img src="base/images/bullitdonker.gif" id="b_external">
-        </td>
+      <tr class="menu inactive">
+        <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
           External Links
         </td>
       </tr>
 
-      <tr>
+      <tr class="menu">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_external_hgb">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_external_hgb"
-            href="http://www.genenames.org/guidelines.html"
-            class="vertnavsub">Human Gene Nomenclature</a>
+          <a href="http://www.genenames.org/guidelines.html"
+           >Human Gene Nomenclature</a>
         </td>
       </tr>
 
-      <tr>
+      <tr class="menu">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_external_hgvs">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_external_hgvs"
-            href="http://www.hgvs.org/mutnomen/"
-            class="vertnavsub">HGVS Variation Nomenclature</a>
+          <a href="http://www.hgvs.org/mutnomen/"
+           >HGVS Variation Nomenclature</a>
         </td>
       </tr>
 
-      <tr>
+      <tr class="menu">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_external_hgvsext">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_external_hgvsext"
-            href="http://www.hgvs.org/mutnomen/HGVS_extend_PT.doc"
-            class="vertnavsub">HGVS Nomenclature Extension Proposal</a>
+          <a href="http://www.hgvs.org/mutnomen/HGVS_extend_PT.doc"
+           >HGVS Nomenclature Extension Proposal</a>
         </td>
       </tr>
 
-      <tr>
+      <tr class="menu">
         <td></td>
-        <td valign="baseline" width="10">
-          <img src="base/images/bullitmiddel.gif" id="b_external_lovd">
-        </td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
         <td colspan="2">
-          <a id="page_external_lovd"
-            onclick="swapActive('external_lovd');"
-            href="http://www.lovd.nl/"
-            class="vertnavsub">LOVD</a>
+          <a href="http://www.lovd.nl/">LOVD</a>
         </td>
       </tr>
 
@@ -516,7 +334,7 @@
     <!-- Content -->
 
     <table cellpadding="0" cellspacing="0" width="100%" border="0">
-    <tbody onMouseover="resetAll();"><tr>
+    <tbody><tr>
     <td width="0"></td>
     <td width="0">
 
