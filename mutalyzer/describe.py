@@ -44,10 +44,11 @@ class LCS(object):
         self.__lcp = lcp
         self.__s1 = s1[self.__lcp:s1_end]
         self.__s2 = s2[self.__lcp:s2_end]
-        self.__s2_rc = None
+        self.__s2_len = s2_end - lcp
         self.__matrix = self.LCSMatrix(self.__s1, self.__s2)
-        self.__matrix_rc = None
 
+        self.__s2_rc = None
+        self.__matrix_rc = None
         if DNA:
             self.__s2_rc = Seq.reverse_complement(s2[self.__lcp:s2_end])
             self.__matrix_rc = self.LCSMatrix(self.__s1, self.__s2_rc)
@@ -62,14 +63,34 @@ class LCS(object):
         @returns: A graphical representation of the LCS matrix.
         @rtype: str
         """
-        out = self.__delim.join(self.__delim + '-' + self.__s2) + '\n'
+        return self.visMatrix((0, len(self.__s1)), (0, len(self.__s2)))
+    #__str__
 
-        for i in range(len(self.__matrix)):
+    def visMatrix(self, r1, r2, rc=False):
+        """
+        Return a graphical representation of the LCS matrix, mainly for
+        debugging.
+
+        @returns: A graphical representation of the LCS matrix.
+        @rtype: str
+        """
+        nr1 = r1[0] - self.__lcp, r1[1] - self.__lcp
+        nr2 = r2[0] - self.__lcp, r2[1] - self.__lcp
+
+        M = self.__matrix
+        s2 = self.__s2
+        if rc:
+            M = self.__matrix_rc
+            s2 = self.__s2_rc
+
+        out = self.__delim.join(self.__delim + '-' + s2[nr2[0]:nr2[1]]) + '\n'
+        for i in range(nr1[0], nr1[1] + 1):
             out += (('-' + self.__s1)[i] + self.__delim +
-                self.__delim.join(map(str, self.__matrix[i])) + '\n')
+                self.__delim.join(map(lambda x: str(M[i][x]),
+                range(nr2[0], nr2[1] + 1))) + '\n')
 
         return out
-    #__str__
+    #visMatrix
 
     def LCSMatrix(self, s1, s2):
         """
@@ -116,6 +137,8 @@ class LCS(object):
         M = self.__matrix
         if rc:
             M = self.__matrix_rc
+            nr2 = self.__s2_len - nr2[1], self.__s2_len - nr2[0]
+        #if
 
         for i in range(nr1[0], nr1[1] + 1):
             x_relative = i - nr1[0]
