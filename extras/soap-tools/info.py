@@ -5,7 +5,7 @@ Get static version information from a Mutalyzer installation.
 Usage:
   {command}
 
-The version information is retrieved from the Mutalyzer SOAP webservice and
+The version information is retrieved from the Mutalyzer SOAP web service and
 printed to standard output.
 """
 

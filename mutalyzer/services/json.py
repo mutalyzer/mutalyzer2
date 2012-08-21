@@ -1,5 +1,5 @@
 """
-Mutalyzer webservice HTTP/RPC with JSON response payloads.
+Mutalyzer web service HTTP/RPC with JSON response payloads.
 """
 
 

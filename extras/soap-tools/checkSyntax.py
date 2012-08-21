@@ -7,8 +7,8 @@ Usage:
 
   description: Variant description to check.
 
-The syntaxchecker results are retrieved from the Mutalyzer SOAP webservice and
-printed to standard output.
+The syntaxchecker results are retrieved from the Mutalyzer SOAP web service
+and printed to standard output.
 """
 
 

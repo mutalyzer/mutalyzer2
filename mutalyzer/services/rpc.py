@@ -118,7 +118,7 @@ def _checkVariant(L, variant) :
 
 class MutalyzerService(ServiceBase):
     """
-    Mutalyzer webservices.
+    Mutalyzer web services.
 
     These methods are made public via a SOAP interface.
     """

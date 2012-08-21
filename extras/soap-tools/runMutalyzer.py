@@ -8,7 +8,7 @@ Usage:
   description: Variant description to check.
   verbosity: If 'verbose', also output full original and variant sequences.
 
-The namechecker results are retrieved from the Mutalyzer SOAP webservice and
+The namechecker results are retrieved from the Mutalyzer SOAP web service and
 printed to standard output.
 """
 

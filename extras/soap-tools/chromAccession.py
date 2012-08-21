@@ -8,7 +8,7 @@ Usage:
   chromosome: Chromosome to get accession number for, e.g. 'chr2'.
   build: Human genome build, 'hg18' or 'hg19' (default: 'hg19').
 
-The accession number is retrieved from the Mutalyzer SOAP webservice and
+The accession number is retrieved from the Mutalyzer SOAP web service and
 printed to standard output.
 """
 

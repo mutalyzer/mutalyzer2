@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-WSGI interface to the Mutalyzer HTTP/RPC+JSON webservice.
+WSGI interface to the Mutalyzer HTTP/RPC+JSON web service.
 
 The WSGI interface is exposed through the module variable 'application'.
 

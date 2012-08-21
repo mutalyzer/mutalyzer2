@@ -9,7 +9,7 @@ Usage:
   position: Position to lookup overlapping transcripts for.
 
 The transcript accession numbers are retrieved from the Mutalyzer SOAP
-webservice and printed to standard output.
+web service and printed to standard output.
 """
 
 

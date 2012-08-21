@@ -7,8 +7,8 @@ Usage:
 
   days: Retrieve entries of at most this number of days old.
 
-The cache entries are retrieved from the Mutalyzer SOAP webservice and printed
-to standard output.
+The cache entries are retrieved from the Mutalyzer SOAP web service and
+printed to standard output.
 """
 
 

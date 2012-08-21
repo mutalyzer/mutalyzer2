@@ -9,8 +9,8 @@ Usage:
   reference: Reference DNA sequence.
   observed: Observed DNA sequence.
 
-The extracted HGVS description is retrieved from the Mutalyzer SOAP webservice
-and printed to standard output.
+The extracted HGVS description is retrieved from the Mutalyzer SOAP web
+service and printed to standard output.
 """
 
 

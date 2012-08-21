@@ -20,7 +20,7 @@ Unit tests
 ----------
 
 The unit tests depend on a running batch daemon, webserver, and SOAP
-webservice:
+web service:
 
     sudo /etc/init.d/mutalyzer-batchd start
     sudo /etc/init.d/apache2 start
@@ -135,8 +135,8 @@ Todo list:
   for example jinja.
 - Develop a large test suite.
 - Create a web interface url to watch the progress of a batch job.
-- Create webservices for the batch jobs (steal ideas from Jeroen's DVD
-  webservice).
+- Create web services for the batch jobs (steal ideas from Jeroen's DVD
+  web service).
 - Use virtualenv?
 - Use SQLAlchemy?
 - Password for MySQL user.

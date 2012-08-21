@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Add HTTP/RPC+JSON webservice entry to Apache configuration.
+# Add HTTP/RPC+JSON web service entry to Apache configuration.
 #
 # Usage:
 #   ./007-apache-json-webservice.migration [migrate]

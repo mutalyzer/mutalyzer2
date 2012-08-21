@@ -318,10 +318,10 @@ class Reference:
 
         This is used by LOVD to quickly check if a reference file is in the
         cache. If it isn't, it will resubmit it.
-        Of course a more proper solution here would be to have some webservice
-        method which checks if the GenBank file is in the cache *or* can be
-        reconstructed from the information in the database. Because if the
-        latter is the case, Mutalyzer will add it to the cache on the fly.
+        Of course a more proper solution here would be to have some web
+        service method which checks if the GenBank file is in the cache *or*
+        can be reconstructed from the information in the database. Because if
+        the latter is the case, Mutalyzer will add it to the cache on the fly.
         """
         file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
 
@@ -1444,11 +1444,11 @@ class Uploader:
 
 class SoapApi:
     """
-    SOAP webservice documentation.
+    SOAP web service documentation.
     """
     def GET(self):
         """
-        HTML documentation for the webservice.
+        HTML documentation for the web service.
 
         Generate the documentation by a XSL transform of the WSDL document.
         The XSL transformation used is from Tomi Vanek:
@@ -1465,7 +1465,7 @@ class SoapApi:
             .documentation { white-space: pre-line; }
 
         @todo: Use some configuration setting for the location of the
-               webservice.
+               web service.
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """

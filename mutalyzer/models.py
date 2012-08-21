@@ -1,5 +1,5 @@
 """
-Collection of serilizable objects used by the SOAP webservice. They extend
+Collection of serilizable objects used by the SOAP web service. They extend
 from the spyne ClassModel.
 
 Default attributes for the spyne ClassModel:

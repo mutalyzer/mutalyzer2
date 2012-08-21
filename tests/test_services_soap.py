@@ -52,7 +52,7 @@ class TestServicesSoap():
     """
     def setUp(self):
         """
-        Initialize webservice entrypoint.
+        Initialize web service entrypoint.
 
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.

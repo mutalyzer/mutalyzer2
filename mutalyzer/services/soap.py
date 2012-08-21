@@ -1,5 +1,5 @@
 """
-Mutalyzer SOAP/1.1 webservice.
+Mutalyzer SOAP/1.1 web service.
 """
 
 

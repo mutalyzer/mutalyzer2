@@ -621,7 +621,7 @@ facilisi."""
 
     def test_download_py(self):
         """
-        Download a Python example client for the webservice.
+        Download a Python example client for the web service.
         """
         r = self.app.get('/download/client-suds.py')
         assert_equal(r.content_type, 'text/plain')
@@ -629,7 +629,7 @@ facilisi."""
 
     def test_download_rb(self):
         """
-        Download a Ruby example client for the webservice.
+        Download a Ruby example client for the web service.
         """
         r = self.app.get('/download/client-savon.rb')
         assert_equal(r.content_type, 'text/plain')
@@ -637,7 +637,7 @@ facilisi."""
 
     def test_download_cs(self):
         """
-        Download a C# example client for the webservice.
+        Download a C# example client for the web service.
         """
         r = self.app.get('/download/client-mono.cs')
         assert_equal(r.content_type, 'text/plain')
@@ -645,7 +645,7 @@ facilisi."""
 
     def test_download_php(self):
         """
-        Download a PHP example client for the webservice.
+        Download a PHP example client for the web service.
         """
         r = self.app.get('/download/client-php.php')
         assert_equal(r.content_type, 'text/plain')

@@ -11,8 +11,8 @@ Usage:
   pos2: End of chromosomal region, e.g. 230938269.
   tolerant: Optionally set region matching to be tolerant, e.g. 1.
 
-The transcript information is retrieved from the Mutalyzer SOAP webservice and
-printed to standard output.
+The transcript information is retrieved from the Mutalyzer SOAP web service
+and printed to standard output.
 """
 
 

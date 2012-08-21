@@ -9,7 +9,7 @@ Usage:
   variant: Variant to map, e.g. 'g.112039014G>T'.
   build: Human genome build, 'hg18' or 'hg19' (default: 'hg19').
 
-The mapping information is retrieved from the Mutalyzer SOAP webservice and
+The mapping information is retrieved from the Mutalyzer SOAP web service and
 printed to standard output.
 """
 

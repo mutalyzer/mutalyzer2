@@ -9,7 +9,7 @@ Usage:
   description: Variant description to convert.
 
 The converted HGVS description(s) is (are) retrieved from the Mutalyzer SOAP
-webservice and printed to standard output.
+web service and printed to standard output.
 """
 
 

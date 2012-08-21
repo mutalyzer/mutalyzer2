@@ -9,7 +9,7 @@ Usage:
   transcript_reference: Reference of the transcript to lookup.
 
 The transcript and product name are retrieved from the Mutalyzer SOAP
-webservice and printed to standard output.
+web service and printed to standard output.
 """
 
 

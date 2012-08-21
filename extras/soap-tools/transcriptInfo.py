@@ -7,8 +7,8 @@ Usage:
 
   transcript: Transcript accession number, e.g. 'NM_002001.2'.
 
-The transcript information is retrieved from the Mutalyzer SOAP webservice and
-printed to standard output.
+The transcript information is retrieved from the Mutalyzer SOAP web service
+and printed to standard output.
 """
 
 

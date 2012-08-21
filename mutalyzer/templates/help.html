@@ -11,20 +11,20 @@
         Mutalyzer is a tool primarily designed to check descriptions of
         sequence variants according to the standard human sequence variant
         nomenclature of the Human Genome Sequence Variation Society
-        (<a href="http://www.hgvs.org/">HGVS</a>) (For an overview, visit 
+        (<a href="http://www.hgvs.org/">HGVS</a>) (For an overview, visit
         <a href="http://www.hgvs.org/mutnomen/"
           >http://www.hgvs.org/mutnomen/</a>).
         Mutalyzer aims to encourage the proper use of&nbsp; nomenclature in
         publications and reduce redundancy in sequence variation databases. In
         principle, Mutalyzer can check descriptions of sequence variants
         detected in other organisms, provided that the standard HGVS
-        nomenclature is applied. 
+        nomenclature is applied.
       </p>
 
       <h3>Mutalyzer 2 flow</h3>
       <p>
         The user specifies a reference sequence (file) and a variant using the
-        <a href="#NameGenerator">Name Generator</a> or the 
+        <a href="#NameGenerator">Name Generator</a> or the
         <a href="#NameChecker">Name checker</a> interface. The Name Generator
         builds the complete variant description for the Name Checker (e.g.,
         Mutalyzer uses this input to perform the nomenclature check in the
@@ -32,8 +32,8 @@
       </p>
       <p>
         1) Retriever: retrieves
-        <a href="#Ref">reference sequence records</a> from the 
-        <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a> or 
+        <a href="#Ref">reference sequence records</a> from the
+        <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a> or
         <a href="http://www.lrg-sequence.org/">LRG</a> websites.
       </p>
       <p>
@@ -76,7 +76,7 @@
           different checkers that accept a large list of descriptions as input.
       </p>
       <p>
-        - <a href="#Webservices">Webservices</a>: programmatic access to
+        - <a href="#Webservices">Web services</a>: programmatic access to
           Mutalyzer's functionality.
       </p>
       <p>&nbsp;</p>
@@ -99,18 +99,18 @@
         1) GenBank files
       </p>
       <p>
-        GenBank records (e.g., NG_007400.1) are specified by a 
+        GenBank records (e.g., NG_007400.1) are specified by a
         <i>GenBank accession number</i> (NG_007400) and a version number (.1).
         Omission of the version number automatically results in selection of
         the most recent version of that record. In case of outdated versions,
-        Mutalyzer will issue a warning. Alternatively, the unique 
+        Mutalyzer will issue a warning. Alternatively, the unique
         <i>GenInfo identifier</i> (gi) of the reference sequence (e.g.,
         4506864) can be used with or without the letters ''gi'';.
         Mutalyzer does not accept GenBank records containing no sequence (e.g.
         chromosomal reference sequence identifiers referring to contig
         accession numbers) or files larger than 10 MB. Mutalyzer also accepts
         user-defined files in GenBank format, including slices of chromosomal
-        reference sequences. These files are specified by unique 
+        reference sequences. These files are specified by unique
         <i><a href="#UD">UD identifiers</a></i>, which are returned by Mutalyzer
         after upload (See the <a href="#GenBankUploader">Reference File Loader</a>
         section for more information).<br>
@@ -121,16 +121,16 @@
       <p>
         Locus Reference Genomic (LRG) files containing uniquely and stable
         reference DNA sequences along with all relevant transcript and protein
-        sequences essential to the description of gene variants (see the 
+        sequences essential to the description of gene variants (see the
         <a href="http://www.lrg-sequence.org/"> LRG website</a> for more
-        information). LRG files are based on 
-        <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a>'s 
+        information). LRG files are based on
+        <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a>'s
         <a href="http://www.ncbi.nlm.nih.gov/RefSeq/RSG/">RefSeqGene project</a>
         and created in collaboration with the community of research and
         diagnostic labs, LSDB curators and mutation consortia. LRG files are
         specified by the prefix &quot;LRG_&quot; followed by a number (e.g.,
         LRG_1). The <a href="http://www.lrg-sequence.org/"> LRG website</a>
-        lists existing LRG sequences and has an 
+        lists existing LRG sequences and has an
         <a href="ftp://ftp.ebi.ac.uk/pub/databases/lrgex/">FTP site</a> for
         downloading LRGs. To maintain LRG stability, Mutalyzer's Reference File Loader does
         not accept user-defined LRG files.
@@ -140,7 +140,7 @@
       <p>
         The Mutalyzer nomenclature checker accepts variant descriptions in
         standard human sequence variant nomenclature format. For users, who are
-        not familiar with the nomenclature syntax, Mutalyzer's 
+        not familiar with the nomenclature syntax, Mutalyzer's
         <a href="#NameGenerator">Name Generator</a> provides a form to acquire
         the separate components necessary to construct variant descriptions.
       </p>
@@ -207,7 +207,7 @@
       </p>
       <p>
         The <i>Non-coding DNA</i> or <i>ncDNA</i> position numbering scheme can
-        be used with:<br> 
+        be used with:<br>
         a) <i> GenBank</i> records containing genomic sequences with annotated
         transcripts without a corresponding coding sequence.<br>
         b) LRG records<br>
@@ -247,10 +247,10 @@
         The value 1 is assigned to the A of the ATG start codon and all the
         exonic bases between start and stop are counted normally.<br>
         5' untranslated region: Exonic bases upstream of (i.e. before) the ATG
-        are numbered -1, -2, -3 and so on.<br> 
+        are numbered -1, -2, -3 and so on.<br>
         3' untranslated region: Exonic bases downstream of (i.e. behind) the
         stop codon are numbered *1, *2, *3 and so on.<br>
-        Intronic bases in the Coding sequence are numbered x+1, x+2, x+3, ... 
+        Intronic bases in the Coding sequence are numbered x+1, x+2, x+3, ...
         y-3, y-2, y-1 where x is the value of the last exonic base
         upstream of the intron, y is the value of the first exonic base
         downstream of the intron and x and y are consecutive numbers. Intronic
@@ -485,7 +485,7 @@
       </p>
 
       <hr>
-      
+
       <h3>Mutalyzer Name Checker Help<a name="NameChecker"></a></h3>
       <p>
         Users can check the correctness of a variant description. The Name
@@ -494,15 +494,15 @@
       </p>
       <p>
         Examples: <br>
-        AB026906.1:c.3_4insG<br> 
-        AB026906.1:c.[1del;4G&gt;T]<br> 
-        AL449423.14(CDKN2A_v1):c.1_10del<br> 
+        AB026906.1:c.3_4insG<br>
+        AB026906.1:c.[1del;4G&gt;T]<br>
+        AL449423.14(CDKN2A_v1):c.1_10del<br>
         UD_127955523176(DMD_v002):c.136G&gt;T<br>
         LRG_1t1:c.266G&gt;T
       </p>
 
       <hr>
-      
+
       <h3>Mutalyzer Syntax Checker Help<a name="SyntaxChecker"></a></h3>
       <p>
         Users can check the correctness of the standard nomenclature syntax.
@@ -517,9 +517,9 @@
         AB026906.1:c.35_36ins<br>
         LRG_1t1:c.266G&gt;T
       </p>
-      
+
       <hr>
-      
+
       <h3>
         Mutalyzer Position Converter Help<a name="PositionConverter"></a>
       </h3>
@@ -528,23 +528,23 @@
         description from the chromosomal position for a specific human genome
         build to a position relative to RefSeq transcript reference sequences.
         The Position Converter uses a local database containing the mapping
-        information from the 
+        information from the
         <a href="http://genome.ucsc.edu/index.html?org=Human"
           >UCSC genome browser</a> for human genome builds hg18 (NCBI 36) and
         hg19 (GRCh37). The specified version of the RefSeq transcript Accession
         number has to be present in the database. The sequence variation
-        description has <u>not</u> been checked by Mutalyzer's 
+        description has <u>not</u> been checked by Mutalyzer's
         <a href="#NameChecker">Name Checker</a>.
       </p>
       <p>
         Examples:<br>
-        NM_003002.2:c.274G&gt;T<br> 
-        chr11:g.111959693G&gt;T<br> 
+        NM_003002.2:c.274G&gt;T<br>
+        chr11:g.111959693G&gt;T<br>
         NC_000011.9:g.111959693G&gt;T
       </p>
 
       <hr>
-      
+
       <h3>Mutalyzer SNP Converter Help<a name="SNPConverter"></a></h3>
       <p>
         The SNP Converter will submit a <a
@@ -560,7 +560,7 @@
       </p>
 
       <hr>
-      
+
       <h3>Mutalyzer Name Generator Help<a name="NameGenerator"></a></h3>
       <p>
         The Name Generator aims to assist users, who are not familiar with all
@@ -573,28 +573,28 @@
       </p>
       <p>
         Example: <br>
-        Reference: AL449423.14<br> 
-        Sequence Type: Coding DNA<br> 
-        Gene symbol: CDKN2A<br> 
+        Reference: AL449423.14<br>
+        Sequence Type: Coding DNA<br>
+        Gene symbol: CDKN2A<br>
         Transcript: v_1
       </p>
       <p>
-        Variant 1<br> 
-        Mutation Type: Substitution<br> 
-        Start Position: 112<br> End Position: 112<br> 
-        Deleted Sequence: C<br> 
+        Variant 1<br>
+        Mutation Type: Substitution<br>
+        Start Position: 112<br> End Position: 112<br>
+        Deleted Sequence: C<br>
         Inserted Sequence: T
       </p>
 
       <hr>
-      
+
       <h3>Mutalyzer Batch Checker Help<a name="BatchChecker"></a></h3>
       <p>
         <br>
         The Batch checkers support submission of files containing large
-        datasets to the <a href="#NameChecker">Name Checker</a>, 
-        <a href="#SyntaxChecker">Syntax Checker</a>, and 
-        <a href="#PositionConverter">Position Converter</a> tools. 
+        datasets to the <a href="#NameChecker">Name Checker</a>,
+        <a href="#SyntaxChecker">Syntax Checker</a>, and
+        <a href="#PositionConverter">Position Converter</a> tools.
       </p>
       <p>The Mutalyzer batch checker accepts the following file formats
         <ul>
@@ -603,7 +603,7 @@
             <li>OpenOffice .odt File</li>
         </ul>
       </p>
-      
+
       <h5>
         We accept two types of input files, you can download examples below
       </h5>
@@ -627,7 +627,7 @@
       </div>
 
       <h5>
-        Old Style: 
+        Old Style:
         <a href="downloads/batchtestold.txt">Download Example File</a>
       </h5>
       <div style="padding-left:20px; width:400px">
@@ -658,7 +658,7 @@
         Users can upload a tab-delimited text file&nbsp;with the sequence
         variations to be checked. Files for the Name Checker and the Syntax
         Checker may contain any combination of reference sequences and sequence
-        types for different genes. Mutalyzer's 
+        types for different genes. Mutalyzer's
         <i><a href="#UD">UD identifiers</a></i> can also be used, but we
         strongly suggest to update any GenBank record following
         <a href="http://www.ncbi.nlm.nih.gov/Genbank/update.html"
@@ -677,9 +677,9 @@
         Internet Explorer, progress may not be reported correctly. Adding
         Mutalyzer to your trusted sites is one option to solve this.
       </p>
-      
+
       <hr>
-      
+
       <h2>Mutalyzer Output</h2>
       <p>
         Mutalyzer has been designed to issue warnings, when correcting entries,
@@ -692,7 +692,7 @@
       </p>
       <p>
         &lt;<i>Accession Number</i>&gt;.&lt;<i>version number&gt;</i>:<i>&lt;sequence type</i>&gt;.&lt;<i >mutation</i>&gt;<br>
-        
+
         (Examples: NM_003002.1:c.5delC or AL449423.14:g.61866_85191del)<br>
         or<br>
         &lt;<i>Accession Number</i>&gt;.&lt;<i>version number&gt;&lt;(Gene Symbol)&gt;</i>:<i >&lt;sequence type</i>&gt;.&lt;<i >mutation</i>&gt;<br>
@@ -717,7 +717,7 @@
         arginine substituted for a proline at position 2).
       </p>
       <p>
-        Please note the following: 
+        Please note the following:
       </p>
       <p>
         - Sequence variation descriptions using genomic references in
@@ -731,12 +731,12 @@
           on the selected Sequence Type. Example: 4506864:c.5del will be
           converted into NM_003002.1:c.5delC
       </p>
-      
+
       <hr>
-      
+
       <h3>Reference File Loader Help<a name="GenBankUploader"></a></h3>
       <p>
-        Users can upload their own reference sequence file in 
+        Users can upload their own reference sequence file in
         <a href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html"
           >GenBank Flat file format</a>, retrieve the genomic sequence of a
         gene with its flanking regions, or specify a chromosomal range for use
@@ -770,11 +770,11 @@
       <p>
         Enter the URL of the website, where the Genbank Flat file with a .gb
         extension can be found and press the submit button.
-      </p> 
+      </p>
       <p>&nbsp;</p>
       <p>
         <b>
-          Retrieve part of the reference genome for a 
+          Retrieve part of the reference genome for a
           (<a href="http://www.genenames.org">HGNC</a>) gene symbol
         </b>
       </p>
@@ -809,7 +809,7 @@
           <tr>
             <td>Number of 3' flanking nucleotides</td>
             <td><input type="text" name="3utr" value="2000"></td>
-          </tr>               	
+          </tr>
        	</table>
       </div>
       <p>
@@ -860,7 +860,7 @@
           Your reference sequence was loaded successfully. You now can use
           mutalyzer with the following accession number as reference:
           UD_127955523176 <br>
-          Download this reference sequence. 
+          Download this reference sequence.
         </p>
       </div>
       <p>
@@ -872,20 +872,20 @@
 
       <hr>
 
-      <h3>Mutalyzer Webservices <a name="Webservices"></a></h3>
+      <h3>Mutalyzer Web services <a name="Webservices"></a></h3>
       <p>
-        Mutalyzer's webservices provide programmatic access to different parts
-        of Mutalyzer's functionality. In the future, these will be used by 
+        Mutalyzer's web services provide programmatic access to different parts
+        of Mutalyzer's functionality. In the future, these will be used by
         <a href="http://www.LOVD.nl">LOVD</a> to convert coding DNA positions
         to chromosomal positions for mapping and display purposes. A full
-        description of available webservices can be found at the 
-        <a href="documentation">Webservice documentation page</a>. 
-        Example scripts and requirements can be found at the 
-        <a href="webservices">Webservice page</a>.
+        description of available web services can be found at the
+        <a href="documentation">Web service documentation page</a>.
+        Example scripts and requirements can be found at the
+        <a href="webservices">Web service page</a>.
       </p>
 
       <hr>
-      
+
       <h3>Using Mutalyzer with sequences from other organisms</h3>
       <p>
         Mutalyzer can process Genbank reference files from other organisms than
@@ -906,13 +906,13 @@
         replicates the input of the user. Most errors occurring after mistyping
         should be easy to understand and can be corrected immediately by
         altering the data in the field specified. In other cases, Mutalyzer
-        should advise you to contact 
+        should advise you to contact
         <a href="mailto:Mutalyzer@humgen.nl">us</a> when the error persists.
         Please specify your input and which tool you used.
       </p>
       <p>
         Occasionally, Mutalyzer will display an Internal Server Error message
-        due to unexpected behavior. You can use Mutalyzer's 
+        due to unexpected behavior. You can use Mutalyzer's
         <a href="https://humgenprojects.lumc.nl/trac/mutalyzer"
           >bugtracking system</a> to report errors and send in feature requests.
       </p>
@@ -923,7 +923,7 @@
         Ophuizen E, den Dunnen JT, Taschner PE. Improving sequence variant
         descriptions in mutation databases and literature using the MUTALYZER
         sequence variation nomenclature checker.
-        <a href="http://www.ncbi.nlm.nih.gov/entrez/utils/fref.fcgi?PrId=3058&itool=AbstractPlus-def&uid=18000842&db=pubmed&url=http://dx.doi.org/10.1002/humu.20654">Hum Mutat 29:6-13 (2008)</a> 
+        <a href="http://www.ncbi.nlm.nih.gov/entrez/utils/fref.fcgi?PrId=3058&itool=AbstractPlus-def&uid=18000842&db=pubmed&url=http://dx.doi.org/10.1002/humu.20654">Hum Mutat 29:6-13 (2008)</a>
         [<a href="http://www.ncbi.nlm.nih.gov/pubmed/18000842?"
           >PMID: 18000842</a>].
       </p>
@@ -933,7 +933,7 @@
         specifications provided by Peter E. M. Taschner and Johan T. den
         Dunnen. The different parts of the nomenclature checker functionality
         have been separated into modules, which can be used as independent
-        webservices and undergo further development and extension in the
+        web services and undergo further development and extension in the
         future.
       </p>
 
@@ -942,7 +942,7 @@
       <p>
         If you have any comments or suggestions be sure to let us know!
       </p>
-      
+
       <p>
         Last modified: November 5, 2010
       </p>
