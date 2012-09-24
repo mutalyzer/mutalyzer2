@@ -585,7 +585,7 @@ class GenBankRetriever(Retriever):
                                         'Could not get mapping information for gene %s.' % gene)
                 return None
 
-            if summary[0]["NomenclatureSymbol"] == gene : # Found it.
+            if summary[0]["NomenclatureSymbol"].lower() == gene.lower() : # Found it.
                 if not summary[0]["GenomicInfo"] :
                     self._output.addMessage(__file__, 4, "ENOMAPPING",
                         "No mapping information found for gene %s." % gene)
