@@ -108,7 +108,8 @@
     <script language="javascript">
         oldload = window.onload
         initpage = function() {
-            oldload();
+            if (oldload)
+              oldload();
             onloadBatch();
         }
     </script>
