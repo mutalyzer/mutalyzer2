@@ -16,6 +16,11 @@ from mutalyzer.util import longest_common_prefix, longest_common_suffix
 from mutalyzer.util import palinsnoop, roll
 from mutalyzer import models
 
+
+# Maximum size of the LCS matrix
+MAX_MATRIX_SIZE = 8000000
+
+
 class LCS(object):
     """
     Class that calculates a Longest Common Substring matrix once and provides
@@ -35,7 +40,7 @@ class LCS(object):
         @arg lcp: The length of the longest common prefix of {s1} and {s2}.
         @type lcp: int
         @arg s1_end: End of the substring in {s1}.
-        @type s1_end: 
+        @type s1_end:
         @arg s2_end: End of the substring in {s2}.
         @type s2_end: int
         @arg DNA:
@@ -805,6 +810,9 @@ def describe(original, mutated, DNA=True):
     lcs = len(longest_common_suffix(s1[lcp:], s2[lcp:]))
     s1_end = len(s1) - lcs
     s2_end = len(s2) - lcs
+
+    if (s1_end - lcp) * (s2_end - lcp) > MAX_MATRIX_SIZE:
+        return
 
     if not DNA:
         M = LCS(s1, s2, lcp, s1_end, s2_end)
