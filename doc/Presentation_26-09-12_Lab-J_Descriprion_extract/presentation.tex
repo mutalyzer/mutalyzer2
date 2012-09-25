@@ -1,0 +1,676 @@
+\documentclass[slidestop]{beamer}
+
+\title{Extracting HGVS descriptions}
+\providecommand{\myConference}{Work discussion}
+\providecommand{\myDate}{Thursday, 24 February 2011}
+\author{Jeroen F. J. Laros}
+\providecommand{\myGroup}{Leiden Genome Technology Center}
+\providecommand{\myDepartment}{Department of Human Genetics}
+\providecommand{\myCenter}{Center for Human and Clinical Genetics}
+\providecommand{\lastCenterLogo}{
+  \raisebox{-0.1cm}{
+    \includegraphics[height = 1cm]{lgtc_logo}
+    %\includegraphics[height = 0.7cm]{ngi_logo}
+  }
+}
+\providecommand{\lastRightLogo}{
+  %\includegraphics[height = 0.7cm]{nbic_logo}
+  %\includegraphics[height = 0.8cm]{nwo_logo_en}
+  \hspace{1.5cm}\includegraphics[height = 0.7cm]{gen2phen_logo}
+}
+
+\usetheme{lumc}
+
+\usepackage{ifthen}
+
+\input{lstBNF}
+
+\begin{document}
+
+\newcommand{\algorithmexample}[1]{
+  \begin{figure}[]
+    \begin{center}
+      \fbox{
+        \setlength{\unitlength}{1pt}
+        \linethickness{3pt}
+        \begin{picture}(300, 60)(0, 0)
+          \put(0, 10){\line(1, 0){30}} % Observed sequence.
+          \put(30, 10){\color{red}\line(1, 0){240}\color{white}} % Change.
+          \put(270, 10){\line(1, 0){30}}
+          \put(0, 14){{\scriptsize observed}}
+
+          \put(0, 40){\line(1, 0){30}} % Reference sequence.
+          \put(30, 40){\color{green}\line(1, 0){240}\color{white}} % Change.
+          \put(270, 40){\line(1, 0){30}}
+          \put(0, 46){{\scriptsize reference}}
+          \put(30, 30){{\scriptsize $8$}}
+          \put(270, 30){{\scriptsize $98$}}
+
+          \ifthenelse{\equal{#1}{1}}{
+            \drawcurve(50, 40)(55, 35)(155, 25)(255, 15)(260, 10)
+            \drawcurve(260, 40)(255, 35)(155, 25)(55, 15)(50, 10)
+          }{}
+          \ifthenelse{#1>1}{
+            \put(50, 10){\line(1, 0){210}} % Inv.
+            \put(50, 40){\line(1, 0){210}} % Inv.
+          }{}
+          \ifthenelse{#1>2}{
+            \put(35, 10){\line(1, 0){10}}
+            \put(35, 40){\line(1, 0){10}}
+          }{}
+        \end{picture}
+      }
+    \end{center}
+    \caption{How would a human do it?}
+  \end{figure}
+}
+
+% This disables the \pause command, handy in the editing phase.
+%\renewcommand{\pause}{}
+
+% Make the title page.
+\bodytemplate
+
+% First page of the presentation.
+\section{Introduction}
+
+\begin{frame}
+  \frametitle{Mutalyzer}
+  
+  A curational tool for \emph{Locus Specific Mutation Databases} (LSDBs).
+  \pause
+  \bigskip
+
+  Variant nomenclature checker applying \emph{Human Genome Variation Society}
+  (HGVS) guidelines.
+  \begin{itemize}
+    \item Is the syntax of the variant description valid?
+    \item Does the reference sequence exist?
+    \item Is the variant possible on this reference sequence?
+    \item Is this variant description the recommended one?
+  \end{itemize}
+  \bigskip
+  \pause
+
+  Basic effect prediction.
+  \begin{itemize}
+    \item Is the description of the transcript product as expected?
+    \item Is the predicted protein as expected?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Mutalyzer}
+
+  Nowadays Mutalyzer is a vital part of LOVD version 3.
+  \bigskip
+  \pause
+
+  Make a reference sequence (configure new gene):
+  \begin{itemize}
+    \item Given a gene symbol, make a slice of a chromosome.
+    \item Receive information on the transcripts and genes in a genomic
+      reference sequence.
+  \end{itemize}
+  \medskip
+  \pause
+
+  Mapping variants:
+  \begin{itemize}
+    \item Find which transcript is affected.
+    \item Map variants to the genome and vice versa.
+    \item Lift a description over to an other transcript.
+  \end{itemize}
+  \medskip
+  \pause
+
+  Curating submissions:
+  \begin{itemize}
+    \item Checking the syntax.
+    \item Checking the variant description.
+  \end{itemize}
+\end{frame}
+
+\section{HGVS nomenclature}
+\begin{frame}
+  \frametitle{HGVS descriptions}
+
+  A simple variant:
+
+  \bt{NM\_002001.2:c.25A>T}
+  \bigskip
+  \pause
+
+  \begin{table}[]
+    \begin{center}
+      \begin{tabular}{c|l}
+        Token             & meaning \\
+        \hline
+        \bt{NM\_002001.2} & Reference sequence and version. \\
+        \bt{c.}           & Coordinate system. \\
+        \bt{25}           & Position within a coordinate system. \\
+        \bt{A>T}          & Variant (substitution). \\
+      \end{tabular}
+    \end{center}
+    \caption{A simple variant description.}
+  \end{table}
+  \bigskip
+  \pause
+
+  Combine simple variants to complex ones:
+
+  \bt{NM\_002001.2:c.[25A>T;100del]}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{HGVS syntax}
+  \pause
+
+  Definition of a gene symbol.
+  \begin{lstlisting}[language = BNF, caption = {Abstract HGVS nomenclature}]
+    TransVar   -> `_v' Number
+    ProtIso    -> `_i' Number
+    GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
+  \end{lstlisting}
+  \bigskip
+  \pause
+
+  Gene name and optionally a transcript or isoform number.
+
+  \begin{lstlisting}[caption = {HGVS nomenclature in Python}]
+      TransVar = Suppress("_v") + Number("TransVar")
+      ProtIso = Suppress("_i") + Number("ProtIso")
+      GeneSymbol = Suppress('(') + \
+          Group(Name("GeneSymbol") + \
+          Optional(TransVar ^ ProtIso))("Gene") + \
+          Suppress(')')
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{HGVS semantics}
+
+  There are a few guidelines for describing variants:
+  \begin{itemize}
+    \item Always use the most 5' variant description.
+    \item Use the shortest description.
+  \end{itemize}
+  \bigskip
+  \pause
+
+  There are no guidelines on \emph{how} to do this.
+  \bigskip
+
+  Example: we observe a change from \bt{CCCCCCC} to \bt{CACACAC}.
+  \begin{itemize}
+    \item \bt{2\_6\color{yellow}delins\color{white}ACACA}
+    \item \bt{[2C\color{yellow}>\color{white}A;4C\color{yellow}>\color{white}A;6C\color{yellow}>\color{white}A]}
+    \item \bt{[1\_2\color{yellow}ins\color{white}A;3\_6\color{yellow}delins\color{white}ACA]}
+    \item \ldots
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variants are not ``inherited''}
+
+  Silent mutations for example.
+  \bigskip
+  \pause
+
+  A double frameshift:
+
+  \bt{NM\_002001.2:c.[10del;22\_23del]}
+
+  \bt{NP\_001992.1:p.Ala4\_Pro7delinsProTrpAsn}
+  \bigskip
+  \pause
+
+  A complex variant that leads to a simple protein change:
+
+  \bt{NM\_002001.2:[c.10\_12delinsAAA;102G>A]}
+
+  \bt{NP\_001992.1:p.Ala4Lys}
+  \bigskip
+  \pause
+
+  An insertion that affects two codons:
+
+  \bt{NM\_002001.2:c.10\_11insTTT}
+
+  \bt{NP\_001992.1:p.Ala4delinsValSer}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Problem description}
+
+  Verifying the validity of a variant description is not enough:
+  \begin{itemize}
+    \item Both \bt{5\_7delinsATA} and \bt{[6G>A;7C>A]} are valid.
+    \item We want one representation.
+  \end{itemize}
+  \bigskip
+  \pause
+
+  We need something that:
+  \begin{itemize}
+    \item Accepts any description to modify a reference sequence.
+    \item Compares the reference and the modified sequence to make a
+      description.
+  \end{itemize}
+  \bigskip
+  \pause
+
+  A description extractor.
+\end{frame}
+
+\section{Extracting descriptions}
+\begin{frame}
+  \frametitle{A ``human'' way of finding a description}
+
+  Observation:
+  \begin{itemize}
+    \item There is always a default way of describing a variant (\bt{delins}).
+    \item A \bt{delins} may be split in smaller parts.
+  \end{itemize}
+  \bigskip
+  \pause
+
+  Outline:
+  \begin{itemize}
+    \item Find the \emph{area of change}.
+    \item Describe this as a \bt{delins}.
+    \item Find the largest overlap in this area of change, splitting the area
+      in two.
+    \item Describe the two sub areas, and see whether this description is
+      smaller than the one we have.
+  \end{itemize}
+\end{frame}
+
+\begin{fframe}
+  \frametitle{Outline of the algorithm}
+
+  \only<1>{\algorithmexample{0}}
+  \only<2>{\algorithmexample{1}}
+  \only<3>{\algorithmexample{2}}
+  \only<4>{\algorithmexample{3}}
+
+  \bt{8\_98\color{yellow}delins\color{white}AGATGCGATAGATTAGCTATATAGGATCG\ldots}
+  \onslide<3->{\bt{[8\_12\color{yellow}delins\color{white}AGATG;13\_96\color{yellow}inv\color{white};97\_98\color{yellow}delins\color{white}TG]}}
+
+  \onslide<4->{\bt{[8G\color{yellow}>\color{white}A;12C\color{yellow}>\color{white}G;13\_96\color{yellow}inv\color{white};97\_98\color{yellow}delins\color{white}TG]}}
+
+  \vfill
+\end{fframe}
+
+\begin{fframe}
+  \frametitle{Finding common sub strings}
+
+  How would a computer do it?
+  \begin{table}[]
+    \begin{center}
+      \begin{tabular}{l|lllllll}
+          & \bt{A} & \bt{T} & \bt{G} & \bt{A} & \bt{G} & \bt{C} & \bt{G} \\
+        \hline
+        \bt{A} & \onslide<2>{\color{red}}1 & 0 & 0 &
+          \onslide<3>{\color{gray}}1 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 \\
+        \bt{T} & 0 & \onslide<2>{\color{red}}2 & 0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 \\
+        \bt{C} & 0 & 0 & 0 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}1 &
+          \onslide<3>{\color{gray}}0 \\
+        \bt{A} & \onslide<3>{\color{gray}}1 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}1 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 \\
+        \bt{G} & \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}1 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}2 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}1 \\
+        \bt{C} & \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}3 &
+          \onslide<3>{\color{gray}}0 \\
+        \bt{A} & \onslide<3>{\color{gray}}1 & \onslide<3>{\color{gray}}0 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}1 &
+          \onslide<3>{\color{gray}}0 & \onslide<3>{\color{gray}}0 & 0 \\
+      \end{tabular}
+    \end{center}
+    \caption{LCS dynamic programming.}
+  \end{table}
+
+  \only<2>{Reusing partial solutions.}
+  \only<3>{Reusing parts of the matrix.}
+
+  \vfill
+\end{fframe}
+
+\section{Results}
+\begin{frame}
+  \frametitle{Protein descriptions}
+
+  Input:
+
+  \bt{NM\_002001.2:n.[109G>T;139G>T;159del]}
+  \bigskip
+  \pause
+
+  Old:
+
+  \bt{NM\_002001.2:n.[109G>T;139G>T;159del]}
+
+  \bt{NM\_002001.2:p.?}
+  \bigskip
+  \pause
+
+  New:
+
+  \bt{NM\_002001.2:n.[109G>T;139G>T;159del]}
+
+  \bt{NM\_002001.2:p.[Ala4Ser;Ala14Ser;Asp21Metfs*4]}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Protein descriptions (2)}
+
+  Input:
+
+  \bt{NM\_002001.2:n.[159del;162\_163del]}
+  \bigskip
+  \pause
+
+  Old:
+
+  \bt{NM\_002001.2:n.[159del;162\_163del]}
+
+  \bt{NM\_002001.2:p.?}
+  \bigskip
+  \pause
+
+  New:
+
+  \bt{NM\_002001.2:n.[159del;162\_163del]}
+
+  \bt{NM\_002001.2:p.Asp21\_Val22delinsSer}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Combining variants}
+
+  Input ($110$ and $111$ have the same nucleotide):
+
+  \bt{NM\_002001.2:n.[109del;111del]}
+  \bigskip
+  \pause
+
+  Old:
+
+  \bt{NM\_002001.2:n.[109del;111del]}
+
+  \bt{NM\_002001.2:p.?}
+  \bigskip
+  \pause
+
+  New:
+
+  \bt{NM\_002001.2:n.109\_110del}
+
+  \bt{NM\_002001.2:p.Ala4Hisfs*27}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Splitting variants}
+
+  Input:
+
+  \bt{NM\_002001.2:c.40\_50delinsTCCTTACTGTG}
+  \bigskip
+  \pause
+
+  Old:
+
+  \bt{NM\_002001.2:n.139\_149delinsTCCTTACTGTG}
+
+  \bt{NM\_002001.2:p.Ala14\_Phe17delinsSerLeuLeuCys}
+  \bigskip
+  \pause
+
+  New:
+
+  \bt{NM\_002001.2:n.[139G>T;149T>G]}
+
+  \bt{NM\_002001.2:p.[Ala14Ser;Phe17Cys]}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Comparing reference sequences}
+
+  DMD Dp71ab vs. DMD Dp71b:
+  \bigskip
+
+  Input:
+
+  \bt{NM\_004018.2} and \bt{NM\_004016.2}
+  \bigskip
+  \pause
+
+  Output:
+
+  \bt{1097\_1098insTCCCGTTACTCTGATCAACTTCTGGCCAGT\ldots}
+  \bigskip
+
+  Interpretation:
+
+  This is an exon not present in Dp71ab.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Old vs. new transcripts}
+
+  DMD Dp71ab old vs. new:
+  \bigskip
+
+  Input: \bt{NM\_004018.2} and \bt{NM\_004018.1}
+  \bigskip
+
+  Output: \bt{[3308A>G;4288A>G]}
+  \bigskip
+  \bigskip
+  \bigskip
+  \pause
+
+  FCER1A old vs. new:
+  \bigskip
+
+  Input: \bt{NM\_002001.1} and \bt{NM\_002001.2}
+  \bigskip
+
+  Output: \bt{1\_7del}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Old vs. new transcripts (2)}
+
+  FCER2 old vs. new:
+  \bigskip
+
+  Input:
+
+  \bt{NM\_002002.1} and \bt{NM\_002002.4}
+  \bigskip
+  \pause
+
+  Output:
+
+  \bt{[720C>T;903A>G;930T>C;1019C>A; \\
+    1401\_1402insACACCCCAACAGCACCCTCTCCAGATGAGAGT\ldots; \\
+    1478del;1529\_1530insTCCCACATTTGTCCCCTTCTTGGA\ldots]}
+  \smallskip
+  \pause
+
+  vice versa:
+
+  \bt{[720T>C;903G>A;930C>T;1019A>C;1402\_1464del; \\
+    1540dup;1592\_1620del]}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Limitations}
+
+  mtDNA reference vs. isolate K422 mitochondrion
+  \medskip
+
+  Input: \bt{NC\_012920.1} and \bt{JX266268.1}
+  \medskip
+  \pause
+
+  Output:
+  \bt{
+    [73A>G;194C>T;249del;263A>G;310delinsCTC;489T>C; \\
+    750A>G;1438A>G;1715C>T;2231\_2232dup;2706A>G; \\
+    3107del;3552T>A;4715A>G;4769A>G;6026G>A;7028C>T; \\
+    7196C>A;7999T>C;8508A>G;8584G>A;8701A>G;8860A>G; \\
+    9540T>C;9545A>G;10398\_10400delinsGCT;10873T>C; \\
+    11719G>A;11914G>A;11969G>A;12672A>G;12705C>T; \\
+    13263A>G;14318T>C;14766C>T;14783T>C;15043G>A; \\
+    15204T>C;15301G>A;15326A>G;15487A>T;15968T>C; \\
+    16129G>A;16223C>T;16298T>C;16327C>T;16519T>C]
+  }
+  \medskip
+  \pause
+
+  Runtime: $\pm20$ minutes, Memory: $4$G.
+\end{frame}
+
+\section{Optimisation}
+\begin{frame}
+  \frametitle{Accuracy vs. speed}
+
+  \begin{tabular}{l@{\ \ $\Rightarrow$\ \ }l}
+    \bt{AGAGGACG} & \bt{AG AG GA CG} \\
+    \bt{GAGGACA}  & \bt{GA AG GG GA AC CA}
+  \end{tabular}
+  \pause
+
+  \begin{table}
+    \begin{center}
+      \begin{tabular}{l|llll}
+           & \bt{A} & \bt{A} & \bt{G} & \bt{C} \\
+           & \bt{G} & \bt{G} & \bt{A} & \bt{G} \\
+        \hline
+        \bt{GA} & 0 & 0 & 1 & 0 \\
+        \bt{AG} & 1 & \onslide<3>{\color{red}}1 & 0 & 0 \\
+        \bt{GG} & 0 & 0 & 0 & 0 \\
+        \bt{GA} & 0 & 0 & \onslide<3>{\color{red}}2 & 0 \\
+        \bt{AC} & 0 & 0 & 0 & 0 \\
+        \bt{CA} & 0 & 0 & 0 & 0 \\
+      \end{tabular}
+    \end{center}
+    \caption{Rough method to find large strings.}
+  \end{table}
+
+  \onslide<3>{We make a ``knight move''.}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Accuracy vs. speed(2)}
+
+  \begin{minipage}[t]{0.45\textwidth}
+    \begin{table}[]
+      \begin{center}
+        \begin{tabular}{l|llll}
+             & \bt{A} & \bt{A} & \bt{G} & \bt{C} \\
+             & \bt{G} & \bt{G} & \bt{A} & \bt{G} \\
+          \hline
+          \bt{GA} & 0 & 0 & 1 & 0 \\
+          \bt{AG} & 1 & 1 & 0 & 0 \\
+          \bt{GG} & 0 & 0 & 0 & 0 \\
+          \bt{GA} & 0 & 0 & 2 & 0 \\
+          \bt{AC} & 0 & 0 & 0 & 0 \\
+          \bt{CA} & 0 & 0 & 0 & 0 \\
+        \end{tabular}
+      \end{center}
+      \caption{``Zoom out'' $k = 2$.}
+    \end{table}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.45\textwidth}
+    \begin{table}[]
+      \begin{center}
+        \begin{tabular}{l|ll}
+              & \bt{A} & \bt{G} \\
+              & \bt{G} & \bt{G} \\
+              & \bt{A} & \bt{A} \\
+          \hline
+          \bt{GAG} & 0 & 0 \\
+          \bt{AGG} & 0 & 0 \\
+          \bt{GGA} & 0 & 1 \\
+          \bt{GAC} & 0 & 0 \\
+          \bt{ACA} & 0 & 0 \\
+        \end{tabular}
+      \end{center}
+      \caption{``Zoom out'' $k = 3$.}
+    \end{table}
+  \end{minipage}
+  \pause
+
+  We find all common sub strings larger than $k$.
+  \pause
+
+  The length of these strings are at least $\ell k$ and at most
+   $\ell k + (k - 1)$ long.
+\end{frame}
+
+\section{Conclusions}
+\begin{frame}
+  \frametitle{We are getting there}
+
+  Extracting descriptions is feasible.
+  \pause
+  \begin{itemize}
+    \item Guarantees the same description for the same variant, no matter how
+      it is described by the user.
+    \item Usable for comparing reference sequences.
+    \pause
+    \begin{itemize}
+      \item Real lift over.
+    \end{itemize}
+  \end{itemize}
+  \bigskip
+  \pause
+
+  Extracting descriptions is practical.
+  \begin{itemize}
+    \item By ``zooming out'', we can meet the memory requirements.
+    \begin{itemize}
+      \item $4$G to less than a megabyte.
+    \end{itemize}
+    \item By ``zooming out'', we can meet the processing requirements.
+    \begin{itemize}
+      \item mtDNA test: $20$ minutes to under one second.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Questions?}
+\lastpagetemplate
+\begin{frame}
+  \begin{center}
+    Acknowledgements:
+    \bigskip
+    \bigskip
+
+    Martijn Vermaat
+
+    Ivo Fokkema
+
+    Peter Taschner
+
+    Johan den Dunnen
+
+  \end{center}
+\end{frame}
+
+\end{document}
