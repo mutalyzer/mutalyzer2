@@ -2,7 +2,7 @@
 
 \title{Extracting HGVS descriptions}
 \providecommand{\myConference}{Work discussion}
-\providecommand{\myDate}{Thursday, 24 February 2011}
+\providecommand{\myDate}{Thursday, 27 September 2012}
 \author{Jeroen F. J. Laros}
 \providecommand{\myGroup}{Leiden Genome Technology Center}
 \providecommand{\myDepartment}{Department of Human Genetics}
@@ -227,7 +227,7 @@
 
   A complex variant that leads to a simple protein change:
 
-  \bt{NM\_002001.2:[c.10\_12delinsAAA;102G>A]}
+  \bt{NM\_002001.2:c.[10\_12delinsAAA;102G>A]}
 
   \bt{NP\_001992.1:p.Ala4Lys}
   \bigskip
@@ -245,7 +245,7 @@
 
   Verifying the validity of a variant description is not enough:
   \begin{itemize}
-    \item Both \bt{5\_7delinsATA} and \bt{[6G>A;7C>A]} are valid.
+    \item Both \bt{5\_7delinsATA} and \bt{[5G>A;7C>A]} are valid.
     \item We want one representation.
   \end{itemize}
   \bigskip
@@ -352,13 +352,13 @@
 
   Input:
 
-  \bt{NM\_002001.2:n.[109G>T;139G>T;159del]}
+  \bt{NM\_002001.2:c.[10G>T;40G>T;60del]}
   \bigskip
   \pause
 
   Old:
 
-  \bt{NM\_002001.2:n.[109G>T;139G>T;159del]}
+  \bt{NM\_002001.2:c.[10G>T;40G>T;60del]}
 
   \bt{NM\_002001.2:p.?}
   \bigskip
@@ -366,7 +366,7 @@
 
   New:
 
-  \bt{NM\_002001.2:n.[109G>T;139G>T;159del]}
+  \bt{NM\_002001.2:c.[10G>T;40G>T;60del]}
 
   \bt{NM\_002001.2:p.[Ala4Ser;Ala14Ser;Asp21Metfs*4]}
 \end{frame}
@@ -376,13 +376,13 @@
 
   Input:
 
-  \bt{NM\_002001.2:n.[159del;162\_163del]}
+  \bt{NM\_002001.2:c.[60del;63\_64del]}
   \bigskip
   \pause
 
   Old:
 
-  \bt{NM\_002001.2:n.[159del;162\_163del]}
+  \bt{NM\_002001.2:c.[60del;63\_64del]}
 
   \bt{NM\_002001.2:p.?}
   \bigskip
@@ -390,7 +390,7 @@
 
   New:
 
-  \bt{NM\_002001.2:n.[159del;162\_163del]}
+  \bt{NM\_002001.2:c.[60del;63\_64del]}
 
   \bt{NM\_002001.2:p.Asp21\_Val22delinsSer}
 \end{frame}
@@ -400,13 +400,13 @@
 
   Input ($110$ and $111$ have the same nucleotide):
 
-  \bt{NM\_002001.2:n.[109del;111del]}
+  \bt{NM\_002001.2:c.[10del;12del]}
   \bigskip
   \pause
 
   Old:
 
-  \bt{NM\_002001.2:n.[109del;111del]}
+  \bt{NM\_002001.2:c.[10del;12del]}
 
   \bt{NM\_002001.2:p.?}
   \bigskip
@@ -414,7 +414,7 @@
 
   New:
 
-  \bt{NM\_002001.2:n.109\_110del}
+  \bt{NM\_002001.2:c.10\_11del}
 
   \bt{NM\_002001.2:p.Ala4Hisfs*27}
 \end{frame}
@@ -430,7 +430,7 @@
 
   Old:
 
-  \bt{NM\_002001.2:n.139\_149delinsTCCTTACTGTG}
+  \bt{NM\_002001.2:c.40\_50delinsTCCTTACTGTG}
 
   \bt{NM\_002001.2:p.Ala14\_Phe17delinsSerLeuLeuCys}
   \bigskip
@@ -438,7 +438,7 @@
 
   New:
 
-  \bt{NM\_002001.2:n.[139G>T;149T>G]}
+  \bt{NM\_002001.2:c.[40G>T;50T>G]}
 
   \bt{NM\_002001.2:p.[Ala14Ser;Phe17Cys]}
 \end{frame}
