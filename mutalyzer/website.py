@@ -189,7 +189,10 @@ render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
     'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
     'contactEmail'        : config.get('email'),
     'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
-    'serviceJsonLocation' : SERVICE_JSON_LOCATION
+    'serviceJsonLocation' : SERVICE_JSON_LOCATION,
+    'piwik'               : config.get('piwik'),
+    'piwikBase'           : config.get('piwikBase'),
+    'piwikSite'           : config.get('piwikSite')
 })
 
 # web.py application

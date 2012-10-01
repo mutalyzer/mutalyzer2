@@ -115,6 +115,7 @@ class _Config():
             # A few 'special' values.
             self._values = {'autoReconnect': config.as_bool('autoReconnect'),
                             'debug':         config.as_bool('debug'),
+                            'piwik':         config.as_bool('piwik'),
                             'threshold':     float(config['threshold'])}
 
             # Simple string values.
@@ -123,13 +124,14 @@ class _Config():
                          'datestring', 'mailFrom', 'mailSubject',
                          'resultsDir', 'nameCheckOutHeader',
                          'syntaxCheckOutHeader', 'positionConverterOutHeader',
-                         'snpConverterOutHeader', 'PIDfile', 'header'):
+                         'snpConverterOutHeader', 'PIDfile', 'header',
+                         'piwikBase'):
                 self._values[name] = config[name]
 
             # Simple integer values.
             for name in ('minDldSize', 'loglevel', 'outputlevel', 'flanksize',
                          'maxvissize', 'flankclipsize', 'bufSize',
-                         'spliceAlarm', 'spliceWarn'):
+                         'spliceAlarm', 'spliceWarn', 'piwikSite'):
                 self._values[name] = int(config[name])
 
             # File sizes (given in megabytes, stored in bytes).

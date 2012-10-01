@@ -414,5 +414,19 @@
   </tr>
   </table>
   <a id = "bottom" name = "bottom"></a>
+<div tal:condition="piwik" tal:omit-tag="">
+<!-- Piwik -->
+<script type="text/javascript" tal:content="string:
+var pkBaseURL = &quot;${piwikBase}/&quot;;
+document.write(unescape(&quot;%3Cscript src='&quot; + pkBaseURL + &quot;piwik.js' type='text/javascript'%3E%3C/script%3E&quot;));
+"></script><script type="text/javascript" tal:content="string:
+try {
+var piwikTracker = Piwik.getTracker(pkBaseURL + &quot;piwik.php&quot;, ${piwikSite});
+piwikTracker.trackPageView();
+piwikTracker.enableLinkTracking();
+} catch( err ) {}
+"></script><noscript><p><img tal:attributes="src string:${piwikBase}/piwik.php?idsite=${piwikSite}" style="border:0" alt="" /></p></noscript>
+<!-- End Piwik Tracking Code -->
+</div>
   </body>
 </html>

@@ -146,3 +146,17 @@ threshold = 0.05
 spliceAlarm = 2
 
 spliceWarn = 5
+
+
+#
+# These settings are for Piwik analytics.
+#
+
+# Enable Piwik analytics.
+piwik = no
+
+# Piwik server base URL (include protocol, no trailing slash).
+piwikBase = https://piwik.example.com
+
+# Piwik site ID.
+piwikSite = 1
