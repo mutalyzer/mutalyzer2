@@ -102,6 +102,54 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
+    def test_est_warning_nm_est(self):
+        """
+        Warning for EST positioning on NM reference.
+        """
+        check_variant('NM_003002.2:274del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 1
+
+    def test_no_est_warning_nm_c(self):
+        """
+        No EST warning for c. positioning on NM reference.
+        """
+        check_variant('NM_003002.2:c.274del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
+    def test_no_est_warning_nm_n(self):
+        """
+        No EST warning for n. positioning on NM reference.
+        """
+        check_variant('NM_003002.2:n.274del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
+    def test_est_warning_ng_est(self):
+        """
+        Warning for EST positioning on NG reference.
+        """
+        check_variant('NG_012772.1:128del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 1
+
+    def test_no_est_warning_ng_g(self):
+        """
+        No EST warning for g. positioning on NG reference.
+        """
+        check_variant('NG_012772.1:g.128del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
+    def test_no_est_warning_est_est(self):
+        """
+        No warning for EST positioning on EST reference.
+        """
+        check_variant('AA010203.1:54_55insG', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
     def test_roll(self):
         """
         Just a variant where we should roll.

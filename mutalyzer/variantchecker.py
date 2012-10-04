@@ -1353,6 +1353,18 @@ def process_variant(mutator, description, record, output):
                           'Variant description contains no mutation.')
         raise _VariantError()
 
+    if not description.RefType:
+        # Mutalyzer assumes EST positioning scheme (like .g) in this case, but
+        # we should warn the user if the reference is not an EST (since it is
+        # probable he/she just forgot a c. or whatever).
+        # We currently give the warning if there is gene annotation in the
+        # reference.
+        if record.record.geneList:
+            output.addMessage(__file__, 2, 'WEST', 'No positioning scheme '
+                              'specified, assuming EST. However, reference '
+                              'does not look like an EST. Did you forget to '
+                              'specify the positioning scheme?')
+
     if description.RefType == 'r':
         output.addMessage(__file__, 4, 'ERNA',
                           'Descriptions on RNA level are not supported.')
