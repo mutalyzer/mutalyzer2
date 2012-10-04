@@ -48,8 +48,8 @@ echo -e "${COLOR_INFO}Installing known-working spyne from git${COLOR_END}"
 
 # For now we use a specific known-working version of spyne.
 pushd $(mktemp -d)
-git clone https://github.com/arskom/spyne.git .
-git checkout -b mutalyzer 065e475fa216837cd714e046e92d01a1799f78c2
+git clone https://github.com/LUMC/spyne.git .
+git checkout mutalyzer
 python setup.py install
 popd
 
