@@ -537,10 +537,14 @@ def apply_insertion(before, after, s, mutator, record, O):
     # means we roll over two splice sites, since they are adjacent.)
     # We only have to consider the forward roll, since RNA reference
     # sequences are always orientated in correspondence with the transcript.
+    # Todo: There's probably a better way to check if we are on RNA.
     original_forward_roll = forward_roll
-    if record.record.molType != 'g' :
-        splice_sites = record.record.geneList[0].transcriptList[0] \
-                       .mRNA.positionList
+    if record.record.molType != 'g':
+        try:
+            splice_sites = record.record.geneList[0].transcriptList[0] \
+                .mRNA.positionList
+        except IndexError:
+            splice_sites = []
         for acceptor, donor in util.grouper(splice_sites):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
