@@ -3,8 +3,6 @@ Mutalyzer web service HTTP/RPC with JSON response payloads.
 """
 
 
-from mutalyzer.util import monkey_patch_spyne; monkey_patch_spyne()
-
 from spyne.application import Application
 from spyne.protocol.http import HttpRpc
 from spyne.protocol.json import JsonObject
