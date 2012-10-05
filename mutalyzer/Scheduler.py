@@ -102,6 +102,11 @@ class Scheduler() :
         if mailTo == 'test@test.test':
             return
 
+        # Mail is set to 'job@webservice' if the batch job was submitted using
+        # the webservice.
+        if mailTo == 'job@webservice':
+            return
+
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 

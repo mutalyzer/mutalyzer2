@@ -1226,6 +1226,7 @@ class BatchResult:
         The url routing currently makes sure to only call this with filenames
         of the form \d+.
         """
+        # Todo: Check if batch job is ready (we have the job id).
         filename = 'Results_%s.txt' % result
         handle = open(os.path.join(config.get('resultsDir'), filename))
         web.header('Content-Type', 'text/plain')

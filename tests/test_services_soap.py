@@ -7,10 +7,12 @@ from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
 import os
 from datetime import datetime, timedelta
+import time
 import mutalyzer
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
+from mutalyzer.util import slow
 import logging
 import urllib2
 from suds.client import Client
@@ -500,3 +502,58 @@ class TestServicesSoap():
             assert_equal(t.cCDSStop, '4395')
             assert_equal(t.gCDSStop, 21138)
             assert_equal(t.chromCDSStop, 48262863)
+
+    def test_batchjob(self):
+        """
+        Submit a batch job.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.1:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        data = '\n'.join(variants).encode('base64')
+
+        result = self.client.service.submitBatchJob(data, 'NameChecker')
+        job_id = int(result)
+
+        for _ in range(50):
+            try:
+                result = self.client.service.getBatchJob(job_id)
+                break
+            except WebFault:
+                result = self.client.service.monitorBatchJob(job_id)
+                assert int(result) <= len(variants)
+                time.sleep(1)
+        else:
+            assert False
+
+        assert_equal(len(result.decode('base64').strip().split('\n')) - 1,
+                     len(variants))
+
+    @slow
+    def test_batchjob_toobig(self):
+        """
+        Submit the batch name checker with a too big input file.
+        """
+        seed = """
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy
+nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi
+enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis
+nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in
+hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu
+feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui
+blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla
+facilisi."""
+        data = seed
+        # Very crude way of creating something at least 6MB in size
+        while len(data) < 6000000:
+            data += data
+
+        try:
+            self.client.service.submitBatchJob(data.encode('base64'), 'NameChecker')
+            assert False
+        except WebFault as e:
+            # - senv:Client.RequestTooLong: Raised by Spyne, depending on
+            #     the max_content_length argument to the HttpBase constructor.
+            # - EMAXSIZE: Raised by Mutalyzer, depending on the
+            #     batchInputMaxSize configuration setting.
+            assert e.fault.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')

@@ -15,6 +15,7 @@ from spyne.model.complex import Array
 from spyne.model.fault import Fault
 import os
 import socket
+import tempfile
 from operator import itemgetter, attrgetter
 
 import mutalyzer
@@ -25,8 +26,10 @@ from mutalyzer.sync import CacheSync
 from mutalyzer import variantchecker
 from mutalyzer import Db
 from mutalyzer.mapping import Converter
+from mutalyzer import File
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
+from mutalyzer import Scheduler
 from mutalyzer.models import *
 from mutalyzer import describe
 
@@ -125,6 +128,110 @@ class MutalyzerService(ServiceBase):
     def __init__(self, environ=None):
         super(MutalyzerService, self).__init__(environ)
     #__init__
+
+    @srpc(Mandatory.ByteArray, String, String,  _returns=Integer)
+    def submitBatchJob(data, process='NameChecker', argument=''):
+        """
+        Submit a batch job.
+
+        Input and output file formats for batch jobs are explained on the
+        website <https://mutalyzer.nl/batch>.
+
+        On error an exception is raised:
+          - detail: Human readable description of the error.
+          - faultstring: A code to indicate the type of error.
+              - EPARSE: The batch input could not be parsed.
+              - EMAXSIZE: Input file exceeds maximum size.
+
+        @arg data: Input file.
+        @arg process: Optional type of the batch job, choose from: NameChecker
+            (default), SyntaxChecker, PositionConverter, SnpConverter.
+        @arg argument: Additional argument. Currently only used if batch_type
+            is PositionConverter, denoting the human genome build.
+
+        @return: Batch job identifier.
+        """
+        output = Output(__file__)
+        database = Db.Batch()
+        scheduler = Scheduler.Scheduler(database)
+        file_instance = File.File(output)
+
+        # Note that the max file size check below might be bogus, since Spyne
+        # first checks the total request size, which by default has a maximum
+        # of 2 megabytes.
+        # In that case, a senv:Client.RequestTooLong faultstring is returned.
+
+        # Todo: Set maximum request size by specifying the max_content_length
+        #     argument for spyne.server.wsgi.WsgiApplication in all webservice
+        #     instantiations.
+
+        max_size = config.get('batchInputMaxSize')
+
+        batch_file = tempfile.TemporaryFile()
+        size = 0
+        try:
+            for chunk in data:
+                size += len(chunk)
+                if size > max_size:
+                    raise Fault('EMAXSIZE',
+                                'Only files up to %s megabytes are accepted.' % (float(max_size) / 1048576))
+                batch_file.write(chunk)
+            batch_file.seek(0)
+            job, columns = file_instance.parseBatchFile(batch_file)
+        finally:
+            try:
+                batch_file.close()
+            except IOError:
+                pass
+
+        if job is None:
+            raise Fault('EPARSE', 'Could not parse input file, please check your file format.')
+
+        job_id = scheduler.addJob('BINSWITHCES', 'job@webservice', job,
+                                  columns, 'webservice', process, argument)
+        return job_id
+
+    @srpc(Mandatory.Integer, _returns=Integer)
+    def monitorBatchJob(job_id):
+        """
+        Get the number of entries left for a batch job.
+
+        Input and output file formats for batch jobs are explained on the
+        website <https://mutalyzer.nl/batch>.
+
+        @arg job_id: Batch job identifier.
+
+        @return: Number of entries left.
+        """
+        database = Db.Batch()
+        return database.entriesLeftForJob(job_id)
+
+    @srpc(Mandatory.Integer, _returns=ByteArray)
+    def getBatchJob(job_id):
+        """
+        Get the result of a batch job.
+
+        Input and output file formats for batch jobs are explained on the
+        website <https://mutalyzer.nl/batch>.
+
+        On error an exception is raised:
+          - detail: Human readable description of the error.
+          - faultstring: A code to indicate the type of error.
+              - EBATCHNOTREADY: The batch job result is not yet ready.
+
+        @arg job_id: Batch job identifier.
+
+        @return: Batch job result file.
+        """
+        database = Db.Batch()
+        left = database.entriesLeftForJob(job_id)
+
+        if left > 0:
+            raise Fault('EBATCHNOTREADY', 'Batch job result is not yet ready.')
+
+        filename = 'Results_%s.txt' % job_id
+        handle = open(os.path.join(config.get('resultsDir'), filename))
+        return handle
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,
         _returns=Array(Mandatory.String))
