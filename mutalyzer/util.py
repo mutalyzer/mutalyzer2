@@ -25,6 +25,7 @@ import math
 import time
 import inspect
 from itertools import izip_longest
+from functools import wraps
 
 import Bio.Seq
 from Bio.Alphabet import IUPAC
@@ -804,6 +805,7 @@ def slow(f):
     @todo: I don't think this actually belongs here (a separate util module
       for the unit tests?).
     """
+    @wraps(f)
     def slow_f(*args, **kwargs):
         if 'MUTALYZER_QUICK_TEST' in os.environ \
                and os.environ['MUTALYZER_QUICK_TEST'] == '1':
@@ -823,6 +825,7 @@ def skip(f):
     @todo: I don't think this actually belongs here (a separate util module
       for the unit tests?).
     """
+    @wraps(f)
     def disabled_f(*args, **kwargs):
         return
     return disabled_f
@@ -842,6 +845,7 @@ def singleton(cls):
     [1] http://www.python.org/dev/peps/pep-0318/#examples
     """
     instances = {}
+    @wraps(cls)
     def getinstance():
         if cls not in instances:
             instances[cls] = cls()
