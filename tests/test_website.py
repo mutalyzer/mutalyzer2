@@ -569,10 +569,10 @@ class TestWSGI():
         results = self._batch('NameChecker',
                               file='\n'.join(variants),
                               size=len(variants),
-                              header='Input\tErrors | Messages')
+                              header='Input\tErrors | Messages').strip().split('\n')
         assert 'Restriction Sites Created\tRestriction Sites Deleted' in results[0]
         assert 'CviQI,RsaI\tBccI' in results[1]
-        assert 'CviQI,RsaI;HinP1I,HhaI;SfcI\tBccI;;BpmI,MnlI,BsaXI (2),Hpy188III' in results[2]
+        assert 'CviQI,RsaI;HhaI,HinP1I;SfcI\tBccI;;BpmI,BsaXI (2),MnlI' in results[2]
 
     @slow
     def test_batch_syntaxchecker_toobig(self):
