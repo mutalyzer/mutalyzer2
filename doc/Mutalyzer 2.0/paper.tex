@@ -1,0 +1,330 @@
+\documentclass{article}
+\usepackage{ltxtable}
+
+\frenchspacing
+
+\title{\Huge Mutalyzer 2.0}
+\author{Jeroen F.J. Laros, Martijn Vermaat, Gerben R. Stouten,\\
+  Johan T. den Dunnen, Peter E.M. Taschner
+  \vspace{10pt}\\
+  Department of Human Genetics\\
+  Center for Human and Clinical Genetics\\
+  \texttt{j.f.j.laros@lumc.nl}}
+\date{\today}
+%\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract} \noindent
+\end{abstract}
+
+\section{Introduction}\label{introduction}
+\cite{Mutalyzer}
+\cite{HGVS}
+
+Currently GenBank and LRG reference supported.
+
+Any organism, including translation.
+
+Phased variants, of all genes containing variants, half of them have more than
+one.
+
+\section{Background}\label{background}
+
+\section{Materials and Methods}
+%Distributed setup, multiple servers can be used, cache and database are
+%synchronised.
+
+The suite is logically divided in modules which can be combined to make several
+interfaces.
+
+\begin{table}[]
+  \begin{center}
+    \caption{Modules.}
+    \begin{tabular}{l|l}
+      name           & function\\
+      \hline
+      HGVS parser    & Check the HGVS nomenclature.\\
+      Retriever      & Retrieve a reference sequence.\\
+      Crossmapper    & Convert positions from \texttt{g.} to \texttt{n.} or
+        \texttt{c.} and vice versa.\\
+      Database       & Interface to Mutalyzer's internal database.\\
+      Mutator        & Apply variants to a reference sequence.\\
+      GenRecord      & Generalisation of reference sequences.\\
+      VariantChecker & Semantic checks.
+    \end{tabular}
+  \end{center}
+  \label{tab:modules}
+\end{table}
+
+In Table~\ref{tab:modules} we see a list of core modules in the Mutalyzer
+suite, the functionality of each module is described in the following sections.
+
+Database:
+\begin{itemize}
+  \item Mapping of transcripts and genes.
+  \item Cache administration.
+  \item Batch checker.
+\end{itemize}
+
+
+\subsection{Name Checker} \label{subsec:namecheck}
+The formalisation of the HGVS nomenclature~\cite{hgvs_bnf}, made it possible to
+implement a context free grammar parser that encompasses the complete
+nomenclature, including nesting and other newly added features. Although the
+semantic checks have not been implemented for the complete nomenclature, we
+have implemented the recognition of allele descriptions. These descriptions
+are, apart from simple variants consisting of one change, the most occurring
+ones. With allele descriptions we can describe a large number of changes, i.e.,
+all descriptions that need no information from outside the reference sequence.
+
+We define a \emph{raw variant} as an elementary variant, e.g., a substitution,
+deletion, insertion, etc. An \emph{allele description} is obtained by
+concatenation of raw variants. Consider the following description
+\texttt{NM\_002001.2:c.[10del;22C>T;101\_119inv]}. The part between brackets is
+the allele description, which consists of raw variants separated by a semicolon
+(\texttt{10del}, \texttt{22C>T} and \texttt{101\_119inv}).
+
+After the description is parsed, the \emph{reference sequence}, which is part
+of the description, is retrieved from a reference sequence repository (e.g.,
+the NCBI~\cite{NCBI} or the EBI). The reference sequence (in either GenBank or
+LRG format) is then parsed and any missing data is retrieved to prepare for the
+next step. See Section~\ref{sec:enrichment} for a complete description.
+
+With the parsed variant description and the information from the reference sequence, the variant can be simulated to produce the observed
+sequence. In this simulation all raw variants are visualised and checked. The
+checks on the raw variants is extensive.
+
+First, we check whether the minimal description is used. In case of a
+\texttt{delins}, one can for example add reference bases to the inserted
+sequence, adding nothing to the description. If, for example, the reference
+sequence is \texttt{AACGTAA}, we can define the following deletion-insertion:
+\texttt{3\_4delinsTT}, resulting in an observed sequence of \texttt{AATTTAA}.
+The same result will be obtained if we define the variant as
+\texttt{2\_6delinsATTTA}. This latter description can be minimised by
+calculating and removing the \emph{longest common prefix} and the \emph{longest
+common suffix} of the deleted and the inserted sequence.
+
+In case of an inversion, a prefix of the inversion can be the reverse
+complement of a suffix, we call this a \emph{partial palindrome}. The
+description of an inversion is minimised in a similar way as described above.
+
+\begin{table}
+  \begin{center}
+    \caption{Disambiguation of raw variant types.}
+    \begin{tabular}{l|l}
+      type            & simplification\\
+      \hline
+      \texttt{delins} & \texttt{del}, \texttt{ins}, \texttt{subst},
+        \texttt{inv}, \texttt{dup}\\
+      \texttt{ins}    & \texttt{dup}\\
+      \texttt{inv}    & \texttt{subst}
+    \end{tabular}
+  \end{center}
+  \label{tab:typedisambiguation}
+\end{table}
+
+After the minimisation step, a disambiguation scheme is used to check whether
+the type of the raw variant is correct. In Table~\ref{tab:typedisambiguation}
+we see which variant types can possibly be written as a simpler type.
+
+Finally, a deletion or insertion is shifted to the most 3' position possible.
+We use a \emph{rolling} algorithm that takes circular permutations of the
+deleted  or inserted sequence into account. If for example, we insert the
+sequence \texttt{TCCA} in a reference sequence \texttt{CATC}, the
+algorithm will correct the description \texttt{2\_3insTCCA} to
+\texttt{3\_4insCCAT}. Note that this method works for both the forward as well
+as the reverse strand. If a gene resides on the reverse strand, the position
+will be shifted in the opposite direction of that of the genomic one.
+Furthermore, if an insertion or a deletion is described on a transcript, the
+position will not be shifted over a splice site.
+
+%Optional arguments (\texttt{10\_12delAAT}) are checked.
+
+After the simulation of the variant, we have the observed sequence. We use this
+observed sequence to do basic effect prediction.
+
+For all the annotated transcripts in the reference sequence, the corrected
+variant description is shown, as well as a list of protein descriptions. Each
+of the DNA variant descriptions can be selected for a more detailed analysis.
+In the detailed analysis the reference protein and the variant protein is
+visualised and the area of change is highlighted. For the selected transcript,
+a list of exons start and end positions are given, as well as the CDS start and
+end positions.
+
+For all raw variants, effects on restriction sites are calculated. A table is
+generated that contains the number of the raw variant, a list of removed
+restriction sites and a list of added restriction sites.
+
+Deletion of exons as well as partial exons (resulting in a fusion exon) is
+supported.
+
+Gives informative warnings when a variant is near a splice site.
+
+%Warns when a change has no effect (\texttt{10A>A}, inversion of a palindrome,
+%etc.).
+
+Supports ``fuzzy'' positions.
+
+\subsection{Syntax Checker}
+The \emph{Syntax Checker} is an interface to the HGVS parser, described in
+Section~\ref{subsec:namecheck}, only. This interface will only return whether
+or not the syntax of a variant description is correct, no semantic check is
+performed. If no reference sequence is available, one might be restricted to
+checking the syntax only. An other reason for using the syntax checker is to
+check large quantities of descriptions in a small amount of time. Since there
+is no communication with reference sequence repositories, this check is
+extremely quick.
+
+\subsection{Position Converter}
+The \emph{position converter} is an interface to the HGVS parser, the
+crossmapper and the database. With this interface, we can convert a description
+that uses a RefSeq transcript as reference sequence to a description on a
+chromosomal reference sequence and vice versa. The mapping information is
+retrieved daily from the NCBI. Currently Human genome build 18 and 19 are
+supported.
+
+This interface can be used to quickly convert variants found by a high
+throughput screening, e.g., an NGS experiment. This enables people to annotate
+their NGS experiments with informative HGVS descriptions. An other use of this
+interface is to convert (or lift over) a description from one transcript to an
+other, or to transcripts of other (overlapping) genes. Finally, by using
+transcripts that are mapped to both hg18 as well as to hg19, we can convert a
+chromosomal description from one build to an other. Potentially, we can even
+lift over descriptions to other species.
+
+\subsection{SNP Converter}
+For converting a DbSNP~\cite{DBSNP} id to an HGVS description, the \emph{SNP
+converter} can be used. This interface retrieves the annotated HGVS
+descriptions from the NCBI.
+
+\subsection{Name Generator}
+Educational interface for those who are not familiar with the HGVS
+nomenclature.
+
+Constructed variant description can be checked (clickable) with the name
+checker.
+
+\subsection{Reference File Loader}
+For reference sequences unknown to the NCBI or EBI, we have created the
+\emph{reference file loader}.
+
+\begin{enumerate}
+  \item Upload a local file. \label{item:local}
+  \item Download a reference sequence by supplying a URL.
+  \item Retrieve part of the reference genome for a (HGNC) gene symbol
+  \begin{itemize}
+    \item Most recent build is used for the organism.
+    \item The orientation of the slice is selected automatically.
+    \item Flanking ranges.
+  \end{itemize}
+  \item Retrieve a range of a chromosome by accession number
+  \begin{itemize}
+    \item Choose orientation.
+  \end{itemize}
+  \item Retrieve a range of a chromosome by name
+\end{enumerate}
+
+Reference sequences are stored in a cache.
+
+MD5sum is used to identify the file.
+\begin{itemize}
+  \item Prevents re-uploading, the same UD is returned.
+  \item Enables the retrieval of reference sequences after it has vanished from
+    the cache, except for~\ref{item:local}.
+\end{itemize}
+
+\subsection{Batch Jobs}
+For the Name Checker, Syntax Checker, Position Converter and SNP Converter.
+
+Formats (automatically detected):
+\begin{itemize}
+  \item Tab delimited text file / CSV file
+  \item Microsoft Excel file
+  \item OpenOffice ODS file
+\end{itemize}
+
+Each row consists of one or more tab delimited fields, where every field
+contains a single variant description (or dbSNP rs number in case of the SNP
+Converter). Note that all rows must have the same number of fields.
+
+For backwards compatibility, the format used by Mutalyzer~1.0.3 is also
+accepted.
+
+The output of a Mutalyzer Batch run is a tab delimited CSV file, which has a
+header-row to clarify the results. We recommend opening the file in a
+spreadsheet program, such as OpenOffice Calc or Microsoft Excel. Note that
+empty lines are removed from the batch input file.
+
+Batch jobs are interleaved, so that even if large jobs are submitted, small
+jobs will still finish soon.
+
+Scheduler can be stopped, will resume even after power failure.
+
+\subsection{Webservices}
+\begin{itemize}
+  \item SOAP
+  \item HTTP/RPC+JSON
+\end{itemize}
+
+Well documented API online.
+
+Examples for other usage (textmining) given.
+
+Someone made a java client? Perhaps add link?
+
+\subsection{Feedback}
+Trac system for requests, documentation and error reporting.
+
+\subsection{Experimental description extractor}
+Generates a description from two sequences.
+\begin{itemize}
+  \item Use after applying a variant in the Name Checker.
+  \item Compare two reference sequences.
+\end{itemize}
+
+Will solve the combining and splitting of variants problem. True
+disambiguation.
+
+\section{LOVD~3.0}
+Uses the Mutalyzer~2.0 Webservices for:
+\begin{itemize}
+  \item Retrieving a reference sequence (add new gene).
+  \item Mapping descriptions.
+  \item Converting descriptions to other transcripts.
+  \item Checking variant descriptions.
+  \item \ldots
+\end{itemize}
+
+\section{Conclusions and further research}\label{conclusion}
+EMBL reference sequences.
+
+Description extractor in Name checker.
+
+Nesting.
+
+\bibliography{$HOME/projects/bibliography}{}
+\bibliographystyle{plain}
+
+\appendix
+
+\section{Webservices}
+\LTXtable{\textwidth}{webservices.tex}
+
+\section{Annotation enrichment} \label{sec:enrichment}
+The reference sequence annotation enrichment consists mainly of the linking of
+annotated transcripts to their \emph{coding sequence} (CDS) and protein. In
+many cases, (especially in GenBank files) there is no direct link between a
+transcript and its CDS, making it impossible to reconstruct the layout of the
+transcript and thereby the biological effect of a variant. Therefore we have
+developed an extensive set of methods to accomplish this link. First we select
+the CDSs that are consistent with a certain transcript, then we try to find a
+connection between the CDS and the transcript by comparing the locus tags. If
+the locus tag is not present, we try to retrieve the link between the
+identifier of the transcript and the accession number of the protein from the
+NCBI. If this is also not available, we use the product tag. The method used
+for connecting the CDS and transcript is reported.
+
+\end{document}
