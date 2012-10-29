@@ -85,7 +85,6 @@ def daemonize():
                 f.write('%s\n\n' % repr(traceback.format_exc()))
                 f.flush()
                 f.close()
-                pass
             if scheduler.stopped():
                 break
             # Wait a bit and process any possible new jobs.

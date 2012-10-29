@@ -23,7 +23,7 @@ from Bio.Seq import UnknownSeq
 from Bio.Alphabet import ProteinAlphabet
 from xml.dom import DOMException, minidom
 from xml.parsers import expat
-from httplib import HTTPException
+from httplib import HTTPException, IncompleteRead
 
 from mutalyzer import util
 from mutalyzer import config
@@ -276,7 +276,14 @@ class Retriever(object) :
                                         'IOError: %s' % str(e))
                 return []
 
-        response_text = response.read()
+        try:
+            response_text = response.read()
+        except IncompleteRead as e:
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'Error reading from dbSNP.')
+            self._output.addMessage(__file__, -1, 'INFO',
+                                    'IncompleteRead: %s' % str(e))
+            return []
 
         if response_text == '\n':
             # This is apparently what dbSNP returns for non-existing dbSNP id
