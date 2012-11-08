@@ -132,6 +132,50 @@ class Db():
     #query
 #Db
 
+class UCSC(Db) :
+    """
+    Database functions for querying the UCSC database.
+    """
+    def __init__(self, build) :
+        """
+        Initialise the Db parent class. Use the local database for a certain
+        build.
+
+        @arg build: The version of the mapping database
+        @type build: string
+        """
+        Db.__init__(self, build, 'genome', 'genome-mysql.cse.ucsc.edu')
+    #__init__
+
+    def transcripts_by_gene(self, gene):
+        """
+        Get transcript mappings for given gene name.
+        """
+        statement = """
+            SELECT DISTINCT
+              acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts,
+              exonEnds, name2 AS geneName, chrom, strand, protAcc
+            FROM gbStatus, refGene, refLink
+            WHERE type = "mRNA"
+            AND refGene.name = acc
+            AND acc = mrnaAcc
+            AND name2 = %s
+        """, gene
+
+        transcripts = []
+        for (acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, exonEnds,
+             geneName, chrom, strand, protAcc) in self.query(statement):
+            transcripts.append(
+                (geneName, acc, version, chrom, strand,
+                 txStart + 1, txEnd,
+                 cdsStart + 1, cdsEnd,
+                 [int(i) + 1 for i in exonStarts.split(',') if i],
+                 [int(i) for i in exonEnds.split(',') if i],
+                 protAcc))
+
+        return transcripts
+    #transcripts_by_gene
+
 class Mapping(Db) :
     """
     Database functions for mapping of transcripts and genes.
@@ -678,6 +722,46 @@ class Mapping(Db) :
         """, None
         self.query(statement)
     #ncbi_aggregate_mapping
+
+    def ucsc_load_mapping(self, transcripts, overwrite=False):
+        """
+        Load given transcripts into the 'MappingTemp' table.
+
+        Todo: Don't overwrite NCBI entries, but *do* overwrite existing UCSC
+            entries.
+        """
+        statement = """
+            DROP TABLE IF EXISTS MappingTemp;
+        """, None
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.query(statement)
+
+        statement = """
+            CREATE TABLE MappingTemp LIKE Mapping;
+        """, None
+        self.query(statement)
+
+        for (gene, transcript, version, chromosome, orientation, start,
+             stop, cds_start, cds_stop, exon_starts, exon_stops, protein) in transcripts:
+            exon_starts = ','.join(str(i) for i in exon_starts)
+            exon_stops = ','.join(str(i) for i in exon_stops)
+
+            statement = """
+                INSERT INTO `MappingTemp`
+                  (`gene`, `transcript`, `version`, `chromosome`, `orientation`,
+                   `start`, `stop`, `cds_start`, `cds_stop`, `exon_starts`, `exon_stops`,
+                   `protein`, `source`)
+                SELECT
+                  %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                FROM DUAL WHERE NOT EXISTS
+                  (SELECT * FROM `Mapping`
+                   WHERE `transcript` = %s AND `version` = %s AND 1 = %s);
+                """, (gene, transcript, version, chromosome, orientation, start,
+                      stop, cds_start, cds_stop, exon_starts, exon_stops, protein,
+                      'UCSC', transcript, version, int(overwrite) + 1)
+            self.query(statement)
+    #ucsc_load_mapping
 #Mapping
 
 

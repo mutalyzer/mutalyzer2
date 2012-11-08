@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+"""
+Update the database with mapping information for the given gene from the UCSC.
+
+Usage:
+  {command} database gene
+
+  database: Database to update (i.e. 'hg18' or 'hg19').
+  gene:     Path to the NCBI mapping information.
+
+
+This program is intended to be run manually whenever transcript mappings for a
+specific gene are required that are not yet in our database (i.e. they are not
+yet available from the NCBI). It will not overwrite transcript/version entries
+that are already in our database.
+"""
+
+
+import sys
+
+from mutalyzer.output import Output
+from mutalyzer.mapping import UCSCUpdater
+from mutalyzer.util import format_usage
+
+
+def main(database, gene):
+    """
+    Update the database with information from the UCSC.
+
+    @arg database: Database to update (i.e. 'hg18' or 'hg19').
+    @type database: string
+    @arg gene: Gene name to get transcript mapping info for.
+    @type gene: string
+
+    @todo: Also report how much was added/updated.
+    """
+    output = Output(__file__)
+    output.addMessage(__file__, -1, 'INFO',
+                      'Starting UCSC mapping data update (gene: %s)' % gene)
+
+    updater = UCSCUpdater(database)
+    updater.load(gene)
+    updater.merge()
+
+    output.addMessage(__file__, -1, 'INFO',
+                      'NCBI mapping data update end (gene: %s)' % gene)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print format_usage()
+        sys.exit(1)
+    main(*sys.argv[1:])

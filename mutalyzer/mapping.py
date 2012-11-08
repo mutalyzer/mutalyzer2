@@ -986,3 +986,47 @@ class NCBIUpdater(Updater):
         self.db.ncbi_drop_temporary_tables()
     #_drop_temporary_tables
 #NCBIUpdater
+
+
+class UCSCUpdater(Updater):
+    """
+    Update the mapping information in the database with mapping information
+    from the UCSC.
+
+    For now, we only load info from the UCSC per gene. By default, we don't
+    overwrite any existing transcript/version entries. This is because we
+    prefer the NCBI mappings but want to be able to manually load info for
+    specific genes that is not provided by the NCBI (yet).
+
+    Example usage:
+
+        >>> updater = UCSCUpdater('hg19')
+        >>> updater.load('SDHD')
+        >>> updater.merge()
+
+    """
+    def __init__(self, build):
+        """
+        @arg build: Human genome build (or database name), i.e. 'hg18' or
+            'hg19'.
+        @type build: string
+        """
+        self.ucsc = Db.UCSC(build)
+        super(UCSCUpdater, self).__init__(build)
+    #__init__
+
+    def load(self, gene, overwrite=False):
+        """
+        Load UCSC mapping information for given gene into the database. By
+        default, don't load transcript/version entries we already have.
+
+        The resulting transcript mappings are inserted into the
+        'MappingTemp' table.
+
+        @arg overwrite: Include already known transcript/version entries
+            (default: False).
+        @type overwrite: bool
+        """
+        transcripts = self.ucsc.transcripts_by_gene(gene)
+        self.db.ucsc_load_mapping(transcripts, overwrite=overwrite)
+    #load
