@@ -40,7 +40,7 @@ def migrate():
     cursor.execute("""
     ALTER TABLE Mapping
         ADD COLUMN selector varchar(255) DEFAULT NULL AFTER version,
-        ADD COLUMN selector_version unsigned DEFAULT NULL AFTER selector;""")
+        ADD COLUMN selector_version smallint(6) DEFAULT NULL AFTER selector;""")
     connection.commit()
     connection.close()
     migration.info('Added column hg18.Mapping.selector')
@@ -51,7 +51,7 @@ def migrate():
     cursor.execute("""
     ALTER TABLE Mapping
         ADD COLUMN selector varchar(255) DEFAULT NULL AFTER version,
-        ADD COLUMN selector_version unsigned DEFAULT NULL AFTER selector;""")
+        ADD COLUMN selector_version smallint(6) DEFAULT NULL AFTER selector;""")
     connection.commit()
     connection.close()
     migration.info('Added column hg19.Mapping.selector')
