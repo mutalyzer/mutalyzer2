@@ -480,14 +480,14 @@ class Mapping(Db) :
         """
 
         statement = """
-            SELECT AccNo
+            SELECT AccNo, organelle_type
               FROM ChrName
               WHERE name = %s;
         """, name
 
         ret = self.query(statement)
         if ret :
-            return ret[0][0]
+            return ret[0]
         return None
     #chromAcc
 

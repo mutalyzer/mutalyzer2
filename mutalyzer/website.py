@@ -594,7 +594,7 @@ class PositionConverter:
             variant = converter.correctChrVariant(variant)
 
             if variant:
-                if not(":c." in variant or ":n." in variant or ":g." in variant):
+                if not(":c." in variant or ":n." in variant or ":g." in variant or ":m." in variant):
                     #Bad name
                     grammar = Grammar(output)
                     grammar.parse(variant)
@@ -605,7 +605,7 @@ class PositionConverter:
 
                 attr["gName"] = variant
 
-                if variant and ":g." in variant:
+                if variant and (":g." in variant or ":m." in variant):
                     # Do the g2c dance
                     variants = converter.chrom2c(variant, "dict")
                     if variants is None:
@@ -1412,9 +1412,9 @@ class Uploader:
                     name = 'chr%s' % name
 
                 database = Db.Mapping(build)
-                accession = database.chromAcc(name)
-
-                if not accession:
+                try:
+                    accession, _ = database.chromAcc(name)
+                except TypeError:
                     raise InputException('Chromosome not available for build %s: %s' %
                                          (build, name))
 

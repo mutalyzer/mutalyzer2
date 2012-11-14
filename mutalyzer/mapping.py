@@ -524,7 +524,10 @@ class Converter(object) :
         else:
             variants = [self.parseTree.RawVar]
 
-        chromAcc = self.__database.chromAcc(self.dbFields["chromosome"])
+        try:
+            chromAcc, organelle_type = self.__database.chromAcc(self.dbFields["chromosome"])
+        except TypeError:
+            return None
 
         # Construct the variant descriptions
         descriptions = []
@@ -555,7 +558,10 @@ class Converter(object) :
         else:
             description = '[' + ';'.join(descriptions) + ']'
 
-        return "%s:g.%s" % (chromAcc, description)
+        if organelle_type == 'mitochondrion':
+            return "%s:m.%s" % (chromAcc, description)
+        else:
+            return "%s:g.%s" % (chromAcc, description)
     #c2chrom
 
     def chromosomal_positions(self, positions, reference, version=None):
@@ -622,8 +628,9 @@ class Converter(object) :
 
         if variant.startswith('chr') and ':' in variant:
             preco, postco = variant.split(':', 1)
-            chrom = self.__database.chromAcc(preco)
-            if chrom is None :
+            try:
+                chrom, _ = self.__database.chromAcc(preco)
+            except TypeError:
                 self.__output.addMessage(__file__, 4, "ENOTINDB",
                     "The accession number %s could not be found in our database (or is not a chromosome)." %
                     preco)
@@ -650,7 +657,7 @@ class Converter(object) :
         """
 
         if not self._parseInput(variant) :
-             return None
+            return None
 
         acc = self.parseTree.RefSeqAcc
         version = self.parseTree.Version

@@ -582,7 +582,7 @@ class MutalyzerService(ServiceBase):
             "Finished processing chromAccession(%s %s)" % (build, name))
 
         del D,L
-        return result
+        return result[0]
     #chromAccession
 
     @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
@@ -674,7 +674,7 @@ class MutalyzerService(ServiceBase):
 
         if "c." in variant or "n." in variant:
             result = [converter.c2chrom(variant)]
-        elif "g." in variant :
+        elif "g." in variant or "m." in variant:
             result = converter.chrom2c(variant, "list", gene=gene)
         else:
             result = [""]
