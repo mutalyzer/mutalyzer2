@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+"""
+Add columns 'selector' and 'selector_version' to the 'Mapping' tables.
+
+Usage:
+  ./009-db-mapping-add-selector.migration [migrate]
+"""
+
+
+import migration
+
+
+def check():
+    """
+    Check if migration is needed.
+    """
+    connection = migration.db_connect('hg18')
+    cursor = connection.cursor()
+    cursor.execute('SHOW COLUMNS FROM Mapping WHERE field = "selector";')
+    has_column_hg18 = len(cursor.fetchall()) > 0
+    connection.close()
+
+    connection = migration.db_connect('hg19')
+    cursor = connection.cursor()
+    cursor.execute('SHOW COLUMNS FROM Mapping WHERE field = "selector";')
+    has_column_hg19 = len(cursor.fetchall()) > 0
+    connection.close()
+
+    if has_column_hg19 != has_column_hg19:
+        migration.fatal('Installation is not in a recognizable state. Fix manually.')
+    return not has_column_hg19
+
+
+def migrate():
+    """
+    Perform migration.
+    """
+    connection = migration.db_connect('hg18')
+    cursor = connection.cursor()
+    cursor.execute("""
+    ALTER TABLE Mapping
+        ADD COLUMN selector varchar(255) DEFAULT NULL AFTER version,
+        ADD COLUMN selector_version unsigned DEFAULT NULL AFTER selector;""")
+    connection.commit()
+    connection.close()
+    migration.info('Added column hg18.Mapping.selector')
+    migration.info('Added column hg18.Mapping.selector_version')
+
+    connection = migration.db_connect('hg19')
+    cursor = connection.cursor()
+    cursor.execute("""
+    ALTER TABLE Mapping
+        ADD COLUMN selector varchar(255) DEFAULT NULL AFTER version,
+        ADD COLUMN selector_version unsigned DEFAULT NULL AFTER selector;""")
+    connection.commit()
+    connection.close()
+    migration.info('Added column hg19.Mapping.selector')
+    migration.info('Added column hg19.Mapping.selector_version')
+
+
+if __name__ == '__main__':
+    migration.main(check, migrate)

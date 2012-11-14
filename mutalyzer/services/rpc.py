@@ -308,7 +308,7 @@ class MutalyzerService(ServiceBase):
         if ret :
             l = []
             for i in ret :
-                l.append(i[0] + '.' + str(i[11]))
+                l.append(i[0] + '.' + str(i[13]))
             return l
 
         return []
@@ -402,9 +402,10 @@ class MutalyzerService(ServiceBase):
 
         for transcript in database.get_Transcripts(chrom, pos1, pos2, method):
             t = TranscriptMappingInfo()
-            d = dict(zip(('transcript', 'start', 'stop', 'cds_start',
-                'cds_stop', 'exon_starts', 'exon_stops', 'gene', 'chromosome',
-                'orientation', 'protein', 'version'), transcript))
+            d = dict(zip(('transcript', 'selector', 'selector_version',
+                'start', 'stop', 'cds_start', 'cds_stop', 'exon_starts',
+                'exon_stops', 'gene', 'chromosome', 'orientation', 'protein',
+                'version'), transcript))
             if d['orientation'] == '-':
                 d['start'], d['stop'] = d['stop'], d['start']
                 d['cds_start'], d['cds_stop'] = d['cds_stop'], d['cds_start']

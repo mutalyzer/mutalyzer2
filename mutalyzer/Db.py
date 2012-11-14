@@ -235,10 +235,12 @@ class Mapping(Db) :
         return [int(i[0]) for i in self.query(statement)]
     #get_NM_version
 
-    def getAllFields(self, mrnaAcc, version):
+    def getAllFields(self, mrnaAcc, version=None, selector=None, selector_version=None):
         """
         Get all Fields of an accession number and version number.
         If the version number is None, use the "newest" version number.
+
+        Optionally also provide a gene and transcript version to select.
 
         SQL tables from dbNames:
             - Mapping ; Accumulated mapping info.
@@ -260,6 +262,7 @@ class Mapping(Db) :
         """
         q = """
                 select  transcript,
+                        selector, selector_version,
                         start, stop,
                         cds_start, cds_stop,
                         exon_starts, exon_stops,
@@ -267,20 +270,36 @@ class Mapping(Db) :
                         orientation, protein
                 from Mapping
         """
-        if version is None:
-            q += """
-                where transcript = %s
-                order by version desc, chromosome asc;
-                """
-            statement = (q, mrnaAcc)
-        else:
-            q += """
-                where transcript = %s and
-                      version = %s
-                order by chromosome asc;
-                """
-            statement = q, (mrnaAcc, version)
 
+        where = []
+        order = []
+        args = []
+
+        if version is None:
+            where.append('transcript = %s')
+            order.append('version desc')
+            order.append('chromosome asc')
+            args.append(mrnaAcc)
+        else:
+            where.append('transcript = %s')
+            where.append('version = %s')
+            order.append('chromosome asc')
+            args.append(mrnaAcc)
+            args.append(version)
+
+        if selector is not None:
+            where.append('selector = %s')
+            args.append(selector)
+
+        if selector_version is not None:
+            where.append('selector_version = %s')
+            args.append(selector_version)
+
+        q += """
+             where """ + ' AND '.join(where) + """
+             order by """ + ', '.join(order) + ';'
+
+        statement = q, tuple(args)
         return self.query(statement)[0]
 
     def get_Transcripts(self, chrom, p1, p2, overlap) :
@@ -311,6 +330,7 @@ class Mapping(Db) :
         """
         q = """
                 select  transcript,
+                        selector, selector_version,
                         start, stop,
                         cds_start, cds_stop,
                         exon_starts, exon_stops,
@@ -353,6 +373,7 @@ class Mapping(Db) :
         """
         statement = """
                 SELECT  transcript,
+                        selector, selector_version,
                         start, stop,
                         cds_start, cds_stop,
                         exon_starts, exon_stops,
@@ -727,8 +748,8 @@ class Mapping(Db) :
         """
         Load given transcripts into the 'MappingTemp' table.
 
-        Todo: Don't overwrite NCBI entries, but *do* overwrite existing UCSC
-            entries.
+        Todo: Don't overwrite NCBI/reference entries, but *do* overwrite
+            existing UCSC entries.
         """
         statement = """
             DROP TABLE IF EXISTS MappingTemp;
@@ -762,6 +783,46 @@ class Mapping(Db) :
                       'UCSC', transcript, version, int(overwrite) + 1)
             self.query(statement)
     #ucsc_load_mapping
+
+    def reference_load_mapping(self, transcripts, overwrite=False):
+        """
+        Load given transcripts into the 'MappingTemp' table.
+
+        Todo: Don't overwrite NCBI/UCSC entries, but *do* overwrite existing
+            reference entries.
+        """
+        statement = """
+            DROP TABLE IF EXISTS MappingTemp;
+        """, None
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.query(statement)
+
+        statement = """
+            CREATE TABLE MappingTemp LIKE Mapping;
+        """, None
+        self.query(statement)
+
+        for t in transcripts:
+            exon_starts = ','.join(str(i) for i in t['exon_starts'])
+            exon_stops = ','.join(str(i) for i in t['exon_stops'])
+            statement = """
+                INSERT INTO `MappingTemp`
+                  (`gene`, `transcript`, `version`, `selector`, `selector_version`,
+                   `chromosome`, `orientation`, `start`, `stop`, `cds_start`, `cds_stop`,
+                   `exon_starts`, `exon_stops`, `protein`, `source`)
+                SELECT
+                  %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'reference'
+                FROM DUAL WHERE NOT EXISTS
+                  (SELECT * FROM `Mapping`
+                   WHERE `transcript` = %s AND `version` = %s AND 1 = %s);
+                """, (t['gene'], t['transcript'], t['version'], t['selector'],
+                      t['selector_version'], t['chromosome'], t['orientation'],
+                      t['start'], t['stop'], t['cds_start'], t['cds_stop'],
+                      exon_starts, exon_stops,
+                      t['protein'], t['transcript'], t['version'], int(overwrite) + 1)
+            self.query(statement)
+    #reference_load_mapping
 #Mapping
 
 

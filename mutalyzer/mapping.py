@@ -12,10 +12,12 @@ update the database with this information.
 
 from Bio.Seq import reverse_complement
 from collections import defaultdict
+from operator import attrgetter
 
 from mutalyzer.grammar import Grammar
 from mutalyzer import Db
 from mutalyzer import Crossmap
+from mutalyzer import Retriever
 from mutalyzer.models import SoapMessage, Mapping, Transcript
 
 
@@ -174,14 +176,14 @@ class Converter(object) :
         """
 
         Fields = dict(zip(
-            ("transcript", "start", "stop", "cds_start", "cds_stop",
-             "exon_starts", "exon_stops", "gene",
+            ("transcript", "selector", "selector_version", "start", "stop",
+             "cds_start", "cds_stop", "exon_starts", "exon_stops", "gene",
              "chromosome", "orientation", "protein", "version"),
             values))
         return self._populateFields(Fields)
     #_FieldsFromValues
 
-    def _FieldsFromDb(self, acc, version) :
+    def _FieldsFromDb(self, acc, version, selector=None, selector_version=None) :
         """
         Get data from database and populate dbFields dict.
 
@@ -189,6 +191,10 @@ class Converter(object) :
         @type acc: string
         @arg version: version number
         @type version: integer
+        @kwarg selector: Optional gene symbol selector.
+        @type selector: str
+        @kwarg selector_version: Optional transcript version selector.
+        @type selector_version: int
         """
 
         if not version :
@@ -205,7 +211,7 @@ class Converter(object) :
         #if
         else :
             if version in versions :
-                Values = self.__database.getAllFields(acc, version)
+                Values = self.__database.getAllFields(acc, version, selector, selector_version)
                 return self._FieldsFromValues(Values)
             #if
             if not version :
@@ -502,7 +508,12 @@ class Converter(object) :
         if self._parseInput(variant):
             acc = self.parseTree.RefSeqAcc
             version = self.parseTree.Version
-            self._FieldsFromDb(acc, version)
+            if self.parseTree.Gene:
+                selector = self.parseTree.Gene.GeneSymbol
+                selector_version = int(self.parseTree.Gene.TransVar)
+            else:
+                selector = selector_version = None
+            self._FieldsFromDb(acc, version, selector, selector_version)
 
         mappings = self._coreMapping()
         if not mappings:
@@ -693,15 +704,29 @@ class Converter(object) :
                 continue
             # construct the variant description
             accNo = "%s.%s" % (self.dbFields["transcript"],self.dbFields["version"])
+            if self.dbFields['selector'] and self.dbFields['selector_version']:
+                selector = '(%s_v%.3i)' % (self.dbFields['selector'], self.dbFields['selector_version'])
+            elif self.dbFields['selector']:
+                selector = '(%s)' % self.dbFields['selector']
+            else:
+                selector = ''
             geneName = self.dbFields["gene"] or ""
             strand = self.dbFields["orientation"] == '+'
 
-            #Check if n or c type
-            info = self.crossmap.info()
-            if info[0] == 1 and info[1] == info[2] :
-                mtype = 'n'
-            else :
+            # Check if n or c type
+            # Note: Originally, the below check using crossmap.info() was
+            #     used (commented out now), but I do not understand this
+            #     logic. Also, it breaks n. notation on non-coding mtDNA
+            #     transcripts, so I replaced it with a simple .CDS check.
+            #info = self.crossmap.info()
+            #if info[0] == 1 and info[1] == info[2] :
+            #    mtype = 'n'
+            #else :
+            #    mtype = 'c'
+            if self.crossmap.CDS:
                 mtype = 'c'
+            else:
+                mtype = 'n'
 
             mutations = []
             for variant, mapping in zip(variants, mappings):
@@ -729,7 +754,7 @@ class Converter(object) :
             else:
                 mutation = '[' + ';'.join(mutations) + ']'
 
-            description = "%s:%c.%s" % (accNo, mtype, mutation)
+            description = "%s%s:%c.%s" % (accNo, selector, mtype, mutation)
             HGVS_notatations[geneName].append(description)
             NM_list.append(description)
         #for
@@ -1023,6 +1048,8 @@ class UCSCUpdater(Updater):
         The resulting transcript mappings are inserted into the
         'MappingTemp' table.
 
+        @arg gene: Gene symbol to load mappings for.
+        @type gene: str
         @arg overwrite: Include already known transcript/version entries
             (default: False).
         @type overwrite: bool
@@ -1030,3 +1057,92 @@ class UCSCUpdater(Updater):
         transcripts = self.ucsc.transcripts_by_gene(gene)
         self.db.ucsc_load_mapping(transcripts, overwrite=overwrite)
     #load
+#UCSCUpdater
+
+
+class ReferenceUpdater(Updater):
+    """
+    Update the mapping information in the database with mapping information
+    from a genomic reference.
+
+    For now, we don't handle exon locations (this is only used for mtDNA
+    genomic references). By default, we don't overwrite any existing
+    transcript/version entries. This is because we prefer the NCBI mappings
+    but want to be able to manually load info for specific genes that is not
+    provided by the NCBI (yet).
+
+    Example usage:
+
+        >>> updater = ReferenceUpdater('hg19')
+        >>> updater.load('NC_012920.1')
+        >>> updater.merge()
+
+    """
+    def __init__(self, build):
+        """
+        @arg build: Human genome build (or database name), i.e. 'hg18' or
+            'hg19'.
+        @type build: string
+        """
+        super(ReferenceUpdater, self).__init__(build)
+    #__init__
+
+    def load(self, reference, output, overwrite=False):
+        """
+        Load genomic reference mapping information into the database. By
+        default, don't load transcript/version entries we already have.
+
+        The resulting transcript mappings are inserted into the
+        'MappingTemp' table.
+
+        @arg reference: Reference to load mappings from.
+        @type reference: str
+        @arg output: An output object.
+        @type output: mutalyzer.output.Output
+        @arg overwrite: Include already known transcript/version entries
+            (default: False).
+        @type overwrite: bool
+        """
+        cache = Db.Cache()
+        retriever = Retriever.GenBankRetriever(output, cache)
+        record = retriever.loadrecord(reference)
+
+        transcripts = []
+
+        for gene in record.geneList:
+            # We support exactly one transcript per gene.
+            try:
+                transcript = sorted(gene.transcriptList, key=attrgetter('name'))[0]
+            except IndexError:
+                continue
+
+            # We use gene.location for now, it is always present and the same
+            # for our purposes.
+            #start, stop = transcript.mRNA.location[0], transcript.mRNA.location[1]
+            start, stop = gene.location
+
+            orientation = '-' if gene.orientation == -1 else '+'
+
+            try:
+                cds_start, cds_stop = transcript.CDS.location
+            except AttributeError:
+                cds_start = cds_stop = None
+
+            transcripts.append({'gene': gene.name,
+                                'transcript': record.source_accession,
+                                'version': int(record.source_version),
+                                'selector': gene.name,
+                                'selector_version': int(transcript.name),
+                                'chromosome': 'chrM',
+                                'orientation': orientation,
+                                'start': start,
+                                'stop': stop,
+                                'cds_start': cds_start,
+                                'cds_stop': cds_stop,
+                                'exon_starts': [start],
+                                'exon_stops': [stop],
+                                'protein': transcript.proteinID})
+
+        self.db.reference_load_mapping(transcripts, overwrite=overwrite)
+    #load
+#ReferenceUpdater

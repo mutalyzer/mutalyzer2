@@ -154,7 +154,7 @@ class TestServicesSoap():
         assert_equal(type(r.string), list)
         # Fix for r536: disable the -u and +d convention.
         #assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
-        assert 'XM_001715131.2:n.*19483A>G' in r.string
+        assert 'XM_001715131.2:c.*19483A>G' in r.string
 
     def test_gettranscriptsbygenename_valid(self):
         """
