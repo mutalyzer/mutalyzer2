@@ -211,3 +211,28 @@ class TestConverter():
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000011.9:g.111959695delGinsTAAA', 'list')
         assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_chrm_chrom2c(self):
+        """
+        Mitochondrial m. to c.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_012920.1:m.12030del', 'list')
+        assert 'NC_012920.1(ND4_v001):c.1271del' in coding
+
+    def test_chrm_name_chrom2c(self):
+        """
+        Mitochondrial m. (by chromosome name) to c.
+        """
+        converter = self._converter('hg19')
+        variant = converter.correctChrVariant('chrM:m.12030del')
+        coding = converter.chrom2c(variant, 'list')
+        assert 'NC_012920.1(ND4_v001):c.1271del' in coding
+
+    def test_chrm_c2chrom(self):
+        """
+        Mitochondrial c. to m.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NC_012920.1(ND4_v001):c.1271del')
+        assert_equal(genomic, 'NC_012920.1:m.12030del')
