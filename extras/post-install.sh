@@ -90,6 +90,15 @@ chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
 echo "You will now be asked for the MySQL root password"
 
 # Create databases
+cat << EOF | mysql -u root -p
+  CREATE USER mutalyzer;
+  CREATE DATABASE mutalyzer;
+  CREATE DATABASE hg18;
+  CREATE DATABASE hg19;
+  GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
+  GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
+  GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
+  FLUSH PRIVILEGES;
 
 echo -e "${COLOR_INFO}Creating tables in hg18 database${COLOR_END}"
 
