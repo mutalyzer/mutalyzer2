@@ -256,6 +256,9 @@ def fitFS(peptide, altPeptide, FS):
     @arg FS: Frame shift table.
     @type FS: dict
     """
+    if len(peptide) < len(altPeptide):
+        return False
+
     pList = __makeOverlaps(peptide)
 
     for i in range(len(altPeptide)):
@@ -761,7 +764,9 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
         FS1, FS2 = makeFSTables(1) # Standard coding table.
 
         if (fitFS(s1[s1_start + 1:], s2[s2_start + 1:], FS1) or
-            fitFS(s1[s1_start + 1:], s2[s2_start + 1:], FS2)):
+            fitFS(s1[s1_start + 1:], s2[s2_start + 1:], FS2) or
+            fitFS(s2[s2_start + 1:], s1[s1_start + 2:], FS1) or
+            fitFS(s2[s2_start + 1:], s1[s1_start + 2:], FS2)): 
             return [RawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
                 inserted=s2[s2_start], term=len(s2) - s2_start, type="fs")]
     #if
