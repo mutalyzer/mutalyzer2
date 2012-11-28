@@ -14,11 +14,12 @@ Usage:
 
 import sys
 import os
+import html2text
 
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer.util import format_usage
-
+from mutalyzer import describe
 
 def main(cmd):
     """
@@ -51,127 +52,70 @@ def main(cmd):
     print
 
     if not errors:
-        visualisation = O.getOutput("visualisation")
-        if visualisation :
-            for i in range(len(visualisation)) :
-                if i and not i % 3 :
-                    print
-                print visualisation[i]
-            #for
+        print "Overview of the raw variants:"
+        for i in O.getOutput("visualisation"):
+            for j in range(len(i)):
+                print i[j]
             print
-        #if
+        #for
 
-        reference = O.getOutput("reference")[-1]
-        for i in O.getOutput("descriptions") :
-            print i
-        print
-        for i in O.getOutput("protDescriptions") :
-            print i
-        print
+        print "Genomic description:"
+        print O.getIndexedOutput('genomicDescription', 0, '')
 
-        if RD.record and RD.record._sourcetype == "LRG": #LRG record
-            from collections import defaultdict
-            toutput = defaultdict(list)
-            poutput = defaultdict(list)
-            for i in RD.record.geneList:
-                for j in i.transcriptList:
-                    d = j.description
-                    d = ';' in d and '['+d+']' or d
-                    if j.name:
-                        toutput[i.name].append(
-                            "%st%s:%c.%s" % (reference, j.name, j.molType, d))
-                    else:
-                        pass
-                    if j.molType == 'c':
-                        poutput[i.name].append(
-                                "%sp%s:%s" % (reference, j.name,
-                                    j.proteinDescription))
-                        poutput[i.name].sort()
-                toutput[i.name].sort()
-
-            #Transcript Notation
-            print "Following transcripts were affected:"
-            for key, values in toutput.items():
-                print key
-                for value in values:
-                    print "\t"+value
-
-            #Protein Notation
-            print "\nFollowing proteins were affected:"
-            for key, values in poutput.items():
-                print key
-                for value in values:
-                    print "\t"+value
-            #for
-        #if
-        else :
-            for i in RD.record.geneList :
-                for j in i.transcriptList :
-                    if ';' in j.description :
-                        print "%s(%s_v%s):%c.[%s]" % (reference, i.name, j.name,
-                                                      j.molType, j.description)
-                    else :
-                        print "%s(%s_v%s):%c.%s" % (reference, i.name, j.name,
-                                                    j.molType, j.description)
-                        if (j.molType == 'c') :
-                            print "%s(%s_i%s):%s" % (reference, i.name, j.name,
-                                                     j.proteinDescription)
-                    #else
-                #for
-            #for
-        #else
-
-        #Genomic Notation
-        rdrd = RD.record.description
-        gdescr = ';' in rdrd and '['+rdrd+']' or rdrd
-        print "\nGenomic notation:\n\t%s:g.%s" % (reference, gdescr)
+        print "\nChromosomal description:"
         print O.getOutput("genomicChromDescription")
 
-        op = O.getOutput("oldprotein")
-        if op :
-            print "\nOld protein:"
-            #__bprint(op[0], O)
-            #for i in O.getOutput("oldProteinFancy") :
-            #    print i
-            print 'Disabled (see how wsgi.py handles this)'
-            print
-        #if
-        np = O.getOutput("newprotein")
-        if np :
-            print "\nNew protein:"
-            #__bprint(np[0], O)
-            #for i in O.getOutput("newProteinFancy") :
-            #    print i
-            print 'Disabled (see how wsgi.py handles this)'
-            print
-        #if
-        ap = O.getOutput("altProtein")
-        if ap :
-            print "\nAlternative protein using start codon %s:" % \
-                O.getOutput("altstart")[0]
-            #__bprint(ap[0], O)
-            #for i in O.getOutput("altProteinFancy") :
-            #    print i
-            print 'Disabled (see how wsgi.py handles this)'
-            print
-        #if
+        print "\nAffected transcripts:"
+        for i in O.getOutput('descriptions'):
+            print i
+        print "\nAffected proteins:"
+        for i in O.getOutput('protDescriptions'):
+            print i
 
+        print "\nOld protein:"
+        print html2text.html2text(''.join(map(lambda x: str(x) + "<br>",
+            O.getOutput("oldProteinFancy"))))
+
+        print "\nNew protein:"
+        print html2text.html2text(''.join(map(lambda x: str(x) + "<br>",
+            O.getOutput("newProteinFancy"))))
+
+        print "\nAlternative protein:"
+        print html2text.html2text(''.join(map(lambda x: str(x) + "<br>",
+            O.getOutput("altProteinFancy"))))
+
+        print "\nExon information:"
         for i in O.getOutput("exonInfo") :
             print i
-        print
-        print O.getOutput("cdsStart")
-        print O.getOutput("cdsStop")
-        print
 
-        for i in O.getOutput("legends") :
-            print i
+        print "\nCDS  information:"
+        print O.getOutput("cdsStart_c"), O.getOutput("cdsStop_c")
+        print O.getOutput("cdsStart_g"), O.getOutput("cdsStop_g")
 
-        print
-        print "Restriction sites:"
+        print "\nEffect on Restriction sites:"
         for i in O.getOutput("restrictionSites") :
             print i
 
-        print "+++ %s" % O.getOutput("myTranscriptDescription")
+        print "\nLegend:"
+        for i in O.getOutput("legends") :
+            print i
+
+        allele = describe.describe(O.getIndexedOutput("original", 0),
+            O.getIndexedOutput("mutated", 0))
+        prot_allele = describe.describe(O.getIndexedOutput("oldprotein", 0),
+            O.getIndexedOutput("newprotein", 0, default=""), DNA=False)
+
+        extracted = extractedProt = '(skipped)'
+
+        if allele:
+            extracted = describe.alleleDescription(allele)
+        if prot_allele:
+            extractedProt = describe.alleleDescription(prot_allele)
+
+        print "\nExperimental services:"
+        print extracted
+        print extractedProt
+        #print "+++ %s" % O.getOutput("myTranscriptDescription")
 
     #if
     ### OUTPUT BLOCK ###
