@@ -824,10 +824,10 @@ class GenRecord() :
             # It should be easy for SOAP clients to filter out all warnings
             # related to other transcripts, so we use two codes here.
             if transcript.current:
-                warning = 'WSPLICESELECTED'
+                warning = 'WSPLICE'
                 str_transcript = 'transcript %s (selected)' % transcript.name
             else:
-                warning = 'WSPLICE'
+                warning = 'WSPLICE_OTHER'
                 str_transcript = 'transcript %s' % transcript.name
 
             if intronPos <= config.get('spliceAlarm'):

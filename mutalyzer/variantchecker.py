@@ -1691,12 +1691,12 @@ def check_variant(description, output):
 
             else:
                 if transcript.current:
-                    output.addMessage(__file__, 2, "WCDSSELECTED", "CDS length is " \
+                    output.addMessage(__file__, 2, "WCDS", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
                         "variant %s (selected)." % (gene.name, transcript.name))
                     transcript.proteinDescription = 'p.?'
                 else:
-                    output.addMessage(__file__, 2, "WCDS", "CDS length is " \
+                    output.addMessage(__file__, 2, "WCDS_OTHER", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
                         "variant %s." % (gene.name, transcript.name))
                     transcript.proteinDescription = 'p.?'
