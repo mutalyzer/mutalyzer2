@@ -1,1 +1,1 @@
-/home/jfjlaros/projects/skel/Makefile
+../shared/Makefile
