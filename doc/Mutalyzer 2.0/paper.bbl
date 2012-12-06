@@ -14,6 +14,12 @@ J.F.J. Laros, A.~Blavier, J.T. den Dunnen, and P.E.M. Taschner.
 {National Center for Biotechnology Information}.
 \newblock \begin{small}\texttt{http://www.ncbi.nlm.nih.gov/}\end{small}.
 
+\bibitem{DBSNP}
+S.T. Sherry, M.H. Ward, M.~Kholodov, J.~Baker, L.~Phan, E.M. Smigielski, and
+  K.~Sirotkin.
+\newblock {dbSNP}: the {NCBI} database of genetic variation.
+\newblock {\em Nucleic Acids Research}, 29(1):308--11, January 2001.
+
 \bibitem{Mutalyzer}
 M.~Wildeman, E.~van Ophuizen, J.~T. den Dunnen, and P.~E. Taschner.
 \newblock Improving sequence variant descriptions in mutation databases and
