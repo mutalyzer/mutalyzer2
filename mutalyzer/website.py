@@ -834,18 +834,21 @@ class Check:
                 chromosome=raw_variants[0], start=min(positions) - 10,
                 stop=max(positions) + 10, bed_file=urllib.quote(bed_url))
 
-        allele = describe.describe(output.getIndexedOutput("original", 0),
-                                   output.getIndexedOutput("mutated", 0))
-        prot_allele = describe.describe(output.getIndexedOutput("oldprotein", 0),
-                                        output.getIndexedOutput("newprotein", 0, default=""), DNA=False)
+        if output.getIndexedOutput("original", 0) and output.getIndexedOutput("mutated", 0):
+            allele = describe.describe(output.getIndexedOutput("original", 0),
+                                       output.getIndexedOutput("mutated", 0))
+            prot_allele = describe.describe(output.getIndexedOutput("oldprotein", 0),
+                                            output.getIndexedOutput("newprotein", 0, default=""), DNA=False)
 
-        extracted = extractedProt = '(skipped)'
+            extracted = extractedProt = '(skipped)'
 
-        if allele:
-            extracted = describe.alleleDescription(allele)
-        if prot_allele:
-            extractedProt = describe.alleleDescription(prot_allele)
+            if allele:
+                extracted = describe.alleleDescription(allele)
+            if prot_allele:
+                extractedProt = describe.alleleDescription(prot_allele)
 
+        else:
+            extracted = extractedProt = ''
 
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
