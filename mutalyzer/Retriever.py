@@ -23,7 +23,7 @@ from Bio.Seq import UnknownSeq
 from Bio.Alphabet import ProteinAlphabet
 from xml.dom import DOMException, minidom
 from xml.parsers import expat
-from httplib import HTTPException
+from httplib import HTTPException, IncompleteRead
 
 from mutalyzer import util
 from mutalyzer import config
@@ -276,7 +276,14 @@ class Retriever(object) :
                                         'IOError: %s' % str(e))
                 return []
 
-        response_text = response.read()
+        try:
+            response_text = response.read()
+        except IncompleteRead as e:
+            self._output.addMessage(__file__, 4, 'EENTREZ',
+                                    'Error reading from dbSNP.')
+            self._output.addMessage(__file__, -1, 'INFO',
+                                    'IncompleteRead: %s' % str(e))
+            return []
 
         if response_text == '\n':
             # This is apparently what dbSNP returns for non-existing dbSNP id
@@ -300,7 +307,7 @@ class Retriever(object) :
             return []
         except IndexError:
             # The expected root element is not present.
-            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unkown dbSNP ' \
+            self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
                                     'error. Result XML was not as expected.')
             self._output.addMessage(__file__, -1, 'INFO',
                                     'Result from dbSNP: %s' % response_text)
@@ -589,7 +596,7 @@ class GenBankRetriever(Retriever):
                                         'Could not get mapping information for gene %s.' % gene)
                 return None
 
-            if summary[0]["NomenclatureSymbol"] == gene : # Found it.
+            if summary[0]["NomenclatureSymbol"].lower() == gene.lower() : # Found it.
                 if not summary[0]["GenomicInfo"] :
                     self._output.addMessage(__file__, 4, "ENOMAPPING",
                         "No mapping information found for gene %s." % gene)
@@ -724,6 +731,10 @@ class GenBankRetriever(Retriever):
         """
         if (identifier[0].isdigit()) : # This is a GI identifier.
             name = self._database.getGBFromGI(identifier)
+            if name is None:
+                self._output.addMessage(__file__, 4, "ERETR",
+                                        "Unknown reference: %s" % identifier)
+                return
         else :
             name = identifier
 
@@ -768,7 +779,7 @@ class GenBankRetriever(Retriever):
 
         # Todo: This will change once we support protein references
         if isinstance(record.seq.alphabet, ProteinAlphabet):
-            self._output.addMessage(__file__, 4, 'EPROTEINREF',
+            self._output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
                                     'Protein reference sequences are not supported.')
             return None
 

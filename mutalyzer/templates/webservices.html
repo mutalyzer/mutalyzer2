@@ -5,20 +5,20 @@
   <body>
     <div metal:define-macro="content">
     <center>
-      <h3>Webservices</h3>
+      <h3>Web services</h3>
     </center>
     <br>
-    Most Mutalyzer functionality is programmatically available trough two
-    interfaces: a SOAP webservice and a HTTP/RPC+JSON webservice.
+    Most Mutalyzer functionality is programmatically available through two
+    interfaces: a SOAP web service and a HTTP/RPC+JSON web service.
     <br>
-    <h3>SOAP webservice</h3>
+    <h3>SOAP web service</h3>
     A <a href="services/?wsdl">WSDL description</a> is available
     for easy generation of client programs in many languages. See the
     <a href = "soap-api">annotated API</a> for detailed documentation.
     <br>
     <br>
-    The following are some example client programs for SOAP webservice. They
-    use the <a href="documentation#op.checkSyntax">checkSyntax</a> method
+    The following are some example client programs for SOAP web service. They
+    use the <a href="soap-api#op.checkSyntax">checkSyntax</a> method
     to determine if a variant description adheres to the <span class="helper"
       title="Human Genome Variation Society standard variant nomenclature">
     <a href="http://www.hgvs.org/mutnomen">HGVS</a> format</span>.
@@ -37,8 +37,8 @@
     Here is an example that could be used for
       <a href="download/textmining.py">text mining</a> on a
       <a href="downloads/textmining_sample.txt">sample</a> input file.
-    <h3>HTTP/RPC+JSON webservice</h3>
-    The HTTP/RPC+JSON webservice is experimental and currently undocumented.
+    <h3>HTTP/RPC+JSON web service</h3>
+    The HTTP/RPC+JSON web service is experimental and currently undocumented.
     It can be called using HTTP GET requests on <code tal:content = "structure string:${location}${serviceJsonLocation}/method?param=value"></code> where <code>method</code> is the name    of the method to be called and method parameters are expected as <code>param=value</code> query string parameters. Responses are JSON-encoded.
     <br>
     <br>
@@ -47,7 +47,7 @@
     <br>
     For now, you can work from this example using the above mentioned
     <a href="soap-api">annotated SOAP API</a>, since the HTTP/RPC+JSON
-    webservice mirrors the functionality of the SOAP webservice.
+    web service mirrors the functionality of the SOAP web service.
   </div>
   </body>
 </html>

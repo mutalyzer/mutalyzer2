@@ -24,12 +24,13 @@ import os
 import bz2
 import web
 import urllib
+from collections import defaultdict
 
 from lxml import etree
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
-from rpclib.interface.wsdl import Wsdl11
+from spyne.interface.wsdl import Wsdl11
 
 import mutalyzer
 from mutalyzer import util
@@ -109,7 +110,7 @@ class render_tal:
         filename = name
 
         def template(args={}, scheme='html', standalone=False,
-                     prevent_caching=False):
+                     prevent_caching=False, page=None):
             """
             Template render function.
 
@@ -126,6 +127,7 @@ class render_tal:
                                argument for template.
             @return: Render of template.
             """
+            page = page or filename
             file = filename
             if scheme == 'html':
                 file += '.html'
@@ -150,6 +152,11 @@ class render_tal:
             # Wrap in site layout with menu
             if scheme == 'html' and not standalone:
                 context.addGlobal('sitemacros', template)
+                # The following three lines are a hack to get class="active"
+                # on the active menu item, working around TAL.
+                active = defaultdict(lambda: 'menu')
+                active[page] = 'menu active'
+                context.addGlobal('active', active)
                 templateFile = open(os.path.join(self.path, 'menu.html'), 'r')
                 template = simpleTAL.compileHTMLTemplate(templateFile)
                 templateFile.close()
@@ -182,7 +189,10 @@ render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
     'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
     'contactEmail'        : config.get('email'),
     'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
-    'serviceJsonLocation' : SERVICE_JSON_LOCATION
+    'serviceJsonLocation' : SERVICE_JSON_LOCATION,
+    'piwik'               : config.get('piwik'),
+    'piwikBase'           : config.get('piwikBase'),
+    'piwikSite'           : config.get('piwikSite')
 })
 
 # web.py application
@@ -311,10 +321,10 @@ class Reference:
 
         This is used by LOVD to quickly check if a reference file is in the
         cache. If it isn't, it will resubmit it.
-        Of course a more proper solution here would be to have some webservice
-        method which checks if the GenBank file is in the cache *or* can be
-        reconstructed from the information in the database. Because if the
-        latter is the case, Mutalyzer will add it to the cache on the fly.
+        Of course a more proper solution here would be to have some web
+        service method which checks if the GenBank file is in the cache *or*
+        can be reconstructed from the information in the database. Because if
+        the latter is the case, Mutalyzer will add it to the cache on the fly.
         """
         file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
 
@@ -584,18 +594,18 @@ class PositionConverter:
             variant = converter.correctChrVariant(variant)
 
             if variant:
-                if not(":c." in variant or ":g." in variant):
+                if not(":c." in variant or ":n." in variant or ":g." in variant or ":m." in variant):
                     #Bad name
                     grammar = Grammar(output)
                     grammar.parse(variant)
 
-                if ":c." in variant:
+                if ":c." in variant or ":n." in variant:
                     # Do the c2chrom dance
                     variant = converter.c2chrom(variant)
 
                 attr["gName"] = variant
 
-                if variant and ":g." in variant:
+                if variant and (":g." in variant or ":m." in variant):
                     # Do the g2c dance
                     variants = converter.chrom2c(variant, "dict")
                     if variants is None:
@@ -824,6 +834,19 @@ class Check:
                 chromosome=raw_variants[0], start=min(positions) - 10,
                 stop=max(positions) + 10, bed_file=urllib.quote(bed_url))
 
+        allele = describe.describe(output.getIndexedOutput("original", 0),
+                                   output.getIndexedOutput("mutated", 0))
+        prot_allele = describe.describe(output.getIndexedOutput("oldprotein", 0),
+                                        output.getIndexedOutput("newprotein", 0, default=""), DNA=False)
+
+        extracted = extractedProt = '(skipped)'
+
+        if allele:
+            extracted = describe.alleleDescription(allele)
+        if prot_allele:
+            extractedProt = describe.alleleDescription(prot_allele)
+
+
         # Todo: Generate the fancy HTML views for the proteins here instead
         # of in mutalyzer/variantchecker.py.
         args = {
@@ -852,7 +875,9 @@ class Check:
             'restrictionSites'   : output.getOutput('restrictionSites'),
             'legends'            : output.getOutput('legends'),
             'reference'          : reference,
-            'browserLink'        : browser_link
+            'browserLink'        : browser_link,
+            'extractedDescription' : (extracted, urllib.quote(extracted)),
+            'extractedProtein'   : (extractedProt, urllib.quote(extractedProt))
         }
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
@@ -919,7 +944,7 @@ class DescriptionExtractor:
             output.addMessage(__file__, 3, "ENODNA",
                 "Variant sequence is not DNA.")
 
-        result = describe.describeDNA(referenceSeq, variantSeq)
+        result = describe.describe(referenceSeq, variantSeq)
         description = describe.alleleDescription(result)
 
         errors, warnings, summary = output.Summary()
@@ -927,7 +952,7 @@ class DescriptionExtractor:
         visualisation = []
         for i in result:
             visualisation.append([i.start, i.end, i.type, i.deleted,
-                i.inserted, i.shift, i.description()])
+                i.inserted, i.shift, i.hgvs])
 
         args = {
             'lastReferenceSeq' : referenceSeq,
@@ -1122,7 +1147,10 @@ class BatchChecker:
         }
 
         # Make sure the correct page is displayed for an entrypoint
-        if not batchType:
+        if batchType:
+            page = 'batch' + batchType
+        else:
+            page = 'batch'
             batchType = 'NameChecker'
 
         if batchType in attr["batchTypes"]:
@@ -1175,7 +1203,7 @@ class BatchChecker:
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
-        return render.batch(attr)
+        return render.batch(attr, page=page)
     #batch
 #BatchChecker
 
@@ -1198,6 +1226,7 @@ class BatchResult:
         The url routing currently makes sure to only call this with filenames
         of the form \d+.
         """
+        # Todo: Check if batch job is ready (we have the job id).
         filename = 'Results_%s.txt' % result
         handle = open(os.path.join(config.get('resultsDir'), filename))
         web.header('Content-Type', 'text/plain')
@@ -1383,9 +1412,9 @@ class Uploader:
                     name = 'chr%s' % name
 
                 database = Db.Mapping(build)
-                accession = database.chromAcc(name)
-
-                if not accession:
+                try:
+                    accession, _ = database.chromAcc(name)
+                except TypeError:
                     raise InputException('Chromosome not available for build %s: %s' %
                                          (build, name))
 
@@ -1423,11 +1452,11 @@ class Uploader:
 
 class SoapApi:
     """
-    SOAP webservice documentation.
+    SOAP web service documentation.
     """
     def GET(self):
         """
-        HTML documentation for the webservice.
+        HTML documentation for the web service.
 
         Generate the documentation by a XSL transform of the WSDL document.
         The XSL transformation used is from Tomi Vanek:
@@ -1444,7 +1473,7 @@ class SoapApi:
             .documentation { white-space: pre-line; }
 
         @todo: Use some configuration setting for the location of the
-               webservice.
+               web service.
         @todo: Use configuration value for .xsl location.
         @todo: Cache this transformation.
         """

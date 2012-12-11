@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}
+
+\bibitem{HGVS}
+{Human Genome Variation Society}.
+\newblock \begin{small}\texttt{http://www.hgvs.org/mutnomen/}\end{small}.
+
+\bibitem{hgvs_bnf}
+J.F.J. Laros, A.~Blavier, J.T. den Dunnen, and P.E.M. Taschner.
+\newblock A formalized description of the standard human variant nomenclature
+  in extended backus-naur form.
+\newblock {\em BMC Bioinformatics}, 12(Suppl 4):S5, 2011.
+
+\bibitem{NCBI}
+{National Center for Biotechnology Information}.
+\newblock \begin{small}\texttt{http://www.ncbi.nlm.nih.gov/}\end{small}.
+
+\bibitem{DBSNP}
+S.T. Sherry, M.H. Ward, M.~Kholodov, J.~Baker, L.~Phan, E.M. Smigielski, and
+  K.~Sirotkin.
+\newblock {dbSNP}: the {NCBI} database of genetic variation.
+\newblock {\em Nucleic Acids Research}, 29(1):308--11, January 2001.
+
+\bibitem{Mutalyzer}
+M.~Wildeman, E.~van Ophuizen, J.~T. den Dunnen, and P.~E. Taschner.
+\newblock Improving sequence variant descriptions in mutation databases and
+  literature using the {Mutalyzer} sequence variation nomenclature checker.
+\newblock {\em Human Mutation}, 29:6–--13, 2008.
+
+\end{thebibliography}

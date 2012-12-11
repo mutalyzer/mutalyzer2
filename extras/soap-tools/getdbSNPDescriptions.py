@@ -7,7 +7,7 @@ Usage:
 
   rs_number: A valid dbSNP rs number, e.g. 'rs9919552'.
 
-The HGVS descriptions are retrieved from the Mutalyzer SOAP webservice and
+The HGVS descriptions are retrieved from the Mutalyzer SOAP web service and
 printed to standard output.
 """
 

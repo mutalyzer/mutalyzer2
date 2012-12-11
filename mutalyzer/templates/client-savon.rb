@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# Example SOAP client for the Mutalyzer webservice in Ruby using the savon
+# Example SOAP client for the Mutalyzer web service in Ruby using the savon
 # library.
 #
 # See {path}/webservices

@@ -35,6 +35,33 @@ class TestConverter():
         assert_equal(genomic, 'NC_000011.9:g.111959695G>T')
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.274G>T' in coding
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NR_028383.1:c.1-u2173C>A' in coding
+        assert 'NR_028383.1:n.-2173C>A' in coding
+
+    def test_converter_non_coding(self):
+        """
+        Test with variant on non-coding transcript.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NR_028383.1:n.-2173C>A')
+        assert_equal(genomic, 'NC_000011.9:g.111959695G>T')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.274G>T' in coding
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NR_028383.1:c.1-u2173C>A' in coding
+        assert 'NR_028383.1:n.-2173C>A' in coding
+
+    def test_converter_compound(self):
+        """
+        Test with compound variant.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.[274G>T;278A>G]')
+        assert_equal(genomic, 'NC_000011.9:g.[111959695G>T;111959699A>G]')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.[274G>T;278A>G]' in coding
+        assert 'NR_028383.1:n.[-2173C>A;-2177T>C]' in coding
 
     def test_hla_cluster(self):
         """
@@ -58,8 +85,11 @@ class TestConverter():
         """
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000022.10:g.51016285_51017117del123456789', 'list')
-        assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
-        assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NM_001145134.1:c.-138-u21_60del123456789' in coding
+        #assert 'NR_021492.1:c.1-u5170_1-u4338del123456789' in coding
+        assert 'NM_001145134.1:c.-159_60del123456789' in coding
+        assert 'NR_021492.1:n.-5170_-4338del123456789' in coding
 
     def test_S_Venkata_Suresh_Kumar(self):
         """
@@ -91,9 +121,9 @@ class TestConverter():
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000001.10:g.160012314_160012329del16', 'list')
         assert 'NM_002241.4:c.-27250-7_-27242del16' not in coding
-        assert 'NM_002241.3:c.-27340-7_-27332del16' not in coding
+        #assert 'NM_002241.3:c.-27340-7_-27332del16' not in coding
         assert 'NM_002241.4:c.1-7_9del16' in coding
-        assert 'NM_002241.3:c.1-7_9del16' in coding
+        #assert 'NM_002241.3:c.1-7_9del16' in coding
 
     def test_range_order_forward_correct(self):
         """
@@ -145,3 +175,64 @@ class TestConverter():
         assert_equal(coding, None)
         erange = self.output.getMessagesWithErrorCode('ERANGE')
         assert_equal(len(erange), 1)
+
+    def test_delins_large_ins_c2chrom(self):
+        """
+        Delins with multi-base insertion c. to chrom.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.274delinsTAAA')
+        assert_equal(genomic, 'NC_000011.9:g.111959695delinsTAAA')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_delins_large_ins_explicit_c2chrom(self):
+        """
+        Delins with multi-base insertion and explicit deleted sequence c. to chrom.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_003002.2:c.274delGinsTAAA')
+        assert_equal(genomic, 'NC_000011.9:g.111959695delinsTAAA')
+        coding = converter.chrom2c(genomic, 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_delins_large_ins_chrom2c(self):
+        """
+        Delins with multi-base insertion chrom to c.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111959695delinsTAAA', 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_delins_large_ins_explicit_chrom2c(self):
+        """
+        Delins with multi-base insertion and explicit deleted sequence chrom to c.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111959695delGinsTAAA', 'list')
+        assert 'NM_003002.2:c.274delinsTAAA' in coding
+
+    def test_chrm_chrom2c(self):
+        """
+        Mitochondrial m. to c.
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_012920.1:m.12030del', 'list')
+        assert 'NC_012920.1(ND4_v001):c.1271del' in coding
+
+    def test_chrm_name_chrom2c(self):
+        """
+        Mitochondrial m. (by chromosome name) to c.
+        """
+        converter = self._converter('hg19')
+        variant = converter.correctChrVariant('chrM:m.12030del')
+        coding = converter.chrom2c(variant, 'list')
+        assert 'NC_012920.1(ND4_v001):c.1271del' in coding
+
+    def test_chrm_c2chrom(self):
+        """
+        Mitochondrial c. to m.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NC_012920.1(ND4_v001):c.1271del')
+        assert_equal(genomic, 'NC_012920.1:m.12030del')

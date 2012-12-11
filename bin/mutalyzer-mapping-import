@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+"""
+Update the database with mapping information for the given gene or genomic
+reference.
+
+Usage:
+  {command} source database gene|reference
+
+  source:    Import source, 'gene' for importing a specific gene from the UCSC
+             or 'reference' for importing from genomic reference.
+  database:  Database to update (i.e. 'hg18' or 'hg19').
+  gene:      Name of gene to import all transcripts mappings for from the UCSC
+             database (e.g. 'TTN').
+  reference: Genomic reference to import all genes from (e.g. 'NC_012920.1').
+             Not that currently no exon locations are supported, this has only
+             been tested on mtDNA.
+
+
+This program is intended to be run manually whenever transcript mappings for
+specific genes are required that are not yet in our database (i.e. they are
+not yet available from the NCBI, or they are mtDNA genes). It will not
+overwrite transcript/version entries that are already in our database.
+"""
+
+
+import sys
+
+from mutalyzer.output import Output
+from mutalyzer.mapping import UCSCUpdater, ReferenceUpdater
+from mutalyzer.util import format_usage
+
+
+def import_gene(database, gene):
+    """
+    Update the database with information from the UCSC.
+
+    @arg database: Database to update (i.e. 'hg18' or 'hg19').
+    @type database: string
+    @arg gene: Gene name to get transcript mapping info for.
+    @type gene: string
+
+    @todo: Also report how much was added/updated.
+    """
+    output = Output(__file__)
+    output.addMessage(__file__, -1, 'INFO',
+                      'Starting UCSC mapping data update (gene: %s)' % gene)
+
+    updater = UCSCUpdater(database)
+    updater.load(gene)
+    updater.merge()
+
+    output.addMessage(__file__, -1, 'INFO',
+                      'UCSC mapping data update end (gene: %s)' % gene)
+
+
+def import_reference(database, reference):
+    """
+    Update the database with information from the given reference.
+
+    @arg database: Database to update (i.e. 'hg18' or 'hg19').
+    @type database: string
+    @arg reference: Reference to get gene mappings from.
+    @type reference: string
+
+    @todo: Also report how much was added/updated.
+    """
+    output = Output(__file__)
+    output.addMessage(__file__, -1, 'INFO',
+                      'Starting reference mapping data update (reference: %s)' % reference)
+
+    updater = ReferenceUpdater(database)
+    updater.load(reference, output)
+    updater.merge()
+
+    output.addMessage(__file__, -1, 'INFO',
+                      'Reference mapping data update end (reference: %s)' % reference)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 4:
+        print format_usage()
+        sys.exit(1)
+    if sys.argv[1] == 'gene':
+        import_gene(*sys.argv[2:])
+    elif sys.argv[1] == 'reference':
+        import_reference(*sys.argv[2:])
+    else:
+        print format_usage()
+        sys.exit(1)

@@ -31,7 +31,7 @@ a:hover {
 	font-weight : bold;
 	text-decoration : none;
 	}
-	
+
 .importanttext {
 	border : 1px solid black;
 	background-color : #717B9D;
@@ -51,7 +51,7 @@ body, div, span, font, td {
 .raTable tr td {
   text-align : right;
   border : 1px solid grey;
-  padding : 0px 4px; 
+  padding : 0px 4px;
 }
 .raTable {
   border : 1px solid grey;
@@ -60,7 +60,7 @@ body, div, span, font, td {
 
 .laTable tr td {
   border : 1px solid grey;
-  padding : 0px 4px; 
+  padding : 0px 4px;
 }
 
 .laTable {
@@ -92,11 +92,6 @@ ul {
 .inverted {
 	background-color: #002E65;
 	color: white;
-}
-
-.bullet{
-	left : -15px;
-	position : absolute;
 }
 
 .faculteitsonderdeel {
@@ -165,89 +160,43 @@ ul {
 	padding-top : 1px;
 }
 
-.vertnav {
-	color : #C2C6D5;
-	font-weight : bold;
+.menu {
 	line-height : 18px;
-	text-decoration : none;
 }
 
-.vertnav:link {
-	color : #FFFFFF;
-}
-
-.vertnav:hover {
-	color : #FFFFFF;
-}
-
-.vertnavactive {
-	color : #FFFFFF;
-	font-weight : bold;
-	line-height : 18px;
-	text-decoration : none;
-}
-
-.vertnavactive:hover {
-	color : #FFFFFF;
-	font-weight : bold;
-	line-height : 18px;
-	text-decoration : none;
-}
-
-.vertnavsub {
+.menu a {
 	color : #002E65;
-	line-height : 18px;
 	text-decoration : none;
 }
 
-.vertnavsub:visited {
-	color : #002E65;
-}
-
-.vertnavsub:hover {
+.menu:hover a, .menu a:hover {
 	color : #FFFFFF;
 }
 
-.vertnavsubother {
-	color : #B2D6F5;
-	line-height : 18px;
-	text-decoration : none;
-}
-
-.vertnavsubother:visited {
-	color : #92b6c5;
-}
-
-.vertnavsubother:hover {
+.menu.active a {
 	color : #FFFFFF;
+    font-weight: bold;
 }
 
-.vertnavsubactive {
-	color : #FFFFFF;
-	font-weight : normal;
-	line-height : 18px;
-	text-decoration : none;
+.menu .bullet {
+    height: 22px;
+	background: url('../images/bullitdonker.gif') no-repeat top left;
 }
 
-.vertnavsubactive:hover {
-	color : #FFFFFF;
-	font-weight : normal;
-	line-height : 18px;
-	text-decoration : none;
+.menu .bullet.sub {
+	background-image: url('../images/bullitmiddel.gif');
 }
 
-.vertnavsubinternal {
-	color : #F5D6B2;
-	line-height : 18px;
-	text-decoration : none;
+.menu.active .bullet, .menu:hover .bullet {
+	background-image: url('../images/bullitlicht1.gif');
 }
 
-.vertnavsubinternal:visited {
-	color : #c2b695;
+.menu.active .bullet.sub, .menu:hover .bullet.sub {
+	background-image: url('../images/bullitlicht2.gif');
 }
 
-.vertnavsubinternal:hover {
-	color : #FFFFFF;
+.menu.inactive:hover .bullet {
+	background-image: url('../images/bullitdonker.gif');
 }
 
 #content{
@@ -326,9 +275,9 @@ i {
     background-image: url('../images/error.png');
 }
 
-.thnormal {  
-	font-family: Arial, Helvetica, sans-serif; 
-	font-weight: bold; 
+.thnormal {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
 	color: #FFFFFF;
 	background-color : #002E65;
 }

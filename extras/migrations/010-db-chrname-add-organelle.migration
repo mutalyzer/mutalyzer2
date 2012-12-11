@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+"""
+Add a column 'organelle_type' to the 'ChrName' tables.
+
+Usage:
+  ./010-db-chrname-add-organelle.migration [migrate]
+"""
+
+
+import migration
+
+
+def check():
+    """
+    Check if migration is needed.
+    """
+    connection = migration.db_connect('hg18')
+    cursor = connection.cursor()
+    cursor.execute('SHOW COLUMNS FROM ChrName WHERE field = "organelle_type";')
+    has_column_hg18 = len(cursor.fetchall()) > 0
+    connection.close()
+
+    connection = migration.db_connect('hg19')
+    cursor = connection.cursor()
+    cursor.execute('SHOW COLUMNS FROM ChrName WHERE field = "organelle_type";')
+    has_column_hg19 = len(cursor.fetchall()) > 0
+    connection.close()
+
+    if has_column_hg19 != has_column_hg19:
+        migration.fatal('Installation is not in a recognizable state. Fix manually.')
+    return not has_column_hg19
+
+
+def migrate():
+    """
+    Perform migration.
+    """
+    connection = migration.db_connect('hg18')
+    cursor = connection.cursor()
+    cursor.execute("""
+    ALTER TABLE ChrName
+        ADD COLUMN organelle_type enum('chromosome','mitochondrion') NOT NULL DEFAULT 'chromosome' AFTER name;""")
+    connection.commit()
+    cursor = connection.cursor()
+    cursor.execute("""
+    UPDATE ChrName SET organelle_type = 'mitochondrion' WHERE name = 'chrM';""")
+    connection.commit()
+    connection.close()
+    migration.info('Added column hg18.ChrName.organelle_type')
+
+    connection = migration.db_connect('hg19')
+    cursor = connection.cursor()
+    cursor.execute("""
+    ALTER TABLE ChrName
+        ADD COLUMN organelle_type enum('chromosome','mitochondrion') NOT NULL DEFAULT 'chromosome' AFTER name;""")
+    connection.commit()
+    cursor = connection.cursor()
+    cursor.execute("""
+    UPDATE ChrName SET organelle_type = 'mitochondrion' WHERE name = 'chrM';""")
+    connection.commit()
+    connection.close()
+    migration.info('Added column hg19.ChrName.organelle_type')
+
+
+if __name__ == '__main__':
+    migration.main(check, migrate)

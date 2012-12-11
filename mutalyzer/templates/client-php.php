@@ -1,7 +1,7 @@
 <?php
 
 /*
- Example SOAP client for the Mutalyzer webservice in PHP.
+ Example SOAP client for the Mutalyzer web service in PHP.
 
  See {path}/webservices
 

@@ -7,10 +7,12 @@ from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
 import os
 from datetime import datetime, timedelta
+import time
 import mutalyzer
 from mutalyzer.output import Output
 from mutalyzer.sync import CacheSync
 from mutalyzer import Db
+from mutalyzer.util import slow
 import logging
 import urllib2
 from suds.client import Client
@@ -52,7 +54,7 @@ class TestServicesSoap():
     """
     def setUp(self):
         """
-        Initialize webservice entrypoint.
+        Initialize web service entrypoint.
 
         @todo: Start the standalone server and stop it in self.tearDown
         instead of depending on some running instance at a fixed address.
@@ -123,9 +125,13 @@ class TestServicesSoap():
                                                  variant='NC_000011.9:g.111959693G>T',
                                                  gene='C11orf57')
         assert_equal(type(r.string), list)
-        assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
-        assert 'NM_001082970.1:c.*2178+d3819G>T' in r.string
-        assert 'NM_018195.3:c.*2178+d3819G>T' in r.string
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
+        #assert 'NM_001082970.1:c.*2178+d3819G>T' in r.string
+        #assert 'NM_018195.3:c.*2178+d3819G>T' in r.string
+        assert 'NM_001082969.1:c.*5997G>T' in r.string
+        assert 'NM_001082970.1:c.*5997G>T' in r.string
+        assert 'NM_018195.3:c.*5997G>T' in r.string
 
     def test_numberconversion_gtoc_no_transcripts(self):
         """
@@ -146,7 +152,9 @@ class TestServicesSoap():
                                                  variant='chr7:g.345T>C',
                                                  gene='LOC100132858')
         assert_equal(type(r.string), list)
-        assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
+        # Fix for r536: disable the -u and +d convention.
+        #assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
+        assert 'XM_001715131.2:c.*19483A>G' in r.string
 
     def test_gettranscriptsbygenename_valid(self):
         """
@@ -222,6 +230,71 @@ class TestServicesSoap():
                   'NM_018052',
                   'NR_034083'):
             assert t in names
+
+    def test_mappinginfo(self):
+        """
+        Running mappingInfo should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001100.3', 'g.112037014G>T')
+        assert_equal(r.endoffset, 117529978)
+        assert_equal(r.start_g, 112037014)
+        assert_equal(r.startoffset, 117529978)
+        assert_equal(r.mutationType, "subst")
+        assert_equal(r.end_g, 112037014)
+        assert_equal(r.startmain, 1388)
+        assert_equal(r.endmain, 1388)
+
+    def test_mappinginfo(self):
+        """
+        Running mappingInfo should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.112039014G>T')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 112039014)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'subst')
+        assert_equal(r.end_g, 112039014)
+        assert_equal(r.startmain, 175)
+        assert_equal(r.endmain, 175)
+
+    def test_mappinginfo_compound(self):
+        """
+        Running mappingInfo with compound variant should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.[112039014G>T;112039018T>A]')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 112039014)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'compound')
+        assert_equal(r.end_g, 112039018)
+        assert_equal(r.startmain, 175)
+        assert_equal(r.endmain, 179)
+
+    def test_mappinginfo_reverse(self):
+        """
+        Running mappingInfo on a reverse transcript should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_000035.3', 'g.104184170_104184179del')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 104184170)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'del')
+        assert_equal(r.end_g, 104184179)
+        assert_equal(r.startmain, 1016)
+        assert_equal(r.endmain, 1007)
+
+    def test_mappinginfo_compound_reverse(self):
+        """
+        Running mappingInfo with compound variant on a reverse transcript should give a Mapping object.
+        """
+        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_000035.3', 'g.[104184170_104184179del;104184182_104184183del]')
+        assert_equal(r.endoffset, 0)
+        assert_equal(r.start_g, 104184170)
+        assert_equal(r.startoffset, 0)
+        assert_equal(r.mutationType, 'compound')
+        assert_equal(r.end_g, 104184183)
+        assert_equal(r.startmain, 1016)
+        assert_equal(r.endmain, 1003)
 
     def test_info(self):
         """
@@ -389,6 +462,7 @@ class TestServicesSoap():
         """
         Get reference info for a GI variant.
         """
+        self.client.service.runMutalyzer('NG_012772.1:g.1del') # Make sure the server has this reference cached
         r = self.client.service.runMutalyzer('gi256574794:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772.1')
@@ -428,3 +502,58 @@ class TestServicesSoap():
             assert_equal(t.cCDSStop, '4395')
             assert_equal(t.gCDSStop, 21138)
             assert_equal(t.chromCDSStop, 48262863)
+
+    def test_batchjob(self):
+        """
+        Submit a batch job.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.1:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        data = '\n'.join(variants).encode('base64')
+
+        result = self.client.service.submitBatchJob(data, 'NameChecker')
+        job_id = int(result)
+
+        for _ in range(50):
+            try:
+                result = self.client.service.getBatchJob(job_id)
+                break
+            except WebFault:
+                result = self.client.service.monitorBatchJob(job_id)
+                assert int(result) <= len(variants)
+                time.sleep(1)
+        else:
+            assert False
+
+        assert_equal(len(result.decode('base64').strip().split('\n')) - 1,
+                     len(variants))
+
+    @slow
+    def test_batchjob_toobig(self):
+        """
+        Submit the batch name checker with a too big input file.
+        """
+        seed = """
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy
+nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi
+enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis
+nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in
+hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu
+feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui
+blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla
+facilisi."""
+        data = seed
+        # Very crude way of creating something at least 6MB in size
+        while len(data) < 6000000:
+            data += data
+
+        try:
+            self.client.service.submitBatchJob(data.encode('base64'), 'NameChecker')
+            assert False
+        except WebFault as e:
+            # - senv:Client.RequestTooLong: Raised by Spyne, depending on
+            #     the max_content_length argument to the HttpBase constructor.
+            # - EMAXSIZE: Raised by Mutalyzer, depending on the
+            #     batchInputMaxSize configuration setting.
+            assert e.fault.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')

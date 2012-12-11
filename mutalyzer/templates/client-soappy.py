@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Example SOAP client for the Mutalyzer webservice in Python using the
+# Example SOAP client for the Mutalyzer web service in Python using the
 # SOAPpy library.
 #
 # See {path}/webservices

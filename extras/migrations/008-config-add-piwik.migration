@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Add Piwik analytics settings (disabled by default) to the configuration file.
+#
+# Usage:
+#   ./008-config-add-piwik.migration [migrate]
+
+COLOR_INFO='\033[32m'
+COLOR_WARNING='\033[33m'
+COLOR_ERROR='\033[31m'
+COLOR_END='\033[0m'
+
+if [ -e /etc/mutalyzer/config ] && ! $(grep -q 'piwik' /etc/mutalyzer/config); then
+    echo -e "${COLOR_WARNING}This migration is needed.${COLOR_END}"
+    if [ "$1" = 'migrate' ]; then
+        echo 'Performing migration.'
+        echo -e "${COLOR_INFO}Copying /etc/mutalyzer/config to /etc/mutalyzer/config.backup${COLOR_END}"
+        cp /etc/mutalyzer/config /etc/mutalyzer/config.backup
+        # Insert Piwik settings at the bottom
+        cat <<EOF >> /etc/mutalyzer/config
+
+
+#
+# These settings are for Piwik analytics.
+#
+
+# Enable Piwik analytics.
+piwik = no
+
+# Piwik server base URL (include protocol, no trailing slash).
+piwikBase = https://piwik.example.com
+
+# Piwik site ID.
+piwikSite = 1
+EOF
+        echo -e "${COLOR_INFO}Added Piwik settings to /etc/mutalyzer/config${COLOR_END}"
+        echo 'Performed migration.'
+    fi
+else
+    echo -e "${COLOR_INFO}This migration is not needed.${COLOR_END}"
+fi

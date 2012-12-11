@@ -31,8 +31,6 @@ def deploy(bootstrap='no'):
     Additionally, if bootstrap=yes, install all dependencies before Mutalyzer
     installation, and bootstrap the Mutalyzer configuration afterwards (i.e.
     create and fill database, add cron script, create cache directory, etc).
-
-    Todo: Instead of using /tmp/mutalyzer, use mktemp or something.
     """
     # Currently, Fabric only supports task arguments as strings.
     bootstrap = (bootstrap == 'yes')
@@ -45,17 +43,17 @@ def deploy(bootstrap='no'):
     tarball = '%s.tar.gz' % dist
 
     # Create a place where we can unzip the source tarball.
-    run('mkdir /tmp/mutalyzer')
+    tempdir = run('mktemp -d').strip()
 
     # Upload the source tarball to the temporary folder on the server.
-    put('dist/%s' % tarball, '/tmp/mutalyzer/%s' % tarball)
+    put('dist/%s' % tarball, tempdir + '/%s' % tarball)
 
     # Go to that directory, unzip and install it.
-    with cd('/tmp/mutalyzer'):
+    with cd(tempdir):
         run('tar xzf %s' % tarball)
 
         # Go to the tarball's contents and do the installation.
-        with cd('/tmp/mutalyzer/%s' % dist):
+        with cd(tempdir + '/%s' % dist):
 
             if bootstrap:
                 # Install dependencies.
@@ -75,6 +73,5 @@ def deploy(bootstrap='no'):
             #run('MUTALYZER_ENV=test nosetests -v')
 
     # Now that all is set up, delete the folder again.
-    # I don't like to 'sudo rm -Rf' but since there where files created by
-    # root in this directory, we have to.
-    sudo('rm -Rf /tmp/mutalyzer')
+    # (I don't like to 'sudo rm -Rf'.)
+    #sudo('rm -Rf %s' % tempdir)

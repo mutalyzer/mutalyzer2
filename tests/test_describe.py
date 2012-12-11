@@ -26,7 +26,7 @@ class TestDescribe():
         """
         Test 1.
         """
-        result = describe.describeDNA(
+        result = describe.describe(
             'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
             'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA')
         description = describe.alleleDescription(result)
@@ -36,7 +36,7 @@ class TestDescribe():
         """
         Test 2.
         """
-        result = describe.describeDNA(
+        result = describe.describe(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTACTGTG',
             'TAAGCACCAGGAGTCCATGAAGAAGCTGGATCCTCCCATGGAATCCCCTACTCTACTGTG')
         description = describe.alleleDescription(result)
@@ -46,7 +46,7 @@ class TestDescribe():
         """
         Test 3.
         """
-        result = describe.describeDNA(
+        result = describe.describe(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTA',
             'TAAGCACCAGGAGTCCATGAAGAAGCCATGTCCTGCCATGGAATCCCCTACTCTA')
         description = describe.alleleDescription(result)
@@ -56,7 +56,7 @@ class TestDescribe():
         """
         Test 4.
         """
-        result = describe.describeDNA(
+        result = describe.describe(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTA',
             'TAAGCACCAGGAGTCCATGAAGAAGCCATGTCCTGCCATGAATCCCCTACTCTA')
         description = describe.alleleDescription(result)

@@ -9,8 +9,8 @@ Usage:
       example 'AL449423.14'.
   gene: Optionally restrict results to transcripts for this gene.
 
-The transcript information is retrieved from the Mutalyzer SOAP webservice and
-printed to standard output.
+The transcript information is retrieved from the Mutalyzer SOAP web service
+and printed to standard output.
 """
 
 

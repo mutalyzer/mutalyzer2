@@ -1,5 +1,5 @@
 /*
-  Example SOAP client for the Mutalyzer webservice in C# for the Mono
+  Example SOAP client for the Mutalyzer web service in C# for the Mono
   platform.
 
   See {path}/webservices

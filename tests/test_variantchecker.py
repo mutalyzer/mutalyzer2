@@ -38,6 +38,12 @@ class TestVariantchecker():
         """
         return self.retriever.retrievegene(gene, organism, upstream, downstream)
 
+    def _load_record(self, identifier):
+        """
+        Load a record in the database and cache.
+        """
+        return self.retriever.loadrecord(identifier)
+
     def test_deletion_in_frame(self):
         """
         Simple in-frame deletion should give a simple description on protein
@@ -95,6 +101,54 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
+
+    def test_est_warning_nm_est(self):
+        """
+        Warning for EST positioning on NM reference.
+        """
+        check_variant('NM_003002.2:274del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 1
+
+    def test_no_est_warning_nm_c(self):
+        """
+        No EST warning for c. positioning on NM reference.
+        """
+        check_variant('NM_003002.2:c.274del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
+    def test_no_est_warning_nm_n(self):
+        """
+        No EST warning for n. positioning on NM reference.
+        """
+        check_variant('NM_003002.2:n.274del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
+    def test_est_warning_ng_est(self):
+        """
+        Warning for EST positioning on NG reference.
+        """
+        check_variant('NG_012772.1:128del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 1
+
+    def test_no_est_warning_ng_g(self):
+        """
+        No EST warning for g. positioning on NG reference.
+        """
+        check_variant('NG_012772.1:g.128del', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
+
+    def test_no_est_warning_est_est(self):
+        """
+        No warning for EST positioning on EST reference.
+        """
+        check_variant('AA010203.1:54_55insG', self.output)
+        west = self.output.getMessagesWithErrorCode('WEST')
+        assert len(west) == 0
 
     def test_roll(self):
         """
@@ -483,6 +537,7 @@ class TestVariantchecker():
         """
         Test reference sequence notation with GI number.
         """
+        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -495,6 +550,7 @@ class TestVariantchecker():
         """
         Test reference sequence notation with GI number and prefix.
         """
+        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('GI31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -507,6 +563,7 @@ class TestVariantchecker():
         """
         Test reference sequence notation with GI number and prefix with colon.
         """
+        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('GI:31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -720,3 +777,34 @@ class TestVariantchecker():
                      'NG_008939.1:g.5206_5208del')
         assert 'NG_008939.1(PCCB_v001):c.155_157del' \
                in self.output.getOutput('descriptions')
+
+    def test_inversion(self):
+        """
+        Inversion variant.
+        """
+        check_variant('AB026906.1:c.274_275inv', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AB026906.1:g.7872_7873inv')
+        assert 'AB026906.1(SDHD_v001):c.274_275inv' \
+            in self.output.getOutput('descriptions')
+
+    def test_delins_with_length(self):
+        """
+        Delins with explicit length of deleted sequence (bug #108).
+        """
+        check_variant('NM_000193.2:c.108_109del2insG', self.output)
+        assert 'NM_000193.2(SHH_i001):p.(Lys38Serfs*2)' in self.output.getOutput('protDescriptions')
+
+    def test_protein_level_description(self):
+        """
+        Currently protein level descriptions are not implemented.
+        """
+        check_variant('NG_009105.1(OPN1LW):p.=', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    def test_protein_reference(self):
+        """
+        Currently protein references are not implemented.
+        """
+        check_variant('NP_064445.1:p.=', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)

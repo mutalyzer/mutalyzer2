@@ -30,7 +30,7 @@ class TestServicesJson():
         Running checkSyntax with a valid variant name should return True.
         """
         r = call('checkSyntax', variant='AB026906.1:c.274G>T')
-        assert_equal(r['CheckSyntaxOutput']['valid'], True)
+        assert_equal(r['checkSyntaxResponse']['checkSyntaxResult']['valid'], True)
 
     def test_checksyntax_invalid(self):
         """
@@ -38,8 +38,8 @@ class TestServicesJson():
         and give at least one error message.
         """
         r = call('checkSyntax', variant='0:abcd')
-        assert_equal(r['CheckSyntaxOutput']['valid'], False)
-        assert len(r['CheckSyntaxOutput']['messages']['SoapMessage']) >= 1
+        assert_equal(r['checkSyntaxResponse']['checkSyntaxResult']['valid'], False)
+        assert len(r['checkSyntaxResponse']['checkSyntaxResult']['messages']['SoapMessage']) >= 1
 
     def test_checksyntax_empty(self):
         """
@@ -55,14 +55,14 @@ class TestServicesJson():
         """
         r = call('transcriptInfo', LOVD_ver='123', build='hg19',
                  accNo='NM_002001.2')
-        assert_equal(r['Transcript']['trans_start'], -99)
-        assert_equal(r['Transcript']['trans_stop'], 1066)
-        assert_equal(r['Transcript']['CDS_stop'], 774)
+        assert_equal(r['transcriptInfoResponse']['transcriptInfoResult']['trans_start'], -99)
+        assert_equal(r['transcriptInfoResponse']['transcriptInfoResult']['trans_stop'], 1066)
+        assert_equal(r['transcriptInfoResponse']['transcriptInfoResult']['CDS_stop'], 774)
 
     def test_info(self):
         """
         Running the info method should give us some version information.
         """
         r = call('info')
-        assert_equal(type(r['InfoOutput']['versionParts']['string']), list)
-        assert_equal(r['InfoOutput']['version'], mutalyzer.__version__)
+        assert_equal(type(r['infoResponse']['infoResult']['versionParts']['string']), list)
+        assert_equal(r['infoResponse']['infoResult']['version'], mutalyzer.__version__)

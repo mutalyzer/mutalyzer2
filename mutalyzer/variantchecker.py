@@ -18,6 +18,8 @@ import Bio
 import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
+from Bio.Alphabet import DNAAlphabet
+from Bio.Alphabet import ProteinAlphabet
 
 from mutalyzer import config
 from mutalyzer import util
@@ -477,7 +479,7 @@ def apply_inversion(first, last, mutator, record, O):
             first += snoop
             last -= snoop
 
-    mutator.invM(first, last)
+    mutator.inversion(first, last)
 
     if first == last:
         O.addMessage(__file__, 2, 'WWRONGTYPE', 'Inversion at position ' \
@@ -537,10 +539,14 @@ def apply_insertion(before, after, s, mutator, record, O):
     # means we roll over two splice sites, since they are adjacent.)
     # We only have to consider the forward roll, since RNA reference
     # sequences are always orientated in correspondence with the transcript.
+    # Todo: There's probably a better way to check if we are on RNA.
     original_forward_roll = forward_roll
-    if record.record.molType != 'g' :
-        splice_sites = record.record.geneList[0].transcriptList[0] \
-                       .mRNA.positionList
+    if record.record.molType != 'g':
+        try:
+            splice_sites = record.record.geneList[0].transcriptList[0] \
+                .mRNA.positionList
+        except IndexError:
+            splice_sites = []
         for acceptor, donor in util.grouper(splice_sites):
             # Note that acceptor and donor splice sites both point to the
             # first, respectively last, position of the exon, so they are
@@ -607,7 +613,7 @@ def apply_insertion(before, after, s, mutator, record, O):
 #apply_insertion
 
 
-def apply_delins(first, last, delete, insert, mutator, record, output):
+def apply_delins(first, last, insert, mutator, record, output):
     """
     Do a semantic check for an delins, do the actual delins, and give
     it a name.
@@ -616,9 +622,6 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
     @type first: int
     @arg last: Genomic end position of the delins.
     @type last: int
-    @arg delete: Sequence to delete (may be None, in which case it will be
-                 constructed from the reference sequence).
-    @type delete: string
     @arg insert: Sequence to insert.
     @type insert: string
     @arg mutator: A Mutator instance.
@@ -628,8 +631,7 @@ def apply_delins(first, last, delete, insert, mutator, record, output):
     @arg output: The Output object.
     @type output: Modules.Output.Output
     """
-    if not delete:
-        delete = mutator.orig[first - 1:last]
+    delete = mutator.orig[first - 1:last]
 
     if str(delete) == str(insert):
         output.addMessage(__file__, 2, 'WNOCHANGE',
@@ -911,6 +913,42 @@ def _coding_to_genomic(first_location, last_location, transcript, output):
 #_coding_to_genomic
 
 
+def process_protein_variant(mutator, variant, record, output):
+    """
+    Process a protein variant.
+
+    We raise _RawVariantError if there was something seriously in error
+    with the raw variant (but it is still okay to process other raw
+    variants). We might (don't at the moment) also raise _VariantError,
+    meaning to stop processing the entire variant.
+
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
+    @arg variant: A parsed raw (simple, noncompound) variant.
+    @type variant: pyparsing.ParseResults
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
+
+    @raise _RawVariantError: Cannot process this raw variant.
+    @raise _VariantError: Cannot further process the entire variant.
+    """
+    variant, original_description = variant.RawVar, variant[-1]
+
+    # List of amino acids.
+    arguments = variant.Args
+
+    if variant.MutationType == 'del':
+        first = int(variant.Main)
+        last = first
+        mutator.deletion(first, last)
+        record.name(first, last, 'del', '', '', (0, 0))
+
+    # Todo: This is really unimplemented, the above is just a start to support
+    #     protein level descriptions.
+
+
 def process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
@@ -1187,7 +1225,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
                               'Insertion of a range is not implemented yet.')
             raise _RangeInsertionError()
-        apply_delins(first, last, argument, sequence, mutator, record, output)
+        apply_delins(first, last, sequence, mutator, record, output)
 #process_raw_variant
 
 
@@ -1348,20 +1386,44 @@ def process_variant(mutator, description, record, output):
 
     @todo: Documentation.
     """
+    if description.RefType == 'p':
+        output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                          'Protein level descriptions are not supported.')
+        raise _VariantError()
+
     if not description.RawVar and not description.SingleAlleleVarSet:
         output.addMessage(__file__, 4, 'ENOVARIANT',
                           'Variant description contains no mutation.')
         raise _VariantError()
+
+    if not description.RefType:
+        # Mutalyzer assumes EST positioning scheme (like .g) in this case, but
+        # we should warn the user if the reference is not an EST (since it is
+        # probable he/she just forgot a c. or whatever).
+        # We currently give the warning if there is gene annotation in the
+        # reference.
+        if record.record.geneList:
+            output.addMessage(__file__, 2, 'WEST', 'No positioning scheme '
+                              'specified, assuming EST. However, reference '
+                              'does not look like an EST. Did you forget to '
+                              'specify the positioning scheme?')
 
     if description.RefType == 'r':
         output.addMessage(__file__, 4, 'ERNA',
                           'Descriptions on RNA level are not supported.')
         raise _VariantError()
 
+    if description.RefType in ['c', 'n', 'g']:
+        if not isinstance(record.record.seq.alphabet, DNAAlphabet):
+            output.addMessage(__file__, 4, 'EREFTYPE',
+                              'DNA level descriptions can only be done on a DNA reference.')
+            raise _VariantError()
+
     transcript = None
 
-    if description.RefType in ['c', 'n']:
-
+    if description.RefType in ['c', 'n'] or \
+            (description.RefType == 'p' and
+             not isinstance(record.record.seq.alphabet, ProteinAlphabet)):
         gene = None
         gene_symbol, transcript_id = output.getOutput('geneSymbol')[-1]
 
@@ -1446,6 +1508,24 @@ def process_variant(mutator, description, record, output):
         # Mark this as the current transcript we work with.
         transcript.current = True
 
+    if description.RefType == 'p':
+        # Todo: This is really unimplemented, what follows is just a start to
+        #     support protein level descriptions on transcript references.
+        if not isinstance(record.record.seq.alphabet, ProteinAlphabet):
+            if not transcript:
+                output.addMessage(__file__, 4, 'EREFTYPE',
+                                  'Protein level descriptions can only be done on a protein or transcript reference.')
+                raise _VariantError()
+            else:
+                cds = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
+                          IUPAC.unambiguous_dna)
+                if transcript.CM.orientation == -1:
+                    cds = Bio.Seq.reverse_complement(cds)
+                protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)
+                mutator.orig = protein
+                mutator.mutated = protein
+
+
     # Add static transcript-specific information.
     if transcript and record.record.geneList:
         _add_static_transcript_info(transcript, output)
@@ -1455,8 +1535,14 @@ def process_variant(mutator, description, record, output):
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
             try:
-                process_raw_variant(mutator, var, record, transcript,
-                                    output)
+                if description.RefType == 'p':
+                    # Todo: This is never called at the moment since protein
+                    #     level descriptions are not yet implemented (we exit
+                    #     this function earlier).
+                    process_protein_variant(mutator, var, record, output)
+                else:
+                    process_raw_variant(mutator, var, record, transcript,
+                                        output)
             except _RawVariantError:
                 #output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
                 #                  'Ignoring raw variant "%s".' % var[0])
@@ -1465,8 +1551,14 @@ def process_variant(mutator, description, record, output):
                                   'raw variant "%s".' % var[-1])
                 raise
     else:
-        process_raw_variant(mutator, description, record,
-                            transcript, output)
+        if description.RefType == 'p':
+            # Todo: This is never called at the moment since protein level
+            #     descriptions are not yet implemented (we exit this function
+            #     earlier).
+            process_protein_variant(mutator, description, record, output)
+        else:
+            process_raw_variant(mutator, description, record,
+                                transcript, output)
 
     # Add transcript-specific variant information.
     if transcript and record.record.geneList:
@@ -1678,10 +1770,16 @@ def check_variant(description, output):
                     transcript.proteinDescription = 'p.?'
 
             else:
-                output.addMessage(__file__, 2, "ECDS", "CDS length is " \
-                    "not a multiple of three in gene %s, transcript " \
-                    "variant %s." % (gene.name, transcript.name))
-                transcript.proteinDescription = 'p.?'
+                if transcript.current:
+                    output.addMessage(__file__, 2, "WCDS", "CDS length is " \
+                        "not a multiple of three in gene %s, transcript " \
+                        "variant %s (selected)." % (gene.name, transcript.name))
+                    transcript.proteinDescription = 'p.?'
+                else:
+                    output.addMessage(__file__, 2, "WCDS_OTHER", "CDS length is " \
+                        "not a multiple of three in gene %s, transcript " \
+                        "variant %s." % (gene.name, transcript.name))
+                    transcript.proteinDescription = 'p.?'
 
     reference = output.getOutput('reference')[-1]
     if ';' in record.record.description:

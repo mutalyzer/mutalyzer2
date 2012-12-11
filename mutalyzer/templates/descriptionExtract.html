@@ -48,8 +48,7 @@
               tal:attributes = "value lastReferenceSeq"
               style = "width:100%"
             ><br>
-          <input type="button" value="Clear field"
-                 onClick = "clearForm(this.form, 'referenceSeq');"><br>
+            <input type="button" value="Clear field" onclick="clearField(this.form, 'referenceSeq');">
           </div>
           <br>
           <div style="border: 1px solid grey; padding: 20px">
@@ -63,8 +62,7 @@
               tal:attributes = "value lastVariantSeq"
               style = "width:100%"
             ><br>
-            <input type="button" value="Clear field"
-                   onClick = "clearForm(this.form, 'variantSeq');"><br>
+            <input type="button" value="Clear field" onclick="clearField(this.form, 'variantSeq');">
           </div>
           <br>
           <input type="submit" value="Submit">

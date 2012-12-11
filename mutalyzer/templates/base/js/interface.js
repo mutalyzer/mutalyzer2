@@ -102,17 +102,10 @@ function updatePercentage() {
     http.send(null);
 }
 
-function linkify(text){
-    var replacePattern = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.([-\*]?\d+((\+|-)[ud]?\d+)?)(_([-\*]?\d+((\+|-)[ud]?\d+)?))?(([delinsup]+[ACTGactg]*)|([ACTGactg].[ACTGactg])))/gim;
-    //reference = /([A-Za-z_0-9]+(\.\d+)?(\([A-Za-z0-9]+(_[vi]\d+)?\))?\:[cgpn]\.
-    //substitut = [0-9]+[ACTGactg].[ACTGactg])
-    //delinsdup = (\:[cgpn]\.(-?\d+((\+|-)\d+)?)(_(-?\d+((\+|-)\d+)?))?[delinsup]+[ACTGactg]*)
-    //mutation = (-?\d+((\+|-)\d+)?)(_(-?\d+((\+|-)\d+)?))?(([delinsup]+[ACTGactg]*)|([ACTGactg].[ACTGactg])))
-    var replacedText = text.replace(replacePattern, '<a name="mutation" href="http://localhost/mutalyzer2/redirect?mutationName=$1">$1</a>');
-    return replacedText
-}
-
-function makeMutalyzer(){
-    var iBody = document.body.innerHTML;
-    document.body.innerHTML = linkify(iBody);
+function clearField(form, fieldName) {
+    for (var i = 0; i < form.elements.length; i++) {
+        if (form.elements[i].name == fieldName) {
+            form.elements[i].value = '';
+        }
+    }
 }

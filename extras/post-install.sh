@@ -99,7 +99,6 @@ cat << EOF | mysql -u root -p
   GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
   GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
   FLUSH PRIVILEGES;
-EOF
 
 echo -e "${COLOR_INFO}Creating tables in hg18 database${COLOR_END}"
 
@@ -108,12 +107,15 @@ cat << EOF | mysql -u mutalyzer -D hg18
 CREATE TABLE ChrName (
   AccNo char(20) NOT NULL,
   name char(20) NOT NULL,
+  organelle_type enum('chromosome','mitochondrion') NOT NULL DEFAULT 'chromosome',
   PRIMARY KEY (AccNo)
-);
+) ENGINE = MYISAM;
 CREATE TABLE Mapping (
   gene varchar(255) DEFAULT NULL,
   transcript varchar(20) NOT NULL DEFAULT '',
   version smallint(6) DEFAULT NULL,
+  selector varchar(255) DEFAULT NULL,
+  selector_version smallint(6) DEFAULT NULL,
   chromosome varchar(40) DEFAULT NULL,
   orientation char(1) DEFAULT NULL,
   start int(11) unsigned DEFAULT NULL,
@@ -125,34 +127,34 @@ CREATE TABLE Mapping (
   protein varchar(20) DEFAULT NULL,
   source varchar(20) DEFAULT NULL,
   INDEX (transcript)
-);
-INSERT INTO ChrName (AccNo, name) VALUES
-('NC_000001.9', 'chr1'),
-('NC_000002.10', 'chr2'),
-('NC_000003.10', 'chr3'),
-('NC_000004.10', 'chr4'),
-('NC_000005.8', 'chr5'),
-('NC_000006.10', 'chr6'),
-('NC_000007.12', 'chr7'),
-('NC_000008.9', 'chr8'),
-('NC_000009.10', 'chr9'),
-('NC_000010.9', 'chr10'),
-('NC_000011.8', 'chr11'),
-('NC_000012.10', 'chr12'),
-('NC_000013.9', 'chr13'),
-('NC_000014.7', 'chr14'),
-('NC_000015.8', 'chr15'),
-('NC_000016.8', 'chr16'),
-('NC_000017.9', 'chr17'),
-('NC_000018.8', 'chr18'),
-('NC_000019.8', 'chr19'),
-('NC_000020.9', 'chr20'),
-('NC_000021.7', 'chr21'),
-('NC_000022.9', 'chr22'),
-('NC_000023.9', 'chrX'),
-('NC_000024.8', 'chrY'),
-('NC_001807.4', 'chrM'),
-('NT_113891.1', 'chr6_cox_hap1'),
+) ENGINE = MYISAM;
+INSERT INTO ChrName (AccNo, name, organelle_type) VALUES
+('NC_000001.9', 'chr1', 'chromosome'),
+('NC_000002.10', 'chr2', 'chromosome'),
+('NC_000003.10', 'chr3', 'chromosome'),
+('NC_000004.10', 'chr4', 'chromosome'),
+('NC_000005.8', 'chr5', 'chromosome'),
+('NC_000006.10', 'chr6', 'chromosome'),
+('NC_000007.12', 'chr7', 'chromosome'),
+('NC_000008.9', 'chr8', 'chromosome'),
+('NC_000009.10', 'chr9', 'chromosome'),
+('NC_000010.9', 'chr10', 'chromosome'),
+('NC_000011.8', 'chr11', 'chromosome'),
+('NC_000012.10', 'chr12', 'chromosome'),
+('NC_000013.9', 'chr13', 'chromosome'),
+('NC_000014.7', 'chr14', 'chromosome'),
+('NC_000015.8', 'chr15', 'chromosome'),
+('NC_000016.8', 'chr16', 'chromosome'),
+('NC_000017.9', 'chr17', 'chromosome'),
+('NC_000018.8', 'chr18', 'chromosome'),
+('NC_000019.8', 'chr19', 'chromosome'),
+('NC_000020.9', 'chr20', 'chromosome'),
+('NC_000021.7', 'chr21', 'chromosome'),
+('NC_000022.9', 'chr22', 'chromosome'),
+('NC_000023.9', 'chrX', 'chromosome'),
+('NC_000024.8', 'chrY', 'chromosome'),
+('NC_001807.4', 'chrM', 'mitochondrion'),
+('NT_113891.1', 'chr6_cox_hap1', 'chromosome'),
 ('NT_113959.1', 'chr22_h2_hap1');
 EOF
 
@@ -172,12 +174,15 @@ cat << EOF | mysql -u mutalyzer -D hg19
 CREATE TABLE ChrName (
   AccNo char(20) NOT NULL,
   name char(20) NOT NULL,
+  organelle_type enum('chromosome','mitochondrion') NOT NULL DEFAULT 'chromosome',
   PRIMARY KEY (AccNo)
-);
+) ENGINE = MYISAM;
 CREATE TABLE Mapping (
   gene varchar(255) DEFAULT NULL,
   transcript varchar(20) NOT NULL DEFAULT '',
   version smallint(6) DEFAULT NULL,
+  selector varchar(255) DEFAULT NULL,
+  selector_version smallint(6) DEFAULT NULL,
   chromosome varchar(40) DEFAULT NULL,
   orientation char(1) DEFAULT NULL,
   start int(11) unsigned DEFAULT NULL,
@@ -189,42 +194,42 @@ CREATE TABLE Mapping (
   protein varchar(20) DEFAULT NULL,
   source varchar(20) DEFAULT NULL,
   INDEX (transcript)
-);
-INSERT INTO ChrName (AccNo, name) VALUES
-('NC_000001.10', 'chr1'),
-('NC_000002.11', 'chr2'),
-('NC_000003.11', 'chr3'),
-('NC_000004.11', 'chr4'),
-('NC_000005.9', 'chr5'),
-('NC_000006.11', 'chr6'),
-('NC_000007.13', 'chr7'),
-('NC_000008.10', 'chr8'),
-('NC_000009.11', 'chr9'),
-('NC_000010.10', 'chr10'),
-('NC_000011.9', 'chr11'),
-('NC_000012.11', 'chr12'),
-('NC_000013.10', 'chr13'),
-('NC_000014.8', 'chr14'),
-('NC_000015.9', 'chr15'),
-('NC_000016.9', 'chr16'),
-('NC_000017.10', 'chr17'),
-('NC_000018.9', 'chr18'),
-('NC_000019.9', 'chr19'),
-('NC_000020.10', 'chr20'),
-('NC_000021.8', 'chr21'),
-('NC_000022.10', 'chr22'),
-('NC_000023.10', 'chrX'),
-('NC_000024.9', 'chrY'),
-('NC_012920.1', 'chrM'),
-('NT_167244.1', 'chr6_apd_hap1'),
-('NT_113891.2', 'chr6_cox_hap2'),
-('NT_167245.1', 'chr6_dbb_hap3'),
-('NT_167246.1', 'chr6_mann_hap4'),
-('NT_167247.1', 'chr6_mcf_hap5'),
-('NT_167248.1', 'chr6_qbl_hap6'),
-('NT_167249.1', 'chr6_ssto_hap7'),
-('NT_167250.1', 'chr4_ctg9_hap1'),
-('NT_167251.1', 'chr17_ctg5_hap1');
+) ENGINE = MYISAM;
+INSERT INTO ChrName (AccNo, name, organelle_type) VALUES
+('NC_000001.10', 'chr1', 'chromosome'),
+('NC_000002.11', 'chr2', 'chromosome'),
+('NC_000003.11', 'chr3', 'chromosome'),
+('NC_000004.11', 'chr4', 'chromosome'),
+('NC_000005.9', 'chr5', 'chromosome'),
+('NC_000006.11', 'chr6', 'chromosome'),
+('NC_000007.13', 'chr7', 'chromosome'),
+('NC_000008.10', 'chr8', 'chromosome'),
+('NC_000009.11', 'chr9', 'chromosome'),
+('NC_000010.10', 'chr10', 'chromosome'),
+('NC_000011.9', 'chr11', 'chromosome'),
+('NC_000012.11', 'chr12', 'chromosome'),
+('NC_000013.10', 'chr13', 'chromosome'),
+('NC_000014.8', 'chr14', 'chromosome'),
+('NC_000015.9', 'chr15', 'chromosome'),
+('NC_000016.9', 'chr16', 'chromosome'),
+('NC_000017.10', 'chr17', 'chromosome'),
+('NC_000018.9', 'chr18', 'chromosome'),
+('NC_000019.9', 'chr19', 'chromosome'),
+('NC_000020.10', 'chr20', 'chromosome'),
+('NC_000021.8', 'chr21', 'chromosome'),
+('NC_000022.10', 'chr22', 'chromosome'),
+('NC_000023.10', 'chrX', 'chromosome'),
+('NC_000024.9', 'chrY', 'chromosome'),
+('NC_012920.1', 'chrM', 'mitochondrion'),
+('NT_167244.1', 'chr6_apd_hap1', 'chromosome'),
+('NT_113891.2', 'chr6_cox_hap2', 'chromosome'),
+('NT_167245.1', 'chr6_dbb_hap3', 'chromosome'),
+('NT_167246.1', 'chr6_mann_hap4', 'chromosome'),
+('NT_167247.1', 'chr6_mcf_hap5', 'chromosome'),
+('NT_167248.1', 'chr6_qbl_hap6', 'chromosome'),
+('NT_167249.1', 'chr6_ssto_hap7', 'chromosome'),
+('NT_167250.1', 'chr4_ctg9_hap1', 'chromosome'),
+('NT_167251.1', 'chr17_ctg5_hap1', 'chromosome');
 EOF
 
 echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg19)${COLOR_END}"
@@ -249,7 +254,7 @@ CREATE TABLE BatchJob (
   JobType char(20) DEFAULT NULL,
   Arg1 char(20) DEFAULT NULL,
   PRIMARY KEY (JobID)
-);
+) ENGINE = MYISAM;
 CREATE TABLE BatchQueue (
   QueueID int(5) NOT NULL AUTO_INCREMENT,
   JobID char(20) NOT NULL,
@@ -257,7 +262,7 @@ CREATE TABLE BatchQueue (
   Flags char(20) DEFAULT NULL,
   PRIMARY KEY (QueueID),
   KEY JobQueue (JobID,QueueID)
-);
+) ENGINE = MYISAM;
 CREATE TABLE GBInfo (
   AccNo char(20) NOT NULL DEFAULT '',
   GI char(13) DEFAULT NULL,
@@ -272,13 +277,13 @@ CREATE TABLE GBInfo (
   UNIQUE KEY hash (hash),
   UNIQUE KEY alias (GI),
   INDEX (created)
-);
+) ENGINE = MYISAM;
 CREATE TABLE Link (
   mrnaAcc char(20) NOT NULL,
   protAcc char(20) NOT NULL,
   PRIMARY KEY (mrnaAcc),
   UNIQUE KEY protAcc (protAcc)
-);
+) ENGINE = MYISAM;
 EOF
 
 # The remainder is essentially the same as post-upgrade.sh

@@ -171,6 +171,7 @@ class File() :
         try :
             # Todo: delimiters in config file
             dialect = csv.Sniffer().sniff(buf, delimiters="\t ;|,")
+            dialect.skipinitialspace = True
         except csv.Error:
             #self.__output.addMessage(__file__, 4, "EBPARSE", e)
             #return None

@@ -252,7 +252,9 @@ class TestWSGI():
         r = self.app.get('/check?name=%s' % urllib.quote('NG_012337.1:g.7055C>T'))
         r.mustcontain('0 Errors')
         r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1:g.7055C>T')))
-        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
+        # Fix for r536: disable the -u and +d convention.
+        #r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
+        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-2133G>A')))
         r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(SDHD_v001):c.204C>T')))
 
     @skip
@@ -567,10 +569,10 @@ class TestWSGI():
         results = self._batch('NameChecker',
                               file='\n'.join(variants),
                               size=len(variants),
-                              header='Input\tErrors | Messages')
+                              header='Input\tErrors | Messages').strip().split('\n')
         assert 'Restriction Sites Created\tRestriction Sites Deleted' in results[0]
         assert 'CviQI,RsaI\tBccI' in results[1]
-        assert 'CviQI,RsaI;HinP1I,HhaI;SfcI\tBccI;;BpmI,MnlI,BsaXI (2),Hpy188III' in results[2]
+        assert 'CviQI,RsaI;HhaI,HinP1I;SfcI\tBccI;;BpmI,BsaXI (2),MnlI' in results[2]
 
     @slow
     def test_batch_syntaxchecker_toobig(self):
@@ -619,7 +621,7 @@ facilisi."""
 
     def test_download_py(self):
         """
-        Download a Python example client for the webservice.
+        Download a Python example client for the web service.
         """
         r = self.app.get('/download/client-suds.py')
         assert_equal(r.content_type, 'text/plain')
@@ -627,7 +629,7 @@ facilisi."""
 
     def test_download_rb(self):
         """
-        Download a Ruby example client for the webservice.
+        Download a Ruby example client for the web service.
         """
         r = self.app.get('/download/client-savon.rb')
         assert_equal(r.content_type, 'text/plain')
@@ -635,7 +637,7 @@ facilisi."""
 
     def test_download_cs(self):
         """
-        Download a C# example client for the webservice.
+        Download a C# example client for the web service.
         """
         r = self.app.get('/download/client-mono.cs')
         assert_equal(r.content_type, 'text/plain')
@@ -643,7 +645,7 @@ facilisi."""
 
     def test_download_php(self):
         """
-        Download a PHP example client for the webservice.
+        Download a PHP example client for the web service.
         """
         r = self.app.get('/download/client-php.php')
         assert_equal(r.content_type, 'text/plain')

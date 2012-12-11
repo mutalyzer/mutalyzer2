@@ -8,7 +8,7 @@ Usage:
   gene: Gene symbol of the gene to slice.
 
 A slice containing the gene with 5000 upstream bases and 2000 downstream bases
-is created with the Mutalyzer SOAP webservice. The resulting UD number is
+is created with the Mutalyzer SOAP web service. The resulting UD number is
 printed to standard output.
 """
 
