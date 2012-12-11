@@ -18,6 +18,8 @@ import Bio
 import Bio.Seq
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
+from Bio.Alphabet import DNAAlphabet
+from Bio.Alphabet import ProteinAlphabet
 
 from mutalyzer import config
 from mutalyzer import util
@@ -911,6 +913,42 @@ def _coding_to_genomic(first_location, last_location, transcript, output):
 #_coding_to_genomic
 
 
+def process_protein_variant(mutator, variant, record, output):
+    """
+    Process a protein variant.
+
+    We raise _RawVariantError if there was something seriously in error
+    with the raw variant (but it is still okay to process other raw
+    variants). We might (don't at the moment) also raise _VariantError,
+    meaning to stop processing the entire variant.
+
+    @arg mutator: A Mutator instance.
+    @type mutator: mutalyzer.mutator.Mutator
+    @arg variant: A parsed raw (simple, noncompound) variant.
+    @type variant: pyparsing.ParseResults
+    @arg record: A GenRecord object.
+    @type record: Modules.GenRecord.GenRecord
+    @arg output: The Output object.
+    @type output: Modules.Output.Output
+
+    @raise _RawVariantError: Cannot process this raw variant.
+    @raise _VariantError: Cannot further process the entire variant.
+    """
+    variant, original_description = variant.RawVar, variant[-1]
+
+    # List of amino acids.
+    arguments = variant.Args
+
+    if variant.MutationType == 'del':
+        first = int(variant.Main)
+        last = first
+        mutator.deletion(first, last)
+        record.name(first, last, 'del', '', '', (0, 0))
+
+    # Todo: This is really unimplemented, the above is just a start to support
+    #     protein level descriptions.
+
+
 def process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
@@ -1348,6 +1386,11 @@ def process_variant(mutator, description, record, output):
 
     @todo: Documentation.
     """
+    if description.RefType == 'p':
+        output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                          'Protein level descriptions are not supported.')
+        raise _VariantError()
+
     if not description.RawVar and not description.SingleAlleleVarSet:
         output.addMessage(__file__, 4, 'ENOVARIANT',
                           'Variant description contains no mutation.')
@@ -1370,10 +1413,17 @@ def process_variant(mutator, description, record, output):
                           'Descriptions on RNA level are not supported.')
         raise _VariantError()
 
+    if description.RefType in ['c', 'n', 'g']:
+        if not isinstance(record.record.seq.alphabet, DNAAlphabet):
+            output.addMessage(__file__, 4, 'EREFTYPE',
+                              'DNA level descriptions can only be done on a DNA reference.')
+            raise _VariantError()
+
     transcript = None
 
-    if description.RefType in ['c', 'n']:
-
+    if description.RefType in ['c', 'n'] or \
+            (description.RefType == 'p' and
+             not isinstance(record.record.seq.alphabet, ProteinAlphabet)):
         gene = None
         gene_symbol, transcript_id = output.getOutput('geneSymbol')[-1]
 
@@ -1458,6 +1508,24 @@ def process_variant(mutator, description, record, output):
         # Mark this as the current transcript we work with.
         transcript.current = True
 
+    if description.RefType == 'p':
+        # Todo: This is really unimplemented, what follows is just a start to
+        #     support protein level descriptions on transcript references.
+        if not isinstance(record.record.seq.alphabet, ProteinAlphabet):
+            if not transcript:
+                output.addMessage(__file__, 4, 'EREFTYPE',
+                                  'Protein level descriptions can only be done on a protein or transcript reference.')
+                raise _VariantError()
+            else:
+                cds = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
+                          IUPAC.unambiguous_dna)
+                if transcript.CM.orientation == -1:
+                    cds = Bio.Seq.reverse_complement(cds)
+                protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)
+                mutator.orig = protein
+                mutator.mutated = protein
+
+
     # Add static transcript-specific information.
     if transcript and record.record.geneList:
         _add_static_transcript_info(transcript, output)
@@ -1467,8 +1535,14 @@ def process_variant(mutator, description, record, output):
     if description.SingleAlleleVarSet:
         for var in description.SingleAlleleVarSet:
             try:
-                process_raw_variant(mutator, var, record, transcript,
-                                    output)
+                if description.RefType == 'p':
+                    # Todo: This is never called at the moment since protein
+                    #     level descriptions are not yet implemented (we exit
+                    #     this function earlier).
+                    process_protein_variant(mutator, var, record, output)
+                else:
+                    process_raw_variant(mutator, var, record, transcript,
+                                        output)
             except _RawVariantError:
                 #output.addMessage(__file__, 2, 'WSKIPRAWVARIANT',
                 #                  'Ignoring raw variant "%s".' % var[0])
@@ -1477,8 +1551,14 @@ def process_variant(mutator, description, record, output):
                                   'raw variant "%s".' % var[-1])
                 raise
     else:
-        process_raw_variant(mutator, description, record,
-                            transcript, output)
+        if description.RefType == 'p':
+            # Todo: This is never called at the moment since protein level
+            #     descriptions are not yet implemented (we exit this function
+            #     earlier).
+            process_protein_variant(mutator, description, record, output)
+        else:
+            process_raw_variant(mutator, description, record,
+                                transcript, output)
 
     # Add transcript-specific variant information.
     if transcript and record.record.geneList:

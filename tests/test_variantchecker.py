@@ -794,3 +794,17 @@ class TestVariantchecker():
         """
         check_variant('NM_000193.2:c.108_109del2insG', self.output)
         assert 'NM_000193.2(SHH_i001):p.(Lys38Serfs*2)' in self.output.getOutput('protDescriptions')
+
+    def test_protein_level_description(self):
+        """
+        Currently protein level descriptions are not implemented.
+        """
+        check_variant('NG_009105.1(OPN1LW):p.=', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    def test_protein_reference(self):
+        """
+        Currently protein references are not implemented.
+        """
+        check_variant('NP_064445.1:p.=', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)

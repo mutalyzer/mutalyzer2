@@ -417,6 +417,10 @@ class GenBankRetriever(Retriever):
     def fetch(self, name) :
         """
         Todo: Documentation.
+
+        Todo: A better implementation would probably use an esummary query
+            first to get the length of the sequence. If this is within limits,
+            use efetch with rettype=gbwithparts to download the GenBank file.
         """
         try:
             net_handle = Entrez.efetch(db='nuccore', id=name, rettype='gb', retmode='text')
@@ -775,7 +779,7 @@ class GenBankRetriever(Retriever):
 
         # Todo: This will change once we support protein references
         if isinstance(record.seq.alphabet, ProteinAlphabet):
-            self._output.addMessage(__file__, 4, 'EPROTEINREF',
+            self._output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
                                     'Protein reference sequences are not supported.')
             return None
 
