@@ -12,6 +12,9 @@ transcripts and mapping information.
 
 This module is based on the result of the minidom xml parser.
 
+Todo: Check document to Relax NG LRG schema.
+    ftp://ftp.ebi.ac.uk/pub/databases/lrgex/
+
 NOTE: A strong alternative to the minidom parser would be ElementTree which is
 added in python2.5. Its main strengths are speed and readability [pythonesque].
 (http://docs.python.org/library/xml.etree.elementtree.html)
@@ -82,6 +85,29 @@ def _attr2dict(attr):
         ret[key.encode("utf-8")] = value
     return ret
 #_attr2dict
+
+
+def _get_attributes(feature):
+    """
+    Get attributes for a feature (gene, transcript, or protein).
+
+    @arg feature: a minidom node
+    @type attr: object
+
+    @return: A dictionary with pairing of attribute names and values.
+    @rtype: dictionary
+    """
+    attributes = _attr2dict(feature.attributes)
+    if not 'symbol' in attributes:
+        attributes['symbol'] = _get_content(feature, 'symbol')
+    if not 'start' in attributes:
+        coordinates = feature.getElementsByTagName('coordinates')
+        if coordinates:
+            attributes.update(_attr2dict(coordinates[0].attributes))
+    if 'transcript_id' in attributes:
+        attributes['accession'] = attributes['transcript_id']
+    return attributes
+#_get_attributes
 
 
 def create_record(data):
@@ -300,7 +326,7 @@ def _transcriptPopulator(trName, trData):
     transcript.transcriptProduct = trData.get("transLongName")
     if trData.has_key("transAttr"):
         tA = trData["transAttr"]
-        transcript.transcriptID = tA.get("transcript_id")
+        transcript.transcriptID = tA.get("accession")
         transcript.location = [tA.get("start"), tA.get("end")]
 
     if trData.has_key("proteinAttr"):
@@ -399,7 +425,8 @@ def getLrgAnnotation(data):
     for mapp in data.getElementsByTagName("mapping"):
         mapattr = _attr2dict(mapp.attributes)
         # only the most recent mapping
-        if not(mapattr.has_key("most_recent")): continue
+        if ret['mapping'] and not mapattr.has_key("most_recent"):
+            continue
         # check if span exists
         for span in mapp.getElementsByTagName("mapping_span"):
             spanattr = _attr2dict(span.attributes)
@@ -456,18 +483,18 @@ def getFeaturesAnnotation(data):
     if not data.getElementsByTagName("features"): return ret
     feature = data.getElementsByTagName("features")[0]
     for gene in feature.getElementsByTagName("gene"):
-        geneAttr = _attr2dict(gene.attributes)
+        geneAttr = _get_attributes(gene)
         geneLongName = _get_content(gene, "long_name")
         transcripts = {"noFixedId": []}
         for transcript in gene.getElementsByTagName("transcript"):
-            transAttr = _attr2dict(transcript.attributes)
+            transAttr = _get_attributes(transcript)
             transLongName = _get_content(transcript, "long_name")
             # Check if the transcript has a protein product
             proteinProduct =\
                     transcript.getElementsByTagName("protein_product")
             if proteinProduct:
                 protein = proteinProduct[0]
-                proteinAttr = _attr2dict(protein.attributes)
+                proteinAttr = _get_attributes(protein)
                 proteinLongName = _get_content(protein, "long_name")
             else:
                 proteinAttr = {}

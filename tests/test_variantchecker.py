@@ -526,6 +526,18 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'LRG_1:g.6855G>T')
 
+    def test_lrg_reference_new(self):
+        """
+        We should be able to use new LRG reference sequence without error.
+
+        Note that all LRG sequences are now in a new format and essentially
+        this test is no different from the previous, except that LRG_218 was
+        not yet in our cache which makes it easier to test the new format.
+        """
+        check_variant('LRG_218:c.1786_1788delAAT', self.output)
+        error_count, _, _ = self.output.Summary()
+        assert_equal(error_count, 0)
+
     def test_non_numeric_locus_tag_ending(self):
         """
         Locus tag in NC_002128 does not end in an underscore and three digits
