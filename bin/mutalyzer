@@ -73,16 +73,16 @@ def main(cmd):
             print i
 
         print "\nOld protein:"
-        print html2text.html2text(''.join(map(lambda x: str(x) + "<br>",
-            O.getOutput("oldProteinFancy"))))
+        for i in O.getOutput("oldProteinFancyText"):
+          print i
 
         print "\nNew protein:"
-        print html2text.html2text(''.join(map(lambda x: str(x) + "<br>",
-            O.getOutput("newProteinFancy"))))
+        for i in O.getOutput("newProteinFancyText"):
+          print i
 
         print "\nAlternative protein:"
-        print html2text.html2text(''.join(map(lambda x: str(x) + "<br>",
-            O.getOutput("altProteinFancy"))))
+        for i in O.getOutput("altProteinFancyText"):
+          print i
 
         print "\nExon information:"
         for i in O.getOutput("exonInfo") :

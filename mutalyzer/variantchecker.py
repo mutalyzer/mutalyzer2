@@ -1337,20 +1337,28 @@ def _add_transcript_info(mutator, transcript, output):
             # use something like below in protein_description().
             util.print_protein_html(protein_original + '*', 0, 0, output,
                                     'oldProteinFancy')
+            util.print_protein_html(protein_original + '*', 0, 0, output,
+                                    'oldProteinFancyText', text=True)
             if str(cds_variant[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
                 output.addOutput('newprotein', '?')
                 util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
+                util.print_protein_html('?', 0, 0, output,
+                    'newProteinFancyText', text=True)
                 output.addOutput('altStart', str(cds_variant[0:3]))
                 if str(protein_original[1:]) != str(protein_variant[1:]):
                     output.addOutput('altProtein',
                                      'M' + protein_variant[1:] + '*')
-                    util.print_protein_html('M' + protein_variant[1:] + '*', 0, 0,
-                                            output, 'altProteinFancy')
+                    util.print_protein_html('M' + protein_variant[1:] + '*', 0,
+                        0, output, 'altProteinFancy')
+                    util.print_protein_html('M' + protein_variant[1:] + '*', 0,
+                        0, output, 'altProteinFancyText', text=True)
             else :
                 output.addOutput('newprotein', '?')
                 util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
+                util.print_protein_html('?', 0, 0, output,
+                    'newProteinFancyText', text=True)
 
         else:
             cds_length = util.cds_length(
@@ -1362,12 +1370,16 @@ def _add_transcript_info(mutator, transcript, output):
             # This is never used.
             output.addOutput('myProteinDescription', descr)
 
-            util.print_protein_html(protein_original + '*', first, last_original,
-                                    output, 'oldProteinFancy')
+            util.print_protein_html(protein_original + '*', first,
+                last_original, output, 'oldProteinFancy')
+            util.print_protein_html(protein_original + '*', first,
+                last_original, output, 'oldProteinFancyText', text=True)
             if str(protein_original) != str(protein_variant):
                 output.addOutput('newprotein', protein_variant + '*')
-                util.print_protein_html(protein_variant + '*', first, last_variant,
-                                        output, 'newProteinFancy')
+                util.print_protein_html(protein_variant + '*', first,
+                    last_variant, output, 'newProteinFancy')
+                util.print_protein_html(protein_variant + '*', first,
+                    last_variant, output, 'newProteinFancyText', text=True)
 #_add_transcript_info
 
 

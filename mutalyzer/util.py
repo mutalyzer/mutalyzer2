@@ -662,7 +662,7 @@ def _insert_tag(s, pos1, pos2, tag1, tag2):
 
 
 # Todo: cleanup
-def print_protein_html(s, first, last, O, where):
+def print_protein_html(s, first, last, O, where, text=False):
     """
     Make a fancy representation of a protein and put it in the Output
     object under the name 'where'. The representation contains HTML tags
@@ -686,8 +686,13 @@ def print_protein_html(s, first, last, O, where):
     block = 10        # Each block consists of 10 amino acids.
     line = 6 * block  # Each line consists of 6 blocks.
 
-    tag1 = '<b style="color:#FF0000">'  # Use this tag for highlighting.
-    tag2 = '</b>'                       # And this one to end highlighting.
+    if text:
+        tag1 = '\033[91m'  # Use this tag for highlighting.
+        tag2 = '\033[0m'   # And this one to end highlighting.
+    else:
+        tag1 = '<b style="color:#FF0000">'  # Use this tag for highlighting.
+        tag2 = '</b>'                       # And this one to end highlighting.
+    #else
 
     # The maximum length for positions is the 10_log of the length of the
     # protein.
@@ -706,8 +711,12 @@ def print_protein_html(s, first, last, O, where):
             o += line
             O.addOutput(where, output)
             # Add the position (while escaping any potential highlighting).
-            output = '<tt style="color:000000;font-weight:normal">%s</tt> ' \
-                     % str(o).rjust(m)
+            if text:
+                output = '%s%s%s ' % (tag2, str(o).rjust(m), tag1)
+            else:
+                output = \
+                    '<tt style="color:000000;font-weight:normal">%s</tt> ' % \
+                    str(o).rjust(m)
 
     # Add last line.
     O.addOutput(where, output)
