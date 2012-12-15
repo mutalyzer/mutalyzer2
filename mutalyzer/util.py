@@ -712,7 +712,10 @@ def print_protein_html(s, first, last, O, where, text=False):
             O.addOutput(where, output)
             # Add the position (while escaping any potential highlighting).
             if text:
-                output = '%s%s%s ' % (tag2, str(o).rjust(m), tag1)
+                if first < o < last:
+                    output = '%s%s%s ' % (tag2, str(o).rjust(m), tag1)
+                else:
+                    output = '%s ' % str(o).rjust(m)
             else:
                 output = \
                     '<tt style="color:000000;font-weight:normal">%s</tt> ' % \
