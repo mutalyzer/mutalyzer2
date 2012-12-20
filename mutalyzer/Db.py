@@ -726,6 +726,8 @@ class Mapping(Db) :
                 G.name as gene,
                 SUBSTRING(T.name FROM 1 FOR LOCATE('.', T.name) - 1) as transcript,
                 SUBSTRING(T.name FROM LOCATE('.', T.name) + 1) as version,
+                NULL as selector,
+                NULL as selector_version,
                 CONCAT('chr', T.chromosome) as chromosome,
                 T.orientation as orientation,
                 MIN(T.start) as start,
