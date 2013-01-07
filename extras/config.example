@@ -46,7 +46,7 @@ LocalMySQLhost = "localhost"
 # Note that this may not always be available and if not will result in an
 # error if used. Mutalyzer also implements its own reconnecting mechanism now
 # which is always on. See Trac issue #91.
-autoReconnect = yes
+autoReconnect = no
 
 
 #
