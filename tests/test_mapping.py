@@ -236,3 +236,63 @@ class TestConverter():
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NC_012920.1(ND4_v001):c.1271del')
         assert_equal(genomic, 'NC_012920.1:m.12030del')
+
+    def test_nm_without_selector_chrom2c(self):
+        """
+        NM reference without transcript selection c. to g.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_017780.2:c.109A>T')
+        assert_equal(genomic, 'NC_000008.10:g.61654100A>T')
+
+    def test_nm_with_selector_chrom2c(self):
+        """
+        NM reference with transcript selection c. to g.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_017780.2(CHD7_v001):c.109A>T')
+        assert_equal(genomic, 'NC_000008.10:g.61654100A>T')
+
+    def test_nm_c2chrom_no_selector(self):
+        """
+        To NM reference should never result in transcript selection.
+        """
+        converter = self._converter('hg19')
+        variant = converter.correctChrVariant('NC_000008.10:g.61654100A>T')
+        coding = converter.chrom2c(variant, 'list')
+        assert 'NM_017780.2:c.109A>T' in coding
+
+    def test_incorrect_selector_c2chrom(self):
+        """
+        Incorrect selector.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_017780.2(CHD8):c.109A>T')
+        erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
+        assert_equal(len(erange), 1)
+
+    def test_incorrect_selector_version_c2chrom(self):
+        """
+        Incorrect selector version.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_017780.2(CHD7_v002):c.109A>T')
+        erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
+        assert_equal(len(erange), 1)
+
+    def test_no_selector_version_c2chrom(self):
+        """
+        Selector but no selector version.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_017780.2(CHD7):c.109A>T')
+        assert_equal(genomic, 'NC_000008.10:g.61654100A>T')
+
+    def test_incorrect_selector_no_selector_version_c2chrom(self):
+        """
+        Incorrect selector, no selector version.
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_017780.2(CHD8):c.109A>T')
+        erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
+        assert_equal(len(erange), 1)

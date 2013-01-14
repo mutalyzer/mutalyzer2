@@ -212,6 +212,13 @@ class Converter(object) :
         else :
             if version in versions :
                 Values = self.__database.getAllFields(acc, version, selector, selector_version)
+                if not Values:
+                    self.__output.addMessage(__file__, 4, "EACCNOTINDB",
+                                             "The accession number %s version %s "
+                                             "with transcript %s version %s could not be found "
+                                             "in our database." %
+                                             (acc, version, selector, selector_version))
+                    return None
                 return self._FieldsFromValues(Values)
             #if
             if not version :
@@ -510,7 +517,7 @@ class Converter(object) :
             version = self.parseTree.Version
             if self.parseTree.Gene:
                 selector = self.parseTree.Gene.GeneSymbol
-                selector_version = int(self.parseTree.Gene.TransVar)
+                selector_version = int(self.parseTree.Gene.TransVar or 1)
             else:
                 selector = selector_version = None
             self._FieldsFromDb(acc, version, selector, selector_version)
@@ -592,6 +599,8 @@ class Converter(object) :
             return None
 
         values = self.__database.getAllFields(reference, version)
+        if not values:
+            return None
         self._FieldsFromValues(values)
 
         mapper = self.makeCrossmap()
