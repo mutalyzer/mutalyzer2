@@ -430,6 +430,17 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tErrors | Messages')
 
+    def test_batch_namechecker_extra_tab(self):
+        """
+        Submit the batch name checker form with lines ending with tab
+        characters.
+        """
+        variants=['AB026906.1(SDHD):g.7872G>T\t']
+        self._batch('NameChecker',
+                    file='\n'.join(variants),
+                    size=len(variants),
+                    header='Input\tErrors | Messages')
+
     def test_batch_syntaxchecker(self):
         """
         Submit the batch syntax checker form.

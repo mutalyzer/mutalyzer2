@@ -1069,6 +1069,10 @@ class BatchProgress:
         D = Db.Batch()
         left = D.entriesLeftForJob(jobID)
         percentage = int(100 - (100 * left / float(total)))
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 100:
+            percentage = 100
         if i.ajax:
             if percentage == 100:
                 #download url, check if file still exists

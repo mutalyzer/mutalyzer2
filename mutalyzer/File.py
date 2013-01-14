@@ -355,7 +355,7 @@ class File() :
                     ret.append("~!InputFields: " + '|'.join(job))
                     ret.extend(['~!' for _ in range(columns - 1)])
                 else:
-                    ret.extend(job)
+                    ret.extend([j or '~!' for j in job])
         #else
 
         if not ret:
