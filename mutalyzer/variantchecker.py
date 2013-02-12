@@ -1513,12 +1513,15 @@ def process_variant(mutator, description, record, output):
             output.addOutput('BatchFlags',
                              ('S2', output.getOutput('preColon')[-1]))
             raise _VariantError()
-        elif not transcript.transcribe:
-            # Todo: Shouldn't we add some message here?
-            raise _VariantError()
 
         # Mark this as the current transcript we work with.
         transcript.current = True
+
+    record.checkRecord()
+
+    if transcript and not transcript.transcribe:
+        # Todo: Shouldn't we add some message here?
+        raise _VariantError()
 
     if description.RefType == 'p':
         # Todo: This is really unimplemented, what follows is just a start to
@@ -1668,7 +1671,22 @@ def check_variant(description, output):
 
     record = GenRecord.GenRecord(output)
     record.record = retrieved_record
-    record.checkRecord()
+
+    # Note: The GenRecord instance is carrying the sequence in .record.seq.
+    #       So is the Mutator instance in .mutator.orig.
+
+    mutator = Mutator(record.record.seq, output)
+
+    # Todo: If processing of the variant fails, we might still want to show
+    # information about the record, gene, transcript.
+
+    try:
+        process_variant(mutator, parsed_description, record, output)
+    except _VariantError:
+        return
+
+    output.addOutput('original', str(mutator.orig))
+    output.addOutput('mutated', str(mutator.mutated))
 
     # Create the legend.
     for gene in record.record.geneList:
@@ -1686,22 +1704,6 @@ def check_variant(description, output):
                                   transcript.proteinID, transcript.locusTag,
                                   transcript.proteinProduct,
                                   transcript.linkMethod])
-
-    # Note: The GenRecord instance is carrying the sequence in .record.seq.
-    #       So is the Mutator instance in .mutator.orig.
-
-    mutator = Mutator(record.record.seq, output)
-
-    # Todo: If processing of the variant fails, we might still want to show
-    # information about the record, gene, transcript.
-
-    try:
-        process_variant(mutator, parsed_description, record, output)
-    except _VariantError:
-        return
-
-    output.addOutput('original', str(mutator.orig))
-    output.addOutput('mutated', str(mutator.mutated))
 
     # Chromosomal region (only for GenBank human transcript references).
     # This is still quite ugly code, and should be cleaned up once we have

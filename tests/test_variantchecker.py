@@ -808,3 +808,24 @@ class TestVariantchecker():
         """
         check_variant('NP_064445.1:p.=', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    def test_wnomrna_other(self):
+        """
+        Warning for no mRNA field on other than currently selected transcript
+        should give WNOMRNA_OTHER warning.
+        """
+        ud = self._slice_gene('A1BG') # Contains ZNF497 (v1 and v2) with no mRNA
+        check_variant(ud + '(A1BG_v001):c.13del', self.output)
+        wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
+        assert len(wnomrna_other) == 2
+
+    def test_wnomrna(self):
+        """
+        Warning for no mRNA field on currently selected transcript should give
+        WNOMRNA warning.
+        """
+        ud = self._slice_gene('A1BG') # Contains ZNF497 (v1 and v2) with no mRNA
+        check_variant(ud + '(ZNF497_v001):c.13del', self.output)
+        wnomrna = self.output.getMessagesWithErrorCode('WNOMRNA')
+        wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
+        assert len(wnomrna) == len(wnomrna_other) == 1
