@@ -5,6 +5,9 @@ Monitor a Mutalyzer server by some basic uptime checks.
 Run with no arguments for usage info. The script returns a 0 exit status
 on success, 1 on failure. It writes the error to standard error.
 
+Example usage:
+  ./mutalyzer-monitor.py && echo ok || echo problem
+
 Currently implemented checks:
 - Website homepage exists.
 - Name checker SOAP web service can be called.
@@ -37,7 +40,7 @@ def main(mutalyzer_url):
     checks = check_website, check_soap, check_batch
     try:
         [check(mutalyzer_url) for check in checks]
-    except Exception as e:
+    except BaseException as e:
         sys.stderr.write(str(e) + '\n')
         sys.exit(1)
 
