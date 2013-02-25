@@ -829,3 +829,21 @@ class TestVariantchecker():
         wnomrna = self.output.getMessagesWithErrorCode('WNOMRNA')
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
         assert len(wnomrna) == len(wnomrna_other) == 1
+
+    def test_mrna_ref_adjacent_exons_warn(self):
+        """
+        Warning for mRNA reference where exons are not adjacent.
+
+        In L41870.1 exon 15 ends on 1558 and 16 starts on 1636.
+        """
+        check_variant('L41870.1:c.1del', self.output)
+        w_exon_annotation = self.output.getMessagesWithErrorCode('WEXON_ANNOTATION')
+        assert len(w_exon_annotation) == 1
+
+    def test_mrna_ref_adjacent_exons_no_warn(self):
+        """
+        No warning for mRNA reference where exons are adjacent.
+        """
+        check_variant('NM_133378.3:c.1del', self.output)
+        w_exon_annotation = self.output.getMessagesWithErrorCode('WEXON_ANNOTATION')
+        assert len(w_exon_annotation) == 0
