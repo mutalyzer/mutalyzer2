@@ -388,7 +388,7 @@ class TestServicesSoap():
         r = self.client.service.runMutalyzer('NM_003002:c.274G>T')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NM_003002')
-        assert_equal(r.sourceId, 'NM_003002.2')
+        assert_equal(r.sourceId, 'NM_003002.3')
         assert_equal(r.sourceAccession, 'NM_003002')
         assert_equal(r.sourceVersion, '2')
         assert_equal(r.sourceGi, '222352156')
