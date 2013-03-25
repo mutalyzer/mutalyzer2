@@ -36,7 +36,7 @@ from mutalyzer import describe
 
 def _checkBuild(L, build) :
     """
-    Check if the build is supported (hg18 or hg19).
+    Check if the build is supported (hg18, hg19, or mm10).
 
     Returns:
         - Nothing (but raises an EARG exception).
@@ -245,7 +245,7 @@ class MutalyzerService(ServiceBase):
               - EARG   ; The argument was not valid.
               - ERANGE ; An invalid range was given.
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
@@ -320,7 +320,7 @@ class MutalyzerService(ServiceBase):
         """
         Get all the transcripts that overlap with a range on a chromosome.
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
@@ -366,7 +366,7 @@ class MutalyzerService(ServiceBase):
         Get all the transcripts and their info that overlap with a range on a
         chromosome.
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
@@ -432,7 +432,7 @@ class MutalyzerService(ServiceBase):
         """
         Find the gene name associated with a transcript.
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg accno: The identifier of a transcript.
         @type accno: string
@@ -480,7 +480,7 @@ class MutalyzerService(ServiceBase):
 
         @arg LOVD_ver: The LOVD version.
         @type LOVD_ver: string
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg accNo: The NM accession number and version.
         @type accNo: string
@@ -528,7 +528,7 @@ class MutalyzerService(ServiceBase):
 
         @arg LOVD_ver: The LOVD version.
         @type LOVD_ver: string
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg accNo: The NM accession number and version.
         @type accNo: string
@@ -559,7 +559,7 @@ class MutalyzerService(ServiceBase):
         """
         Get the accession number of a chromosome, given a name.
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg name: The name of a chromosome (e.g. chr1).
         @type name: string
@@ -590,7 +590,7 @@ class MutalyzerService(ServiceBase):
         """
         Get the name of a chromosome, given a chromosome accession number.
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg accNo: The accession number of a chromosome (NC_...).
         @type accNo: string
@@ -621,7 +621,7 @@ class MutalyzerService(ServiceBase):
         """
         Get the chromosome name, given a transcript identifier (NM number).
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg acc: The NM accession number (version NOT included).
         @type acc: string
@@ -653,7 +653,7 @@ class MutalyzerService(ServiceBase):
         """
         Converts I{c.} to I{g.} notation or vice versa
 
-        @arg build: The human genome build (hg19 or hg18).
+        @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
             notation, including NM_ or NC_ accession number.
