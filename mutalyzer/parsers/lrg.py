@@ -87,27 +87,22 @@ def _attr2dict(attr):
 #_attr2dict
 
 
-def _get_attributes(feature):
+def _get_coordinates(data, system=None):
     """
-    Get attributes for a feature (gene, transcript, or protein).
-
-    @arg feature: a minidom node
-    @type attr: object
-
-    @return: A dictionary with pairing of attribute names and values.
-    @rtype: dictionary
+    Get attributes from descendent <coordinates> element as a dictionary. If
+    more than one <coordinates> element is found, we have a preference for the
+    one with 'coord_system' attribute equal to the `system` argument, if
+    defined.
     """
-    attributes = _attr2dict(feature.attributes)
-    if not 'symbol' in attributes:
-        attributes['symbol'] = _get_content(feature, 'symbol')
-    if not 'start' in attributes:
-        coordinates = feature.getElementsByTagName('coordinates')
-        if coordinates:
-            attributes.update(_attr2dict(coordinates[0].attributes))
-    if 'transcript_id' in attributes:
-        attributes['accession'] = attributes['transcript_id']
-    return attributes
-#_get_attributes
+    result = None
+    cos = data.getElementsByTagName('coordinates')
+    for co in cos:
+        attributes = _attr2dict(co.attributes)
+        if result and system and attributes.get('coord_system') != system:
+            continue
+        result = attributes
+    return result
+#_get_coordinates
 
 
 def create_record(data):
@@ -129,11 +124,14 @@ def create_record(data):
     fixed = data.getElementsByTagName("fixed_annotation")[0]
     updatable = data.getElementsByTagName("updatable_annotation")[0]
 
+    # Get LRG id
+    lrg_id = _get_content(data, 'id')
+
     # Get organism
     record.organism = _get_content(data, 'organism')
 
     # Get all raw information from updatable section into a nested dict
-    updParsed = parseUpdatable(updatable)
+    updParsed = parseUpdatable(updatable, lrg_id)
 
     # NOTE: To get insight in the structure of the intermediate
     # nested dictionary format please comment out the following line
@@ -172,19 +170,21 @@ def create_record(data):
         transcription = [t for t in gene.transcriptList if t.name ==
                 transcriptName][0]  #TODO?: swap with gene.findLocus
 
+        coordinates = tData.getElementsByTagName('coordinates')[0]
+
         # Set the locusTag, linkMethod (used in the output) and the location
         # LRG file transcripts can (for now) always be linked via the locustag
         transcription.locusTag = transcriptName and "t"+transcriptName
         transcription.linkMethod = "Locus Tag"
         transcription.location = \
-          [int(tData.getAttribute("start")), int(tData.getAttribute("end"))]
+          [int(coordinates.getAttribute("start")), int(coordinates.getAttribute("end"))]
 
         #get the Exons of transcript and store them in a position list.
         exonPList = GenRecord.PList()
         for exon in tData.getElementsByTagName("exon"):
-            co = exon.getElementsByTagName("lrg_coords")[0]
-            exonPList.positionList.extend(\
-              [int(co.getAttribute("start")), int(co.getAttribute("end"))])
+            coordinates = _get_coordinates(exon, lrg_id)
+            exonPList.positionList.extend(
+              [int(coordinates["start"]), int(coordinates["end"])])
         exonPList.positionList.sort()
 
         # get the CDS of the transcript and store them in a position list.
@@ -193,8 +193,9 @@ def create_record(data):
         # regions are given
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
+            coordinates = _get_coordinates(CDS, lrg_id)
             CDSPList.positionList.extend(\
-            [int(CDS.getAttribute("start")), int(CDS.getAttribute("end"))])
+            [int(coordinates["start"]), int(coordinates["end"])])
         CDSPList.positionList.sort()
 
         # If there is a CDS position List set the transcriptflag to True
@@ -236,10 +237,10 @@ def genesFromUpdatable(updParsed):
     genes = []
     for geneSymbol, geneData in updParsed["NCBI"].items():
         gene = GenRecord.Gene(geneSymbol)
-        gene.location = [geneData["geneAttr"]["start"],
-                         geneData["geneAttr"]["end"]]
+        gene.location = [geneData["coordinates"]["start"],
+                         geneData["coordinates"]["end"]]
         gene.longName = geneData["geneLongName"]
-        gene.orientation = int(geneData["geneAttr"]["strand"])
+        gene.orientation = int(geneData["coordinates"]["strand"])
         # Get transcripts
         transcripts = transcriptsFromParsed(geneData["transcripts"])
         if not transcripts:
@@ -301,8 +302,8 @@ def _emptyTranscripts(data):
     transcript = GenRecord.Locus('')
     transcript.molType = 'n'
     mRNA = GenRecord.PList()
-    location = [data["geneAttr"]["start"],
-            data["geneAttr"]["end"]]
+    location = [data["coordinates"]["start"],
+            data["coordinates"]["end"]]
     mRNA.location = location
     transcript.mRNA = mRNA
     return [transcript,]
@@ -335,7 +336,7 @@ def _transcriptPopulator(trName, trData):
         pA = trData["proteinAttr"]
         transcript.proteinID = pA.get("accession")
         CDS = GenRecord.PList()
-        CDS.location = [pA.get("cds_start"), pA.get("cds_end")]
+        CDS.location = [pA.get("start"), pA.get("end")]
         # If the CDS list is empty set it to None. This will be fixed by the
         # GenRecord.checkRecord method
         if not any(CDS.location): CDS = None
@@ -360,21 +361,21 @@ def getMapping(rawMapData):
     """
 
     mapp, span, diffs = rawMapData
-    ret = { "assembly":     mapp.get("assembly"),       # Assembly Reference
-            "chr_name":     mapp.get("chr_name"),       # Chromosome name
-            "chr_id":       mapp.get("chr_id"),         # Chr. Reference NC
-            "chr_location": [int(span.get("start")),    # Start & End Position
-                             int(span.get("end"))],     #    of seq on the ref
-            "strand":       int(span.get("strand")),    # Forward:1 Reverse:-1
-            "lrg_location": [int(span.get("lrg_start")),# Start & End Position
-                             int(span.get("lrg_end"))], #    of seq on the LRG
-            "diffs":        diffs}                      # Unformatted Diffs
+    ret = { "assembly":     mapp.get("coord_system"),      # Assembly Reference
+            "chr_name":     mapp.get("other_name"),        # Chromosome name
+            "chr_id":       mapp.get("other_id"),          # Chr. Reference NC
+            "chr_location": [int(span.get("other_start")), # Start & End Position
+                             int(span.get("other_end"))],  #    of seq on the ref
+            "strand":       int(span.get("strand")),       # Forward:1 Reverse:-1
+            "lrg_location": [int(span.get("lrg_start")),   # Start & End Position
+                             int(span.get("lrg_end"))],    #    of seq on the LRG
+            "diffs":        diffs}                         # Unformatted Diffs
     # NOTE: diffs contains the differences between the LRG and reference seq.
     return ret
 #getMapping
 
 
-def parseUpdatable(data):
+def parseUpdatable(data, lrg_id):
     """
     Mediator function which transforms the minidom object to a nested dict
     and filters information needed to construct the GenRecord.Record.
@@ -396,9 +397,9 @@ def parseUpdatable(data):
         if name == "LRG":
             ret["LRG"] = getLrgAnnotation(anno)
         elif name == "NCBI RefSeqGene":
-            ret["NCBI"] = getFeaturesAnnotation(anno)
+            ret["NCBI"] = getFeaturesAnnotation(anno, lrg_id)
         elif name == "Ensembl":
-            ret["Ensembl"] = getFeaturesAnnotation(anno)
+            ret["Ensembl"] = getFeaturesAnnotation(anno, lrg_id)
         else:
             #This annotation node is not yet implemented
             pass
@@ -438,12 +439,12 @@ def getLrgAnnotation(data):
         ret["mapping"] = (mapattr,spanattr,diffs)
     #for
     # Get the LRG Gene Name, this is the main gene in this LRG
-    ret["genename"] = _get_content(data, "lrg_gene_name")
+    ret["genename"] = _get_content(data, "lrg_locus")
     return ret
 #getLrgAnnotation
 
 
-def getFeaturesAnnotation(data):
+def getFeaturesAnnotation(data, lrg_id):
     """
     Retrieves feature annotations from NCBI & Ensembl nodes.
         - List of genes
@@ -463,10 +464,10 @@ def getFeaturesAnnotation(data):
 
     @return: nested dict ; toplevel contains the genesymbols as keys e.g:
         - COL1A1 :
-            - geneAttr        : {}
+            - coordinates     : {}
             - geneLongName    : ""
             - transcripts     : {}
-        - geneAttr contains the start, end and strand info
+        - coordinates contains the start, end and strand info
         - transcripts contains a list of transcripts that could not be linked to
         the fixed section AND it contains each linked transcript with the
         locustag as key e.g:
@@ -483,18 +484,21 @@ def getFeaturesAnnotation(data):
     if not data.getElementsByTagName("features"): return ret
     feature = data.getElementsByTagName("features")[0]
     for gene in feature.getElementsByTagName("gene"):
-        geneAttr = _get_attributes(gene)
+        symbol = _get_content(gene, 'symbol')
+        coordinates = _get_coordinates(gene, lrg_id)
         geneLongName = _get_content(gene, "long_name")
         transcripts = {"noFixedId": []}
         for transcript in gene.getElementsByTagName("transcript"):
-            transAttr = _get_attributes(transcript)
+            transAttr = _attr2dict(transcript.attributes)
+            transAttr.update(_get_coordinates(transcript, lrg_id))
             transLongName = _get_content(transcript, "long_name")
             # Check if the transcript has a protein product
             proteinProduct =\
                     transcript.getElementsByTagName("protein_product")
             if proteinProduct:
                 protein = proteinProduct[0]
-                proteinAttr = _get_attributes(protein)
+                proteinAttr = _attr2dict(protein.attributes)
+                proteinAttr.update(_get_coordinates(protein, lrg_id))
                 proteinLongName = _get_content(protein, "long_name")
             else:
                 proteinAttr = {}
@@ -516,8 +520,8 @@ def getFeaturesAnnotation(data):
                 transcripts["noFixedId"].append(transRet)
 
         #for transcript
-        ret[geneAttr["symbol"]] = {\
-                    "geneAttr":         geneAttr,
+        ret[symbol] = {\
+                    "coordinates":      coordinates,
                     "geneLongName":     geneLongName,
                     "transcripts":      transcripts}
     #for gene
