@@ -390,8 +390,8 @@ class TestServicesSoap():
         assert_equal(r.referenceId, 'NM_003002')
         assert_equal(r.sourceId, 'NM_003002.3')
         assert_equal(r.sourceAccession, 'NM_003002')
-        assert_equal(r.sourceVersion, '2')
-        assert_equal(r.sourceGi, '222352156')
+        assert_equal(r.sourceVersion, '3')
+        assert_equal(r.sourceGi, '452405284')
         assert_equal(r.molecule, 'n')
 
     def test_runmutalyzer_reference_info_nm_version(self):
