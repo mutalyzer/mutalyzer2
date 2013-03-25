@@ -76,6 +76,12 @@ def main(description, verbosity=None):
         print 'Affected proteins:'
         print '\n'.join(result.proteinDescriptions.string)
 
+    if 'exons' in result:
+        print '\nExon table for selected transcript:'
+        print '\t'.join(['Number', 'Start (g.)', 'Stop (g.)', 'Start (c.)', 'Stop (c.)'])
+        for i, exon in enumerate(result.exons.ExonInfo, start=1):
+            print '\t'.join([str(i), str(exon.gStart), str(exon.gStop), exon.cStart, exon.cStop])
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

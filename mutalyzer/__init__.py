@@ -22,8 +22,8 @@ import os
 
 RELEASE = False
 
-__version_info__ = ('2', '0', 'beta-25', 'dev')
-__date__ = '10 Dec 2012'
+__version_info__ = ('2', '0', 'beta-26', 'dev')
+__date__ = '25 Mar 2013'
 
 
 __version__ = '.'.join(__version_info__)
@@ -35,7 +35,7 @@ __homepage__ = 'http://mutalyzer.nl'
 NOMENCLATURE_VERSION_INFO = ('2', '0')
 NOMENCLATURE_VERSION = '.'.join(NOMENCLATURE_VERSION_INFO)
 
-COPYRIGHT_YEARS = (2007, int(__date__[-4:]))
+COPYRIGHT_YEARS = (2009, int(__date__[-4:]))
 
 SOAP_NAMESPACE = 'http://mutalyzer.nl/2.0/services'
 

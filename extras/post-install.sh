@@ -95,10 +95,11 @@ cat << EOF | mysql -u root -p
   CREATE DATABASE mutalyzer;
   CREATE DATABASE hg18;
   CREATE DATABASE hg19;
-  GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer;
-  GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer;
-  GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer;
+  GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer@localhost;
+  GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer@localhost;
+  GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer@localhost;
   FLUSH PRIVILEGES;
+EOF
 
 echo -e "${COLOR_INFO}Creating tables in hg18 database${COLOR_END}"
 
@@ -155,7 +156,7 @@ INSERT INTO ChrName (AccNo, name, organelle_type) VALUES
 ('NC_000024.8', 'chrY', 'chromosome'),
 ('NC_001807.4', 'chrM', 'mitochondrion'),
 ('NT_113891.1', 'chr6_cox_hap1', 'chromosome'),
-('NT_113959.1', 'chr22_h2_hap1');
+('NT_113959.1', 'chr22_h2_hap1', 'chromosome');
 EOF
 
 echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (hg18)${COLOR_END}"

@@ -123,6 +123,21 @@ class Allele(ComplexModel):
 #Allele
 
 
+class ExonInfo(ComplexModel):
+    """
+    Used in TranscriptInfo and MutalyzerOutput data types.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    cStart = Mandatory.String
+    gStart = Mandatory.Integer
+    chromStart = Integer
+    cStop = Mandatory.String
+    gStop = Mandatory.Integer
+    chromStop = Integer
+#ExonInfo
+
+
 class MutalyzerOutput(ComplexModel):
     """
     Return type of SOAP method runMutalyzer.
@@ -158,6 +173,8 @@ class MutalyzerOutput(ComplexModel):
     transcriptDescriptions = Array(String)
     proteinDescriptions = Array(String)
 
+    exons = Array(ExonInfo)
+
     rawVariants = Array(RawVariant)
 
     messages = Array(SoapMessage)
@@ -173,21 +190,6 @@ class TranscriptNameInfo(ComplexModel):
     transcriptName = Mandatory.String
     productName = Mandatory.String
 #TranscriptNameInfo
-
-
-class ExonInfo(ComplexModel):
-    """
-    Used in TranscriptInfo data type.
-    """
-    __namespace__ = SOAP_NAMESPACE
-
-    cStart = Mandatory.String
-    gStart = Mandatory.Integer
-    chromStart = Integer
-    cStop = Mandatory.String
-    gStop = Mandatory.Integer
-    chromStop = Integer
-#ExonInfo
 
 
 class ProteinTranscript(ComplexModel):

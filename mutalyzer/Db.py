@@ -287,20 +287,33 @@ class Mapping(Db) :
             args.append(mrnaAcc)
             args.append(version)
 
+        # The fallback to NULL selector (and selector_version) is necessary
+        # to accept transcript selection in NM references. To be safe, we also
+        # prefer entries with a match over entries with NULL.
+        # Example: NM_017780.2(CHD7_v001):c.109A>T
         if selector is not None:
-            where.append('selector = %s')
+            where.append('(selector = %s or (selector IS NULL and selector_version IS NULL and gene = %s and %s = 1))')
             args.append(selector)
+            args.append(selector)
+            args.append(selector_version)
+            order.append('(selector is null) asc')
 
         if selector_version is not None:
-            where.append('selector_version = %s')
+            where.append('(selector_version = %s or (selector_version IS NULL and selector_version IS NULL and gene = %s and %s = 1))')
             args.append(selector_version)
+            args.append(selector)
+            args.append(selector_version)
+            order.append('(selector_version is null) asc')
 
         q += """
              where """ + ' AND '.join(where) + """
              order by """ + ', '.join(order) + ';'
 
         statement = q, tuple(args)
-        return self.query(statement)[0]
+        try:
+            return self.query(statement)[0]
+        except IndexError:
+            return None
 
     def get_Transcripts(self, chrom, p1, p2, overlap) :
         """
@@ -726,6 +739,8 @@ class Mapping(Db) :
                 G.name as gene,
                 SUBSTRING(T.name FROM 1 FOR LOCATE('.', T.name) - 1) as transcript,
                 SUBSTRING(T.name FROM LOCATE('.', T.name) + 1) as version,
+                NULL as selector,
+                NULL as selector_version,
                 CONCAT('chr', T.chromosome) as chromosome,
                 T.orientation as orientation,
                 MIN(T.start) as start,

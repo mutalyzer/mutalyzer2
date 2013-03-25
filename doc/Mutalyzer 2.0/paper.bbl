@@ -4,6 +4,24 @@
 {Human Genome Variation Society}.
 \newblock \begin{small}\texttt{http://www.hgvs.org/mutnomen/}\end{small}.
 
+\bibitem{JSON-RPC}
+J.~Damick and {JSON-RPC} group.
+\newblock {JSON-RPC over HTTP}, jan 2008.
+\newblock {\small{\texttt
+  http://www.jsonrpc.org/historical/json-rpc-over-http.html}}.
+
+\bibitem{TRAC}
+{Edgewall Software}.
+\newblock Trac, 2012.
+\newblock {\small{\texttt http://trac.edgewall.org/}}.
+
+\bibitem{SOAP}
+M.~Gudgin, M.~Hadley, N.~Mendelsohn, J.~Moreau, H.~{Frystyk Nielsen},
+  A.~Karmarkar, and Y.~Lafon.
+\newblock {SOAP Version 1.2 Part 1: Messaging Framework (Second Edition)}.
+\newblock World Wide Web Consortium, Recommendation REC-soap12-part1-20070427,
+  April 2007.
+
 \bibitem{hgvs_bnf}
 J.F.J. Laros, A.~Blavier, J.T. den Dunnen, and P.E.M. Taschner.
 \newblock A formalized description of the standard human variant nomenclature

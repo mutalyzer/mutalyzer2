@@ -24,25 +24,21 @@
 \cite{Mutalyzer}
 \cite{HGVS}
 
-Currently GenBank and LRG reference supported.
-
-Any organism, including translation.
-
-Phased variants, of all genes containing variants, half of them have more than
-one.
-
-\section{Background}\label{background}
+\begin{verbatim}
+- Currently GenBank and LRG reference supported.
+- Any organism, including translation.
+- Phased variants, of all genes containing variants, half of
+  them have more than one.
+\end{verbatim}
 
 \section{Materials and Methods}
-%Distributed setup, multiple servers can be used, cache and database are
-%synchronised.
-
 The suite is logically divided in modules which, combined make up several
 interfaces.
 
 \begin{table}[]
+  \caption{Modules.}
+  \label{tab:modules}
   \begin{center}
-    \caption{Modules.}
     \begin{tabular}{l|l}
       name           & function\\
       \hline
@@ -55,7 +51,6 @@ interfaces.
       GenRecord      & Generalisation of reference sequences.\\
     \end{tabular}
   \end{center}
-  \label{tab:modules}
 \end{table}
 
 A list of core modules of the Mutalyzer suite is shown in
@@ -91,18 +86,35 @@ the \emph{cross\-mapper} module. By facilitating the bidirectional conversion
 from \texttt{c.} and \texttt{n.} to \texttt{g.} and \texttt{m.}, this module
 can be used to convert positions between transcripts.
 
-% UD_135074263017:g.8000del
-% NC_000011.9:g.111949587del
-% UD_135074263017(PIH1D2_v001):c.-4915del
-% UD_135074263017(C11orf57_v001):c.170+548del
-% UD_135074263017(TIMM8B_v001):c.*6432del
-% UD_135074263017(TIMM8B_v002):n.*5937del
-% UD_135074263017(SDHD_v001):c.-8045del
+
+\begin{table}[]
+  \caption{Different representations of an intronic variant of C11orf57.}
+  \label{tab:crossmap}
+  \begin{center}
+    \begin{tabular}{l|l}
+      type & description\\
+      \hline
+      genomic     & \texttt{UD\_135074263017:g.8000del}\\
+      chromosomal & \texttt{NC\_000011.9:g.111949587del}\\
+      transcript  & \texttt{UD\_135074263017(PIH1D2\_v001):c.-4915del}\\
+      transcript  & \texttt{UD\_135074263017(C11orf57\_v001):c.170+548del}\\
+      transcript  & \texttt{UD\_135074263017(TIMM8B\_v001):c.*6432del}\\
+      transcript  & \texttt{UD\_135074263017(TIMM8B\_v002):n.*5937del}\\
+      transcript  & \texttt{UD\_135074263017(SDHD\_v001):c.-8045del}\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+In Table~\ref{tab:crossmap} we see an example of the capabilities of the
+cross\-mapper. A variant described on one of the transcripts (C11orf57\_v001
+for example), is converted to a genomic one and subsequently converted to
+descriptions on all other annotated transcripts in the reference sequence file.
 
 \subsubsection{Database} \label{subsubsec:db}
 Since much of the retrieved information is reusable and quite some
-administration of different .. needs to be done, Mutalyzer uses a database to
-store \ldots
+administration of different datasets needs to be done, Mutalyzer uses a
+database to store mapping and linking information and its own administration
+of local files.
 
 To facilitate the conversion of chromosomal coordinates to gene-oriented ones,
 a number of \emph{mapping databases} were created. These databases contain the
@@ -175,6 +187,7 @@ identifies the transcripts and CDSs, we proceed to match the two lists.
 
 \begin{table}[]
   \caption{Usage of the product tag.}
+  \label{tab:product}
   \begin{center}
     \begin{tabular}{lll}
       Type & Accession number & Product\\
@@ -190,7 +203,6 @@ identifies the transcripts and CDSs, we proceed to match the two lists.
       mRNA & \texttt{NP\_004000.1} & dystrophin Dp427p1 isoform protein\\
     \end{tabular}
   \end{center}
-  \label{tab:product}
 \end{table}
 
 Consider the example in Table~\ref{tab:product}, the identifying words in the
@@ -201,7 +213,6 @@ The methods described in this section are tried in order and the method that
 finally resolved the ambiguity is reported by Mutalyzer.
 
 \subsection{Name Checker} \label{subsec:namecheck}
-% Parse description
 Although the contextual checks have not been implemented for the complete
 nomenclature, the recognition of allele descriptions has been implemented.
 These descriptions are, apart from simple variants consisting of one change,
@@ -231,12 +242,20 @@ sequence, the variation can be simulated to obtain the observed sequence. In
 this simulation all raw variants are visualised and checked. The checks on the
 raw variants is extensive.
 
-First, Mutalyzer checks whether the minimal description is used. In case of a
-\texttt{delins}, one can for example add reference bases to the inserted
-sequence, adding no information to the description. If, for example, the
-reference sequence is \texttt{AACGTAA}, we can define the following
-deletion-insertion: \texttt{3\_4delinsTT}, resulting in an observed sequence of
-\texttt{AATTTAA}. The same result will be obtained if we define the variant as
+Before any disambiguation is performed, the validity of each raw variant is
+checked, this includes the verification of optional arguments, like the
+superfluous indication of a deleted sequence in \texttt{10\_12delAAT}.
+Mutalyzer checks whether the reference sequence indeed contains the sequence
+\texttt{AAT} at the indicated position. An other optional argument check is the
+verification of the length of a range (\texttt{3\_9del7}).
+
+After the input checks, the disambiguation is performed. First, Mutalyzer
+checks whether the minimal description is used. In case of a \texttt{delins},
+one can for example add reference bases to the inserted sequence, adding no
+information to the description. If, for example, the reference sequence is
+\texttt{AACGTAA}, we can define the following deletion-insertion:
+\texttt{3\_4delinsTT}, resulting in an observed sequence of \texttt{AATTTAA}.
+The same result will be obtained if we define the variant as
 \texttt{2\_6delinsATTTA}. This latter description can be minimised by
 calculating and removing the \emph{longest common prefix} and the \emph{longest
 common suffix} of the deleted and the inserted sequence.
@@ -246,8 +265,9 @@ complement of its suffix, i.e., a \emph{partial palindrome}. The
 description of an inversion is minimised in a similar way as described above.
 
 \begin{table}
+  \caption{Disambiguation of raw variant types.}
+  \label{tab:typedisambiguation}
   \begin{center}
-    \caption{Disambiguation of raw variant types.}
     \begin{tabular}{l|l}
       type            & simplification\\
       \hline
@@ -257,7 +277,6 @@ description of an inversion is minimised in a similar way as described above.
       \texttt{inv}    & \texttt{subst}
     \end{tabular}
   \end{center}
-  \label{tab:typedisambiguation}
 \end{table}
 
 After the minimisation step, a disambiguation scheme is used to check whether
@@ -275,8 +294,6 @@ will be shifted in the opposite direction of that of the genomic one.
 Furthermore, if an insertion or a deletion is described on a transcript, the
 position will not be shifted over a splice site.
 
-%Optional arguments (\texttt{10\_12delAAT}) are checked.
-
 After the simulation of the variation, we have the observed sequence. We use
 this observed sequence to do basic effect prediction.
 
@@ -292,16 +309,15 @@ For all raw variants, effects on restriction sites are calculated. A table is
 generated that contains the number of the raw variant, a list of removed
 restriction sites and a list of added restriction sites.
 
-\texttt{Martijn}
+\begin{verbatim}
+Martijn:
+- Deletion of exons as well as partial exons (resulting in a
+  fusion exon) is supported.
+- Gives informative warnings when a variant is near a splice site.
+- Supports ``fuzzy'' positions.
+\end{verbatim}
 
-Deletion of exons as well as partial exons (resulting in a fusion exon) is
-supported.
-
-Gives informative warnings when a variant is near a splice site.
-
-Supports ``fuzzy'' positions.
-
-\subsection{Syntax Checker}
+\subsection{Syntax Checker} \label{subsec:syntaxcheck}
 If no reference sequence is available, or if large quantities of
 descriptions in a small amount of time need to be checked, it might be
 desirable to only check the syntax. The \emph{Syntax Checker} is an interface
@@ -310,7 +326,7 @@ description is correct. No contextual check is performed. Since there is no
 communication with reference sequence repositories, this check is extremely
 quick.
 
-\subsection{Position Converter}
+\subsection{Position Converter} \label{subsec:positionconvert}
 The \emph{position converter} is an interface to the HGVS parser, the
 cross\-mapper and the database. With this interface, we can convert a
 description that uses a RefSeq transcript as reference sequence to a
@@ -328,19 +344,19 @@ chromosomal description from one build to an other. Potentially, descriptions
 can be lifted over to other species, provided cross-species transcript
 annotation is available.
 
-\subsection{SNP Converter}
+\subsection{SNP Converter} \label{subsec:snpconvert}
 For converting a DbSNP~\cite{DBSNP} id to an HGVS description, the \emph{SNP
 converter} can be used. This interface retrieves the annotated HGVS
 descriptions from the NCBI.
 
 \subsection{Name Generator}
-\texttt{Gerben}
-
-Educational interface for those who are not familiar with the HGVS
-nomenclature.
-
-Constructed variant description can be checked (clickable) with the name
-checker.
+\begin{verbatim}
+Gerben:
+- Educational interface for those who are not familiar with
+  the HGVS nomenclature.
+- Constructed variant description can be checked (clickable)
+  with the name checker.
+\end{verbatim}
 
 \subsection{Reference File Loader}
 To support reference sequences unknown to the NCBI or EBI, we implemented a
@@ -354,83 +370,165 @@ used to select the slice automatically. In this mode, the most recent build of
 the organism in question will be used, the orientation is selected
 automatically, the size of the flanking regions (5' and 3') can be modified.
 
+Administration of the uploaded or sliced reference sequences is handled by the
+database module, described in Section~\ref{subsubsec:db}.
+
 \subsection{Batch Jobs} \label{subsec:batch}
-For the Name Checker, Syntax Checker, Position Converter and SNP Converter.
+To process large batches of data in a non-interacive way, we have developed the
+\emph{batch checker}. This interface is available for the \emph{Name Checker},
+the \emph{Syntax Checker}, the \emph{Position Converter} and the
+\emph{SNP Converter} (see
+Sections~\ref{subsec:namecheck},~\ref{subsec:syntaxcheck},~\ref{subsec:positionconvert} and~\ref{subsec:snpconvert} respectively).
 
-Formats (automatically detected):
-\begin{itemize}
-  \item Tab delimited text file / CSV file
-  \item Microsoft Excel file
-  \item OpenOffice ODS file
-\end{itemize}
-
-Each row consists of one or more tab delimited fields, where every field
+The Batch Checker accepts three types of input formats: CSV files (the
+delimiters are detected automatically), Microsoft Excel files and OpenOffice
+ODS files. Each row consists of a variable number of fields, where every field
 contains a single variant description (or dbSNP rs number in case of the SNP
-Converter). Note that all rows must have the same number of fields.
-
-For backwards compatibility, the format used by Mutalyzer~1.0.3 is also
-accepted.
+Converter). For backwards compatibility, the format used by Mutalyzer~1.0.3 is
+also accepted.
 
 The output of a Mutalyzer Batch run is a tab delimited CSV file, which has a
 header-row to clarify the results. We recommend opening the file in a
 spreadsheet program, such as OpenOffice Calc or Microsoft Excel. Note that
-empty lines are removed from the batch input file.
+empty lines are removed from the batch input file. For a complete description
+of the output fields of the various batch checker modules, see
+Tables~\ref{tab:namecheckbatch},~\ref{tab:syntaxcheckbatch},~\ref{tab:positionconvertbatch}~and~\ref{tab:snpconvertbatch}.
 
 Batch jobs are interleaved, so that even if large jobs are submitted, small
-jobs will still finish soon.
-
-Scheduler can be stopped, will resume even after power failure.
+jobs will still finish in a short amount of time, the scheduling method is
+described in Section~\ref{subsubsec:db}. The scheduler is designed in such a
+way that it can be stopped for maintenance. Even when an unplanned downtime
+occurs, the scheduler will resume where it was stopped, without missing
+anything in the output.
 
 \subsection{Webservices}
-\begin{itemize}
-  \item SOAP
-  \item HTTP/RPC+JSON
-\end{itemize}
+To facilitate developers that want to use the Mutalyzer functionality, we have
+developed a large number of webservices
+\footnote{\texttt{https://mutalyzer.nl/webservices}}. Currently two major
+protocols are supported: SOAP~\cite{SOAP} and
+JSON-RPC~over~HTTP~\cite{JSON-RPC}. 
 
-Well documented API online.
+See Section~\ref{sec:webservices} for a full list of implemented functions.
+There is an online description available for the API. On this page, there are
+also example clients available.
 
-Examples for other usage (textmining) given.
-
-Someone made a java client? Perhaps add link?
+\begin{verbatim}
+- Someone made a java client? Perhaps add link?
+\end{verbatim}
 
 \subsection{Feedback}
-Trac system for requests, documentation and error reporting.
+For feature requests, documentation and error reporting, we use the
+Trac~\cite{TRAC} system. Users can either register themselves when they submit
+a request, or they can do so anonymously. If registration was chosen, the user
+will be automatically informed of changes.
+
+\section{LOVD~3.0}
+\begin{verbatim}
+Uses the Mutalyzer 2.0 Webservices for:
+- Retrieving a reference sequence (add new gene).
+- Mapping descriptions.
+- Converting descriptions to other transcripts.
+- Checking variant descriptions.
+\end{verbatim}
+
+\section{Conclusions and further research}\label{conclusion}
+\begin{verbatim}
+- EMBL reference sequences.
+- Nesting.
+\end{verbatim}
 
 \subsection{Experimental description extractor}
+\begin{verbatim}
 Generates a description from two sequences.
-\begin{itemize}
-  \item Use after applying a variant in the Name Checker.
-  \item Compare two reference sequences.
-\end{itemize}
+- Use after applying a variant in the Name Checker.
+- Compare two reference sequences.
 
 Will solve the combining and splitting of variants problem. True
 disambiguation.
-
-\section{LOVD~3.0}
-Uses the Mutalyzer~2.0 Webservices for:
-\begin{itemize}
-  \item Retrieving a reference sequence (add new gene).
-  \item Mapping descriptions.
-  \item Converting descriptions to other transcripts.
-  \item Checking variant descriptions.
-  \item \ldots
-\end{itemize}
-
-\section{Conclusions and further research}\label{conclusion}
-EMBL reference sequences.
-
-Description extractor in Name checker.
-
-Nesting.
+\end{verbatim}
 
 \bibliography{$HOME/projects/bibliography}{}
 \bibliographystyle{plain}
 
 \appendix
 
-\section{Webservices}
+\section{Webservices} \label{sec:webservices}
 \LTXtable{\textwidth}{webservices.tex}
 
+\section{Batch output} \label{sec:batchoutput}
+\begin{table}[h]
+  \caption{Name Checker batch output.}
+  \label{tab:namecheckbatch}
+  \begin{center}
+    \begin{tabular}{l|l}
+      name                             & description\\
+      \hline
+      Input                            & User input.\\
+      Errors | Messages                & List of errors and warnings.\\
+      AccNo                            & Accession number from the input.\\
+      Genesymbol                       & Gene symbol from the input.\\
+      Variant                          & Variant description.\\
+      Reference Sequence Start Descr.  & Description in \texttt{g.} or
+        \texttt{n.} notation.\\
+      Coding DNA Descr.                & Description in \texttt{c.} notation.\\
+      Protein Descr.                   & Description of the protein change.\\
+      GeneSymbol Coding DNA Descr.     & Description in \texttt{c.} notation
+        including the gene symbol.\\
+      GeneSymbol Protein Descr.        & Description of the protein change
+        inclusing the gene symbol.\\
+      Genomic Reference                & ??\\
+      Coding Reference                 & Reference sequence of the
+        transcript.\\
+      Protein Reference                & Reference sequence of the protein.\\
+      Affected Transcripts             & List of affected transcripts.\\
+      Affected Proteins                & List of affected proteins.\\
+      Restriction Sites Created        & List of created restriction sites.\\
+      Restriction Sites Deleted        & List of deleted restriction sites.\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[h]
+  \caption{Syntax Checker batch output.}
+  \label{tab:syntaxcheckbatch}
+  \begin{center}
+    \begin{tabular}{l|l}
+      name   & description\\
+      \hline
+      Input  & User input.\\
+      Status & Either ``OK'' or an error message.\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[h]
+  \caption{Position Converter batch output.}
+  \label{tab:positionconvertbatch}
+  \begin{center}
+    \begin{tabular}{l|l}
+      name                & description\\
+      \hline
+      Input Variant       & User input.\\
+      Errors              & List of errors and warnings.\\
+      Chromosomal Variant & Variant in \texttt{g.} notation.\\
+      Coding Variant(s)   & Variant in \texttt{c.} notation.\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[h]
+  \caption{Position Converter batch output.}
+  \label{tab:snpconvertbatch}
+  \begin{center}
+    \begin{tabular}{l|l}
+      name                & description\\
+      \hline
+      Input Variant       & User input.\\
+      HGVS description(s) & List of HGVS descriptions.\\
+      Errors | Messages   & List of errors and warnings.\\
+    \end{tabular}
+  \end{center}
+\end{table}
 %\section{Annotation enrichment} \label{sec:enrichment}
 
 \end{document}

@@ -763,6 +763,12 @@ class MutalyzerService(ServiceBase):
                 represented by an object with fields:
                 - description: Description of the raw variant.
                 - visualisation: ASCII visualisation of the raw variant.
+            - exons: If a transcript is selected, array of ExonInfo objects
+                for each exon in the selected transcript with fields:
+                - cStart
+                - gStart
+                - cStop
+                - gStop
             - messages: List of (error) messages.
         """
         O = Output(__file__)
@@ -803,6 +809,13 @@ class MutalyzerService(ServiceBase):
             O.getIndexedOutput("genomicDescription", 0)
         result.transcriptDescriptions = O.getOutput("descriptions")
         result.proteinDescriptions = O.getOutput("protDescriptions")
+
+        if O.getIndexedOutput('hasTranscriptInfo', 0, False):
+            result.exons = []
+            for e in O.getOutput('exonInfo'):
+                exon = ExonInfo()
+                exon.gStart, exon.gStop, exon.cStart, exon.cStop = e
+                result.exons.append(exon)
 
         raw_variants = []
         for v in O.getOutput("visualisation"):

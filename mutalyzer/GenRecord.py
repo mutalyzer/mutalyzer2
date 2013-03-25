@@ -511,9 +511,19 @@ class GenRecord() :
             for j in i.transcriptList :
                 if not j.mRNA :
                     usableExonList = self.__checkExonList(j.exon, j.CDS)
+                    if self.record.molType == 'n' and j.exon:
+                        if not all(p1 + 1 == p2 for p1, p2 in
+                                   util.grouper(j.exon.positionList[1:-1])):
+                            code = 'WEXON_ANNOTATION' if j.current else 'WEXON_ANNOTATION_OTHER'
+                            self.__output.addMessage(__file__, 2, code,
+                                "Exons for gene %s, transcript variant %s were "
+                                "found not to be adjacent. This signifies a "
+                                "possible problem in the annotation of the "
+                                "reference sequence." % (i.name, j.name))
                     if not j.exon or not usableExonList :
                         if self.record.molType == 'g' :
-                            self.__output.addMessage(__file__, 2, "WNOMRNA",
+                            code = 'WNOMRNA' if j.current else 'WNOMRNA_OTHER'
+                            self.__output.addMessage(__file__, 2, code,
                                 "No mRNA field found for gene %s, transcript " \
                                 "variant %s in record, constructing " \
                                 "it from CDS. Please note that descriptions "\
@@ -521,7 +531,8 @@ class GenRecord() :
                                 i.name, j.name))
                         if j.exon and j.exon.positionList and \
                            not usableExonList :
-                            self.__output.addMessage(__file__, 2, "WNOMRNA",
+                            code = 'WNOMRNA' if j.current else 'WNOMRNA_OTHER'
+                            self.__output.addMessage(__file__, 2, code,
                                 "Exons were found for gene %s, transcript " \
                                 "variant %s but were not usable. " \
                                 "Please note that descriptions "\
