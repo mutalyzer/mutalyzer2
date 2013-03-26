@@ -1717,6 +1717,7 @@ def check_variant(description, output):
             locations = [pos
                          for descr, first, last in raw_variants
                          for pos in (first, last)]
+            # Todo: This is hard-coded to hg19...
             converter = Converter('hg19', output)
             chromosomal_positions = converter.chromosomal_positions(
                 locations, parsed_description.RefSeqAcc, parsed_description.Version)

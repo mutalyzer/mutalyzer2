@@ -122,7 +122,7 @@ class _Config():
             for name in ('email', 'cache', 'lrgurl', 'internalDb', 'dbNames',
                          'LocalMySQLuser', 'LocalMySQLhost', 'log',
                          'datestring', 'mailFrom', 'mailSubject',
-                         'resultsDir', 'nameCheckOutHeader',
+                         'resultsDir', 'nameCheckOutHeader', 'defaultDb',
                          'syntaxCheckOutHeader', 'positionConverterOutHeader',
                          'snpConverterOutHeader', 'PIDfile', 'header',
                          'piwikBase'):

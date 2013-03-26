@@ -30,6 +30,7 @@ PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root
 BIN_BATCHD=$(which mutalyzer-batchd)
 BIN_CACHE_SYNC=$(which mutalyzer-cache-sync)
 BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
+BIN_MAPPING_IMPORT=$(which mutalyzer-mapping-import)
 BIN_WEBSITE=$(which mutalyzer-website.wsgi)
 BIN_SOAP_SERVICE=$(which mutalyzer-soap-service.wsgi)
 BIN_JSON_SERVICE=$(which mutalyzer-json-service.wsgi)
@@ -87,6 +88,8 @@ cp extras/apache/mutalyzer.conf /etc/apache2/conf.d/mutalyzer.conf
 sed -i -e "s@<MUTALYZER_BIN_WEBSITE>@${BIN_WEBSITE}@g" -e "s@<MUTALYZER_BIN_SOAP_SERVICE>@${BIN_SOAP_SERVICE}@g" -e "s@<MUTALYZER_BIN_JSON_SERVICE>@${BIN_JSON_SERVICE}@g" -e "s@<MUTALYZER_BIN_BATCHD>@${BIN_BATCHD}@g" /etc/apache2/conf.d/mutalyzer.conf
 chmod u=rw,go=r /etc/apache2/conf.d/mutalyzer.conf
 
+echo -e "${COLOR_INFO}Creating databases${COLOR_END}"
+
 echo "You will now be asked for the MySQL root password"
 
 # Create databases
@@ -95,9 +98,11 @@ cat << EOF | mysql -u root -p
   CREATE DATABASE mutalyzer;
   CREATE DATABASE hg18;
   CREATE DATABASE hg19;
+  CREATE DATABASE mm10;
   GRANT ALL PRIVILEGES ON mutalyzer.* TO mutalyzer@localhost;
   GRANT ALL PRIVILEGES ON hg18.* TO mutalyzer@localhost;
   GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer@localhost;
+  GRANT ALL PRIVILEGES ON mm10.* TO mutalyzer@localhost;
   FLUSH PRIVILEGES;
 EOF
 
@@ -167,6 +172,9 @@ wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.36.3/mapview/seq_ge
 echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg18)${COLOR_END}"
 $($BIN_MAPPING_UPDATE hg18 $MAPPING reference)
 rm $MAPPING
+
+echo -e "${COLOR_INFO}Separate import of NC_001807.4 (chrM) in hg18 database${COLOR_END}"
+$($BIN_MAPPING_IMPORT reference hg18 NC_001807.4)
 
 echo -e "${COLOR_INFO}Creating tables in hg19 database${COLOR_END}"
 
@@ -242,6 +250,74 @@ wget "ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_ge
 echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (hg19)${COLOR_END}"
 $($BIN_MAPPING_UPDATE hg19 $MAPPING 'GRCh37.p2-Primary Assembly')
 rm $MAPPING
+
+echo -e "${COLOR_INFO}Separate import of NC_012920.1 (chrM) in hg19 database${COLOR_END}"
+$($BIN_MAPPING_IMPORT reference hg19 NC_012920.1)
+
+echo -e "${COLOR_INFO}Creating tables in mm10 database${COLOR_END}"
+
+# Create ChrName and Mapping table (mm10)
+cat << EOF | mysql -u mutalyzer -D mm10
+CREATE TABLE ChrName (
+  AccNo char(20) NOT NULL,
+  name char(20) NOT NULL,
+  organelle_type enum('chromosome','mitochondrion') NOT NULL DEFAULT 'chromosome',
+  PRIMARY KEY (AccNo)
+) ENGINE = MYISAM;
+CREATE TABLE Mapping (
+  gene varchar(255) DEFAULT NULL,
+  transcript varchar(20) NOT NULL DEFAULT '',
+  version smallint(6) DEFAULT NULL,
+  selector varchar(255) DEFAULT NULL,
+  selector_version smallint(6) DEFAULT NULL,
+  chromosome varchar(40) DEFAULT NULL,
+  orientation char(1) DEFAULT NULL,
+  start int(11) unsigned DEFAULT NULL,
+  stop int(11) unsigned DEFAULT NULL,
+  cds_start int(11) unsigned DEFAULT NULL,
+  cds_stop int(11) unsigned DEFAULT NULL,
+  exon_starts longblob NOT NULL,
+  exon_stops longblob NOT NULL,
+  protein varchar(20) DEFAULT NULL,
+  source varchar(20) DEFAULT NULL,
+  INDEX (transcript)
+) ENGINE = MYISAM;
+INSERT INTO ChrName (AccNo, name, organelle_type) VALUES
+('NC_000067.65', 'chr1', 'chromosome'),
+('NC_000068.70', 'chr2', 'chromosome'),
+('NC_000069.60', 'chr3', 'chromosome'),
+('NC_000070.66', 'chr4', 'chromosome'),
+('NC_000071.65', 'chr5', 'chromosome'),
+('NC_000072.60', 'chr6', 'chromosome'),
+('NC_000073.61', 'chr7', 'chromosome'),
+('NC_000074.60', 'chr8', 'chromosome'),
+('NC_000075.60', 'chr9', 'chromosome'),
+('NC_000076.60', 'chr10', 'chromosome'),
+('NC_000077.60', 'chr11', 'chromosome'),
+('NC_000078.60', 'chr12', 'chromosome'),
+('NC_000079.60', 'chr13', 'chromosome'),
+('NC_000080.60', 'chr14', 'chromosome'),
+('NC_000081.60', 'chr15', 'chromosome'),
+('NC_000082.60', 'chr16', 'chromosome'),
+('NC_000083.60', 'chr17', 'chromosome'),
+('NC_000084.60', 'chr18', 'chromosome'),
+('NC_000085.60', 'chr19', 'chromosome'),
+('NC_000086.71', 'chrX', 'chromosome'),
+('NC_000087.74', 'chrY', 'chromosome'),
+('NC_005089.1', 'chrM', 'mitochondrion');
+EOF
+
+echo -e "${COLOR_INFO}Populating Mapping table with NCBI data (mm10)${COLOR_END}"
+
+# Populate Mapping table with UCSC data (mm10)
+MAPPING=$(mktemp)
+wget "ftp://ftp.ncbi.nih.gov/genomes/M_musculus/ARCHIVE/BUILD.38.1/mapview/seq_gene.md.gz" -O - | zcat > $MAPPING
+echo -e "${COLOR_INFO}Importing NCBI mapping data, this may take a few minutes (mm10)${COLOR_END}"
+$($BIN_MAPPING_UPDATE mm10 $MAPPING 'GRCm38-C57BL/6J')
+rm $MAPPING
+
+echo -e "${COLOR_INFO}Separate import of NC_005089.1 (chrM) in mm10 database${COLOR_END}"
+$($BIN_MAPPING_IMPORT reference mm10 NC_005089.1)
 
 echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
 
