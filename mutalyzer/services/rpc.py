@@ -153,6 +153,10 @@ class MutalyzerService(ServiceBase):
         """
         output = Output(__file__)
         database = Db.Batch()
+
+        counter = Db.Counter()
+        counter.increment('batchjob', 'webservice')
+
         scheduler = Scheduler.Scheduler(database)
         file_instance = File.File(output)
 
@@ -669,6 +673,10 @@ class MutalyzerService(ServiceBase):
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received request cTogConversion(%s %s)" % (build, variant))
+
+        counter = Db.Counter()
+        counter.increment('positionconvert', 'webservice')
+
         converter = Converter(build, O)
         variant = converter.correctChrVariant(variant)
 
@@ -701,6 +709,9 @@ class MutalyzerService(ServiceBase):
         output = Output(__file__)
         output.addMessage(__file__, -1, "INFO",
             "Received request checkSyntax(%s)" % (variant))
+
+        counter = Db.Counter()
+        counter.increment('checksyntax', 'webservice')
 
         result = CheckSyntaxOutput()
 
@@ -774,6 +785,10 @@ class MutalyzerService(ServiceBase):
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received request runMutalyzer(%s)" % (variant))
+
+        counter = Db.Counter()
+        counter.increment('namecheck', 'webservice')
+
         variantchecker.check_variant(variant, O)
 
         result = MutalyzerOutput()
@@ -1213,6 +1228,9 @@ class MutalyzerService(ServiceBase):
 
         output.addMessage(__file__, -1, 'INFO',
             'Received request getdbSNPDescription(%s)' % rs_id)
+
+        counter = Db.Counter()
+        counter.increment('snpconvert', 'webservice')
 
         retriever = Retriever.Retriever(output, None)
         descriptions = retriever.snpConvert(rs_id)

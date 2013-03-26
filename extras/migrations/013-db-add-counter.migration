@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Add Counter table to mutalyzer database.
+#
+# Usage:
+#   ./013-db-add-counter.migration [migrate]
+
+COLOR_INFO='\033[32m'
+COLOR_WARNING='\033[33m'
+COLOR_ERROR='\033[31m'
+COLOR_END='\033[0m'
+
+if echo 'show tables;' | mysql -u mutalyzer -D mutalyzer | grep -q Counter; then
+    echo -e "${COLOR_INFO}This migration is not needed.${COLOR_END}"
+else
+    echo -e "${COLOR_WARNING}This migration is needed.${COLOR_END}"
+
+    if [ "$1" = 'migrate' ]; then
+        echo 'Performing migration.'
+
+        echo -e "${COLOR_INFO}Creating mutalyzer.Counter table${COLOR_END}"
+
+        # Create Counter table and initial rows
+        cat << EOF | mysql -u mutalyzer -D mutalyzer
+CREATE TABLE Counter (
+  service varchar(100) NOT NULL,
+  interface varchar(100) NOT NULL,
+  count bigint NOT NULL DEFAULT 0,
+  start TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (service, interface)
+) ENGINE = MYISAM;
+INSERT INTO Counter (service, interface) VALUES
+('namecheck', 'website'),
+('syntaxcheck', 'website'),
+('positionconvert', 'website'),
+('snpconvert', 'website'),
+('batchjob', 'website'),
+('namecheck', 'webservice'),
+('syntaxcheck', 'webservice'),
+('positionconvert', 'webservice'),
+('snpconvert', 'webservice'),
+('batchjob', 'webservice'),
+('namecheck', 'batch'),
+('syntaxcheck', 'batch'),
+('positionconvert', 'batch'),
+('snpconvert', 'batch');
+EOF
+
+        echo 'Performed migration.'
+    fi
+fi

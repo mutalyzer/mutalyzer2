@@ -361,6 +361,28 @@ CREATE TABLE Link (
   PRIMARY KEY (mrnaAcc),
   UNIQUE KEY protAcc (protAcc)
 ) ENGINE = MYISAM;
+CREATE TABLE Counter (
+  service varchar(100) NOT NULL,
+  interface varchar(100) NOT NULL,
+  count bigint NOT NULL DEFAULT 0,
+  start TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (service, interface)
+) ENGINE = MYISAM;
+INSERT INTO Counter (service, interface) VALUES
+('namecheck', 'website'),
+('syntaxcheck', 'website'),
+('positionconvert', 'website'),
+('snpconvert', 'website'),
+('batchjob', 'website'),
+('namecheck', 'webservice'),
+('syntaxcheck', 'webservice'),
+('positionconvert', 'webservice'),
+('snpconvert', 'webservice'),
+('batchjob', 'webservice'),
+('namecheck', 'batch'),
+('syntaxcheck', 'batch'),
+('positionconvert', 'batch'),
+('snpconvert', 'batch');
 EOF
 
 # The remainder is essentially the same as post-upgrade.sh

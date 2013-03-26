@@ -24,7 +24,7 @@ import time
 import traceback
 
 from mutalyzer import config
-from mutalyzer.Db import Batch
+from mutalyzer.Db import Batch, Counter
 from mutalyzer.Scheduler import Scheduler
 
 
@@ -68,6 +68,8 @@ def daemonize():
         # the config module, since it does not read its file again after
         # initialisation.
         database = Batch()
+        counter = Counter()
+
         scheduler = Scheduler(database)
 
         def stop_scheduler(signum, stack_frame):
@@ -78,7 +80,7 @@ def daemonize():
             # Process batch jobs. This process() method runs while there
             # exist jobs to run.
             try:
-                scheduler.process()
+                scheduler.process(counter)
             except Exception as e:
                 f = open('/tmp/batcherror.log', 'a+')
                 f.write('Error (%s): %s\n' % (type(e), str(e)))

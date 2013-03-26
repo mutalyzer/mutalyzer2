@@ -1575,3 +1575,42 @@ class Batch(Db) :
         return inputl, flags
     #getFromQueue
 #Batch
+
+
+class Counter(Db):
+    """
+    Database functions for the service counters.
+
+    Special methods:
+        - __init__() ; Initialise the class.
+
+    Inherited methods from Db:
+        - query(statement) ; General query function.
+
+    SQL tables from internalDb:
+        - Counter   ; Service count information.
+    """
+    def __init__(self):
+        """
+        Initialise the Db parent class. Use the internalDb.
+        """
+        Db.__init__(self, config.get('internalDb'),
+                    config.get('LocalMySQLuser'),
+                    config.get('LocalMySQLhost'))
+
+    def increment(self, service, interface):
+        """
+        Increment the counter for given service and interface.
+
+        SQL tables from internalDb:
+            - Counter ; Service count information.
+        """
+        statement = """
+            UPDATE `Counter` SET
+              `count` = `count` + 1
+            WHERE `service` = %s
+            AND `interface` = %s;
+        """, (service, interface)
+
+        self.query(statement)
+#Counter

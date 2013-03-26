@@ -438,6 +438,9 @@ class SyntaxCheck:
         output.addMessage(__file__, -1, 'INFO',
             'Received request syntaxCheck(%s) from %s' % (i.variant, IP))
 
+        counter = Db.Counter()
+        counter.increment('syntaxcheck', 'website')
+
         variant = i.variant
         if variant.find(',') >= 0:
             output.addMessage(__file__, 2, "WCOMMASYNTAX",
@@ -509,6 +512,10 @@ class Snp:
         if rs_id:
             output.addMessage(__file__, -1, 'INFO',
                 'Received request snpConvert(%s) from %s' % (rs_id, IP))
+
+            counter = Db.Counter()
+            counter.increment('snpconvert', 'website')
+
             retriever = Retriever.Retriever(output, None)
             descriptions = retriever.snpConvert(rs_id)
             output.addMessage(__file__, -1, 'INFO',
@@ -589,6 +596,9 @@ class PositionConverter:
             output.addMessage(__file__, -1, 'INFO',
                 'Received request positionConverter(%s, %s) from %s' % (
                 build, variant, IP))
+
+            counter = Db.Counter()
+            counter.increment('positionconvert', 'website')
 
             # Todo: check for correct build.
             converter = Converter(build, output)
@@ -793,6 +803,9 @@ class Check:
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
                           % (name, web.ctx['ip']))
+
+        counter = Db.Counter()
+        counter.increment('namecheck', 'website')
 
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
@@ -1189,6 +1202,9 @@ class BatchChecker:
         # to the truth value False, so 'if inFile: ...' is not useful.
 
         if email and isEMail(email) and not inFile == None and inFile.file:
+
+            counter = Db.Counter()
+            counter.increment('batchjob', 'website')
 
             # Todo: These error messages could be delivered trough a template
             if not 'CONTENT_LENGTH' in web.ctx.environ.keys():

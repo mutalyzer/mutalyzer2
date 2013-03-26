@@ -274,7 +274,7 @@ Mutalyzer batch checker.""" % url)
         #for
     #_updateDbFlags
 
-    def process(self) :
+    def process(self, counter) :
         """
         Start the mutalyzer Batch Processing. This method retrieves
         all jobs from the database and processes them in a roundrobin
@@ -324,13 +324,13 @@ Mutalyzer batch checker.""" % url)
                 inputl, flags = self.__database.getFromQueue(i)
                 if not (inputl is None) :
                     if jobType == "NameChecker" :
-                        self._processNameBatch(inputl, i, flags)
+                        self._processNameBatch(inputl, i, flags, counter)
                     elif jobType == "SyntaxChecker" :
-                        self._processSyntaxCheck(inputl, i, flags)
+                        self._processSyntaxCheck(inputl, i, flags, counter)
                     elif jobType == "PositionConverter" :
-                        self._processConversion(inputl, i, arg1, flags)
+                        self._processConversion(inputl, i, arg1, flags, counter)
                     elif jobType == "SnpConverter" :
-                        self._processSNP(inputl, i, flags)
+                        self._processSNP(inputl, i, flags, counter)
                     else: #unknown jobType
                         pass #TODO: Scream burning water and remove from Queue
                 else :
@@ -345,7 +345,7 @@ Mutalyzer batch checker.""" % url)
         #while
     #process
 
-    def _processNameBatch(self, cmd, i, flags) :
+    def _processNameBatch(self, cmd, i, flags, counter) :
         """
         Process an entry from the Name Batch, write the results
         to the job-file. If an Exception is raised, catch and continue.
@@ -363,6 +363,8 @@ Mutalyzer batch checker.""" % url)
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received NameChecker batchvariant " + cmd)
+
+        counter.increment('namecheck', 'batch')
 
         #Read out the flags
         skip = self.__processFlags(O, flags)
@@ -415,7 +417,7 @@ Mutalyzer batch checker.""" % url)
             "Finished NameChecker batchvariant " + cmd)
     #_processNameBatch
 
-    def _processSyntaxCheck(self, cmd, i, flags) :
+    def _processSyntaxCheck(self, cmd, i, flags, counter) :
         """
         Process an entry from the Syntax Check, write the results
         to the job-file.
@@ -435,6 +437,8 @@ Mutalyzer batch checker.""" % url)
 
         output.addMessage(__file__, -1, "INFO",
                            "Received SyntaxChecker batchvariant " + cmd)
+
+        counter.increment('syntaxcheck', 'batch')
 
         skip = self.__processFlags(output, flags)
         #Process
@@ -472,7 +476,7 @@ Mutalyzer batch checker.""" % url)
                           "Finished SyntaxChecker batchvariant " + cmd)
     #_processSyntaxCheck
 
-    def _processConversion(self, cmd, i, build, flags) :
+    def _processConversion(self, cmd, i, build, flags, counter) :
         """
         Process an entry from the Position Converter, write the results
         to the job-file. The Position Converter is wrapped in a try except
@@ -499,6 +503,8 @@ Mutalyzer batch checker.""" % url)
 
         O.addMessage(__file__, -1, "INFO",
             "Received PositionConverter batchvariant " + cmd)
+
+        counter.increment('positionconvert', 'batch')
 
         skip = self.__processFlags(O, flags)
         if not skip :
@@ -573,7 +579,7 @@ Mutalyzer batch checker.""" % url)
     #_processConversion
 
 
-    def _processSNP(self, cmd, i, flags) :
+    def _processSNP(self, cmd, i, flags, counter) :
         """
         Process an entry from the SNP converter Batch, write the results
         to the job-file. If an Exception is raised, catch and continue.
@@ -591,6 +597,8 @@ Mutalyzer batch checker.""" % url)
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received SNP converter batch rs" + cmd)
+
+        counter.increment('snpconvert', 'batch')
 
         #Read out the flags
         # Todo: Do something with the flags?
