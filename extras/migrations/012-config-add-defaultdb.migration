@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Add 'default mapping database' setting to the configuration file.
+#
+# Usage:
+#   ./012-config-add-defaultdb.migration [migrate]
+
+COLOR_INFO='\033[32m'
+COLOR_WARNING='\033[33m'
+COLOR_ERROR='\033[31m'
+COLOR_END='\033[0m'
+
+if [ -e /etc/mutalyzer/config ] && ! $(grep -q 'defaultDb' /etc/mutalyzer/config); then
+    echo -e "${COLOR_WARNING}This migration is needed.${COLOR_END}"
+    if [ "$1" = 'migrate' ]; then
+        echo 'Performing migration.'
+        echo -e "${COLOR_INFO}Copying /etc/mutalyzer/config to /etc/mutalyzer/config.backup${COLOR_END}"
+        cp /etc/mutalyzer/config /etc/mutalyzer/config.backup
+        # Insert after dbNames line
+        if $(grep -q '^dbNames' /etc/mutalyzer/config && sed -i '/^dbNames/ a\
+\
+# Default mapping database.\
+defaultDb = "hg19"' /etc/mutalyzer/config); then
+            echo -e "${COLOR_INFO}Added defaultDb = \"hg19\" to /etc/mutalyzer/config${COLOR_END}"
+            echo 'Performed migration.'
+        else
+            echo -e "${COLOR_ERROR}Could not perform migration.${COLOR_END}"
+        fi
+    fi
+else
+    echo -e "${COLOR_INFO}This migration is not needed.${COLOR_END}"
+fi

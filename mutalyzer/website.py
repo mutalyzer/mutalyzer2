@@ -562,19 +562,26 @@ class PositionConverter:
         output = Output(__file__)
         IP = web.ctx["ip"]
 
-        avail_builds = config.get('dbNames')[::-1]
+        avail_builds = config.get('dbNames')
 
-        if build :
-            avail_builds.remove(build)
-            avail_builds.insert(0, build)
+        # We have to put up with this crap just to get a certain <option>
+        # selected in our TAL template.
+        if build in avail_builds:
+            selected_build = build
+        else:
+            selected_build = config.get('defaultDb')
+        unselected_builds = sorted(b for b in avail_builds
+                                   if b != selected_build)
 
         attr = {
-            "avail_builds" : avail_builds,
-            "variant"      : variant,
-            "gName"        : "",
-            "cNames"       : [],
-            "messages"     : [],
-            "posted"       : build and variant
+            "avail_builds"     : avail_builds,
+            "unselected_builds": unselected_builds,
+            "selected_build"   : selected_build,
+            "variant"          : variant,
+            "gName"            : "",
+            "cNames"           : [],
+            "messages"         : [],
+            "posted"           : build and variant
         }
 
         if build and variant:
@@ -1134,6 +1141,17 @@ class BatchChecker:
 
         maxUploadSize = config.get('batchInputMaxSize')
 
+        avail_builds = config.get('dbNames')
+
+        # We have to put up with this crap just to get a certain <option>
+        # selected in our TAL template.
+        if arg1 in avail_builds:
+            selected_build = arg1
+        else:
+            selected_build = config.get('defaultDb')
+        unselected_builds = sorted(b for b in avail_builds
+                                   if b != selected_build)
+
         attr = {
             "messages"      : [],
             "errors"        : [],
@@ -1144,7 +1162,9 @@ class BatchChecker:
             "hideTypes"     : batchType and 'none' or '',
             "selected"      : "0",
             "batchType"     : batchType or "",
-            "avail_builds"  : config.get('dbNames')[::-1],
+            "avail_builds"  : avail_builds,
+            "unselected_builds": unselected_builds,
+            "selected_build": selected_build,
             "jobID"         : None,
             "totalJobs"     : None
         }
@@ -1285,11 +1305,20 @@ class Uploader:
         Render reference sequence uploader form.
         """
         maxUploadSize = config.get('maxDldSize')
-        available_assemblies = config.get('dbNames')[::-1]
+        available_assemblies = config.get('dbNames')
+
+        # We have to put up with this crap just to get a certain <option>
+        # selected in our TAL template.
+        selected_assembly = config.get('defaultDb')
+        unselected_assemblies = sorted(b for b in available_assemblies
+                                       if b != selected_assembly)
+
         UD, errors = "", []
         args = {
             'UD'                   : UD,
             'available_assemblies' : available_assemblies,
+            'unselected_assemblies': unselected_assemblies,
+            'selected_assembly'    : selected_assembly,
             'maxSize'              : float(maxUploadSize) / 1048576,
             'errors'               : errors
         }
@@ -1340,7 +1369,8 @@ class Uploader:
         - chrnameorientation: Orientation.
         """
         maxUploadSize = config.get('maxDldSize')
-        available_assemblies = config.get('dbNames')[::-1]
+
+        available_assemblies = config.get('dbNames')
 
         O = Output(__file__)
         IP = web.ctx["ip"]
@@ -1354,6 +1384,15 @@ class Uploader:
                       chracc='', start='', stop='', orientation='',
                       chrnameassembly='', chrname='', chrnamestart='',
                       chrnamestop='', chrnameorientation='')
+
+        # We have to put up with this crap just to get a certain <option>
+        # selected in our TAL template.
+        if i.chrnameassembly in available_assemblies:
+            selected_assembly = i.chrnameassembly
+        else:
+            selected_assembly = config.get('defaultDb')
+        unselected_assemblies = sorted(b for b in available_assemblies
+                                       if b != selected_assembly)
 
         O.addMessage(__file__, -1, 'INFO',
             'Received request'
@@ -1438,6 +1477,8 @@ class Uploader:
         args = {
             "UD"                   : UD,
             'available_assemblies' : available_assemblies,
+            'unselected_assemblies': unselected_assemblies,
+            'selected_assembly'    : selected_assembly,
             "maxSize"              : float(maxUploadSize) / 1048576,
             "errors"               : errors
         }

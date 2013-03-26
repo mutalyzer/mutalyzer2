@@ -78,10 +78,15 @@
                   <td><b>Build</b></td>
                   <td>
                       <select name="arg1">
-                        <option tal:repeat="build avail_builds"
-                        tal:content="build"
-                        tal:attributes="value build">
-                        </option>
+                          <option
+                          selected="selected"
+                          tal:content = "selected_build"
+                          tal:attributes = "value selected_build">
+                          </option>
+                          <option tal:repeat = "i unselected_builds"
+                          tal:content = "i"
+                          tal:attributes = "value i">
+                          </option>
                       </select>
                   </td>
               </tr>

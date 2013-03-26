@@ -21,7 +21,12 @@
                     <div tal:content = "build"></div>
                     <td>
                         <select name="build">
-                          <option tal:repeat = "i avail_builds"
+                          <option
+                          selected="selected"
+                          tal:content = "selected_build"
+                          tal:attributes = "value selected_build">
+                          </option>
+                          <option tal:repeat = "i unselected_builds"
                           tal:content = "i"
                           tal:attributes = "value i">
                           </option>

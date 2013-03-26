@@ -118,10 +118,15 @@
                   <td>Assembly</td>
                   <td>
                     <select name="chrnameassembly">
-                      <option tal:repeat = "i available_assemblies"
-                              tal:content = "i"
-                              tal:attributes = "value i">
-                      </option>
+                          <option
+                          selected="selected"
+                          tal:content = "selected_assembly"
+                          tal:attributes = "value selected_assembly">
+                          </option>
+                          <option tal:repeat = "i unselected_assemblies"
+                          tal:content = "i"
+                          tal:attributes = "value i">
+                          </option>
                     </select>
                   </td>
                 </tr>
