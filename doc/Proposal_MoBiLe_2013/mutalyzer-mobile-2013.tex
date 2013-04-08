@@ -1,0 +1,114 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{a4,fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{qpxmath}
+\usepackage{tgpagella}
+\renewcommand{\ttdefault}{txtt}
+\usepackage[scaled=0.95]{helvet}
+\usepackage[T1]{fontenc}
+\usepackage[numbers]{natbib}
+\bibliographystyle{plainnat}
+\addto\captionsenglish{\renewcommand{\bibname}{References}}
+%\shortcites{green-2010}
+\usepackage{url}
+%% Define a new 'leo' style for the package that will use a smaller
+%% font.
+\makeatletter
+\def\url@leostyle{%
+  \@ifundefined{selectfont}{\def\UrlFont{\sf}}{\def\UrlFont{\small\ttfamily}}}
+\makeatother
+%% Now actually use the newly defined style.
+\urlstyle{leo}
+\usepackage{hyperref}
+\hypersetup{
+  final,
+  colorlinks=true,
+  citecolor=black,
+  filecolor=black,
+  linkcolor=red,
+  urlcolor=red,
+  anchorcolor=black,
+  pdfauthor={Martijn Vermaat},
+  pdftitle={Quality control of full-genome alignments for 756 individuals in the
+    Genome of the NetherlandsInfinitary Rewriting in Coq},
+}
+\setlength\parskip{\medskipamount}
+\setlength{\parindent}{0pt}
+\pagestyle{plain}
+
+
+\title{Research project proposal: Extending the Mutalyzer reference sequence
+  parser for the analysis of mysterious genes}
+\date{April 8, 2013}
+\author{Martijn Vermaat \and Jeroen F. J. Laros \and Peter
+  E. M. Taschner\\[1.5em]
+\normalsize{Department of Human Genetics, Leiden University Medical Center}}
+
+
+\begin{document}
+
+
+\maketitle
+\thispagestyle{empty}
+
+
+\section*{Background}
+
+The application of molecular genetic techniques to elucidate the molecular
+basis of hereditary disease in both research and diagnostic settings has led
+to the identification of many sequence variations in human genes.
+The department of Human Genetics maintains several databases containing
+sequence variations (see \href{http://www.lovd.nl}{lovd.nl}), which need to be
+curated to assure use of appropriate sequence variation nomenclature.
+The current Mutalyzer 2 (\href{https://mutalyzer.nl}{mutalyzer.nl}) enables
+extended checks of sequence variation nomenclature provided by the user, but
+also provides mutation descriptions for all transcripts and proteins affected
+by a genomic sequence change when a properly annotated reference sequence is
+provided. The latter information already provides the basis for an extended
+analysis of genotype-phenotype correlations.
+
+
+\section*{Project description}
+
+The students will work on the reference sequence record parser of Mutalyzer to
+capture and use additional annotation in
+\href{http://www.ncbi.nlm.nih.gov/refseq/}{RefSeq},
+\href{http://www.lrg-sequence.org/}{LRG}, and
+\href{http://www.ensembl.org/index.html}{Ensembl} records which will help
+extending Mutalyzer's functionality to ``exotic'' human genes
+\begin{enumerate}
+  \itemsep0em
+  \item with alternative use of termination codons (UGA for selenocystein and
+    UAG for pyrrolysine incorporation) \citep{elzanowski-2010},
+  \item having mismatches between RefSeq genomic and transcript or protein
+    coding sequences, or
+  \item using alternative start codons \citep{slavoff-2013}.
+\end{enumerate}
+Each extension of the improved parser will be implemented by the Mutalyzer
+development team on a publicly reachable server, so progress can be followed
+during the project.
+In addition, a solution has to be developed for bacterial translation,
+including the automatic generation of mutated sequences, automatic submission
+of these sequences and their reference counterparts for analysis and
+comparison with web-based analysis tools and prediction of mutation effects.
+
+
+\section*{Implementation details}
+
+The Mutalyzer sequence variation nomenclature checker is implemented in Python
+and uses \href{http://biopython.org/}{BioPython} and Python's XML libraries
+for parsing reference sequence records.
+To generalize specific formats such as GenBank and LRG, an abstract reference
+sequence representation is used internally (``GenRecord'').
+Students are expected to extend this representation with additional attributes
+and write the code to implement them from data in the specific formats.
+Some experience with programming in Python is required to take on this
+project.
+
+
+\bibliography{mutalyzer-mobile-2013}
+
+
+\end{document}
