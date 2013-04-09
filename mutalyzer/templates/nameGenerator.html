@@ -18,7 +18,7 @@
             <td><input type="text" name="refe" size="20" value=""></td>
             <td id="refeerror" class="errors"></td>
           </tr>
-          
+
           <tr id="seqT">
             <td>Sequence Type</td>
             <td>
@@ -52,7 +52,7 @@
             </td>
             <td id="gSymerror" class="errors"></td>
           </tr>
-                  
+
           <tr id="tVar">
             <td>Transcript</td>
             <td>
@@ -72,7 +72,11 @@
       </div>
       <div id="addButton">
           <input type="button" onclick="addVariant();" value="Add Variant">
-          <input type="button" onclick="if(confirm('This action will clear all input fields'))javascript:location.reload(true);" value="Clear Form">
+          <input type="button" onclick="if(confirm('This action will clear all
+                                        input
+                                        fields'))javascript:location.reload(true);"
+                 value="Clear Form">
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameGenerator">Help</a>
       </div>
     </form>
 
@@ -93,7 +97,7 @@
           oldload();
         update();
     }
-    
+
 </script>
 
 <!-- Inline CSS -->
@@ -163,7 +167,7 @@
           <td id="V{NMBR}P1error" class="errors"></td>
       </tr>
   </tbody>
-          
+
   <tbody id = "V{NMBR}P2row">
       <tr name="P2">
           <td id="V{NMBR}P2name">End Position</td>
@@ -174,7 +178,7 @@
     </tr>
   </tbody>
 
-          
+
   <tbody id="V{NMBR}S1row">
       <tr name="S1">
           <td id="V{NMBR}S1name">Old Sequence</td>
@@ -184,7 +188,7 @@
           <td id="V{NMBR}S1error" class="errors"></td>
       </tr>
   </tbody>
-  
+
   <tbody id="V{NMBR}S2row">
       <tr name="S2">
           <td id="V{NMBR}S2name">New Sequence</td>
