@@ -3,7 +3,7 @@
 # Add mm10 database with mouse mappings.
 #
 # Usage:
-#   ./011-db-add-mm10.migration [migrate]
+#   ./012-db-add-mm10.migration [migrate]
 
 COLOR_INFO='\033[32m'
 COLOR_WARNING='\033[33m'

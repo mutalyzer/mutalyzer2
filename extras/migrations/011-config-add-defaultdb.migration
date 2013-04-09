@@ -3,7 +3,7 @@
 # Add 'default mapping database' setting to the configuration file.
 #
 # Usage:
-#   ./012-config-add-defaultdb.migration [migrate]
+#   ./011-config-add-defaultdb.migration [migrate]
 
 COLOR_INFO='\033[32m'
 COLOR_WARNING='\033[33m'
