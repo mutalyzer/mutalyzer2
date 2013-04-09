@@ -35,12 +35,12 @@ class Output() :
     Provide an output interface for errors, warnings and logging purposes.
 
     Private variables:
-        - __outputdata ; The output dictionary.
-        - __messages   ; The messages list.
-        - __instance   ; The name of the module that made this object.
-        - __loghandle  ; The handle of the log file.
-        - __errors     ; The number of errors that have been processed.
-        - __warnings   ; The number of warnings that have been processed.
+        - _outputdata ; The output dictionary.
+        - _messages   ; The messages list.
+        - _instance   ; The name of the module that made this object.
+        - _loghandle  ; The handle of the log file.
+        - _errors     ; The number of errors that have been processed.
+        - _warnings   ; The number of warnings that have been processed.
 
     Special methods:
         - __init__(instance) ; Initialise the class with the calling
@@ -63,24 +63,24 @@ class Output() :
         Initialise the class with the calling module.
 
         Private variables (altered):
-            - __outputdata ; The output dictionary.
-            - __messages   ; The messages list.
-            - __instance   ; Initialised with the name of the module that
+            - _outputdata ; The output dictionary.
+            - _messages   ; The messages list.
+            - _instance   ; Initialised with the name of the module that
                              created this object.
-            - __loghandle  ; Initialised as the handle of the log file
+            - _loghandle  ; Initialised as the handle of the log file
                              defined in the configuration file.
-            - __errors     ; Initialised to 0.
-            - __warnings   ; Initialised to 0.
+            - _errors     ; Initialised to 0.
+            - _warnings   ; Initialised to 0.
 
         @arg instance: The filename of the module that created this object
         @type instance: string
         """
-        self.__outputData = {}
-        self.__messages = []
-        self.__instance = util.nice_filename(instance)
-        self.__loghandle = open(config.get('log'), "a+")
-        self.__errors = 0
-        self.__warnings = 0
+        self._outputData = {}
+        self._messages = []
+        self._instance = util.nice_filename(instance)
+        self._loghandle = open(config.get('log'), "a+")
+        self._errors = 0
+        self._warnings = 0
     #__init__
 
     def __del__(self) :
@@ -89,16 +89,16 @@ class Output() :
         file.
 
         Private variables(altered):
-            - __loghandle  ; The handle of the log file defined in the
+            - _loghandle  ; The handle of the log file defined in the
                              configuration file.
-            - __outputdata ; The output dictionary.
-            - __messages   ; The messages list.
+            - _outputdata ; The output dictionary.
+            - _messages   ; The messages list.
         """
 
-        self.__loghandle.close()
-        for i in self.__outputData :
+        self._loghandle.close()
+        for i in self._outputData :
             del i
-        for i in self.__messages :
+        for i in self._messages :
             del i
     #__del__
 
@@ -111,13 +111,13 @@ class Output() :
         if it exceeds 2, then the number of errors is increased.
 
         Private variables:
-            - __messages  ; The messages list.
-            - __instance  ; Module that created the Output object.
-            - __loghandle ; Handle to the log file.
+            - _messages  ; The messages list.
+            - _instance  ; Module that created the Output object.
+            - _loghandle ; Handle to the log file.
 
         Private variables (altered):
-            - __warnings ; Increased by one if the severity equals 2.
-            - __errors   ; Increased by one if the severity exceeds 2.
+            - _warnings ; Increased by one if the severity equals 2.
+            - _errors   ; Increased by one if the severity exceeds 2.
 
         @arg filename:    Name of the calling module
         @arg level:       Severity of the message
@@ -128,21 +128,21 @@ class Output() :
         message = Message(nice_name, level, code, description)
 
         # Append a new message object to the messages list.
-        self.__messages.append(message)
+        self._messages.append(message)
 
         if level == 2:
-            self.__warnings += 1
+            self._warnings += 1
         if level > 2:
-            self.__errors += 1
+            self._errors += 1
 
         # Log the message if the message is important enough, or if it is only
         # meant to be logged (level -1).
         if level >= config.get('loglevel') or level == -1 :
-            self.__loghandle.write(time.strftime(
+            self._loghandle.write(time.strftime(
                 config.get('datestring') + ' ') + "%s (%s) %s: %s: %s\n" % (
-                    self.__instance, nice_name, code, message.named_level(),
+                    self._instance, nice_name, code, message.named_level(),
                     description))
-            self.__loghandle.flush()
+            self._loghandle.flush()
         #if
     #addMessage
 
@@ -151,13 +151,13 @@ class Output() :
         Print all messages that exceed the configured output level.
 
         Private variables:
-            - __messages  ; The messages list.
+            - _messages  ; The messages list.
 
         @return: A list of messages
         @rtype: list
         """
         return filter(lambda m: m.level >= config.get('outputlevel'),
-                      self.__messages)
+                      self._messages)
     #getMessages
 
     def getMessagesWithErrorCode(self, errorcode):
@@ -165,7 +165,7 @@ class Output() :
         Retrieve all messages that have a specific error code.
 
         Private variables:
-            - __messages   ; The messages list.
+            - _messages   ; The messages list.
 
         @arg errorcode: The error code to filter on
         @type errorcode: string
@@ -173,7 +173,7 @@ class Output() :
         @return: A filtered list
         @rtype: list
         """
-        return filter(lambda m: m.code == errorcode, self.__messages)
+        return filter(lambda m: m.code == errorcode, self._messages)
     #getMessagesWithErrorCode
 
     def getBatchMessages(self, level):
@@ -182,7 +182,7 @@ class Output() :
         and removes additional lines from a parseerror
 
         Private variables:
-            - __messages   ; The messages list.
+            - _messages   ; The messages list.
 
         @arg level: error level
         @type level: integer
@@ -192,7 +192,7 @@ class Output() :
         """
         ret = []
         lastorigin = ""
-        for i in self.__messages:
+        for i in self._messages:
             if i.level >= level:
                 # Todo: We changed this from 'Parser' to 'grammar', does this
                 # still work?
@@ -212,17 +212,17 @@ class Output() :
         Otherwise create a node and assign a list containing the data.
 
         Private variables:
-            - __outputData ; The output dictionary.
+            - _outputData ; The output dictionary.
 
         @arg name: Name of a node in the output dictionary
         @type name: string
         @arg data: The data to be stored at this node
         @type data: object
         """
-        if self.__outputData.has_key(name) :
-            self.__outputData[name].append(data)
+        if self._outputData.has_key(name) :
+            self._outputData[name].append(data)
         else :
-            self.__outputData[name] = [data]
+            self._outputData[name] = [data]
     #addOutput
 
     def getOutput(self, name) :
@@ -230,7 +230,7 @@ class Output() :
         Return a list of data from the output dictionary.
 
         Private variables:
-            - __outputData ; The output dictionary.
+            - _outputData ; The output dictionary.
 
         @arg name: Name of a node in the output dictionary
         @type name: string
@@ -238,15 +238,15 @@ class Output() :
         @return: output dictionary
         @rtype: dictionary
         """
-        if self.__outputData.has_key(name) :
-            return self.__outputData[name]
+        if self._outputData.has_key(name) :
+            return self._outputData[name]
         return []
     #getOutput
 
     def getIndexedOutput(self, name, index, default=None):
         """
         Return an element of a list, the list is called 'name' in de
-        __outputData dictionary. If either the list or the element does not
+        _outputData dictionary. If either the list or the element does not
         exist, return {default}.
 
         @arg name:  Name of the list.
@@ -255,14 +255,14 @@ class Output() :
             does not exist.
 
         Private variables:
-            - __outputData ; The output dictionary.
+            - _outputData ; The output dictionary.
 
         @return: The requested element or None
         @rtype: any type
         """
-        if self.__outputData.has_key(name) :
-            if 0 <= index < len(self.__outputData[name]) :
-                return self.__outputData[name][index]
+        if self._outputData.has_key(name) :
+            if 0 <= index < len(self._outputData[name]) :
+                return self._outputData[name][index]
         return default
     #getIndexedOutput
 
@@ -271,8 +271,8 @@ class Output() :
         Print a summary of the number of errors and warnings.
 
         Private variables:
-            - __errors   ; The number of errors.
-            - __warnings ; The number of warnings.
+            - _errors   ; The number of errors.
+            - _warnings ; The number of warnings.
 
         @return:
             triple:
@@ -283,13 +283,13 @@ class Output() :
         """
         e_s = 's'
         w_s = 's'
-        if self.__errors == 1 :
+        if self._errors == 1 :
             e_s = ''
-        if self.__warnings == 1 :
+        if self._warnings == 1 :
             w_s = ''
 
-        return self.__errors, self.__warnings, "%i Error%s, %i Warning%s." % (
-            self.__errors, e_s, self.__warnings, w_s)
+        return self._errors, self._warnings, "%i Error%s, %i Warning%s." % (
+            self._errors, e_s, self._warnings, w_s)
     #Summary
 #Output
 

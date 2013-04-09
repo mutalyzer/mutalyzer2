@@ -522,6 +522,7 @@ class TestServicesSoap():
             assert_equal(t.gCDSStop, 21138)
             assert_equal(t.chromCDSStop, 48262863)
 
+    @slow
     def test_batchjob(self):
         """
         Submit a batch job.
