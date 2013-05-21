@@ -317,6 +317,26 @@ Martijn:
 - Supports ``fuzzy'' positions.
 \end{verbatim}
 
+Effect prediction becomes more complex when variants are located close to or
+overlapping splice sites.
+Barring some specific cases, Mutalyzer takes a safe approach and issues a
+warning and does not predict a translated protein if a splice site is hit
+(example: \texttt{NG\_012772.3(BRCA2):c.508\_516+9del}).
+However, a deletion partly covering two exons (thereby spanning the intron),
+although affecting two splice sites, is considered as a case where protein
+prediction can still be valuable.
+An example is \texttt{NG\_012772.3(BRCA2):c.508\_525del}, where the deletion
+is interpreted as forming a fusion exon (in-frame).
+As another example, consider the large deletion
+\texttt{NG\_012772.3(BRCA2):c.317-10\_631+14del} covering 4 complete exons.
+Mutalyzer removes the exons from the CDS, which is still in-frame, in order to
+give a meaningful protein prediction.
+In practice, similar large deletions are often identified without their
+precise break points which can be described using fuzzy intronic offsets (in
+this case \texttt{NG\_012772.3(BRCA2):c.317-?\_631+?del}).
+Internally and for crossmapping to \texttt{g.} descriptions, Mutalyzer
+interprets these offsets as the center of the intron.
+
 \subsection{Syntax Checker} \label{subsec:syntaxcheck}
 If no reference sequence is available, or if large quantities of
 descriptions in a small amount of time need to be checked, it might be
@@ -406,7 +426,7 @@ To facilitate developers that want to use the Mutalyzer functionality, we have
 developed a large number of webservices
 \footnote{\texttt{https://mutalyzer.nl/webservices}}. Currently two major
 protocols are supported: SOAP~\cite{SOAP} and
-JSON-RPC~over~HTTP~\cite{JSON-RPC}. 
+JSON-RPC~over~HTTP~\cite{JSON-RPC}.
 
 See Section~\ref{sec:webservices} for a full list of implemented functions.
 There is an online description available for the API. On this page, there are
