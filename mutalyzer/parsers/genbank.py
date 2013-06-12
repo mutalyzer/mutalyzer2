@@ -137,33 +137,34 @@ class GBparser():
         @return: Accession number of a protein or None if nothing can be found
         @rtype: string
         """
+        try:
+            return self.__database.getProtAcc(transcriptAcc)
+        except IndexError:
+            pass
 
-        proteinAcc = self.__database.getProtAcc(transcriptAcc)
-        if not proteinAcc :
-            handle = Entrez.esearch(db = "nucleotide", term = transcriptAcc)
-            result = Entrez.read(handle)
-            handle.close()
+        handle = Entrez.esearch(db = "nucleotide", term = transcriptAcc)
+        result = Entrez.read(handle)
+        handle.close()
 
-            transcriptGI = result["IdList"][0]
+        transcriptGI = result["IdList"][0]
 
-            handle = Entrez.elink(dbfrom = "nucleotide", db = "protein",
-                                  id = transcriptGI)
-            result = Entrez.read(handle)
-            handle.close()
+        handle = Entrez.elink(dbfrom = "nucleotide", db = "protein",
+                              id = transcriptGI)
+        result = Entrez.read(handle)
+        handle.close()
 
-            if not result[0]["LinkSetDb"] :
-                return None
+        if not result[0]["LinkSetDb"] :
+            self.__database.insertLink(transcriptAcc, None)
+            return None
 
-            proteinGI = result[0]["LinkSetDb"][0]["Link"][0]["Id"]
+        proteinGI = result[0]["LinkSetDb"][0]["Link"][0]["Id"]
 
-            handle = Entrez.efetch(db='protein', id=proteinGI, rettype='acc', retmode='text')
+        handle = Entrez.efetch(db='protein', id=proteinGI, rettype='acc', retmode='text')
 
-            proteinAcc = handle.read().split('.')[0]
-            handle.close()
+        proteinAcc = handle.read().split('.')[0]
+        handle.close()
 
-            self.__database.insertLink(transcriptAcc, proteinAcc)
-        #if
-
+        self.__database.insertLink(transcriptAcc, proteinAcc)
         return proteinAcc
     #__transcriptToProtein
 

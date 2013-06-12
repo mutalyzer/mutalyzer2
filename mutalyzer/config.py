@@ -131,7 +131,8 @@ class _Config():
             # Simple integer values.
             for name in ('minDldSize', 'loglevel', 'outputlevel', 'flanksize',
                          'maxvissize', 'flankclipsize', 'bufSize',
-                         'spliceAlarm', 'spliceWarn', 'piwikSite'):
+                         'spliceAlarm', 'spliceWarn', 'piwikSite',
+                         'proteinLinkLifetime', 'proteinLinkNoneLifetime'):
                 self._values[name] = int(config[name])
 
             # File sizes (given in megabytes, stored in bytes).

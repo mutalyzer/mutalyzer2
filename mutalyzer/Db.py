@@ -1212,18 +1212,27 @@ class Cache(Db) :
 
         @return: The protein accession number
         @rtype: string
-        """
 
+        @raise: IndexError if no link is stored in the database (recently).
+        """
         statement = """
             SELECT protAcc
               FROM Link
-              WHERE mrnaAcc = %s;
-        """, mrnaAcc
+              WHERE mrnaAcc = %s
+              AND
+                (
+                   (protAcc IS NULL AND
+                    created >= DATE_SUB(CURDATE(), INTERVAL %s DAY))
+                 OR
+                   (protAcc IS NOT NULL AND
+                    created >= DATE_SUB(CURDATE(), INTERVAL %s DAY))
+                );
+        """, (mrnaAcc,
+              config.get('proteinLinkNoneLifetime'),
+              config.get('proteinLinkLifetime'))
 
         ret = self.query(statement)
-        if ret :
-            return ret[0][0]
-        return None
+        return ret[0][0]
     #getProtAcc
 
     def getmrnaAcc(self, protAcc) :
@@ -1238,25 +1247,34 @@ class Cache(Db) :
 
         @return: The mRNA accession number
         @rtype: string
-        """
 
+        @raise: IndexError if no link is stored in the database (recently).
+        """
         statement = """
             SELECT mrnaAcc
               FROM Link
-              WHERE protAcc = %s;
-        """, protAcc
+              WHERE protAcc = %s
+              AND
+                (
+                   (protAcc IS NULL AND
+                    created >= DATE_SUB(CURDATE(), INTERVAL %s DAY))
+                 OR
+                   (protAcc IS NOT NULL AND
+                    created >= DATE_SUB(CURDATE(), INTERVAL %s DAY))
+                );
+        """, (protAcc,
+              config.get('proteinLinkNoneLifetime'),
+              config.get('proteinLinkLifetime'))
 
         ret = self.query(statement)
-        if ret :
-            return ret[0][0]
-        return None
-
-    #getProtAcc
+        return ret[0][0]
+    #getmrnaAcc
 
     def insertLink(self, mrnaAcc, protAcc) :
         """
         Inserts the given mRNA and protein accession numbers into the Link
-        table.
+        table. If a record already exists for this mrnaAcc value, it is
+        replaced by the new data.
 
         SQL tables from internalDb:
             - Link ; mRNA and associated protein IDs.
@@ -1268,7 +1286,7 @@ class Cache(Db) :
         """
 
         statement = """
-            INSERT INTO Link
+            REPLACE INTO Link (mrnaAcc, protAcc)
               VALUES (%s, %s);
         """, (mrnaAcc, protAcc)
 
