@@ -34,7 +34,10 @@ lrgurl = "ftp://ftp.ebi.ac.uk/pub/databases/lrgex/"
 internalDb = "mutalyzer"
 
 # MySQL mapping database names.
-dbNames = "hg18", "hg19"
+dbNames = "hg18", "hg19", "mm10"
+
+# Default mapping database.
+defaultDb = "hg19"
 
 # MySQL username for the local databases (internalDb and dbNames).
 LocalMySQLuser = "mutalyzer"
@@ -47,6 +50,13 @@ LocalMySQLhost = "localhost"
 # error if used. Mutalyzer also implements its own reconnecting mechanism now
 # which is always on. See Trac issue #91.
 autoReconnect = no
+
+# Number of days a cached transcript->protein link from the NCBI is valid.
+proteinLinkLifetime = 30
+
+# Number of days a cached nonexisting transcript->protein link from the NCBI
+# is valid.
+proteinLinkNoneLifetime = 5
 
 
 #
