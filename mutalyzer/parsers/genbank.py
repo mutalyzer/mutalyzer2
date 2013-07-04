@@ -492,6 +492,7 @@ class GBparser():
         record.source_accession, record.source_version = biorecord.id.split('.')[:2]
         record.source_gi = biorecord.annotations['gi']
         record.organism = biorecord.annotations['organism']
+	record.transl_except = self.create_exception(biorecord) 
 
         # Todo: This will change once we support protein references
         if isinstance(biorecord.seq.alphabet, ProteinAlphabet):
@@ -691,4 +692,32 @@ class GBparser():
 
         return record
     #create_record
+
+    def create_exception(self, SeqRecordobject):
+	''' create-exception return a list with tuples of coordinates of start and end positions of Sec codon.
+	If your entry does not contain Sec, this function return an empty list.
+
+	Example:
+	>>> print create_exception(sepn1_seqrecordobject)
+	[(1918, 1920, 'Seq'), (12614, 12616, 'Seq')] 
+	Note: The sepn1_seqrecordobject is the SeqRecord object of NCBI Reference Sequence: NG_009930.1'''
+
+	sec_coord_list=[]
+	for feature in SeqRecordobject.features: 
+		if feature.type=="CDS":
+			if "transl_except" in feature.qualifiers:   
+				# We are looking for translational exception: single codon 
+				# the translation of which does not conform to genetic code
+				# indicated by transl_table. For more information see 
+				# http://www.ddbj.nig.ac.jp/sub/ref6-e.html#transl_except'''
+				for transl_except in feature.qualifiers["transl_except"]:
+					intermediate=re.split("[,:.]", transl_except.strip("()"))
+					sec_coord_list.append((int(intermediate[1]),int(intermediate[3]), intermediate[-1]))
+					#if
+				#for
+			#if
+		#if
+	#for
+        return sec_coord_list
+   #create_exception
 #GBparser
