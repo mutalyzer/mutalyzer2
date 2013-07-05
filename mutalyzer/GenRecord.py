@@ -94,6 +94,7 @@ class Locus(object) :
         self.location = []
         self.exon = None
         self.txTable = 1
+	self.transl_except=[]
         self.CM = None
         self.transcriptID = None
         self.proteinID = None

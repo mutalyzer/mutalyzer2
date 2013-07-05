@@ -492,7 +492,7 @@ class GBparser():
         record.source_accession, record.source_version = biorecord.id.split('.')[:2]
         record.source_gi = biorecord.annotations['gi']
         record.organism = biorecord.annotations['organism']
-	record.transl_except = self.create_exception(biorecord) 
+	##record.transl_except = self.create_exception(biorecord) 
 
         # Todo: This will change once we support protein references
         if isinstance(biorecord.seq.alphabet, ProteinAlphabet):
@@ -569,8 +569,10 @@ class GBparser():
                 self.link(myGene.rnaList, myGene.cdsList)
                 for i in myGene.rnaList :
                     if i.usable :
+
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
+			    
                             # Note: We use the last three characters of the
                             # locus_tag as a unique transcript version id.
                             # This is also used to for the protein-transcript
@@ -586,8 +588,10 @@ class GBparser():
                                     i.locus_tag)[0].zfill(3)
                             except IndexError:
                                 version = '000'
+
                             myTranscript = Locus(version)
                         else :
+
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
                         myTranscript.mRNA.positionList = i.positionList
@@ -607,6 +611,8 @@ class GBparser():
                             if i.link.qualifiers.has_key("transl_table") :
                                 myTranscript.txTable = \
                                     int(i.qualifiers["transl_table"][0])
+                            if "transl_except" in i.link.qualifiers :
+				myTranscript.transl_except=self.create_exception(i.link)
                         #if
                         myRealGene.transcriptList.append(myTranscript)
                     #if
@@ -614,6 +620,7 @@ class GBparser():
                 for i in myGene.cdsList :
                     if not i.linked and \
                        (i.usable or not geneDict[myGene.name].rnaList) :
+              
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
                             # Note: We use the last three characters of the
@@ -642,6 +649,8 @@ class GBparser():
                         if i.qualifiers.has_key("transl_table") :
                             myTranscript.txTable = \
                                 int(i.qualifiers["transl_table"][0])
+			if "transl_except" in i.qualifiers :
+				myTranscript.transl_except=self.create_exception(i)
                         myRealGene.transcriptList.append(myTranscript)
                         #if
                     #if
@@ -681,6 +690,8 @@ class GBparser():
                         if myCDS.qualifiers.has_key("transl_table") :
                             myTranscript.txTable = \
                                 int(i.qualifiers["transl_table"][0])
+                        if "transl_except" in myCDS.qualifiers :
+				myTranscript.transl_except=self.create_exception(myCDS)
                     #if
                     myRealGene.transcriptList.append(myTranscript)
                 #if
@@ -693,30 +704,20 @@ class GBparser():
         return record
     #create_record
 
-    def create_exception(self, SeqRecordobject):
-	''' create-exception return a list with tuples of coordinates of start and end positions of Sec codon.
-	If your entry does not contain Sec, this function return an empty list.
-
-	Example:
-	>>> print create_exception(sepn1_seqrecordobject)
-	[(1918, 1920, 'Seq'), (12614, 12616, 'Seq')] 
-	Note: The sepn1_seqrecordobject is the SeqRecord object of NCBI Reference Sequence: NG_009930.1'''
+    def create_exception(self, SeqFeature):
+	''' create-exception return a list with tuples of coordinates of start and end positions of uncanonical amino acids.
+	If your entry does not contain it, this function return an empty list.'''
 
 	sec_coord_list=[]
-	for feature in SeqRecordobject.features: 
-		if feature.type=="CDS":
-			if "transl_except" in feature.qualifiers:   
-				# We are looking for translational exception: single codon 
-				# the translation of which does not conform to genetic code
-				# indicated by transl_table. For more information see 
-				# http://www.ddbj.nig.ac.jp/sub/ref6-e.html#transl_except'''
-				for transl_except in feature.qualifiers["transl_except"]:
-					intermediate=re.split("[,:.]", transl_except.strip("()"))
-					sec_coord_list.append((int(intermediate[1]),int(intermediate[3]), intermediate[-1]))
-					#if
-				#for
-			#if
-		#if
+
+	# We are looking for translational exception: single codon 
+	# the translation of which does not conform to genetic code
+	# indicated by transl_table. For more information see 
+	# http://www.ddbj.nig.ac.jp/sub/ref6-e.html#transl_except'''
+	for transl_except in SeqFeature.qualifiers["transl_except"]:
+		intermediate=re.split("[,:.]", transl_except.strip("()"))
+		sec_coord_list.append((int(intermediate[1]),int(intermediate[3]), intermediate[-1], "g."))
+					
 	#for
         return sec_coord_list
    #create_exception
