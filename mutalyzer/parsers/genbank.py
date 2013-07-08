@@ -716,9 +716,17 @@ class GBparser():
 	# http://www.ddbj.nig.ac.jp/sub/ref6-e.html#transl_except'''
 	for transl_except in SeqFeature.qualifiers["transl_except"]:
 		intermediate=re.split("[,:.]", transl_except.strip("()"))
-		sec_coord_list.append((int(intermediate[1]),int(intermediate[3]), intermediate[-1], "g."))
+		triplet_dict={"Ala":"A", "Gly":"G", "Val":"V", "Leu":"L", "Ile":"I",
+			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
+                              "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
+			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P", 
+			      "Sec":"U", "Pyl":"O", "TERM":"Stop"}
+		sec_coord_list.append((int(intermediate[1]),int(intermediate[3]), triplet_dict[intermediate[-1]], "g."))
+
 					
 	#for
         return sec_coord_list
-   #create_exception
+    #create_exception
+   
+
 #GBparser

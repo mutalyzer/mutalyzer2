@@ -1312,8 +1312,8 @@ def _add_transcript_info(mutator, transcript, output):
             return
 
         if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
-            output.addMessage(__file__, 3, 'ESTOP',
-                              'In frame stop codon found.')
+		star_subst(cds_original,transcript)
+	
             return
 
         protein_original = cds_original.translate(table=transcript.txTable,
@@ -1879,3 +1879,59 @@ def check_variant(description, output):
 
     _add_batch_output(output)
 #check_variant
+def star_subst(sequence,transcript):
+	''' sequence need to nucleotide'''
+	t=transcript.transl_except
+	sequence_t=sequence.translate()
+	for j in t:
+		if j[3]!="c.":
+			converting_coordinates(t,transcript.CM)
+	for m in re.finditer("\*", str(sequence_t)):
+		coord = m.start()
+		start = coord * 3
+		end = coord * 3 + 2  #not important !!!!chain!!!!
+		for i in t:
+				if int(start)==int(i[0]) and int(end)==int(i[1]):
+					triplet= sequence[start:stop+1]
+					if t[2]=="Stop":	
+						transcript.txTable.stop_codons.append(triplet)
+						output.addMessage(__file__, 3, 'ESTOP',
+				                              'In frame stop codon found.')
+
+					else:
+						transcript.txTable.forward_table[triplet] = t[2]
+						transcript.txTable.back_table[t[2]] = triplet
+						if triplet in transcript.txTable.stop_codons:
+							del transcript.txTable.stop_codons[transcript.txTable.stop_codons.index(triplet)]					
+						output.addMessage(__file__, 2, 'WSTOP',
+                                                          'In frame stop codon was substituted according to CDS annotation.')
+					break
+		 output.addMessage(__file__, 3, 'ESTOP',
+                              'In frame stop codon found.')
+	return 
+
+def converting_coordinates(create_exception_output, transript_cm):
+	for i in create_exception_output:
+		start,end,aa,scheme=i
+		if scheme == 'g.':
+	        	coding_main_s, coding_offset_s = transript_cm.g2x(start)
+	        	if coding_offset_s != 0:
+	        	    # Todo: error message.
+	       		    return
+	        	coding_main_e, coding_offset_e = transript_cm.g2x(end)
+	        	if coding_offset_e != 0:
+	        	    # Todo: error message.
+	       		    return
+	        	start = coding_main_s
+			end = coding_main_e
+        	elif scheme == 'p.':
+	        	# I think this is in LRGs, look at it later.
+	        	start = start * 3
+			end = end * 3
+		elif scheme == "c.":
+			pass
+        	else:
+	        	# Todo: error message.
+			return
+	        create_exception_output[create_exception_output.index(i)] = start,end,aa,"c."
+	return   # Now `position` is an index in the CDS.	
