@@ -1880,12 +1880,15 @@ def check_variant(description, output):
     _add_batch_output(output)
 #check_variant
 def star_subst(sequence,transcript):
-	''' sequence need to nucleotide'''
+	'''This function change txTable (a Table with genetic code) according to annotations in gGenBank file.
+	input: 
+		sequence: nucleotide sequence of transcript
+		transcript: Locus object'''
 	t=transcript.transl_except
 	sequence_t=sequence.translate()
 	for j in t:
 		if j[3]!="c.":
-			converting_coordinates(t,transcript.CM)
+			j = converting_coordinates(j,transcript.CM)
 	for m in re.finditer("\*", str(sequence_t)):
 		coord = m.start()
 		start = coord * 3
@@ -1911,27 +1914,36 @@ def star_subst(sequence,transcript):
 	return 
 
 def converting_coordinates(create_exception_output, transript_cm):
-	for i in create_exception_output:
-		start,end,aa,scheme=i
-		if scheme == 'g.':
-	        	coding_main_s, coding_offset_s = transript_cm.g2x(start)
-	        	if coding_offset_s != 0:
-	        	    # Todo: error message.
-	       		    return
-	        	coding_main_e, coding_offset_e = transript_cm.g2x(end)
-	        	if coding_offset_e != 0:
-	        	    # Todo: error message.
-	       		    return
-	        	start = coding_main_s
-			end = coding_main_e
-        	elif scheme == 'p.':
-	        	# I think this is in LRGs, look at it later.
-	        	start = start * 3
-			end = end * 3
-		elif scheme == "c.":
-			pass
-        	else:
-	        	# Todo: error message.
-			return
-	        create_exception_output[create_exception_output.index(i)] = start,end,aa,"c."
-	return   # Now `position` is an index in the CDS.	
+	''' This function converts coordinates with regard to  CDS 
+	input: 
+		create_exception_output: tuple, which contain information about substitutions
+		transcript_cm: Locus.CM object
+	'''
+	
+	start,end,aa,scheme=create_exception_output
+	if scheme == 'g.':
+	        coding_main_s, coding_offset_s = transript_cm.g2x(start)
+	        if coding_offset_s != 0:
+	        	 output.addMessage(__file__, 3, 'EOFFSET',
+                                                          'Reading frame offset')
+	       		 return
+	        coding_main_e, coding_offset_e = transript_cm.g2x(end)
+	        if coding_offset_e != 0:
+	        	 output.addMessage(__file__, 3, 'EOFFSET',
+                                                          'Reading frame offset')
+	       		  return
+	        start = coding_main_s
+		end = coding_main_e
+        elif scheme == 'p.':
+	        # I think this is in LRGs, look at it later.
+	        start = start * 3
+		end = end * 3
+	elif scheme == "c.":
+		pass
+        else:
+	       output.addMessage(__file__, 3, 'ESCHEME',
+                                                          'Error in transl_exception object') # TODO: Normal description
+		return
+	         
+	return   start,end,aa,"c." # Now `position` is an index in the CDS.	
+
