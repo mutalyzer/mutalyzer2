@@ -1314,29 +1314,15 @@ def _add_transcript_info(mutator, transcript, output):
         #if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
         #    star_subst(cds_original,transcript)
 
-        protein_original = cds_original.translate(table=transcript.txTable)
-                                                 
-        for start, stop, aa, scheme in transcript.transl_except:
-            if scheme!="p.":
-                s, e, a, sch = converting_coordinates((start, stop, aa, scheme), transcript.CM)
-            if protein_original[s] == '*':
-                protein_original=protein_original.tomutable()
-                protein_original[s] = aa
-                protein_original=protein_original.toseq()
+        protein_original = cds_original.translate(table = transcript.txTable)
+        protein_original = star_subst(protein_original, transcript)
 
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
-                              'In frame stop codon.')
+                              'In frame stop codon.')                            #&&&
 
-        protein_variant = cds_variant.translate(table=transcript.txTable)
-        for start, stop, aa, scheme in transcript.transl_except:
-            if scheme!="p.":
-                s, e, a, sch = converting_coordinates((start, stop, aa, scheme), transcript.CM)
-            if protein_variant[s] == '*':
-                protein_variant=protein_variant.tomutable()
-                protein_variant[s] = aa
-                protein_variant=protein_variant.toseq()
-       # print protein_original, "\n", protein_variant
+        protein_variant = cds_variant.translate(table = transcript.txTable)
+        protein_variant = star_subst(protein_variant, transcript)
 
         # Note: addOutput('origCDS', ...) was first before the possible
         #       reverse complement operation above.
@@ -1783,15 +1769,14 @@ def check_variant(description, output):
             if not len(cds_original) % 3:
                 try:
                     # FIXME this is a bit of a rancid fix.
-                    protein_original = cds_original.translate(table=transcript.txTable,
-                                                              cds=True,
-                                                              to_stop=True)
+                    protein_original = star_subst(cds_original.translate(), transcript).split("*")[0]
+                    print "once more", protein_original
                 except Bio.Data.CodonTable.TranslationError:
                     output.addMessage(__file__, 4, "ETRANS", "Original " \
                                       "CDS could not be translated.")
                     return
-                protein_variant = cds_variant.translate(table=transcript.txTable,
-                                                        to_stop=True)
+                protein_variant = star_subst(cds_variant.translate(), transcript).split("*")[0]
+                print "once more" , protein_variant
                 try:
                     cds_length = util.cds_length(
                         mutator.shift_sites(transcript.CDS.positionList))
@@ -1927,8 +1912,23 @@ def converting_coordinates(create_exception_output, transript_cm):
         pass
     else:
         output.addMessage(__file__, 3, 'ESCHEME',
-                                                         'Error in transl_exception object') # TODO: Normal description
+                          'Error in transl_exception object') # TODO: Normal description
         return
              
-    return   start,end,aa,"c." # Now `position` is an index in the CDS.    
+    return   start,end,aa,"p." # Now `position` is an index in the CDS.    
+
+def star_subst(protein, transcript):
+    ''' The function substitute stop codons in reference sequence 
+         if there is information about it in GenBank file'''
+    for start, stop, aa, scheme in transcript.transl_except:
+            if scheme!="p.":
+                s, e, a, sch = converting_coordinates((start, stop, aa, scheme), transcript.CM)
+                transcript.transl_except[transcript.transl_except.index((start, stop, aa, scheme))] = s, e, a, sch
+                start, stop, aa, scheme = s, e, a, sch
+    
+            if protein[start] == '*':
+                protein=protein.tomutable()
+                protein[start] = aa
+                protein=protein.toseq()
+    return protein 
 
