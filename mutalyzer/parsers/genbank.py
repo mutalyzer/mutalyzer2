@@ -492,7 +492,6 @@ class GBparser():
         record.source_accession, record.source_version = biorecord.id.split('.')[:2]
         record.source_gi = biorecord.annotations['gi']
         record.organism = biorecord.annotations['organism']
-	##record.transl_except = self.create_exception(biorecord) 
 
         # Todo: This will change once we support protein references
         if isinstance(biorecord.seq.alphabet, ProteinAlphabet):
@@ -718,10 +717,10 @@ class GBparser():
 		intermediate=re.split("[,:.]", transl_except.strip("()"))
 		triplet_dict={"Ala":"A", "Gly":"G", "Val":"V", "Leu":"L", "Ile":"I",
 			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
-                              "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
+                  "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
 			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P", 
 			      "Sec":"U", "Pyl":"O", "TERM":"Stop"}
-		sec_coord_list.append((int(intermediate[1]),int(intermediate[3]), triplet_dict[intermediate[-1]], "g."))
+		sec_coord_list.append((int(intermediate[1]), triplet_dict[intermediate[-1]], "g."))
 
 					
 	#for

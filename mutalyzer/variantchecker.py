@@ -31,6 +31,7 @@ from mutalyzer import GenRecord
 from mutalyzer import Db
 
 
+
 # Exceptions used (privately) in this module.
 class _VariantError(Exception): pass
 class _RawVariantError(_VariantError): pass
@@ -1315,14 +1316,14 @@ def _add_transcript_info(mutator, transcript, output):
         #    star_subst(cds_original,transcript)
 
         protein_original = cds_original.translate(table = transcript.txTable)
-        protein_original = star_subst(protein_original, transcript)
+        protein_original = star_subst(protein_original, transcript).split("*")[0]
 
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
-                              'In frame stop codon.')                            #&&&
+                              'In frame stop codon.')                            
 
         protein_variant = cds_variant.translate(table = transcript.txTable)
-        protein_variant = star_subst(protein_variant, transcript)
+        protein_variant = star_subst(protein_variant, transcript).split("*")[0]
 
         # Note: addOutput('origCDS', ...) was first before the possible
         #       reverse complement operation above.
@@ -1539,7 +1540,7 @@ def process_variant(mutator, description, record, output):
                           IUPAC.unambiguous_dna)
                 if transcript.CM.orientation == -1:
                     cds = Bio.Seq.reverse_complement(cds)
-                protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)
+                protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)    #&&&
                 mutator.orig = protein
                 mutator.mutated = protein
 
@@ -1770,13 +1771,11 @@ def check_variant(description, output):
                 try:
                     # FIXME this is a bit of a rancid fix.
                     protein_original = star_subst(cds_original.translate(), transcript).split("*")[0]
-                    print "once more", protein_original
                 except Bio.Data.CodonTable.TranslationError:
                     output.addMessage(__file__, 4, "ETRANS", "Original " \
                                       "CDS could not be translated.")
                     return
                 protein_variant = star_subst(cds_variant.translate(), transcript).split("*")[0]
-                print "once more" , protein_variant
                 try:
                     cds_length = util.cds_length(
                         mutator.shift_sites(transcript.CDS.positionList))
@@ -1890,24 +1889,17 @@ def converting_coordinates(create_exception_output, transript_cm):
         transcript_cm: Locus.CM object
     '''
     
-    start,end,aa,scheme=create_exception_output
+    start,aa,scheme=create_exception_output
     if scheme == 'g.':
             coding_main_s, coding_offset_s = transript_cm.g2x(start)
             if coding_offset_s != 0:
                  output.addMessage(__file__, 3, 'EOFFSET',
                                                           'Reading frame offset')
                  return
-            coding_main_e, coding_offset_e = transript_cm.g2x(end)
-            if coding_offset_e != 0:
-                 output.addMessage(__file__, 3, 'EOFFSET',
-                                                          'Reading frame offset')
-                 return
             start = coding_main_s/3
-            end = coding_main_e/3
     elif scheme == 'c.':
             # I think this is in LRGs, look at it later.
             start = start/3
-            end = end/3
     elif scheme == "p.":
         pass
     else:
@@ -1915,20 +1907,22 @@ def converting_coordinates(create_exception_output, transript_cm):
                           'Error in transl_exception object') # TODO: Normal description
         return
              
-    return   start,end,aa,"p." # Now `position` is an index in the CDS.    
+    return   start, aa,"p." # Now `position` is an index in the CDS.    
 
 def star_subst(protein, transcript):
     ''' The function substitute stop codons in reference sequence 
          if there is information about it in GenBank file'''
-    for start, stop, aa, scheme in transcript.transl_except:
+    for start, aa, scheme in transcript.transl_except:
             if scheme!="p.":
-                s, e, a, sch = converting_coordinates((start, stop, aa, scheme), transcript.CM)
-                transcript.transl_except[transcript.transl_except.index((start, stop, aa, scheme))] = s, e, a, sch
-                start, stop, aa, scheme = s, e, a, sch
+                s, a, sch = converting_coordinates((start, aa, scheme), transcript.CM)
+                transcript.transl_except[transcript.transl_except.index((start, aa, scheme))] = s, a, sch
+                start,  aa, scheme = s,  a, sch
     
             if protein[start] == '*':
                 protein=protein.tomutable()
                 protein[start] = aa
+                # output.addMessage(__file__, 2, 'WSTOP',
+                #          'The stop codons were substituted according to GenBank annotation')
                 protein=protein.toseq()
     return protein 
 
