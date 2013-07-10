@@ -193,11 +193,16 @@ def create_record(data):
         # regions are given
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
+            for exc in CDS.getElementsByTagName("translation_exception"):
+               codon = _attr2dict(exc.attributes)["codon"]
+               aa=_get_content(exc, "sequence")[0]
+               transcription.transl_except.append((codon, aa, "p."))
             coordinates = _get_coordinates(CDS, lrg_id)
             CDSPList.positionList.extend(\
             [int(coordinates["start"]), int(coordinates["end"])])
         CDSPList.positionList.sort()
-
+            
+                
         # If there is a CDS position List set the transcriptflag to True
         if CDSPList.positionList:
             transcription.molType = 'c'
