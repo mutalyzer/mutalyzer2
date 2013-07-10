@@ -1311,19 +1311,24 @@ def _add_transcript_info(mutator, transcript, output):
             output.addMessage(__file__, 4, 'ENODNA',
                               'Invalid letters in reference sequence.')
             return
-
-        #if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
-        #    star_subst(cds_original,transcript)
-
+    
         protein_original = cds_original.translate(table = transcript.txTable)
         protein_original = star_subst(protein_original, transcript).split("*")[0]
 
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
-                              'In frame stop codon.')                            
-
-        protein_variant = cds_variant.translate(table = transcript.txTable)
-        protein_variant = star_subst(protein_variant, transcript).split("*")[0]
+                              'In frame stop codon.')   
+        protein_variant = cds_variant.translate(table = transcript.txTable)                         
+        triplets = define_triplet(cds_original, transcript.transl_except)
+        protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets)
+        protein_variant = protein_variant.split("*")[0] 
+        #output.addMessage(__file__, 2, 'WSUBST',
+        #                      ' The uncanonical amino acids were found and substituted in \
+        #                        predicted protein according to translation exception annotation to original protein. \
+        #                        Context was not taken into account.  ')
+        # add Selenocysteine recognition. [see substitute_variant function]
+        # protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets, True)    
+        #&&&
 
         # Note: addOutput('origCDS', ...) was first before the possible
         #       reverse complement operation above.
@@ -1540,7 +1545,7 @@ def process_variant(mutator, description, record, output):
                           IUPAC.unambiguous_dna)
                 if transcript.CM.orientation == -1:
                     cds = Bio.Seq.reverse_complement(cds)
-                protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)    #&&&
+                protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)    
                 mutator.orig = protein
                 mutator.mutated = protein
 
@@ -1921,8 +1926,33 @@ def star_subst(protein, transcript):
             if protein[start] == '*':
                 protein=protein.tomutable()
                 protein[start] = aa
-                # output.addMessage(__file__, 2, 'WSTOP',
+                #output.addMessage(__file__, 2, 'WSTOP',
                 #          'The stop codons were substituted according to GenBank annotation')
                 protein=protein.toseq()
     return protein 
-
+def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
+    '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
+       Unfortunately, the function does not check context around substituted amino_acid, but it has that possibility in future'''
+    result=[]
+    prot = prot_seq.tomutable()
+    for triplet in triplets:
+        for i in range(len(nucl_seq)/3):
+            if str(nucl_seq[i*3:i*3+3]) == triplet:
+                if Sec:
+                    if context(sequence, i*3): # TODO: context function (return False or True in depend on Sec context). 
+                                               #The function never go on this way, while we don't write the context(?) function. 
+                       prot[i] =  triplets[triplet]
+                else:
+                    prot[i] =  triplets[triplet]
+    prot = prot.toseq()    
+    return  prot
+def define_triplet(sequence, transl_except):
+     ''' The function goes through the list of transl_except and makes a dictionary: {Triplet:Uncanonical_Amino_Acid}. 
+        It return triplet according to coordinates of exception in transl_except'''
+     triplets={}
+     for start, aa, scheme in transl_except:
+        if scheme!="p.":
+            raise Exception("kosyaaak")
+        else:
+            triplets[str(sequence[start*3:start*3+3])] = aa
+     return triplets

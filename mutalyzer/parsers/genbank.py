@@ -708,7 +708,6 @@ class GBparser():
 	If your entry does not contain it, this function return an empty list.'''
 
 	sec_coord_list=[]
-
 	# We are looking for translational exception: single codon 
 	# the translation of which does not conform to genetic code
 	# indicated by transl_table. For more information see 
@@ -721,7 +720,6 @@ class GBparser():
 			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P", 
 			      "Sec":"U", "Pyl":"O", "TERM":"Stop"}
 		sec_coord_list.append((int(intermediate[1]), triplet_dict[intermediate[-1]], "g."))
-
 					
 	#for
         return sec_coord_list
