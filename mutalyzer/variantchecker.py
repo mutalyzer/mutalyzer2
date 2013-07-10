@@ -1951,8 +1951,6 @@ def define_triplet(sequence, transl_except):
         It return triplet according to coordinates of exception in transl_except'''
      triplets={}
      for start, aa, scheme in transl_except:
-        if scheme!="p.":
-            raise Exception("kosyaaak")
-        else:
+        if scheme == "p.":
             triplets[str(sequence[start*3:start*3+3])] = aa
      return triplets
