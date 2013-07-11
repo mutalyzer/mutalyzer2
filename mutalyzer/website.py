@@ -897,7 +897,8 @@ class Check:
             'browserLink'        : browser_link,
             'extractedDescription' : (extracted, urllib.quote(extracted)),
             'extractedProtein'   : (extractedProt, urllib.quote(extractedProt)),
-            'reference_exceptions' : output.getOutput('reference_exceptions')
+            'reference_exceptions' : output.getOutput('reference_exceptions'),
+            'predicted_exceptions' : output.getOutput('predicted_exceptions')
         }
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)

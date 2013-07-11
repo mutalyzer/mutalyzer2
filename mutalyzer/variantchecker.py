@@ -1319,27 +1319,19 @@ def _add_transcript_info(mutator, transcript, output):
         triplets = define_triplet(cds_original, transcript)
         protein_original = cds_original.translate(table = transcript.txTable)
         protein_original, res = star_subst(protein_original, transcript, triplets, aa_dict_r, output, True)
-        protein_original=protein_original.split("*")[0]
         if res:
-         output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein (transcript:{0}, protein:{1}). Some amino acids were changed according to GenBank annotation (see CDS exception table below)'.format(transcript.transcriptID, transcript.proteinID))
+         output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein (transcript:{0}, protein:{1}). Some amino acids were changed according to GenBank annotation (see  table below CDS information)'.format(transcript.transcriptID, transcript.proteinID))
          
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
-        protein_variant = cds_variant.translate(table = transcript.txTable)                         
-        
-        protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets)
-        protein_variant = protein_variant.split("*")[0] 
-        result_n=[]
-        #if result:
-           # for i in result:
-             #   if i <= len(protein_variant):
-              #      result_n.append(i+1)
-       # if result_n:
-          #  output.addMessage(__file__, 2, 'WSUBST',
-          #                    ' The noncanonical amino acids were found and substituted in \
-          #                      predicted protein   according to translation exception annotation to original protein.Positions: {0}. \
-          #                      Context was not taken into account.'.format(result_n))
+        protein_variant = cds_variant.translate(table = transcript.txTable)                                 
+        protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript,output, True)
+        if result:
+             output.addMessage(__file__, 2, 'WSUBST',
+                              ' The noncanonical amino acids were found and substituted in \
+                                predicted protein (transcript:{0}, protein:{1}) according to translation exception annotation to original protein. \
+                                !Context was not taken into account! (See table below CDS information) '.format(transcript.transcriptID, transcript.proteinID))
         #add Selenocysteine recognition. [see substitute_variant function]
         #protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets, True)    
         #&&&
@@ -1348,7 +1340,6 @@ def _add_transcript_info(mutator, transcript, output):
         #       reverse complement operation above.
         output.addOutput('origCDS', cds_original)
         output.addOutput("newCDS", cds_variant[:(len(str(protein_variant)) + 1) * 3])
-
         output.addOutput('oldprotein', protein_original + '*')
 
         # Todo: Don't generate the fancy HTML protein views here, do this in
@@ -1793,15 +1784,13 @@ def check_variant(description, output):
                     # FIXME this is a bit of a rancid fix.
                     triplets = define_triplet(cds_original, transcript)
                     protein_original, res = star_subst(cds_original.translate(), transcript, triplets, aa_dict_r, output, False)
-                    protein_original=protein_original.split("*")[0]
                 except Bio.Data.CodonTable.TranslationError:
                     output.addMessage(__file__, 4, "ETRANS", "Original " \
                                       "CDS could not be translated.")
                     return
                 protein_variant = cds_variant.translate(table = transcript.txTable)                         
                 
-                protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets)
-                protein_variant = protein_variant.split("*")[0] 
+                protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript, output, False)
                 #add Selenocysteine recognition. [see substitute_variant function]
                 #protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets, True)    
                 #&&&
@@ -1958,25 +1947,35 @@ def star_subst(protein, transcript, triplets, aa_dict_r, output, flag):
                 protein[start] = aa
                 protein=protein.toseq()
  
-    return protein, res 
-def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
+    return protein.split("*")[0], res 
+def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, flag, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
        Unfortunately, the function does not check context around substituted amino_acid, but it has that possibility in future'''
-    result= {}
+    result = False
+    exceptions = []
     prot = prot_seq.tomutable()
     for triplet in triplets:
         for i in range(len(nucl_seq)/3):
             if str(nucl_seq[i*3:i*3+3]) == triplet:
-                if Sec:
-                    if context(sequence, i*3): # TODO: context function (return False or True in depend on Sec context). 
+                result = True
+                #if Sec:
+                    #if context(sequence, i*3): # TODO: context function (return False or True in depend on Sec context). 
                                                #The function never go on this way, while we don't write the context(?) function. 
-                       result[i] = [triplet, prot[i], triplets[triplet]]
-                       prot[i] =  triplets[triplet]
+                     #  genomic = transcript.CM.x2g(i*3, 0)
+                      # output.addOutput('predicted_exceptions',[str(i+1), str(i*3+1) + ".." + str(i*3+3), str(genomic) + ".." + str(genomic+2), triplet, prot[i], triplets[triplet]])
+                     #  prot[i] =  triplets[triplet]
                     
-                else:
-                    result[i] = [triplet, prot[i], triplets[triplet]]
-                    prot[i] =  triplets[triplet]
-    prot = prot.toseq()    
+                if flag:
+                    genomic = transcript.CM.x2g(i*3, 0)                
+                    exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic) + ".." + str(genomic+2), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
+                prot[i] =  triplets[triplet]
+    prot = prot.toseq()   
+    prot = prot.split("*")[0]
+    for i in  exceptions:
+        if i[0]-1 <= len(prot):
+            output.addOutput('predicted_exceptions', i)
+        else:
+            break
     return  prot, result
 def define_triplet(sequence, transcript):
      ''' The function goes through the list of transl_except and makes a dictionary: {Triplet:Uncanonical_Amino_Acid}. 
