@@ -55,6 +55,11 @@ class _InvalidExonError(_RawVariantError):
 class _InvalidIntronError(_RawVariantError):
     def __init__(self, intron):
         self.intron = intron
+aa_dict = {"Ala":"A", "Gly":"G", "Val":"V", "Leu":"L", "Ile":"I",
+			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
+                  "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
+			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P", 
+			      "Sec":"U", "Pyl":"O", "TERM":"Stop"}
 
 
 def _is_coding_intronic(loc):
@@ -1311,27 +1316,31 @@ def _add_transcript_info(mutator, transcript, output):
             output.addMessage(__file__, 4, 'ENODNA',
                               'Invalid letters in reference sequence.')
             return
-    
+        triplets = define_triplet(cds_original, transcript)
         protein_original = cds_original.translate(table = transcript.txTable)
-        protein_original, res = star_subst(protein_original, transcript)
+        protein_original, res = star_subst(protein_original, transcript, triplets, aa_dict_r)
         protein_original=protein_original.split("*")[0]
         if res:
-            for i in res:
-                output.addMessage(__file__,2, 'WSTOP', 'The stop codon was substituted in position {0} according to GenBank annotation'.format(i))
+         output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein. Some amino acids were changed according to GenBank annotation')
+         for i in res:
+            output.addMessage(__file__, 1, "THMX", "{0}\n {1}\t {2} {3} {4} {5} {6} {7}".format(i[0],i[1],i[2],i[3],i[4],i[5],i[6],i[7]))
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
         protein_variant = cds_variant.translate(table = transcript.txTable)                         
-        triplets = define_triplet(cds_original, transcript.transl_except)
+        
         protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets)
         protein_variant = protein_variant.split("*")[0] 
-        if result:
-            for i in result:
-                if i <= len(protein_variant):
-                    output.addMessage(__file__, 2, 'WSUBST',
-                              ' The uncanonical amino acid was found and substituted in \
-                                predicted protein   according to translation exception annotation to original protein.Position: {0}. \
-                                Context was not taken into account.'.format(i+1))
+        result_n=[]
+        #if result:
+           # for i in result:
+             #   if i <= len(protein_variant):
+              #      result_n.append(i+1)
+       # if result_n:
+          #  output.addMessage(__file__, 2, 'WSUBST',
+          #                    ' The noncanonical amino acids were found and substituted in \
+          #                      predicted protein   according to translation exception annotation to original protein.Positions: {0}. \
+          #                      Context was not taken into account.'.format(result_n))
         #add Selenocysteine recognition. [see substitute_variant function]
         #protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets, True)    
         #&&&
@@ -1350,10 +1359,12 @@ def _add_transcript_info(mutator, transcript, output):
         if not protein_variant or protein_variant[0] != 'M':
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
-            util.print_protein_html(protein_original + '*', 0, 0, output,
+            if protein_original[0]!="M":
+                util.print_protein_html('M' + protein_original[1:] + '*', 0, 0, output,
                                     'oldProteinFancy')
-            util.print_protein_html(protein_original + '*', 0, 0, output,
+                util.print_protein_html('M'+ protein_original[1:] + '*', 0, 0, output,
                                     'oldProteinFancyText', text=True)
+                output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in reference protein'.format(cds_original[0:3]))
             if str(cds_variant[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
@@ -1781,14 +1792,15 @@ def check_variant(description, output):
             if not len(cds_original) % 3:
                 try:
                     # FIXME this is a bit of a rancid fix.
-                    protein_original, res = star_subst(cds_original.translate(), transcript)
+                    triplets = define_triplet(cds_original, transcript)
+                    protein_original, res = star_subst(cds_original.translate(), transcript, triplets, aa_dict_r)
                     protein_original=protein_original.split("*")[0]
                 except Bio.Data.CodonTable.TranslationError:
                     output.addMessage(__file__, 4, "ETRANS", "Original " \
                                       "CDS could not be translated.")
                     return
                 protein_variant = cds_variant.translate(table = transcript.txTable)                         
-                triplets = define_triplet(cds_original, transcript.transl_except)
+                
                 protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets)
                 protein_variant = protein_variant.split("*")[0] 
                 #add Selenocysteine recognition. [see substitute_variant function]
@@ -1916,7 +1928,6 @@ def converting_coordinates(create_exception_output, transript_cm):
                  return
             start = coding_main_s/3
     elif scheme == 'c.':
-            # I think this is in LRGs, look at it later.
             start = start/3
     elif scheme == "p.":
         pass
@@ -1927,27 +1938,29 @@ def converting_coordinates(create_exception_output, transript_cm):
              
     return   start, aa,"p." # Now `position` is an index in the CDS.    
 
-def star_subst(protein, transcript):
+def star_subst(protein, transcript, triplets, aa_dict_r):
     ''' The function substitute stop codons in reference sequence 
          if there is information about it in GenBank file'''
-    res=[]
+    res = [("position (p.) \t", "posinion (c.) \t", "position (g.) \t", "triplet", "original aa", "substituted aa", "transcriptID", "proteinID")]
+    rev_triplets = reverse_dict(triplets)
     for start, aa, scheme in transcript.transl_except:
             
-            if scheme!="p.":
-                s, a, sch = converting_coordinates((start, aa, scheme), transcript.CM)
-                transcript.transl_except[transcript.transl_except.index((start, aa, scheme))] = s, a, sch
-                start,  aa, scheme = s,  a, sch
+           # if scheme!="p.":
+           #     s, a, sch = converting_coordinates((start, aa, scheme), transcript.CM)
+           #     transcript.transl_except[transcript.transl_except.index((start, aa, scheme))] = s, a, sch
+           #     start,  aa, scheme = s,  a, sch
     
             if protein[start] == '*':
                 protein=protein.tomutable()
+                genomic = transcript.CM.x2g(start*3, 0)
+                res.append((str(start+1) + "\t", str(start*3+1) + ".." + str(start*3+3) +"\t", str(genomic) + ".." + str(genomic+2) + "\t", rev_triplets[aa], protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')', transcript.transcriptID, transcript.proteinID))
                 protein[start] = aa
-                res.append(start+1)
                 protein=protein.toseq()
     return protein, res 
 def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
        Unfortunately, the function does not check context around substituted amino_acid, but it has that possibility in future'''
-    result=[]
+    result= {}
     prot = prot_seq.tomutable()
     for triplet in triplets:
         for i in range(len(nucl_seq)/3):
@@ -1955,20 +1968,32 @@ def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
                 if Sec:
                     if context(sequence, i*3): # TODO: context function (return False or True in depend on Sec context). 
                                                #The function never go on this way, while we don't write the context(?) function. 
+                       result[i] = [triplet, prot[i], triplets[triplet]]
                        prot[i] =  triplets[triplet]
-                       result.append(i)
+                    
                 else:
+                    result[i] = [triplet, prot[i], triplets[triplet]]
                     prot[i] =  triplets[triplet]
-                 
-                    result.append(i)
     prot = prot.toseq()    
     return  prot, result
-def define_triplet(sequence, transl_except):
+def define_triplet(sequence, transcript):
      ''' The function goes through the list of transl_except and makes a dictionary: {Triplet:Uncanonical_Amino_Acid}. 
         It return triplet according to coordinates of exception in transl_except'''
      triplets={}
-     for start, aa, scheme in transl_except:
+     for start, aa, scheme in transcript.transl_except:
+         if scheme!="p.":
+                s, a, sch = converting_coordinates((start, aa, scheme), transcript.CM)
+                transcript.transl_except[transcript.transl_except.index((start, aa, scheme))] = s, a, sch
+                start,  aa, scheme = s,  a, sch
          if scheme == "p.":
             triplets[str(sequence[start*3:start*3+3])] = aa
-
+     print triplets
      return triplets
+
+def reverse_dict(dictionary):
+    reversed_dict = {}
+    for key in dictionary:
+        reversed_dict[dictionary[key]] = key
+    return reversed_dict
+aa_dict_r = reverse_dict(aa_dict)
+aa_dict_r["*"] = "Stop"
