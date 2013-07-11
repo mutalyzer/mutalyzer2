@@ -200,6 +200,26 @@
                 <tr>
                 </tr>
               </table>
+              <br>
+              <b><span class = "helper" title = "Coding Sequence">CDS</span>
+              exceptions</b><br>
+              <table class = "raTable">
+                <tr>
+                  <td></td>
+                  <td>Position (p.)</td>
+                  <td>Position (c.)</td>
+                  <td>Position (g.)</td>
+                  <td>Triplet</td>
+                  <td>Original amino acid</td>
+                  <td>Substituted amino acid</td>
+                </tr>
+                <tr tal:repeat = "i reference_exceptions">
+                    <td tal:content = "repeat/i/number"></td>
+                    <td tal:repeat = "j i" tal:content = "j"></td>
+                </tr>
+                <tr>
+                </tr>
+              </table>
             </div>
           </div> <!-- background color -->
           <br>

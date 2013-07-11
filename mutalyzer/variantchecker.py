@@ -1318,12 +1318,11 @@ def _add_transcript_info(mutator, transcript, output):
             return
         triplets = define_triplet(cds_original, transcript)
         protein_original = cds_original.translate(table = transcript.txTable)
-        protein_original, res = star_subst(protein_original, transcript, triplets, aa_dict_r)
+        protein_original, res = star_subst(protein_original, transcript, triplets, aa_dict_r, output, True)
         protein_original=protein_original.split("*")[0]
         if res:
-         output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein. Some amino acids were changed according to GenBank annotation')
-         for i in res:
-            output.addMessage(__file__, 1, "THMX", "{0}\n {1}\t {2} {3} {4} {5} {6} {7}".format(i[0],i[1],i[2],i[3],i[4],i[5],i[6],i[7]))
+         output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein (transcript:{0}, protein:{1}). Some amino acids were changed according to GenBank annotation (see CDS exception table below)'.format(transcript.transcriptID, transcript.proteinID))
+         
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
@@ -1793,7 +1792,7 @@ def check_variant(description, output):
                 try:
                     # FIXME this is a bit of a rancid fix.
                     triplets = define_triplet(cds_original, transcript)
-                    protein_original, res = star_subst(cds_original.translate(), transcript, triplets, aa_dict_r)
+                    protein_original, res = star_subst(cds_original.translate(), transcript, triplets, aa_dict_r, output, False)
                     protein_original=protein_original.split("*")[0]
                 except Bio.Data.CodonTable.TranslationError:
                     output.addMessage(__file__, 4, "ETRANS", "Original " \
@@ -1938,10 +1937,10 @@ def converting_coordinates(create_exception_output, transript_cm):
              
     return   start, aa,"p." # Now `position` is an index in the CDS.    
 
-def star_subst(protein, transcript, triplets, aa_dict_r):
+def star_subst(protein, transcript, triplets, aa_dict_r, output, flag):
     ''' The function substitute stop codons in reference sequence 
          if there is information about it in GenBank file'''
-    res = [("position (p.) \t", "posinion (c.) \t", "position (g.) \t", "triplet", "original aa", "substituted aa", "transcriptID", "proteinID")]
+    res = False
     rev_triplets = reverse_dict(triplets)
     for start, aa, scheme in transcript.transl_except:
             
@@ -1951,11 +1950,14 @@ def star_subst(protein, transcript, triplets, aa_dict_r):
            #     start,  aa, scheme = s,  a, sch
     
             if protein[start] == '*':
+                res=True
                 protein=protein.tomutable()
                 genomic = transcript.CM.x2g(start*3, 0)
-                res.append((str(start+1) + "\t", str(start*3+1) + ".." + str(start*3+3) +"\t", str(genomic) + ".." + str(genomic+2) + "\t", rev_triplets[aa], protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')', transcript.transcriptID, transcript.proteinID))
+                if flag:
+                    output.addOutput('reference_exceptions', [str(start+1), str(start*3+1) + ".." + str(start*3+3), str(genomic) + ".." + str(genomic+2) , rev_triplets[aa], protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')'])
                 protein[start] = aa
                 protein=protein.toseq()
+ 
     return protein, res 
 def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
