@@ -194,7 +194,7 @@ def create_record(data):
         CDSPList = GenRecord.PList()
         for CDS in tData.getElementsByTagName("coding_region"):
             for exc in CDS.getElementsByTagName("translation_exception"):
-               codon = _attr2dict(exc.attributes)["codon"]
+               codon = _attr2dict(exc.attributes)["codon"] - 1
                aa=_get_content(exc, "sequence")[0]
                transcription.transl_except.append((codon, aa, "p."))
             coordinates = _get_coordinates(CDS, lrg_id)

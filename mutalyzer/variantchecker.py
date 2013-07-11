@@ -1313,8 +1313,11 @@ def _add_transcript_info(mutator, transcript, output):
             return
     
         protein_original = cds_original.translate(table = transcript.txTable)
-        protein_original = star_subst(protein_original, transcript, output).split("*")[0]
-
+        protein_original, res = star_subst(protein_original, transcript)
+        protein_original=protein_original.split("*")[0]
+        if res:
+            for i in res:
+                output.addMessage(__file__,2, 'WSTOP', 'The stop codon was substituted in position {0} according to GenBank annotation'.format(i))
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
@@ -1326,8 +1329,8 @@ def _add_transcript_info(mutator, transcript, output):
             for i in result:
                 if i <= len(protein_variant):
                     output.addMessage(__file__, 2, 'WSUBST',
-                              ' The uncanonical amino acids were found and substituted in \
-                                predicted protein  (position: {0}) according to translation exception annotation to original protein. \
+                              ' The uncanonical amino acid was found and substituted in \
+                                predicted protein   according to translation exception annotation to original protein.Position: {0}. \
                                 Context was not taken into account.'.format(i+1))
         #add Selenocysteine recognition. [see substitute_variant function]
         #protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets, True)    
@@ -1778,8 +1781,8 @@ def check_variant(description, output):
             if not len(cds_original) % 3:
                 try:
                     # FIXME this is a bit of a rancid fix.
-                    protein_original = star_subst(cds_original.translate(), transcript, output).split("*")[0]
-
+                    protein_original, res = star_subst(cds_original.translate(), transcript)
+                    protein_original=protein_original.split("*")[0]
                 except Bio.Data.CodonTable.TranslationError:
                     output.addMessage(__file__, 4, "ETRANS", "Original " \
                                       "CDS could not be translated.")
@@ -1924,10 +1927,12 @@ def converting_coordinates(create_exception_output, transript_cm):
              
     return   start, aa,"p." # Now `position` is an index in the CDS.    
 
-def star_subst(protein, transcript, output):
+def star_subst(protein, transcript):
     ''' The function substitute stop codons in reference sequence 
          if there is information about it in GenBank file'''
+    res=[]
     for start, aa, scheme in transcript.transl_except:
+            
             if scheme!="p.":
                 s, a, sch = converting_coordinates((start, aa, scheme), transcript.CM)
                 transcript.transl_except[transcript.transl_except.index((start, aa, scheme))] = s, a, sch
@@ -1936,10 +1941,9 @@ def star_subst(protein, transcript, output):
             if protein[start] == '*':
                 protein=protein.tomutable()
                 protein[start] = aa
-                output.addMessage(__file__, 2, 'WSTOP',
-                          'The stop codon was substituted in positions {0} according to GenBank annotation '.format(start+1))
+                res.append(start+1)
                 protein=protein.toseq()
-    return protein 
+    return protein, res 
 def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
        Unfortunately, the function does not check context around substituted amino_acid, but it has that possibility in future'''
@@ -1955,6 +1959,7 @@ def substitute_variant_prot(nucl_seq, prot_seq, triplets, Sec = False):
                        result.append(i)
                 else:
                     prot[i] =  triplets[triplet]
+                 
                     result.append(i)
     prot = prot.toseq()    
     return  prot, result
@@ -1963,6 +1968,7 @@ def define_triplet(sequence, transl_except):
         It return triplet according to coordinates of exception in transl_except'''
      triplets={}
      for start, aa, scheme in transl_except:
-        if scheme == "p.":
+         if scheme == "p.":
             triplets[str(sequence[start*3:start*3+3])] = aa
+
      return triplets
