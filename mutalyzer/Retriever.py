@@ -29,6 +29,7 @@ from mutalyzer import util
 from mutalyzer import config
 from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
+from mutalyzer.parsers import embl
 
 
 ENTREZ_MAX_TRIES = 4
@@ -969,6 +970,190 @@ class LRGRetriever(Retriever):
         return self._write(raw_data, filename) #returns full path
     #write
 #LargeRetriever
+
+class EMBLRetriever(Retriever):
+    """
+    Retrieve a EMBL record from either the cache or the web.
+
+    Public methods:
+        - loadrecord(identifier) ; Load a record, store it in the cache, manage
+                                   the cache and return the record.
+    """
+
+    def __init__(self, output, database):
+        #TODO documentation
+        """
+        Initialize the class.
+
+        @todo: documentation
+        @arg  output:
+        @type  output:
+        @arg  database:
+        @type  database:
+        """
+        # Recall init of parent
+        Retriever.__init__(self, output, database)
+        self.fileType = "xml"
+        # Child specific init
+    #__init__
+
+    def loadrecord(self, identifier):
+        """
+        Load and parse a EMBL file based on the identifier
+
+        @arg identifier: The name of the EMBL file to read
+        @type identifier: string
+
+        @return: record ; GenRecord.Record of EMBL file
+                   None ; in case of failure
+        @rtype:
+        """
+
+        # Make a filename based upon the identifier.
+        filename = self._nametofile(identifier)
+
+        if not os.path.isfile(filename) :   # We can't find the file.
+            filename = self.fetch(identifier)
+
+        if filename is None:                # return None in case of error
+            #Notify batch to skip all instance of identifier
+            self._output.addOutput("BatchFlags", ("S1", identifier))
+            return None
+
+        # Now we have the file, so we can parse it.
+        file_handle = bz2.BZ2File(filename, "r")
+
+        #create GenRecord.Record from EMBL file
+        record = embl.create_record(file_handle.read()) 
+        file_handle.close()
+
+        # We don't create EMBLs from other sources, so id is always the same
+        # as source_id.
+        ##record.id = identifier
+        ##record.source_id = identifier
+
+        return record
+    #loadrecord
+
+    def fetch(self, name):
+        """
+        Fetch the EMBL file and store in the cache directory. First try to
+        grab the file from the confirmed section, if this fails, get it
+        from the pending section.
+
+        @arg name: The name of the LRG file to fetch
+        @type name: string
+
+        @return: the full path to the file; None in case of an error
+        @rtype: string
+        """
+
+        ##prefix = config.get('lrgurl')
+        db =  'ensemblgene' ### TODO : add function to recognize query db type
+        url = 'http://www.ebi.ac.uk/Tools/dbfetch/dbfetch?db=' + db + ';id=' + str(name)+ ';format=embl'    
+        ##pendingurl = prefix + "pending/%s.xml"  % name
+
+        try:
+            return self.downloadrecord(url, name)
+        except urllib2.URLError: #Catch error: file not found
+            pass
+
+        #try:                # Try to get the file from the pending section
+        #    filename = self.downloadrecord(pendingurl, name)
+        #    self._output.addMessage(__file__, 2, "WPEND",
+        #        "Warning: LRG file %s is a pending entry." % name)
+        #    return filename
+        except urllib2.URLError:
+            self._output.addMessage(__file__, 4, "ERETR",
+                                 "Could not retrieve %s." % name)
+            return None             #Explicit return in case of an Error
+    #fetch
+
+    def downloadrecord(self, url, name = None) :
+        """
+        Download an EMBL record from an URL.
+
+        @arg url: Location of the EMBL record
+        @type url: string
+
+        @return:
+            - filename    ; The full path to the file
+            - None        ; in case of failure
+        @rtype: string
+        """
+
+        emblID = name or os.path.splitext(os.path.split(url)[1])[0]
+        #if not emblID.startswith("EMBL"):
+        #    return None
+        filename = self._nametofile(emblID)
+
+        handle = urllib2.urlopen(url)
+        info = handle.info()
+        if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
+
+            length = int(info["Content-Length"])
+            if config.get('minDldSize') < length < config.get('maxDldSize'):
+                raw_data = handle.read()
+                handle.close()
+
+                #Do an md5 check
+                md5sum = self._calcHash(raw_data)
+                md5db = self._database.getHash(emblID)
+                if md5db is None:
+                    self._database.insertEMBL(emblID, md5sum, url)
+                elif md5sum != md5db:       #hash has changed for the EMBL ID
+                    self._output.addMessage(__file__, -1, "WHASH",
+                        "Warning: Hash of %s changed from %s to %s." % (
+                        emblID, md5db, md5sum))
+                    self._database.updateHash(emblID, md5sum)
+                else:                       #hash the same as in db
+                    pass
+
+                if not os.path.isfile(filename) :
+                    return self.write(raw_data, emblID)
+                else:
+                    # This can only occur if synchronus calls to mutalyzer are
+                    # made to recover a file that did not exist. Still leaves
+                    # a window in between the check and the write.
+                    return filename
+            #if
+            else :
+                self._output.addMessage(__file__, 4, "EFILESIZE",
+                    "Filesize is not within the allowed boundaries.")
+        #if
+        else :
+            self._output.addMessage(__file__, 4, "ERECPARSE",
+                                     "This is not an EMBL record.")
+        handle.close()
+    #downloadrecord
+
+    def write(self, raw_data, filename) :
+        """
+        Write raw EMBL data to a file. The data is parsed before writing,
+        if a parse error occurs None is returned.
+
+        @arg raw_data: The data
+        @type raw_data: string
+        @arg filename: The intended name of the file
+        @type filename: string
+
+        @return:
+            - filename ; The full path and name of the file written
+            - None     ; In case of an error
+        @rtype: string
+        """
+        # Dirty way to test if a file is valid,
+        # Parse the file to see if it's a real LRG file.
+        try:
+            embl.create_record(raw_data)
+        except DOMException:
+            self._output.addMessage(__file__, 4, "ERECPARSE",
+                                      "Could not parse file.")
+            return None             # Explicit return on Error
+
+        return self._write(raw_data, filename) #returns full path
+    #write
+#EMBLRetriever
 
 if __name__ == "__main__" :
     pass

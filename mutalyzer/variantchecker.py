@@ -1321,7 +1321,7 @@ def _add_transcript_info(mutator, transcript, output):
         protein_original, res = star_subst(protein_original, transcript, triplets, aa_dict_r, output, True)
         if res:
          output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein (transcript:{0}, protein:{1}). Some amino acids were changed according to GenBank annotation (see  table below CDS information)'.format(transcript.transcriptID, transcript.proteinID))
-         
+         print 'OLOLO', cds_original
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
@@ -1932,18 +1932,12 @@ def star_subst(protein, transcript, triplets, aa_dict_r, output, flag):
     res = False
     rev_triplets = reverse_dict(triplets)
     for start, aa, scheme in transcript.transl_except:
-            
-           # if scheme!="p.":
-           #     s, a, sch = converting_coordinates((start, aa, scheme), transcript.CM)
-           #     transcript.transl_except[transcript.transl_except.index((start, aa, scheme))] = s, a, sch
-           #     start,  aa, scheme = s,  a, sch
-    
             if protein[start] == '*':
                 res=True
                 protein=protein.tomutable()
                 genomic = transcript.CM.x2g(start*3, 0)
                 if flag:
-                    output.addOutput('reference_exceptions', [str(start+1), str(start*3+1) + ".." + str(start*3+3), str(genomic) + ".." + str(genomic+2) , rev_triplets[aa], protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')'])
+                    output.addOutput('reference_exceptions', [str(start+1), str(start*3+1) + ".." + str(start*3+3), str(genomic+1) + ".." + str(genomic+3) , rev_triplets[aa], protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')'])
                 protein[start] = aa
                 protein=protein.toseq()
  
@@ -1962,12 +1956,12 @@ def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, fl
                     #if context(sequence, i*3): # TODO: context function (return False or True in depend on Sec context). 
                                                #The function never go on this way, while we don't write the context(?) function. 
                      #  genomic = transcript.CM.x2g(i*3, 0)
-                      # output.addOutput('predicted_exceptions',[str(i+1), str(i*3+1) + ".." + str(i*3+3), str(genomic) + ".." + str(genomic+2), triplet, prot[i], triplets[triplet]])
+                      # output.addOutput('predicted_exceptions',[str(i+1), str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i], triplets[triplet]])
                      #  prot[i] =  triplets[triplet]
                     
                 if flag:
                     genomic = transcript.CM.x2g(i*3, 0)                
-                    exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic) + ".." + str(genomic+2), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
+                    exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
                 prot[i] =  triplets[triplet]
     prot = prot.toseq()   
     prot = prot.split("*")[0]
