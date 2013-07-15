@@ -309,3 +309,35 @@ i {
   cursor: pointer;
   text-align: left;
 }
+pre.monoseq
+ span {
+        font-family: monospace;
+    }
+pre.monoseq {
+    background: aliceblue;
+    color: black;
+}
+.monoseq-margin {
+    color: grey;
+}
+.monoseq-annotation-0 {
+    color: red;
+    font-weight: bold;
+}
+.monoseq-annotation-1 {
+    background: #8096B2 ;
+    font-weight: bold;
+    color: white;
+}
+.monoseq-annotation-1 .monoseq-annotation-0 {
+    background:red ;
+    color: white;
+    font-weight: bold;
+}
+.monoseq-annotation-2 {
+    text-decoration: underline;
+}
+.monoseq-annotation-3 {
+    font-weight: bold;
+}
+

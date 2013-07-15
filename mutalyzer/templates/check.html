@@ -122,35 +122,12 @@
           <b>Detailed information about the selected transcript:</b><br>
           <br>
            <style>
-pre.monoseq {
-    background: aliceblue;
-    color: black;
-}
-.monoseq-margin {
-    color: grey;
-}
-.monoseq-annotation-0 {
-    color: red;
-}
-.monoseq-annotation-1 {
-    background: black;
-    color: lightYellow;
-}
-.monoseq-annotation-1 .monoseq-annotation-0 {
-    background: red;
-    color: lightYellow;
-}
-.monoseq-annotation-2 {
-    text-decoration: underline;
-}
-.monoseq-annotation-3 {
-    font-weight: bold;
-}
 </style>
           <div style = "background-color : aliceblue; padding : 20px; border: 1px solid grey">
             <div tal:condition = "oldProtein">
               <b>Reference protein:</b><br>
-              <pre class = "monoseq" tal:content = "oldProtein" ></pre>
+              <pre class = "monoseq"><div tal:replace = "structure string:${oldProtein}<br>"> </div></pre>  
+                    
               <br>
               <b>Protein predicted from variant coding sequence:</b><br>
               <div tal:condition = "not:newProtein">
@@ -160,14 +137,14 @@ pre.monoseq {
                 <br>
               </div> <!-- not:newProtein -->
               <div tal:condition = "newProtein">
-                <pre tal:content = "newProtein"></pre>
+                <pre class = "monoseq"><div tal:replace = "structure string:${newProtein}<br>"> </div></pre> 
               </div> <!-- newProtein -->
               <br>
               <div tal:condition = "altStart">
                 <b tal:content = "structure string:Alternative protein
                   using start codon ${altStart}:"></b><br>
                 <div tal:condition = "altProtein">
-                  <pre tal:content = "altProtein"></pre>
+                 <pre class = "monoseq"> <div tal:replace = "structure string:${altProtein}<br>"> </div></pre> 
                 </div> <!-- altProtein -->
                 <div tal:condition = "not:altProtein">
                   <br>
