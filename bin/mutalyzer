@@ -73,16 +73,15 @@ def main(cmd):
             print i
 
         print "\nOld protein:"
-        for i in O.getOutput("oldProteinFancyText"):
-          print i
+        print O.getIndexedOutput("oldProteinFancyText",0)
 
         print "\nNew protein:"
-        for i in O.getOutput("newProteinFancyText"):
-          print i
+        print O.getIndexedOutput("newProteinFancyText",0)
+        
 
         print "\nAlternative protein:"
-        for i in O.getOutput("altProteinFancyText"):
-          print i
+        print O.getIndexedOutput("altProteinFancyText", 0)
+          
 
         print "\nExon information:"
         for i in O.getOutput("exonInfo") :

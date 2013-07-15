@@ -29,7 +29,7 @@ from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Db
-
+from monoseq import pprint_sequence, AnsiFormat, HtmlFormat
 
 
 # Exceptions used (privately) in this module.
@@ -1321,7 +1321,6 @@ def _add_transcript_info(mutator, transcript, output):
         protein_original, res = star_subst(protein_original, transcript, triplets, aa_dict_r, output, True)
         if res:
          output.addMessage(__file__,2, 'WSTOP', 'There are some exceptions in reference protein (transcript:{0}, protein:{1}). Some amino acids were changed according to GenBank annotation (see  table below CDS information)'.format(transcript.transcriptID, transcript.proteinID))
-         print 'OLOLO', cds_original
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
@@ -1347,34 +1346,47 @@ def _add_transcript_info(mutator, transcript, output):
         # I think it would also be nice to include the mutated list of splice
         # sites.
         if not protein_variant or protein_variant[0] != 'M':
+            cds_length = util.cds_length(
+                mutator.shift_sites(transcript.CDS.positionList))
+            descr, first, last_original, last_variant = \
+                   util.protein_description(cds_length, protein_original,
+                                            protein_variant)
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
             if protein_original[0]!="M":
-                util.print_protein_html('M' + protein_original[1:] + '*', 0, 0, output,
-                                    'oldProteinFancy')
-                util.print_protein_html('M'+ protein_original[1:] + '*', 0, 0, output,
-                                    'oldProteinFancyText', text=True)
+               # util.print_protein_html('M' + protein_original[1:] + '*', 0, 0, output,
+               #                     'oldProteinFancy')
+               # util.print_protein_html('M'+ protein_original[1:] + '*', 0, 0, output,
+               #                     'oldProteinFancyText', text=True)
+                output.addOutput('oldProteinFancy', pprint_sequence('M' + protein_original[1:], format=HtmlFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
+                output.addOutput('oldProteinFancyText', pprint_sequence('M' + protein_original[1:], format=AnsiFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
                 output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in reference protein'.format(cds_original[0:3]))
             if str(cds_variant[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
                 output.addOutput('newprotein', '?')
-                util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-                util.print_protein_html('?', 0, 0, output,
-                    'newProteinFancyText', text=True)
+               # util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
+               # util.print_protein_html('?', 0, 0, output,
+               #    'newProteinFancyText', text=True)
+                output.addOutput('oldProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
+                output.addOutput('oldProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
                 output.addOutput('altStart', str(cds_variant[0:3]))
                 if str(protein_original[1:]) != str(protein_variant[1:]):
-                    output.addOutput('altProtein',
-                                     'M' + protein_variant[1:] + '*')
-                    util.print_protein_html('M' + protein_variant[1:] + '*', 0,
-                        0, output, 'altProteinFancy')
-                    util.print_protein_html('M' + protein_variant[1:] + '*', 0,
-                        0, output, 'altProteinFancyText', text=True)
+                 #   output.addOutput('altProtein',
+                 #                    'M' + protein_variant[1:] + '*')
+                 #   util.print_protein_html('M' + protein_variant[1:] + '*', 0,
+                 #       0, output, 'altProteinFancy')
+                 #   util.print_protein_html('M' + protein_variant[1:] + '*', 0,
+                 #       0, output, 'altProteinFancyText', text=True)
+                    output.addOutput('altProteinFancy', pprint_sequence('M' + protein_variant[1:], format=HtmlFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
+                    output.addOutput('altProteinFancyText', pprint_sequence('M' + protein_variant[1:], format=AnsiFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
             else :
                 output.addOutput('newprotein', '?')
-                util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-                util.print_protein_html('?', 0, 0, output,
-                    'newProteinFancyText', text=True)
+                #util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
+                #util.print_protein_html('?', 0, 0, output,
+                #    'newProteinFancyText', text=True)
+                output.addOutput('newProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
+                output.addOutput('newProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
 
         else:
             cds_length = util.cds_length(
@@ -1386,16 +1398,20 @@ def _add_transcript_info(mutator, transcript, output):
             # This is never used.
             output.addOutput('myProteinDescription', descr)
 
-            util.print_protein_html(protein_original + '*', first,
-                last_original, output, 'oldProteinFancy')
-            util.print_protein_html(protein_original + '*', first,
-                last_original, output, 'oldProteinFancyText', text=True)
+           # util.print_protein_html(protein_original + '*', first,
+           #    last_original, output, 'oldProteinFancy')
+           # util.print_protein_html(protein_original + '*', first,
+           #    last_original, output, 'oldProteinFancyText', text=True)
+            output.addOutput('oldProteinFancy', pprint_sequence(protein_original, format=HtmlFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
+            output.addOutput('oldProteinFancyText', pprint_sequence(protein_original, format=AnsiFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
             if str(protein_original) != str(protein_variant):
                 output.addOutput('newprotein', protein_variant + '*')
-                util.print_protein_html(protein_variant + '*', first,
-                    last_variant, output, 'newProteinFancy')
-                util.print_protein_html(protein_variant + '*', first,
-                    last_variant, output, 'newProteinFancyText', text=True)
+                #util.print_protein_html(protein_variant + '*', first,
+                #    last_variant, output, 'newProteinFancy')
+                #util.print_protein_html(protein_variant + '*', first,
+                #    last_variant, output, 'newProteinFancyText', text=True)
+                output.addOutput('newProteinFancy', pprint_sequence(protein_variant, format=HtmlFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
+                output.addOutput('newProteinFancyText', pprint_sequence(protein_variant, format=AnsiFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
 #_add_transcript_info
 
 
@@ -1929,11 +1945,11 @@ def converting_coordinates(create_exception_output, transript_cm):
 def star_subst(protein, transcript, triplets, aa_dict_r, output, flag):
     ''' The function substitute stop codons in reference sequence 
          if there is information about it in GenBank file'''
-    res = False
+    res = []
     rev_triplets = reverse_dict(triplets)
     for start, aa, scheme in transcript.transl_except:
             if protein[start] == '*':
-                res=True
+                res.append(start)
                 protein=protein.tomutable()
                 genomic = transcript.CM.x2g(start*3, 0)
                 if flag:
@@ -1945,13 +1961,12 @@ def star_subst(protein, transcript, triplets, aa_dict_r, output, flag):
 def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, flag, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
        Unfortunately, the function does not check context around substituted amino_acid, but it has that possibility in future'''
-    result = False
+    result = []
     exceptions = []
     prot = prot_seq.tomutable()
     for triplet in triplets:
         for i in range(len(nucl_seq)/3):
             if str(nucl_seq[i*3:i*3+3]) == triplet:
-                result = True
                 #if Sec:
                     #if context(sequence, i*3): # TODO: context function (return False or True in depend on Sec context). 
                                                #The function never go on this way, while we don't write the context(?) function. 
@@ -1968,6 +1983,7 @@ def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, fl
     for i in  exceptions:
         if i[0]-1 <= len(prot):
             output.addOutput('predicted_exceptions', i)
+            result.append(i[0]-1)
         else:
             break
     return  prot, result
@@ -1982,7 +1998,6 @@ def define_triplet(sequence, transcript):
                 start,  aa, scheme = s,  a, sch
          if scheme == "p.":
             triplets[str(sequence[start*3:start*3+3])] = aa
-     print triplets
      return triplets
 
 def reverse_dict(dictionary):

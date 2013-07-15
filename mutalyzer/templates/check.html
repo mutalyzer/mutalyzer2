@@ -4,6 +4,7 @@
       type="text/css"
       href="base/css/style.css">
     <title></title>
+   
   </head>
   <body>
     <div metal:define-macro="content">
@@ -120,12 +121,36 @@
         <div tal:condition = "transcriptInfo">
           <b>Detailed information about the selected transcript:</b><br>
           <br>
+           <style>
+pre.monoseq {
+    background: aliceblue;
+    color: black;
+}
+.monoseq-margin {
+    color: grey;
+}
+.monoseq-annotation-0 {
+    color: red;
+}
+.monoseq-annotation-1 {
+    background: black;
+    color: lightYellow;
+}
+.monoseq-annotation-1 .monoseq-annotation-0 {
+    background: red;
+    color: lightYellow;
+}
+.monoseq-annotation-2 {
+    text-decoration: underline;
+}
+.monoseq-annotation-3 {
+    font-weight: bold;
+}
+</style>
           <div style = "background-color : aliceblue; padding : 20px; border: 1px solid grey">
             <div tal:condition = "oldProtein">
               <b>Reference protein:</b><br>
-              <pre><div tal:repeat = "i oldProtein"
-                        tal:replace = "structure string:${i}<br>">
-                </div></pre>
+              <pre class = "monoseq" tal:content = "oldProtein" ></pre>
               <br>
               <b>Protein predicted from variant coding sequence:</b><br>
               <div tal:condition = "not:newProtein">
@@ -135,18 +160,14 @@
                 <br>
               </div> <!-- not:newProtein -->
               <div tal:condition = "newProtein">
-                <pre><div tal:repeat = "i newProtein"
-                          tal:replace = "structure string:${i}<br>">
-                  </div></pre>
+                <pre tal:content = "newProtein"></pre>
               </div> <!-- newProtein -->
               <br>
               <div tal:condition = "altStart">
                 <b tal:content = "structure string:Alternative protein
                   using start codon ${altStart}:"></b><br>
                 <div tal:condition = "altProtein">
-                  <pre><div tal:repeat = "i altProtein"
-                         tal:replace = "structure string:${i}<br>">
-                    </div></pre>
+                  <pre tal:content = "altProtein"></pre>
                 </div> <!-- altProtein -->
                 <div tal:condition = "not:altProtein">
                   <br>
