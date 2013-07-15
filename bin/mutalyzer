@@ -91,6 +91,15 @@ def main(cmd):
         print O.getOutput("cdsStart_c"), O.getOutput("cdsStop_c")
         print O.getOutput("cdsStart_g"), O.getOutput("cdsStop_g")
 
+        print "\n Translation exceptions for old protein:"
+        print ['Position (p.)', 'Position (c.)', 'Position (g.)','Triplet','Original amino acid','Substituted amino acid']
+        for i in O.getOutput('reference_exceptions'):
+            print i
+
+        print "\n Translation exceptions for new (alternative) protein:"
+        print ['Position (p.)', 'Position (c.)', 'Position (g.)','Triplet','Original amino acid','Substituted amino acid']
+        for i in O.getOutput('predicted_exceptions'):
+            print i
         print "\nEffect on Restriction sites:"
         for i in O.getOutput("restrictionSites") :
             print i
