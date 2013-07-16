@@ -1666,6 +1666,12 @@ def check_variant(description, output):
         retriever = Retriever.LRGRetriever(output, database)
     elif parsed_description.EnsemblId:
         filetype = 'EMBL'
+        if parsed_description.Gene:
+            gene_symbol = parsed_description.Gene.GeneSymbol or ''
+            transcript_id = parsed_description.Gene.TransVar or ''
+            if parsed_description.Gene.ProtIso:
+                output.addMessage(__file__, 4, 'EPROT',
+                    'Indexing by protein isoform is not supported.')
         retriever = Retriever.EMBLRetriever(output, database)
         
     else:

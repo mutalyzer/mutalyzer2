@@ -819,6 +819,8 @@ class Check:
         if reference:
             if record_type == 'LRG':
                 reference = reference + '.xml'
+            elif record_type == 'EMBL':
+                reference = reference + '.embl'
             else :
                 reference = reference + '.gb'
 

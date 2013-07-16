@@ -538,26 +538,28 @@ class EMBLparser():
 
                 if i.qualifiers.has_key("gene") :
                     geneName = i.qualifiers["gene"][0]
-                    if i.type == "gene" :
-                        if not geneDict.has_key(geneName) :
-                            myGene = Gene(geneName)
-                            record.geneList.append(myGene)
-                            if i.strand :
-                                myGene.orientation = i.strand
-                            myGene.location = self.__location2pos(i.location)
-                            geneDict[geneName] = tempGene(geneName)
+                    if geneName.startswith('ENS') and geneName[3:6] != 'EST':
+                        if i.type == "gene" :
+                            if not geneDict.has_key(geneName) :
+                                myGene = Gene(geneName)
+                                record.geneList.append(myGene)
+                                if i.strand :
+                                    myGene.orientation = i.strand
+                                myGene.location = self.__location2pos(i.location)
+                                geneDict[geneName] = tempGene(geneName)
+                            #if
                         #if
                     #if
 
-                    if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
-                       "tmRNA"] :
-                        geneDict[geneName].rnaList.append(i)
-                    if i.type == "CDS" :
-                        geneDict[geneName].cdsList.append(i)
-                    if i.type == "exon" :
-                        exonLocation = self.__location2pos(i.location)
-                        if exonLocation :
-                            exonList.extend(exonLocation)
+                        if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
+                            "tmRNA"] :
+                             geneDict[geneName].rnaList.append(i)
+                        if i.type == "CDS" :
+                            geneDict[geneName].cdsList.append(i)
+                        if i.type == "exon" :
+                            exonLocation = self.__location2pos(i.location)
+                            if exonLocation :
+                                 exonList.extend(exonLocation)
                     #if
                 #if
             #if
