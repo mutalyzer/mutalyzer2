@@ -51,7 +51,7 @@ class tempGene():
 #tempGene
 
 
-class EMparser():
+class EMBLparser():
     """
     @todo: documentation
     """

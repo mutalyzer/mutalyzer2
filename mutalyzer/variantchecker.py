@@ -1647,6 +1647,9 @@ def check_variant(description, output):
         record_id = parsed_description.LrgAcc
     elif parsed_description.Version:
         record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
+    elif parsed_description.EnsemblId:
+        record_id = parsed_description.EnsemblId
+        pass
     else:
         record_id = parsed_description.RefSeqAcc
 
@@ -1661,6 +1664,10 @@ def check_variant(description, output):
         filetype = 'LRG'
         transcript_id = parsed_description.LRGTranscriptID
         retriever = Retriever.LRGRetriever(output, database)
+    elif parsed_description.EnsemblId:
+        filetype = 'EMBL'
+        retriever = Retriever.EMBLRetriever(output, database)
+        
     else:
         filetype = 'GB'
         if parsed_description.Gene:

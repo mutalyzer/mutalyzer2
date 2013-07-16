@@ -948,7 +948,29 @@ class Cache(Db) :
         """, (accNo, None, fileHash, None, None, None, None, url)
 
         self.query(statement)
-    #insertLRG
+    #insertLRG    
+    def insertEMBL(self, accNo, fileHash, url):
+        """
+        Insert information about a EMBL record in the internal database.
+
+        See insertGB() for more information.
+
+        @arg accNo: The name associated with this record
+        @type accNo: string
+        @arg fileHash: The hash of the content of the record
+        @type fileHash: string
+        @arg url:  The originating URL (if available)
+        @type url: string
+        """
+
+        statement = """
+            INSERT INTO GBInfo
+             (AccNo, GI, hash, ChrAccVer, ChrStart, ChrStop, orientation, url)
+              VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        """, (accNo, None, fileHash, None, None, None, None, url)
+
+        self.query(statement)
+    #insertEMBL
 
 
     def updateHash(self, accNo, fileHash) :

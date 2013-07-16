@@ -166,7 +166,6 @@ class Retriever(object) :
         out_handle = open(self._nametofile(filename), "w")
         out_handle.write(data)
         out_handle.close()
-
         # Since we put something in the cache, check if it needs cleaning.
         self._cleancache()
 
@@ -993,7 +992,7 @@ class EMBLRetriever(Retriever):
         """
         # Recall init of parent
         Retriever.__init__(self, output, database)
-        self.fileType = "xml"
+        self.fileType = "embl"
         # Child specific init
     #__init__
 
@@ -1024,12 +1023,13 @@ class EMBLRetriever(Retriever):
         file_handle = bz2.BZ2File(filename, "r")
 
         #create GenRecord.Record from EMBL file
-        record = embl.create_record(file_handle.read()) 
+        EMBLParser = embl.EMBLparser()
+        record = EMBLParser.create_record(filename)
         file_handle.close()
 
         # We don't create EMBLs from other sources, so id is always the same
         # as source_id.
-        ##record.id = identifier
+        record.id = identifier
         ##record.source_id = identifier
 
         return record
@@ -1089,16 +1089,17 @@ class EMBLRetriever(Retriever):
 
         handle = urllib2.urlopen(url)
         info = handle.info()
-        if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
+        print info
+        if info["Content-Type"] == "text/plain;charset=UTF-8" :
 
-            length = int(info["Content-Length"])
-            if config.get('minDldSize') < length < config.get('maxDldSize'):
+            #length = int(info["Content-Length"])
+            #if config.get('minDldSize') < length < config.get('maxDldSize'):
                 raw_data = handle.read()
                 handle.close()
 
                 #Do an md5 check
-                md5sum = self._calcHash(raw_data)
-                md5db = self._database.getHash(emblID)
+                md5sum = self._calcHash(raw_data)                                             #?
+                md5db = self._database.getHash(emblID)                                       
                 if md5db is None:
                     self._database.insertEMBL(emblID, md5sum, url)
                 elif md5sum != md5db:       #hash has changed for the EMBL ID
@@ -1110,6 +1111,7 @@ class EMBLRetriever(Retriever):
                     pass
 
                 if not os.path.isfile(filename) :
+                    print "JoHOHOHO", emblID
                     return self.write(raw_data, emblID)
                 else:
                     # This can only occur if synchronus calls to mutalyzer are
@@ -1117,9 +1119,9 @@ class EMBLRetriever(Retriever):
                     # a window in between the check and the write.
                     return filename
             #if
-            else :
-                self._output.addMessage(__file__, 4, "EFILESIZE",
-                    "Filesize is not within the allowed boundaries.")
+            #else :
+            #    self._output.addMessage(__file__, 4, "EFILESIZE",
+            #        "Filesize is not within the allowed boundaries.")
         #if
         else :
             self._output.addMessage(__file__, 4, "ERECPARSE",
@@ -1143,9 +1145,11 @@ class EMBLRetriever(Retriever):
         @rtype: string
         """
         # Dirty way to test if a file is valid,
-        # Parse the file to see if it's a real LRG file.
+        # Parse the file to see if it's a real EMBL file.
         try:
-            embl.create_record(raw_data)
+           # EMBLParser = embl.EMBLparser()
+           # record = EMBLParser.create_record(filename)
+           print "something"
         except DOMException:
             self._output.addMessage(__file__, 4, "ERECPARSE",
                                       "Could not parse file.")
