@@ -733,12 +733,13 @@ class EMBLparser():
 	# indicated by transl_table. For more information see
 	# http://www.ddbj.nig.ac.jp/sub/ref6-e.html#transl_except'''
 	for transl_except in SeqFeature.qualifiers["transl_except"]:
-		intermediate=re.split("[,:.]", transl_except.strip("()"))
-		triplet_dict={"Ala":"A", "Gly":"G", "Val":"V", "Leu":"L", "Ile":"I",
+		intermediate = re.split("[,:.]", transl_except.strip("()"))
+		triplet_dict = {"Ala":"A", "Gly":"G", "Val":"V", "Leu":"L", "Ile":"I",
 			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
                   "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
 			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P",
-			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X"}
+			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X", "Asx" : "B", 
+                  "Glx" : "Z", "Xle" : "J"}
 		sec_coord_list.append((int(intermediate[1]), triplet_dict[intermediate[-1]], "g."))
 		print sec_coord_list
 	#for

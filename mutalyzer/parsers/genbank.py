@@ -610,8 +610,9 @@ class GBparser():
                             if i.link.qualifiers.has_key("transl_table") :
                                 myTranscript.txTable = \
                                     int(i.qualifiers["transl_table"][0])
-                            if "transl_except" in i.link.qualifiers :
-				myTranscript.transl_except=self.create_exception(i.link)
+                            if "transl_except" in i.link.qualifiers:
+                                myTranscript.transl_except=self.create_exception(i.link)
+                               
                         #if
                         myRealGene.transcriptList.append(myTranscript)
                     #if
@@ -648,8 +649,9 @@ class GBparser():
                         if i.qualifiers.has_key("transl_table") :
                             myTranscript.txTable = \
                                 int(i.qualifiers["transl_table"][0])
-			if "transl_except" in i.qualifiers :
-				myTranscript.transl_except=self.create_exception(i)
+                        if "transl_except" in i.qualifiers:
+                            myTranscript.transl_except=self.create_exception(i)
+                           
                         myRealGene.transcriptList.append(myTranscript)
                         #if
                     #if
@@ -689,8 +691,9 @@ class GBparser():
                         if myCDS.qualifiers.has_key("transl_table") :
                             myTranscript.txTable = \
                                 int(i.qualifiers["transl_table"][0])
-                        if "transl_except" in myCDS.qualifiers :
-				myTranscript.transl_except=self.create_exception(myCDS)
+                        if "transl_except" in myCDS.qualifiers:
+                            myTranscript.transl_except=self.create_exception(myCDS)
+                           
                     #if
                     myRealGene.transcriptList.append(myTranscript)
                 #if
@@ -718,7 +721,8 @@ class GBparser():
 			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
                   "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
 			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P", 
-			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X"}
+			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X", "Asx" : "B", 
+                  "Glx" : "Z", "Xle" : "J"}
 		sec_coord_list.append((int(intermediate[1]), triplet_dict[intermediate[-1]], "g."))			
 	#for
         return sec_coord_list

@@ -900,7 +900,8 @@ class Check:
             'extractedDescription' : (extracted, urllib.quote(extracted)),
             'extractedProtein'   : (extractedProt, urllib.quote(extractedProt)),
             'reference_exceptions' : output.getOutput('reference_exceptions'),
-            'predicted_exceptions' : output.getOutput('predicted_exceptions')
+            'predicted_exceptions' : output.getOutput('predicted_exceptions'),
+            'transExceptions'   :   output.getIndexedOutput('transExceptions', 0, False)
         }
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
