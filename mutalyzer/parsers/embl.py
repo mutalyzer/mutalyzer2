@@ -87,7 +87,7 @@ class EMBLparser():
         ret.append(location.start.position + 1)
         ret.append(location.end.position)
 
-        return ret
+        return sorted(ret)
     #__location2pos
 
     def __locationList2posList(self, locationList):
@@ -108,6 +108,25 @@ class EMBLparser():
             return None
         #if
 
+        # Todo: From Biopython 1.62, the `sub_features` attribute is
+        #     deprecated and all location information can be found in the
+        #     `location` attribute as a `CompoundLocation` object. However,
+        #     before 1.62 we cannot yet switch to using `location` yet since
+        #     it does not have everything we use from `sub_features`.
+        #     The `location` field also has a bug for complex locations like
+        #     ``join(complement(..),complement(..),..)`` so there we still
+        #     rely on the `sub_features` attribute. See things like the
+        #     following in our code for examples of this workaround:
+        #
+        #         .location = [i.positionList[0], i.positionList[-1]]
+        #
+        #     instead of just
+        #
+        #         .location = i.location
+        #
+        #     This bug has also been fixed in Biopython 1.62, so from there on
+        #     we can really switch to only using the `location` attribute.
+
         for i in locationList.sub_features :
             if i.ref : # This is a workaround for a bug in BioPython.
                 ret = None
@@ -120,7 +139,7 @@ class EMBLparser():
             #if
         #for
 
-        return ret
+        return sorted(ret)
     #__locationList2posList
 
     def __transcriptToProtein(self, transcriptAcc):
@@ -549,7 +568,6 @@ class EMBLparser():
                                 geneDict[geneName] = tempGene(geneName)
                             #if
                         #if
-                    #if
 
                         if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
                             "tmRNA"] :
@@ -573,7 +591,7 @@ class EMBLparser():
 
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
-			    
+
                             # Note: We use the last three characters of the
                             # locus_tag as a unique transcript version id.
                             # This is also used to for the protein-transcript
@@ -596,7 +614,7 @@ class EMBLparser():
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
                         myTranscript.mRNA.positionList = i.positionList
-                        myTranscript.mRNA.location = i.location
+                        myTranscript.mRNA.location = [i.positionList[0], i.positionList[-1]]
                         myTranscript.transcribe = True
                         myTranscript.transcriptID = i.transcript_id
                         myTranscript.transcriptProduct = i.product
@@ -604,7 +622,7 @@ class EMBLparser():
                         if i.link :
                             myTranscript.CDS = PList()
                             myTranscript.CDS.positionList = i.link.positionList
-                            myTranscript.CDS.location = i.link.location
+                            myTranscript.CDS.location = [i.link.positionList[0], i.link.positionList[-1]]
                             myTranscript.translate = True
                             myTranscript.proteinID = i.link.protein_id
                             myTranscript.linkMethod = i.linkMethod
@@ -621,7 +639,7 @@ class EMBLparser():
                 for i in myGene.cdsList :
                     if not i.linked and \
                        (i.usable or not geneDict[myGene.name].rnaList) :
-              
+
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
                             # Note: We use the last three characters of the
@@ -644,7 +662,7 @@ class EMBLparser():
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.CDS = PList()
                         myTranscript.CDS.positionList = i.positionList
-                        myTranscript.CDS.location = i.location
+                        myTranscript.CDS.location = [i.positionList[0], i.positionList[-1]]
                         myTranscript.proteinID = i.protein_id
                         myTranscript.proteinProduct = i.product
                         if i.qualifiers.has_key("transl_table") :
@@ -710,22 +728,22 @@ class EMBLparser():
 	If your entry does not contain it, this function return an empty list.'''
 
 	sec_coord_list=[]
-	# We are looking for translational exception: single codon 
+	# We are looking for translational exception: single codon
 	# the translation of which does not conform to genetic code
-	# indicated by transl_table. For more information see 
+	# indicated by transl_table. For more information see
 	# http://www.ddbj.nig.ac.jp/sub/ref6-e.html#transl_except'''
 	for transl_except in SeqFeature.qualifiers["transl_except"]:
 		intermediate=re.split("[,:.]", transl_except.strip("()"))
 		triplet_dict={"Ala":"A", "Gly":"G", "Val":"V", "Leu":"L", "Ile":"I",
 			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
                   "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
-			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P", 
+			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P",
 			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X"}
 		sec_coord_list.append((int(intermediate[1]), triplet_dict[intermediate[-1]], "g."))
-		print sec_coord_list			
+		print sec_coord_list
 	#for
         return sec_coord_list
     #create_exception
-   
+
 
 #EMparser
