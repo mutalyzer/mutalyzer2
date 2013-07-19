@@ -1352,6 +1352,7 @@ def _add_transcript_info(mutator, transcript, output):
             descr, first, last_original, last_variant = \
                    util.protein_description(cds_length, protein_original,
                                             protein_variant)
+            
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
             if protein_original[0]!="M":
@@ -1967,7 +1968,7 @@ def star_subst(cds_original,protein, transcript, triplets, aa_dict_r, output, fl
                 protein=protein.tomutable()
                 genomic = transcript.CM.x2g(start*3, 0)
                 if flag:
-                    output.addOutput('reference_exceptions', [str(start+1), str(start*3+1) + ".." + str(start*3+3), str(genomic+1) + ".." + str(genomic+3) , cds_original[start*3:start*3+3], protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')'])
+                    output.addOutput('reference_exceptions', [str(start+1), str(start*3+1) + ".." + str(start*3+3), str(genomic+1) + ".." + str(genomic+3) , str(cds_original[start*3:start*3+3]), protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')'])
                 protein[start] = aa
                 protein=protein.toseq()
  
