@@ -90,7 +90,7 @@ class Grammar():
     Version = Suppress('.') + Number('Version')
 
     # BNF: AccNo -> ([a-Z] Number `_')+ Version?
-    AccNo = NotAny(Literal('LRG_') | Literal('_')) + \
+    AccNo = NotAny(Literal('LRG_') | Literal('ENS')) + \
             Combine(Word(alphas + '_') + Number)('RefSeqAcc') + \
             Optional(Version)
 
@@ -108,7 +108,7 @@ class Grammar():
                                                         LRGProteinID)
 
     # BNF: EnsemblRef -> `_` ([a-Z]+ | Number)+ (`(' GeneSymbol `)')?
-    EnsemblRef = Suppress('_') + Combine(Word(alphas) + Number)('EnsemblId') + Optional(GeneSymbol)
+    EnsemblRef = Combine('ENS' + Word(alphas) + Number)('EnsemblId') + Optional(GeneSymbol)
 
     # RefSeqAcc  -> (GI | AccNo | UD | LRG) (`(' GeneSymbol `)')?
     GenBankRef = (GI ^ AccNo ^ UD) + Optional(GeneSymbol)
