@@ -562,6 +562,7 @@ class EMBLparser():
                             if not geneDict.has_key(geneName) :
                                 myGene = Gene(geneName)
                                 record.geneList.append(myGene)
+                                record.locusDict[i.qualifiers["locus_tag"][0]] = geneName
                                 if i.strand :
                                     myGene.orientation = i.strand
                                 myGene.location = self.__location2pos(i.location)

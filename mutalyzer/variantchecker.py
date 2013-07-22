@@ -1499,12 +1499,15 @@ def process_variant(mutator, description, record, output):
 
         else:
             # Not an LRG, find our gene manually.
-            genes = record.record.listGenes()
+            genes = record.record.listGenes() 
             transcript_id = transcript_id and "%.3i" % int(transcript_id)
-
+            locus =  list(record.record.locusDict)
             if gene_symbol in genes:
                 # We found our gene.
                 gene = record.record.findGene(gene_symbol)
+            elif record.record.locusDict.has_key(gene_symbol):
+                    # We found our gene by locus_id
+                    gene = record.record.findGene(record.record.locusDict[gene_symbol])
             elif not gene_symbol:
                 if len(genes) == 1:
                     # No gene given and there is only one gene in the record.
@@ -1512,11 +1515,12 @@ def process_variant(mutator, description, record, output):
                     gene = record.record.geneList[0]
                 else:
                     output.addMessage(__file__, 4, "EINVALIDGENE",
-                        "No gene specified. Please choose from: %s" % ", ".join(genes))
+                        "No gene specified. Please choose from: %s" % ", ".join(locus))
+            
             else:
                 output.addMessage(__file__, 4, "EINVALIDGENE",
                     "Gene %s not found. Please choose from: %s" % (
-                    gene_symbol, ", ".join(genes)))
+                    gene_symbol, ", ".join(locus)))
 
             if gene:
                 # Find transcript.
@@ -1669,8 +1673,8 @@ def check_variant(description, output):
     elif parsed_description.EnsemblId:
         filetype = 'EMBL'
         if parsed_description.Gene:
-            gene_symbol = parsed_description.Gene.GeneSymbol or ''
-            transcript_id = parsed_description.Gene.TransVar or ''
+            gene_symbol = parsed_description.Gene[0] or ''
+            transcript_id = parsed_description.Gene[1] or ''
             if parsed_description.Gene.ProtIso:
                 output.addMessage(__file__, 4, 'EPROT',
                     'Indexing by protein isoform is not supported.')

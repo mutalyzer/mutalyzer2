@@ -281,6 +281,7 @@ class Record(object) :
         """
 
         self.geneList = []
+        self.locusDict = {}
         self.molType = 'g'
         self.seq = ""
         self.mapping = []

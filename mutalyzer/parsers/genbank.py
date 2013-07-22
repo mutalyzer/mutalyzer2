@@ -243,7 +243,7 @@ class GBparser():
             setattr(locus, key, "")
     #__tagByDict
 
-    def __tagLocus(self, locusList):
+    def __tagLocus(self, locusList, output):
         """
         Enrich a list of locus objects (mRNA or CDS) with information used
         for linking (locus_tag, proteinLink and productTag). Also
@@ -284,6 +284,7 @@ class GBparser():
                 i.usable = True
             else :
                 i.usable = False
+                
         #for
 
         if productList :
@@ -374,7 +375,7 @@ class GBparser():
         return 1         # Everything matches, but there is little information.
     #__matchByRange
 
-    def link(self, rnaList, cdsList):
+    def link(self, rnaList, cdsList, output):
         """
         Link mRNA loci to CDS loci (all belonging to one gene).
 
@@ -402,8 +403,9 @@ class GBparser():
         """
 
         # Enrich the lists with as much information we can find.
-        self.__tagLocus(rnaList)
-        self.__tagLocus(cdsList)
+        self.__tagLocus(rnaList, output)
+        
+        self.__tagLocus(cdsList, output)
 
         # Prune the tags based upon uniqueness.
         self.__checkTags(rnaList, "locus_tag")
@@ -466,7 +468,7 @@ class GBparser():
         #for
     #link
 
-    def create_record(self, filename):
+    def create_record(self, filename, output):
         """
         Create a GenRecord.Record from a GenBank file
 
@@ -565,7 +567,7 @@ class GBparser():
         if record.molType in ['g', 'm'] :
             for j in geneDict.keys() :
                 myGene = geneDict[j]
-                self.link(myGene.rnaList, myGene.cdsList)
+                self.link(myGene.rnaList, myGene.cdsList, output)
                 for i in myGene.rnaList :
                     if i.usable :
 
@@ -616,6 +618,9 @@ class GBparser():
                         #if
                         myRealGene.transcriptList.append(myTranscript)
                     #if
+                    else:
+                        output.addMessage(__file__, 2, 'WPOSITION',
+                              "The gene's %s coordinates extend beyound transcript" % i.gene)
                 #for
                 for i in myGene.cdsList :
                     if not i.linked and \

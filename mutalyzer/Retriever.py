@@ -774,7 +774,7 @@ class GenBankRetriever(Retriever):
 
         # Now we have the file, so we can parse it.
         GenBankParser = genbank.GBparser()
-        record = GenBankParser.create_record(filename)
+        record = GenBankParser.create_record(filename, self._output)
         record.id = name
 
         # Todo: This will change once we support protein references
