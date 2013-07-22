@@ -1484,7 +1484,7 @@ def process_variant(mutator, description, record, output):
                     # NG_012772.1).
                     output.addMessage(__file__, 4, "ENOTRANSCRIPT",
                         "Multiple transcripts found for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
+                        "choose from: %s" %(gene.locus,
                             ", ".join(gene.listLoci())))
             else:
                 # No transcript id given.
@@ -1494,7 +1494,7 @@ def process_variant(mutator, description, record, output):
                 else:
                     output.addMessage(__file__, 4, "ENOTRANSCRIPT",
                         "No transcript given for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
+                        "choose from: %s" %(gene.locus,
                             ", ".join(gene.listLoci())))
 
         else:
@@ -1538,7 +1538,7 @@ def process_variant(mutator, description, record, output):
                     # NG_012772.1).
                     output.addMessage(__file__, 4, "ENOTRANSCRIPT",
                         "Multiple transcripts found for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
+                        "choose from: %s" %(gene.locus,
                         ", ".join(gene.listLoci())))
 
         # Add selected gene symbol to output
@@ -1745,13 +1745,13 @@ def check_variant(description, output):
             if not transcript.name:
                 continue
             output.addOutput('legends',
-                             ['%s_v%s' % (gene.name, transcript.name),
+                             ['%s_v%s' % (gene.locus, transcript.name),
                               transcript.transcriptID, transcript.locusTag,
                               transcript.transcriptProduct,
                               transcript.linkMethod])
             if transcript.translate:
                 output.addOutput('legends',
-                                 ['%s_i%s' % (gene.name, transcript.name),
+                                 ['%s_i%s' % (gene.locus, transcript.name),
                                   transcript.proteinID, transcript.locusTag,
                                   transcript.proteinProduct,
                                   transcript.linkMethod])
@@ -1900,7 +1900,7 @@ def check_variant(description, output):
                     output.addOutput('descriptions', gene.name)
             else:
                 full_description = '%s(%s_v%s):%c.%s' % \
-                                   (reference, gene.name, transcript.name,
+                                   (reference, gene.locus, transcript.name,
                                     transcript.molType,
                                     generated_description)
                 output.addOutput('descriptions', full_description)
@@ -1914,7 +1914,7 @@ def check_variant(description, output):
                                                 protein_description)
                 else:
                     full_protein_description = '%s(%s_i%s):%s' % \
-                                               (reference, gene.name,
+                                               (reference, gene.locus,
                                                 transcript.name,
                                                 protein_description)
 

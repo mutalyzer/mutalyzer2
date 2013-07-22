@@ -261,7 +261,15 @@ class EMBLparser():
         else :
             setattr(locus, key, "")
     #__tagByDict
+    def __transcript_id (self, locus):
+         if locus.qualifiers.has_key('note'):
+            for i in locus.qualifiers['note']:
+                if locus.qualifiers['note'][-1].split('=')[0] == "transcript_id":
+                     key = locus.qualifiers['note'][-1].split('=')[1]
 
+            setattr(locus, 'transcript_id', key)
+         else:
+            setattr(locus, 'transcript_id', " ")
     def __tagLocus(self, locusList):
         """
         Enrich a list of locus objects (mRNA or CDS) with information used
@@ -278,7 +286,7 @@ class EMBLparser():
         for i in locusList :
             # Transfer some variables from the dictionary to the locus object.
             self.__tagByDict(i, "locus_tag")
-            self.__tagByDict(i, "transcript_id")
+            self.__transcript_id(i)
             self.__tagByDict(i, "protein_id")
             self.__tagByDict(i, "gene")
             self.__tagByDict(i, "product")
@@ -292,9 +300,9 @@ class EMBLparser():
                 if i.protein_id : # Tag a CDS with the protein id.
                     i.proteinLink = i.protein_id.split('.')[0]
             #if
-            else :                # Tag an mRNA with the protein id too.
-                i.proteinLink = \
-                    self.__transcriptToProtein(i.transcript_id.split('.')[0])
+            #else :                # Tag an mRNA with the protein id too.
+           #     i.proteinLink = \
+           #         self.__transcriptToProtein(i.transcript_id.split('.')[0])
             i.positionList = self.__locationList2posList(i)
             i.location = self.__location2pos(i.location) #FIXME
             #if not i.positionList : # FIXME ???
@@ -563,6 +571,7 @@ class EMBLparser():
                                 myGene = Gene(geneName)
                                 record.geneList.append(myGene)
                                 record.locusDict[i.qualifiers["locus_tag"][0]] = geneName
+                                myGene.locus = i.qualifiers["locus_tag"][0]
                                 if i.strand :
                                     myGene.orientation = i.strand
                                 myGene.location = self.__location2pos(i.location)

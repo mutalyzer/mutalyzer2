@@ -179,6 +179,7 @@ class Gene(object) :
         self.location = []
         self.longName = ""
         self.__locusTag = "000"
+        self.locus = None
     #__init__
 
     def newLocusTag(self) :
