@@ -1520,7 +1520,7 @@ def process_variant(mutator, description, record, output):
             else:
                 output.addMessage(__file__, 4, "EINVALIDGENE",
                     "Gene %s not found. Please choose from: %s" % (
-                    gene_symbol, ", ".join(locus)))
+                    gene_symbol, ", ".join(genes)))
 
             if gene:
                 # Find transcript.
@@ -1883,6 +1883,7 @@ def check_variant(description, output):
     # level descriptions.
     for gene in record.record.geneList:
         if gene.locus:
+
             name = gene.locus
         else:
             name = gene.name

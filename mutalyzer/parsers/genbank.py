@@ -517,7 +517,9 @@ class GBparser():
                 record.chromOffset = int(accInfo[2].split('.')[0])
         #if
         for i in biorecord.features :
+            print i
             if i.qualifiers :
+
                 if i.type == "source" :
                     if i.qualifiers.has_key("mol_type") :
                         if i.qualifiers["mol_type"][0] in ["mRNA", \
@@ -537,7 +539,6 @@ class GBparser():
                     fakeGene.CDS = PList()
                     fakeGene.CDS.location = self.__location2pos(i.location)
                 #if
-
                 if i.qualifiers.has_key("gene") :
                     geneName = i.qualifiers["gene"][0]
                     if i.type == "gene" :
@@ -622,7 +623,7 @@ class GBparser():
                     else:
                         if not i.gene in  myTranscript.nonusableList:
                             output.addMessage(__file__, 2, 'WPOSITION',
-                              "The gene's {0} coordinates extend beyound transcript".format(i.gene))
+                              "The gene's {0} coordinates extend beyond transcript".format(i.gene))
                             myTranscript.nonusableList.append(i.gene)
                 #for
                 for i in myGene.cdsList :
