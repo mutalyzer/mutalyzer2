@@ -129,8 +129,7 @@ class EMBLparser():
 
         for i in locationList.sub_features :
             if i.ref : # This is a workaround for a bug in BioPython.
-                ret = None
-                break
+                return None
             #if
             temp = self.__location2pos(i.location)
             if temp :
@@ -626,7 +625,7 @@ class EMBLparser():
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
                         myTranscript.mRNA.positionList = i.positionList
-                        myTranscript.mRNA.location = [i.positionList[0], i.positionList[-1]]
+                        myTranscript.mRNA.location = [i.positionList[0], i.positionList[-1]] if i.positionList else None
                         myTranscript.transcribe = True
                         myTranscript.transcriptID = i.transcript_id
                         myTranscript.transcriptProduct = i.product
@@ -635,7 +634,7 @@ class EMBLparser():
                         if i.link :
                             myTranscript.CDS = PList()
                             myTranscript.CDS.positionList = i.link.positionList
-                            myTranscript.CDS.location = [i.link.positionList[0], i.link.positionList[-1]]
+                            myTranscript.CDS.location = [i.link.positionList[0], i.link.positionList[-1]]if i.positionList else None
                             myTranscript.translate = True
                             myTranscript.proteinID = i.link.protein_id
                             myTranscript.linkMethod = i.linkMethod
@@ -681,7 +680,7 @@ class EMBLparser():
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.CDS = PList()
                         myTranscript.CDS.positionList = i.positionList
-                        myTranscript.CDS.location = [i.positionList[0], i.positionList[-1]]
+                        myTranscript.CDS.location = [i.positionList[0], i.positionList[-1]] if i.positionList else None
                         myTranscript.proteinID = i.protein_id
                         myTranscript.proteinProduct = i.product
                         if i.qualifiers.has_key("transl_table") :
