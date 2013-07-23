@@ -1368,7 +1368,7 @@ def _add_transcript_info(mutator, transcript, output):
                    [transcript.txTable].start_codons:
                      output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in reference protein'.format(cds_original[0:3]))
                 else:
-                    output.addMessage(__file__,3, "ESTART", '{0} codon of {1} was not found in table of start codons for current organism  '.format(cds_original[0:3], transcript.locusTag))
+                    output.addMessage(__file__,2, "WSTART", '{0} codon of {1} was not found in table of start codons for current organism  '.format(cds_original[0:3], transcript.locusTag))
             if str(cds_variant[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
@@ -1392,7 +1392,7 @@ def _add_transcript_info(mutator, transcript, output):
                 output.addOutput('newprotein', '?')
                 output.addOutput('newProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
                 output.addOutput('newProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
-                output.addMessage(__file__, 3, "ESTART", "No start codon was found in predicted cds")
+                output.addMessage(__file__, 2, "WSTART", "No start codon was found in predicted cds")
                 print cds_variant[0:3], cds_original[0:3]  
 
         else:
@@ -1752,13 +1752,13 @@ def check_variant(description, output):
                              ['%s_v%s' % (name, transcript.name),
                               transcript.transcriptID, transcript.locusTag,
                               transcript.transcriptProduct,
-                              transcript.linkMethod])
+                              transcript.linkMethod, transcript.references_r])
             if transcript.translate:
                 output.addOutput('legends',
                                  ['%s_i%s' % (name, transcript.name),
                                   transcript.proteinID, transcript.locusTag,
                                   transcript.proteinProduct,
-                                  transcript.linkMethod])
+                                  transcript.linkMethod, transcript.references_p])
 
     # Chromosomal region (only for GenBank human transcript references).
     # This is still quite ugly code, and should be cleaned up once we have

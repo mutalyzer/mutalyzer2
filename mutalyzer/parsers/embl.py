@@ -631,6 +631,7 @@ class EMBLparser():
                         myTranscript.transcriptID = i.transcript_id
                         myTranscript.transcriptProduct = i.product
                         myTranscript.locusTag = locus_tag
+                        #myTranscript.references = ???
                         if i.link :
                             myTranscript.CDS = PList()
                             myTranscript.CDS.positionList = i.link.positionList
@@ -643,7 +644,13 @@ class EMBLparser():
                                 myTranscript.txTable = \
                                     int(i.qualifiers["transl_table"][0])
                             if "transl_except" in i.link.qualifiers :
-				myTranscript.transl_except=self.create_exception(i.link)
+				                myTranscript.transl_except=self.create_exception(i.link)
+                            if i.link.qualifiers.has_key("db_xref"):
+                               for ref in i.link.qualifiers["db_xref"]:
+                                    if ref.split(":")[0] == "RefSeq_peptide":
+                                            myTranscript.references_p = ref.split(":")[1]
+                                    elif ref.split(":")[0] == "RefSeq_mRNA":
+                                            myTranscript.references_r = ref.split(":")[1]
                         #if
                         myRealGene.transcriptList.append(myTranscript)
                     #if
