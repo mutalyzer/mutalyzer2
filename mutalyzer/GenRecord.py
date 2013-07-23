@@ -110,6 +110,7 @@ class Locus(object) :
         self.linkMethod = None
         self.transcriptProduct = None
         self.proteinProduct = None
+        self.nonusableList = []
     #__init__
 
     def cancelDescription(self):

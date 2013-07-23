@@ -1356,39 +1356,44 @@ def _add_transcript_info(mutator, transcript, output):
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
             if protein_original[0]!="M":
+                print "ORIGINAL"
                # util.print_protein_html('M' + protein_original[1:] + '*', 0, 0, output,
                #                     'oldProteinFancy')
                # util.print_protein_html('M'+ protein_original[1:] + '*', 0, 0, output,
                #                     'oldProteinFancyText', text=True)
                 output.addOutput('oldProteinFancy', pprint_sequence('M' + protein_original[1:] + '*', format=HtmlFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
                 output.addOutput('oldProteinFancyText', pprint_sequence('M' + protein_original[1:] + '*', format=AnsiFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
-                output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in reference protein'.format(cds_original[0:3]))
+                if str(cds_original[0:3]) in \
+                   Bio.Data.CodonTable.unambiguous_dna_by_id \
+                   [transcript.txTable].start_codons:
+                     output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in reference protein'.format(cds_original[0:3]))
+                else:
+                    output.addMessage(__file__,3, "ESTART", '{0} codon of {1} was not found in table of start codons for current organism  '.format(cds_original[0:3], transcript.locusTag))
             if str(cds_variant[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
+                    output.addOutput('newprotein', '?')
+                    output.addOutput('newProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
+                    output.addOutput('newProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
+                    output.addOutput('altStart', str(cds_variant[0:3]))
+                    if str(protein_original[1:]) != str(protein_variant[1:]):
+                        output.addOutput('altProteinFancy', pprint_sequence('M' + protein_variant[1:] + '*', format=HtmlFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
+                        output.addOutput('altProteinFancyText', pprint_sequence('M' + protein_variant[1:] + '*', format=AnsiFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
+            elif str(cds_variant[0:3]) == str(cds_original[0:3]):
+                    output.addOutput('newprotein', '?')
+                    output.addOutput('newProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
+                    output.addOutput('newProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
+                    output.addOutput('altStart', str(cds_variant[0:3]))
+                    if str(protein_original[1:]) != str(protein_variant[1:]):
+                        output.addOutput('altProteinFancy', pprint_sequence('M' + protein_variant[1:] + '*', format=HtmlFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
+                        output.addOutput('altProteinFancyText', pprint_sequence('M' + protein_variant[1:] + '*', format=AnsiFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
+                        output.addMessage(__file__, 2, "WSTART", "Non canonical start codon in predicted cds({0}) is equal to original cds ({0})".format(transcript.locusTag, cds_variant[0:3]))
+            else:
                 output.addOutput('newprotein', '?')
-               # util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-               # util.print_protein_html('?', 0, 0, output,
-               #    'newProteinFancyText', text=True)
-                output.addOutput('oldProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
-                output.addOutput('oldProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
-                output.addOutput('altStart', str(cds_variant[0:3]))
-                if str(protein_original[1:]) != str(protein_variant[1:]):
-                 #   output.addOutput('altProtein',
-                 #                    'M' + protein_variant[1:] + '*')
-                 #   util.print_protein_html('M' + protein_variant[1:] + '*', 0,
-                 #       0, output, 'altProteinFancy')
-                 #   util.print_protein_html('M' + protein_variant[1:] + '*', 0,
-                 #       0, output, 'altProteinFancyText', text=True)
-                    output.addOutput('altProteinFancy', pprint_sequence('M' + protein_variant[1:] + '*', format=HtmlFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
-                    output.addOutput('altProteinFancyText', pprint_sequence('M' + protein_variant[1:] + '*', format=AnsiFormat, annotations=[[(first, last_variant)], [(p, p+1) for p in result]]))
-            else :
-                output.addOutput('newprotein', '?')
-                #util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-                #util.print_protein_html('?', 0, 0, output,
-                #    'newProteinFancyText', text=True)
                 output.addOutput('newProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
                 output.addOutput('newProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
+                output.addMessage(__file__, 3, "ESTART", "No start codon was found in predicted cds")
+                print cds_variant[0:3], cds_original[0:3]  
 
         else:
             cds_length = util.cds_length(
@@ -1399,11 +1404,6 @@ def _add_transcript_info(mutator, transcript, output):
 
             # This is never used.
             output.addOutput('myProteinDescription', descr)
-
-           # util.print_protein_html(protein_original + '*', first,
-           #    last_original, output, 'oldProteinFancy')
-           # util.print_protein_html(protein_original + '*', first,
-           #    last_original, output, 'oldProteinFancyText', text=True)
             output.addOutput('oldProteinFancy', pprint_sequence(protein_original + '*', format=HtmlFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
             output.addOutput('oldProteinFancyText', pprint_sequence(protein_original + '*', format=AnsiFormat, annotations=[[(first, last_original)], [(p, p+1) for p in res]]))
             if str(protein_original) != str(protein_variant):
@@ -1741,17 +1741,21 @@ def check_variant(description, output):
 
     # Create the legend.
     for gene in record.record.geneList:
+        if gene.locus:
+            name = gene.locus
+        else:
+            name = gene.name
         for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
             if not transcript.name:
                 continue
             output.addOutput('legends',
-                             ['%s_v%s' % (gene.locus, transcript.name),
+                             ['%s_v%s' % (name, transcript.name),
                               transcript.transcriptID, transcript.locusTag,
                               transcript.transcriptProduct,
                               transcript.linkMethod])
             if transcript.translate:
                 output.addOutput('legends',
-                                 ['%s_i%s' % (gene.locus, transcript.name),
+                                 ['%s_i%s' % (name, transcript.name),
                                   transcript.proteinID, transcript.locusTag,
                                   transcript.proteinProduct,
                                   transcript.linkMethod])
@@ -1839,15 +1843,19 @@ def check_variant(description, output):
                     transcript.proteinDescription = 'p.?'
 
             else:
+                if gene.locus:
+                    gene_name = gene.locus
+                else:
+                    gene_name = gene.name
                 if transcript.current:
                     output.addMessage(__file__, 2, "WCDS", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
-                        "variant %s (selected)." % (gene.name, transcript.name))
+                        "variant %s (selected)." % (gene_name, transcript.name))
                     transcript.proteinDescription = 'p.?'
                 else:
                     output.addMessage(__file__, 2, "WCDS_OTHER", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
-                        "variant %s." % (gene.name, transcript.name))
+                        "variant %s." % (gene_name, transcript.name))
                     transcript.proteinDescription = 'p.?'
 
     reference = output.getOutput('reference')[-1]
@@ -1874,6 +1882,10 @@ def check_variant(description, output):
     # Now we add variant descriptions for all transcripts, including protein
     # level descriptions.
     for gene in record.record.geneList:
+        if gene.locus:
+            name = gene.locus
+        else:
+            name = gene.name
         for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
 
             # Note: I don't think genomic_id is ever used, because it is
@@ -1897,10 +1909,10 @@ def check_variant(description, output):
                                         generated_description)
                     output.addOutput('descriptions', full_description)
                 else:
-                    output.addOutput('descriptions', gene.name)
+                    output.addOutput('descriptions', name)
             else:
                 full_description = '%s(%s_v%s):%c.%s' % \
-                                   (reference, gene.locus, transcript.name,
+                                   (reference, name, transcript.name,
                                     transcript.molType,
                                     generated_description)
                 output.addOutput('descriptions', full_description)
@@ -1914,7 +1926,7 @@ def check_variant(description, output):
                                                 protein_description)
                 else:
                     full_protein_description = '%s(%s_i%s):%s' % \
-                                               (reference, gene.locus,
+                                               (reference, name,
                                                 transcript.name,
                                                 protein_description)
 
@@ -1925,7 +1937,7 @@ def check_variant(description, output):
 
             # The 'NewDescriptions' field is used in _add_batch_output.
             output.addOutput('NewDescriptions',
-                             (gene.name, transcript.name,
+                             (name, transcript.name,
                               transcript.molType, coding_description,
                               protein_description, genomic_id, coding_id,
                               protein_id, full_description,

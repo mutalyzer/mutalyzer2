@@ -572,6 +572,8 @@ class EMBLparser():
                                 record.geneList.append(myGene)
                                 record.locusDict[i.qualifiers["locus_tag"][0]] = geneName
                                 myGene.locus = i.qualifiers["locus_tag"][0]
+                                locus_tag = i.qualifiers["locus_tag"][0]
+                                print myGene.locus, "myGene.locus"
                                 if i.strand :
                                     myGene.orientation = i.strand
                                 myGene.location = self.__location2pos(i.location)
@@ -628,7 +630,7 @@ class EMBLparser():
                         myTranscript.transcribe = True
                         myTranscript.transcriptID = i.transcript_id
                         myTranscript.transcriptProduct = i.product
-                        myTranscript.locusTag = i.locus_tag
+                        myTranscript.locusTag = locus_tag
                         if i.link :
                             myTranscript.CDS = PList()
                             myTranscript.CDS.positionList = i.link.positionList

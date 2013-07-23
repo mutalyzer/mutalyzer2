@@ -567,9 +567,10 @@ class GBparser():
         if record.molType in ['g', 'm'] :
             for j in geneDict.keys() :
                 myGene = geneDict[j]
+                print myGene.name
                 self.link(myGene.rnaList, myGene.cdsList, output)
-                for i in myGene.rnaList :
-                    if i.usable :
+                for i in myGene.rnaList:
+                    if i.usable:
 
                         myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
@@ -619,8 +620,10 @@ class GBparser():
                         myRealGene.transcriptList.append(myTranscript)
                     #if
                     else:
-                        output.addMessage(__file__, 2, 'WPOSITION',
-                              "The gene's %s coordinates extend beyound transcript" % i.gene)
+                        if not i.gene in  myTranscript.nonusableList:
+                            output.addMessage(__file__, 2, 'WPOSITION',
+                              "The gene's {0} coordinates extend beyound transcript".format(i.gene))
+                            myTranscript.nonusableList.append(i.gene)
                 #for
                 for i in myGene.cdsList :
                     if not i.linked and \
