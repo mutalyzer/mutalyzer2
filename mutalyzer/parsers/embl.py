@@ -76,6 +76,9 @@ class EMBLparser():
         @return: A tuple of integers
         @rtype: list
         """
+        if location.ref:
+            # Part of this feature is in another reference file.
+            return None
 
         ret = []
 
@@ -128,7 +131,8 @@ class EMBLparser():
         #     we can really switch to only using the `location` attribute.
 
         for i in locationList.sub_features :
-            if i.ref : # This is a workaround for a bug in BioPython.
+            if i.ref:
+                # Part of this feature is in another reference file.
                 return None
             #if
             temp = self.__location2pos(i.location)
@@ -563,6 +567,8 @@ class EMBLparser():
                 #if
 
                 if i.qualifiers.has_key("gene") :
+                    if i.ref:
+                        continue
                     geneName = i.qualifiers["gene"][0]
                     if geneName.startswith('ENS') and geneName[3:6] != 'EST':
                         if i.type == "gene" :
@@ -572,13 +578,15 @@ class EMBLparser():
                                 record.locusDict[i.qualifiers["locus_tag"][0]] = geneName
                                 myGene.locus = i.qualifiers["locus_tag"][0]
                                 locus_tag = i.qualifiers["locus_tag"][0]
-                                print myGene.locus, "myGene.locus"
                                 if i.strand :
                                     myGene.orientation = i.strand
                                 myGene.location = self.__location2pos(i.location)
                                 geneDict[geneName] = tempGene(geneName)
                             #if
                         #if
+
+                        if geneName not in geneDict:
+                            continue
 
                         if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
                             "tmRNA"] :
@@ -625,7 +633,7 @@ class EMBLparser():
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.mRNA = PList()
                         myTranscript.mRNA.positionList = i.positionList
-                        myTranscript.mRNA.location = [i.positionList[0], i.positionList[-1]] if i.positionList else None
+                        myTranscript.mRNA.location = [i.positionList[0], i.positionList[-1]]
                         myTranscript.transcribe = True
                         myTranscript.transcriptID = i.transcript_id
                         myTranscript.transcriptProduct = i.product
@@ -634,7 +642,7 @@ class EMBLparser():
                         if i.link :
                             myTranscript.CDS = PList()
                             myTranscript.CDS.positionList = i.link.positionList
-                            myTranscript.CDS.location = [i.link.positionList[0], i.link.positionList[-1]]if i.positionList else None
+                            myTranscript.CDS.location = [i.link.positionList[0], i.link.positionList[-1]]
                             myTranscript.translate = True
                             myTranscript.proteinID = i.link.protein_id
                             myTranscript.linkMethod = i.linkMethod
@@ -680,7 +688,7 @@ class EMBLparser():
                             myTranscript = Locus(myRealGene.newLocusTag())
                         myTranscript.CDS = PList()
                         myTranscript.CDS.positionList = i.positionList
-                        myTranscript.CDS.location = [i.positionList[0], i.positionList[-1]] if i.positionList else None
+                        myTranscript.CDS.location = [i.positionList[0], i.positionList[-1]]
                         myTranscript.proteinID = i.protein_id
                         myTranscript.proteinProduct = i.product
                         if i.qualifiers.has_key("transl_table") :
@@ -756,7 +764,7 @@ class EMBLparser():
 			      "Met":"M", "Phe":"F", "Asn":"N", "Gln":"Q", "Asp":"D",
                   "Glu":"E", "His":"H", "Lys":"K", "Arg":"R", "Ser":"S",
 			      "Thr":"T", "Tyr":"Y", "Trp":"W", "Cys":"C", "Pro":"P",
-			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X", "Asx" : "B", 
+			      "Sec":"U", "Pyl":"O", "TERM":"Stop", "OTHER": "X", "Asx" : "B",
                   "Glx" : "Z", "Xle" : "J"}
 		sec_coord_list.append((int(intermediate[1]), triplet_dict[intermediate[-1]], "g."))
 		print sec_coord_list
