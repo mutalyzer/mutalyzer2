@@ -1366,7 +1366,7 @@ def _add_transcript_info(mutator, transcript, output):
                 if str(cds_original[0:3]) in \
                    Bio.Data.CodonTable.unambiguous_dna_by_id \
                    [transcript.txTable].start_codons:
-                     output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in reference protein'.format(cds_original[0:3]))
+                     output.addMessage(__file__,2, "WSTART", 'Non canonical start codon {0} was found in the reference protein'.format(cds_original[0:3]))
                 else:
                     output.addMessage(__file__,2, "WSTART", '{0} codon of {1} was not found in table of start codons for current organism  '.format(cds_original[0:3], transcript.locusTag))
             if str(cds_variant[0:3]) in \
@@ -1502,6 +1502,10 @@ def process_variant(mutator, description, record, output):
             genes = record.record.listGenes() 
             transcript_id = transcript_id and "%.3i" % int(transcript_id)
             locus =  list(record.record.locusDict)
+            if locus:
+                gene_names = locus
+            else:
+                gene_names = genes
             if gene_symbol in genes:
                 # We found our gene.
                 gene = record.record.findGene(gene_symbol)
@@ -1515,12 +1519,12 @@ def process_variant(mutator, description, record, output):
                     gene = record.record.geneList[0]
                 else:
                     output.addMessage(__file__, 4, "EINVALIDGENE",
-                        "No gene specified. Please choose from: %s" % ", ".join(locus))
+                        "No gene specified. Please choose from: %s" % ", ".join(gene_names))
             
             else:
                 output.addMessage(__file__, 4, "EINVALIDGENE",
                     "Gene %s not found. Please choose from: %s" % (
-                    gene_symbol, ", ".join(genes)))
+                    gene_symbol, ", ".join(gene_names)))
 
             if gene:
                 # Find transcript.

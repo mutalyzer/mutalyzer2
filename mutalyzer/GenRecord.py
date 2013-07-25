@@ -112,7 +112,7 @@ class Locus(object) :
         self.linkMethod = None
         self.transcriptProduct = None
         self.proteinProduct = None
-        self.nonusableList = []
+        
     #__init__
 
     def cancelDescription(self):
@@ -298,6 +298,7 @@ class Record(object) :
         self.chromDescription = ""
         self.orientation = 1
         self.recordId = None
+        self.nonusableList = []
     #__init__
 
     def findGene(self, name) :

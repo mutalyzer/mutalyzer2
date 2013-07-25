@@ -621,10 +621,10 @@ class GBparser():
                         myRealGene.transcriptList.append(myTranscript)
                     #if
                     else:
-                        if not i.gene in  myTranscript.nonusableList:
+                        if not i.gene in  record.nonusableList:
                             output.addMessage(__file__, 2, 'WPOSITION',
                               "The gene's {0} coordinates extend beyond transcript".format(i.gene))
-                            myTranscript.nonusableList.append(i.gene)
+                            record.nonusableList.append(i.gene)
                 #for
                 for i in myGene.cdsList :
                     if not i.linked and \
