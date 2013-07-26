@@ -1325,8 +1325,8 @@ def _add_transcript_info(mutator, transcript, output):
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
-        protein_variant = cds_variant.translate(table = transcript.txTable)                              
-        protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript,output,True,res)
+        protein_variant = cds_variant.translate(table = transcript.txTable)                                 
+        protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript,output, True, res)
         if result:
              output.addMessage(__file__, 2, 'WSUBST',
                               ' The noncanonical amino acids were found and substituted in \
@@ -1356,7 +1356,6 @@ def _add_transcript_info(mutator, transcript, output):
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
             if protein_original[0]!="M":
-                print "ORIGINAL"
                # util.print_protein_html('M' + protein_original[1:] + '*', 0, 0, output,
                #                     'oldProteinFancy')
                # util.print_protein_html('M'+ protein_original[1:] + '*', 0, 0, output,
@@ -1392,8 +1391,7 @@ def _add_transcript_info(mutator, transcript, output):
                 output.addOutput('newprotein', '?')
                 output.addOutput('newProteinFancy', pprint_sequence('?', format=HtmlFormat, annotations=[[(0, 0)], [(0,0)]]))
                 output.addOutput('newProteinFancyText', pprint_sequence('?', format=AnsiFormat, annotations=[[(0, 0)], [(0,0)]]))
-                output.addMessage(__file__, 2, "WSTART", "No start codon was found in predicted cds")
-                print cds_variant[0:3], cds_original[0:3]  
+                output.addMessage(__file__, 2, "WSTART", "No start codon was found in predicted cds") 
 
         else:
             cds_length = util.cds_length(
@@ -1992,7 +1990,6 @@ def star_subst(cds_original,protein, transcript, triplets, aa_dict_r, output, fl
                     output.addOutput('reference_exceptions', [str(start+1), str(start*3+1) + ".." + str(start*3+3), str(genomic+1) + ".." + str(genomic+3) , str(cds_original[start*3:start*3+3]), protein[start] + ' (' + aa_dict_r[protein[start]] + ')', aa + ' (' + aa_dict_r[aa] + ')'])
                 protein[start] = aa
                 protein=protein.toseq()
- 
     return protein.split("*")[0], res 
 def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, flag, start_original, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
@@ -2012,10 +2009,13 @@ def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, fl
                     
                 if flag:
                     genomic = transcript.CM.x2g(i*3, 0) 
-                    if i in start_original:               
-                        exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')', 'Yes'])
-                    else:
-                          exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
+                    semaph = True
+                    for start, aa, sch in transcript.transl_except:
+                        if i == start and triplets[triplet] == aa:              
+                            exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')', 'Yes'])
+                            semaph = False
+                    if semaph:                  
+                        exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
 
                 prot[i] =  triplets[triplet]
     prot = prot.toseq()   
