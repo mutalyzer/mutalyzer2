@@ -1325,8 +1325,8 @@ def _add_transcript_info(mutator, transcript, output):
         if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon.')   
-        protein_variant = cds_variant.translate(table = transcript.txTable)                                 
-        protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript,output, True)
+        protein_variant = cds_variant.translate(table = transcript.txTable)                              
+        protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript,output,True,res)
         if result:
              output.addMessage(__file__, 2, 'WSUBST',
                               ' The noncanonical amino acids were found and substituted in \
@@ -1833,7 +1833,7 @@ def check_variant(description, output):
                     return
                 protein_variant = cds_variant.translate(table = transcript.txTable)                         
                 
-                protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript, output, False)
+                protein_variant, result = substitute_variant_prot(cds_variant, protein_variant, triplets, transcript, output, False, res)
                 #add Selenocysteine recognition. [see substitute_variant function]
                 #protein_variant = substitute_variant_prot(cds_variant, protein_variant, triplets, True)    
                 #&&&
@@ -1994,7 +1994,7 @@ def star_subst(cds_original,protein, transcript, triplets, aa_dict_r, output, fl
                 protein=protein.toseq()
  
     return protein.split("*")[0], res 
-def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, flag, Sec = False):
+def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, flag, start_original, Sec = False):
     '''This function return a changed protein. Amino acids are substituted according to triplets dictionary. 
        Unfortunately, the function does not check context around substituted amino_acid, but it has that possibility in future'''
     result = []
@@ -2011,8 +2011,12 @@ def substitute_variant_prot(nucl_seq, prot_seq, triplets, transcript, output, fl
                      #  prot[i] =  triplets[triplet]
                     
                 if flag:
-                    genomic = transcript.CM.x2g(i*3, 0)                
-                    exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
+                    genomic = transcript.CM.x2g(i*3, 0) 
+                    if i in start_original:               
+                        exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')', 'Yes'])
+                    else:
+                          exceptions.append([i+1, str(i*3+1) + ".." + str(i*3+3), str(genomic+1) + ".." + str(genomic+3), triplet, prot[i] + ' (' + aa_dict_r[prot[i]] + ')', triplets[triplet] + ' (' + aa_dict_r[triplets[triplet]] + ')'])
+
                 prot[i] =  triplets[triplet]
     prot = prot.toseq()   
     prot = prot.split("*")[0]
