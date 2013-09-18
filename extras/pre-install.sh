@@ -39,6 +39,7 @@ apt-get install -y \
   python-webpy \
   python-webtest \
   python-nose \
+  python-werkzeug \
   apache2 \
   libapache2-mod-wsgi \
   python-setuptools \
