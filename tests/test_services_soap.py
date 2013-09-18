@@ -328,8 +328,8 @@ class TestServicesSoap():
         """
         r = self.client.service.getdbSNPDescriptions('rs9919552')
         assert 'NC_000011.9:g.111959625C>T' in r.string
-        assert 'NG_012337.1:g.7055C>T' in r.string
-        assert 'NM_003002.2:c.204C>T' in r.string
+        assert 'NG_012337.2:g.7055C>T' in r.string
+        assert 'NM_003002.3:c.204C>T' in r.string
         assert 'NP_002993.1:p.Ser68=' in r.string
 
     def test_gettranscripts(self):
@@ -496,8 +496,8 @@ class TestServicesSoap():
         Running getTranscriptsAndInfo on a chromosomal slice should include
         chromosomal positions.
 
-        slice: 48284000 - 48259456 (COL1A1 with 5001 and 2001 borders)
-        translation start: 48284000 - 5001 + 1 = 48279000
+        slice: 48284003 - 48259456 (COL1A1 with 5001 and 2001 borders)
+        translation start: 48284003 - 5001 + 1 = 48279003
         translation end: 48259456 + 2001 = 48261457
         """
         ud = str(self.client.service.sliceChromosomeByGene('COL1A1', 'human', 5000, 2000))
@@ -508,18 +508,18 @@ class TestServicesSoap():
         for t in r.TranscriptInfo:
             if t.name != 'COL1A1_v001':
                 continue
-            assert_equal(t.cTransStart, '-126')
+            assert_equal(t.cTransStart, '-129')
             assert_equal(t.gTransStart, 5001)
-            assert_equal(t.chromTransStart, 48279000)
+            assert_equal(t.chromTransStart, 48279003)
             assert_equal(t.cTransEnd, '*1406')
-            assert_equal(t.gTransEnd, 22544)
+            assert_equal(t.gTransEnd, 22547)
             assert_equal(t.chromTransEnd, 48261457)
-            assert_equal(t.sortableTransEnd, 5801)
+            assert_equal(t.sortableTransEnd, 4883)
             assert_equal(t.cCDSStart, '1')
-            assert_equal(t.gCDSStart, 5127)
+            assert_equal(t.gCDSStart, 5130)
             assert_equal(t.chromCDSStart, 48278874)
-            assert_equal(t.cCDSStop, '4395')
-            assert_equal(t.gCDSStop, 21138)
+            assert_equal(t.cCDSStop, '3477')
+            assert_equal(t.gCDSStop, 21141)
             assert_equal(t.chromCDSStop, 48262863)
 
     @slow
