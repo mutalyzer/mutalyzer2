@@ -1,19 +1,16 @@
-Mutalyzer, a HGVS variant nomenclature checker
-==============================================
+Mutalyzer development
+=====================
+
+Development of Mutalyzer happens on the GitLab server:
+https://git.lumc.nl/mutalyzer/mutalyzer
 
 
-Documentation
--------------
-
-See the doc/ directory for (possibly outdated) developer documentation and
-presentation slides related to Mutalyzer. See http://www.mutalyzer.nl for
-user documentation.
-
-
-Installation
+Coding style
 ------------
 
-See the INSTALL file for installation instructions.
+In general, try to follow the [PEP 8](http://www.python.org/dev/peps/pep-0008)
+guidelines for Python code and
+[PEP 257](http://www.python.org/dev/peps/pep-0257/) for docstrings.
 
 
 Unit tests
@@ -34,6 +31,43 @@ Or, if you are in a hurry, skip the long-running tests with:
     MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
 
 
+Working with feature branches
+-----------------------------
+
+New features are best implemented in their own branches, isolating the work
+from unrelated developments. In fact, it's good practice to **never work
+directly on the master branch** but always in a separate branch. For this
+reason, the master branch on the GitLab server is locked. Feature branches can
+be merged back into master via a **merge request** in GitLab.
+
+Before starting work on your feature, create a branch for it:
+
+    git checkout -b your-feature
+
+Commit changes on this branch. If you're happy with it, push to GitLab:
+
+    git push origin your-feature -u
+
+Now create a merge request to discuss the implementation with your
+colleagues. This might involve adding additional commits which are included in
+the merge request by pushing your branch again:
+
+    git commit
+    git push
+
+You may also be asked to rebase your branch on the master branch if it has
+changed since you started your work. This will require a forced push:
+
+    git fetch
+    git rebase origin/master
+    git push -f
+
+If the work is done, a developer can merge your branch and close the merge
+request. After the branch was merged you can safely delete it:
+
+    git branch -d your-feature
+
+
 Release management
 ------------------
 
@@ -44,75 +78,29 @@ On the event of a new release, the following is done:
 
     emacs mutalyzer/__init__.py
 
-Update `__date__`, remove `'dev'` from `__version_info__` and set `RELEASE` to
+Update `__date__`, remove `dev` from `__version_info__` and set `RELEASE` to
 `True`.
 
-    svn commit -m 'Release 2.0.beta-11'
-    svn cp https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
-      https://humgenprojects.lumc.nl/svn/mutalyzer/tags/mutalyzer-2.0.beta-11 \
-      -m 'Tag 2.0.beta-11'
+    git commit -am 'Bump version to 2.0.beta-XX'
+    git tag -a 'mutalyzer-2.0.beta-XX'
+    git push --tags
+
     emacs mutalyzer/__init__.py
 
 Set `__version_info__` to a new version ending with `'dev'` and set `RELEASE`
 to `FALSE`.
 
-    svn commit -m 'Open development for 2.0.beta-12'
+    git commit -am 'Open development for 2.0.beta-YY'
 
 Be sure to upgrade your installations to the new version as described in the
 INSTALL file (e.g. `sudo python setup.py develop` for development checkouts).
-
-
-Working with feature branches
------------------------------
-
-Some features are best developed isolated in a separate branch (a 'feature
-branch') before being merged into trunk. To make it easier to switch between
-branches, don't checkout the entire repository tree from its root. Instead,
-checkout the branch subdirectory (or trunk) directly and use `svn switch` to
-switch between them. Otherwise, you might need to update you Apache config and
-run `sudo python setup.py develop` every time you switch branches.
-
-To create the branch from current trunk:
-
-    svn cp https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
-      https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
-      -m 'Create my-feature-branch from trunk'
-
-To work from this branch, switch your checkout to there:
-
-    svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
-
-To make it easier to reintegrate long-running branches, you can periodically
-merge trunk into them:
-
-    svn merge https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
-
-Use `mergeinfo` to see which revisions are already merged. You can cherry-pick
-revisions to merge by using the `-c` option:
-
-    svn mergeinfo https://humgenprojects.lumc.nl/svn/mutalyzer/trunk \
-      --show-revs eligible
-    svn merge -c 354 https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
-
-If you just want to mark a revision as being merged, you can use the
-`--record-only` switch.
-
-Reintegrating a branch into trunk is done from the trunk checkout:
-
-    svn switch https://humgenprojects.lumc.nl/svn/mutalyzer/trunk
-    svn merge --reintegrate \
-      https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch
-    svn rm https://humgenprojects.lumc.nl/svn/mutalyzer/branches/my-feature-branch \
-      -m 'Delete refactor-mutalyzer-branch'
-
-All `merge` operations taken an optional `--dry-run` switch. Use it to see
-what would happen without having to actually applying.
 
 
 Development notes
 -----------------
 
 Todo list:
+
 - Improve the web interface design :)
 - Test all uses of mkstemp().
 - Use naming conventions for modules Crossmap, Db, File, GenRecord, Retriever
@@ -154,6 +142,7 @@ Todo list:
 - Be more explicit in all the type of descriptions we don't currently support.
 
 Code style guide:
+
 - Follow PEP 8 (code) and PEP 257 (docstrings).
     http://www.python.org/dev/peps/pep-0008/
     http://www.python.org/dev/peps/pep-0257/
@@ -174,6 +163,7 @@ Code style guide:
   effort.
 
 Obsoleted features:
+
 - On eu.liacs.nl:
   /etc/apache2/mods-enabled/rewrite.load contains a rewrite rule that converts
   "Variant_info.php" to "Variant_info".
@@ -188,6 +178,7 @@ Dependencies
 ------------
 
 Mutalyzer depends on the following (Debian/Ubuntu) packages:
+
 - mysql-server     >= 5.1
 - python           >= 2.6
 - python-mysqldb   >= 1.2.2
@@ -202,6 +193,7 @@ Mutalyzer depends on the following (Debian/Ubuntu) packages:
 - python-suds      >= 0.3.9-1
 
 The web and SOAP interfaces depend on the following packages:
+
 - apache2             >= 2.2.11
 - libapache2-mod-wsgi >= 2.8
 - python-webpy        >= 0.33
@@ -209,9 +201,11 @@ The web and SOAP interfaces depend on the following packages:
 - python-simpletal    >= 4.1-6
 
 Automatic remote deployment depends on Fabric:
+
 - fabric >= 0.9.0-2
 
 The unit tests depend on the following packages:
+
 - python-nose    >= 0.11
 - python-webtest >= 1.2.3
 
