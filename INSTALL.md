@@ -39,7 +39,8 @@ Short version
 
 Run the following commands:
 
-    svn co https://www.mutalyzer.nl/svn/mutalyzer2/trunk .
+    git clone https://git.lumc.nl/mutalyzer/mutalyzer
+    cd mutalyzer
     sudo bash extras/pre-install.sh
     sudo python setup.py install
     sudo bash extras/post-install.sh
@@ -76,9 +77,9 @@ your hands on a tarball and:
     tar -zxvf mutalyzer-XXX.tar.gz
     cd mutalyzer-XXX
 
-Or get the source from SVN directly:
+Or get the source from GitLab directly:
 
-    svn https://www.mutalyzer.nl/svn/mutalyzer2/trunk mutalyzer
+    git clone https://git.lumc.nl/mutalyzer/mutalyzer
     cd mutalyzer
 
 
