@@ -17,7 +17,7 @@ should be run with the mutalyzer directory as working directory.
 
 import os
 import sys
-from daemon import pidlockfile, DaemonContext
+from daemon import pidfile, DaemonContext
 from lockfile import LockTimeout
 import signal
 import time
@@ -40,10 +40,10 @@ def daemonize():
     Write PID file when it is not locked and daemonize a loop processing
     scheduled batch jobs.
     """
-    pidfile = os.path.realpath(config.get('PIDfile'))
+    pidfile_path = os.path.realpath(config.get('PIDfile'))
 
-    lockfile = pidlockfile.TimeoutPIDLockFile(pidfile, acquire_timeout=1,
-                                              threaded=False)
+    lockfile = pidfile.TimeoutPIDLockFile(pidfile_path, acquire_timeout=1,
+                                          threaded=False)
 
     context = DaemonContext(working_directory=os.getcwd(),
                             pidfile=lockfile)
