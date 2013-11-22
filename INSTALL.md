@@ -142,7 +142,7 @@ above, you can upgrade Mutalyzer to a new version by running from the source
 directory:
 
     sudo python setup.py install
-    sudo bash extras/post-upgrade
+    sudo bash extras/post-upgrade.sh
 
 If you installed Mutalyzer in a development environment, you don't have to
 do anything usually, except for the following situations.
