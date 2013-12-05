@@ -26,7 +26,7 @@ COLOR_END='\033[0m'
 
 # The 'cd /' is a hack to prevent the mutalyzer package under the current
 # directory to be used.
-PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
+STATIC_DIR=$(cd / && python -c 'import pkg_resources; print pkg_resources.resource_filename("mutalyzer", "templates/static")')
 BIN_BATCHD=$(which mutalyzer-batchd)
 BIN_CACHE_SYNC=$(which mutalyzer-cache-sync)
 BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
@@ -396,8 +396,8 @@ if [ -e /var/www/mutalyzer/base ]; then
     rm /var/www/mutalyzer/base
 fi
 
-echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base${COLOR_END}"
-ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
+echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $STATIC_DIR${COLOR_END}"
+ln -s $STATIC_DIR /var/www/mutalyzer/static
 
 echo "Restarting Apache"
 /etc/init.d/apache2 restart

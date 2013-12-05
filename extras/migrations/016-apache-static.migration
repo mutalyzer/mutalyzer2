@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Update Apache configuration from /base to /static
+#
+# Usage:
+#   ./016-apache-static.migration [migrate]
+
+COLOR_INFO='\033[32m'
+COLOR_WARNING='\033[33m'
+COLOR_ERROR='\033[31m'
+COLOR_END='\033[0m'
+
+CONF=/etc/apache2/conf.d/mutalyzer.conf
+
+if [ -e $CONF ] && ! $(grep -q "/mutalyzer/static" $CONF) && $(grep -q "/mutalyzer/base" $CONF); then
+    echo -e "${COLOR_WARNING}This migration is needed.${COLOR_END}"
+    if [ "$1" = 'migrate' ]; then
+        echo 'Performing migration.'
+        sed -i "s!/mutalyzer/base!/mutalyzer/static!g" $CONF
+        echo -e "${COLOR_INFO}Changed /mutalyzer/base to /mutalyzer/static in ${CONF}${COLOR_END}"
+        echo 'Performed migration.'
+    fi
+else
+    echo -e "${COLOR_INFO}This migration is not needed.${COLOR_END}"
+fi
