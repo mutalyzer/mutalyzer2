@@ -144,7 +144,8 @@ CREATE TABLE GBInfo (
 ) ENGINE = MYISAM;
 CREATE TABLE Link (
   mrnaAcc char(20) NOT NULL,
-  protAcc char(20) NOT NULL,
+  protAcc char(20) DEFAULT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (mrnaAcc),
   UNIQUE KEY protAcc (protAcc)
 ) ENGINE = MYISAM;
