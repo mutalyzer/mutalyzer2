@@ -122,7 +122,6 @@ PIDfile = "/var/run/mutalyzer/mutalyzer-batchd.pid"
 batchInputMaxSize = 5
 
 # The output header for NameChecking
-# Todo: migration for restriction sites
 nameCheckOutHeader = "Input", "Errors | Messages", "AccNo", "Genesymbol", "Variant", "Reference Sequence Start Descr.", "Coding DNA Descr.", "Protein Descr.", "GeneSymbol Coding DNA Descr.", "GeneSymbol Protein Descr.", "Genomic Reference", "Coding Reference", "Protein Reference", "Affected Transcripts", "Affected Proteins", "Restriction Sites Created", "Restriction Sites Deleted"
 
 # The output header for SyntaxChecking

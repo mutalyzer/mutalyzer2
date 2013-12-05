@@ -4,6 +4,9 @@
 # Copy this file to ~/.config/mutalyzer/config to overwrite definitions from
 # /etc/mutalyzer.config.
 
+# Use this email address for retrieval of records at the NCBI.
+email = "mutalyzer@humgen.nl"
+
 # The cache directory.
 cache = "/home/<USERNAME>/.cache/mutalyzer"
 
