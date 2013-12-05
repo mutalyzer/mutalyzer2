@@ -131,7 +131,7 @@ the batch daemon and the webserver (the SOAP part) running.
 
 Now run the tests:
 
-    MUTALYZER_ENV=test nosetests
+    nosetests
 
 
 Upgrade Mutalyzer

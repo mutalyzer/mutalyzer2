@@ -5,7 +5,6 @@ General Mutalyzer website interface.
 
 SERVICE_SOAP_LOCATION = '/services'
 SERVICE_JSON_LOCATION = '/json'
-WSDL_VIEWER = 'templates/wsdl-viewer.xsl'
 GENOME_BROWSER_URL = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position={chromosome}:{start}-{stop}&hgt.customText={bed_file}'
 
 
@@ -27,6 +26,7 @@ import urllib
 from collections import defaultdict
 
 from lxml import etree
+import pkg_resources
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
@@ -176,7 +176,7 @@ class render_tal:
 
 
 # TAL template render
-render = render_tal(os.path.join(mutalyzer.package_root(), 'templates'),
+render = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
     globals = {
     'version'             : mutalyzer.__version__,
     'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
@@ -231,7 +231,9 @@ class Download:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z-]+\.(?:py|cs).
         """
-        file_path = os.path.join(mutalyzer.package_root(), 'templates', file)
+        file_path = os.path.join(
+            pkg_resources.resource_filename('mutalyzer', 'templates'),
+            file)
 
         if not os.path.isfile(file_path):
             raise web.notfound()
@@ -263,8 +265,9 @@ class Downloads:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-        file_path = os.path.join(mutalyzer.package_root(), 'templates',
-                                 'downloads', file)
+        file_path = os.path.join(
+            pkg_resources.resource_filename('mutalyzer', 'templates'),
+            'downloads', file)
 
         if not os.path.isfile(file_path):
             raise web.notfound()
@@ -1541,8 +1544,9 @@ class SoapApi:
         wsdl = Wsdl11(soap.application.interface)
         wsdl.build_interface_document(url)
         wsdl_handle = StringIO(wsdl.get_interface_document())
-        xsl_handle = open(os.path.join(mutalyzer.package_root(), WSDL_VIEWER),
-                          'r')
+        xsl_handle = open(os.path.join(
+                pkg_resources.resource_filename('mutalyzer', 'templates'),
+                'wsdl-viewer.xsl'), 'r')
         wsdl_doc = etree.parse(wsdl_handle)
         xsl_doc = etree.parse(xsl_handle)
         transform = etree.XSLT(xsl_doc)
