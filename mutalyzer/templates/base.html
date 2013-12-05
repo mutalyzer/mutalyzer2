@@ -1,0 +1,367 @@
+<html>
+  <head>
+    <link rel="shortcut icon"
+      href="static/images/favicon.ico"
+      type="image/x-icon">
+    <link rel="stylesheet"
+      type="text/css"
+      href="static/css/style.css">
+    <script
+      type="text/javascript"
+      language="javascript"
+      src="static/js/interface.js">
+    </script>
+    <script
+      type="text/javascript"
+      language="javascript"
+      src="static/js/generator.js">
+    </script>
+    <meta http-equiv="Content-Type"
+      content="text/html; charset=iso-8859-1">
+    <title>Mutalyzer {{ version|e }} &mdash; {{ page_title|e }}</title>
+  </head>
+  <body
+    style="background-image: url('static/images/background.gif');
+           background-repeat: repeat-y;"
+    leftmargin="0"
+    topmargin="0"
+    marginwidth="0"
+    marginheight="0">
+    <!-- Header -->
+    <a id = "top" name = "top"></a>
+
+    <table width="98%"
+      border="0"
+      cellspacing="0"
+      cellpadding="0">
+      <tr>
+        <!-- Corner logo -->
+        <td rowspan="2"
+          valign="bottom"
+          width="180">
+          <a href="index"
+            target="_top"><img
+              src="static/images/mutalyzer_logo_bw.png" width="180" height="112"
+              alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
+        <td valign="top"
+          bgcolor="#FFFFFF"
+          width="20"><img
+            src="static/images/1x1b.gif" height="1" width="20" border="0">
+        </td>
+        <td align="left"
+          valign="bottom"
+          bgcolor="White"
+          width="98%">
+          <!-- Banner -->
+          <center>
+            <a href="index"><img
+                src="static/images/mutalyzer_logo.png"
+                width="90%"
+                height="90"
+                alt="Rauzy color fractal"
+                border="0"></a>
+          </center>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+        </td>
+        <td>
+        <table width = "100%" style = "padding:0; border:0; margin:0">
+          <tr>
+            <td align="left">
+              <a href="javascript:history.back(-1);"
+                 class="hornav">previous page</a>&nbsp;&nbsp;&nbsp;
+            </td>
+            <td align="right">
+              <a href="index"
+                 class="hornav">home</a>&nbsp;&nbsp;&nbsp;
+              <a href="about"
+                 class="hornav">about</a>&nbsp;&nbsp;&nbsp;
+              <a href="mailto:{{ contactEmail|e }}"
+                 class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
+              <a href="#bottom" class="hornav">go to bottom</a>&nbsp;&nbsp;&nbsp;
+            </td>
+          </tr>
+        </table>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="3"
+          bgcolor="#000000"><img
+            src="static/images/1x1b.gif"
+            height="1"
+            border="0"></td>
+      </tr>
+    </table>
+
+    <table width="98%"
+      border="0"
+      cellspacing="0"
+      cellpadding="0">
+    <tr>
+      <td width="180" valign="top">
+
+      <table id="menu" width="180" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td valign="top" width="20">
+          <img src="static/images/1x1b.gif" height="19" border="0">
+        </td>
+      </tr>
+
+{# Fields are: url, id, caption, subnav #}
+{% set navigation_menu = [
+    ('index', 'homepage', 'Home', False),
+    ('check', 'name-checker', 'Name Checker', False),
+    ('syntaxCheck', 'syntax-checker', 'Syntax Checker', False),
+    ('positionConverter', 'position-converter', 'Position Converter', False),
+    ('snp', 'snp-converter', 'SNP Converter', False),
+    ('nameGenerator', 'name-generator', 'Name Generator', False),
+    ('descriptionExtract', 'description-extractor', 'Description Extractor', False),
+    ('upload', 'reference-loader', 'Reference File Loader', False),
+    ('batch', 'batch-jobs', 'Batch Jobs', False),
+    ('batchNameChecker', 'batch-name-checker', 'Name Checker', True),
+    ('batchSyntaxChecker', 'batch-syntax-checker', 'Syntax Checker', True),
+    ('batchPositionConverter', 'batch-position-converter', 'Position Converter', True),
+    ('batchSnpConverter', 'batch-snp-converter', 'SNP Converter', True),
+    ('webservices', 'webservices', 'Web Services', False)
+] -%}
+{% set active_page = active_page|default('home') -%}
+
+{% for url, id, caption, subnav in navigation_menu %}
+  <tr class="menu{% if id == active_page %} active{% endif %}">
+    {% if subnav %}
+      <td></td>
+      <td valign="baseline" width="10" class="bullet sub"></td>
+      <td colspan="2">
+        <a href="{{ url|e }}">{{ caption|e }}</a>
+      </td>
+    {% else %}
+      <td valign="top" width="20" class="bullet"></td>
+      <td colspan="3">
+        <a href="{{ url|e }}">{{ caption|e }}</a>
+      </td>
+    {% endif %}
+  </tr>
+{% endfor %}
+
+      <tr><td>&nbsp;</td></tr>
+
+      <tr class="menu">
+        <td valign="top" width="20" class="bullet"></td>
+        <td colspan="3">
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation">Documentation</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td valign="top" width="20" class="bullet"></td>
+        <td colspan="3">
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq">FAQ</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td valign="top" width="20" class="bullet"></td>
+        <td colspan="3">
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise">Exercise</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td valign="top" width="20" class="bullet"></td>
+        <td colspan="3">
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDisclaimer">Disclaimer</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td valign="top" width="20" class="bullet"></td>
+        <td colspan="3">
+          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer">Feedback</a>
+        </td>
+      </tr>
+
+      <tr><td>&nbsp;</td></tr>
+
+      <tr class="menu inactive">
+        <td valign="top" width="20" class="bullet"></td>
+        <td colspan="3">
+          External Links
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td></td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
+        <td colspan="2">
+          <a href="http://www.genenames.org/guidelines.html"
+           >Human Gene Nomenclature</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td></td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
+        <td colspan="2">
+          <a href="http://www.hgvs.org/mutnomen/"
+           >HGVS Variation Nomenclature</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td></td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
+        <td colspan="2">
+          <a href="http://dx.doi.org/10.1002/humu.21427"
+           >HGVS Nomenclature Extension Proposal</a>
+        </td>
+      </tr>
+
+      <tr class="menu">
+        <td></td>
+        <td valign="baseline" width="10" class="bullet sub"></td>
+        <td colspan="2">
+          <a href="http://www.lovd.nl/">LOVD</a>
+        </td>
+      </tr>
+
+      <tr>
+        <td width="20"><img
+          src="static/images/1x1b.gif"
+          height="10"
+          width="20"
+          border="0">
+        </td>
+        <td width="12"><img
+          src="static/images/1x1b.gif"
+          height="10"
+          width="10"
+          border="0">
+        </td>
+        <td valign="top" width="12"><img
+          src="static/images/1x1b.gif"
+          height="10"
+          width="10"
+          border="0">
+        </td>
+        <td valign="top" width="136"><img
+          src="static/images/1x1b.gif"
+          height="10"
+          width="136"
+          border="0">
+        </td>
+      </tr>
+      </table>
+
+    </td>
+    <td width="20"><img
+      src="static/images/1x1b.gif"
+      height="1"
+      width="20"
+      border="0">
+    </td>
+    <td width="98%" valign="top"><br>
+
+    <!-- Content -->
+
+    <table cellpadding="0" cellspacing="0" width="100%" border="0">
+    <tbody><tr>
+    <td width="0"></td>
+    <td width="0">
+
+
+    <center>
+      <h2>Mutalyzer {{ version|e }}<br>
+        <small><small><small><small>
+        {% if release %}
+          released on {{ releaseDate|e }}
+        {% else %}
+          development version
+        {% endif %}
+        </small></small></small></small>
+      </h2>
+      HGVS nomenclature version
+      <span>{{ nomenclatureVersion|e }}</span>
+    </center>
+    <p>
+
+    <h3><center>{{ page_title|e }}</center></h3>
+
+    {% block content %}{% endblock %}
+
+      <!-- Navigation bar -->
+      <table border="0"
+        cellspacing="0"
+        cellpadding="0"
+          width="100%"
+        align="center">
+      <tr>
+        <td colspan="2"><img
+          src="static/images/1x1b.gif"
+          width="1"
+          height="20"
+          border="0">
+        </td>
+      </tr>
+      <tr>
+        <td bgcolor="#000000" colspan="3"><img
+          src="static/images/1x1b.gif"
+          width="100%"
+          height="1"
+          border="0"></td>
+      </tr>
+      <tr>
+        <td align="left">
+          &nbsp;<a href="javascript:history.back(-1);"
+             class="hornav">previous page</a>
+        </td>
+        <td align="middle">
+          <img src = "static/images/LUMC_24x24.png" align = "middle">
+          &nbsp; &copy; {{ copyrightYears[0]|e }}-{{ copyrightYears[1]|e }}
+          <a href = "http://www.lumc.nl">LUMC</a>
+          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+          &nbsp; &nbsp;
+        </td>
+        <td align="right">
+          <a href="#top" class="hornav">go to top</a>&nbsp;&nbsp;&nbsp;&nbsp;
+        </td>
+      </tr>
+      <tr>
+  <!--
+        <td colspan="2"
+          align="center">Last edited by:  with /usr/bin/vim
+        </td>
+  -->
+      </tr>
+      <tr>
+        <td colspan="2"><img
+          src="static/images/1x1b.gif"
+          width="1"
+          height="10"
+          border="0">
+        </td>
+      </tr>
+      </table>
+    </td>
+  </tr>
+  </table>
+  <a id = "bottom" name = "bottom"></a>
+{% if piwik %}
+<!-- Piwik -->
+<script type="text/javascript">
+var pkBaseURL = "{{ piwikBase|e }}/";
+document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script type="text/javascript">
+try {
+var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", {{ piwikSite|e }});
+piwikTracker.trackPageView();
+piwikTracker.enableLinkTracking();
+} catch( err ) {}
+</script><noscript><p><img src="{{ piwikBase|e }}/piwik.php?idsite={{ piwikSite|e }}" style="border:0" alt="" /></p></noscript>
+<!-- End Piwik Tracking Code -->
+{% endif %}
+  </body>
+</html>

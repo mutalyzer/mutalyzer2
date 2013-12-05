@@ -24,6 +24,7 @@ import bz2
 import web
 import urllib
 from collections import defaultdict
+from web.contrib.template import render_jinja
 
 from lxml import etree
 import pkg_resources
@@ -176,7 +177,7 @@ class render_tal:
 
 
 # TAL template render
-render = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
+render_ = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
     globals = {
     'version'             : mutalyzer.__version__,
     'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
@@ -190,6 +191,22 @@ render = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
     'piwikBase'           : config.get('piwikBase'),
     'piwikSite'           : config.get('piwikSite')
 })
+
+# Jinja2 template render
+render = render_jinja(pkg_resources.resource_filename('mutalyzer', 'templates'),
+                      encoding='utf-8',
+                      globals = {
+    'version'             : mutalyzer.__version__,
+    'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
+    'releaseDate'         : mutalyzer.__date__,
+    'release'             : mutalyzer.RELEASE,
+    'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
+    'contactEmail'        : config.get('email'),
+    'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
+    'serviceJsonLocation' : SERVICE_JSON_LOCATION,
+    'piwik'               : config.get('piwik'),
+    'piwikBase'           : config.get('piwikBase'),
+    'piwikSite'           : config.get('piwikSite')})
 
 # web.py application
 app = web.application(urls, globals(), autoreload = False)
@@ -424,7 +441,7 @@ class SyntaxCheck:
             "parseError"    : None,
             "debug"         : ""
         }
-        return render.parse(args)
+        return render.syntax_checker(args)
     #GET
 
     def POST(self):
@@ -468,7 +485,7 @@ class SyntaxCheck:
         output.addMessage(__file__, -1, 'INFO',
             'Finished request syntaxCheck(%s)' % i.variant)
 
-        return render.parse(args)
+        return render.syntax_checker(args)
     #POST
 #SyntaxCheck
 
@@ -531,7 +548,7 @@ class Snp:
             'lastpost' : rs_id
         }
 
-        return render.snp(args)
+        return render_.snp(args)
     #snp
 #Snp
 
@@ -637,7 +654,7 @@ class PositionConverter:
                 'Finished request positionConverter(%s, %s)' % (build,
                 variant))
 
-        return render.converter(attr)
+        return render_.converter(attr)
     #position_converter
 #PositionConverter
 
@@ -801,7 +818,7 @@ class Check:
             the site layout and include the HTML form.
         """
         if not name:
-            return render.check(dict(name=None), standalone=standalone)
+            return render_.check(dict(name=None), standalone=standalone)
 
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
@@ -904,7 +921,7 @@ class Check:
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
 
-        return render.check(args, standalone=standalone, prevent_caching=True)
+        return render_.check(args, standalone=standalone, prevent_caching=True)
     #check
 #Check
 
@@ -953,7 +970,7 @@ class DescriptionExtractor:
         }
 
         if not (referenceSeq and variantSeq):
-            return render.descriptionExtract(args)
+            return render_.descriptionExtract(args)
 
         output.addMessage(__file__, -1, 'INFO',
             "Received Description Extract request from %s" % IP)
@@ -990,7 +1007,7 @@ class DescriptionExtractor:
         output.addMessage(__file__, -1, 'INFO',
             "Finished Description Extract request")
 
-        return render.descriptionExtract(args)
+        return render_.descriptionExtract(args)
     #descriptionExtract
 #DescriptionExtract
 
@@ -1101,7 +1118,7 @@ class BatchProgress:
             web.header('Content-Type', 'text/plain')
             return ret
 
-        return render.progress(attr)
+        return render_.progress(attr)
     #GET
 #BatchProgress
 
@@ -1245,7 +1262,7 @@ class BatchChecker:
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
-        return render.batch(attr, page=page)
+        return render_.batch(attr, page=page)
     #batch
 #BatchChecker
 
@@ -1341,7 +1358,7 @@ class Uploader:
             'maxSize'              : float(maxUploadSize) / 1048576,
             'errors'               : errors
         }
-        return render.gbupload(args)
+        return render_.gbupload(args)
     #GET
 
     def POST(self):
@@ -1508,7 +1525,7 @@ class Uploader:
                i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation,
                i.chrnameassembly, i.chrname, i.chrnamestart, i.chrnamestop, i.chrnameorientation))
 
-        return render.gbupload(args)
+        return render_.gbupload(args)
     #POST
 #Uploader
 
@@ -1567,7 +1584,7 @@ class Static:
         """
         Render a TAL template as HTML.
 
-        @kwarg page: Page name to render. A TAL template with this name must
+        @kwarg page: Page name to render_. A TAL template with this name must
                      exist. Special case is a page of None, having the same
                      effect as 'index'.
         @type page: string
@@ -1579,6 +1596,6 @@ class Static:
         if not page:
             page = 'index'
 
-        return getattr(render, page)()
+        return getattr(render_, page)()
     #GET
 #Static
