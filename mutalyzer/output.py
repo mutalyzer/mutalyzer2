@@ -45,7 +45,6 @@ class Output() :
     Special methods:
         - __init__(instance) ; Initialise the class with the calling
                                module.
-        - __del__()          ; Close the logfile and clean up.
 
     Public methods:
         - addMessage(filename, level, code, description) ; Add a message to
@@ -82,25 +81,6 @@ class Output() :
         self._errors = 0
         self._warnings = 0
     #__init__
-
-    def __del__(self) :
-        """
-        Clean up the output dictionary, the messages list and close the log
-        file.
-
-        Private variables(altered):
-            - _loghandle  ; The handle of the log file defined in the
-                             configuration file.
-            - _outputdata ; The output dictionary.
-            - _messages   ; The messages list.
-        """
-
-        self._loghandle.close()
-        for i in self._outputData :
-            del i
-        for i in self._messages :
-            del i
-    #__del__
 
     def addMessage(self, filename, level, code, description) :
         """
