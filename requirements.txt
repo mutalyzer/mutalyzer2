@@ -1,5 +1,4 @@
 MySQL-python==1.2.4
-SimpleTAL==4.3
 argparse==1.2.1
 biopython==1.63b
 configobj==4.7.2
@@ -21,3 +20,4 @@ WebOb==1.1.1
 WebTest==1.4.2
 cssselect==0.9.1
 -e git+https://github.com/mammadori/magic-python.git#egg=Magic_file_extensions
+http://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-4.3.tar.gz
