@@ -14,7 +14,6 @@ Usage:
 
 import sys
 import os
-import html2text
 
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
