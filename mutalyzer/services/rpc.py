@@ -5,6 +5,8 @@ Mutalyzer RPC services.
        kind of strictness checks on the input. For example, in
        transcriptInfo, the build argument must really be present. (Hint:
        use __checkBuild.)
+       We should use the built-in validator functionality from Spyne for
+       this.
 """
 
 
