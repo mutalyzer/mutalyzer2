@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% set active_page = "description-extractor" %}
+{% set page_title = "Variant Description Extractor" %}
+
+{% block content %}
+
+<p>
+<b style="color: red">Note that this is an experimental service.</b>
+</p>
+
+<p>
+Extract the HGVS variant description from a reference sequence and an
+observed sequence. For now, we require the user to fill in two
+sequences. After the testing phase, we plan to use the underlying
+algorithm for:
+</p>
+
+<ul>
+  <li>
+    Disambiguation in the name checker. This will enable full support
+    for complex variants.
+  </li>
+  <li>
+    Comparison of two reference sequences. Useful for migrating a
+    variant description to an other reference sequence.
+  </li>
+  <li>
+    Implementation of a Reference Sequence Editor.
+  </li>
+</ul>
+
+<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
+  <form action = "" method = "post">
+    Please supply a reference sequence and an observed sequence.<br>
+    <br>
+    <div style="border: 1px solid grey; padding: 20px">
+      <b>Reference sequence:</b><br>
+      <br>
+      Example: <tt>ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</tt><br>
+      <br>
+      <input
+        type = "text"
+        name = "referenceSeq"
+        value = "{{ lastReferenceSeq|e }}"
+        style = "width:100%"
+      ><br>
+      <input type="button" value="Clear field" onclick="clearField(this.form, 'referenceSeq');">
+    </div>
+    <br>
+    <div style="border: 1px solid grey; padding: 20px">
+      <b>Observed sequence:</b><br>
+      <br>
+      Example: <tt>ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</tt><br>
+      <br>
+      <input
+        type = "text"
+        name = "variantSeq"
+        value = "{{ lastVariantSeq|e }}"
+        style = "width:100%"
+      ><br>
+      <input type="button" value="Clear field" onclick="clearField(this.form, 'variantSeq');">
+    </div>
+    <br>
+    <input type="submit" value="Submit">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/DescriptionExtractor">Help</a>
+  </form>
+</div>
+
+{% if description is defined %}
+  <h3>Variant Description Extractor results:</h3>
+
+  <div class="messages">
+    {% for m in messages %}
+      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e }})">{{ m.description|e }}</p>
+    {% endfor %}
+    <p>{{ summary|e }}</p>
+  </div>
+
+  {% if not errors %}
+    <p>
+    <b>Genomic description:</b>
+    </p>
+    <p>
+    <tt>g.{{ description|e }}</tt>
+    </p>
+    <p>
+    <b>Overview of the raw variants:</b>
+    </p>
+    <table class = "laTable">
+      <tr>
+        <td>Start</td>
+        <td>End</td>
+        <td>Type</td>
+        <td>Deleted</td>
+        <td>Inserted</td>
+        <td>Shift</td>
+        <td>Description</td>
+      </tr>
+      {% for i in visualisation %}
+        <tr>
+          {% for j in i %}
+            <td>{{ j|e }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endif %}
+
+{% endblock content %}

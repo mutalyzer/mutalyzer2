@@ -459,7 +459,7 @@ class SyntaxCheck:
         counter = Db.Counter()
         counter.increment('syntaxcheck', 'website')
 
-        variant = i.variant
+        variant = i.variant or ''
         if variant.find(',') >= 0:
             output.addMessage(__file__, 2, "WCOMMASYNTAX",
                 "Comma's are not allowed in the syntax, autofixed.")
@@ -962,13 +962,13 @@ class DescriptionExtractor:
         output = Output(__file__)
         IP = web.ctx["ip"]
 
+        if not (referenceSeq and variantSeq):
+            return render.description_extractor()
+
         args = {
             'lastReferenceSeq' : referenceSeq,
             'lastVariantSeq'   : variantSeq
         }
-
-        if not (referenceSeq and variantSeq):
-            return render_.descriptionExtract(args)
 
         output.addMessage(__file__, -1, 'INFO',
             "Received Description Extract request from %s" % IP)
@@ -998,14 +998,13 @@ class DescriptionExtractor:
             'visualisation'    : visualisation,
             'errors'           : errors,
             'summary'          : summary,
-            'messages'         : map(util.message_info,
-                output.getMessages())
+            'messages'         : map(util.message_info, output.getMessages())
         }
 
         output.addMessage(__file__, -1, 'INFO',
             "Finished Description Extract request")
 
-        return render_.descriptionExtract(args)
+        return render.description_extractor(args)
     #descriptionExtract
 #DescriptionExtract
 

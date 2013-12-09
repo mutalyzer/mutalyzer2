@@ -33,7 +33,7 @@
   <br>
 </div>
 <br>
-{% if variant %}
+{% if variant is defined %}
   <h3>Variant syntax checker results:</h3>
   {% if parseError %}
     <div class="messages">
