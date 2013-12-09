@@ -13,7 +13,8 @@ from mutalyzer.services import rpc
 
 # SOAP/1.1 application.
 application = Application([rpc.MutalyzerService], tns=mutalyzer.SOAP_NAMESPACE,
-                          in_protocol=Soap11(), out_protocol=Soap11(),
+                          in_protocol=Soap11(validator='lxml'),
+                          out_protocol=Soap11(),
                           name='Mutalyzer')
 
 
