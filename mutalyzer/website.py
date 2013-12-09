@@ -134,8 +134,6 @@ class render_tal:
 
             context.addGlobal('interactive', not standalone)
 
-            context.addGlobal('location', web.ctx.homedomain + web.ctx.homepath)
-
             for name, value in self.globals.items():
                 context.addGlobal(name, value)
 
@@ -1596,6 +1594,8 @@ class Static:
         if not page:
             page = 'index'
 
-        return getattr(render_, page)()
+        args = {'location': web.ctx.homedomain + web.ctx.homepath}
+
+        return getattr(render, page)(args)
     #GET
 #Static
