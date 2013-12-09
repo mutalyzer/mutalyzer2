@@ -652,7 +652,7 @@ class PositionConverter:
                 'Finished request positionConverter(%s, %s)' % (build,
                 variant))
 
-        return render_.converter(attr)
+        return render.position_converter(attr)
     #position_converter
 #PositionConverter
 

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% set active_page = "position-converter" %}
+{% set page_title = "Position Converter" %}
+
+{% block content %}
+
+<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
+  <p>
+  Please supply the build which you want to use to convert your
+  position, available builds at the moment are: hg18 (NCBI36), hg19
+  (GRCh37) and mm10 (GRCm38).
+  </p>
+  <p>
+  <b>Note:</b> The Position Converter does NOT check the description or
+  normalize it to HGVS. Use the <a href="check">Name Checker</a> for this.
+  </p>
+  <p>
+  Example: NM_003002.2:c.274G&gt;T<br>
+  or: chr11:g.111959693G&gt;T<br>
+  or: NC_000011.9:g.111959693G&gt;T<br>
+  </p>
+  <table id="inputform">
+      <form action = "" method = "post" enctype = "multipart/form-data">
+          <tr>
+              <td><b>Build</b></td>
+              <div>{{ build|e }}</div>
+              <td>
+                  <select name="build">
+                    <option
+                    selected="selected"
+                    value="{{ selected_build|e }}">{{ selected_build|e }}</option>
+                    {% for i in unselected_builds %}
+                      <option value="{{ i|e }}">{{ i|e }}</option>
+                    {% endfor %}
+                  </select>
+              </td>
+          </tr>
+          <tr>
+              <td><b>Variant</b></td>
+              <td><input type = "text"
+                         name = "variant"
+                         value = "{{ variant|e }}"
+                         style = "width:500px"></td>
+          </tr>
+          <tr>
+              <td colspan="2">
+                <input type="submit" value="Submit">
+                <input type="button" value="Clear field"
+                         onclick="clearField(this.form, 'variant');">
+                <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter">Help</a>
+              </td>
+
+          </tr>
+      </form>
+  </table> <!-- inputform -->
+</div>
+
+{% if posted %}
+  <h3>Results:</h3>
+
+  <div class="messages">
+    {% for m in messages %}
+      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e
+      }})">{{ m.description|e }}</p>
+    {% endfor %}
+    <p>{{ summary|e }}</p>
+  </div>
+
+  {% if gName %}
+    <p>
+    <b>Chromosomal Variant:</b>
+    </p>
+    <pre>{{ gName|e }}</pre>
+    {% if not cNames %}
+      <p>
+      <b>No transcripts found in mutation region</b>
+      </p>
+    {% endif %}
+  {% endif %}
+
+  {% if cNames %}
+    <p>
+    <b>Found transcripts in mutation region:</b>
+    </p>
+    <pre>{% for i in cNames %}{{ i|e }}<br>{% endfor %}</pre>
+  {% endif %}
+{% endif %}
+
+{% endblock content %}
