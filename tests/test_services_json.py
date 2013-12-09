@@ -10,6 +10,14 @@ import mutalyzer
 from mutalyzer.services.json import application
 
 
+# Todo: We currently have no way of testing POST requests to the JSON API. We
+#     had some tests for this, but they were removed with the new setup [1].
+#     They depended on a patch to Spyne [2].
+#
+# [1] https://git.lumc.nl/mutalyzer/mutalyzer/commit/fbf42d8c4a6c6ec27f9001686941b835867199ff
+# [2] https://github.com/LUMC/spyne/commit/58660dec28d47b1c3bf1e46d20f55a913ad036cd
+
+
 class TestServicesJson():
     """
     Test the Mutalyzer HTTP/RPC+JSON interface.
