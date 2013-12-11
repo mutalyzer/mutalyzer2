@@ -1,6 +1,17 @@
 {% extends "base.html" %}
 
-{% set active_page = "batch-jobs" %}
+{% if batchType == "NameChecker" %}
+  {% set active_page = "batch-name-checker" %}
+{% elif batchType == "SyntaxChecker" %}
+  {% set active_page = "batch-syntax-checker" %}
+{% elif batchType == "PositionConverter" %}
+  {% set active_page = "batch-position-converter" %}
+{% elif batchType == "SnpConverter" %}
+  {% set active_page = "batch-snp-converter" %}
+{% else %}
+  {% set active_page = "batch-jobs" %}
+{% endif %}
+
 {% set page_title = "Batch {{ batchType|e }} Interface" %}
 
 {% block content %}

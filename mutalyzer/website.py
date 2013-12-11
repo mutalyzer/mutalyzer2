@@ -29,8 +29,6 @@ from web.contrib.template import render_jinja
 from lxml import etree
 import pkg_resources
 from cStringIO import StringIO
-from simpletal import simpleTALES
-from simpletal import simpleTAL
 from spyne.server.http import HttpBase
 
 import mutalyzer
@@ -191,6 +189,8 @@ render_ = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
 })
 
 # Jinja2 template render
+# Todo: We rely on Apache to add a Content-Type header, we should actually
+#     set it ourselves.
 render = render_jinja(pkg_resources.resource_filename('mutalyzer', 'templates'),
                       encoding='utf-8',
                       globals = {
@@ -913,7 +913,9 @@ class Check:
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
 
-        return render.name_checker(args, prevent_caching=True)
+        web.header('Cache-Control', 'no-cache')
+        web.header('Expires', '-1')
+        return render.name_checker(args)
     #check
 #Check
 
@@ -1189,10 +1191,7 @@ class BatchChecker:
         }
 
         # Make sure the correct page is displayed for an entrypoint
-        if batchType:
-            page = 'batch' + batchType
-        else:
-            page = 'batch'
+        if not batchType:
             batchType = 'NameChecker'
 
         if batchType in attr["batchTypes"]:
@@ -1248,7 +1247,7 @@ class BatchChecker:
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
-        return render.batch_jobs(attr, page=page)
+        return render.batch_jobs(attr)
     #batch
 #BatchChecker
 
