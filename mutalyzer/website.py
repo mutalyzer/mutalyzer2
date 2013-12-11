@@ -1077,9 +1077,7 @@ class BatchProgress:
         Parameters:
         - jobID: ID of the job to return progress for.
         - totalJobs: Total number of entries in this job.
-        - ajax: If set, return plain text result.
 
-        @todo: The 'progress' template does not exist.
         @todo: Actually, signaling 'OK' here only means the last entry was
             taken from the database queue. It might still be processing, in
             which case not all output is yet written to the result file.
@@ -1092,7 +1090,6 @@ class BatchProgress:
         """
         attr = {"percentage": 0}
 
-        i = web.input(ajax = None)
         try:
             jobID = int(i.jobID)
             total = int(i.totalJobs)
@@ -1106,16 +1103,14 @@ class BatchProgress:
             percentage = 0
         elif percentage > 100:
             percentage = 100
-        if i.ajax:
-            if percentage == 100:
-                #download url, check if file still exists
-                ret = "OK"
-            else:
-                ret = percentage
-            web.header('Content-Type', 'text/plain')
-            return ret
 
-        return render_.progress(attr)
+        if percentage == 100:
+            #download url, check if file still exists
+            ret = "OK"
+        else:
+            ret = percentage
+        web.header('Content-Type', 'text/plain')
+        return ret
     #GET
 #BatchProgress
 
@@ -1259,7 +1254,7 @@ class BatchChecker:
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
-        return render_.batch(attr, page=page)
+        return render.batch_jobs(attr, page=page)
     #batch
 #BatchChecker
 
