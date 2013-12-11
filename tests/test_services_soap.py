@@ -7,10 +7,11 @@ import datetime
 import logging
 import os
 import tempfile
+import time
 
 from nose.tools import *
 from spyne.server.null import NullServer
-from suds import WebFault
+from spyne.model.fault import Fault
 from suds.client import Client
 
 import mutalyzer
@@ -92,15 +93,16 @@ class TestServicesSoap():
         assert_equal(r.valid, False)
         assert len(r.messages.SoapMessage) >= 1
 
-    #@raises(WebFault)
+    @raises(Fault)
     def test_checksyntax_empty(self):
         """
         Running checkSyntax with no variant name should raise exception.
         """
-        # The validator doesn't work with NullServer, so we cannot do this
-        # test. See https://github.com/arskom/spyne/issues/318
-        #self._call('checkSyntax')
-        pass
+        # The validator doesn't work with NullServer, so we cannot really do
+        # these type of tests. However, in this case we implemented our own
+        # check instead of relying on the validator.
+        # See https://github.com/arskom/spyne/issues/318
+        self._call('checkSyntax')
 
     def test_transcriptinfo_valid(self):
         """
@@ -554,7 +556,7 @@ class TestServicesSoap():
             try:
                 result = self._call('getBatchJob', job_id)
                 break
-            except WebFault:
+            except Fault:
                 result = self._call('monitorBatchJob', job_id)
                 assert int(result) <= len(variants)
                 time.sleep(1)
@@ -586,9 +588,9 @@ facilisi."""
         try:
             self._call('submitBatchJob', data.encode('base64'), 'NameChecker')
             assert False
-        except WebFault as e:
+        except Fault as e:
             # - senv:Client.RequestTooLong: Raised by Spyne, depending on
             #     the max_content_length argument to the HttpBase constructor.
             # - EMAXSIZE: Raised by Mutalyzer, depending on the
             #     batchInputMaxSize configuration setting.
-            assert e.fault.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')
+            assert e.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')
