@@ -546,7 +546,7 @@ class Snp:
             'lastpost' : rs_id
         }
 
-        return render_.snp(args)
+        return render.snp_converter(args)
     #snp
 #Snp
 
