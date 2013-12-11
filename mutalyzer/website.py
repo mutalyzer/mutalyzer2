@@ -1355,7 +1355,7 @@ class Uploader:
             'maxSize'              : float(maxUploadSize) / 1048576,
             'errors'               : errors
         }
-        return render_.gbupload(args)
+        return render.reference_loader(args)
     #GET
 
     def POST(self):
@@ -1522,7 +1522,7 @@ class Uploader:
                i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation,
                i.chrnameassembly, i.chrname, i.chrnamestart, i.chrnamestop, i.chrnameorientation))
 
-        return render_.gbupload(args)
+        return render.reference_loader(args)
     #POST
 #Uploader
 
