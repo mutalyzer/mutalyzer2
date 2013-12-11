@@ -30,7 +30,7 @@ import pkg_resources
 from cStringIO import StringIO
 from simpletal import simpleTALES
 from simpletal import simpleTAL
-from spyne.interface.wsdl import Wsdl11
+from spyne.server.http import HttpBase
 
 import mutalyzer
 from mutalyzer import util
@@ -1541,9 +1541,11 @@ class SoapApi:
         @todo: Cache this transformation.
         """
         url = web.ctx.homedomain + web.ctx.homepath + SERVICE_SOAP_LOCATION
-        wsdl = Wsdl11(soap.application.interface)
-        wsdl.build_interface_document(url)
-        wsdl_handle = StringIO(wsdl.get_interface_document())
+
+        soap_server = HttpBase(soap.application)
+        soap_server.doc.wsdl11.build_interface_document(url)
+        wsdl_handle = StringIO(soap_server.doc.wsdl11.get_interface_document())
+
         xsl_handle = open(os.path.join(
                 pkg_resources.resource_filename('mutalyzer', 'templates'),
                 'wsdl-viewer.xsl'), 'r')
