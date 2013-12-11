@@ -207,7 +207,7 @@ render = render_jinja(pkg_resources.resource_filename('mutalyzer', 'templates'),
     'piwikSite'           : config.get('piwikSite')})
 
 # web.py application
-app = web.application(urls, globals(), autoreload = False)
+app = web.application(urls, globals(), autoreload=False)
 
 
 class RedirectHome:
@@ -816,7 +816,7 @@ class Check:
             the site layout and include the HTML form.
         """
         if not name:
-            return render_.check(dict(name=None), standalone=standalone)
+            return render.name_checker(dict(standalone=standalone))
 
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
@@ -847,13 +847,6 @@ class Check:
 
         genomic_dna = output.getIndexedOutput('molType', 0) != 'n'
         genomic_description = output.getIndexedOutput('genomicDescription', 0, '')
-
-        # Create a tuple (description, link) from a description
-        def description_to_link(description):
-            link = None
-            if description[-1] != '?':
-                link = urllib.quote(description)
-            return description, link
 
         # Create a link to the UCSC Genome Browser
         browser_link = None
@@ -892,11 +885,11 @@ class Check:
             'summary'            : summary,
             'parseError'         : parse_error,
             'errors'             : errors,
-            'genomicDescription' : (genomic_description, urllib.quote(genomic_description)),
+            'genomicDescription' : genomic_description,
             'chromDescription'   : output.getIndexedOutput('genomicChromDescription', 0),
             'genomicDNA'         : genomic_dna,
             'visualisation'      : output.getOutput('visualisation'),
-            'descriptions'       : map(description_to_link, output.getOutput('descriptions')),
+            'descriptions'       : output.getOutput('descriptions'),
             'protDescriptions'   : output.getOutput('protDescriptions'),
             'oldProtein'         : output.getOutput('oldProteinFancy'),
             'altStart'           : output.getIndexedOutput('altStart', 0),
@@ -913,13 +906,14 @@ class Check:
             'legends'            : output.getOutput('legends'),
             'reference'          : reference,
             'browserLink'        : browser_link,
-            'extractedDescription' : (extracted, urllib.quote(extracted)),
-            'extractedProtein'   : (extractedProt, urllib.quote(extractedProt))
+            'extractedDescription' : extracted,
+            'extractedProtein'   : extractedProt,
+            'standalone'         : standalone
         }
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
 
-        return render_.check(args, standalone=standalone, prevent_caching=True)
+        return render.name_checker(args, prevent_caching=True)
     #check
 #Check
 
