@@ -2,24 +2,16 @@
 """
 Daemon for processing scheduled batch jobs.
 
-We use python-daemon [1] for daemonizing the job processing. This file
-should be run with the mutalyzer directory as working directory.
+The process can be shutdown gracefully by sending a SIGINT (Ctrl+C) or SIGTERM
+signal.
 
-@todo: Check if PID dir is writable.
 @todo: Get rid of ugly exception logging.
 @todo: Reload configuration without restarting (for example, on SIGHUP).
-@todo: Use [2] to set process name (and use that in init script).
-
-[1] http://pypi.python.org/pypi/python-daemon/
-[2] http://code.google.com/p/py-setproctitle/
 """
 
 
-import os
-import sys
-from daemon import pidfile, DaemonContext
-from lockfile import LockTimeout
 import signal
+import sys
 import time
 import traceback
 
@@ -28,76 +20,44 @@ from mutalyzer.Db import Batch, Counter
 from mutalyzer.Scheduler import Scheduler
 
 
-def cleanup(signum, stack_frame):
-    """
-    Generate a normal exit signal.
-    """
-    sys.exit(1)
-
-
 def daemonize():
     """
-    Write PID file when it is not locked and daemonize a loop processing
-    scheduled batch jobs.
+    Run forever in a loop processing scheduled batch jobs.
     """
-    pidfile_path = os.path.realpath(config.get('PIDfile'))
+    database = Batch()
+    counter = Counter()
+    scheduler = Scheduler(database)
 
-    lockfile = pidfile.TimeoutPIDLockFile(pidfile_path, acquire_timeout=1,
-                                          threaded=False)
+    def handle_exit(signum, stack_frame):
+        if scheduler.stopped():
+            sys.stderr.write('mutalyzer-batchd: Terminated\n')
+            sys.exit(1)
+        if signum == signal.SIGINT:
+            sys.stderr.write('mutalyzer-batchd: Hitting Ctrl+C again will terminate any running job!\n')
+        scheduler.stop()
 
-    context = DaemonContext(working_directory=os.getcwd(),
-                            pidfile=lockfile)
+    signal.signal(signal.SIGTERM, handle_exit)
+    signal.signal(signal.SIGINT, handle_exit)
 
-    # To preserve stderr and stdout, add these arguments.
-    #stdin=sys.stdin,
-    #stdout=sys.stdout,
-    #files_preserve=[sys.stdin, sys.stdout]
+    while not scheduler.stopped():
+        # Process batch jobs. This process() method runs while there
+        # exist jobs to run.
+        try:
+            scheduler.process(counter)
+        except Exception as e:
+            f = open('/tmp/batcherror.log', 'a+')
+            f.write('Error (%s): %s\n' % (type(e), str(e)))
+            f.write('%s\n\n' % repr(traceback.format_exc()))
+            f.flush()
+            f.close()
+        if scheduler.stopped():
+            break
+        # Wait a bit and process any possible new jobs.
+        time.sleep(1)
 
-    # Writing the PID file as root before changing user/group does not seem
-    # to work.
-    #uid=pwd.getpwnam('www-data').pw_uid
-    #gid=grp.getgrnam('www-data').gr_gid
-
-    context.signal_map = {
-        signal.SIGTERM: cleanup,
-        signal.SIGHUP:  'terminate'
-    }
-
-    with context:
-        # Note that any opened files are now closed. This is not a problem for
-        # the config module, since it does not read its file again after
-        # initialisation.
-        database = Batch()
-        counter = Counter()
-
-        scheduler = Scheduler(database)
-
-        def stop_scheduler(signum, stack_frame):
-            scheduler.stop()
-        signal.signal(signal.SIGTERM, stop_scheduler)
-
-        while not scheduler.stopped():
-            # Process batch jobs. This process() method runs while there
-            # exist jobs to run.
-            try:
-                scheduler.process(counter)
-            except Exception as e:
-                f = open('/tmp/batcherror.log', 'a+')
-                f.write('Error (%s): %s\n' % (type(e), str(e)))
-                f.write('%s\n\n' % repr(traceback.format_exc()))
-                f.flush()
-                f.close()
-            if scheduler.stopped():
-                break
-            # Wait a bit and process any possible new jobs.
-            time.sleep(5)
+    sys.stderr.write('mutalyzer-batchd: Graceful shutdown\n')
+    sys.exit(0)
 
 
 if __name__ == '__main__':
-    try:
-        daemonize()
-    except LockTimeout:
-        # If we want to see something on stdout, we have to add it to the
-        # {files_preserve} argument of the DaemonContext.
-        #print 'Mutalyzer batch daemon is already running.'
-        sys.exit(1)
+    daemonize()
