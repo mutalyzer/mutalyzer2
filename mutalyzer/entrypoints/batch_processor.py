@@ -10,7 +10,6 @@ import argparse
 import signal
 import sys
 import time
-import traceback
 
 from .. import config
 from .. import Db
@@ -40,14 +39,7 @@ def process():
     while not scheduler.stopped():
         # Process batch jobs. This process() method runs while there
         # exist jobs to run.
-        try:
-            scheduler.process(counter)
-        except Exception as e:
-            f = open('/tmp/batcherror.log', 'a+')
-            f.write('Error (%s): %s\n' % (type(e), str(e)))
-            f.write('%s\n\n' % repr(traceback.format_exc()))
-            f.flush()
-            f.close()
+        scheduler.process(counter)
         if scheduler.stopped():
             break
         # Wait a bit and process any possible new jobs.
