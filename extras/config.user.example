@@ -1,8 +1,8 @@
 #
 # Mutalyzer config file.
 #
-# Copy this file to ~/.config/mutalyzer/config to overwrite definitions from
-# /etc/mutalyzer.config.
+# Specify the location of this file in the MUTALYZER_SETTINGS environment
+# variable.
 
 # Use this email address for retrieval of records at the NCBI.
 email = "mutalyzer@humgen.nl"
