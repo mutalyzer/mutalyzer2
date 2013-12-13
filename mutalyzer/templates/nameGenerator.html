@@ -1,11 +1,9 @@
-<html>
-  <head>
-    <title></title>
-  </head>
-  <body >
-<!-- Start of template -->
-<div metal:define-macro="content">
-<center><h3 tal:content = "structure string:Name Generator"></h3></center>
+{% extends "base.html" %}
+
+{% set active_page = "name-generator" %}
+{% set page_title = "Name Generator" %}
+
+{% block content %}
 
     <div id="main">
       <form id="mainform" onkeyup="update();" onchange="update();">
@@ -205,6 +203,4 @@
 
 </div>
 
-</div>
-</body>
-</html>
+{% endblock content %}

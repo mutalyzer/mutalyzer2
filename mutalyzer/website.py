@@ -24,12 +24,11 @@ import bz2
 import web
 import urllib
 from collections import defaultdict
+from web.contrib.template import render_jinja
 
 from lxml import etree
 import pkg_resources
 from cStringIO import StringIO
-from simpletal import simpleTALES
-from simpletal import simpleTAL
 from spyne.server.http import HttpBase
 
 import mutalyzer
@@ -133,8 +132,6 @@ class render_tal:
 
             context.addGlobal('interactive', not standalone)
 
-            context.addGlobal('location', web.ctx.homedomain + web.ctx.homepath)
-
             for name, value in self.globals.items():
                 context.addGlobal(name, value)
 
@@ -176,7 +173,7 @@ class render_tal:
 
 
 # TAL template render
-render = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
+render_ = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
     globals = {
     'version'             : mutalyzer.__version__,
     'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
@@ -191,8 +188,26 @@ render = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
     'piwikSite'           : config.get('piwikSite')
 })
 
+# Jinja2 template render
+# Todo: We rely on Apache to add a Content-Type header, we should actually
+#     set it ourselves.
+render = render_jinja(pkg_resources.resource_filename('mutalyzer', 'templates'),
+                      encoding='utf-8',
+                      globals = {
+    'version'             : mutalyzer.__version__,
+    'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
+    'releaseDate'         : mutalyzer.__date__,
+    'release'             : mutalyzer.RELEASE,
+    'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
+    'contactEmail'        : config.get('email'),
+    'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
+    'serviceJsonLocation' : SERVICE_JSON_LOCATION,
+    'piwik'               : config.get('piwik'),
+    'piwikBase'           : config.get('piwikBase'),
+    'piwikSite'           : config.get('piwikSite')})
+
 # web.py application
-app = web.application(urls, globals(), autoreload = False)
+app = web.application(urls, globals(), autoreload=False)
 
 
 class RedirectHome:
@@ -424,7 +439,7 @@ class SyntaxCheck:
             "parseError"    : None,
             "debug"         : ""
         }
-        return render.parse(args)
+        return render.syntax_checker(args)
     #GET
 
     def POST(self):
@@ -444,7 +459,7 @@ class SyntaxCheck:
         counter = Db.Counter()
         counter.increment('syntaxcheck', 'website')
 
-        variant = i.variant
+        variant = i.variant or ''
         if variant.find(',') >= 0:
             output.addMessage(__file__, 2, "WCOMMASYNTAX",
                 "Comma's are not allowed in the syntax, autofixed.")
@@ -468,7 +483,7 @@ class SyntaxCheck:
         output.addMessage(__file__, -1, 'INFO',
             'Finished request syntaxCheck(%s)' % i.variant)
 
-        return render.parse(args)
+        return render.syntax_checker(args)
     #POST
 #SyntaxCheck
 
@@ -531,7 +546,7 @@ class Snp:
             'lastpost' : rs_id
         }
 
-        return render.snp(args)
+        return render.snp_converter(args)
     #snp
 #Snp
 
@@ -637,7 +652,7 @@ class PositionConverter:
                 'Finished request positionConverter(%s, %s)' % (build,
                 variant))
 
-        return render.converter(attr)
+        return render.position_converter(attr)
     #position_converter
 #PositionConverter
 
@@ -801,7 +816,7 @@ class Check:
             the site layout and include the HTML form.
         """
         if not name:
-            return render.check(dict(name=None), standalone=standalone)
+            return render.name_checker(dict(standalone=standalone))
 
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
@@ -832,13 +847,6 @@ class Check:
 
         genomic_dna = output.getIndexedOutput('molType', 0) != 'n'
         genomic_description = output.getIndexedOutput('genomicDescription', 0, '')
-
-        # Create a tuple (description, link) from a description
-        def description_to_link(description):
-            link = None
-            if description[-1] != '?':
-                link = urllib.quote(description)
-            return description, link
 
         # Create a link to the UCSC Genome Browser
         browser_link = None
@@ -877,11 +885,11 @@ class Check:
             'summary'            : summary,
             'parseError'         : parse_error,
             'errors'             : errors,
-            'genomicDescription' : (genomic_description, urllib.quote(genomic_description)),
+            'genomicDescription' : genomic_description,
             'chromDescription'   : output.getIndexedOutput('genomicChromDescription', 0),
             'genomicDNA'         : genomic_dna,
             'visualisation'      : output.getOutput('visualisation'),
-            'descriptions'       : map(description_to_link, output.getOutput('descriptions')),
+            'descriptions'       : output.getOutput('descriptions'),
             'protDescriptions'   : output.getOutput('protDescriptions'),
             'oldProtein'         : output.getOutput('oldProteinFancy'),
             'altStart'           : output.getIndexedOutput('altStart', 0),
@@ -898,13 +906,16 @@ class Check:
             'legends'            : output.getOutput('legends'),
             'reference'          : reference,
             'browserLink'        : browser_link,
-            'extractedDescription' : (extracted, urllib.quote(extracted)),
-            'extractedProtein'   : (extractedProt, urllib.quote(extractedProt))
+            'extractedDescription' : extracted,
+            'extractedProtein'   : extractedProt,
+            'standalone'         : standalone
         }
 
         output.addMessage(__file__, -1, 'INFO', 'Finished variant %s' % name)
 
-        return render.check(args, standalone=standalone, prevent_caching=True)
+        web.header('Cache-Control', 'no-cache')
+        web.header('Expires', '-1')
+        return render.name_checker(args)
     #check
 #Check
 
@@ -947,13 +958,13 @@ class DescriptionExtractor:
         output = Output(__file__)
         IP = web.ctx["ip"]
 
+        if not (referenceSeq and variantSeq):
+            return render.description_extractor()
+
         args = {
             'lastReferenceSeq' : referenceSeq,
             'lastVariantSeq'   : variantSeq
         }
-
-        if not (referenceSeq and variantSeq):
-            return render.descriptionExtract(args)
 
         output.addMessage(__file__, -1, 'INFO',
             "Received Description Extract request from %s" % IP)
@@ -983,14 +994,13 @@ class DescriptionExtractor:
             'visualisation'    : visualisation,
             'errors'           : errors,
             'summary'          : summary,
-            'messages'         : map(util.message_info,
-                output.getMessages())
+            'messages'         : map(util.message_info, output.getMessages())
         }
 
         output.addMessage(__file__, -1, 'INFO',
             "Finished Description Extract request")
 
-        return render.descriptionExtract(args)
+        return render.description_extractor(args)
     #descriptionExtract
 #DescriptionExtract
 
@@ -1063,9 +1073,7 @@ class BatchProgress:
         Parameters:
         - jobID: ID of the job to return progress for.
         - totalJobs: Total number of entries in this job.
-        - ajax: If set, return plain text result.
 
-        @todo: The 'progress' template does not exist.
         @todo: Actually, signaling 'OK' here only means the last entry was
             taken from the database queue. It might still be processing, in
             which case not all output is yet written to the result file.
@@ -1078,7 +1086,6 @@ class BatchProgress:
         """
         attr = {"percentage": 0}
 
-        i = web.input(ajax = None)
         try:
             jobID = int(i.jobID)
             total = int(i.totalJobs)
@@ -1092,16 +1099,14 @@ class BatchProgress:
             percentage = 0
         elif percentage > 100:
             percentage = 100
-        if i.ajax:
-            if percentage == 100:
-                #download url, check if file still exists
-                ret = "OK"
-            else:
-                ret = percentage
-            web.header('Content-Type', 'text/plain')
-            return ret
 
-        return render.progress(attr)
+        if percentage == 100:
+            #download url, check if file still exists
+            ret = "OK"
+        else:
+            ret = percentage
+        web.header('Content-Type', 'text/plain')
+        return ret
     #GET
 #BatchProgress
 
@@ -1186,10 +1191,7 @@ class BatchChecker:
         }
 
         # Make sure the correct page is displayed for an entrypoint
-        if batchType:
-            page = 'batch' + batchType
-        else:
-            page = 'batch'
+        if not batchType:
             batchType = 'NameChecker'
 
         if batchType in attr["batchTypes"]:
@@ -1245,7 +1247,7 @@ class BatchChecker:
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
-        return render.batch(attr, page=page)
+        return render.batch_jobs(attr)
     #batch
 #BatchChecker
 
@@ -1341,7 +1343,7 @@ class Uploader:
             'maxSize'              : float(maxUploadSize) / 1048576,
             'errors'               : errors
         }
-        return render.gbupload(args)
+        return render.reference_loader(args)
     #GET
 
     def POST(self):
@@ -1508,7 +1510,7 @@ class Uploader:
                i.fiveutr, i.threeutr, i.chracc, i.start, i.stop, i.orientation,
                i.chrnameassembly, i.chrname, i.chrnamestart, i.chrnamestop, i.chrnameorientation))
 
-        return render.gbupload(args)
+        return render.reference_loader(args)
     #POST
 #Uploader
 
@@ -1567,7 +1569,7 @@ class Static:
         """
         Render a TAL template as HTML.
 
-        @kwarg page: Page name to render. A TAL template with this name must
+        @kwarg page: Page name to render_. A TAL template with this name must
                      exist. Special case is a page of None, having the same
                      effect as 'index'.
         @type page: string
@@ -1579,6 +1581,8 @@ class Static:
         if not page:
             page = 'index'
 
-        return getattr(render, page)()
+        args = {'location': web.ctx.homedomain + web.ctx.homepath}
+
+        return getattr(render, page)(args)
     #GET
 #Static

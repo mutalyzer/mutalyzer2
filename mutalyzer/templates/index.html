@@ -1,78 +1,76 @@
-<html>
-  <head>
-    <title></title>
-  </head>
-  <body>
-    <div metal:define-macro="content">
-      <center><h3>Welcome to the Mutalyzer web site</h3></center>
-      <br>
+{% extends "base.html" %}
 
-      The aim of this program suite is to support checks of sequence variant
-      nomenclature according to the
-      <a href="http://www.hgvs.org/mutnomen/">guidelines</a> of the
-      <a href="http://www.hgvs.org">Human Genome Variation Society</a>.<br>
-      <br>
-      <br>
+{% set active_page = "homepage" %}
+{% set page_title = "Welcome to the Mutalyzer website" %}
 
-      Different interfaces are provided to collect the information necessary
-      for the checks:
-      <ul>
-        <li>
-          The <a href = "check">Name Checker</a> takes the complete sequence
-          variant description as input and checks whether it is correct.
-        </li>
-        <li>
-          The <a href = "syntaxCheck">Syntax Checker</a> takes the complete
-          sequence variant description as input and checks whether the syntax
-          is correct.
-        </li>
-        <li>
-          The <a href = "positionConverter">Position Converter</a> can convert
-          chromosomal positions to transcript orientated positions and vice
-          versa.
-        </li>
-        <li>
-          The <a href = "snp">SNP converter</a> allows you to convert a
-          dbSNP rsId to HGVS notation.
-        </li>
-        <li>
-          The <a href = "nameGenerator">Name Generator</a> is a user friendly
-          interface that helps to make a valid HGVS variant description.
-        </li>
-        <li>
-          The <a href = "descriptionExtract">Description Extractor</a> allows
-          you to generate the HGVS variant description from a reference
-          sequence and an observed sequence.
-        </li>
-        <li>
-          The <a href = "upload">Reference File Loader</a> allows you to load and
-          use your own reference sequence.
-        </li>
-        <li>
-          The <a href="batch">Batch Checkers</a> are interfaces that accept a
-          list of inputs. These interfaces can be used for large quantities of
-          checks.
-        </li>
-        <li>
-          The <a href = "webservices">Web services</a> page provides instructions
-          for the web services.
-        </li>
-      </ul>
-      <br>
-      <!--
-      Mutalyzer <span tal:content = "structure string:${version}"></span> is
-      written completely in <a href="http://www.python.org">Python</a>. The
-      Python Scripting Language was chosen for good readability and therefore
-      easy maintenance.<br>
-      -->
-      GenBank sequences are retrieved from the
-      <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a>
-      (<a href="http://eutils.ncbi.nlm.nih.gov/About/disclaimer.html"
-      >Copyright and Disclaimers</a>).<br>
-      This project is sponsored by
-      <a href = "http://www.sun.com">SUN Microsystems</a> with server
-      hardware within the scope of the Academic Excellence Grant (AEG)
-      program (award EDUD-7832-080223-CNE).<br>
-    </div>
-  </body>
-</html>
+{% block content %}
+
+<p>
+The aim of this program suite is to support checks of sequence variant
+nomenclature according to the
+<a href="http://www.hgvs.org/mutnomen/">guidelines</a> of the
+<a href="http://www.hgvs.org">Human Genome Variation Society</a>.
+</p>
+
+<p>
+Different interfaces are provided to collect the information necessary
+for the checks:
+</p>
+<ul>
+  <li>
+    The <a href = "check">Name Checker</a> takes the complete sequence
+    variant description as input and checks whether it is correct.
+  </li>
+  <li>
+    The <a href = "syntaxCheck">Syntax Checker</a> takes the complete
+    sequence variant description as input and checks whether the syntax
+    is correct.
+  </li>
+  <li>
+    The <a href = "positionConverter">Position Converter</a> can convert
+    chromosomal positions to transcript orientated positions and vice
+    versa.
+  </li>
+  <li>
+    The <a href = "snp">SNP converter</a> allows you to convert a
+    dbSNP rsId to HGVS notation.
+  </li>
+  <li>
+    The <a href = "nameGenerator">Name Generator</a> is a user friendly
+    interface that helps to make a valid HGVS variant description.
+  </li>
+  <li>
+    The <a href = "descriptionExtract">Description Extractor</a> allows
+    you to generate the HGVS variant description from a reference
+    sequence and an observed sequence.
+  </li>
+  <li>
+    The <a href = "upload">Reference File Loader</a> allows you to load and
+    use your own reference sequence.
+  </li>
+  <li>
+    The <a href="batch">Batch Checkers</a> are interfaces that accept a
+    list of inputs. These interfaces can be used for large quantities of
+    checks.
+  </li>
+  <li>
+    The <a href = "webservices">Web services</a> page provides instructions
+    for the web services.
+  </li>
+</ul>
+
+<p>
+GenBank sequences are retrieved from the
+<a href="http://www.ncbi.nlm.nih.gov/">NCBI</a>
+(<a href="http://eutils.ncbi.nlm.nih.gov/About/disclaimer.html"
+>Copyright and Disclaimers</a>).
+</p>
+
+<p>
+This project is sponsored by
+<a href = "http://www.sun.com">SUN Microsystems</a> with server
+hardware within the scope of the Academic Excellence Grant (AEG)
+program (award EDUD-7832-080223-CNE).
+</p>
+
+{% endblock content %}

@@ -18,7 +18,7 @@
     </script>
     <meta http-equiv="Content-Type"
       content="text/html; charset=iso-8859-1">
-    <title tal:content = "structure string:Mutalyzer ${version}"></title>
+    <title>Mutalyzer {{ version|e }} &mdash; {{ page_title|e }}</title>
   </head>
   <body
     style="background-image: url('static/images/background.gif');
@@ -79,7 +79,7 @@
                  class="hornav">home</a>&nbsp;&nbsp;&nbsp;
               <a href="about"
                  class="hornav">about</a>&nbsp;&nbsp;&nbsp;
-              <a tal:attributes = "href string:mailto:${contactEmail}"
+              <a href="mailto:{{ contactEmail|e }}"
                  class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
               <a href="#bottom" class="hornav">go to bottom</a>&nbsp;&nbsp;&nbsp;
             </td>
@@ -111,132 +111,66 @@
         </td>
       </tr>
 
-      <tr tal:attributes="class active/index">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="index">Home</a>
-        </td>
-      </tr>
+{# Fields are: url, id, caption, subnav #}
+{% set navigation_menu = [
+    ('index', 'homepage', 'Home', False),
+    ('check', 'name-checker', 'Name Checker', False),
+    ('syntaxCheck', 'syntax-checker', 'Syntax Checker', False),
+    ('positionConverter', 'position-converter', 'Position Converter', False),
+    ('snp', 'snp-converter', 'SNP Converter', False),
+    ('nameGenerator', 'name-generator', 'Name Generator', False),
+    ('descriptionExtract', 'description-extractor', 'Description Extractor', False),
+    ('upload', 'reference-loader', 'Reference File Loader', False),
+    ('batch', 'batch-jobs', 'Batch Jobs', False),
+    ('batchNameChecker', 'batch-name-checker', 'Name Checker', True),
+    ('batchSyntaxChecker', 'batch-syntax-checker', 'Syntax Checker', True),
+    ('batchPositionConverter', 'batch-position-converter', 'Position Converter', True),
+    ('batchSnpConverter', 'batch-snp-converter', 'SNP Converter', True),
+    ('webservices', 'webservices', 'Web Services', False)
+] -%}
+{% set active_page = active_page|default('home') -%}
 
-      <tr tal:attributes="class active/check">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="check">Name Checker</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/parse">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="syntaxCheck">Syntax Checker</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/converter">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="positionConverter">Position Converter</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/snp">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="snp">SNP Converter</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/nameGenerator">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="nameGenerator">Name Generator</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/descriptionExtract">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="descriptionExtract">Description Extractor</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/gbupload">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="upload">Reference File Loader</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/batch">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="batch">Batch Jobs</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/batchNameChecker">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="batchNameChecker">Name Checker</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/batchSyntaxChecker">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="batchSyntaxChecker">Syntax Checker</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/batchPositionConverter">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="batchPositionConverter">Position Converter</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/batchSnpConverter">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="batchSnpConverter">SNP Converter</a>
-        </td>
-      </tr>
-
-      <tr tal:attributes="class active/webservices">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="webservices">Web services</a>
-        </td>
-      </tr>
+{% for url, id, caption, subnav in navigation_menu %}
+  <tr class="menu{% if id == active_page %} active{% endif %}">
+    {% if subnav %}
+      <td></td>
+      <td valign="baseline" width="10" class="bullet sub"></td>
+      <td colspan="2">
+        <a href="{{ url|e }}">{{ caption|e }}</a>
+      </td>
+    {% else %}
+      <td valign="top" width="20" class="bullet"></td>
+      <td colspan="3">
+        <a href="{{ url|e }}">{{ caption|e }}</a>
+      </td>
+    {% endif %}
+  </tr>
+{% endfor %}
 
       <tr><td>&nbsp;</td></tr>
 
-      <tr tal:attributes="class active/help">
+      <tr class="menu">
         <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
           <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation">Documentation</a>
         </td>
       </tr>
 
-      <tr tal:attributes="class active/faq">
+      <tr class="menu">
         <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
           <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq">FAQ</a>
         </td>
       </tr>
 
-      <tr tal:attributes="class active/exercise">
+      <tr class="menu">
         <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
           <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise">Exercise</a>
         </td>
       </tr>
 
-      <tr tal:attributes="class active/disclaimer">
+      <tr class="menu">
         <td valign="top" width="20" class="bullet"></td>
         <td colspan="3">
           <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDisclaimer">Disclaimer</a>
@@ -340,22 +274,23 @@
 
 
     <center>
-      <h2 tal:condition = "release"
-          tal:content = "structure string:Mutalyzer ${version}<br>
+      <h2>Mutalyzer {{ version|e }}<br>
         <small><small><small><small>
-          released on ${releaseDate}
-        </small></small></small></small>"></h2>
-      <h2 tal:condition = "not:release"
-          tal:content = "structure string:Mutalyzer ${version}<br>
-        <small><small><small><small>
+        {% if release %}
+          released on {{ releaseDate|e }}
+        {% else %}
           development version
-        </small></small></small></small>"></h2>
+        {% endif %}
+        </small></small></small></small>
+      </h2>
       HGVS nomenclature version
-      <span tal:content = "nomenclatureVersion"></span>
+      <span>{{ nomenclatureVersion|e }}</span>
     </center>
     <p>
 
-    <div metal:use-macro = "sitemacros/macros/content"></div>
+    <h3><center>{{ page_title|e }}</center></h3>
+
+    {% block content %}{% endblock %}
 
       <!-- Navigation bar -->
       <table border="0"
@@ -385,7 +320,7 @@
         </td>
         <td align="middle">
           <img src = "static/images/LUMC_24x24.png" align = "middle">
-          &nbsp; &copy; <tal tal:replace = "copyrightYears/0"></tal>-<tal tal:replace = "copyrightYears/1"></tal>
+          &nbsp; &copy; {{ copyrightYears[0]|e }}-{{ copyrightYears[1]|e }}
           <a href = "http://www.lumc.nl">LUMC</a>
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
           &nbsp; &nbsp;
@@ -414,19 +349,19 @@
   </tr>
   </table>
   <a id = "bottom" name = "bottom"></a>
-<div tal:condition="piwik" tal:omit-tag="">
+{% if piwik %}
 <!-- Piwik -->
-<script type="text/javascript" tal:content="string:
-var pkBaseURL = &quot;${piwikBase}/&quot;;
-document.write(unescape(&quot;%3Cscript src='&quot; + pkBaseURL + &quot;piwik.js' type='text/javascript'%3E%3C/script%3E&quot;));
-"></script><script type="text/javascript" tal:content="string:
+<script type="text/javascript">
+var pkBaseURL = "{{ piwikBase|e }}/";
+document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script type="text/javascript">
 try {
-var piwikTracker = Piwik.getTracker(pkBaseURL + &quot;piwik.php&quot;, ${piwikSite});
+var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", {{ piwikSite|e }});
 piwikTracker.trackPageView();
 piwikTracker.enableLinkTracking();
 } catch( err ) {}
-"></script><noscript><p><img tal:attributes="src string:${piwikBase}/piwik.php?idsite=${piwikSite}" style="border:0" alt="" /></p></noscript>
+</script><noscript><p><img src="{{ piwikBase|e }}/piwik.php?idsite={{ piwikSite|e }}" style="border:0" alt="" /></p></noscript>
 <!-- End Piwik Tracking Code -->
-</div>
+{% endif %}
   </body>
 </html>

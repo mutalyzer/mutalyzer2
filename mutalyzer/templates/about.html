@@ -1,82 +1,93 @@
-<html>
-  <head>
-    <title></title>
-  </head>
-  <body>
-    <div metal:define-macro="content">
-      <center>
-        <h3>About</h3>
-      </center>
-      Mutalyzer <span tal:content = "structure string:${version}"></span>
-      is designed and developed by Jeroen F.J. Laros, with the
-      following exceptions:
-      <ul>
-        <li>The LRG parser, as well as the Batch interfaces are written
-            by Gerben R. Stouten.</li>
-        <li>The position converter interfaces (web service and WWW) are
-            written by Gerard C.P. Schaafsma.</li>
-        <li>Current development and maintenance is done by Martijn
-            Vermaat.</li>
-        <li>Automatic extraction of variant descriptions is implemented by
-        Jonathan Vis.</li>
-      </ul>
-      Furthermore we would like to thank the following people for their
-      valuable work on previous versions that acted as a guideline for the
-      development of the current version:
-      <ul>
-        <li>Ernest van Ophuizen.</li>
-        <li>Martin Wildeman.</li>
-        <li>Corinne Bareil.</li>
-        <li>Gerben R. Stouten.</li>
-      </ul>
-      Specifications are given by Peter E.M. Taschner and Johan T. den
-      Dunnen.<br>
-      <br>
-      Since references to WWW-sites are not yet acknowledged as citations,
-      please mention
-      <a href="http://www.ncbi.nlm.nih.gov/pubmed/18000842">
-        &quot;Wildeman M et al. (2008). Improving sequence variant
-        descriptions in mutation databases and literature using the
-        Mutalyzer sequence variation nomenclature checker. Hum Mutat 29,
-        6-13&quot;</a> (<a href="http://dx.doi.org/10.1002/humu.20654">direct
-        link</a>) when referring to these pages.<br>
-      <br>
-      Project development is sponsored by
-      <a href="http://www.gen2phen.org" target="_blank">
-        <img src="static/images/gen_2_phen_logo_print.png"
-             width="110"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Eurogentest"></a>
-      and
-      <a href="http://www.nbic.nl" target="_blank">
-        <img src="static/images/nbic_logo.png"
-             width="229"
-             height="50"
-             align="middle"
-             border="0"
-             alt="NBIC"></a>
-      and has been supported by
-      <a href="http://www.eurogentest.org" target="_blank">
-        <img src="static/images/Eurogentest.png"
-             width="110"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Eurogentest"></a>
-      and
-      <a href="http://www.commit-nl.nl/" target="_blank">
-        <img src="static/images/commit_logo.png"
-             width="122"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Dutch national program COMMIT"></a>
-      <br><br>
-      Some icons are copyright &copy;
-      <a href="http://p.yusukekamiyamane.com/">Yusuke Kamiyamane</a>.
-      <br>
-    </div>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% set active_page = "about" %}
+{% set page_title = "About Mutalyzer" %}
+
+{% block content %}
+
+<p>
+Mutalyzer {{ version|e }} is designed and developed by Jeroen F.J. Laros, with
+the following exceptions:
+</p>
+
+<ul>
+  <li>The LRG parser, as well as the Batch interfaces are written
+      by Gerben R. Stouten.</li>
+  <li>The position converter interfaces (web service and WWW) are
+      written by Gerard C.P. Schaafsma.</li>
+  <li>Current development and maintenance is done by Martijn
+      Vermaat.</li>
+  <li>Automatic extraction of variant descriptions is implemented by
+  Jonathan Vis.</li>
+</ul>
+
+<p>
+Furthermore we would like to thank the following people for their
+valuable work on previous versions that acted as a guideline for the
+development of the current version:
+</p>
+
+<ul>
+  <li>Ernest van Ophuizen.</li>
+  <li>Martin Wildeman.</li>
+  <li>Corinne Bareil.</li>
+  <li>Gerben R. Stouten.</li>
+</ul>
+
+<p>
+Specifications are given by Peter E.M. Taschner and Johan T. den
+Dunnen.
+</p>
+
+<p>
+Since references to WWW-sites are not yet acknowledged as citations,
+please mention
+<a href="http://www.ncbi.nlm.nih.gov/pubmed/18000842">
+  &quot;Wildeman M et al. (2008). Improving sequence variant
+  descriptions in mutation databases and literature using the
+  Mutalyzer sequence variation nomenclature checker. Hum Mutat 29,
+  6-13&quot;</a> (<a href="http://dx.doi.org/10.1002/humu.20654">direct
+  link</a>) when referring to these pages.
+</p>
+
+<p>
+Project development is sponsored by
+<a href="http://www.gen2phen.org" target="_blank">
+  <img src="static/images/gen_2_phen_logo_print.png"
+       width="110"
+       height="50"
+       align="middle"
+       border="0"
+       alt="Eurogentest"></a>
+and
+<a href="http://www.nbic.nl" target="_blank">
+  <img src="static/images/nbic_logo.png"
+       width="229"
+       height="50"
+       align="middle"
+       border="0"
+       alt="NBIC"></a>
+and has been supported by
+<a href="http://www.eurogentest.org" target="_blank">
+  <img src="static/images/Eurogentest.png"
+       width="110"
+       height="50"
+       align="middle"
+       border="0"
+       alt="Eurogentest"></a>
+and
+<a href="http://www.commit-nl.nl/" target="_blank">
+  <img src="static/images/commit_logo.png"
+       width="122"
+       height="50"
+       align="middle"
+       border="0"
+       alt="Dutch national program COMMIT"></a>
+</p>
+
+<p>
+Some icons are copyright &copy;
+<a href="http://p.yusukekamiyamane.com/">Yusuke Kamiyamane</a>.
+</p>
+
+{% endblock content %}
