@@ -21,7 +21,7 @@ COLOR_END='\033[0m'
 
 # The 'cd /' is a hack to prevent the mutalyzer package under the current
 # directory to be used.
-PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
+STATIC_DIR=$(cd / && python -c 'import pkg_resources; print pkg_resources.resource_filename("mutalyzer", "templates/static")')
 BIN_WEBSITE=$(which mutalyzer-website.wsgi)
 BIN_SOAP_SERVICE=$(which mutalyzer-soap-service.wsgi)
 BIN_JSON_SERVICE=$(which mutalyzer-json-service.wsgi)
@@ -35,8 +35,8 @@ if [ -e /var/www/mutalyzer/base ]; then
     rm /var/www/mutalyzer/base
 fi
 
-echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base${COLOR_END}"
-ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
+echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $STATIC_DIR${COLOR_END}"
+ln -s $STATIC_DIR /var/www/mutalyzer/static
 
 echo "Running any needed migrations"
 for MIGRATION in extras/migrations/*.migration; do

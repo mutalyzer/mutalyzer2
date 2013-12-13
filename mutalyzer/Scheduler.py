@@ -91,14 +91,8 @@ class Scheduler() :
         @arg url: The url containing the results
         @type url: string
         """
-        if mutalyzer.is_test():
-            return
-
-        # Note: The above check with mutalyzer.is_test is bogus, since during
-        # a normal unit test, the batch checker process is not started in the
-        # environment of the unit tests.
-        # As sort of a hack, we therefore check for the patented address
-        # 'test@test.test', used in the unit tests.
+        # Mail is set to 'test@test.test" if the batch job was submitted from
+        # a unit test.
         if mailTo == 'test@test.test':
             return
 

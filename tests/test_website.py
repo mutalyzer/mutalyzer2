@@ -744,7 +744,8 @@ facilisi."""
         @todo: This genbank file location is bogus. The tests directory is not
             included with the package installation.
         """
-        test_genbank_file = os.path.join(os.path.split(mutalyzer.package_root())[0], 'tests/data/AB026906.1.gb')
+        test_genbank_file = os.path.join(os.path.realpath(os.path.dirname(__file__)),
+                                         'data', 'AB026906.1.gb')
         r = self.app.get('/upload')
         form = r.forms[0]
         form['invoermethode'] = 'file'

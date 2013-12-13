@@ -26,7 +26,7 @@ COLOR_END='\033[0m'
 
 # The 'cd /' is a hack to prevent the mutalyzer package under the current
 # directory to be used.
-PACKAGE_ROOT=$(cd / && python -c 'import mutalyzer; print mutalyzer.package_root()')
+STATIC_DIR=$(cd / && python -c 'import pkg_resources; print pkg_resources.resource_filename("mutalyzer", "templates/static")')
 BIN_BATCHD=$(which mutalyzer-batchd)
 BIN_CACHE_SYNC=$(which mutalyzer-cache-sync)
 BIN_MAPPING_UPDATE=$(which mutalyzer-mapping-update)
@@ -104,6 +104,73 @@ cat << EOF | mysql -u root -p
   GRANT ALL PRIVILEGES ON hg19.* TO mutalyzer@localhost;
   GRANT ALL PRIVILEGES ON mm10.* TO mutalyzer@localhost;
   FLUSH PRIVILEGES;
+EOF
+
+echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
+
+# Create mutalyzer tables
+cat << EOF | mysql -u mutalyzer -D mutalyzer
+CREATE TABLE BatchJob (
+  JobID char(20) NOT NULL,
+  Filter char(20) NOT NULL,
+  EMail char(255) NOT NULL,
+  FromHost char(255) NOT NULL,
+  JobType char(20) DEFAULT NULL,
+  Arg1 char(20) DEFAULT NULL,
+  PRIMARY KEY (JobID)
+) ENGINE = MYISAM;
+CREATE TABLE BatchQueue (
+  QueueID int(5) NOT NULL AUTO_INCREMENT,
+  JobID char(20) NOT NULL,
+  Input char(255) NOT NULL,
+  Flags char(20) DEFAULT NULL,
+  PRIMARY KEY (QueueID),
+  KEY JobQueue (JobID,QueueID)
+) ENGINE = MYISAM;
+CREATE TABLE GBInfo (
+  AccNo char(20) NOT NULL DEFAULT '',
+  GI char(13) DEFAULT NULL,
+  hash char(32) NOT NULL DEFAULT '',
+  ChrAccVer char(20) DEFAULT NULL,
+  ChrStart int(12) DEFAULT NULL,
+  ChrStop int(12) DEFAULT NULL,
+  orientation int(2) DEFAULT NULL,
+  url char(255) DEFAULT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (AccNo),
+  UNIQUE KEY hash (hash),
+  UNIQUE KEY alias (GI),
+  INDEX (created)
+) ENGINE = MYISAM;
+CREATE TABLE Link (
+  mrnaAcc char(20) NOT NULL,
+  protAcc char(20) DEFAULT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (mrnaAcc),
+  UNIQUE KEY protAcc (protAcc)
+) ENGINE = MYISAM;
+CREATE TABLE Counter (
+  service varchar(100) NOT NULL,
+  interface varchar(100) NOT NULL,
+  count bigint NOT NULL DEFAULT 0,
+  start TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (service, interface)
+) ENGINE = MYISAM;
+INSERT INTO Counter (service, interface) VALUES
+('namecheck', 'website'),
+('syntaxcheck', 'website'),
+('positionconvert', 'website'),
+('snpconvert', 'website'),
+('batchjob', 'website'),
+('namecheck', 'webservice'),
+('syntaxcheck', 'webservice'),
+('positionconvert', 'webservice'),
+('snpconvert', 'webservice'),
+('batchjob', 'webservice'),
+('namecheck', 'batch'),
+('syntaxcheck', 'batch'),
+('positionconvert', 'batch'),
+('snpconvert', 'batch');
 EOF
 
 echo -e "${COLOR_INFO}Creating tables in hg18 database${COLOR_END}"
@@ -319,72 +386,6 @@ rm $MAPPING
 echo -e "${COLOR_INFO}Separate import of NC_005089.1 (chrM) in mm10 database${COLOR_END}"
 $($BIN_MAPPING_IMPORT reference mm10 NC_005089.1)
 
-echo -e "${COLOR_INFO}Creating tables in mutalyzer database${COLOR_END}"
-
-# Create mutalyzer tables
-cat << EOF | mysql -u mutalyzer -D mutalyzer
-CREATE TABLE BatchJob (
-  JobID char(20) NOT NULL,
-  Filter char(20) NOT NULL,
-  EMail char(255) NOT NULL,
-  FromHost char(255) NOT NULL,
-  JobType char(20) DEFAULT NULL,
-  Arg1 char(20) DEFAULT NULL,
-  PRIMARY KEY (JobID)
-) ENGINE = MYISAM;
-CREATE TABLE BatchQueue (
-  QueueID int(5) NOT NULL AUTO_INCREMENT,
-  JobID char(20) NOT NULL,
-  Input char(255) NOT NULL,
-  Flags char(20) DEFAULT NULL,
-  PRIMARY KEY (QueueID),
-  KEY JobQueue (JobID,QueueID)
-) ENGINE = MYISAM;
-CREATE TABLE GBInfo (
-  AccNo char(20) NOT NULL DEFAULT '',
-  GI char(13) DEFAULT NULL,
-  hash char(32) NOT NULL DEFAULT '',
-  ChrAccVer char(20) DEFAULT NULL,
-  ChrStart int(12) DEFAULT NULL,
-  ChrStop int(12) DEFAULT NULL,
-  orientation int(2) DEFAULT NULL,
-  url char(255) DEFAULT NULL,
-  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (AccNo),
-  UNIQUE KEY hash (hash),
-  UNIQUE KEY alias (GI),
-  INDEX (created)
-) ENGINE = MYISAM;
-CREATE TABLE Link (
-  mrnaAcc char(20) NOT NULL,
-  protAcc char(20) NOT NULL,
-  PRIMARY KEY (mrnaAcc),
-  UNIQUE KEY protAcc (protAcc)
-) ENGINE = MYISAM;
-CREATE TABLE Counter (
-  service varchar(100) NOT NULL,
-  interface varchar(100) NOT NULL,
-  count bigint NOT NULL DEFAULT 0,
-  start TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (service, interface)
-) ENGINE = MYISAM;
-INSERT INTO Counter (service, interface) VALUES
-('namecheck', 'website'),
-('syntaxcheck', 'website'),
-('positionconvert', 'website'),
-('snpconvert', 'website'),
-('batchjob', 'website'),
-('namecheck', 'webservice'),
-('syntaxcheck', 'webservice'),
-('positionconvert', 'webservice'),
-('snpconvert', 'webservice'),
-('batchjob', 'webservice'),
-('namecheck', 'batch'),
-('syntaxcheck', 'batch'),
-('positionconvert', 'batch'),
-('snpconvert', 'batch');
-EOF
-
 # The remainder is essentially the same as post-upgrade.sh
 
 if [ ! -e /var/www/mutalyzer ]; then
@@ -396,8 +397,8 @@ if [ -e /var/www/mutalyzer/base ]; then
     rm /var/www/mutalyzer/base
 fi
 
-echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $PACKAGE_ROOT/templates/base${COLOR_END}"
-ln -s $PACKAGE_ROOT/templates/base /var/www/mutalyzer/base
+echo -e "${COLOR_INFO}Symlinking /var/www/mutalyzer/base to $STATIC_DIR${COLOR_END}"
+ln -s $STATIC_DIR /var/www/mutalyzer/static
 
 echo "Restarting Apache"
 /etc/init.d/apache2 restart

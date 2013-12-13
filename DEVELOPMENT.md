@@ -24,11 +24,11 @@ web service:
 
 Now run the tests with:
 
-    MUTALYZER_ENV=test nosetests -v
+    nosetests -v
 
 Or, if you are in a hurry, skip the long-running tests with:
 
-    MUTALYZER_ENV=test MUTALYZER_QUICK_TEST=1 nosetests -v
+    MUTALYZER_QUICK_TEST=1 nosetests -v
 
 
 Working with feature branches

@@ -23,15 +23,14 @@ To start the built-in HTTP server on port 8081:
 
 import sys
 from wsgiref.simple_server import make_server
+from spyne.server.wsgi import WsgiApplication
 from mutalyzer.services import soap
 
 
 DEFAULT_PORT = 8081
 
 
-# Unfortunately we cannot instantiate wsgi.Application here, see the note
-# near the bottom of mutalyzer/services/soap.py.
-application = soap.wsgi_application
+application = WsgiApplication(soap.application)
 
 
 if __name__ == '__main__':

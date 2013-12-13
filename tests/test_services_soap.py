@@ -3,21 +3,23 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
-from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
-
-import os
-from datetime import datetime, timedelta
-import time
-import mutalyzer
-from mutalyzer.output import Output
-from mutalyzer.sync import CacheSync
-from mutalyzer import Db
-from mutalyzer.util import slow
+import datetime
 import logging
-import urllib2
-from suds.client import Client
-from suds import WebFault
+import os
+import tempfile
+import time
+
 from nose.tools import *
+from spyne.server.null import NullServer
+from spyne.model.fault import Fault
+from suds.client import Client
+
+import mutalyzer
+from mutalyzer import Db
+from mutalyzer.output import Output
+from mutalyzer.services.soap import application
+from mutalyzer.sync import CacheSync
+from mutalyzer.util import slow
 
 
 # Suds logs an awful lot of things with level=DEBUG, including entire WSDL
@@ -33,20 +35,13 @@ for logger in ('suds.metrics', 'suds.wsdl', 'suds.xsd.schema',
     logging.getLogger(logger).setLevel(logging.ERROR)
 
 
-WSDL_URL = 'http://localhost/mutalyzer/services/?wsdl'
-
-
-class TestWSDL():
-    """
-    Test the Mutalyzer SOAP interface WSDL description.
-    """
-    def test_wsdl(self):
-        """
-        Test if the WSDL is available and looks somewhat sensible.
-        """
-        wsdl = urllib2.urlopen(WSDL_URL).read()
-        assert wsdl.startswith("<?xml version='1.0' encoding='UTF-8'?>")
-        assert 'name="Mutalyzer"' in wsdl
+def _write_wsdl(server):
+    server.doc.wsdl11.build_interface_document('/')
+    wsdl = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    wsdl_filename = wsdl.name
+    wsdl.write(server.doc.wsdl11.get_interface_document())
+    wsdl.close()
+    return wsdl_filename
 
 
 class TestServicesSoap():
@@ -55,19 +50,38 @@ class TestServicesSoap():
     """
     def setUp(self):
         """
-        Initialize web service entrypoint.
-
-        @todo: Start the standalone server and stop it in self.tearDown
-        instead of depending on some running instance at a fixed address.
+        Initialize test server.
         """
-        self.client = Client(WSDL_URL, cache=None)
-        #self.client.options.cache.setduration(seconds=120)
+        self.server = NullServer(application, ostr=True)
+        # Unfortunately there's no easy way to just give a SUDS client a
+        # complete WSDL string, it only accepts a URL to it. So we create one.
+        self.wsdl = _write_wsdl(self.server)
+        self.client = Client('file://%s' % self.wsdl, cache=None)
+
+    def tearDown(self):
+        """
+        Remove temporary file used for WSDL.
+        """
+        os.unlink(self.wsdl)
+
+    def _call(self, method, *args, **kwargs):
+        r = getattr(self.server.service, method)(*args, **kwargs)
+        # This seems to be the way to feed raw SOAP response strings to a
+        # SUDS client, without having it talking to a real server.
+        return getattr(self.client.service, method)(__inject={'reply': ''.join(r)})
+
+    def test_ping(self):
+        """
+        Running the ping method should return 'pong'.
+        """
+        r = self._call('ping')
+        assert_equal(r, 'pong')
 
     def test_checksyntax_valid(self):
         """
         Running checkSyntax with a valid variant name should return True.
         """
-        r = self.client.service.checkSyntax('AB026906.1:c.274G>T')
+        r = self._call('checkSyntax', 'AB026906.1:c.274G>T')
         assert_equal(r.valid, True)
 
     def test_checksyntax_invalid(self):
@@ -75,24 +89,28 @@ class TestServicesSoap():
         Running checkSyntax with an invalid variant name should return False
         and give at least one error message.
         """
-        r = self.client.service.checkSyntax('0:abcd')
+        r = self._call('checkSyntax', '0:abcd')
         assert_equal(r.valid, False)
         assert len(r.messages.SoapMessage) >= 1
 
-    @raises(WebFault)
+    @raises(Fault)
     def test_checksyntax_empty(self):
         """
         Running checkSyntax with no variant name should raise exception.
         """
-        self.client.service.checkSyntax()
+        # The validator doesn't work with NullServer, so we cannot really do
+        # these type of tests. However, in this case we implemented our own
+        # check instead of relying on the validator.
+        # See https://github.com/arskom/spyne/issues/318
+        self._call('checkSyntax')
 
     def test_transcriptinfo_valid(self):
         """
         Running transcriptInfo with valid arguments should get us a Transcript
         object.
         """
-        r = self.client.service.transcriptInfo(LOVD_ver='123', build='hg19',
-                                               accNo='NM_002001.2')
+        r = self._call('transcriptInfo',
+                       LOVD_ver='123', build='hg19', accNo='NM_002001.2')
         assert_equal(r.trans_start, -99)
         assert_equal(r.trans_stop, 1066)
         assert_equal(r.CDS_stop, 774)
@@ -102,8 +120,8 @@ class TestServicesSoap():
         Running numberConversion with valid g variant should give a list of
         c variant names.
         """
-        r = self.client.service.numberConversion(build='hg19',
-                                                 variant='NC_000001.10:g.159272155del')
+        r = self._call('numberConversion',
+                       build='hg19', variant='NC_000001.10:g.159272155del')
         assert_equal(type(r.string), list)
         assert 'NM_002001.2:c.1del' in r.string
 
@@ -112,8 +130,8 @@ class TestServicesSoap():
         Running numberConversion with valid c variant should give a list of
         g variant names.
         """
-        r = self.client.service.numberConversion(build='hg19',
-                                                 variant='NM_002001.2:c.1del')
+        r = self._call('numberConversion',
+                       build='hg19', variant='NM_002001.2:c.1del')
         assert_equal(type(r.string), list)
         assert 'NC_000001.10:g.159272155del' in r.string
 
@@ -122,9 +140,8 @@ class TestServicesSoap():
         Running numberConversion with valid g variant and a gene name should
         give a list of c variant names on transcripts for the given gene.
         """
-        r = self.client.service.numberConversion(build='hg19',
-                                                 variant='NC_000011.9:g.111959693G>T',
-                                                 gene='C11orf57')
+        r = self._call('numberConversion',
+                       build='hg19', variant='NC_000011.9:g.111959693G>T', gene='C11orf57')
         assert_equal(type(r.string), list)
         # Fix for r536: disable the -u and +d convention.
         #assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
@@ -139,8 +156,8 @@ class TestServicesSoap():
         Running numberConversion with valid g variant but no transcripts
         close to it should give an empty list.
         """
-        r = self.client.service.numberConversion(build='hg19',
-                                                 variant='chr7:g.345T>C')
+        r = self._call('numberConversion',
+                       build='hg19', variant='chr7:g.345T>C')
         assert_false(r)
 
     def test_numberconversion_gtoc_required_gene(self):
@@ -149,9 +166,8 @@ class TestServicesSoap():
         close to it, but with a gene name, should give a list of c variant
         names on transcripts for the given gene.
         """
-        r = self.client.service.numberConversion(build='hg19',
-                                                 variant='chr7:g.345T>C',
-                                                 gene='LOC100132858')
+        r = self._call('numberConversion',
+                       build='hg19', variant='chr7:g.345T>C', gene='LOC100132858')
         assert_equal(type(r.string), list)
         # Fix for r536: disable the -u and +d convention.
         #assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
@@ -162,8 +178,8 @@ class TestServicesSoap():
         Running getTranscriptsByGeneName with valid gene name should give a
         list of transcripts.
         """
-        r = self.client.service.getTranscriptsByGeneName(build='hg19',
-                                                         name='DMD')
+        r = self._call('getTranscriptsByGeneName',
+                       build='hg19', name='DMD')
         assert_equal(type(r.string), list)
         for t in ['NM_004006.2',
                   'NM_000109.3',
@@ -179,8 +195,8 @@ class TestServicesSoap():
         Running getTranscriptsByGeneName with invalid gene name should not
         give a result.
         """
-        r = self.client.service.getTranscriptsByGeneName(build='hg19',
-                                                         name='BOGUSGENE')
+        r = self._call('getTranscriptsByGeneName',
+                       build='hg19', name='BOGUSGENE')
         assert_false(r)
 
     def test_gettranscriptsandinfo_valid(self):
@@ -188,7 +204,7 @@ class TestServicesSoap():
         Running getTranscriptsAndInfo with a valid genomic reference should
         give a list of TranscriptInfo objects.
         """
-        r = self.client.service.getTranscriptsAndInfo('AL449423.14')
+        r = self._call('getTranscriptsAndInfo', 'AL449423.14')
         assert_equal(type(r.TranscriptInfo), list)
         names = [t.name for t in r.TranscriptInfo]
         for t in ['CDKN2B_v002',
@@ -206,7 +222,7 @@ class TestServicesSoap():
         gene name should give a list of TranscriptInfo objects restricted
         to the gene.
         """
-        r = self.client.service.getTranscriptsAndInfo('AL449423.14', 'CDKN2A')
+        r = self._call('getTranscriptsAndInfo', 'AL449423.14', 'CDKN2A')
         assert_equal(type(r.TranscriptInfo), list)
         names = [t.name for t in r.TranscriptInfo]
         for t in ['CDKN2A_v008',
@@ -223,7 +239,8 @@ class TestServicesSoap():
         Running getTranscriptsMapping should give a list of
         TranscriptMappingInfo objects.
         """
-        r = self.client.service.getTranscriptsMapping('hg19', 'chr16', 70680470, 70807150, 1)
+        r = self._call('getTranscriptsMapping',
+                       'hg19', 'chr16', 70680470, 70807150, 1)
         assert_equal(type(r.TranscriptMappingInfo), list)
         names = [t.name for t in r.TranscriptMappingInfo]
         for t in ('NM_152456',
@@ -236,7 +253,8 @@ class TestServicesSoap():
         """
         Running mappingInfo should give a Mapping object.
         """
-        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001100.3', 'g.112037014G>T')
+        r = self._call('mappingInfo',
+                       '3.0-beta-06', 'hg19', 'NM_001100.3', 'g.112037014G>T')
         assert_equal(r.endoffset, 117529978)
         assert_equal(r.start_g, 112037014)
         assert_equal(r.startoffset, 117529978)
@@ -249,7 +267,8 @@ class TestServicesSoap():
         """
         Running mappingInfo should give a Mapping object.
         """
-        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.112039014G>T')
+        r = self._call('mappingInfo',
+                       '3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.112039014G>T')
         assert_equal(r.endoffset, 0)
         assert_equal(r.start_g, 112039014)
         assert_equal(r.startoffset, 0)
@@ -262,7 +281,8 @@ class TestServicesSoap():
         """
         Running mappingInfo with compound variant should give a Mapping object.
         """
-        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.[112039014G>T;112039018T>A]')
+        r = self._call('mappingInfo',
+                       '3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.[112039014G>T;112039018T>A]')
         assert_equal(r.endoffset, 0)
         assert_equal(r.start_g, 112039014)
         assert_equal(r.startoffset, 0)
@@ -275,7 +295,8 @@ class TestServicesSoap():
         """
         Running mappingInfo on a reverse transcript should give a Mapping object.
         """
-        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_000035.3', 'g.104184170_104184179del')
+        r = self._call('mappingInfo',
+                       '3.0-beta-06', 'hg19', 'NM_000035.3', 'g.104184170_104184179del')
         assert_equal(r.endoffset, 0)
         assert_equal(r.start_g, 104184170)
         assert_equal(r.startoffset, 0)
@@ -288,7 +309,8 @@ class TestServicesSoap():
         """
         Running mappingInfo with compound variant on a reverse transcript should give a Mapping object.
         """
-        r = self.client.service.mappingInfo('3.0-beta-06', 'hg19', 'NM_000035.3', 'g.[104184170_104184179del;104184182_104184183del]')
+        r = self._call('mappingInfo',
+                       '3.0-beta-06', 'hg19', 'NM_000035.3', 'g.[104184170_104184179del;104184182_104184183del]')
         assert_equal(r.endoffset, 0)
         assert_equal(r.start_g, 104184170)
         assert_equal(r.startoffset, 0)
@@ -301,7 +323,7 @@ class TestServicesSoap():
         """
         Running the info method should give us some version information.
         """
-        r = self.client.service.info()
+        r = self._call('info')
         assert_equal(type(r.versionParts.string), list)
         assert_equal(r.version, mutalyzer.__version__)
 
@@ -310,14 +332,14 @@ class TestServicesSoap():
         Running the getCache method should give us the expected number of
         cache entries.
         """
-        created_since = datetime.today() - timedelta(days=14)
+        created_since = datetime.datetime.today() - datetime.timedelta(days=14)
 
         database = Db.Cache()
         output = Output(__file__)
         sync = CacheSync(output, database)
         cache = sync.local_cache(created_since)
 
-        r = self.client.service.getCache(created_since)
+        r = self._call('getCache', created_since)
         if len(cache) > 0:
             assert_equal(len(r.CacheEntry), len(cache))
 
@@ -326,7 +348,7 @@ class TestServicesSoap():
         Running getdbSNPDescriptions method should give us the expected HGVS
         descriptions for the given dbSNP id.
         """
-        r = self.client.service.getdbSNPDescriptions('rs9919552')
+        r = self._call('getdbSNPDescriptions', 'rs9919552')
         assert 'NC_000011.9:g.111959625C>T' in r.string
         assert 'NG_012337.2:g.7055C>T' in r.string
         assert 'NM_003002.3:c.204C>T' in r.string
@@ -336,8 +358,8 @@ class TestServicesSoap():
         """
         Running getTranscripts should give a list of transcripts.
         """
-        r = self.client.service.getTranscripts(build='hg19', chrom='chrX',
-                                               pos=32237295)
+        r = self._call('getTranscripts',
+                       build='hg19', chrom='chrX', pos=32237295)
         assert_equal(type(r.string), list)
         for t in ['NM_000109',
                   'NM_004006',
@@ -353,8 +375,8 @@ class TestServicesSoap():
         Running getTranscripts with versions=True should give a list
         of transcripts with version numbers.
         """
-        r = self.client.service.getTranscripts(build='hg19', chrom='chrX',
-                                               pos=32237295, versions=True)
+        r = self._call('getTranscripts',
+                       build='hg19', chrom='chrX', pos=32237295, versions=True)
         assert_equal(type(r.string), list)
         for t in ['NM_000109.3',
                   'NM_004006.2',
@@ -365,18 +387,11 @@ class TestServicesSoap():
                   'NM_004012.3']:
             assert t in r.string
 
-    def test_ping(self):
-        """
-        Running the ping method should return 'pong'.
-        """
-        r = self.client.service.ping()
-        assert_equal(r, 'pong')
-
     def test_runmutalyzer(self):
         """
         Just a runMutalyzer test.
         """
-        r = self.client.service.runMutalyzer('NM_003002.2:c.274G>T')
+        r = self._call('runMutalyzer', 'NM_003002.2:c.274G>T')
         assert_equal(r.errors, 0)
         assert_equal(r.genomicDescription, 'NM_003002.2:n.335G>T')
         assert 'NM_003002.2(SDHD_v001):c.274G>T' in r.transcriptDescriptions.string
@@ -385,7 +400,7 @@ class TestServicesSoap():
         """
         Get reference info for an NM variant without version.
         """
-        r = self.client.service.runMutalyzer('NM_003002:c.274G>T')
+        r = self._call('runMutalyzer', 'NM_003002:c.274G>T')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NM_003002')
         assert_equal(r.sourceId, 'NM_003002.3')
@@ -398,7 +413,7 @@ class TestServicesSoap():
         """
         Get reference info for an NM variant with version.
         """
-        r = self.client.service.runMutalyzer('NM_003002.2:c.274G>T')
+        r = self._call('runMutalyzer', 'NM_003002.2:c.274G>T')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NM_003002.2')
         assert_equal(r.sourceId, 'NM_003002.2')
@@ -413,8 +428,9 @@ class TestServicesSoap():
 
             UD_129433404385: NC_000023.10 31135344 33362726 2 NULL 2011-10-04 13:15:04
         """
-        ud = str(self.client.service.sliceChromosome('NC_000023.10', 31135344, 33362726, 2))
-        r = self.client.service.runMutalyzer(ud + ':g.1del')
+        ud = str(self._call('sliceChromosome',
+                            'NC_000023.10', 31135344, 33362726, 2))
+        r = self._call('runMutalyzer', ud + ':g.1del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, ud)
         assert_equal(r.sourceId, 'NC_000023.10')
@@ -427,7 +443,7 @@ class TestServicesSoap():
         """
         Get reference info for an LRG variant.
         """
-        r = self.client.service.runMutalyzer('LRG_1t1:c.266G>T')
+        r = self._call('runMutalyzer', 'LRG_1t1:c.266G>T')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'LRG_1')
         assert_equal(r.sourceId, 'LRG_1')
@@ -437,7 +453,7 @@ class TestServicesSoap():
         """
         Get reference info for an NG variant without version.
         """
-        r = self.client.service.runMutalyzer('NG_012772:g.18964del')
+        r = self._call('runMutalyzer', 'NG_012772:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772')
         assert_equal(r.sourceId, 'NG_012772.3')
@@ -450,7 +466,7 @@ class TestServicesSoap():
         """
         Get reference info for an NG variant with version.
         """
-        r = self.client.service.runMutalyzer('NG_012772.3:g.18964del')
+        r = self._call('runMutalyzer', 'NG_012772.3:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772.3')
         assert_equal(r.sourceId, 'NG_012772.3')
@@ -463,8 +479,8 @@ class TestServicesSoap():
         """
         Get reference info for a GI variant.
         """
-        self.client.service.runMutalyzer('NG_012772.1:g.1del') # Make sure the server has this reference cached
-        r = self.client.service.runMutalyzer('gi256574794:g.18964del')
+        self._call('runMutalyzer', 'NG_012772.1:g.1del') # Make sure the server has this reference cached
+        r = self._call('runMutalyzer', 'gi256574794:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772.1')
         assert_equal(r.sourceId, 'NG_012772.1')
@@ -477,7 +493,7 @@ class TestServicesSoap():
         """
         Exon table in runMutalyzer output.
         """
-        r = self.client.service.runMutalyzer('NM_004959.4:c.630_636del')
+        r = self._call('runMutalyzer', 'NM_004959.4:c.630_636del')
         assert_equal(r.errors, 0)
         expected_exons = [(1, 172, '-187', '-16'),
                           (173, 289, '-15', '102'),
@@ -500,8 +516,9 @@ class TestServicesSoap():
         translation start: 48284003 - 5001 + 1 = 48279003
         translation end: 48259456 + 2001 = 48261457
         """
-        ud = str(self.client.service.sliceChromosomeByGene('COL1A1', 'human', 5000, 2000))
-        r = self.client.service.getTranscriptsAndInfo(ud)
+        ud = str(self._call('sliceChromosomeByGene',
+                            'COL1A1', 'human', 5000, 2000))
+        r = self._call('getTranscriptsAndInfo', ud)
         assert_equal(type(r.TranscriptInfo), list)
         names = [t.name for t in r.TranscriptInfo]
         assert 'COL1A1_v001' in names
@@ -532,15 +549,15 @@ class TestServicesSoap():
                     'AL449423.14(CDKN2A_v002):c.5_400del']
         data = '\n'.join(variants).encode('base64')
 
-        result = self.client.service.submitBatchJob(data, 'NameChecker')
+        result = self._call('submitBatchJob', data, 'NameChecker')
         job_id = int(result)
 
         for _ in range(50):
             try:
-                result = self.client.service.getBatchJob(job_id)
+                result = self._call('getBatchJob', job_id)
                 break
-            except WebFault:
-                result = self.client.service.monitorBatchJob(job_id)
+            except Fault:
+                result = self._call('monitorBatchJob', job_id)
                 assert int(result) <= len(variants)
                 time.sleep(1)
         else:
@@ -569,11 +586,11 @@ facilisi."""
             data += data
 
         try:
-            self.client.service.submitBatchJob(data.encode('base64'), 'NameChecker')
+            self._call('submitBatchJob', data.encode('base64'), 'NameChecker')
             assert False
-        except WebFault as e:
+        except Fault as e:
             # - senv:Client.RequestTooLong: Raised by Spyne, depending on
             #     the max_content_length argument to the HttpBase constructor.
             # - EMAXSIZE: Raised by Mutalyzer, depending on the
             #     batchInputMaxSize configuration setting.
-            assert e.fault.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')
+            assert e.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')

@@ -4,29 +4,32 @@ WSGI interface to the Mutalyzer website.
 
 The WSGI interface is exposed through the module variable 'application'.
 Static files are not handled by this interface and should be served through
-the '/base' url prefix separately.
+the '/static' url prefix separately.
 
 Example Apache/mod_wsgi configuration:
 
-  Alias /base /var/www/mutalyzer/base
+  Alias /static /var/www/mutalyzer/static
   WSGIScriptAlias / /usr/local/bin/mutalyzer-website.wsgi
 
 You can also use the built-in HTTP server by running this file directly.
-Note, however, that static files are not served by this server. A common
-pattern is to use Nginx as a proxy and static file server.
+Note, however, that static files are only found by this server in a 'static'
+subdirectory of the current working directory. If you're running Mutalyzer
+from its source code directory, you can satisfy this by creating a quick
+symbolic link:
 
-Start the built-in HTTP server on port 8080:
+  ln -s mutalyzer/templates/static
 
-  /usr/local/bin/mutalyzer-website.wsgi 8080
+Another common practice is to use Nginx to directly serve the static files
+and act as a reverse proxy server to the Mutalyzer HTTP server.
 
 Example Nginx configuration:
 
   server {
     listen 80;
-    location /base/ {
-      root /var/www/mutalyzer/base;
+    location /static/ {
+      root /var/www/mutalyzer/static;
       if (-f $request_filename) {
-        rewrite ^/base/(.*)$  /base/$1 break;
+        rewrite ^/static/(.*)$  /static/$1 break;
       }
     }
     location / {
@@ -35,8 +38,11 @@ Example Nginx configuration:
     }
   }
 
+Now start the built-in HTTP server on port 8080:
+
+  mutalyzer-website.wsgi 8080
+
 @todo: Integrate webservice.py (http://webpy.org/cookbook/webservice/).
-@todo: Move /templates/base to /static for web.py compatibility.
 """
 
 

@@ -70,7 +70,7 @@ def deploy(bootstrap='no'):
                 sudo('bash extras/post-upgrade.sh')
 
             # Run unittests.
-            #run('MUTALYZER_ENV=test nosetests -v')
+            #run('nosetests -v')
 
     # Now that all is set up, delete the folder again.
     # (I don't like to 'sudo rm -Rf'.)
