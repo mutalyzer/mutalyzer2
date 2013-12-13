@@ -1,7 +1,9 @@
 #
 # Mutalyzer config file.
 #
-# Copy this file to /etc/mutalyzer/config and modify to suit your preferences.
+# Specify the location of this file in the MUTALYZER_SETTINGS environment
+# variable.
+
 
 #
 # These settings are used by the Retriever module.

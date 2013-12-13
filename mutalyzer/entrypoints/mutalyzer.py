@@ -1,38 +1,28 @@
-#!/usr/bin/env python
 """
-Command-line interface to the nomenclature checker.
+Mutalyzer command-line name checker.
 
-Usage:
-  {command} variant
-
-  variant: The variant description to check.
-
-
-@todo: Refactor this file.
+.. todo: Refactor this file.
 """
 
 
-import sys
-import os
+import argparse
 
-from mutalyzer import variantchecker
-from mutalyzer.output import Output
-from mutalyzer.util import format_usage
-from mutalyzer import describe
+from .. import describe
+from .. import output
+from .. import variantchecker
 
-def main(cmd):
+
+def check_name(description):
     """
-    Command line interface to the name checker.
-
-    @todo: documentation
+    Run the name checker.
     """
-    O = Output(__file__)
+    O = output.Output(__file__)
 
-    O.addMessage(__file__, -1, "INFO", "Received variant " + cmd)
+    O.addMessage(__file__, -1, "INFO", "Received variant " + description)
 
-    RD = variantchecker.check_variant(cmd, O)
+    RD = variantchecker.check_variant(description, O)
 
-    O.addMessage(__file__, -1, "INFO", "Finished processing variant " + cmd)
+    O.addMessage(__file__, -1, "INFO", "Finished processing variant " + description)
 
     ### OUTPUT BLOCK ###
     gn = O.getOutput("genename")
@@ -116,16 +106,20 @@ def main(cmd):
         print extractedProt
         #print "+++ %s" % O.getOutput("myTranscriptDescription")
 
-    #if
-    ### OUTPUT BLOCK ###
-    del O
-#main
+
+def main():
+    """
+    Command-line interface to the name checker.
+    """
+    parser = argparse.ArgumentParser(
+        description='Mutalyzer command-line name checker.')
+    parser.add_argument(
+        'description', metavar='DESCRIPTION',
+        help='variant description to run the name checker on')
+
+    args = parser.parse_args()
+    check_name(args.description)
 
 
 if __name__ == '__main__':
-
-    if len(sys.argv) < 2:
-        print format_usage()
-        sys.exit(1)
-
-    main(sys.argv[1])
+    main()
