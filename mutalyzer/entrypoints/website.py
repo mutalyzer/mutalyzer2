@@ -10,14 +10,6 @@ Example Apache/mod_wsgi configuration:
     Alias /static /var/www/mutalyzer/static
     WSGIScriptAlias / /usr/local/bin/mutalyzer-website
 
-You can also use the built-in HTTP server by running this file directly.
-Note, however, that static files are only found by this server in a 'static'
-subdirectory of the current working directory. If you're running Mutalyzer
-from its source code directory, you can satisfy this by creating a quick
-symbolic link:
-
-    ln -s mutalyzer/templates/static
-
 Another common practice is to use Nginx to directly serve the static files
 and act as a reverse proxy server to the Mutalyzer HTTP server.
 
@@ -36,10 +28,16 @@ Example Nginx configuration:
         proxy_pass http://127.0.0.1:8080;
       }
     }
+
+You can also use the built-in HTTP server by running this file directly. This
+will give you a single-threaded server suitable for development which will
+also serve the static files.
 """
 
 
 import argparse
+import os
+import pkg_resources
 
 from .. import website
 
@@ -51,6 +49,11 @@ def debugserver():
     """
     Run the website with the Python built-in HTTP server.
     """
+    # There's really no sane way to make web.py serve static files other than
+    # providing it with a `static` directory, so we just jump to the template
+    # directory where it can find this.
+    os.chdir(pkg_resources.resource_filename('mutalyzer', 'templates'))
+
     website.app.run()
 
 
