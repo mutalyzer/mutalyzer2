@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% set active_page = "syntax-checker" %}
-{% set page_title = "Variant syntax checker" %}
+{% set page_title = "Syntax Checker" %}
 
 {% block content %}
 
@@ -30,10 +30,9 @@
       onclick="clearField(this.form, 'variant');">
     <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SyntaxChecker">Help</a>
   </form>
-  <br>
 </div>
 <br>
-{% if variant is defined %}
+{% if variant %}
   <h3>Variant syntax checker results:</h3>
   {% if parseError %}
     <div class="messages">
