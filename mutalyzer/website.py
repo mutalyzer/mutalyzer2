@@ -77,117 +77,6 @@ urls = (
 )
 
 
-class render_tal:
-    """
-    Render interface to TAL templates.
-
-    Example to render /templates/hello.html with parameter 'alice':
-
-        >>> render = render_tal('templates')
-        >>> render.hello('alice')
-    """
-    def __init__(self, path, globals={}):
-        """
-        @arg path: Path to templates directory.
-        @kwarg globals: Dictionary of global template variables.
-        """
-        self.path = path
-        self.globals = globals
-    #__init__
-
-    def __getattr__(self, name):
-        """
-        Returns a template. Call the template to get a render.
-
-        @arg name: Template name (usually a HTML filename without '.html').
-        @return: Template render function.
-        """
-        filename = name
-
-        def template(args={}, scheme='html', standalone=False,
-                     prevent_caching=False, page=None):
-            """
-            Template render function.
-
-            If a scheme of 'html' is choosen, the template name is assumed
-            to be a filename without its '.html' suffix. Otherwise it is
-            assumed to be a full filename.
-
-            The render of the template is wrapped in the HTML site layout
-            with menu if scheme is 'html' and standalone is False.
-
-            @arg args: Arguments for template.
-            @kwarg scheme: One of 'html', 'file'.
-            @kwarg standalone: Includes HTML site layout and sets interactive
-                               argument for template.
-            @return: Render of template.
-            """
-            page = page or filename
-            file = filename
-            if scheme == 'html':
-                file += '.html'
-            path = os.path.join(self.path, file)
-
-            context = simpleTALES.Context()
-
-            context.addGlobal('interactive', not standalone)
-
-            for name, value in self.globals.items():
-                context.addGlobal(name, value)
-
-            for name, value in args.items():
-                context.addGlobal(name, value)
-
-            templateFile = open(path, 'r')
-            template = simpleTAL.compileHTMLTemplate(templateFile)
-            templateFile.close()
-
-            # Wrap in site layout with menu
-            if scheme == 'html' and not standalone:
-                context.addGlobal('sitemacros', template)
-                # The following three lines are a hack to get class="active"
-                # on the active menu item, working around TAL.
-                active = defaultdict(lambda: 'menu')
-                active[page] = 'menu active'
-                context.addGlobal('active', active)
-                templateFile = open(os.path.join(self.path, 'menu.html'), 'r')
-                template = simpleTAL.compileHTMLTemplate(templateFile)
-                templateFile.close()
-
-            if scheme == 'html':
-                web.header('Content-Type', 'text/html')
-
-            if prevent_caching:
-                web.header('Cache-Control', 'no-cache')
-                web.header('Expires', '-1')
-
-            io = StringIO()
-            template.expand(context, io)
-
-            return io.getvalue()
-        #template
-
-        return template
-    #__getattr__
-#render_tal
-
-
-# TAL template render
-render_ = render_tal(pkg_resources.resource_filename('mutalyzer', 'templates'),
-    globals = {
-    'version'             : mutalyzer.__version__,
-    'nomenclatureVersion' : mutalyzer.NOMENCLATURE_VERSION,
-    'releaseDate'         : mutalyzer.__date__,
-    'release'             : mutalyzer.RELEASE,
-    'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
-    'contactEmail'        : config.get('email'),
-    'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
-    'serviceJsonLocation' : SERVICE_JSON_LOCATION,
-    'piwik'               : config.get('piwik'),
-    'piwikBase'           : config.get('piwikBase'),
-    'piwikSite'           : config.get('piwikSite')
-})
-
 # Jinja2 template render
 # Todo: We rely on Apache to add a Content-Type header, we should actually
 #     set it ourselves.
@@ -591,6 +480,7 @@ class PositionConverter:
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
+        # Todo: Now we switched to Jinja2, we can make this sane.
         if build in avail_builds:
             selected_build = build
         else:
@@ -1166,6 +1056,7 @@ class BatchChecker:
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
+        # Todo: Now we switched to Jinja2, we can make this sane.
         if arg1 in avail_builds:
             selected_build = arg1
         else:
@@ -1330,6 +1221,7 @@ class Uploader:
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
+        # Todo: Now we switched to Jinja2, we can make this sane.
         selected_assembly = config.get('defaultDb')
         unselected_assemblies = sorted(b for b in available_assemblies
                                        if b != selected_assembly)
@@ -1408,6 +1300,7 @@ class Uploader:
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
+        # Todo: Now we switched to Jinja2, we can make this sane.
         if i.chrnameassembly in available_assemblies:
             selected_assembly = i.chrnameassembly
         else:
@@ -1563,15 +1456,15 @@ class SoapApi:
 
 class Static:
     """
-    Static page, just render a TAL template on GET.
+    Static page, just render a Jinja2 template on GET.
     """
     def GET(self, page=None):
         """
-        Render a TAL template as HTML.
+        Render a Jinja2 template as HTML.
 
-        @kwarg page: Page name to render_. A TAL template with this name must
-                     exist. Special case is a page of None, having the same
-                     effect as 'index'.
+        @kwarg page: Page name to render. A Jinja2 template with this name
+                     must exist. Special case is a page of None, having the
+                     same effect as 'index'.
         @type page: string
 
         Be careful to only call this method with an argument that is a simple
