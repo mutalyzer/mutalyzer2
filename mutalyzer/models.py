@@ -14,6 +14,9 @@ Additional attributes values for the spyne String model:
 
 @todo: Use Mandatory.* models in the ClassModel extensions?
 @todo: See if it improves client code if we use Array(_, nillable=False).
+@todo: Move all these models to the mutalyzer.services package and refactor
+  all uses of them in other places. The SOAP_NAMESPACE variable can then also
+  be moved there.
 """
 
 

@@ -27,7 +27,6 @@ import time
 
 from mutalyzer import util
 from mutalyzer.config import settings
-from mutalyzer.models import SoapMessage
 
 
 class Output() :
