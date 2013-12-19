@@ -20,9 +20,8 @@ def process():
     """
     Run forever in a loop processing scheduled batch jobs.
     """
-    database = Db.Batch()
     counter = Db.Counter()
-    scheduler = Scheduler.Scheduler(database)
+    scheduler = Scheduler.Scheduler()
 
     def handle_exit(signum, stack_frame):
         if scheduler.stopped():
@@ -36,9 +35,8 @@ def process():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGINT, handle_exit)
 
-    while not scheduler.stopped():
-        # Process batch jobs. This process() method runs while there
-        # exist jobs to run.
+    while True:
+        # Process batch jobs.
         scheduler.process(counter)
         if scheduler.stopped():
             break

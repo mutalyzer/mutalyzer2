@@ -17,3 +17,4 @@ cssselect==0.9.1
 Jinja2==2.7.1
 -e git+https://github.com/mammadori/magic-python.git#egg=Magic_file_extensions
 Flask==0.10.1
+https://bitbucket.org/zzzeek/sqlalchemy/downloads/SQLAlchemy-0.9.0b1.tar.gz

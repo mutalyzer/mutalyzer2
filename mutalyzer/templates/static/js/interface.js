@@ -65,10 +65,10 @@ function getHTTPObject(){
 }
 
 function updatePercentage() {
-    if (!document.getElementById('jobID')){ return; };
-    var id = document.getElementById('jobID').value;
+    if (!document.getElementById('resultID')){ return; };
+    var id = document.getElementById('resultID').value;
     var total = document.getElementById('totalJobs').value;
-    var url = 'progress?jobID='+id+'&totalJobs='+total+'&ajax=1';
+    var url = 'progress?resultID='+id+'&totalJobs='+total+'&ajax=1';
     var val = "";
 
     http = getHTTPObject();

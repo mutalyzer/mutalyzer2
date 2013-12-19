@@ -18,9 +18,12 @@ Module used to add and manage the Batch Jobs.
 import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
+from sqlalchemy import func
 
 import mutalyzer
 from mutalyzer.config import settings
+from mutalyzer.db import queries, session
+from mutalyzer.db.models import BatchJob, BatchQueueItem
 from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
@@ -47,17 +50,13 @@ class Scheduler() :
         - Batch Position Converter
     """
 
-    def __init__(self, database) :
+    def __init__(self) :
         #TODO: documentation
         """
         Initialize the Scheduler, which requires a database connection.
 
         @todo: documentation
-
-        @arg database:
-        @type database:
         """
-        self.__database = database
         self.__run = True
     #__init__
 
@@ -163,10 +162,15 @@ Mutalyzer batch scheduler""" % url)
 
     def __alterBatchEntries(self, jobID, old, new, flag, nselector) :
         """
-        Alias for the database.updateBatchDb method.
+        Replace within one JobID all entries matching old with new, if they do
+        not match the negative selector.
 
-        Replace within one JobID all entries matching old with new, if
-        they do not match the negative selector.
+        This is used to alter batch entries that would otherwise take a long
+        time to process. E.g. a batch job with a lot of the same accession
+        numbers without version numbers would take a long time because
+        mutalyzer would fetch the file from the NCBI for each entry. A
+        database update over all entries with the same accession number speeds
+        up the job considerably.
 
         Example:
         NM_002001(FCER1A_v001):c.1A>C ; this would result in the continuous
@@ -174,12 +178,12 @@ Mutalyzer batch scheduler""" % url)
         In this case the arguments would be:
             - old         ;   NM_002001
             - new         ;   NM_002001.2
-            - nselector   ;   NM_002001[[.period.]]
+            - nselector   ;   NM_002001.
 
         The nselector is used to prevent the replacement of
         false positives. e.g. NM_002001.1(FCER1A_v001):c.1A>C should not
-        be replaced. The double bracket notation is the MySQL escape char
-        for a regular expression.
+        be replaced. For this reason, any items starting with the nselector
+        value are ignored.
 
         @arg jobID:
         @type jobID:
@@ -192,15 +196,33 @@ Mutalyzer batch scheduler""" % url)
         @arg nselector:
         @type nselector:
         """
-
-        self.__database.updateBatchDb(jobID, old, new, flag, nselector)
+        #query = '''UPDATE batch_queue_items
+        #             SET item = REPLACE(item, :old, :new),
+        #                 flags = flags || :flag
+        #             WHERE batch_job_id = :batch_job_id
+        #                   AND NOT item LIKE :nselector%'''
+        #parameters = {'batch_job_id': jobID,
+        #              'old': old,
+        #              'new': new,
+        #              'flag': flag,
+        #              'nselector': nselector}
+        #session.execute(query, parameters)
+        BatchQueueItem.query \
+            .filter_by(batch_job_id=jobID) \
+            .filter(BatchQueueItem.item.startswith(old),
+                    ~BatchQueueItem.item.startswith(nselector)) \
+            .update({'item': func.replace(BatchQueueItem.item, old, new),
+                     'flags': BatchQueueItem.flags + flag},
+                    synchronize_session=False)
+        session.commit()
     #__alterBatchEntries
 
     def __skipBatchEntries(self, jobID, flag, selector) :
         """
-        Alias for the database.skipBatchDb method.
-
         Skip all batch entries that match a certain selector.
+
+        We flag batch entries to be skipped. This is used if it is certain
+        that an entry will cause an error, or that its output is ambiguous.
 
         @arg jobID:
         @type jobID:
@@ -209,8 +231,16 @@ Mutalyzer batch scheduler""" % url)
         @arg selector:
         @type selector:
         """
-
-        self.__database.skipBatchDb(jobID, selector, flag)
+        #update `BatchQueue` set
+        #  `Flags` = CONCAT(IFNULL(`Flags`, ""), %s)
+        #  where `JobID` = %s AND
+        #  `Input` RLIKE %s;
+        BatchQueueItem.query \
+            .filter_by(batch_job_id=jobID) \
+            .filter(BatchQueueItem.item.startswith(selector)) \
+            .update({'flags': BatchQueueItem.flags + flag},
+                    synchronize_session=False)
+        session.commit()
     #__skipBatchEntries
 
     def _updateDbFlags(self, O, jobID) :
@@ -267,12 +297,13 @@ Mutalyzer batch scheduler""" % url)
         #for
     #_updateDbFlags
 
-    def process(self, counter) :
+    def process(self, counter):
         """
-        Start the mutalyzer Batch Processing. This method retrieves
-        all jobs from the database and processes them in a roundrobin
-        fashion. If all jobs are done the process checks if new jobs are
-        added during the last processing round.
+        Start the mutalyzer Batch Processing. This method retrieves all jobs
+        jobs from the database and processes them in a roundrobin fashion.
+        After each round, the process checks if new jobs are added during the
+        last processing round and repeats. This continue until no jobs are
+        left to process.
 
         If during this process the {stop} method is called, the current
         job item is completed and we return.
@@ -310,35 +341,45 @@ Mutalyzer batch scheduler""" % url)
         A Flag consists of either an A, S or C followed by a digit, which
         refers to the reason of alteration / skip.
         """
-        jobList = self.__database.getJobs()
+        while not self.stopped():
+            batch_jobs = BatchJob.query
 
-        while jobList and self.__run:
-            for i, jobType, arg1 in jobList :
-                inputl, flags = self.__database.getFromQueue(i)
-                if not (inputl is None) :
-                    if jobType == "NameChecker" :
-                        self._processNameBatch(inputl, i, flags, counter)
-                    elif jobType == "SyntaxChecker" :
-                        self._processSyntaxCheck(inputl, i, flags, counter)
-                    elif jobType == "PositionConverter" :
-                        self._processConversion(inputl, i, arg1, flags, counter)
-                    elif jobType == "SnpConverter" :
-                        self._processSNP(inputl, i, flags, counter)
-                    else: #unknown jobType
-                        pass #TODO: Scream burning water and remove from Queue
-                else :
-                    eMail, stuff, fromHost = self.__database.removeJob(i)
-                    print "Job %s finished, email %s file %s" % (i, eMail, i)
-                    self.__sendMail(eMail, "%sResults_%s.txt" % (fromHost, i))
-                #else
-                if not self.__run:
+            if batch_jobs.count() == 0:
+                break
+
+            for batch_job in batch_jobs:
+                if self.stopped():
                     break
-            #for
-            jobList = self.__database.getJobs()
-        #while
+
+                batch_queue_item = queries.pop_batch_queue_item(batch_job)
+
+                if batch_queue_item is not None:
+                    item, flags = batch_queue_item
+
+                    if batch_job.job_type == 'NameChecker':
+                        self._processNameBatch(batch_job, item, flags, counter)
+                    elif batch_job.job_type == 'SyntaxChecker':
+                        self._processSyntaxCheck(batch_job, item, flags, counter)
+                    elif batch_job.job_type == 'PositionConverter':
+                        self._processConversion(batch_job, item, flags, counter)
+                    elif batch_job.job_type == 'SnpConverter':
+                        self._processSNP(batch_job, item, flags, counter)
+                    else:
+                        # Unknown job type, should never happen.
+                        # Todo: Log some screaming message.
+                        pass
+
+                else:
+                    print ('Job %s finished, email %s file %s'
+                           % (batch_job.id, batch_job.email, batch_job.id))
+                    self.__sendMail(
+                        batch_job.email, '%sResults_%s.txt'
+                        % (batch_job.download_url_prefix, batch_job.result_id))
+                    session.delete(batch_job)
+                    session.commit()
     #process
 
-    def _processNameBatch(self, cmd, i, flags, counter) :
+    def _processNameBatch(self, batch_job, cmd, flags, counter) :
         """
         Process an entry from the Name Batch, write the results
         to the job-file. If an Exception is raised, catch and continue.
@@ -375,7 +416,7 @@ Mutalyzer batch scheduler""" % url)
             #except
             finally :
                 #check if we need to update the database
-                self._updateDbFlags(O, i)
+                self._updateDbFlags(O, batch_job.id)
         #if
 
         batchOutput = O.getOutput("batchDone")
@@ -387,7 +428,7 @@ Mutalyzer batch scheduler""" % url)
             outputline += batchOutput[0]
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -426,7 +467,7 @@ Mutalyzer batch scheduler""" % url)
             "Finished NameChecker batchvariant " + cmd)
     #_processNameBatch
 
-    def _processSyntaxCheck(self, cmd, i, flags, counter) :
+    def _processSyntaxCheck(self, batch_job, cmd, flags, counter) :
         """
         Process an entry from the Syntax Check, write the results
         to the job-file.
@@ -462,7 +503,7 @@ Mutalyzer batch scheduler""" % url)
             result = "|".join(output.getBatchMessages(2))
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -485,7 +526,7 @@ Mutalyzer batch scheduler""" % url)
                           "Finished SyntaxChecker batchvariant " + cmd)
     #_processSyntaxCheck
 
-    def _processConversion(self, cmd, i, build, flags, counter) :
+    def _processConversion(self, batch_job, cmd, flags, counter) :
         """
         Process an entry from the Position Converter, write the results
         to the job-file. The Position Converter is wrapped in a try except
@@ -519,7 +560,7 @@ Mutalyzer batch scheduler""" % url)
         if not skip :
             try :
                 #process
-                converter = Converter(build, O)
+                converter = Converter(batch_job.argument, O)
 
                 #Also accept chr accNo
                 variant = converter.correctChrVariant(variant)
@@ -564,7 +605,7 @@ Mutalyzer batch scheduler""" % url)
         error = "%s" % "|".join(O.getBatchMessages(2))
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -591,7 +632,7 @@ Mutalyzer batch scheduler""" % url)
     #_processConversion
 
 
-    def _processSNP(self, cmd, i, flags, counter) :
+    def _processSNP(self, batch_job, cmd, flags, counter) :
         """
         Process an entry from the SNP converter Batch, write the results
         to the job-file. If an Exception is raised, catch and continue.
@@ -627,7 +668,7 @@ Mutalyzer batch scheduler""" % url)
         outputline += "%s\t" % "|".join(O.getBatchMessages(2))
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -653,13 +694,11 @@ Mutalyzer batch scheduler""" % url)
     #_processSNP
 
 
-    def addJob(self, outputFilter, eMail, queue, columns, fromHost, jobType,
+    def addJob(self, eMail, queue, columns, fromHost, jobType,
                Arg1):
         """
         Add a job to the Database and start the BatchChecker.
 
-        @arg outputFilter:  Filter the output of Mutalyzer
-        @type outputFilter:
         @arg eMail:         e-mail address of batch supplier
         @type eMail:        string
         @arg queue:         A list of jobs
@@ -673,16 +712,12 @@ Mutalyzer batch scheduler""" % url)
         @arg Arg1:          Batch Arguments, for now only build info
         @type Arg1:
 
-        @return: jobID
+        @return: resultID
         @rtype:
-
-        @todo: outputFilter is not used
         """
-        #TODO: outputFilter is not used
-
         # Add jobs to the database
-        jobID = self.__database.addJob(outputFilter, eMail, fromHost, jobType,
-                                       Arg1)
+        batch_job = BatchJob(jobType, email=eMail, download_url_prefix=fromHost, argument=Arg1)
+        session.add(batch_job)
 
         for i, inputl in enumerate(queue):
             # NOTE:
@@ -704,7 +739,9 @@ Mutalyzer batch scheduler""" % url)
             if (i + 1) % columns:
                 # Add flag for continuing the current row
                 flag = '%s%s' % (flag if flag else '', 'C0')
-            self.__database.addToQueue(jobID, inputl, flag)
+
+            item = BatchQueueItem(batch_job, inputl, flags=flag)
+            session.add(item)
 
         # Spawn child
         # Todo: Executable should be in bin/ directory.
@@ -713,6 +750,9 @@ Mutalyzer batch scheduler""" % url)
 
         #Wait for the BatchChecker to fork of the Daemon
         #p.communicate()
-        return jobID
+
+        session.commit()
+
+        return batch_job.result_id
     #addJob
 #Scheduler

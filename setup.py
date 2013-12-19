@@ -42,6 +42,7 @@ setup(
     install_requires=install_requires,
     packages=['mutalyzer',
               'mutalyzer.config',
+              'mutalyzer.db',
               'mutalyzer.entrypoints',
               'mutalyzer.parsers',
               'mutalyzer.services'],

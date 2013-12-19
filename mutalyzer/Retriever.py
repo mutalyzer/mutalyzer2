@@ -402,7 +402,7 @@ class GenBankRetriever(Retriever):
                         "BatchFlags", ("A1",(
                             filename,
                             outfile,
-                            filename+"[[.period.]]" )))
+                            filename+"." )))
                 self._output.addMessage(__file__, 2, "WNOVER",
                     "No version number is given, using %s. Please use this " \
                     "number to reduce downloading overhead." % record.id)

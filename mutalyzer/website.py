@@ -34,6 +34,8 @@ from spyne.server.http import HttpBase
 import mutalyzer
 from mutalyzer import util
 from mutalyzer.config import settings
+from mutalyzer.db import session
+from mutalyzer.db.models import BatchJob, BatchQueueItem
 from mutalyzer.grammar import Grammar
 from mutalyzer.services import soap
 from mutalyzer import variantchecker
@@ -67,7 +69,7 @@ urls = (
     '/upload',                                  'Uploader',
     '/batch([a-zA-Z]+)?',                       'BatchChecker',
     '/progress',                                'BatchProgress',
-    '/Results_(\d+)\.txt',                      'BatchResult',
+    '/Results_([\da-z-]+)\.txt',                'BatchResult',
     '/soap-api',                                'SoapApi',
     '/Variant_info',                            'VariantInfo',
     '/getGS',                                   'GetGS',
@@ -95,8 +97,16 @@ render = render_jinja(pkg_resources.resource_filename('mutalyzer', 'templates'),
     'piwikBase'           : settings.PIWIK_BASE_URL,
     'piwikSite'           : settings.PIWIK_SITE_ID})
 
+
+
 # web.py application
 app = web.application(urls, globals(), autoreload=False)
+
+
+# Close database session at end of each request.
+def _shutdown_session():
+    session.remove()
+app.add_processor(web.unloadhook(_shutdown_session))
 
 
 class RedirectHome:
@@ -961,7 +971,7 @@ class BatchProgress:
         Progress for a batch job.
 
         Parameters:
-        - jobID: ID of the job to return progress for.
+        - resultID: Result ID of the job to return progress for.
         - totalJobs: Total number of entries in this job.
 
         @todo: Actually, signaling 'OK' here only means the last entry was
@@ -978,13 +988,12 @@ class BatchProgress:
 
         i = web.input(ajax=None)
         try:
-            jobID = int(i.jobID)
+            resultID = str(i.resultID)
             total = int(i.totalJobs)
         except ValueError:
             return
 
-        D = Db.Batch()
-        left = D.entriesLeftForJob(jobID)
+        left = BatchQueueItem.query.join(BatchJob).filter_by(result_id=resultID).count()
         percentage = int(100 - (100 * left / float(total)))
         if percentage < 0:
             percentage = 0
@@ -1070,8 +1079,6 @@ class BatchChecker:
             "errors"        : [],
             "debug"         : [],
             "maxSize"       : float(maxUploadSize) / 1048576,
-            "batchTypes"    : ["NameChecker", "SyntaxChecker",
-                               "PositionConverter", "SnpConverter"],
             "hideTypes"     : batchType and 'none' or '',
             "selected"      : "0",
             "batchType"     : batchType or "",
@@ -1082,12 +1089,15 @@ class BatchChecker:
             "totalJobs"     : None
         }
 
+        batch_types = ['NameChecker', 'SyntaxChecker', 'PositionConverter',
+                       'SnpConverter']
+
         # Make sure the correct page is displayed for an entrypoint
         if not batchType:
             batchType = 'NameChecker'
 
-        if batchType in attr["batchTypes"]:
-            attr["selected"] = str(attr["batchTypes"].index(batchType))
+        if batchType in batch_types:
+            attr["selected"] = str(batch_types.index(batchType))
 
         # Todo: I think this test is kindof bogus
         def isEMail(a):
@@ -1115,8 +1125,7 @@ class BatchChecker:
                 return 'Sorry, only files up to %s megabytes are accepted.' % (
                     float(maxUploadSize) / 1048576)
 
-            D = Db.Batch()
-            S = Scheduler.Scheduler(D)
+            S = Scheduler.Scheduler()
             FileInstance = File.File(O)
 
             # Generate the fromhost URL from which the results can be fetched
@@ -1129,9 +1138,8 @@ class BatchChecker:
                 O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
                     " file, please check your file format.")
             else:
-                #TODO: Add Binair Switches to toggle some events
-                attr["jobID"] = S.addJob("BINSWITHCES", email, job, columns,
-                    fromHost, batchType, arg1)
+                attr["resultID"] = S.addJob(email, job, columns, fromHost,
+                                            batchType, arg1)
                 attr["totalJobs"] = len(job) or 1
                 attr["messages"].append("Your file has been parsed and the job"
                     " is scheduled, you will receive an email when the job is"

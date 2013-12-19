@@ -22,6 +22,8 @@ from operator import itemgetter, attrgetter
 
 import mutalyzer
 from mutalyzer.config import settings
+from mutalyzer.db import session
+from mutalyzer.db.models import BatchJob, BatchQueueItem
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -131,7 +133,7 @@ class MutalyzerService(ServiceBase):
         super(MutalyzerService, self).__init__(environ)
     #__init__
 
-    @srpc(Mandatory.ByteArray, String, String,  _returns=Integer)
+    @srpc(Mandatory.ByteArray, String, String,  _returns=String)
     def submitBatchJob(data, process='NameChecker', argument=''):
         """
         Submit a batch job.
@@ -154,13 +156,20 @@ class MutalyzerService(ServiceBase):
         @return: Batch job identifier.
         """
         output = Output(__file__)
-        database = Db.Batch()
 
         counter = Db.Counter()
         counter.increment('batchjob', 'webservice')
 
-        scheduler = Scheduler.Scheduler(database)
+        scheduler = Scheduler.Scheduler()
         file_instance = File.File(output)
+
+        batch_types = ['NameChecker', 'SyntaxChecker', 'PositionConverter',
+                       'SnpConverter']
+
+        if process not in batch_types:
+            raise Fault('EARG',
+                        'The process argument must be one of %s.'
+                        % ', '.join(batch_types))
 
         # Note that the max file size check below might be bogus, since Spyne
         # first checks the total request size, which by default has a maximum
@@ -193,11 +202,11 @@ class MutalyzerService(ServiceBase):
         if job is None:
             raise Fault('EPARSE', 'Could not parse input file, please check your file format.')
 
-        job_id = scheduler.addJob('BINSWITHCES', 'job@webservice', job,
-                                  columns, 'webservice', process, argument)
-        return job_id
+        result_id = scheduler.addJob('job@webservice', job, columns,
+                                     'webservice', process, argument)
+        return result_id
 
-    @srpc(Mandatory.Integer, _returns=Integer)
+    @srpc(Mandatory.String, _returns=Integer)
     def monitorBatchJob(job_id):
         """
         Get the number of entries left for a batch job.
@@ -209,10 +218,9 @@ class MutalyzerService(ServiceBase):
 
         @return: Number of entries left.
         """
-        database = Db.Batch()
-        return database.entriesLeftForJob(job_id)
+        return BatchQueueItem.query.join(BatchJob).filter_by(result_id=job_id).count()
 
-    @srpc(Mandatory.Integer, _returns=ByteArray)
+    @srpc(Mandatory.String, _returns=ByteArray)
     def getBatchJob(job_id):
         """
         Get the result of a batch job.
@@ -229,8 +237,7 @@ class MutalyzerService(ServiceBase):
 
         @return: Batch job result file.
         """
-        database = Db.Batch()
-        left = database.entriesLeftForJob(job_id)
+        left = BatchQueueItem.query.join(BatchJob).filter_by(result_id=job_id).count()
 
         if left > 0:
             raise Fault('EBATCHNOTREADY', 'Batch job result is not yet ready.')
@@ -1250,3 +1257,12 @@ class MutalyzerService(ServiceBase):
         return descriptions
     #getdbSNPDescriptions
 #MutalyzerService
+
+
+# Close database session at end of each call.
+def _shutdown_session(ctx):
+    session.remove()
+MutalyzerService.event_manager.add_listener('method_return_object',
+                                            _shutdown_session)
+MutalyzerService.event_manager.add_listener('method_exception_object',
+                                            _shutdown_session)

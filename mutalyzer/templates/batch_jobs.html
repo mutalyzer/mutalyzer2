@@ -12,7 +12,7 @@
   {% set active_page = "batch-jobs" %}
 {% endif %}
 
-{% set page_title = "Batch {{ batchType|e }} Interface" %}
+{% set page_title = "Batch Job Interface" %}
 
 {% block content %}
 
@@ -72,9 +72,10 @@
             <td><b>BatchType</b></td>
             <td>
           <select id="batchType" name="batchType" onchange="return changeBatch(this)">
-            {% for i in batchTypes %}
-              <option value="{{ i|e }}">{{ i|e }}</option>
-            {% endfor %}
+              <option value="NameChecker">Name Checker</option>
+              <option value="SyntaxChecker">Syntax Checker</option>
+              <option value="PositionConverter">Position Converter</option>
+              <option value="SnpConverter">SNP Converter</option>
           </select>
             </td>
           </tr>
@@ -150,12 +151,12 @@ window.onload = initpage;
     {% endfor %}
     <p>{{ summary|e }}</p>
   </div>
-  {% if jobID %}
+  {% if resultID %}
     <div id="percent">Your job is in progress and currently at 0%</div>
-    <input  id = "jobID"
+    <input  id = "resultID"
             type = "hidden"
-            name = "jobID"
-            value = "{{ jobID|e }}">
+            name = "resultID"
+            value = "{{ resultID|e }}">
     <input  id = "totalJobs"
             type = "hidden"
             name = "totalJobs"
