@@ -6,8 +6,9 @@ module and overridden by any values from the module specified by the
 `MUTALYZER_SETTINGS`.
 
 Alternatively, the default values can be overridden manually using the
-:meth:`settings.configure` method, in which case the `MUTALYZER_SETTINGS`
-environment variable will not be used.
+:meth:`settings.configure` method before the first use of a configuration
+value, in which case the `MUTALYZER_SETTINGS` environment variable will not be
+used.
 """
 
 
@@ -40,28 +41,24 @@ class LazySettings(util.LazyObject):
     .. note:: Django also does some logging config magic here, we did not copy
         that.
     """
-    def _setup(self, settings=None):
+    def _setup(self, from_environment=True):
         """
         Load the settings module pointed to by the environment variable. This
         is used the first time we need any settings at all, if the user has not
-        previously configured the settings manually.
+        previously configured the settings manually with :meth:`configure`.
         """
         self._wrapped = Settings()
         self._wrapped.from_object('mutalyzer.config.default_settings')
-        if settings is None:
+        if from_environment:
             self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
-        else:
-            self._wrapped.update(settings)
 
     def configure(self, settings):
         """
-        Called to manually configure the settings. The 'default_settings'
-        parameter sets where to retrieve any unspecified values from (its
-        argument must support attribute access (__getattr__)).
+        Called to manually configure the settings.
         """
-        if self._wrapped is not None:
-            raise RuntimeError('settings already configured')
-        self._setup(settings)
+        if self._wrapped is None:
+            self._setup(from_environment=False)
+        self._wrapped.update(settings)
 
     @property
     def configured(self):

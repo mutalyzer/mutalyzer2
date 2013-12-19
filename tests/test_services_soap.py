@@ -3,6 +3,10 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
+from utils import TEST_SETTINGS
+from mutalyzer.config import settings
+settings.configure(TEST_SETTINGS)
+
 import datetime
 import logging
 import os

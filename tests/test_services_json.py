@@ -3,6 +3,10 @@ Tests for the JSON interface to Mutalyzer.
 """
 
 
+from utils import TEST_SETTINGS
+from mutalyzer.config import settings
+settings.configure(TEST_SETTINGS)
+
 from nose.tools import *
 import simplejson as json
 from spyne.server.null import NullServer

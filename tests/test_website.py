@@ -11,6 +11,10 @@ I just installed webtest by 'easy_install webtest'.
 """
 
 
+from utils import TEST_SETTINGS
+from mutalyzer.config import settings
+settings.configure(TEST_SETTINGS)
+
 #import logging; logging.basicConfig()
 import os
 import re

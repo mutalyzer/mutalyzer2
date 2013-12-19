@@ -7,6 +7,9 @@ pointed-to by the `MUTALYZER_SETTINGS` environment variable.
 # Use Mutalyzer in debug mode.
 DEBUG = True
 
+# We are running unit tests.
+TESTING = False
+
 # This address is used in contact information on the website, as sender in
 # batch job notifications, and with retrieval of records at the NCBI using
 # Entrez.

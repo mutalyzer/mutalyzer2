@@ -3,6 +3,10 @@ Tests for the mutalyzer.mutator module.
 """
 
 
+from utils import TEST_SETTINGS
+from mutalyzer.config import settings
+settings.configure(TEST_SETTINGS)
+
 #import logging; logging.basicConfig()
 import re
 import os
