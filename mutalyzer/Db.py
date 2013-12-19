@@ -25,7 +25,7 @@ import warnings
 import MySQLdb
 
 from mutalyzer import util
-from mutalyzer import config
+from mutalyzer.config import settings
 
 
 #
@@ -74,14 +74,11 @@ class Db():
             is unfortunately not implemented in (most versions of) the Python
             MySQLdb module.
             Therefore we manually implement automatic reconnects in the query
-            method, but also optionally use the reconnect option from MySQLdb
-            if specified in the Mutalyzer configuration.
+            method.
             Also see Trac ticket #91.
         """
-        kwargs = dict(user=self._user, db=self._database, host=self._host)
-        if config.get('autoReconnect'):
-            kwargs.update(reconnect=True)
-        self._connection = MySQLdb.connect(**kwargs)
+        self._connection = MySQLdb.connect(
+                user=self._user, db=self._database, host=self._host)
     #_connect
 
     def query(self, statement):
@@ -209,7 +206,7 @@ class Mapping(Db) :
         @arg build: The version of the mapping database
         @type build: string
         """
-        Db.__init__(self, build, config.get('LocalMySQLuser'), config.get('LocalMySQLhost'))
+        Db.__init__(self, build, settings.MYSQL_USER, settings.MYSQL_HOST)
     #__init__
 
     def get_NM_version(self, mrnaAcc) :
@@ -873,8 +870,8 @@ class Cache(Db) :
         """
         Initialise the Db parent class. Use the internalDb.
         """
-        Db.__init__(self, config.get('internalDb'),
-                    config.get('LocalMySQLuser'), config.get('LocalMySQLhost'))
+        Db.__init__(self, settings.MYSQL_DATABASE,
+                    settings.MYSQL_USER, settings.MYSQL_HOST)
     #__init__
 
     def insertGB(self, accNo, GI, fileHash, ChrAccVer, ChrStart,
@@ -1228,8 +1225,8 @@ class Cache(Db) :
                     created >= DATE_SUB(CURDATE(), INTERVAL %s DAY))
                 );
         """, (mrnaAcc,
-              config.get('proteinLinkNoneLifetime'),
-              config.get('proteinLinkLifetime'))
+              settings.PROTEIN_LINK_NONE_LIFETIME,
+              settings.PROTEIN_LINK_LIFETIME)
 
         ret = self.query(statement)
         return ret[0][0]
@@ -1263,8 +1260,8 @@ class Cache(Db) :
                     created >= DATE_SUB(CURDATE(), INTERVAL %s DAY))
                 );
         """, (protAcc,
-              config.get('proteinLinkNoneLifetime'),
-              config.get('proteinLinkLifetime'))
+              settings.PROTEIN_LINK_NONE_LIFETIME,
+              settings.PROTEIN_LINK_LIFETIME)
 
         ret = self.query(statement)
         return ret[0][0]
@@ -1325,9 +1322,9 @@ class Batch(Db) :
         """
         Initialise the Db parent class. Use the internalDb.
         """
-        Db.__init__(self, config.get('internalDb'),
-                    config.get('LocalMySQLuser'),
-                    config.get('LocalMySQLhost'))
+        Db.__init__(self, settings.MYSQL_DATABASE,
+                    settings.MYSQL_USER,
+                    settings.MYSQL_HOST)
     #__init__
 
     def isJobListEmpty(self) :
@@ -1612,9 +1609,9 @@ class Counter(Db):
         """
         Initialise the Db parent class. Use the internalDb.
         """
-        Db.__init__(self, config.get('internalDb'),
-                    config.get('LocalMySQLuser'),
-                    config.get('LocalMySQLhost'))
+        Db.__init__(self, settings.MYSQL_DATABASE,
+                    settings.MYSQL_USER,
+                    settings.MYSQL_HOST)
 
     def increment(self, service, interface):
         """

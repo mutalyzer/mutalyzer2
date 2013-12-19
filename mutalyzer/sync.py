@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import urllib2
 from suds.client import Client
 
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer import Retriever
 
 
@@ -58,7 +58,7 @@ class CacheSync(object):
         for entry in entries:
             # Note that this way we only include Genbank files, not LRG files.
             cached = None
-            if os.path.isfile(os.path.join(config.get('cache'),
+            if os.path.isfile(os.path.join(settings.CACHE_DIR,
                                            '%s.gb.bz2' % entry[0])):
                 cached = '%s.gb' % entry[0]
             cache.append({'name':                  entry[0],

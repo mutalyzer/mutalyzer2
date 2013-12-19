@@ -26,7 +26,7 @@ from xml.parsers import expat
 from httplib import HTTPException, IncompleteRead
 
 from mutalyzer import util
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
 
@@ -79,9 +79,9 @@ class Retriever(object) :
         """
         self._output = output
         self._database = database
-        if not os.path.isdir(config.get('cache')) :
-            os.mkdir(config.get('cache'))
-        Entrez.email = config.get('email')
+        if not os.path.isdir(settings.CACHE_DIR) :
+            os.mkdir(settings.CACHE_DIR)
+        Entrez.email = settings.EMAIL
         self.fileType = None
     #__init__
 
@@ -112,12 +112,12 @@ class Retriever(object) :
         size the ``oldest'' files are deleted. Note that accessing a file
         makes it ``new''.
         """
-        if self._foldersize(config.get('cache')) < config.get('cachesize'):
+        if self._foldersize(settings.CACHE_DIR) < settings.MAX_CACHE_SIZE:
             return
 
         # Build a list of files sorted by access time.
         cachelist = []
-        for (path, dirs, files) in os.walk(config.get('cache')) :
+        for (path, dirs, files) in os.walk(settings.CACHE_DIR) :
             for filename in files :
                 filepath = os.path.join(path, filename)
                 cachelist.append(
@@ -128,7 +128,7 @@ class Retriever(object) :
         # small enough (or until the list is exhausted).
         for i in range(0, len(cachelist)) :
             os.remove(cachelist[i][1])
-            if self._foldersize(config.get('cache')) < config.get('cachesize'):
+            if self._foldersize(settings.CACHE_DIR) < settings.MAX_CACHE_SIZE:
                 break;
         #for
     #_cleancache
@@ -143,7 +143,7 @@ class Retriever(object) :
         @return: A filename
         @rtype: string
         """
-        return config.get('cache') + '/' + name + "." + self.fileType + ".bz2"
+        return os.path.join(settings.CACHE_DIR, name + "." + self.fileType + ".bz2")
     #_nametofile
 
     def _write(self, raw_data, filename) :
@@ -449,7 +449,7 @@ class GenBankRetriever(Retriever):
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
                 return None
-            if length > config.get('maxDldSize'):
+            if length > settings.MAX_FILE_SIZE:
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
                 return None
@@ -508,7 +508,7 @@ class GenBankRetriever(Retriever):
             return None
 
         # The slice can not be too big.
-        if stop - start > config.get('maxDldSize'):
+        if stop - start > settings.MAX_FILE_SIZE:
             return None
 
         # Check whether we have seen this slice before.
@@ -660,8 +660,7 @@ class GenBankRetriever(Retriever):
         info = handle.info()
         if info["Content-Type"] == "text/plain" :
             length = int(info["Content-Length"])
-            if length > config.get('minDldSize') and \
-               length < config.get('maxDldSize'):
+            if 512 < length < settings.MAX_FILE_SIZE:
                 raw_data = handle.read()
                 md5sum = self._calcHash(raw_data)
                 UD = self._database.getGBFromHash(md5sum)
@@ -864,7 +863,7 @@ class LRGRetriever(Retriever):
         @rtype: string
         """
 
-        prefix = config.get('lrgurl')
+        prefix = settings.LRG_PREFIX_URL
         url        = prefix + "%s.xml"          % name
         pendingurl = prefix + "pending/%s.xml"  % name
 
@@ -907,7 +906,7 @@ class LRGRetriever(Retriever):
         if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
 
             length = int(info["Content-Length"])
-            if config.get('minDldSize') < length < config.get('maxDldSize'):
+            if 512 < length < settings.MAX_FILE_SIZE:
                 raw_data = handle.read()
                 handle.close()
 

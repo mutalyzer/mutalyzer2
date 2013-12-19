@@ -11,7 +11,7 @@ from itertools import izip_longest
 from Bio import SeqIO, Entrez
 from Bio.Alphabet import ProteinAlphabet
 
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer import Db
 from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
 
@@ -62,7 +62,7 @@ class GBparser():
         Private variables:
             - __database ; Db.Cache object
         """
-        Entrez.email = config.get('email')
+        Entrez.email = settings.EMAIL
         self.__database = Db.Cache()
     #__init__
 

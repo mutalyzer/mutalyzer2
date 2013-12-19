@@ -33,7 +33,7 @@ from spyne.server.http import HttpBase
 
 import mutalyzer
 from mutalyzer import util
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer.grammar import Grammar
 from mutalyzer.services import soap
 from mutalyzer import variantchecker
@@ -47,7 +47,7 @@ from mutalyzer import describe
 
 
 # Show web.py debugging information.
-web.config.debug = config.get('debug')
+web.config.debug = settings.DEBUG
 
 
 # URL dispatch table
@@ -88,12 +88,12 @@ render = render_jinja(pkg_resources.resource_filename('mutalyzer', 'templates'),
     'releaseDate'         : mutalyzer.__date__,
     'release'             : mutalyzer.RELEASE,
     'copyrightYears'      : mutalyzer.COPYRIGHT_YEARS,
-    'contactEmail'        : config.get('email'),
+    'contactEmail'        : settings.EMAIL,
     'serviceSoapLocation' : SERVICE_SOAP_LOCATION,
     'serviceJsonLocation' : SERVICE_JSON_LOCATION,
-    'piwik'               : config.get('piwik'),
-    'piwikBase'           : config.get('piwikBase'),
-    'piwikSite'           : config.get('piwikSite')})
+    'piwik'               : settings.PIWIK,
+    'piwikBase'           : settings.PIWIK_BASE_URL,
+    'piwikSite'           : settings.PIWIK_SITE_ID})
 
 # web.py application
 app = web.application(urls, globals(), autoreload=False)
@@ -202,7 +202,7 @@ class Reference:
         The url routing currently makes sure to only call this with filenames
         of the form [a-zA-Z\._-]+.
         """
-        file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
+        file_path = os.path.join(settings.CACHE_DIR, '%s.bz2' % file)
 
         if not os.path.isfile(file_path):
             raise web.notfound()
@@ -229,7 +229,7 @@ class Reference:
         can be reconstructed from the information in the database. Because if
         the latter is the case, Mutalyzer will add it to the cache on the fly.
         """
-        file_path = os.path.join(config.get('cache'), '%s.bz2' % file)
+        file_path = os.path.join(settings.CACHE_DIR, '%s.bz2' % file)
 
         if not os.path.isfile(file_path):
             # The following is a hack to return a 404 not found status with
@@ -476,7 +476,7 @@ class PositionConverter:
         output = Output(__file__)
         IP = web.ctx["ip"]
 
-        avail_builds = config.get('dbNames')
+        avail_builds = settings.DB_NAMES
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
@@ -484,7 +484,7 @@ class PositionConverter:
         if build in avail_builds:
             selected_build = build
         else:
-            selected_build = config.get('defaultDb')
+            selected_build = settings.DEFAULT_DB
         unselected_builds = sorted(b for b in avail_builds
                                    if b != selected_build)
 
@@ -1050,9 +1050,9 @@ class BatchChecker:
         """
         O = Output(__file__)
 
-        maxUploadSize = config.get('batchInputMaxSize')
+        maxUploadSize = settings.MAX_FILE_SIZE
 
-        avail_builds = config.get('dbNames')
+        avail_builds = settings.DB_NAMES
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
@@ -1060,7 +1060,7 @@ class BatchChecker:
         if arg1 in avail_builds:
             selected_build = arg1
         else:
-            selected_build = config.get('defaultDb')
+            selected_build = settings.DEFAULT_DB
         unselected_builds = sorted(b for b in avail_builds
                                    if b != selected_build)
 
@@ -1163,7 +1163,7 @@ class BatchResult:
         """
         # Todo: Check if batch job is ready (we have the job id).
         filename = 'Results_%s.txt' % result
-        handle = open(os.path.join(config.get('resultsDir'), filename))
+        handle = open(os.path.join(settings.CACHE_DIR, filename))
         web.header('Content-Type', 'text/plain')
         web.header('Content-Disposition',
             'attachment; filename="%s"' % filename)
@@ -1216,13 +1216,13 @@ class Uploader:
         """
         Render reference sequence uploader form.
         """
-        maxUploadSize = config.get('maxDldSize')
-        available_assemblies = config.get('dbNames')
+        maxUploadSize = settings.MAX_FILE_SIZE
+        available_assemblies = settings.DB_NAMES
 
         # We have to put up with this crap just to get a certain <option>
         # selected in our TAL template.
         # Todo: Now we switched to Jinja2, we can make this sane.
-        selected_assembly = config.get('defaultDb')
+        selected_assembly = settings.DEFAULT_DB
         unselected_assemblies = sorted(b for b in available_assemblies
                                        if b != selected_assembly)
 
@@ -1281,9 +1281,9 @@ class Uploader:
         - chrnamestop: Stop position.
         - chrnameorientation: Orientation.
         """
-        maxUploadSize = config.get('maxDldSize')
+        maxUploadSize = settings.MAX_FILE_SIZE
 
-        available_assemblies = config.get('dbNames')
+        available_assemblies = settings.DB_NAMES
 
         O = Output(__file__)
         IP = web.ctx["ip"]
@@ -1304,7 +1304,7 @@ class Uploader:
         if i.chrnameassembly in available_assemblies:
             selected_assembly = i.chrnameassembly
         else:
-            selected_assembly = config.get('defaultDb')
+            selected_assembly = settings.DEFAULT_DB
         unselected_assemblies = sorted(b for b in available_assemblies
                                        if b != selected_assembly)
 

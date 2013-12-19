@@ -21,7 +21,7 @@ import tempfile
 from operator import itemgetter, attrgetter
 
 import mutalyzer
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -49,7 +49,7 @@ def _checkBuild(L, build) :
     @type build: string
     """
 
-    if not build in config.get('dbNames'):
+    if not build in settings.DB_NAMES:
         L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
         raise Fault("EARG",
                     "The build argument (%s) was not a valid " \
@@ -171,7 +171,7 @@ class MutalyzerService(ServiceBase):
         #     argument for spyne.server.wsgi.WsgiApplication in all webservice
         #     instantiations.
 
-        max_size = config.get('batchInputMaxSize')
+        max_size = settings.MAX_FILE_SIZE
 
         batch_file = tempfile.TemporaryFile()
         size = 0
@@ -236,7 +236,7 @@ class MutalyzerService(ServiceBase):
             raise Fault('EBATCHNOTREADY', 'Batch job result is not yet ready.')
 
         filename = 'Results_%s.txt' % job_id
-        handle = open(os.path.join(config.get('resultsDir'), filename))
+        handle = open(os.path.join(settings.CACHE_DIR, filename))
         return handle
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,

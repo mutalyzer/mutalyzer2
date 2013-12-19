@@ -19,9 +19,12 @@ search for them each time.
 import Bio
 
 from mutalyzer import util
-from mutalyzer import config
 from mutalyzer import Crossmap
 from mutalyzer import Db
+
+
+SPLICE_ALARM = 2
+SPLICE_WARN = 5
 
 
 class PList(object) :
@@ -841,11 +844,11 @@ class GenRecord() :
                 warning = 'WSPLICE_OTHER'
                 str_transcript = 'transcript %s' % transcript.name
 
-            if intronPos <= config.get('spliceAlarm'):
+            if intronPos <= SPLICE_ALARM:
                 self.__output.addMessage(__file__, 2, warning,
                     "Mutation on splice site in gene %s %s." % (
                     gene.name, str_transcript))
-            elif intronPos <= config.get('spliceWarn'):
+            elif intronPos <= SPLICE_WARN:
                 self.__output.addMessage(__file__, 2, warning,
                     "Mutation near splice site in gene %s %s." % (
                     gene.name, str_transcript))

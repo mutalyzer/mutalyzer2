@@ -41,6 +41,7 @@ setup(
     platforms=['any'],
     install_requires=install_requires,
     packages=['mutalyzer',
+              'mutalyzer.config',
               'mutalyzer.entrypoints',
               'mutalyzer.parsers',
               'mutalyzer.services'],

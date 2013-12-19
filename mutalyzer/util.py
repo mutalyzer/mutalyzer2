@@ -19,16 +19,17 @@ General utility functions.
 """
 
 
-import sys
-import os
-import math
-import time
+from functools import wraps
 import inspect
 from itertools import izip_longest
-from functools import wraps
+import math
+import operator
+import os
+import sys
+import time
 
-import Bio.Seq
 from Bio.Alphabet import IUPAC
+import Bio.Seq
 from Bio.SeqUtils import seq3
 
 
@@ -895,3 +896,81 @@ def monkey_patch_suds():
     Import.open = _import_open_patched
     Import.MUTALYZER_MONKEY_PATCHED = True
 #monkey_patch_suds
+
+
+class AttributeDictMixin(object):
+    """
+    Augment classes with a Mapping interface by adding attribute access.
+
+    Taken from `Celery <http://www.celeryproject.org/>`_
+    (`celery.datastructures.AttributeDictMixin`).
+    """
+    def __getattr__(self, k):
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(
+                '{0!r} object has no attribute {1!r}'.format(
+                    type(self).__name__, k))
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
+# Helper for LazyObject.
+def _new_method_proxy(func):
+    def inner(self, *args):
+        if self._wrapped is None:
+            self._setup()
+        return func(self._wrapped, *args)
+    return inner
+
+
+class LazyObject(object):
+    """
+    A wrapper for another class that can be used to delay instantiation of the
+    wrapped class.
+
+    Taken from `Django <https://www.djangoproject.com/>`_
+    (`django.utils.functional.LazyObject`).
+    """
+    _wrapped = None
+
+    def __init__(self):
+        self._wrapped = None
+
+    __getattr__ = _new_method_proxy(getattr)
+
+    def __setattr__(self, name, value):
+        if name == '_wrapped':
+            # Assign to __dict__ to avoid infinite __setattr__ loops.
+            self.__dict__['_wrapped'] = value
+        else:
+            if self._wrapped is None:
+                self._setup()
+            setattr(self._wrapped, name, value)
+
+    def __delattr__(self, name):
+        if name == '_wrapped':
+            raise TypeError('can\'t delete _wrapped.')
+        if self._wrapped is None:
+            self._setup()
+        delattr(self._wrapped, name)
+
+    def _setup(self):
+        """
+        Must be implemented by subclasses to initialize the wrapped object.
+        """
+        raise NotImplementedError('subclasses of LazyObject must provide a '
+                                  '_setup() method')
+
+    # Introspection support
+    __dir__ = _new_method_proxy(dir)
+
+    # Dictionary methods support
+    __getitem__ = _new_method_proxy(operator.getitem)
+    __setitem__ = _new_method_proxy(operator.setitem)
+    __delitem__ = _new_method_proxy(operator.delitem)
+
+    __len__ = _new_method_proxy(len)
+    __contains__ = _new_method_proxy(operator.contains)

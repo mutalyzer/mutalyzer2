@@ -20,7 +20,17 @@ from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
 from Bio.Seq import reverse_complement
 
 from mutalyzer import util
-from mutalyzer import config
+
+
+# Length of the flanking sequences used in the visualisation of mutations.
+VIS_FLANK_LENGTH = 25
+
+# Maximum length of visualised mutations.
+VIS_MAX_LENGTH = 25
+
+# Length of the flanking sequences used if the visualised mutation is clipped
+# (because it exceeds VIS_MAX_LENGTH).
+VIS_CLIP_FLANK_LENGTH = 6
 
 
 class Mutator():
@@ -104,19 +114,19 @@ class Mutator():
         @return: Visualisation.
         @rtype: str
         """
-        loflank = self.orig[max(pos1 - config.get('flanksize'), 0):pos1]
-        roflank = self.orig[pos2:pos2 + config.get('flanksize')]
+        loflank = self.orig[max(pos1 - VIS_FLANK_LENGTH, 0):pos1]
+        roflank = self.orig[pos2:pos2 + VIS_FLANK_LENGTH]
         delPart = self.orig[pos1:pos2]
-        odel = util.visualise_sequence(delPart, config.get('maxvissize'),
-                                       config.get('flankclipsize'))
+        odel = util.visualise_sequence(delPart, VIS_MAX_LENGTH,
+                                       VIS_CLIP_FLANK_LENGTH)
 
         bp1 = self.shift(pos1)
         bp2 = self.shift(pos2)
-        lmflank = self.mutated[max(bp1 - config.get('flanksize'), 0):bp1]
-        rmflank = self.mutated[bp2:bp2 + config.get('flanksize')]
+        lmflank = self.mutated[max(bp1 - VIS_FLANK_LENGTH, 0):bp1]
+        rmflank = self.mutated[bp2:bp2 + VIS_FLANK_LENGTH]
 
-        insvis = util.visualise_sequence(ins, config.get('maxvissize'),
-                                         config.get('flankclipsize'))
+        insvis = util.visualise_sequence(ins, VIS_MAX_LENGTH,
+                                         VIS_CLIP_FLANK_LENGTH)
         fill = abs(len(odel) - len(insvis))
         if len(odel) > len(ins):
             visualisation = ['%s %s %s' % (loflank, odel, roflank),

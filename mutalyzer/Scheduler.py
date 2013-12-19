@@ -20,7 +20,7 @@ import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 
 import mutalyzer
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
@@ -115,16 +115,15 @@ Thanks for using Mutalyzer.
 
 
 With kind regards,
-Mutalyzer batch checker.""" % url)
+Mutalyzer batch scheduler""" % url)
 
-        message["Subject"] = config.get('mailSubject')
-        message["From"] = config.get('mailFrom')
+        message["Subject"] = "Result of your Mutalyzer batch job"
+        message["From"] = settings.EMAIL
         message["To"] = mailTo
 
         smtpInstance = smtplib.SMTP()
         smtpInstance.connect()
-        smtpInstance.sendmail(config.get('mailFrom'), mailTo,
-                              message.as_string())
+        smtpInstance.sendmail(settings.EMAIL, mailTo, message.as_string())
         smtpInstance.quit()
     #__sendMail
 
@@ -388,12 +387,28 @@ Mutalyzer batch checker.""" % url)
             outputline += batchOutput[0]
 
         #Output
-        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = config.get('nameCheckOutHeader')
+            header = ['Input',
+                      'Errors | Messages',
+                      'AccNo',
+                      'Genesymbol',
+                      'Variant',
+                      'Reference Sequence Start Descr.',
+                      'Coding DNA Descr.',
+                      'Protein Descr.',
+                      'GeneSymbol Coding DNA Descr.',
+                      'GeneSymbol Protein Descr.',
+                      'Genomic Reference',
+                      'Coding Reference',
+                      'Protein Reference',
+                      'Affected Transcripts',
+                      'Affected Proteins',
+                      'Restriction Sites Created',
+                      'Restriction Sites Deleted']
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
@@ -447,12 +462,12 @@ Mutalyzer batch checker.""" % url)
             result = "|".join(output.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = config.get('syntaxCheckOutHeader')
+            header = ['Input', 'Status']
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
@@ -549,12 +564,15 @@ Mutalyzer batch checker.""" % url)
         error = "%s" % "|".join(O.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = config.get('positionConverterOutHeader')
+            header = ['Input Variant',
+                      'Errors',
+                      'Chromosomal Variant',
+                      'Coding Variant(s)']
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
@@ -609,12 +627,14 @@ Mutalyzer batch checker.""" % url)
         outputline += "%s\t" % "|".join(O.getBatchMessages(3))
 
         #Output
-        filename = "%s/Results_%s.txt" % (config.get('resultsDir'), i)
+        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
-            header = config.get('snpConverterOutHeader')
+            header = ['Input Variant',
+                      'HGVS description(s)',
+                      'Errors | Messages']
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if

@@ -26,7 +26,7 @@ Public classes:
 import time
 
 from mutalyzer import util
-from mutalyzer import config
+from mutalyzer.config import settings
 from mutalyzer.models import SoapMessage
 
 
@@ -77,7 +77,7 @@ class Output() :
         self._outputData = {}
         self._messages = []
         self._instance = util.nice_filename(instance)
-        self._loghandle = open(config.get('log'), "a+")
+        self._loghandle = open(settings.LOG_FILE, "a+")
         self._errors = 0
         self._warnings = 0
     #__init__
@@ -117,9 +117,9 @@ class Output() :
 
         # Log the message if the message is important enough, or if it is only
         # meant to be logged (level -1).
-        if level >= config.get('loglevel') or level == -1 :
+        if level >= settings.LOG_LEVEL or level == -1 :
             self._loghandle.write(time.strftime(
-                config.get('datestring') + ' ') + "%s (%s) %s: %s: %s\n" % (
+                settings.LOG_TIME_FORMAT + ' ') + "%s (%s) %s: %s: %s\n" % (
                     self._instance, nice_name, code, message.named_level(),
                     description))
             self._loghandle.flush()
@@ -136,7 +136,7 @@ class Output() :
         @return: A list of messages
         @rtype: list
         """
-        return filter(lambda m: m.level >= config.get('outputlevel'),
+        return filter(lambda m: m.level >= settings.OUTPUT_LEVEL,
                       self._messages)
     #getMessages
 

@@ -27,7 +27,11 @@ import types           # UnicodeType
 from cStringIO import StringIO
 
 from mutalyzer import util
-from mutalyzer import config
+from mutalyzer.config import settings
+
+
+# Amount of bytes to be read for determining the file type.
+BUFFER_SIZE = 32768
 
 
 class File() :
@@ -160,7 +164,7 @@ class File() :
 
         # I don't think the .seek(0) is needed now we created a new handle
         new_handle.seek(0)
-        buf = new_handle.read(config.get('bufSize'))
+        buf = new_handle.read(BUFFER_SIZE)
 
         # Default dialect
         dialect = 'excel'
@@ -280,7 +284,7 @@ class File() :
         jobl = [(l+1, row) for l, row in enumerate(job)]
 
         #TODO:  Add more new style old style logic
-        if jobl[0][1] == config.get('header') : #Old style NameCheckBatch job
+        if jobl[0][1] == ['AccNo', 'Genesymbol', 'Mutation']: #Old style NameCheckBatch job
             ret = []
             notthree = []
             emptyfield = []
@@ -365,7 +369,7 @@ class File() :
         err = float(len(errlist))/len(ret)
         if err == 0:
             return (ret, columns)
-        elif err < config.get('threshold'):
+        elif err < settings.BATCH_JOBS_ERROR_THRESHOLD:
             #allow a 5 (default) percent threshold for errors in batchfiles
             self.__output.addMessage(__file__, 3, "EBPARSE",
                     "There were errors in your batch entry file, they are "
@@ -389,7 +393,7 @@ class File() :
         @rtype: string
         """
         handle.seek(0)
-        buf = handle.read(config.get('bufSize')) #: The bufSize configuration variables.
+        buf = handle.read(BUFFER_SIZE)
 
         MagicInstance = magic.open(magic.MAGIC_MIME)
         MagicInstance.load()

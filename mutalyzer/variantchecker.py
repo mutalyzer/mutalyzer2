@@ -21,7 +21,6 @@ from Bio.Alphabet import IUPAC
 from Bio.Alphabet import DNAAlphabet
 from Bio.Alphabet import ProteinAlphabet
 
-from mutalyzer import config
 from mutalyzer import util
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
@@ -377,13 +376,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that on the forward strand ' \
             'it should be "%s" at position %s.' % (
-            util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                    config.get('maxvissize'),
-                                    config.get('flankclipsize')),
+            util.visualise_sequence(str(mutator.orig[first - 1:last])),
             util.format_range(first, last),
-            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop]),
-                                    config.get('maxvissize'),
-                                    config.get('flankclipsize')),
+            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop])),
             util.format_range(new_first, new_stop)))
 
     if forward_roll != original_forward_roll and not reverse_strand:
@@ -393,13 +388,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
         O.addMessage(__file__, 1, 'IROLLBACK',
             'Sequence "%s" at position %s was not corrected to "%s" at ' \
             'position %s, since they reside in different exons.' % (
-            util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                    config.get('maxvissize'),
-                                    config.get('flankclipsize')),
+            util.visualise_sequence(str(mutator.orig[first - 1:last])),
             util.format_range(first, last),
-            util.visualise_sequence(str(mutator.orig[incorrect_first - 1:incorrect_stop]),
-                                    config.get('maxvissize'),
-                                    config.get('flankclipsize')),
+            util.visualise_sequence(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
             util.format_range(incorrect_first, incorrect_stop)))
 
     if reverse_roll and reverse_strand:
@@ -409,13 +400,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that on the reverse strand ' \
             'it should be "%s" at position %s.' % (
-            util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                    config.get('maxvissize'),
-                                    config.get('flankclipsize')),
+            util.visualise_sequence(str(mutator.orig[first - 1:last])),
             util.format_range(first, last),
-            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop]),
-                                    config.get('maxvissize'),
-                                    config.get('flankclipsize')),
+            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop])),
             util.format_range(new_first, new_stop)))
 
     # We don't go through the trouble of visualising the *corrected* variant
@@ -457,9 +444,7 @@ def apply_inversion(first, last, mutator, record, O):
             O.addMessage(__file__, 2, 'WNOCHANGE',
                 'Sequence "%s" at position %i_%i is a palindrome ' \
                 '(its own reverse complement).' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                        config.get('maxvissize'),
-                                        config.get('flankclipsize')),
+                util.visualise_sequence(str(mutator.orig[first - 1:last])),
                 first, last))
             return
         else:
@@ -468,13 +453,10 @@ def apply_inversion(first, last, mutator, record, O):
                 'palindrome (the first %i nucleotide(s) are the reverse ' \
                 'complement of the last one(s)), the HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                        config.get('maxvissize'),
-                                        config.get('flankclipsize')),
+                util.visualise_sequence(str(mutator.orig[first - 1:last])),
                 first, last, snoop,
                 util.visualise_sequence(
-                    str(mutator.orig[first + snoop - 1: last - snoop]),
-                    config.get('maxvissize'), config.get('flankclipsize')),
+                    str(mutator.orig[first + snoop - 1: last - snoop])),
                 first + snoop, last - snoop))
             first += snoop
             last -= snoop
@@ -637,9 +619,7 @@ def apply_delins(first, last, insert, mutator, record, output):
         output.addMessage(__file__, 2, 'WNOCHANGE',
                           'Sequence "%s" at position %i_%i is identical to ' \
                           'the variant.' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                        config.get('maxvissize'),
-                                        config.get('flankclipsize')),
+                util.visualise_sequence(str(mutator.orig[first - 1:last])),
                 first, last))
         return
 
@@ -678,9 +658,7 @@ def apply_delins(first, last, insert, mutator, record, output):
                 'Sequence "%s" at position %i_%i has the same prefix or ' \
                 'suffix as the inserted sequence "%s". The HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last]),
-                                        config.get('maxvissize'),
-                                        config.get('flankclipsize')),
+                util.visualise_sequence(str(mutator.orig[first - 1:last])),
                 first, last, insert, insert_trimmed, first + lcp, last - lcs))
 
     mutator.delins(first + lcp, last - lcs, insert_trimmed)
