@@ -3,10 +3,6 @@ Tests for the mutalyzer.describe module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 import os
 from nose.tools import *
@@ -14,17 +10,15 @@ from nose.tools import *
 import mutalyzer
 from mutalyzer import describe
 
+import utils
+
 
 class TestDescribe():
     """
     Test the mytalyzer.describe module.
     """
-
-    def setUp(self):
-        """
-        Nothing.
-        """
-        pass
+    def setup(self):
+        utils.create_test_environment()
 
     def test1(self):
         """

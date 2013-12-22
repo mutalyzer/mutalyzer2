@@ -3,10 +3,6 @@ Tests for the mutalyzer.grammar module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 import os
 from nose.tools import *
@@ -15,16 +11,18 @@ import mutalyzer
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 
+import utils
+
 
 class TestGrammar():
     """
     Test the mytalyzer.grammar module.
     """
-
-    def setUp(self):
+    def setup(self):
         """
         Initialize test Grammar instance.
         """
+        utils.create_test_environment()
         self.output = Output(__file__)
         self.grammar = Grammar(self.output)
 

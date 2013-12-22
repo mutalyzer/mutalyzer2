@@ -3,15 +3,13 @@ Tests for the JSON interface to Mutalyzer.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 from nose.tools import *
 import simplejson as json
 from spyne.server.null import NullServer
 import mutalyzer
 from mutalyzer.services.json import application
+
+import utils
 
 
 # Todo: We currently have no way of testing POST requests to the JSON API. We
@@ -26,10 +24,11 @@ class TestServicesJson():
     """
     Test the Mutalyzer HTTP/RPC+JSON interface.
     """
-    def setUp(self):
+    def setup(self):
         """
         Initialize test server.
         """
+        utils.create_test_environment(database=True)
         self.server = NullServer(application, ostr=True)
 
     def _call(self, method, *args, **kwargs):

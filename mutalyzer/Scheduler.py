@@ -265,10 +265,10 @@ Mutalyzer batch scheduler""" % url)
         # NOTE:
         # Flags is a list of tuples. Each tuple consists of a flag and its
         # arguments. A skipped entry has only one argument, the selector
-        # E.g. ("S1", "NM_002001.$")
+        # E.g. ("S1", "NM_002001.")
         # An altered entry has three arguments,
         #               old,           new          negative selector
-        # E.g.("A2",("NM_002001", "NM_002001.2", "NM_002001[[.period.]]"))
+        # E.g.("A2",("NM_002001", "NM_002001.2", "NM_002001."))
 
         # Flags are set when an entry could be sped up. This is either the
         # case for the Retriever as for the Mutalyzer module

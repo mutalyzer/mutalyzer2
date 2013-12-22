@@ -1,19 +1,9 @@
 """
 Tests for the WSGI interface to Mutalyzer.
 
-Uses WebTest, see:
-  http://pythonpaste.org/webtest/
-  http://blog.ianbicking.org/2010/04/02/webtest-http-testing/
-
-I just installed webtest by 'easy_install webtest'.
-
 @todo: Tests for /upload.
 """
 
-
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
 
 #import logging; logging.basicConfig()
 import os
@@ -27,18 +17,11 @@ import logging
 import urllib
 import cgi
 
-
 import mutalyzer
 from mutalyzer import website
 from mutalyzer.util import slow, skip
 
-
-# TAL logs an awful lot of things with level=DEBUG. On any error, this is all
-# dumped to the console, which is very unconvenient. The following suppresses
-# most of this.
-logging.raiseExceptions = 0
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('simpleTAL.HTMLTemplateCompiler').setLevel(logging.ERROR)
+import utils
 
 
 BATCH_RESULT_URL = 'http://localhost/mutalyzer/Results_{id}.txt'
@@ -49,10 +32,11 @@ class TestWSGI():
     Test the Mutalyzer WSGI interface.
     """
 
-    def setUp(self):
+    def setup(self):
         """
         Initialize test application.
         """
+        utils.create_test_environment(database=True)
         web.config.debug = False
         application = website.app.wsgifunc()
         self.app = TestApp(application)

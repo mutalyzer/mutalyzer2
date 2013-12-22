@@ -3,20 +3,21 @@ Tests for the Crossmap module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 from nose.tools import *
 
 from mutalyzer.Crossmap import Crossmap
+
+import utils
 
 
 class TestCrossmap():
     """
     Test the Crossmap class.
     """
+    def setup(self):
+        utils.create_test_environment(database=True)
+
     def test_splice_sites(self):
         """
         Check whether the gene on the forward strand has the right splice

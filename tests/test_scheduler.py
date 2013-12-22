@@ -3,27 +3,32 @@ Tests for the Scheduler module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 import os
 import StringIO
 
 #import logging; logging.basicConfig()
 from nose.tools import *
 
+from mutalyzer.config import settings
 from mutalyzer.db.models import BatchJob, BatchQueueItem
 from mutalyzer import Db
 from mutalyzer import File
 from mutalyzer import output
 from mutalyzer import Scheduler
 
+import utils
+
 
 class TestScheduler():
     """
     Test the Scheduler class.
     """
+    def setup(self):
+        utils.create_test_environment(database=True)
+
+    def teardown(self):
+        utils.destroy_environment()
+
     @staticmethod
     def _batch_job(variants, expected, job_type, argument=None):
         file_instance = File.File(output.Output('test'))
@@ -32,7 +37,7 @@ class TestScheduler():
         batch_file = StringIO.StringIO('\n'.join(variants) + '\n')
         job, columns = file_instance.parseBatchFile(batch_file)
         result_id = scheduler.addJob('test@test.test', job, columns,
-                                     'webservice', job_type, argument)
+                                     None, job_type, argument)
 
         left = BatchQueueItem.query \
             .join(BatchJob) \
@@ -72,8 +77,6 @@ class TestScheduler():
         Simple name checker batch job.
         """
         variants = ['AB026906.1:c.274G>T',
-                    'NM_000059:c.670dup',
-                    'NM_000059:c.670G>T',
                     'NM_000059.3:c.670G>T']
         expected = [['AB026906.1:c.274G>T',
                      '(GenRecord): No mRNA field found for gene SDHD, '
@@ -95,7 +98,33 @@ class TestScheduler():
                      'AB026906.1(SDHD_i001):p.(Asp92Tyr)',
                      'CviQI,RsaI',
                      'BccI'],
-                    ['NM_000059:c.670dup',
+                    ['NM_000059.3:c.670G>T',
+                     '',
+                     'NM_000059.3',
+                     'BRCA2_v001',
+                     'c.670G>T',
+                     'n.897G>T',
+                     'c.670G>T',
+                     'p.(Asp224Tyr)',
+                     'BRCA2_v001:c.670G>T',
+                     'BRCA2_v001:p.(Asp224Tyr)',
+                     '',
+                     'NM_000059.3',
+                     'NP_000050.2',
+                     'NM_000059.3(BRCA2_v001):c.670G>T',
+                     'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
+                     '',
+                     'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
+        self._batch_job(variants, expected, 'NameChecker')
+
+    def test_name_checker_altered(self):
+        """
+        Name checker job with altered entries.
+        """
+        variants = ['NM_000059:c.670dup',
+                    'NM_000059:c.670G>T',
+                    'NM_000059.3:c.670G>T']
+        expected = [['NM_000059:c.670dup',
                      '|'.join(['(Retriever): No version number is given, '
                                'using NM_000059.3. Please use this number to '
                                'reduce downloading overhead.',
@@ -134,6 +163,38 @@ class TestScheduler():
                      'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
                      '',
                      'BspHI,CviAII,FatI,Hpy188III,NlaIII'],
+                    ['NM_000059.3:c.670G>T',
+                     '',
+                     'NM_000059.3',
+                     'BRCA2_v001',
+                     'c.670G>T',
+                     'n.897G>T',
+                     'c.670G>T',
+                     'p.(Asp224Tyr)',
+                     'BRCA2_v001:c.670G>T',
+                     'BRCA2_v001:p.(Asp224Tyr)',
+                     '',
+                     'NM_000059.3',
+                     'NP_000050.2',
+                     'NM_000059.3(BRCA2_v001):c.670G>T',
+                     'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
+                     '',
+                     'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
+        self._batch_job(variants, expected, 'NameChecker')
+
+    def test_name_checker_skipped(self):
+        """
+        Name checker job with skipped entries.
+        """
+        variants = ['NM_1234567890.3:c.670G>T',
+                    'NM_1234567890.3:c.570G>T',
+                    'NM_000059.3:c.670G>T']
+        expected = [['NM_1234567890.3:c.670G>T',
+                     '(Retriever): Could not retrieve NM_1234567890.3.|'
+                     '(Scheduler): All further occurrences with '
+                     '\'NM_1234567890.3\' will be skipped'],
+                    ['NM_1234567890.3:c.570G>T',
+                     '(Scheduler): Skipping entry'],
                     ['NM_000059.3:c.670G>T',
                      '',
                      'NM_000059.3',

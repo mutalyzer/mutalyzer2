@@ -118,3 +118,16 @@ class BatchQueueItem(db.Base):
 
 Index('batch_queue_item_with_batch_job',
       BatchQueueItem.batch_job_id, BatchQueueItem.id)
+
+
+def create_all():
+    db.Base.metadata.drop_all(db.session.get_bind())
+    db.Base.metadata.create_all(db.session.get_bind())
+
+    # Todo: Use alembic.
+
+    # if using alembic:
+    #from alembic.config import Config
+    #from alembic import command
+    #alembic_cfg = Config("alembic.ini")
+    #command.stamp(alembic_cfg, "head")

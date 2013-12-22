@@ -3,10 +3,6 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 import datetime
 import logging
 import os
@@ -25,6 +21,7 @@ from mutalyzer.services.soap import application
 from mutalyzer.sync import CacheSync
 from mutalyzer.util import slow
 
+import utils
 
 # Suds logs an awful lot of things with level=DEBUG, including entire WSDL
 # files and SOAP responses. On any error, this is all dumped to the console,
@@ -52,10 +49,11 @@ class TestServicesSoap():
     """
     Test the Mutalyzer SOAP interface.
     """
-    def setUp(self):
+    def setup(self):
         """
         Initialize test server.
         """
+        utils.create_test_environment(database=True)
         self.server = NullServer(application, ostr=True)
         # Unfortunately there's no easy way to just give a SUDS client a
         # complete WSDL string, it only accepts a URL to it. So we create one.

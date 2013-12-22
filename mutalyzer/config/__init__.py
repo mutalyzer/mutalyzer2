@@ -6,14 +6,16 @@ module and overridden by any values from the module specified by the
 `MUTALYZER_SETTINGS`.
 
 Alternatively, the default values can be overridden manually using the
-:meth:`settings.configure` method before the first use of a configuration
-value, in which case the `MUTALYZER_SETTINGS` environment variable will not be
-used.
+:meth:`settings.configure` method. If this is done before the first use of a
+configuration value, the `MUTALYZER_SETTINGS` environment variable will never
+be used.
 """
 
 
-import flask.config
+import collections
 import os
+
+import flask.config
 
 from mutalyzer import util
 
@@ -38,9 +40,19 @@ class LazySettings(util.LazyObject):
     Taken from `Django <https://www.djangoproject.com/>`_
     (`django.conf.LazySettings`).
 
+    Configuration settings can be updated with the :meth:`configure` method.
+
+    The user can register callbacks to configuration keys that are called
+    whenever the value for that key is updated with :meth:`on_update`.
+
     .. note:: Django also does some logging config magic here, we did not copy
         that.
     """
+    def __init__(self, *args, **kwargs):
+        # Assign to __dict__ to avoid __setattr__ call.
+        self.__dict__['_callbacks'] = collections.defaultdict(list)
+        super(LazySettings, self).__init__(*args, **kwargs)
+
     def _setup(self, from_environment=True):
         """
         Load the settings module pointed to by the environment variable. This
@@ -60,12 +72,33 @@ class LazySettings(util.LazyObject):
             self._setup(from_environment=False)
         self._wrapped.update(settings)
 
+        # Callbacks for specific keys.
+        for key, callbacks in self._callbacks.items():
+            if key in settings:
+                for callback in callbacks:
+                    callback(settings[key])
+
+        # General callbacks.
+        for callback in self._callbacks[None]:
+            callback(settings)
+
     @property
     def configured(self):
         """
         Returns True if the settings have already been configured.
         """
         return self._wrapped is not None
+
+    def on_update(self, callback, key=None):
+        """
+        Register a callback for the update of a key (or any update if `key` is
+        `None`).
+
+        The callback is called with as argument the new value for the updated
+        key (or a dictionary with all updated key-value pairs if `key` is
+        `None`).
+        """
+        self._callbacks[key].append(callback)
 
 
 settings = LazySettings()

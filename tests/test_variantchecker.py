@@ -3,10 +3,6 @@ Tests for the variantchecker module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 from nose.tools import *
 
@@ -15,15 +11,18 @@ from mutalyzer.Db import Cache
 from mutalyzer.Retriever import GenBankRetriever
 from mutalyzer.variantchecker import check_variant
 
+import utils
+
 
 class TestVariantchecker():
     """
     Test the variantchecker module.
     """
-    def setUp(self):
+    def setup(self):
         """
         Initialize test variantchecker module.
         """
+        utils.create_test_environment(database=True)
         self.output = Output(__file__)
         self.cache_database = Cache()
         self.retriever = GenBankRetriever(self.output, self.cache_database)

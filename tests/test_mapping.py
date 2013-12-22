@@ -3,25 +3,24 @@ Tests for the mapping module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 from nose.tools import *
 
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
 
+import utils
+
 
 class TestConverter():
     """
     Test the Converter class.
     """
-    def setUp(self):
+    def setup(self):
         """
         Initialize test converter module.
         """
+        utils.create_test_environment(database=True)
         self.output = Output(__file__)
 
     def _converter(self, build):

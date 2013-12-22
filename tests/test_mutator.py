@@ -3,10 +3,6 @@ Tests for the mutalyzer.mutator module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 import re
 import os
@@ -18,6 +14,8 @@ import mutalyzer
 from mutalyzer.util import skip
 from mutalyzer.output import Output
 from mutalyzer import mutator
+
+import utils
 
 
 def _seq(length):
@@ -34,10 +32,11 @@ class TestMutator():
     """
     Test the mutator module.
     """
-    def setUp(self):
+    def setup(self):
         """
         Initialize test mutator module.
         """
+        utils.create_test_environment()
         self.output = Output(__file__)
 
     def _mutator(self, sequence):

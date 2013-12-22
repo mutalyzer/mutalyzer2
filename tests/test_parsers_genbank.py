@@ -3,24 +3,23 @@ Tests for the mutalyzer.parsers.genbank module.
 """
 
 
-from utils import TEST_SETTINGS
-from mutalyzer.config import settings
-settings.configure(TEST_SETTINGS)
-
 #import logging; logging.basicConfig()
 from nose.tools import *
 
 from mutalyzer.parsers import genbank
+
+import utils
 
 
 class TestMutator():
     """
     Test the mutator module.
     """
-    def setUp(self):
+    def setup(self):
         """
         Initialize test mutator module.
         """
+        utils.create_test_environment(database=True)
         self.gb_parser = genbank.GBparser()
 
     def test_product_lists_mismatch(self):
