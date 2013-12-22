@@ -152,11 +152,11 @@ Mutalyzer batch scheduler""" % url)
                 message = "Empty Line"
             else :
                 message = "Skipping entry"
-            O.addMessage(__file__, 4, "EBSKIP", message)
+            O.addMessage(__file__, 3, "EBSKIP", message)
             return True #skip
         #if
         if 'A' in flags : #This entry is altered before execution
-            O.addMessage(__file__, 3, "WEALTER", "Entry altered before "
+            O.addMessage(__file__, 2, "WEALTER", "Entry altered before "
                     "execution")
         return False
     #__processFlags
@@ -248,7 +248,7 @@ Mutalyzer batch scheduler""" % url)
         for flag, args in flags :
             if 'S' in flag :
                 selector = args     # Strip argument
-                O.addMessage(__file__, 3, "WBSKIP",
+                O.addMessage(__file__, 2, "WBSKIP",
                         "All further occurrences with '%s' will be "
                         "skipped" % selector)
                 self.__skipBatchEntries(jobID, flag, selector)
@@ -259,7 +259,7 @@ Mutalyzer batch scheduler""" % url)
         for flag, args in flags :
             if 'A' in flag :
                 old, new, nselector = args  #Strip arguments
-                O.addMessage(__file__, 3, "WBSUBST",
+                O.addMessage(__file__, 2, "WBSUBST",
                         "All further occurrences of %s will be substituted "
                         "by %s" % (old, new))
                 self.__alterBatchEntries(jobID, old, new, flag, nselector)
@@ -381,7 +381,7 @@ Mutalyzer batch scheduler""" % url)
         batchOutput = O.getOutput("batchDone")
 
         outputline =  "%s\t" % cmd
-        outputline += "%s\t" % "|".join(O.getBatchMessages(3))
+        outputline += "%s\t" % "|".join(O.getBatchMessages(2))
 
         if batchOutput :
             outputline += batchOutput[0]
@@ -393,7 +393,7 @@ Mutalyzer batch scheduler""" % url)
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
             header = ['Input',
-                      'Errors | Messages',
+                      'Errors and warnings',
                       'AccNo',
                       'Genesymbol',
                       'Variant',
@@ -459,7 +459,7 @@ Mutalyzer batch scheduler""" % url)
         if parsetree :
             result = "OK"
         else :
-            result = "|".join(output.getBatchMessages(3))
+            result = "|".join(output.getBatchMessages(2))
 
         #Output
         filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
@@ -561,7 +561,7 @@ Mutalyzer batch scheduler""" % url)
             #except
         #if
 
-        error = "%s" % "|".join(O.getBatchMessages(3))
+        error = "%s" % "|".join(O.getBatchMessages(2))
 
         #Output
         filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
@@ -624,7 +624,7 @@ Mutalyzer batch scheduler""" % url)
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd
         outputline += "%s\t" % "|".join(descriptions)
-        outputline += "%s\t" % "|".join(O.getBatchMessages(3))
+        outputline += "%s\t" % "|".join(O.getBatchMessages(2))
 
         #Output
         filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, i)
@@ -634,7 +634,7 @@ Mutalyzer batch scheduler""" % url)
             # a list. We need a tab delimited string.
             header = ['Input Variant',
                       'HGVS description(s)',
-                      'Errors | Messages']
+                      'Errors and warnings']
             handle = open(filename, 'a')
             handle.write("%s\n" % "\t".join(header))
         #if
