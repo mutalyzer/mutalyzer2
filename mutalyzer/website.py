@@ -976,6 +976,7 @@ class BatchProgress:
         """
         attr = {"percentage": 0}
 
+        i = web.input(ajax=None)
         try:
             jobID = int(i.jobID)
             total = int(i.totalJobs)
