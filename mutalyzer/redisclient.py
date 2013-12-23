@@ -9,12 +9,18 @@ simple and just use one global connection pool as created by `StrictRedis`.
 
     If the `REDIS_URI` configuration setting is `None`, we silently
     instantiate a mock interface to Redis.
+
+.. todo:: We currently use Redis for storing stat counters, but there are many
+    opportunities to use it for caching. For example, which version numbers
+    are available for a certain accession number, which is a costly operation
+    and something we implemented quite a hack for to optimize in the batch
+    name checker (the whole alter thing with batchflags).
 """
 
 
 import redis
 
-from mutalyzer import settings
+from mutalyzer.config import settings
 from mutalyzer import util
 
 
@@ -34,4 +40,4 @@ class LazyClient(util.LazyObject):
             self._wrapped = redis.StrictRedis.from_url(settings.REDIS_URI)
 
 
-client = LazyCLient()
+client = LazyClient()

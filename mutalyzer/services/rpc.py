@@ -28,6 +28,7 @@ from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
+from mutalyzer import stats
 from mutalyzer import variantchecker
 from mutalyzer import Db
 from mutalyzer.mapping import Converter
@@ -73,8 +74,7 @@ class MutalyzerService(ServiceBase):
         """
         output = Output(__file__)
 
-        counter = Db.Counter()
-        counter.increment('batchjob', 'webservice')
+        stats.increment_counter('batch-job/webservice')
 
         scheduler = Scheduler.Scheduler()
         file_instance = File.File(output)
@@ -678,8 +678,7 @@ class MutalyzerService(ServiceBase):
         O.addMessage(__file__, -1, "INFO",
             "Received request cTogConversion(%s %s)" % (build, variant))
 
-        counter = Db.Counter()
-        counter.increment('positionconvert', 'webservice')
+        stats.increment_counter('position-converter/webservice')
 
         assembly = Assembly.query.filter(or_(Assembly.name == build,
                                              Assembly.alias == build)).first()
@@ -722,8 +721,7 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, "INFO",
             "Received request checkSyntax(%s)" % (variant))
 
-        counter = Db.Counter()
-        counter.increment('checksyntax', 'webservice')
+        stats.increment_counter('syntax-checker/webservice')
 
         if not variant :
             output.addMessage(__file__, 4, "EARG", "EARG no variant")
@@ -800,8 +798,7 @@ class MutalyzerService(ServiceBase):
         O.addMessage(__file__, -1, "INFO",
             "Received request runMutalyzer(%s)" % (variant))
 
-        counter = Db.Counter()
-        counter.increment('namecheck', 'webservice')
+        stats.increment_counter('name-checker/webservice')
 
         variantchecker.check_variant(variant, O)
 
@@ -1238,8 +1235,7 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
             'Received request getdbSNPDescription(%s)' % rs_id)
 
-        counter = Db.Counter()
-        counter.increment('snpconvert', 'webservice')
+        stats.increment_counter('snp-converter/webservice')
 
         retriever = Retriever.Retriever(output)
         descriptions = retriever.snpConvert(rs_id)

@@ -20,6 +20,7 @@ def create_test_environment(database=False):
             DEBUG        = False,
             TESTING      = True,
             CACHE_DIR    = tempfile.mkdtemp(),
+            REDIS_URI    = None,
             DATABASE_URI = 'sqlite://',
             LOG_FILE     = log_filename))
 

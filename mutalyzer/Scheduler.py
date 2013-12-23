@@ -24,6 +24,7 @@ import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import queries, session
 from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
+from mutalyzer import stats
 from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
@@ -298,7 +299,7 @@ Mutalyzer batch scheduler""" % url)
         #for
     #_updateDbFlags
 
-    def process(self, counter):
+    def process(self):
         """
         Start the mutalyzer Batch Processing. This method retrieves all jobs
         jobs from the database and processes them in a roundrobin fashion.
@@ -358,13 +359,13 @@ Mutalyzer batch scheduler""" % url)
                     item, flags = batch_queue_item
 
                     if batch_job.job_type == 'NameChecker':
-                        self._processNameBatch(batch_job, item, flags, counter)
+                        self._processNameBatch(batch_job, item, flags)
                     elif batch_job.job_type == 'SyntaxChecker':
-                        self._processSyntaxCheck(batch_job, item, flags, counter)
+                        self._processSyntaxCheck(batch_job, item, flags)
                     elif batch_job.job_type == 'PositionConverter':
-                        self._processConversion(batch_job, item, flags, counter)
+                        self._processConversion(batch_job, item, flags)
                     elif batch_job.job_type == 'SnpConverter':
-                        self._processSNP(batch_job, item, flags, counter)
+                        self._processSNP(batch_job, item, flags)
                     else:
                         # Unknown job type, should never happen.
                         # Todo: Log some screaming message.
@@ -380,7 +381,7 @@ Mutalyzer batch scheduler""" % url)
                     session.commit()
     #process
 
-    def _processNameBatch(self, batch_job, cmd, flags, counter) :
+    def _processNameBatch(self, batch_job, cmd, flags):
         """
         Process an entry from the Name Batch, write the results
         to the job-file. If an Exception is raised, catch and continue.
@@ -399,7 +400,7 @@ Mutalyzer batch scheduler""" % url)
         O.addMessage(__file__, -1, "INFO",
             "Received NameChecker batchvariant " + cmd)
 
-        counter.increment('namecheck', 'batch')
+        stats.increment_counter('name-checker/batch')
 
         #Read out the flags
         skip = self.__processFlags(O, flags)
@@ -468,7 +469,7 @@ Mutalyzer batch scheduler""" % url)
             "Finished NameChecker batchvariant " + cmd)
     #_processNameBatch
 
-    def _processSyntaxCheck(self, batch_job, cmd, flags, counter) :
+    def _processSyntaxCheck(self, batch_job, cmd, flags):
         """
         Process an entry from the Syntax Check, write the results
         to the job-file.
@@ -489,7 +490,7 @@ Mutalyzer batch scheduler""" % url)
         output.addMessage(__file__, -1, "INFO",
                            "Received SyntaxChecker batchvariant " + cmd)
 
-        counter.increment('syntaxcheck', 'batch')
+        stats.increment_counter('syntax-checker/batch')
 
         skip = self.__processFlags(output, flags)
         #Process
@@ -527,7 +528,7 @@ Mutalyzer batch scheduler""" % url)
                           "Finished SyntaxChecker batchvariant " + cmd)
     #_processSyntaxCheck
 
-    def _processConversion(self, batch_job, cmd, flags, counter) :
+    def _processConversion(self, batch_job, cmd, flags):
         """
         Process an entry from the Position Converter, write the results
         to the job-file. The Position Converter is wrapped in a try except
@@ -555,7 +556,7 @@ Mutalyzer batch scheduler""" % url)
         O.addMessage(__file__, -1, "INFO",
             "Received PositionConverter batchvariant " + cmd)
 
-        counter.increment('positionconvert', 'batch')
+        stats.increment_counter('position-converter/batch')
 
         skip = self.__processFlags(O, flags)
         if not skip :
@@ -634,7 +635,7 @@ Mutalyzer batch scheduler""" % url)
     #_processConversion
 
 
-    def _processSNP(self, batch_job, cmd, flags, counter) :
+    def _processSNP(self, batch_job, cmd, flags):
         """
         Process an entry from the SNP converter Batch, write the results
         to the job-file. If an Exception is raised, catch and continue.
@@ -653,7 +654,7 @@ Mutalyzer batch scheduler""" % url)
         O.addMessage(__file__, -1, "INFO",
             "Received SNP converter batch rs" + cmd)
 
-        counter.increment('snpconvert', 'batch')
+        stats.increment_counter('snp-converter/batch')
 
         #Read out the flags
         # Todo: Do something with the flags?

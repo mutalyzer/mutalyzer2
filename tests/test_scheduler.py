@@ -11,7 +11,6 @@ from nose.tools import *
 
 from mutalyzer.config import settings
 from mutalyzer.db.models import BatchJob, BatchQueueItem
-from mutalyzer import Db
 from mutalyzer import File
 from mutalyzer import output
 from mutalyzer import Scheduler
@@ -45,7 +44,7 @@ class TestScheduler():
             .count()
         assert_equal(left, len(variants))
 
-        scheduler.process(Db.Counter())
+        scheduler.process()
 
         left = BatchQueueItem.query \
             .join(BatchJob) \

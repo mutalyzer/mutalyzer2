@@ -26,9 +26,8 @@ MAX_CACHE_SIZE = 50 * 1048576 # 50 MB
 # Maximum size for uploaded and downloaded files (in bytes).
 MAX_FILE_SIZE = 10 * 1048576 # 10 MB
 
-# Redis connection URI (can be any redis-py connection URI). Redis is used
-# for keeping statistics counters. Setting this to `None`, will silently
-# yield a mock Redis.
+# Redis connection URI (can be any redis-py connection URI). Set to `None` to
+# silently use a mock Redis. Redis is only used for non-essential features.
 REDIS_URI = None
 
 # Database connection URI (can be any SQLAlchemy connection URI).

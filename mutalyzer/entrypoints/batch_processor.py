@@ -12,7 +12,6 @@ import sys
 import time
 
 from .. import config
-from .. import Db
 from .. import Scheduler
 
 
@@ -20,7 +19,6 @@ def process():
     """
     Run forever in a loop processing scheduled batch jobs.
     """
-    counter = Db.Counter()
     scheduler = Scheduler.Scheduler()
 
     def handle_exit(signum, stack_frame):
@@ -37,7 +35,7 @@ def process():
 
     while True:
         # Process batch jobs.
-        scheduler.process(counter)
+        scheduler.process()
         if scheduler.stopped():
             break
         # Wait a bit and process any possible new jobs.

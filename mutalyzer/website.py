@@ -33,7 +33,7 @@ from spyne.server.http import HttpBase
 from sqlalchemy import and_, or_
 
 import mutalyzer
-from mutalyzer import util
+from mutalyzer import stats, util
 from mutalyzer.config import settings
 from mutalyzer.db import session
 from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
@@ -356,8 +356,7 @@ class SyntaxCheck:
         output.addMessage(__file__, -1, 'INFO',
             'Received request syntaxCheck(%s) from %s' % (i.variant, IP))
 
-        counter = Db.Counter()
-        counter.increment('syntaxcheck', 'website')
+        stats.increment_counter('syntax-checker/website')
 
         variant = i.variant or ''
         if variant.find(',') >= 0:
@@ -431,8 +430,7 @@ class Snp:
             output.addMessage(__file__, -1, 'INFO',
                 'Received request snpConvert(%s) from %s' % (rs_id, IP))
 
-            counter = Db.Counter()
-            counter.increment('snpconvert', 'website')
+            stats.increment_counter('snp-converter/website')
 
             retriever = Retriever.Retriever(output)
             descriptions = retriever.snpConvert(rs_id)
@@ -508,8 +506,7 @@ class PositionConverter:
                 'Received request positionConverter(%s, %s) from %s' % (
                 assembly_name_or_alias, variant, IP))
 
-            counter = Db.Counter()
-            counter.increment('positionconvert', 'website')
+            stats.increment_counter('position-converter/website')
 
             assembly = Assembly.query.filter(
                 or_(Assembly.name == assembly_name_or_alias,
@@ -726,8 +723,7 @@ class Check:
         output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
                           % (name, web.ctx['ip']))
 
-        counter = Db.Counter()
-        counter.increment('namecheck', 'website')
+        stats.increment_counter('name-checker/website')
 
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
@@ -1105,9 +1101,7 @@ class BatchChecker:
         # to the truth value False, so 'if inFile: ...' is not useful.
 
         if email and isEMail(email) and not inFile == None and inFile.file:
-
-            counter = Db.Counter()
-            counter.increment('batchjob', 'website')
+            stats.increment_counter('batch-job/website')
 
             # Todo: These error messages could be delivered trough a template
             if not 'CONTENT_LENGTH' in web.ctx.environ.keys():
