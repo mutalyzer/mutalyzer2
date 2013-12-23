@@ -68,7 +68,7 @@ class LazySettings(util.LazyObject):
         """
         Called to manually configure the settings.
         """
-        if self._wrapped is None:
+        if self._wrapped is util.empty:
             self._setup(from_environment=False)
         self._wrapped.update(settings)
 
@@ -87,7 +87,7 @@ class LazySettings(util.LazyObject):
         """
         Returns True if the settings have already been configured.
         """
-        return self._wrapped is not None
+        return self._wrapped is not util.empty
 
     def on_update(self, callback, key=None):
         """

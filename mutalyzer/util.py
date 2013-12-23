@@ -917,10 +917,14 @@ class AttributeDictMixin(object):
         self[key] = value
 
 
+# This is used in LazyObject to define the empty wrapper.
+empty = object()
+
+
 # Helper for LazyObject.
 def _new_method_proxy(func):
     def inner(self, *args):
-        if self._wrapped is None:
+        if self._wrapped is empty:
             self._setup()
         return func(self._wrapped, *args)
     return inner
@@ -937,7 +941,7 @@ class LazyObject(object):
     _wrapped = None
 
     def __init__(self):
-        self._wrapped = None
+        self._wrapped = empty
 
     __getattr__ = _new_method_proxy(getattr)
 
@@ -946,14 +950,14 @@ class LazyObject(object):
             # Assign to __dict__ to avoid infinite __setattr__ loops.
             self.__dict__['_wrapped'] = value
         else:
-            if self._wrapped is None:
+            if self._wrapped is empty:
                 self._setup()
             setattr(self._wrapped, name, value)
 
     def __delattr__(self, name):
         if name == '_wrapped':
             raise TypeError('can\'t delete _wrapped.')
-        if self._wrapped is None:
+        if self._wrapped is empty:
             self._setup()
         delattr(self._wrapped, name)
 
