@@ -26,7 +26,12 @@ MAX_CACHE_SIZE = 50 * 1048576 # 50 MB
 # Maximum size for uploaded and downloaded files (in bytes).
 MAX_FILE_SIZE = 10 * 1048576 # 10 MB
 
-# Database connection URL (can be any SQLAlchemy connection URI).
+# Redis connection URI (can be any redis-py connection URI). Redis is used
+# for keeping statistics counters. Setting this to `None`, will silently
+# yield a mock Redis.
+REDIS_URI = None
+
+# Database connection URI (can be any SQLAlchemy connection URI).
 DATABASE_URI = 'sqlite://'
 
 # Host name for local MySQL databases.
