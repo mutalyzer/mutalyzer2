@@ -1766,35 +1766,44 @@ def check_variant(description, output):
             if not len(cds_original) % 3:
                 try:
                     # FIXME this is a bit of a rancid fix.
-                    protein_original = cds_original.translate(table=transcript.txTable,
-                                                              cds=True,
-                                                              to_stop=True)
+                    protein_original = cds_original.translate(
+                        table=transcript.txTable, cds=True, to_stop=True)
                 except Bio.Data.CodonTable.TranslationError:
-                    output.addMessage(__file__, 4, "ETRANS", "Original " \
-                                      "CDS could not be translated.")
-                    return
-                protein_variant = cds_variant.translate(table=transcript.txTable,
-                                                        to_stop=True)
-                try:
-                    cds_length = util.cds_length(
-                        mutator.shift_sites(transcript.CDS.positionList))
-                    transcript.proteinDescription = util.protein_description(
-                        cds_length, protein_original, protein_variant)[0]
-                except IndexError:
-                    # Todo: Probably CDS start was hit by removal of exon...
+                    if transcript.current:
+                        output.addMessage(
+                            __file__, 2, "WTRANS",
+                            "Original CDS could not be translated in gene "
+                            "%s, transcript variant %s (selected)."
+                            % (gene.name, transcript.name))
+                    else:
+                        output.addMessage(
+                            __file__, 2, "WTRANS_OTHER",
+                            "Original CDS could not be translated in gene "
+                            "%s, transcript variant %s."
+                            % (gene.name, transcript.name))
                     transcript.proteinDescription = 'p.?'
+                else:
+                    protein_variant = cds_variant.translate(
+                        table=transcript.txTable, to_stop=True)
+                    try:
+                        cds_length = util.cds_length(
+                            mutator.shift_sites(transcript.CDS.positionList))
+                        transcript.proteinDescription = util.protein_description(
+                            cds_length, protein_original, protein_variant)[0]
+                    except IndexError:
+                        # Todo: Probably CDS start was hit by removal of exon..
+                        transcript.proteinDescription = 'p.?'
 
             else:
                 if transcript.current:
                     output.addMessage(__file__, 2, "WCDS", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
                         "variant %s (selected)." % (gene.name, transcript.name))
-                    transcript.proteinDescription = 'p.?'
                 else:
                     output.addMessage(__file__, 2, "WCDS_OTHER", "CDS length is " \
                         "not a multiple of three in gene %s, transcript " \
                         "variant %s." % (gene.name, transcript.name))
-                    transcript.proteinDescription = 'p.?'
+                transcript.proteinDescription = 'p.?'
 
     reference = output.getOutput('reference')[-1]
     if ';' in record.record.description:
