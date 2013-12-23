@@ -129,49 +129,6 @@ class Db():
     #query
 #Db
 
-class UCSC(Db) :
-    """
-    Database functions for querying the UCSC database.
-    """
-    def __init__(self, build) :
-        """
-        Initialise the Db parent class. Use the local database for a certain
-        build.
-
-        @arg build: The version of the mapping database
-        @type build: string
-        """
-        Db.__init__(self, build, 'genome', 'genome-mysql.cse.ucsc.edu')
-    #__init__
-
-    def transcripts_by_gene(self, gene):
-        """
-        Get transcript mappings for given gene name.
-        """
-        statement = """
-            SELECT DISTINCT
-              acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts,
-              exonEnds, name2 AS geneName, chrom, strand, protAcc
-            FROM gbStatus, refGene, refLink
-            WHERE type = "mRNA"
-            AND refGene.name = acc
-            AND acc = mrnaAcc
-            AND name2 = %s
-        """, gene
-
-        transcripts = []
-        for (acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, exonEnds,
-             geneName, chrom, strand, protAcc) in self.query(statement):
-            transcripts.append(
-                (geneName, acc, version, chrom, strand,
-                 txStart + 1, txEnd,
-                 cdsStart + 1, cdsEnd,
-                 [int(i) + 1 for i in exonStarts.split(',') if i],
-                 [int(i) for i in exonEnds.split(',') if i],
-                 protAcc))
-
-        return transcripts
-    #transcripts_by_gene
 
 class Mapping(Db) :
     """

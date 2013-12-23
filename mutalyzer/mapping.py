@@ -10,9 +10,11 @@ update the database with this information.
 """
 
 
-from Bio.Seq import reverse_complement
 from collections import defaultdict
 from operator import attrgetter
+
+from Bio.Seq import reverse_complement
+import MySQLdb
 
 from mutalyzer.grammar import Grammar
 from mutalyzer import Db
@@ -1052,7 +1054,10 @@ class UCSCUpdater(Updater):
             'hg19'.
         @type build: string
         """
-        self.ucsc = Db.UCSC(build)
+        self._ucsc_connection = MySQLdb.connect(
+            user='genome',
+            host='genome-mysql.cse.ucsc.edu',
+            db=build)
         super(UCSCUpdater, self).__init__(build)
     #__init__
 
@@ -1070,7 +1075,34 @@ class UCSCUpdater(Updater):
             (default: False).
         @type overwrite: bool
         """
-        transcripts = self.ucsc.transcripts_by_gene(gene)
+        query = """
+            SELECT DISTINCT
+              acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts,
+              exonEnds, name2 AS geneName, chrom, strand, protAcc
+            FROM gbStatus, refGene, refLink
+            WHERE type = "mRNA"
+            AND refGene.name = acc
+            AND acc = mrnaAcc
+            AND name2 = %s
+        """
+        parameters = gene
+
+        cursor = self._ucsc_connection.cursor()
+        cursor.execute(query, parameters)
+        result = cursor.fetchall()
+        cursor.close()
+
+        transcripts = []
+        for (acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, exonEnds,
+             geneName, chrom, strand, protAcc) in result:
+            transcripts.append(
+                (geneName, acc, version, chrom, strand,
+                 txStart + 1, txEnd,
+                 cdsStart + 1, cdsEnd,
+                 [int(i) + 1 for i in exonStarts.split(',') if i],
+                 [int(i) for i in exonEnds.split(',') if i],
+                 protAcc))
+
         self.db.ucsc_load_mapping(transcripts, overwrite=overwrite)
     #load
 #UCSCUpdater
