@@ -27,7 +27,6 @@ from mutalyzer.mutator import Mutator
 from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
-from mutalyzer import Db
 
 
 # Exceptions used (privately) in this module.
@@ -1602,11 +1601,10 @@ def check_variant(description, output):
 
     gene_symbol = transcript_id = ''
 
-    database = Db.Cache()
     if parsed_description.LrgAcc:
         filetype = 'LRG'
         transcript_id = parsed_description.LRGTranscriptID
-        retriever = Retriever.LRGRetriever(output, database)
+        retriever = Retriever.LRGRetriever(output)
     else:
         filetype = 'GB'
         if parsed_description.Gene:
@@ -1615,7 +1613,7 @@ def check_variant(description, output):
             if parsed_description.Gene.ProtIso:
                 output.addMessage(__file__, 4, 'EPROT',
                     'Indexing by protein isoform is not supported.')
-        retriever = Retriever.GenBankRetriever(output, database)
+        retriever = Retriever.GenBankRetriever(output)
 
     retrieved_record = retriever.loadrecord(record_id)
 

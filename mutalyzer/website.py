@@ -433,7 +433,7 @@ class Snp:
             counter = Db.Counter()
             counter.increment('snpconvert', 'website')
 
-            retriever = Retriever.Retriever(output, None)
+            retriever = Retriever.Retriever(output)
             descriptions = retriever.snpConvert(rs_id)
             output.addMessage(__file__, -1, 'INFO',
                 'Finished request snpConvert(%s)' % rs_id)
@@ -1296,8 +1296,7 @@ class Uploader:
 
         O = Output(__file__)
         IP = web.ctx["ip"]
-        D = Db.Cache()
-        R = Retriever.GenBankRetriever(O, D)
+        R = Retriever.GenBankRetriever(O)
 
         UD, errors = "", []
 

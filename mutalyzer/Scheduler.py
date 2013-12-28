@@ -659,7 +659,7 @@ Mutalyzer batch scheduler""" % url)
 
         descriptions = []
         if not skip :
-            R = Retriever.Retriever(O, None)
+            R = Retriever.Retriever(O)
             descriptions = R.snpConvert(cmd)
 
         # Todo: Is output ok?

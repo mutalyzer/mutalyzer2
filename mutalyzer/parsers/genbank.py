@@ -10,10 +10,11 @@ from itertools import izip_longest
 
 from Bio import SeqIO, Entrez
 from Bio.Alphabet import ProteinAlphabet
+from sqlalchemy import and_, or_
 
 from mutalyzer.config import settings
-from mutalyzer import Db
-from mutalyzer.GenRecord import PList, Locus, Gene, Record, GenRecord
+from mutalyzer.db import queries
+from mutalyzer.GenRecord import PList, Locus, Gene, Record
 
 
 # Regular expression used to find version number in locus tag
@@ -58,12 +59,8 @@ class GBparser():
     def __init__(self):
         """
         Initialise the class
-
-        Private variables:
-            - __database ; Db.Cache object
         """
         Entrez.email = settings.EMAIL
-        self.__database = Db.Cache()
     #__init__
 
     def __location2pos(self, location):
@@ -137,10 +134,9 @@ class GBparser():
         @return: Accession number of a protein or None if nothing can be found
         @rtype: string
         """
-        try:
-            return self.__database.getProtAcc(transcriptAcc)
-        except IndexError:
-            pass
+        link = queries.get_transcript_protein_link(transcriptAcc)
+        if link is not None:
+            return link.protein_accession
 
         handle = Entrez.esearch(db = "nucleotide", term = transcriptAcc)
         result = Entrez.read(handle)
@@ -154,7 +150,7 @@ class GBparser():
         handle.close()
 
         if not result[0]["LinkSetDb"] :
-            self.__database.insertLink(transcriptAcc, None)
+            queries.update_transcript_protein_link(transcriptAcc)
             return None
 
         proteinGI = result[0]["LinkSetDb"][0]["Link"][0]["Id"]
@@ -164,7 +160,7 @@ class GBparser():
         proteinAcc = handle.read().split('.')[0]
         handle.close()
 
-        self.__database.insertLink(transcriptAcc, proteinAcc)
+        queries.update_transcript_protein_link(transcriptAcc, proteinAcc)
         return proteinAcc
     #__transcriptToProtein
 

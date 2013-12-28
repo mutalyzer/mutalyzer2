@@ -871,12 +871,11 @@ class MutalyzerService(ServiceBase):
         Todo: documentation.
         """
         O = Output(__file__)
-        D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
             "Received request getGeneAndTranscript(%s, %s)" % (
             genomicReference, transcriptReference))
-        retriever = Retriever.GenBankRetriever(O, D)
+        retriever = Retriever.GenBankRetriever(O)
         record = retriever.loadrecord(genomicReference)
 
         GenRecordInstance = GenRecord.GenRecord(O)
@@ -943,12 +942,11 @@ class MutalyzerService(ServiceBase):
                                       - product
         """
         O = Output(__file__)
-        D = Db.Cache()
 
         O.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsAndInfo(%s, %s)" % (
             genomicReference, geneName))
-        retriever = Retriever.GenBankRetriever(O, D)
+        retriever = Retriever.GenBankRetriever(O)
         record = retriever.loadrecord(genomicReference)
 
         # Todo: If loadRecord failed (e.g. DTD missing), we should abort here.
@@ -1071,8 +1069,7 @@ class MutalyzerService(ServiceBase):
         Todo: documentation, error handling, argument checking, tests.
         """
         O = Output(__file__)
-        D = Db.Cache()
-        retriever = Retriever.GenBankRetriever(O, D)
+        retriever = Retriever.GenBankRetriever(O)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosomeByGene(%s, %s, %s, %s)" % (
@@ -1104,8 +1101,7 @@ class MutalyzerService(ServiceBase):
         @type orientation: integer
         """
         O = Output(__file__)
-        D = Db.Cache()
-        retriever = Retriever.GenBankRetriever(O, D)
+        retriever = Retriever.GenBankRetriever(O)
 
         O.addMessage(__file__, -1, "INFO",
             "Received request sliceChromosome(%s, %s, %s, %s)" % (
@@ -1204,8 +1200,7 @@ class MutalyzerService(ServiceBase):
 
         output.addMessage(__file__, -1, 'INFO', 'Received request getCache')
 
-        database = Db.Cache()
-        sync = CacheSync(output, database)
+        sync = CacheSync(output)
 
         cache = sync.local_cache(created_since)
 
@@ -1241,7 +1236,7 @@ class MutalyzerService(ServiceBase):
         counter = Db.Counter()
         counter.increment('snpconvert', 'webservice')
 
-        retriever = Retriever.Retriever(output, None)
+        retriever = Retriever.Retriever(output)
         descriptions = retriever.snpConvert(rs_id)
 
         output.addMessage(__file__, -1, 'INFO',

@@ -12,6 +12,8 @@ import urllib2
 from suds.client import Client
 
 from mutalyzer.config import settings
+from mutalyzer.db import session
+from mutalyzer.db.models import Reference
 from mutalyzer import Retriever
 
 
@@ -22,17 +24,14 @@ class CacheSync(object):
     """
     Synchronize the database cache with other Mutalyzer instances.
     """
-    def __init__(self, output, database):
+    def __init__(self, output):
         """
         Instantiate the object.
 
         @arg output: An output object.
         @type output: mutalyzer.output.Output
-        @arg database: A database object.
-        @type database: mutalyzer.Db.Cache
         """
         self._output = output
-        self._database = database
 
     def local_cache(self, created_since=None):
         """
@@ -50,26 +49,30 @@ class CacheSync(object):
             created_since = datetime.today() - \
                             timedelta(days=DEFAULT_CREATED_SINCE_DAYS)
 
-        entries = self._database.getGBSince(created_since)
+        references = Reference.query.filter(Reference.added >= created_since)
         cache = []
+
+        cast_orientation = {None: None,
+                            'forward': 1,
+                            'reverse': 2}
 
         # Translate each entry to a dictionary and check if it is cached on
         # our filesystem.
-        for entry in entries:
+        for reference in references:
             # Note that this way we only include Genbank files, not LRG files.
             cached = None
             if os.path.isfile(os.path.join(settings.CACHE_DIR,
-                                           '%s.gb.bz2' % entry[0])):
-                cached = '%s.gb' % entry[0]
-            cache.append({'name':                  entry[0],
-                          'gi':                    entry[1],
-                          'hash':                  entry[2],
-                          'chromosomeName':        entry[3],
-                          'chromosomeStart':       entry[4],
-                          'chromosomeStop':        entry[5],
-                          'chromosomeOrientation': entry[6],
-                          'url':                   entry[7],
-                          'created':               entry[8],
+                                           '%s.gb.bz2' % reference.accession)):
+                cached = '%s.gb' % reference.accession
+            cache.append({'name':                  reference.accession,
+                          'gi':                    reference.geninfo_identifier,
+                          'hash':                  reference.checksum,
+                          'chromosomeName':        reference.slice_accession,
+                          'chromosomeStart':       reference.slice_start,
+                          'chromosomeStop':        reference.slice_stop,
+                          'chromosomeOrientation': cast_orientation[reference.slice_orientation],
+                          'url':                   reference.download_url,
+                          'created':               reference.added,
                           'cached':                cached})
 
         return cache
@@ -133,7 +136,7 @@ class CacheSync(object):
         handle.close()
 
         # Store remote data
-        retriever = Retriever.GenBankRetriever(self._output, self._database)
+        retriever = Retriever.GenBankRetriever(self._output)
         retriever.write(data, name, 0)
 
     def sync_with_remote(self, remote_wsdl, url_template,
@@ -167,20 +170,26 @@ class CacheSync(object):
         inserted = downloaded = 0
 
         for entry in remote_cache:
-            if self._database.getHash(entry['name']):
+            try:
+                reference = Reference.query.filter_by(accession=entry['name']).one()
+                if reference.checksum is not None:
+                    continue
+            except NoResultFound:
+                pass
+
+            if Reference.query.filter_by(checksum=entry['hash']).count() > 0:
+                # Todo: Combine these queries.
                 continue
-            if self._database.getGBFromHash(entry['hash']):
+            if entry['gi'] and Reference.query.filter_by(geninfo_identifier=entry['gi']).count() > 0:
+                # Todo: Combine these queries.
                 continue
-            if entry['gi'] and self._database.getGBFromGI(entry['gi']):
-                continue
-            self._database.insertGB(entry['name'],
-                                    entry['gi'],
-                                    entry['hash'],
-                                    entry['chromosomeName'],
-                                    entry['chromosomeStart'],
-                                    entry['chromosomeStop'],
-                                    entry['chromosomeOrientation'],
-                                    entry['url'])
+            reference = Reference(entry['name'], entry['hash'],
+                                  geninfo_identifier=entry['gi'],
+                                  slice_accession=entry['chromosomeName'],
+                                  slice_start=entry['chromosomeStart'],
+                                  slice_stop=entry['chromosomeStop'],
+                                  slice_orientation=entry['chromosomeOrientation'],
+                                  download_url=entry['url'])
             inserted += 1
             if not entry['chromosomeName'] and not entry['url'] \
                    and entry['cached']:

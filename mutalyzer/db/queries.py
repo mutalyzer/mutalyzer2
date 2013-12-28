@@ -3,8 +3,13 @@ Queries on database models.
 """
 
 
+from datetime import datetime, timedelta
+
+from sqlalchemy import and_, or_
+
+from mutalyzer.config import settings
 from mutalyzer.db import session
-from mutalyzer.db.models import BatchQueueItem
+from mutalyzer.db.models import BatchQueueItem, TranscriptProteinLink
 
 
 def pop_batch_queue_item(batch_job):
@@ -42,3 +47,50 @@ def pop_batch_queue_item(batch_job):
     session.commit()
 
     return item, flags
+
+
+def get_transcript_protein_link(transcript_accession):
+    """
+    Get a cached link between a transcript and a protein that is not expired
+    according to the configuration settings `PROTEIN_LINK_EXPIRATION` and
+    `NEGATIVE_PROTEIN_LINK_EXPIRATION`.
+
+    Note that the link may be negative, i.e., the knowledge that no link
+    exists can also be cached. In that case, the `protein_accession` field of
+    the resulting `TranscriptProteinLink` object is `None`.
+
+    Returns `None` if no link (positive or negative) is found.
+    """
+    link_datetime = datetime.now() - \
+        timedelta(seconds=settings.PROTEIN_LINK_EXPIRATION)
+    negative_link_datetime = datetime.now() - \
+        timedelta(seconds=settings.NEGATIVE_PROTEIN_LINK_EXPIRATION)
+
+    return TranscriptProteinLink.query \
+        .filter_by(transcript_accession=transcript_accession) \
+        .filter(or_(
+          and_(TranscriptProteinLink.protein_accession != None,
+               TranscriptProteinLink.added >= link_datetime),
+          and_(TranscriptProteinLink.protein_accession == None,
+               TranscriptProteinLink.added >= negative_link_datetime))) \
+        .first()
+
+
+def update_transcript_protein_link(transcript_accession,
+                                   protein_accession=None):
+    """
+    Update cached link between a transcript and a protein, or create it if it
+    doesn't exist yet.
+    """
+    link = TranscriptProteinLink.query \
+        .filter_by(transcript_accession=transcript_accession) \
+        .first()
+
+    if link is not None:
+        link.protein_accession = protein_accession
+        link.added = datetime.now()
+    else:
+        link = TranscriptProteinLink(transcript_accession, protein_accession)
+        session.add(link)
+
+    session.commit()

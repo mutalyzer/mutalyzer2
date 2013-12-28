@@ -24,9 +24,12 @@ from Bio.Alphabet import ProteinAlphabet
 from xml.dom import DOMException, minidom
 from xml.parsers import expat
 from httplib import HTTPException, IncompleteRead
+from sqlalchemy.orm.exc import NoResultFound
 
 from mutalyzer import util
 from mutalyzer.config import settings
+from mutalyzer.db import session
+from mutalyzer.db.models import Reference
 from mutalyzer.parsers import lrg
 from mutalyzer.parsers import genbank
 
@@ -67,7 +70,7 @@ class Retriever(object) :
         - LogMsg(filename, message)     ; Log a message.
     """
 
-    def __init__(self, output, database) :
+    def __init__(self, output) :
         """
         Use variables from the configuration file for some simple
         settings. Make the cache directory if it does not exist yet.
@@ -78,7 +81,6 @@ class Retriever(object) :
         @type database:
         """
         self._output = output
-        self._database = database
         if not os.path.isdir(settings.CACHE_DIR) :
             os.mkdir(settings.CACHE_DIR)
         Entrez.email = settings.EMAIL
@@ -218,19 +220,26 @@ class Retriever(object) :
         @return: filename
         @rtype: string
         """
+        try:
+            reference = Reference.query.filter_by(accession=name).one()
+            currentmd5sum = reference.checksum
+        except NoResultFound:
+            currentmd5sum = None
 
-        currentmd5sum = self._database.getHash(name)
         if currentmd5sum :
             md5sum = self._calcHash(raw_data)
             if md5sum != currentmd5sum :
                 self._output.addMessage(__file__, -1, "WHASH",
                     "Warning: Hash of %s changed from %s to %s." % (
                     name, currentmd5sum, md5sum))
-                self._database.updateHash(name, md5sum)
+                Reference.query.filter_by(accession=name).update({'checksum': md5sum})
+                session.commit()
             #if
         else :
-            self._database.insertGB(name, GI,
-                self._calcHash(raw_data), None, 0, 0, 0, None)
+            reference = Reference(name, self._calcHash(raw_data),
+                                  geninfo_identifier=GI)
+            session.add(reference)
+            session.commit()
         return self._nametofile(name)
     #_updateDBmd5
 
@@ -326,12 +335,12 @@ class GenBankRetriever(Retriever):
     """
     """
 
-    def __init__(self, output, database):
+    def __init__(self, output):
         """
         @todo: Documentation.
         """
         # Recall init of parent
-        Retriever.__init__(self, output, database)
+        Retriever.__init__(self, output)
         self.fileType = "gb"
         # Child specific init
     #__init__
@@ -511,11 +520,18 @@ class GenBankRetriever(Retriever):
         if stop - start > settings.MAX_FILE_SIZE:
             return None
 
+        slice_orientation = ['forward', 'reverse'][orientation - 1]
+
         # Check whether we have seen this slice before.
-        UD = self._database.getGBFromLoc(accno, start, stop, orientation)
-        if UD : # This has been requested before.
-            if os.path.isfile(self._nametofile(UD)) : # It's still present.
-                return UD
+        try:
+            reference = Reference.query.filter_by(
+                slice_accession=accno, slice_start=start, slice_stop=stop,
+                slice_orientation=slice_orientation).one()
+        except NoResultFound:
+            reference = None
+        else:
+            if os.path.isfile(self._nametofile(reference.accession)) : # It's still present.
+                return reference.accession
 
         # It's not present, so download it.
         try:
@@ -534,21 +550,28 @@ class GenBankRetriever(Retriever):
         # Calculate the hash of the downloaded file.
         md5sum = self._calcHash(raw_data)
 
-        if UD : # We have seen this one before.
-            currentmd5sum = self._database.getHash(UD)
+        if reference is not None: # We have seen this one before.
+            currentmd5sum = reference.checksum
+
             if md5sum != currentmd5sum :
                 self._output.addMessage(__file__, -1, "WHASH",
                     "Warning: Hash of %s changed from %s to %s." % (
                     UD, currentmd5sum, md5sum))
-                self._database.updateHash(UD, md5sum)
+                Reference.query.filter_by(accession=UD).update({'checksum': md5sum})
+                session.commit()
             #if
         else : # We haven't seen it before, so give it a name.
             UD = self._newUD()
-            self._database.insertGB(UD, None, md5sum, accno, start,
-                          stop, orientation, None)
+            slice_orientation = ['forward', 'reverse'][orientation - 1]
+            reference = Reference(UD, md5sum, slice_accession=accno,
+                                  slice_start=start, slice_stop=stop,
+                                  slice_orientation=slice_orientation)
+            session.add(reference)
+            session.commit()
         #else
 
-        return self.write(raw_data, UD, 0) and UD
+        if self.write(raw_data, reference.accession, 0):
+            return str(reference.accession)
     #retrieveslice
 
     def retrievegene(self, gene, organism, upstream, downstream) :
@@ -628,9 +651,9 @@ class GenBankRetriever(Retriever):
         #if
 
         # Figure out the orientation of the gene.
-        orientation = "1"
+        orientation = 1
         if ChrStart > ChrStop :             # Swap start and stop.
-            orientation = "2"
+            orientation = 2
             temp = ChrStart
             ChrStart = ChrStop - downstream # Also take care of the flanking
             ChrStop = temp + upstream + 1   # sequences.
@@ -663,17 +686,21 @@ class GenBankRetriever(Retriever):
             if 512 < length < settings.MAX_FILE_SIZE:
                 raw_data = handle.read()
                 md5sum = self._calcHash(raw_data)
-                UD = self._database.getGBFromHash(md5sum)
-                if UD:  #hash found
-                    if not os.path.isfile(self._nametofile(UD)):
-                        UD = self.write(raw_data, UD, 0) and UD
-                else:
+
+                try:
+                    reference = Reference.query.filter_by(checksum=md5sum).one()
+                except NoResultFound:
                     UD = self._newUD()
                     if not os.path.isfile(self._nametofile(UD)):
-                        UD = self.write(raw_data, UD, 0) and UD
+                        UD = self.write(raw_data, UD, 0) and str(UD)
                     if UD:      #Parsing went OK, add to DB
-                        self._database.insertGB(UD, None, md5sum,
-                                None, 0, 0, 0, url)
+                        reference = Reference(UD, md5sum, download_url=url)
+                        session.add(reference)
+                        session.commit()
+                else:
+                    if not os.path.isfile(self._nametofile(reference.accession)):
+                        UD = self.write(raw_data, reference.accession, 0) and str(reference.accession)
+
                 return UD #Returns the UD or None
             #if
             else :
@@ -702,84 +729,111 @@ class GenBankRetriever(Retriever):
         @rtype: string?????
         """
         md5sum = self._calcHash(raw_data)
-        UD = self._database.getGBFromHash(md5sum)
-        if not UD :
+
+        try:
+            reference = Reference.query.filter_by(checksum=md5sum).one()
+        except NoResultFound:
             UD = self._newUD()
             if self.write(raw_data, UD, 0):
-                self._database.insertGB(UD, None, md5sum, None, 0, 0, 0, None)
+                reference = Reference(UD, md5sum)
+                session.add(reference)
+                session.commit()
                 return UD
-        #if
         else:
-            if os.path.isfile(self._nametofile(UD)):
-                return UD
+            if os.path.isfile(self._nametofile(reference.accession)):
+                return reference.accession
             else:
-                return self.write(raw_data, UD, 0) and UD
+                return self.write(raw_data, reference.accession, 0) and str(reference.accession)
     #uploadrecord
 
-    def loadrecord(self, identifier) :
+    def loadrecord(self, identifier):
         """
-        Load a record and return it.
-        If the filename associated with the accession number is not found
-        in the cache, try to re-download it.
+        Load a RefSeq record and return it.
 
-        @arg identifier: An accession number
-        @type identifier: string
+        The record is found by trying the following options in order:
 
-        @return: A GenBank.Record record
-        @rtype: object
+        1. Returned from the cache if it is there.
+        2. Re-created (if it was created by slicing) or re-downloaded (if it
+           was created by URL) if we have information on its source in the
+           database.
+        3. Fetched from the NCBI.
+
+        :arg identifier: A RefSeq accession number or geninfo identifier (GI).
+        :type identifier: string
+
+        :return: A parsed RefSeq record or `None` if no record could be found
+            for the given identifier.
+        :rtype: mutalyzer.GenRecord.Record
         """
-        if (identifier[0].isdigit()) : # This is a GI identifier.
-            name = self._database.getGBFromGI(identifier)
-            if name is None:
-                self._output.addMessage(__file__, 4, "ERETR",
-                                        "Unknown reference: %s" % identifier)
-                return
-        else :
-            name = identifier
+        if identifier[0].isdigit():
+            # This is a GI number (geninfo identifier).
+            reference = Reference.query \
+                .filter_by(geninfo_identifier=identifier) \
+                .first()
+        else:
+            # This is a RefSeq accession number.
+            reference = Reference.query \
+                .filter_by(accession=identifier) \
+                .first()
 
-        # Make a filename based upon the identifier.
-        filename = self._nametofile(name)
+        if reference is None:
+            # We don't know it, fetch it from NCBI.
+            filename = self.fetch(identifier)
 
-        if not os.path.isfile(filename) :   # We can't find the file.
-            md5 = self._database.getHash(name)
-            if md5:   # We have seen it before though.
-                Loc = self._database.getLoc(name)  # Try to find the location.
-                if not Loc[0]:              # No location found.
-                    url = self._database.getUrl(name)   # Try to find an URL.
-                    if not url :
-                        if self._database.getGI(name) : # It was from NCBI.
-                            filename = self.fetch(name)
-                        else :
-                            self._output.addMessage(__file__, 4, "ERETR",
-                                "Please upload this sequence again.")
-                            filename = None
-                    #if
-                    else :                  # This used to be a downloaded seq
-                        filename = self.downloadrecord(url) and filename
-                #if
-                else :                      # This used to be a slice.
-                    filename = self.retrieveslice(*Loc) and filename
-            #if
-            else :                          # Never seen this name before.
-                filename = self.fetch(name)
-            #else
-        #if
+        else:
+            # We have seen it before.
+            filename = self._nametofile(reference.accession)
 
-        # If filename is None an error occured
+            if os.path.isfile(filename):
+                # It is still in the cache, so filename is valid.
+                pass
+
+            if reference.slice_accession:
+                # It was previously created by slicing.
+                cast_orientation = {None: None,
+                                    'forward': 1,
+                                    'reverse': 2}
+                if not self.retrieveslice(reference.slice_accession,
+                                          reference.slice_start,
+                                          reference.slice_stop,
+                                          cast_orientation[reference.slice_orientation]):
+                    filename = None
+
+            elif reference.download_url:
+                # It was previously created by URL.
+                if not self.downloadrecord(reference.download_url):
+                    filename = None
+
+            elif reference.geninfo_identifier:
+                # It was previously fetched from NCBI.
+                filename = self.fetch(reference.accession)
+
+            else:
+                # It was previously created by uploading.
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Please upload this sequence again.')
+                filename = None
+
+        # If filename is None, we could not retrieve the record.
         if filename is None:
-            #Notify batch to skip all instance of identifier
-            self._output.addOutput("BatchFlags", ("S1", identifier))
+            # Notify batch job to skip all instance of identifier.
+            self._output.addOutput('BatchFlags', ('S1', identifier))
             return None
 
         # Now we have the file, so we can parse it.
         GenBankParser = genbank.GBparser()
         record = GenBankParser.create_record(filename)
-        record.id = name
 
-        # Todo: This will change once we support protein references
+        if reference:
+            record.id = reference.accession
+        else:
+            record.id = record.source_id
+
+        # Todo: This will change once we support protein references.
         if isinstance(record.seq.alphabet, ProteinAlphabet):
-            self._output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
-                                    'Protein reference sequences are not supported.')
+            self._output.addMessage(
+                __file__, 4, 'ENOTIMPLEMENTED',
+                'Protein reference sequences are not supported.')
             return None
 
         return record
@@ -795,7 +849,7 @@ class LRGRetriever(Retriever):
                                    the cache and return the record.
     """
 
-    def __init__(self, output, database):
+    def __init__(self, output):
         #TODO documentation
         """
         Initialize the class.
@@ -807,7 +861,7 @@ class LRGRetriever(Retriever):
         @type  database:
         """
         # Recall init of parent
-        Retriever.__init__(self, output, database)
+        Retriever.__init__(self, output)
         self.fileType = "xml"
         # Child specific init
     #__init__
@@ -912,14 +966,22 @@ class LRGRetriever(Retriever):
 
                 #Do an md5 check
                 md5sum = self._calcHash(raw_data)
-                md5db = self._database.getHash(lrgID)
+                try:
+                    reference = Reference.query.filter_by(accession=lrgID).one()
+                    md5db = reference.checksum
+                except NoResultFound:
+                    md5db = None
+
                 if md5db is None:
-                    self._database.insertLRG(lrgID, md5sum, url)
+                    reference = Reference(lrgID, md5sum, download_url=url)
+                    session.add(reference)
+                    session.commit()
                 elif md5sum != md5db:       #hash has changed for the LRG ID
                     self._output.addMessage(__file__, -1, "WHASH",
                         "Warning: Hash of %s changed from %s to %s." % (
                         lrgID, md5db, md5sum))
-                    self._database.updateHash(lrgID, md5sum)
+                    Reference.query.filter_by(accession=lrgID).update({'checksum': md5sum})
+                    session.commit()
                 else:                       #hash the same as in db
                     pass
 

@@ -68,13 +68,12 @@ LRG_PREFIX_URL = 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/'
 # Allow for this fraction of errors in batch jobs.
 BATCH_JOBS_ERROR_THRESHOLD = 0.05
 
-# Number of days a cached transcript->protein link from the NCBI is considered
-# valid.
-PROTEIN_LINK_LIFETIME = 30
+# Expiration time for transcript->protein links from the NCBI (in seconds).
+PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 30
 
-# Number of days a cached nonexisting transcript->protein link from the NCBI
-# is considered valid.
-PROTEIN_LINK_NONE_LIFETIME = 5
+# Expiration time for negative transcript->protein links from the NCBI (in
+# seconds).
+NEGATIVE_PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 5
 
 # Is Piwik enabled?
 PIWIK = False

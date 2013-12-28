@@ -1151,8 +1151,7 @@ class ReferenceUpdater(Updater):
             (default: False).
         @type overwrite: bool
         """
-        cache = Db.Cache()
-        retriever = Retriever.GenBankRetriever(output, cache)
+        retriever = Retriever.GenBankRetriever(output)
         record = retriever.loadrecord(reference)
 
         transcripts = []
