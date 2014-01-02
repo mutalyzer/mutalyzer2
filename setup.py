@@ -1,5 +1,5 @@
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 if sys.version_info < (2, 6):
     raise Exception('Mutalyzer requires Python 2.6 or higher.')
@@ -15,7 +15,9 @@ setup(
     url=distmeta.__homepage__,
     license='Not distributable',
     platforms=['any'],
-    packages=find_packages(exclude=['doc', 'extras', 'tests']),
+    packages=['mutalyzer',
+              'mutalyzer.parsers',
+              'mutalyzer.services'],
     include_package_data=True,
     scripts=['bin/mutalyzer',
              'bin/mutalyzer-batchd',
