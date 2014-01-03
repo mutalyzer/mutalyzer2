@@ -21,15 +21,13 @@
   or: NC_000011.9:g.111959693G&gt;T<br>
   </p>
   <table id="inputform">
-      <form action = "" method = "post" enctype = "multipart/form-data">
+      <form action="" method="post" enctype="multipart/form-data">
           <tr>
               <td><b>Build</b></td>
               <div>{{ build|e }}</div>
               <td>
                   <select name="build">
-                    <option
-                    selected="selected"
-                    value="{{ selected_build|e }}">{{ selected_build|e }}</option>
+                    <option selected="selected" value="{{ selected_build|e }}">{{ selected_build|e }}</option>
                     {% for i in unselected_builds %}
                       <option value="{{ i|e }}">{{ i|e }}</option>
                     {% endfor %}
@@ -38,16 +36,12 @@
           </tr>
           <tr>
               <td><b>Variant</b></td>
-              <td><input type = "text"
-                         name = "variant"
-                         value = "{{ variant|e }}"
-                         style = "width:500px"></td>
+              <td><input type="text" name="variant" value="{{ variant|e }}" style="width:500px"></td>
           </tr>
           <tr>
               <td colspan="2">
                 <input type="submit" value="Submit">
-                <input type="button" value="Clear field"
-                         onclick="clearField(this.form, 'variant');">
+                <input type="button" value="Clear field" onclick="clearField(this.form, 'variant');">
                 <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter">Help</a>
               </td>
 

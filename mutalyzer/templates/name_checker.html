@@ -29,16 +29,10 @@
       </div><br>
       Example: AB026906.1:c.274G&gt;T<br>
       <br>
-      <form action = "" method = "get">
-        <input
-          type = "text"
-          name = "name"
-          value = "{{ name|e }}"
-          style = "width:100%"
-        ><br>
+      <form action="" method="get">
+        <input type="text" name="name" value="{{ name|e }}" style="width:100%"><br>
         <input type="submit" value="Submit">
-        <input type="button" value="Clear field"
-          onclick="clearField(this.form, 'name');">
+        <input type="button" value="Clear field" onclick="clearField(this.form, 'name');">
         <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameChecker">Help</a>
       </form>
     </div>

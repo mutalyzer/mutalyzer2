@@ -17,17 +17,10 @@
   </div><br>
   Example: AB026906.1:c.274G&gt;T<br>
   <br>
-  <form action = "" method = "post">
-    <input
-      type = "text"
-      name = "variant"
-      value = "{{ variant|e }}"
-      style = "width:100%"><br>
-    <input
-      type="submit"
-      value="Submit">
-    <input type="button" value="Clear field"
-      onclick="clearField(this.form, 'variant');">
+  <form action="" method="post">
+    <input type="text" name="variant" value="{{ variant|e }}" style="width:100%"><br>
+    <input type="submit" value="Submit">
+    <input type="button" value="Clear field" onclick="clearField(this.form, 'variant');">
     <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SyntaxChecker">Help</a>
   </form>
 </div>

@@ -31,7 +31,7 @@ algorithm for:
 </ul>
 
 <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
-  <form action = "" method = "post">
+  <form action="" method="post">
     Please supply a reference sequence and an observed sequence.<br>
     <br>
     <div style="border: 1px solid grey; padding: 20px">
@@ -39,12 +39,7 @@ algorithm for:
       <br>
       Example: <tt>ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</tt><br>
       <br>
-      <input
-        type = "text"
-        name = "referenceSeq"
-        value = "{{ lastReferenceSeq|e }}"
-        style = "width:100%"
-      ><br>
+      <input type="text" name="referenceSeq" value="{{ lastReferenceSeq|e }}" style="width:100%"><br>
       <input type="button" value="Clear field" onclick="clearField(this.form, 'referenceSeq');">
     </div>
     <br>
@@ -53,12 +48,7 @@ algorithm for:
       <br>
       Example: <tt>ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</tt><br>
       <br>
-      <input
-        type = "text"
-        name = "variantSeq"
-        value = "{{ lastVariantSeq|e }}"
-        style = "width:100%"
-      ><br>
+      <input type="text" name="variantSeq" value="{{ lastVariantSeq|e }}" style="width:100%"><br>
       <input type="button" value="Clear field" onclick="clearField(this.form, 'variantSeq');">
     </div>
     <br>
@@ -87,7 +77,7 @@ algorithm for:
     <p>
     <b>Overview of the raw variants:</b>
     </p>
-    <table class = "laTable">
+    <table class="laTable">
       <tr>
         <td>Start</td>
         <td>End</td>

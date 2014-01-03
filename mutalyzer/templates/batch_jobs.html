@@ -67,7 +67,7 @@
 </div>
 
 <table id="inputform">
-    <form action = "" method = "post" enctype = "multipart/form-data">
+    <form action="" method="post" enctype="multipart/form-data">
         <tr id="batchRow">
             <td><b>BatchType</b></td>
             <td>
@@ -94,16 +94,11 @@
         </tr>
         <tr>
             <td><b>Email</b></td>
-            <td><input type = "text"
-                       name = "batchEmail"
-                       value="{{ lastpost|e }}"
-                       style = "width:200px"></td>
+            <td><input type="text" name="batchEmail" value="{{ lastpost|e }}" style="width:200px"></td>
         </tr>
         <tr>
             <td><b>File</b></td>
-            <td><input type = "file"
-                       name = "batchFile"
-                       style = "width:200px"></td>
+            <td><input type="file" name="batchFile" style="width:200px"></td>
         </tr>
         <tr>
             <td colspan="2">
@@ -153,14 +148,8 @@ window.onload = initpage;
   </div>
   {% if resultID %}
     <div id="percent">Your job is in progress and currently at 0%</div>
-    <input  id = "resultID"
-            type = "hidden"
-            name = "resultID"
-            value = "{{ resultID|e }}">
-    <input  id = "totalJobs"
-            type = "hidden"
-            name = "totalJobs"
-            value = "{{ totalJobs|e }}">
+    <input id="resultID" type="hidden" name="resultID" value="{{ resultID|e }}">
+    <input id="totalJobs" type="hidden" name="totalJobs" value="{{ totalJobs|e }}">
   {% endif %}
 {% endif %}
 
