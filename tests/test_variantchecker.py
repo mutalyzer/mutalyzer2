@@ -10,6 +10,7 @@ from mutalyzer.output import Output
 from mutalyzer.Db import Cache
 from mutalyzer.Retriever import GenBankRetriever
 from mutalyzer.variantchecker import check_variant
+from mutalyzer.util import slow, skip
 
 import utils
 
@@ -47,6 +48,7 @@ class TestVariantchecker():
         """
         return self.retriever.loadrecord(identifier)
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_in_frame(self):
         """
         Simple in-frame deletion should give a simple description on protein
@@ -61,6 +63,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_insertion_in_frame(self):
         """
         Simple in-frame insertion should give a simple description on protein
@@ -75,6 +78,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_insertion_in_frame(self):
         """
         Simple in-frame deletion/insertion should give a simple description on
@@ -90,6 +94,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_insertion_in_frame_complete(self):
         """
         Simple in-frame deletion/insertion should give a simple description on
@@ -198,6 +203,7 @@ class TestVariantchecker():
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_roll_both_ins(self):
         """
         Insertion that rolls should not use the same inserted sequence in
@@ -231,6 +237,7 @@ class TestVariantchecker():
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_roll_reverse_ins(self):
         """
         Insertion that rolls on the reverse strand should not use the same
@@ -241,6 +248,7 @@ class TestVariantchecker():
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_roll_message_forward(self):
         """
         Roll warning message should only be shown for currently selected
@@ -250,6 +258,7 @@ class TestVariantchecker():
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 0)
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_roll_message_reverse(self):
         """
         Roll warning message should only be shown for currently selected
@@ -439,6 +448,7 @@ class TestVariantchecker():
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_del_exon_unknown_offsets_reverse(self):
         """
         Deletion of an entire exon with unknown offsets should be possible,
@@ -731,6 +741,7 @@ class TestVariantchecker():
         assert ud + '(MARK1_v001):c.401del' \
                in self.output.getOutput('descriptions')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_with_sequence_forward_genomic(self):
         """
         Specify the deleted sequence in a deletion.
@@ -741,6 +752,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
                in self.output.getOutput('descriptions')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_with_length_forward_genomic(self):
         """
         Specify the deleted sequence length in a deletion.
@@ -751,6 +763,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
                in self.output.getOutput('descriptions')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_with_sequence_reverse_coding(self):
         """
         Specify the deleted sequence in a deletion on the reverse strand.
@@ -761,6 +774,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
                in self.output.getOutput('descriptions')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_deletion_with_length_reverse_coding(self):
         """
         Specify the deleted sequence length in a deletion on the reverse strand.

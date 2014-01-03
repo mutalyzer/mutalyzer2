@@ -406,6 +406,7 @@ class TestWSGI():
         assert_equal(len(result.strip().split('\n')) - 1, lines)
         return result
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_namechecker(self):
         """
         Submit the batch name checker form.
@@ -429,6 +430,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tErrors | Messages')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker(self):
         """
         Submit the batch syntax checker form.
@@ -453,6 +455,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input Variant')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_newlines_unix(self):
         """
         Submit the batch syntax checker form with unix line endings.
@@ -465,6 +468,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tStatus')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_newlines_mac(self):
         """
         Submit the batch syntax checker form with mac line endings.
@@ -477,6 +481,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tStatus')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_newlines_windows(self):
         """
         Submit the batch syntax checker form with windows line endings.
@@ -489,6 +494,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tStatus')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_newlines_big_unix(self):
         """
         Submit the batch syntax checker form with unix line ending
@@ -506,6 +512,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tStatus')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_newlines_big_mac(self):
         """
         Submit the batch syntax checker form with mac line ending
@@ -523,6 +530,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tStatus')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_newlines_big_windows(self):
         """
         Submit the batch syntax checker form with windows line ending
@@ -540,6 +548,7 @@ class TestWSGI():
                     size=len(variants),
                     header='Input\tStatus')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_batch_syntaxchecker_oldstyle(self):
         """
         Submit the batch syntax checker form with old style input file.
@@ -600,6 +609,7 @@ facilisi."""
         r = form.submit(status=413)
         assert_equal(r.content_type, 'text/plain')
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     @slow
     def test_batch_multicolumn(self):
         """

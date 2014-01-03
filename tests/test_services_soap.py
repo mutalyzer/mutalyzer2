@@ -19,7 +19,7 @@ from mutalyzer import Db
 from mutalyzer.output import Output
 from mutalyzer.services.soap import application
 from mutalyzer.sync import CacheSync
-from mutalyzer.util import slow
+from mutalyzer.util import skip, slow
 
 import utils
 
@@ -206,18 +206,14 @@ class TestServicesSoap():
         Running getTranscriptsAndInfo with a valid genomic reference should
         give a list of TranscriptInfo objects.
         """
-        r = self._call('getTranscriptsAndInfo', 'AL449423.14')
+        r = self._call('getTranscriptsAndInfo', 'AF230870.1')
         assert_equal(type(r.TranscriptInfo), list)
         names = [t.name for t in r.TranscriptInfo]
-        for t in ['CDKN2B_v002',
-                  'CDKN2B_v001',
-                  'MTAP_v005',
-                  'CDKN2A_v008',
-                  'CDKN2A_v007',
-                  'C9orf53_v001',
-                  'CDKN2A_v001']:
+        for t in ['mtmC2_v001',
+                  'mtmB2_v001']:
             assert t in names
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     def test_gettranscriptsandinfo_restricted_valid(self):
         """
         Running getTranscriptsAndInfo with a valid genomic reference and a
@@ -541,6 +537,7 @@ class TestServicesSoap():
             assert_equal(t.gCDSStop, 21141)
             assert_equal(t.chromCDSStop, 48262863)
 
+    @skip # Todo: AL449423.14 no longer contains gene annotations.
     @slow
     def test_batchjob(self):
         """
