@@ -26,6 +26,9 @@ class TestGrammar():
         self.output = Output(__file__)
         self.grammar = Grammar(self.output)
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def _parse(self, description):
         """
         Parse a variant description.

@@ -31,6 +31,9 @@ class TestServicesJson():
         utils.create_test_environment(database=True)
         self.server = NullServer(application, ostr=True)
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def _call(self, method, *args, **kwargs):
         r = getattr(self.server.service, method)(*args, **kwargs)
         return json.loads(''.join(r))

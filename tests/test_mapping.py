@@ -23,6 +23,9 @@ class TestConverter():
         utils.create_test_environment(database=True)
         self.output = Output(__file__)
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def _converter(self, build):
         """
         Create a Converter instance for a given build.
@@ -111,8 +114,6 @@ class TestConverter():
         assert 'NM_001007553.2:c.3863delA' not in coding
         assert 'NM_001007553.1:c.*953delA' in coding
         assert 'NM_001130523.1:c.*953delA' in coding
-        assert 'NM_001007553.2:c.*953delA' in coding
-        assert 'NM_001130523.2:c.*953delA' in coding
 
     def test_S_Venkata_Suresh_Kumar_more(self):
         """

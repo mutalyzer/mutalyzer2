@@ -6,6 +6,9 @@ from mutalyzer.config import settings
 from mutalyzer.db import models
 
 
+# Todo: Refactor creating and destroying environment into a context manager.
+
+
 def create_test_environment(database=False):
     """
     Configure Mutalyzer for unit tests. All storage is transient and isolated.

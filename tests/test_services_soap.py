@@ -60,10 +60,11 @@ class TestServicesSoap():
         self.wsdl = _write_wsdl(self.server)
         self.client = Client('file://%s' % self.wsdl, cache=None)
 
-    def tearDown(self):
+    def teardown(self):
         """
         Remove temporary file used for WSDL.
         """
+        utils.destroy_environment()
         os.unlink(self.wsdl)
 
     def _call(self, method, *args, **kwargs):
@@ -332,9 +333,8 @@ class TestServicesSoap():
         """
         created_since = datetime.datetime.today() - datetime.timedelta(days=14)
 
-        database = Db.Cache()
         output = Output(__file__)
-        sync = CacheSync(output, database)
+        sync = CacheSync(output)
         cache = sync.local_cache(created_since)
 
         r = self._call('getCache', created_since)

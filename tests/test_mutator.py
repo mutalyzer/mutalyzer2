@@ -39,6 +39,9 @@ class TestMutator():
         utils.create_test_environment()
         self.output = Output(__file__)
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def _mutator(self, sequence):
         """
         Create a Mutator instance for a given sequence.

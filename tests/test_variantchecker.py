@@ -7,7 +7,6 @@ Tests for the variantchecker module.
 from nose.tools import *
 
 from mutalyzer.output import Output
-from mutalyzer.Db import Cache
 from mutalyzer.Retriever import GenBankRetriever
 from mutalyzer.variantchecker import check_variant
 from mutalyzer.util import slow, skip
@@ -25,8 +24,10 @@ class TestVariantchecker():
         """
         utils.create_test_environment(database=True)
         self.output = Output(__file__)
-        self.cache_database = Cache()
-        self.retriever = GenBankRetriever(self.output, self.cache_database)
+        self.retriever = GenBankRetriever(self.output)
+
+    def teardown(self):
+        utils.destroy_environment()
 
     def _slice(self, chromosome, start, stop, orientation):
         """
@@ -846,7 +847,7 @@ class TestVariantchecker():
         ud = self._slice_gene('A1BG') # Contains ZNF497 (v1 and v2) with no mRNA
         check_variant(ud + '(A1BG_v001):c.13del', self.output)
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
-        assert len(wnomrna_other) == 2
+        assert len(wnomrna_other) == 3
 
     def test_wnomrna(self):
         """
@@ -857,7 +858,8 @@ class TestVariantchecker():
         check_variant(ud + '(ZNF497_v001):c.13del', self.output)
         wnomrna = self.output.getMessagesWithErrorCode('WNOMRNA')
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
-        assert len(wnomrna) == len(wnomrna_other) == 1
+        assert len(wnomrna) == 1
+        assert len(wnomrna_other) == 2
 
     def test_mrna_ref_adjacent_exons_warn(self):
         """

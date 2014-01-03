@@ -17,6 +17,19 @@ import logging
 import urllib
 import cgi
 
+# Todo: Since the `mutalyzer.website` module accesses the configuration
+#     settings at import time, we need to pre-populate those. This hack can
+#     be removed once we moved from web.py to Flask and refactored the web
+#     application into an application factory (which does not access the
+#     configuration settings at import time).
+from mutalyzer.config import settings
+settings.configure(dict(
+    DEBUG        = True,
+    TESTING      = True,
+    CACHE_DIR    = None,
+    DATABASE_URI = 'sqlite://',
+    LOG_FILE     = None))
+
 import mutalyzer
 from mutalyzer import website
 from mutalyzer.util import slow, skip
@@ -31,7 +44,6 @@ class TestWSGI():
     """
     Test the Mutalyzer WSGI interface.
     """
-
     def setup(self):
         """
         Initialize test application.
@@ -40,6 +52,9 @@ class TestWSGI():
         web.config.debug = False
         application = website.app.wsgifunc()
         self.app = TestApp(application)
+
+    def teardown(self):
+        utils.destroy_environment()
 
     def test_root(self):
         """
@@ -52,7 +67,7 @@ class TestWSGI():
         assert_equal(r.status, '200 OK')
         # We check for <html> to make sure the menu template is included
         r.mustcontain('<html>',
-                      'Welcome to the Mutalyzer web site',
+                      'Welcome to the Mutalyzer website',
                       '</html>')
 
     def test_index(self):
@@ -63,7 +78,7 @@ class TestWSGI():
         assert_equal(r.status, '200 OK')
         # We check for <html> to make sure the menu template is included
         r.mustcontain('<html>',
-                      'Welcome to the Mutalyzer web site',
+                      'Welcome to the Mutalyzer website',
                       '</html>')
 
     def test_index_explicit(self):
@@ -74,7 +89,7 @@ class TestWSGI():
         assert_equal(r.status, '200 OK')
         # We check for <html> to make sure the menu template is included
         r.mustcontain('<html>',
-                      'Welcome to the Mutalyzer web site',
+                      'Welcome to the Mutalyzer website',
                       '</html>')
 
     def test_about(self):
@@ -151,7 +166,7 @@ class TestWSGI():
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="NM_002001.2:g.1del" type="text" name="name" style="width:100%">')
+                      '<input type="text" name="name" value="NM_002001.2:g.1del" style="width:100%">')
 
     def test_check_more_valid(self):
         """
@@ -225,7 +240,7 @@ class TestWSGI():
         """
         r = self.app.get('/check?name=NM_002001.2:g.1del&standalone=1')
         assert_false('<a href="#bottom" class="hornav">go to bottom</a>' in r)
-        assert_false('<input value="NM_002001.2:g.1del" type="text" name="name" style="width:100%">' in r)
+        assert_false('<input type="text" name="name" value="NM_002001.2:g.1del" style="width:100%">' in r)
         r.mustcontain('0 Errors',
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
@@ -296,7 +311,7 @@ class TestWSGI():
                       '0 Warnings',
                       'Raw variant 1: deletion of 1',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="NM_002001.2:g.1del" type="text" name="name" style="width:100%">')
+                      '<input type="text" name="name" value="NM_002001.2:g.1del" style="width:100%">')
 
     def test_snp_converter_valid(self):
         """
@@ -308,9 +323,9 @@ class TestWSGI():
         r = form.submit()
         r.mustcontain('0 Errors',
                       '0 Warnings',
-                      'NC_000011.9:g.111959625C>T',
-                      'NG_012337.2:g.7055C>T',
-                      'NM_003002.3:c.204C>T',
+                      'NC_000011.9:g.111959625C&gt;T',
+                      'NG_012337.2:g.7055C&gt;T',
+                      'NM_003002.3:c.204C&gt;T',
                       'NP_002993.1:p.Ser68=')
 
     def test_snp_converter_invalid(self):
@@ -335,7 +350,7 @@ class TestWSGI():
         form['build'] = 'hg19'
         form['variant'] = 'NM_003002.2:c.204C>T'
         r = form.submit()
-        r.mustcontain('NC_000011.9:g.111959625C>T')
+        r.mustcontain('NC_000011.9:g.111959625C&gt;T')
 
     def test_position_converter_g2c(self):
         """
@@ -346,7 +361,7 @@ class TestWSGI():
         form['build'] = 'hg19'
         form['variant'] = 'NC_000011.9:g.111959625C>T'
         r = form.submit()
-        r.mustcontain('NM_003002.2:c.204C>T')
+        r.mustcontain('NM_003002.2:c.204C&gt;T')
 
     @slow
     def _batch(self, batch_type='NameChecker', arg1=None, file="", size=0,
@@ -780,7 +795,7 @@ facilisi."""
                       '1 Warning',
                       'Raw variant 1: substitution at 7872',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="name" style="width:100%">')
+                      '<input type="text" name="name" value="AB026906.1:c.274G&gt;T" style="width:100%">')
         r = self.app.get('/Reference/AB026906.1.gb')
         assert_equal(r.content_type, 'text/plain')
         assert_equal(r.content_length, 26427)
@@ -801,7 +816,7 @@ facilisi."""
                       '1 Warning',
                       'Raw variant 1: substitution at 7872',
                       '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input value="AB026906.1:c.274G&gt;T" type="text" name="name" style="width:100%">')
+                      '<input type="text" name="name" value="AB026906.1:c.274G&gt;T" style="width:100%">')
         r = self.app.head('/Reference/AB026906.1.gb')
         assert_equal(r.content_type, 'text/plain')
 

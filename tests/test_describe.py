@@ -20,6 +20,9 @@ class TestDescribe():
     def setup(self):
         utils.create_test_environment()
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def test1(self):
         """
         Test 1.

@@ -22,6 +22,9 @@ class TestMutator():
         utils.create_test_environment(database=True)
         self.gb_parser = genbank.GBparser()
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def test_product_lists_mismatch(self):
         """
         Test finding mismatches in some product lists.

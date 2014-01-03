@@ -18,6 +18,9 @@ class TestCrossmap():
     def setup(self):
         utils.create_test_environment(database=True)
 
+    def teardown(self):
+        utils.destroy_environment()
+
     def test_splice_sites(self):
         """
         Check whether the gene on the forward strand has the right splice
