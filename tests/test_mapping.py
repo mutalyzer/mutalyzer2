@@ -6,6 +6,7 @@ Tests for the mapping module.
 #import logging; logging.basicConfig()
 from nose.tools import *
 
+from mutalyzer.db.models import Assembly
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
 
@@ -30,7 +31,8 @@ class TestConverter():
         """
         Create a Converter instance for a given build.
         """
-        return Converter(build, self.output)
+        assembly = Assembly.query.first()
+        return Converter(assembly, self.output)
 
     def test_converter(self):
         """

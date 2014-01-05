@@ -256,7 +256,6 @@ class TranscriptMappingInfo(ComplexModel):
     name = Mandatory.String
     version = Mandatory.Integer
     gene = Mandatory.String
-    protein = Mandatory.String
     orientation = Mandatory.String
 
     start = Mandatory.Integer

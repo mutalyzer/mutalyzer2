@@ -7,11 +7,10 @@ from datetime import datetime
 import sqlite3
 import uuid
 
-from sqlalchemy import (event, Column, Boolean, BigInteger, DateTime, ForeignKey,
-                        Integer, Numeric, String, Table, Text, Index, Enum,
-                        UniqueConstraint)
+from sqlalchemy import (event, Boolean, Column, DateTime, Enum, ForeignKey,
+                        Index, Integer, String, Text, TypeDecorator)
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import backref, relationship
 
 from mutalyzer import db
 
@@ -35,6 +34,30 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.close()
 
 
+class Positions(TypeDecorator):
+    """
+    Represents an immutable list of integers as a concatentation of their
+    string serializations.
+
+    Adapted from the `Marshal JSON Strings
+    <http://docs.sqlalchemy.org/en/latest/core/types.html#marshal-json-strings>`_
+    example in the SQLAlchemy documentation.
+    """
+    impl = Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = ','.join(str(i) for i in value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if value == '':
+            return []
+        return [int(s) for s in value.split(',')]
+
+
 class BatchJob(db.Base):
     """
     Batch job.
@@ -54,8 +77,8 @@ class BatchJob(db.Base):
     #: Type of batch job.
     job_type = Column(Enum(*BATCH_JOB_TYPES, name='job_type'), nullable=False)
 
-    #: Optional argument (currently only used with job type PositionConverter,
-    #: where it denotes the assembly).
+    #: Optional argument (currently only used when `job_type` is
+    #: ``PositionConverter``, where it denotes the assembly).
     argument = Column(String(20))
 
     #: Identifier to use in the job result filename and thus the URL for
@@ -95,15 +118,15 @@ class BatchQueueItem(db.Base):
     #: Input line from a batch job.
     item = Column(String(200), nullable=False)
 
-    #: A list of flags set for this item. A flag consists of either an A, S or
-    #: C followed by a digit, which refers to the reason of alteration/skip.
-    #: We simply store the concatenation of these flags.
+    #: A list of flags set for this item. A flag consists of either an ``A``,
+    #: ``S`` or ``C`` followed by a digit, which refers to the reason of
+    #: alteration/skip. We simply store the concatenation of these flags.
     flags = Column(String(20), nullable=False)
 
     #: The :class:`BatchJob` for this item.
     batch_job = relationship(
         BatchJob,
-        backref=backref('batch_jobs', lazy='dynamic',
+        backref=backref('batch_queue_items', lazy='dynamic',
                         cascade='all, delete-orphan',
                         passive_deletes=True))
 
@@ -130,7 +153,8 @@ class Reference(db.Base):
     id = Column(Integer, primary_key=True)
 
     #: Accession number for this reference, including the version number if
-    #: applicable (e.g., AL449423.14, NM_000059.3, UD_138781341344).
+    #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
+    #: ``UD_138781341344``).
     accession = Column(String(20), nullable=False, index=True, unique=True)
 
     #: MD5 checksum of the reference file.
@@ -195,13 +219,13 @@ class TranscriptProteinLink(db.Base):
     id = Column(Integer, primary_key=True)
 
     #: Accession number for the transcript, not including the version number
-    #: (e.g., NM_018195, XM_005270562, NR_015380).
+    #: (e.g., ``NM_018195`, ``XM_005270562``, ``NR_015380``).
     transcript_accession = Column(String(20), nullable=False, index=True,
                                   unique=True)
 
     #: Accession number for the protein, not including the version number
-    #: (e.g., NP_060665, XP_005258635). If `NULL`, the record states that no
-    #: protein is linked to the transcript by the NCBI.
+    #: (e.g., ``NP_060665``, ``XP_005258635``). If `NULL`, the record states
+    #: that no protein is linked to the transcript by the NCBI.
     protein_accession = Column(String(20), index=True)
 
     #: Date and time of creation.
@@ -217,9 +241,362 @@ class TranscriptProteinLink(db.Base):
             % (self.transcript_accession, self.protein_accession)
 
 
+class Assembly(db.Base):
+    """
+    Genome assembly.
+    """
+    __tablename__ = 'assemblies'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
+
+    id = Column(Integer, primary_key=True)
+
+    #: Genome Reference Consortium name (e.g., ``GRCh37``, ``GRCm38``).
+    name = Column(String(30), nullable=False, unique=True)
+
+    #: Short alias (e.g., ``hg19``, ``mm10``).
+    alias = Column(String(10), unique=True)
+
+    #: NCBI taxonomy identifier (e.g., 9606, 10090).
+    taxonomy_id = Column(Integer, nullable=False)
+
+    #: NCBI taxonomy name (e.g., ``Homo sapiens``, ``Mus musculus``).
+    taxonomy_common_name = Column(String(50), nullable=False)
+
+    def __init__(self, name, taxonomy_id, taxonomy_common_name, alias=None):
+        self.name = name
+        self.taxonomy_id = taxonomy_id
+        self.taxonomy_common_name = taxonomy_common_name
+        self.alias = alias
+
+    def __repr__(self):
+        return '<Assembly %r taxonomy=%r>' % (self.name,
+                                              self.taxonomy_common_name)
+
+
+class Chromosome(db.Base):
+    """
+    Chromosome name and accession number in a genome assembly.
+    """
+    __tablename__ = 'chromosomes'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
+
+    id = Column(Integer, primary_key=True)
+    assembly_id = Column(Integer,
+                         ForeignKey('assemblies.id', ondelete='CASCADE'),
+                         nullable=False)
+
+    #: Chromosome name (e.g., ``chr1``, ``chrM``).
+    name = Column(String(30), nullable=False)
+
+    #: Chromosome accession number (e.g., ``NC_000001.10``, ``NC_012920.1``).
+    accession = Column(String(30), nullable=False)
+
+    #: Type of organelle.
+    organelle_type = Column(Enum('chromosome', 'mitochondrion',
+                                 name='organelle_type'))
+
+    #: The :class:`Assembly` this chromosome is in.
+    assembly = relationship(
+        Assembly,
+        lazy='joined',
+        innerjoin=True,
+        backref=backref('chromosomes', lazy='dynamic',
+                        cascade='all, delete-orphan',
+                        passive_deletes=True))
+
+    def __init__(self, assembly, name, accession, organelle_type):
+        self.assembly = assembly
+        self.name = name
+        self.accession = accession
+        self.organelle_type = organelle_type
+
+    def __repr__(self):
+        return '<Chromosome %r accession=%r>' % (self.name, self.accession)
+
+
+Index('chromosome_name',
+      Chromosome.assembly_id, Chromosome.name,
+      unique=True)
+Index('chromosome_accession',
+      Chromosome.assembly_id, Chromosome.accession,
+      unique=True)
+
+
+class TranscriptMapping(db.Base):
+    """
+    Mapping of a gene transcript on a chromosome.
+
+    .. note:: All positions are ordered according to the chromosome,
+       irrespective of transcript orientation. For example, `start` is always
+       smaller than `stop`.
+    """
+    __tablename__ = 'transcript_mappings'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
+
+    id = Column(Integer, primary_key=True)
+    chromosome_id = Column(Integer,
+                           ForeignKey('chromosomes.id', ondelete='CASCADE'),
+                           nullable=False)
+
+    #: Type of reference sequence containing the transcript.
+    reference_type = Column(Enum('refseq', 'lrg', name='reference_type'),
+                            nullable=False)
+
+    #: Accession number for the transcript reference, not including the
+    #: version number (e.g., ``NM_000020``, ``NC_012920``, ``LRG_14``).
+    accession = Column(String(20), nullable=False)
+
+    #: Accession version (e.g., 3, 2). Not applicaple when `reference_type` is
+    #: ``lrg``.
+    version = Column(Integer)
+
+    #: Gene symbol (e.g., ``DMD``, ``PSEN1``, ``TRNS1``).
+    gene = Column(String(30), nullable=False)
+
+    #: Transcript number in reference (e.g., 1, 2).
+    transcript = Column(Integer, nullable=False)
+
+    # Todo: Use constants and some utilities for conversion.
+    #: The orientation of the transcript on the chromosome.
+    orientation = Column(Enum('forward', 'reverse', name='orentation'),
+                         nullable=False)
+
+    #: The start position of the transcript on the chromosome.
+    start = Column(Integer, nullable=False)
+
+    #: The stop position of the transcript on the chromosome.
+    stop = Column(Integer, nullable=False)
+
+    #: The CDS start position of the transcript on the chromosome.
+    cds_start = Column(Integer)
+
+    #: The CDS stop position of the transcript on the chromosome.
+    cds_stop = Column(Integer)
+
+    #: The exon start positions of the transcript on the chromosome.
+    exon_starts = Column(Positions, nullable=False)
+
+    #: The exon start positions of the transcript on the chromosome.
+    exon_stops = Column(Positions, nullable=False)
+
+    #: If `False`, variant descriptions can use just the accession number
+    #: without gene and transcript selector (e.g., ``NM_000020:c.1del``,
+    #: ``LRG_1:c.1del``). If `True`, gene and transcript selection is
+    #: necessary (e.g., ``NC_012920(TRNI_v001):c.1del``, ``LRG_1_t1:c.1del``).
+    select_transcript = Column(Boolean, nullable=False)
+
+    #: Source of the mapping.
+    source = Column(Enum('ucsc', 'ncbi', 'reference', name='source'),
+                    nullable=False)
+
+    #: The :class:`Assembly` this chromosome is in.
+    chromosome = relationship(
+        Chromosome,
+        lazy='joined',
+        innerjoin=True,
+        backref=backref('transcript_mappings', lazy='dynamic',
+                        cascade='all, delete-orphan',
+                        passive_deletes=True))
+
+    def __init__(self, chromosome, reference_type, accession, gene,
+                 orientation, start, stop, exon_starts, exon_stops, source,
+                 transcript=1, cds=None, select_transcript=False,
+                 version=None):
+        self.chromosome = chromosome
+        self.reference_type = reference_type
+        self.accession = accession
+        self.gene = gene
+        self.orientation = orientation
+        self.start = start
+        self.stop = stop
+        self.exon_starts = exon_starts
+        self.exon_stops = exon_stops
+        self.source = source
+        self.transcript = transcript
+        self.cds = cds
+        self.select_transcript = select_transcript
+        self.version = version
+
+    def __repr__(self):
+        return ('<TranscriptMapping accession=%r version=%r gene=%r '
+                'transcript=%r>'
+                % (self.accession, self.version, self.gene, self.transcript))
+
+    @classmethod
+    def create_or_update(cls, chromosome, reference_type, accession, gene,
+                         orientation, start, stop, exon_starts, exon_stops,
+                         source, transcript=1, cds=None,
+                         select_transcript=False, version=None):
+        """
+        Returns an existing :class:`TranscriptMapping` instance with the given
+        values for `chromosome`, `accession`, `version`, `gene`, and
+        `transcript` if it exists, or a new instance otherwise.
+
+        .. note:: Unfortunately, SQLAlchemy does not have `ON DUPLICATE KEY
+            UPDATE` functionality, which would performance-wise be the best
+            way to update transcript mappings. This class method implements an
+            alternative albeit at the cost of querying the table for an
+            existing entry on each update.
+        """
+        instance = cls.query.filter_by(
+            chromosome=chromosome, accession=accession, version=version,
+            gene=gene, transcript=transcript).first()
+        if instance is None:
+            instance = cls(chromosome, reference_type, accession, gene,
+                           orientation, start, stop, exon_starts, exon_stops,
+                           source, transcript=transcript, cds=cds,
+                           select_transcript=select_transcript,
+                           version=version)
+        else:
+            instance.reference_type = reference_type
+            instance.orientation = orientation
+            instance.start = start
+            instance.stop = stop
+            instance.exon_starts = exon_starts
+            instance.exon_stops = exon_stops
+            instance.source = source
+            instance.cds = cds
+            instance.select_transcript = select_transcript
+        return instance
+
+    @property
+    def coding(self):
+        """
+        Set to `True` iff the transcript is coding.
+        """
+        return self.cds_start is not None and self.cds_stop is not None
+
+    @property
+    def cds(self):
+        """
+        Tuple of CDS start and stop positions on the chromosome, or `None` if
+        the transcript is non-coding.
+        """
+        if self.coding:
+            return self.cds_start, self.cds_stop
+        return None
+
+    @cds.setter
+    def cds(self, cds):
+        self.cds_start, self.cds_stop = cds or (None, None)
+
+
+Index('transcript_mapping_transcript',
+      TranscriptMapping.accession, TranscriptMapping.version,
+      TranscriptMapping.gene, TranscriptMapping.transcript,
+      TranscriptMapping.chromosome_id,
+      unique=True)
+
+
 def create_all():
     db.Base.metadata.drop_all(db.session.get_bind())
     db.Base.metadata.create_all(db.session.get_bind())
+
+    assembly = Assembly('GRCh37', 9606, 'Homo sapiens', alias='hg19')
+    db.session.add(assembly)
+
+    for accession, name, organelle_type in [
+        ('NC_000001.10', 'chr1', 'chromosome'),
+        ('NC_000002.11', 'chr2', 'chromosome'),
+        ('NC_000003.11', 'chr3', 'chromosome'),
+        ('NC_000004.11', 'chr4', 'chromosome'),
+        ('NC_000005.9', 'chr5', 'chromosome'),
+        ('NC_000006.11', 'chr6', 'chromosome'),
+        ('NC_000007.13', 'chr7', 'chromosome'),
+        ('NC_000008.10', 'chr8', 'chromosome'),
+        ('NC_000009.11', 'chr9', 'chromosome'),
+        ('NC_000010.10', 'chr10', 'chromosome'),
+        ('NC_000011.9', 'chr11', 'chromosome'),
+        ('NC_000012.11', 'chr12', 'chromosome'),
+        ('NC_000013.10', 'chr13', 'chromosome'),
+        ('NC_000014.8', 'chr14', 'chromosome'),
+        ('NC_000015.9', 'chr15', 'chromosome'),
+        ('NC_000016.9', 'chr16', 'chromosome'),
+        ('NC_000017.10', 'chr17', 'chromosome'),
+        ('NC_000018.9', 'chr18', 'chromosome'),
+        ('NC_000019.9', 'chr19', 'chromosome'),
+        ('NC_000020.10', 'chr20', 'chromosome'),
+        ('NC_000021.8', 'chr21', 'chromosome'),
+        ('NC_000022.10', 'chr22', 'chromosome'),
+        ('NC_000023.10', 'chrX', 'chromosome'),
+        ('NC_000024.9', 'chrY', 'chromosome'),
+        ('NT_167244.1', 'chr6_apd_hap1', 'chromosome'),
+        ('NT_113891.2', 'chr6_cox_hap2', 'chromosome'),
+        ('NT_167245.1', 'chr6_dbb_hap3', 'chromosome'),
+        ('NT_167246.1', 'chr6_mann_hap4', 'chromosome'),
+        ('NT_167247.1', 'chr6_mcf_hap5', 'chromosome'),
+        ('NT_167248.1', 'chr6_qbl_hap6', 'chromosome'),
+        ('NT_167249.1', 'chr6_ssto_hap7', 'chromosome'),
+        ('NT_167250.1', 'chr4_ctg9_hap1', 'chromosome'),
+        ('NT_167251.1', 'chr17_ctg5_hap1', 'chromosome'),
+        ('NC_012920.1', 'chrM', 'mitochondrion')]:
+        chromosome = Chromosome(assembly, name, accession, organelle_type)
+        db.session.add(chromosome)
+
+    assembly = Assembly('GRCh36', 9606, 'Homo sapiens', alias='hg18')
+    db.session.add(assembly)
+
+    for accession, name, organelle_type in [
+        ('NC_000001.9', 'chr1', 'chromosome'),
+        ('NC_000002.10', 'chr2', 'chromosome'),
+        ('NC_000003.10', 'chr3', 'chromosome'),
+        ('NC_000004.10', 'chr4', 'chromosome'),
+        ('NC_000005.8', 'chr5', 'chromosome'),
+        ('NC_000006.10', 'chr6', 'chromosome'),
+        ('NC_000007.12', 'chr7', 'chromosome'),
+        ('NC_000008.9', 'chr8', 'chromosome'),
+        ('NC_000009.10', 'chr9', 'chromosome'),
+        ('NC_000010.9', 'chr10', 'chromosome'),
+        ('NC_000011.8', 'chr11', 'chromosome'),
+        ('NC_000012.10', 'chr12', 'chromosome'),
+        ('NC_000013.9', 'chr13', 'chromosome'),
+        ('NC_000014.7', 'chr14', 'chromosome'),
+        ('NC_000015.8', 'chr15', 'chromosome'),
+        ('NC_000016.8', 'chr16', 'chromosome'),
+        ('NC_000017.9', 'chr17', 'chromosome'),
+        ('NC_000018.8', 'chr18', 'chromosome'),
+        ('NC_000019.8', 'chr19', 'chromosome'),
+        ('NC_000020.9', 'chr20', 'chromosome'),
+        ('NC_000021.7', 'chr21', 'chromosome'),
+        ('NC_000022.9', 'chr22', 'chromosome'),
+        ('NC_000023.9', 'chrX', 'chromosome'),
+        ('NC_000024.8', 'chrY', 'chromosome'),
+        ('NT_113891.1', 'chr6_cox_hap1', 'chromosome'),
+        ('NT_113959.1', 'chr22_h2_hap1', 'chromosome'),
+        ('NC_001807.4', 'chrM', 'mitochondrion')]:
+        chromosome = Chromosome(assembly, name, accession, organelle_type)
+        db.session.add(chromosome)
+
+    assembly = Assembly('GRCm38', 10090, 'Mus musculus', alias='mm10')
+    db.session.add(assembly)
+
+    for accession, name, organelle_type in [
+        ('NC_000067.65', 'chr1', 'chromosome'),
+        ('NC_000068.70', 'chr2', 'chromosome'),
+        ('NC_000069.60', 'chr3', 'chromosome'),
+        ('NC_000070.66', 'chr4', 'chromosome'),
+        ('NC_000071.65', 'chr5', 'chromosome'),
+        ('NC_000072.60', 'chr6', 'chromosome'),
+        ('NC_000073.61', 'chr7', 'chromosome'),
+        ('NC_000074.60', 'chr8', 'chromosome'),
+        ('NC_000075.60', 'chr9', 'chromosome'),
+        ('NC_000076.60', 'chr10', 'chromosome'),
+        ('NC_000077.60', 'chr11', 'chromosome'),
+        ('NC_000078.60', 'chr12', 'chromosome'),
+        ('NC_000079.60', 'chr13', 'chromosome'),
+        ('NC_000080.60', 'chr14', 'chromosome'),
+        ('NC_000081.60', 'chr15', 'chromosome'),
+        ('NC_000082.60', 'chr16', 'chromosome'),
+        ('NC_000083.60', 'chr17', 'chromosome'),
+        ('NC_000084.60', 'chr18', 'chromosome'),
+        ('NC_000085.60', 'chr19', 'chromosome'),
+        ('NC_000086.71', 'chrX', 'chromosome'),
+        ('NC_000087.74', 'chrY', 'chromosome'),
+        ('NC_005089.1', 'chrM', 'mitochondrion')]:
+        chromosome = Chromosome(assembly, name, accession, organelle_type)
+        db.session.add(chromosome)
+
+    db.session.commit()
 
     # Todo: Use alembic.
 

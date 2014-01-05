@@ -17,7 +17,7 @@ def create_test_environment(database=False):
     os.close(log_handle)
 
     settings.configure(dict(
-            DEBUG        = True,
+            DEBUG        = False,
             TESTING      = True,
             CACHE_DIR    = tempfile.mkdtemp(),
             DATABASE_URI = 'sqlite://',

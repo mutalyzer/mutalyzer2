@@ -30,12 +30,13 @@ from lxml import etree
 import pkg_resources
 from cStringIO import StringIO
 from spyne.server.http import HttpBase
+from sqlalchemy import and_, or_
 
 import mutalyzer
 from mutalyzer import util
 from mutalyzer.config import settings
 from mutalyzer.db import session
-from mutalyzer.db.models import BatchJob, BatchQueueItem
+from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
 from mutalyzer.grammar import Grammar
 from mutalyzer.services import soap
 from mutalyzer import variantchecker
@@ -464,62 +465,60 @@ class PositionConverter:
     def POST(self):
         """
         Convert a variant and render position converter HTML form.
-
-        Parameters:
-        - build: Human genome build (currently 'hg18' or 'hg19').
-        - variant: Variant to convert.
         """
-        i = web.input(build='', variant='')
+        i = web.input(assembly_name_or_alias=None, variant='')
         # Todo: The following is probably a problem elsewhere too.
         # We stringify the variant, because a unicode string crashes
         # Bio.Seq.reverse_complement in mapping.py:607.
-        return self.position_converter(i.build, str(i.variant))
+        return self.position_converter(i.assembly_name_or_alias,
+                                       str(i.variant))
     #POST
 
-    def position_converter(self, build='', variant=''):
+    def position_converter(self, assembly_name_or_alias=None, variant=None):
         """
         Convert a variant and render position converter HTML form.
 
-        @kwarg build: Human genome build (currently 'hg18' or 'hg19').
-        @kwarg variant: Variant to convert.
+        :arg assembly_name_or_alias: Genome assembly.
+        :type assembly_name_or_alias: string
+        :arg variant: Variant to convert.
+        :type variant: string
         """
         output = Output(__file__)
         IP = web.ctx["ip"]
 
-        avail_builds = settings.DB_NAMES
+        assemblies = Assembly.query \
+            .order_by(Assembly.taxonomy_common_name.asc(),
+                      Assembly.name.asc()) \
+            .all()
 
-        # We have to put up with this crap just to get a certain <option>
-        # selected in our TAL template.
-        # Todo: Now we switched to Jinja2, we can make this sane.
-        if build in avail_builds:
-            selected_build = build
-        else:
-            selected_build = settings.DEFAULT_DB
-        unselected_builds = sorted(b for b in avail_builds
-                                   if b != selected_build)
+        assembly_name_or_alias = (assembly_name_or_alias or
+                                  settings.DEFAULT_ASSEMBLY)
 
         attr = {
-            "avail_builds"     : avail_builds,
-            "unselected_builds": unselected_builds,
-            "selected_build"   : selected_build,
-            "variant"          : variant,
-            "gName"            : "",
-            "cNames"           : [],
-            "messages"         : [],
-            "posted"           : build and variant
+            "assemblies"             : assemblies,
+            "assembly_name_or_alias" : assembly_name_or_alias,
+            "variant"                : variant or '',
+            "gName"                  : "",
+            "cNames"                 : [],
+            "messages"               : [],
         }
 
-        if build and variant:
-
+        if variant:
             output.addMessage(__file__, -1, 'INFO',
                 'Received request positionConverter(%s, %s) from %s' % (
-                build, variant, IP))
+                assembly_name_or_alias, variant, IP))
 
             counter = Db.Counter()
             counter.increment('positionconvert', 'website')
 
-            # Todo: check for correct build.
-            converter = Converter(build, output)
+            assembly = Assembly.query.filter(
+                or_(Assembly.name == assembly_name_or_alias,
+                    Assembly.alias == assembly_name_or_alias)).first()
+            if not assembly:
+                output.addMessage(__file__, 3, "ENOASSEMBLY",
+                                  "Not a valid assembly.")
+
+            converter = Converter(assembly, output)
 
             #Convert chr accNo to NC number
             variant = converter.correctChrVariant(variant)
@@ -549,8 +548,8 @@ class PositionConverter:
             attr['messages'] = map(util.message_info, output.getMessages())
 
             output.addMessage(__file__, -1, 'INFO',
-                'Finished request positionConverter(%s, %s)' % (build,
-                variant))
+                              'Finished request positionConverter(%s, %s)'
+                              % (assembly_name_or_alias, variant))
 
         return render.position_converter(attr)
     #position_converter
@@ -616,7 +615,12 @@ class VariantInfo:
             'Received request variantInfo(%s:%s (LOVD_ver %s, build %s))'
             ' from %s' % (acc, var, LOVD_ver, build, IP))
 
-        converter = Converter(build, output)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            return 'invalid build'
+
+        converter = Converter(assembly, output)
 
         result = ''
 
@@ -1062,31 +1066,23 @@ class BatchChecker:
 
         maxUploadSize = settings.MAX_FILE_SIZE
 
-        avail_builds = settings.DB_NAMES
-
-        # We have to put up with this crap just to get a certain <option>
-        # selected in our TAL template.
-        # Todo: Now we switched to Jinja2, we can make this sane.
-        if arg1 in avail_builds:
-            selected_build = arg1
-        else:
-            selected_build = settings.DEFAULT_DB
-        unselected_builds = sorted(b for b in avail_builds
-                                   if b != selected_build)
+        assemblies = Assembly.query \
+            .order_by(Assembly.taxonomy_common_name.asc(),
+                      Assembly.name.asc()) \
+            .all()
 
         attr = {
-            "messages"      : [],
-            "errors"        : [],
-            "debug"         : [],
-            "maxSize"       : float(maxUploadSize) / 1048576,
-            "hideTypes"     : batchType and 'none' or '',
-            "selected"      : "0",
-            "batchType"     : batchType or "",
-            "avail_builds"  : avail_builds,
-            "unselected_builds": unselected_builds,
-            "selected_build": selected_build,
-            "jobID"         : None,
-            "totalJobs"     : None
+            "messages"        : [],
+            "errors"          : [],
+            "debug"           : [],
+            "maxSize"         : float(maxUploadSize) / 1048576,
+            "hideTypes"       : batchType and 'none' or '',
+            "selected"        : "0",
+            "batchType"       : batchType or "",
+            "assemblies"      : assemblies,
+            "default_assembly": settings.DEFAULT_ASSEMBLY,
+            "jobID"           : None,
+            "totalJobs"       : None
         }
 
         batch_types = ['NameChecker', 'SyntaxChecker', 'PositionConverter',
@@ -1125,25 +1121,32 @@ class BatchChecker:
                 return 'Sorry, only files up to %s megabytes are accepted.' % (
                     float(maxUploadSize) / 1048576)
 
-            S = Scheduler.Scheduler()
-            FileInstance = File.File(O)
-
-            # Generate the fromhost URL from which the results can be fetched
-            fromHost = web.ctx.homedomain + web.ctx.homepath + '/'
-            #fromHost = "http://%s%s" % (
-            #    req.hostname, req.uri.rsplit("/", 1)[0]+"/")
-
-            job, columns = FileInstance.parseBatchFile(inFile.file)
-            if job is None:
-                O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
-                    " file, please check your file format.")
+            if batchType == 'PositionConverter':
+                if not Assembly.query.filter(
+                    or_(Assembly.name == arg1,
+                        Assembly.alias == arg1)).first():
+                    output.addMessage(__file__, 4, "ENOASSEMBLY",
+                                      "Not a valid assembly.")
             else:
-                attr["resultID"] = S.addJob(email, job, columns, fromHost,
-                                            batchType, arg1)
-                attr["totalJobs"] = len(job) or 1
-                attr["messages"].append("Your file has been parsed and the job"
-                    " is scheduled, you will receive an email when the job is"
-                    " finished.")
+                S = Scheduler.Scheduler()
+                FileInstance = File.File(O)
+
+                # Generate the fromhost URL from which the results can be fetched
+                fromHost = web.ctx.homedomain + web.ctx.homepath + '/'
+                #fromHost = "http://%s%s" % (
+                #    req.hostname, req.uri.rsplit("/", 1)[0]+"/")
+
+                job, columns = FileInstance.parseBatchFile(inFile.file)
+                if job is None:
+                    O.addMessage(__file__, 4, "PRSERR", "Could not parse input"
+                        " file, please check your file format.")
+                else:
+                    attr["resultID"] = S.addJob(email, job, columns, fromHost,
+                                                batchType, arg1)
+                    attr["totalJobs"] = len(job) or 1
+                    attr["messages"].append("Your file has been parsed and the job"
+                        " is scheduled, you will receive an email when the job is"
+                        " finished.")
 
             attr["errors"].extend(map(util.message_info, O.getMessages()))
 
@@ -1226,23 +1229,21 @@ class Uploader:
         Render reference sequence uploader form.
         """
         maxUploadSize = settings.MAX_FILE_SIZE
-        available_assemblies = settings.DB_NAMES
 
-        # We have to put up with this crap just to get a certain <option>
-        # selected in our TAL template.
-        # Todo: Now we switched to Jinja2, we can make this sane.
-        selected_assembly = settings.DEFAULT_DB
-        unselected_assemblies = sorted(b for b in available_assemblies
-                                       if b != selected_assembly)
+        assemblies = Assembly.query \
+            .order_by(Assembly.taxonomy_common_name.asc(),
+                      Assembly.name.asc()) \
+            .all()
+
+        assembly_name_or_alias = settings.DEFAULT_ASSEMBLY
 
         UD, errors = "", []
         args = {
-            'UD'                   : UD,
-            'available_assemblies' : available_assemblies,
-            'unselected_assemblies': unselected_assemblies,
-            'selected_assembly'    : selected_assembly,
-            'maxSize'              : float(maxUploadSize) / 1048576,
-            'errors'               : errors
+            'UD'                     : UD,
+            'assemblies'             : assemblies,
+            'assembly_name_or_alias' : assembly_name_or_alias,
+            'maxSize'                : float(maxUploadSize) / 1048576,
+            'errors'                 : errors
         }
         return render.reference_loader(args)
     #GET
@@ -1292,7 +1293,10 @@ class Uploader:
         """
         maxUploadSize = settings.MAX_FILE_SIZE
 
-        available_assemblies = settings.DB_NAMES
+        assemblies = Assembly.query \
+            .order_by(Assembly.taxonomy_common_name.asc(),
+                      Assembly.name.asc()) \
+            .all()
 
         O = Output(__file__)
         IP = web.ctx["ip"]
@@ -1306,15 +1310,7 @@ class Uploader:
                       chrnameassembly='', chrname='', chrnamestart='',
                       chrnamestop='', chrnameorientation='')
 
-        # We have to put up with this crap just to get a certain <option>
-        # selected in our TAL template.
-        # Todo: Now we switched to Jinja2, we can make this sane.
-        if i.chrnameassembly in available_assemblies:
-            selected_assembly = i.chrnameassembly
-        else:
-            selected_assembly = settings.DEFAULT_DB
-        unselected_assemblies = sorted(b for b in available_assemblies
-                                       if b != selected_assembly)
+        assembly_name_or_alias = i.chrnameassembly or settings.DEFAULT_ASSEMBLY
 
         O.addMessage(__file__, -1, 'INFO',
             'Received request'
@@ -1363,26 +1359,27 @@ class Uploader:
                 orientation = int(i.orientation)
                 UD = R.retrieveslice(accNo, start, stop, orientation)
             elif i.invoermethode == "chrname":
-                build = i.chrnameassembly
                 name = i.chrname
                 start = _checkInt(i.chrnamestart, "Start position")
                 stop = _checkInt(i.chrnamestop, "Stop position")
                 orientation = int(i.chrnameorientation)
 
-                if build not in available_assemblies:
-                    raise InputException('Assembly not available: %s' % build)
+                assembly = Assembly.query.filter(
+                    or_(Assembly.name == assembly_name_or_alias,
+                        Assembly.alias == assembly_name_or_alias)).first()
+                if not assembly:
+                    raise InputException('Invalid assembly')
 
                 if not name.startswith('chr'):
                     name = 'chr%s' % name
 
-                database = Db.Mapping(build)
-                try:
-                    accession, _ = database.chromAcc(name)
-                except TypeError:
-                    raise InputException('Chromosome not available for build %s: %s' %
-                                         (build, name))
+                chromosome = Chromosome.query.filter_by(assembly=assembly,
+                                                        name=name).first()
+                if not chromosome:
+                    raise InputException('Chromosome not available for assembly %s: %s' %
+                                         (assembly.name, name))
 
-                UD = R.retrieveslice(accession, start, stop, orientation)
+                UD = R.retrieveslice(chromosome.accession, start, stop, orientation)
             else:
                 #unknown "invoermethode"
                 raise InputException("Wrong method selected")
@@ -1397,12 +1394,11 @@ class Uploader:
                 errors.extend(map(lambda m: str(m), O.getMessages()))
 
         args = {
-            "UD"                   : UD,
-            'available_assemblies' : available_assemblies,
-            'unselected_assemblies': unselected_assemblies,
-            'selected_assembly'    : selected_assembly,
-            "maxSize"              : float(maxUploadSize) / 1048576,
-            "errors"               : errors
+            "UD"                     : UD,
+            'assemblies'             : assemblies,
+            'assembly_name_or_alias' : assembly_name_or_alias,
+            "maxSize"                : float(maxUploadSize) / 1048576,
+            "errors"                 : errors
         }
 
         O.addMessage(__file__, -1, 'INFO',

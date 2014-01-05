@@ -22,6 +22,7 @@ from Bio.Alphabet import DNAAlphabet
 from Bio.Alphabet import ProteinAlphabet
 
 from mutalyzer import util
+from mutalyzer.db.models import Assembly
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
 from mutalyzer.mapping import Converter
@@ -1694,15 +1695,17 @@ def check_variant(description, output):
                          for descr, first, last in raw_variants
                          for pos in (first, last)]
             # Todo: This is hard-coded to hg19...
-            converter = Converter('hg19', output)
-            chromosomal_positions = converter.chromosomal_positions(
-                locations, parsed_description.RefSeqAcc, parsed_description.Version)
-            if chromosomal_positions:
-                output.addOutput('rawVariantsChromosomal',
-                                 (chromosomal_positions[0], chromosomal_positions[1],
-                                  zip([descr for descr, first, last in raw_variants],
-                                      util.grouper(chromosomal_positions[2]))))
-                # Example value: ('chr12', [('29+4T>C', (2323, 2323)), ('230_233del', (5342, 5345))])
+            assembly = Assembly.query.filter_by(alias='hg19').first()
+            if assembly:
+                converter = Converter(assembly, output)
+                chromosomal_positions = converter.chromosomal_positions(
+                    locations, parsed_description.RefSeqAcc, parsed_description.Version or None)
+                if chromosomal_positions:
+                    output.addOutput('rawVariantsChromosomal',
+                                     (chromosomal_positions[0], chromosomal_positions[1],
+                                      zip([descr for descr, first, last in raw_variants],
+                                          util.grouper(chromosomal_positions[2]))))
+                    # Example value: ('chr12', [('29+4T>C', (2323, 2323)), ('230_233del', (5342, 5345))])
 
     # Protein.
     for gene in record.record.geneList:

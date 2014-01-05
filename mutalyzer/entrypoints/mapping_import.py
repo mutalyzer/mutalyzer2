@@ -5,30 +5,69 @@ reference.
 
 
 import argparse
+from operator import attrgetter
+import sys
 
+from sqlalchemy import or_
+
+from ..db import session
+from ..db.models import Assembly, TranscriptMapping
 from .. import output
-from .. import mapping
+from .. import Retriever
 
 
-def import_gene(database, gene):
+def import_gene(assembly, gene):
     """
     Update the database with information from the UCSC.
 
-    .. todo: Also report how much was added/updated.
+    .. todo: This is not really tested.
     """
     o = output.Output(__file__)
     o.addMessage(__file__, -1, 'INFO',
                  'Starting UCSC mapping data update (gene: %s)' % gene)
 
-    updater = mapping.UCSCUpdater(database)
-    updater.load(gene)
-    updater.merge()
+    connection = MySQLdb.connect(user='genome',
+                                 host='genome-mysql.cse.ucsc.edu',
+                                 db=assembly.alias)
+
+    query = """
+        SELECT DISTINCT
+          acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts,
+          exonEnds, name2 AS geneName, chrom, strand, protAcc
+        FROM gbStatus, refGene, refLink
+        WHERE type = "mRNA"
+        AND refGene.name = acc
+        AND acc = mrnaAcc
+        AND name2 = %s
+    """
+    parameters = gene
+
+    cursor = connection.cursor()
+    cursor.execute(query, parameters)
+    result = cursor.fetchall()
+    cursor.close()
+
+    for (acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, exonEnds,
+         geneName, chrom, strand, protAcc) in result:
+        orientation = 'reverse' if strand == '-' else 'forward'
+        exon_starts = [int(i) + 1 for i in exonStarts.split(',') if i]
+        exon_stops = [int(i) for i in exonEnds.split(',') if i]
+        if cdsStart and cdsEnd:
+            cds = cdsStart + 1, cdsEnd
+        else:
+            cds = None
+        mapping = TranscriptMapping.create_or_update(
+            chrom, 'refseq', acc, gene.name, orientation, txStart + 1, txEnd,
+            exon_starts, exon_stops, 'ucsc', cds=cds, version=int(version))
+        session.add(mapping)
+
+    session.commit()
 
     o.addMessage(__file__, -1, 'INFO',
                  'UCSC mapping data update end (gene: %s)' % gene)
 
 
-def import_reference(database, reference):
+def import_reference(assembly, reference):
     """
     Update the database with information from the given reference.
 
@@ -41,9 +80,40 @@ def import_reference(database, reference):
     o.addMessage(__file__, -1, 'INFO',
                  'Starting reference mapping data update (reference: %s)' % reference)
 
-    updater = mapping.ReferenceUpdater(database)
-    updater.load(reference, o)
-    updater.merge()
+    chromosome = assembly.chromosomes.filter_by(name='chrM').one()
+
+    retriever = Retriever.GenBankRetriever(o)
+    record = retriever.loadrecord(reference)
+
+    select_transcript = len(record.geneList) > 1
+
+    for gene in record.geneList:
+        # We support exactly one transcript per gene.
+        try:
+            transcript = sorted(gene.transcriptList, key=attrgetter('name'))[0]
+        except IndexError:
+            continue
+
+        # We use gene.location for now, it is always present and the same
+        # for our purposes.
+        #start, stop = transcript.mRNA.location[0], transcript.mRNA.location[1]
+        start, stop = gene.location
+
+        orientation = 'reverse' if gene.orientation == -1 else 'forward'
+
+        try:
+            cds = transcript.CDS.location
+        except AttributeError:
+            cds = None
+
+        mapping = TranscriptMapping.create_or_update(
+            chromosome, 'refseq', record.source_accession, gene.name,
+            orientation, start, stop, [start], [stop], 'reference', cds=cds,
+            select_transcript=select_transcript,
+            version=int(record.source_version))
+        session.add(mapping)
+
+    session.commit()
 
     o.addMessage(__file__, -1, 'INFO',
                  'Reference mapping data update end (reference: %s)' % reference)
@@ -55,8 +125,8 @@ def main():
     """
     database_parser = argparse.ArgumentParser(add_help=False)
     database_parser.add_argument(
-        '-d', '--database', metavar='DATABASE', dest='database',
-        default='hg19', help='database to import to (default: hg19)')
+        '-a', '--assembly', metavar='ASSEMBLY', dest='assembly_name_or_alias',
+        default='hg19', help='assembly to import to (default: hg19)')
 
     parser = argparse.ArgumentParser(
         description='Mutalyzer mapping importer.',
@@ -87,10 +157,18 @@ def main():
         'NC_012920.1)')
 
     args = parser.parse_args()
+
+    assembly = Assembly.query \
+        .filter(or_(Assembly.name == args.assembly_name_or_alias,
+                    Assembly.alias == args.assembly_name_or_alias)).first()
+    if not assembly:
+        sys.stderr.write('Invalid assembly: %s\n' % (assembly_name_or_alias,))
+        sys.exit(1)
+
     if args.subcommand == 'gene':
-        import_gene(args.database, args.gene)
+        import_gene(assembly, args.gene)
     if args.subcommand == 'reference':
-        import_reference(args.database, args.reference)
+        import_reference(assembly, args.reference)
 
 
 if __name__ == '__main__':

@@ -7,9 +7,8 @@
 
 <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
   <p>
-  Please supply the build which you want to use to convert your
-  position, available builds at the moment are: hg18 (NCBI36), hg19
-  (GRCh37) and mm10 (GRCm38).
+  Please supply the genome assembly which you want to use to convert your
+  position.
   </p>
   <p>
   <b>Note:</b> The Position Converter does NOT check the description or
@@ -23,13 +22,11 @@
   <table id="inputform">
       <form action="" method="post" enctype="multipart/form-data">
           <tr>
-              <td><b>Build</b></td>
-              <div>{{ build|e }}</div>
+              <td><b>Assembly</b></td>
               <td>
-                  <select name="build">
-                    <option selected="selected" value="{{ selected_build|e }}">{{ selected_build|e }}</option>
-                    {% for i in unselected_builds %}
-                      <option value="{{ i|e }}">{{ i|e }}</option>
+                  <select name="assembly_name_or_alias">
+                    {% for assembly in assemblies %}
+<option value="{{ assembly.name|e }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name|e }} &mdash; {{ assembly.name|e }}{% if assembly.alias %} ({{ assembly.alias|e }}){% endif %}</option>
                     {% endfor %}
                   </select>
               </td>
@@ -50,7 +47,7 @@
   </table> <!-- inputform -->
 </div>
 
-{% if posted %}
+{% if variant %}
   <h3>Results:</h3>
 
   <div class="messages">

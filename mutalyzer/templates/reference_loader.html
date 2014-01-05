@@ -115,10 +115,9 @@ sequence (maximum size is {{ maxSize|e }} megabytes):
               <td>Assembly</td>
               <td>
                 <select name="chrnameassembly">
-                      <option selected="selected" value="{{ selected_assembly|e }}">{{ selected_assembly|e }}</option>
-                      {% for i in unselected_assemblies %}
-                        <option value="{{ i|e }}">{{ i|e }}</option>
-                      {% endfor %}
+                  {% for assembly in assemblies %}
+<option value="{{ assembly.name|e }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name|e }} &mdash; {{ assembly.name|e }}{% if assembly.alias %} ({{assembly.alias|e }}){% endif %}</option>
+                  {% endfor %}
                 </select>
               </td>
             </tr>

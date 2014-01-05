@@ -347,7 +347,7 @@ class TestWSGI():
         """
         r = self.app.get('/positionConverter')
         form = r.forms[0]
-        form['build'] = 'hg19'
+        form['assembly_name_or_alias'] = 'hg19'
         form['variant'] = 'NM_003002.2:c.204C>T'
         r = form.submit()
         r.mustcontain('NC_000011.9:g.111959625C&gt;T')
@@ -358,7 +358,7 @@ class TestWSGI():
         """
         r = self.app.get('/positionConverter')
         form = r.forms[0]
-        form['build'] = 'hg19'
+        form['assembly_name_or_alias'] = 'hg19'
         form['variant'] = 'NC_000011.9:g.111959625C>T'
         r = form.submit()
         r.mustcontain('NM_003002.2:c.204C&gt;T')

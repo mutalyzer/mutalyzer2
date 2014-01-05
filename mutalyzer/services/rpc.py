@@ -3,8 +3,7 @@ Mutalyzer RPC services.
 
 @todo: More thourough input checking. The @soap decorator does not do any
        kind of strictness checks on the input. For example, in
-       transcriptInfo, the build argument must really be present. (Hint:
-       use __checkBuild.)
+       transcriptInfo, the build argument must really be present.
        We should use the built-in validator functionality from Spyne for
        this.
 """
@@ -19,11 +18,13 @@ import os
 import socket
 import tempfile
 from operator import itemgetter, attrgetter
+from sqlalchemy import and_, or_
 
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import session
-from mutalyzer.db.models import BatchJob, BatchQueueItem
+from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
+                                 BatchQueueItem, TranscriptMapping)
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -36,91 +37,6 @@ from mutalyzer import GenRecord
 from mutalyzer import Scheduler
 from mutalyzer.models import *
 from mutalyzer import describe
-
-
-def _checkBuild(L, build) :
-    """
-    Check if the build is supported (hg18, hg19, or mm10).
-
-    Returns:
-        - Nothing (but raises an EARG exception).
-
-    @arg L: An output object for logging.
-    @type L: object
-    @arg build: The human genome build name that needs to be checked.
-    @type build: string
-    """
-
-    if not build in settings.DB_NAMES:
-        L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
-        raise Fault("EARG",
-                    "The build argument (%s) was not a valid " \
-                    "build name." % build)
-    #if
-#_checkBuild
-
-
-def _checkChrom(L, D, chrom) :
-    """
-    Check if the chromosome is in our database.
-
-    Returns:
-        - Nothing (but raises an EARG exception).
-
-    @arg L: An output object for logging.
-    @type L: object
-    @arg D: A handle to the database.
-    @type D: object
-    @arg chrom: The name of the chromosome.
-    @type chrom: string
-    """
-
-    if not D.isChrom(chrom) :
-        L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
-        raise Fault("EARG", "The chrom argument (%s) was not a valid " \
-            "chromosome name." % chrom)
-    #if
-#_checkChrom
-
-
-def _checkPos(L, pos) :
-    """
-    Check if the position is valid.
-
-    Returns:
-        - Nothing (but raises an ERANGE exception).
-
-    @arg L: An output object for logging.
-    @type L: object
-    @arg pos: The position.
-    @type pos: integer
-    """
-
-    if pos < 1 :
-        L.addMessage(__file__, 4, "ERANGE", "ERANGE %i" % pos)
-        raise Fault("ERANGE", "The pos argument (%i) is out of range." % pos)
-    #if
-#_checkPos
-
-
-def _checkVariant(L, variant) :
-    """
-    Check if a variant is provided.
-
-    Returns:
-        - Nothing (but raises an EARG exception).
-
-    @arg L: An output object for logging.
-    @type L: object
-    @arg variant: The variant.
-    @type variant: string
-    """
-
-    if not variant :
-        L.addMessage(__file__, 4, "EARG", "EARG no variant")
-        raise Fault("EARG", "The variant argument is not provided.")
-    #if
-#_checkVariant
 
 
 class MutalyzerService(ServiceBase):
@@ -276,28 +192,34 @@ class MutalyzerService(ServiceBase):
             "Received request getTranscripts(%s %s %s %s)" % (build, chrom,
             pos, versions))
 
-        _checkBuild(L, build)
-        D = Db.Mapping(build)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        _checkChrom(L, D, chrom)
-        _checkPos(L, pos)
+        chromosome = Chromosome.query.filter_by(assembly=assembly,
+                                                name=chrom).first()
+        if not chromosome:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
+            raise Fault("EARG", "The chrom argument (%s) was not a valid " \
+                            "chromosome name." % chrom)
 
-        ret = D.get_Transcripts(chrom, pos, pos, True)
+        mappings = chromosome.transcript_mappings.filter(
+            TranscriptMapping.start <= pos,
+            TranscriptMapping.stop >= pos)
+
+        L.addMessage(__file__, -1, "INFO",
+                     "Finished processing getTranscripts(%s %s %s %s)"
+                     % (build, chrom, pos, versions))
 
         #filter out the accNo
         if versions:
-            ret = [r[0] + '.' + str(r[-1]) for r in ret]
+            return ['%s.%s' % (m.accession, m.version) for m in mappings]
         else:
-            ret = [r[0] for r in ret]
-
-        L.addMessage(__file__, -1, "INFO",
-            "Finished processing getTranscripts(%s %s %s %s)" % (build, chrom,
-            pos, versions))
-
-        L.addMessage(__file__, -1, "INFO", "We return %s" % ret)
-
-        del D, L
-        return ret
+            return [m.accession for m in mappings]
     #getTranscripts
 
     @srpc(Mandatory.String, Mandatory.String, _returns=Array(Mandatory.String))
@@ -310,21 +232,22 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsByGene(%s %s)" % (build, name))
 
-        _checkBuild(L, build)
-        D = Db.Mapping(build)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        ret = D.get_TranscriptsByGeneName(name)
+        mappings = TranscriptMapping.query \
+            .filter(TranscriptMapping.chromosome.has(assembly=assembly),
+                    TranscriptMapping.gene == name)
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsByGene(%s %s)" % (build, name))
 
-        if ret :
-            l = []
-            for i in ret :
-                l.append(i[0] + '.' + str(i[13]))
-            return l
-
-        return []
+        return ['%s.%s' % (m.accession, m.version) for m in mappings]
     #getTranscriptsByGene
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
@@ -355,20 +278,35 @@ class MutalyzerService(ServiceBase):
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
-        D = Db.Mapping(build)
-        _checkBuild(L, build)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        ret = D.get_Transcripts(chrom, pos1, pos2, method)
+        chromosome = Chromosome.query.filter_by(assembly=assembly,
+                                                name=chrom).first()
+        if not chromosome:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
+            raise Fault("EARG", "The chrom argument (%s) was not a valid " \
+                            "chromosome name." % chrom)
 
-        #filter out the accNo
-        ret = [r[0] for r in ret]
+        if method:
+            range_filter = (TranscriptMapping.start <= pos2,
+                            TranscriptMapping.stop >= pos1)
+        else:
+            range_filter = (TranscriptMapping.start >= pos1,
+                            TranscriptMapping.stop <= pos2)
+
+        mappings = chromosome.transcript_mappings.filter(*range_filter)
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
 
-        del D, L
-        return ret
+        return [m.accession for m in mappings]
     #getTranscriptsRange
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
@@ -396,7 +334,6 @@ class MutalyzerService(ServiceBase):
                  - name
                  - version
                  - gene
-                 - protein
                  - orientation
                  - start
                  - stop
@@ -405,36 +342,53 @@ class MutalyzerService(ServiceBase):
         """
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received request ' \
-            'getTranscriptsRange(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
+            'getTranscriptsMapping(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
             method))
 
-        _checkBuild(output, build)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        database = Db.Mapping(build)
+        chromosome = Chromosome.query.filter_by(assembly=assembly,
+                                                name=chrom).first()
+        if not chromosome:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
+            raise Fault("EARG", "The chrom argument (%s) was not a valid " \
+                            "chromosome name." % chrom)
+
+        if method:
+            range_filter = (TranscriptMapping.start <= pos2,
+                            TranscriptMapping.stop >= pos1)
+        else:
+            range_filter = (TranscriptMapping.start >= pos1,
+                            TranscriptMapping.stop <= pos2)
+
+        mappings = chromosome.transcript_mappings.filter(*range_filter)
+
         transcripts = []
 
-        for transcript in database.get_Transcripts(chrom, pos1, pos2, method):
+        for mapping in mappings:
             t = TranscriptMappingInfo()
-            d = dict(zip(('transcript', 'selector', 'selector_version',
-                'start', 'stop', 'cds_start', 'cds_stop', 'exon_starts',
-                'exon_stops', 'gene', 'chromosome', 'orientation', 'protein',
-                'version'), transcript))
-            if d['orientation'] == '-':
-                d['start'], d['stop'] = d['stop'], d['start']
-                d['cds_start'], d['cds_stop'] = d['cds_stop'], d['cds_start']
-            t.name = d['transcript']
-            t.version = d['version']
-            t.gene = d['gene']
-            t.protein = d['protein']
-            t.orientation = d['orientation']
-            t.start = d['start']
-            t.stop = d['stop']
-            t.cds_start = d['cds_start']
-            t.cds_stop = d['cds_stop']
+            t.name = mapping.accession
+            t.version = mapping.version
+            t.gene = mapping.gene
+            t.orientation = '-' if mapping.orientation == 'reverse' else '+'
+            if mapping.orientation == 'reverse':
+                t.start, t.stop = mapping.stop, mapping.start
+            else:
+                t.start, t.stop = mapping.start, mapping.stop
+            if mapping.orientation == 'reverse':
+                t.cds_start, t.cds_stop = mapping.cds_stop, mapping.cds_start
+            else:
+                t.cds_start, t.cds_stop = mapping.cds_start, mapping.cds_stop
             transcripts.append(t)
 
         output.addMessage(__file__, -1, 'INFO', 'Finished processing ' \
-            'getTranscriptsRange(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
+            'getTranscriptsMapping(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
             method))
 
         return transcripts
@@ -458,18 +412,24 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request getGeneName(%s %s)" % (build, accno))
 
-        D = Db.Mapping(build)
-        _checkBuild(L, build)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        ret = D.get_GeneName(accno.split('.')[0])
+        mapping = TranscriptMapping.query \
+            .filter(TranscriptMapping.chromosome.has(assembly=assembly),
+                    TranscriptMapping.accession == accno.split('.')[0]) \
+            .first()
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getGeneName(%s %s)" % (build, accno))
 
-        del D, L
-        return ret
+        return mapping.gene
     #getGeneName
-
 
     @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
         Mandatory.String, _returns=Mapping)
@@ -520,7 +480,15 @@ class MutalyzerService(ServiceBase):
             "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver, build,
             accNo, variant))
 
-        conv = Converter(build, L)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
+
+        conv = Converter(assembly, L)
         result = conv.mainMapping(accNo, variant)
 
         L.addMessage(__file__, -1, "INFO",
@@ -558,7 +526,15 @@ class MutalyzerService(ServiceBase):
             "Received request transcriptInfo(%s %s %s)" % (LOVD_ver, build,
             accNo))
 
-        converter = Converter(build, O)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            O.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
+
+        converter = Converter(assembly, O)
         T = converter.mainTranscript(accNo)
 
         O.addMessage(__file__, -1, "INFO",
@@ -580,22 +556,29 @@ class MutalyzerService(ServiceBase):
         @return: The accession number of a chromosome.
         @rtype: string
         """
-        D = Db.Mapping(build)
         L = Output(__file__)
-
         L.addMessage(__file__, -1, "INFO",
             "Received request chromAccession(%s %s)" % (build, name))
 
-        _checkBuild(L, build)
-        _checkChrom(L, D, name)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        result = D.chromAcc(name)
+        chromosome = Chromosome.query.filter_by(assembly=assembly,
+                                                name=name).first()
+        if not chromosome:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % name)
+            raise Fault("EARG", "The name argument (%s) was not a valid " \
+                            "chromosome name." % name)
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing chromAccession(%s %s)" % (build, name))
 
-        del D,L
-        return result[0]
+        return chromosome.accession
     #chromAccession
 
     @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
@@ -611,22 +594,29 @@ class MutalyzerService(ServiceBase):
         @return: The name of a chromosome.
         @rtype: string
         """
-        D = Db.Mapping(build)
         L = Output(__file__)
-
         L.addMessage(__file__, -1, "INFO",
             "Received request chromName(%s %s)" % (build, accNo))
 
-        _checkBuild(L, build)
-#        self._checkChrom(L, D, name)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        result = D.chromName(accNo)
+        chromosome = Chromosome.query.filter_by(assembly=assembly,
+                                                accession=accNo).first()
+        if not chromosome:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % accNo)
+            raise Fault("EARG", "The accNo argument (%s) was not a valid " \
+                            "chromosome accession." % accNo)
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing chromName(%s %s)" % (build, accNo))
 
-        del D,L
-        return result
+        return chromosome.name
     #chromosomeName
 
     @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
@@ -642,26 +632,32 @@ class MutalyzerService(ServiceBase):
         @return: The name of a chromosome.
         @rtype: string
         """
-        D = Db.Mapping(build)
         L = Output(__file__)
 
         L.addMessage(__file__, -1, "INFO",
             "Received request getchromName(%s %s)" % (build, acc))
 
-        _checkBuild(L, build)
-#        self._checkChrom(L, D, name)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
 
-        result = D.get_chromName(acc)
+        mapping = TranscriptMapping.query \
+            .filter(TranscriptMapping.chromosome.has(assembly=assembly),
+                    TranscriptMapping.accession == acc) \
+            .first()
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getchromName(%s %s)" % (build, acc))
 
-        del D,L
-        return result
+        return mapping.chromosome.name
     #chromosomeName
 
     @srpc(Mandatory.String, Mandatory.String, String,
-        _returns=Array(Mandatory.String))
+          _returns=Array(Mandatory.String))
     def numberConversion(build, variant, gene=None):
         """
         Converts I{c.} to I{g.} notation or vice versa
@@ -678,7 +674,6 @@ class MutalyzerService(ServiceBase):
         @return: The variant(s) in either I{g.} or I{c.} notation.
         @rtype: list
         """
-        D = Db.Mapping(build)
         O = Output(__file__)
         O.addMessage(__file__, -1, "INFO",
             "Received request cTogConversion(%s %s)" % (build, variant))
@@ -686,7 +681,15 @@ class MutalyzerService(ServiceBase):
         counter = Db.Counter()
         counter.increment('positionconvert', 'webservice')
 
-        converter = Converter(build, O)
+        assembly = Assembly.query.filter(or_(Assembly.name == build,
+                                             Assembly.alias == build)).first()
+        if not assembly:
+            O.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                            "build name." % build)
+
+        converter = Converter(assembly, O)
         variant = converter.correctChrVariant(variant)
 
         if "c." in variant or "n." in variant:
@@ -722,9 +725,11 @@ class MutalyzerService(ServiceBase):
         counter = Db.Counter()
         counter.increment('checksyntax', 'webservice')
 
-        result = CheckSyntaxOutput()
+        if not variant :
+            output.addMessage(__file__, 4, "EARG", "EARG no variant")
+            raise Fault("EARG", "The variant argument is not provided.")
 
-        _checkVariant(output, variant)
+        result = CheckSyntaxOutput()
 
         grammar = Grammar(output)
         parsetree = grammar.parse(variant)

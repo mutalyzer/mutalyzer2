@@ -84,10 +84,8 @@
             <td><b>Build</b></td>
             <td>
                 <select name="arg1">
-                    <option selected="selected" value="{{ selected_build|e
-                    }}">{{ selected_build|e }}</option>
-                    {% for i in unselected_builds %}
-                      <option value="{{ i|e }}">{{ i|e }}</option>
+                    {% for assembly in assemblies %}
+<option value="{{ assembly.name|e }}"{% if default_assembly in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name|e }} &mdash; {{ assembly.name|e }}{% if assembly.alias %} ({{ assembly.alias|e }}){% endif %}</option>
                     {% endfor %}
                 </select>
             </td>

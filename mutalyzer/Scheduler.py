@@ -23,7 +23,7 @@ from sqlalchemy import func
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import queries, session
-from mutalyzer.db.models import BatchJob, BatchQueueItem
+from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
 from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
@@ -92,6 +92,7 @@ class Scheduler() :
         """
         # Mail is set to 'test@test.test" if the batch job was submitted from
         # a unit test.
+        # Todo: Use `settings.TESTING` instead.
         if mailTo == 'test@test.test':
             return
 
@@ -560,7 +561,8 @@ Mutalyzer batch scheduler""" % url)
         if not skip :
             try :
                 #process
-                converter = Converter(batch_job.argument, O)
+                assembly = Assembly.get(int(batch_job.argument))
+                converter = Converter(assembly, O)
 
                 #Also accept chr accNo
                 variant = converter.correctChrVariant(variant)

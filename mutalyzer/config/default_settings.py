@@ -5,7 +5,7 @@ pointed-to by the `MUTALYZER_SETTINGS` environment variable.
 
 
 # Use Mutalyzer in debug mode.
-DEBUG = True
+DEBUG = False
 
 # We are running unit tests.
 TESTING = False
@@ -38,11 +38,8 @@ MYSQL_USER = 'mutalyzer'
 # Local MySQL database name.
 MYSQL_DATABASE = 'mutalyzer'
 
-# Available databases with mapping information.
-DB_NAMES = ['hg18', 'hg19', 'mm10']
-
-# Default database for mapping information.
-DEFAULT_DB = 'hg19'
+# Default genome assembly (by name or alias).
+DEFAULT_ASSEMBLY = 'hg19'
 
 # Name and location of the log file.
 import os
