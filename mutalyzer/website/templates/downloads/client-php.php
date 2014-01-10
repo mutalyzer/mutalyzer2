@@ -3,13 +3,13 @@
 /*
  Example SOAP client for the Mutalyzer web service in PHP.
 
- See {path}/webservices
+ See {{ url_for('.webservices', _external=True) }}
 
  This code is in the public domain; it can be used for whatever purpose
  with absolutely no restrictions.
 */
 
-$URL = '{path}/services/?wsdl';
+$URL = '{{ soap_wsdl_url }}';
 
 ?><!DOCTYPE html>
 <html lang="en">
@@ -23,7 +23,7 @@ $URL = '{path}/services/?wsdl';
 
 <?php
 
-if (isset($_GET['variant']) && $_GET['variant']) {{
+if (isset($_GET['variant']) && $_GET['variant']) {
 
     $variant = $_GET['variant'];
 
@@ -42,16 +42,16 @@ if (isset($_GET['variant']) && $_GET['variant']) {{
     else
         echo '<p><b>Not</b> valid!';
 
-    if (isset($result->messages->SoapMessage)) {{
+    if (isset($result->messages->SoapMessage)) {
         echo '<p>Messages:<ol>';
-        foreach ($result->messages->SoapMessage as $message) {{
+        foreach ($result->messages->SoapMessage as $message) {
             echo '<li><code>'.htmlentities($message->errorcode).'</code>: ';
             echo htmlentities($message->message);
-        }}
+        }
         echo '</ol>';
-    }}
+    }
 
-}}
+}
 
 ?>
 

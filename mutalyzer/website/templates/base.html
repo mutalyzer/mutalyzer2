@@ -9,6 +9,11 @@
     <script
       type="text/javascript"
       language="javascript"
+      src="static/js/jquery-1.10.2.min.js">
+    </script>
+    <script
+      type="text/javascript"
+      language="javascript"
       src="static/js/interface.js">
     </script>
     <script
@@ -18,7 +23,7 @@
     </script>
     <meta http-equiv="Content-Type"
       content="text/html; charset=iso-8859-1">
-    <title>Mutalyzer {{ version|e }} &mdash; {{ page_title|e }}</title>
+    <title>Mutalyzer {{ mutalyzer_version }} &mdash; {{ page_title }}</title>
   </head>
   <body
     style="background-image: url('static/images/background.gif');
@@ -39,7 +44,7 @@
         <td rowspan="2"
           valign="bottom"
           width="180">
-          <a href="index"
+          <a href="{{ url_for('.homepage') }}"
             target="_top"><img
               src="static/images/mutalyzer_logo_bw.png" width="180" height="112"
               alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
@@ -54,7 +59,7 @@
           width="98%">
           <!-- Banner -->
           <center>
-            <a href="index"><img
+            <a href="{{ url_for('.homepage') }}"><img
                 src="static/images/mutalyzer_logo.png"
                 width="90%"
                 height="90"
@@ -75,11 +80,11 @@
                  class="hornav">previous page</a>&nbsp;&nbsp;&nbsp;
             </td>
             <td align="right">
-              <a href="index"
+              <a href="{{ url_for('.homepage') }}"
                  class="hornav">home</a>&nbsp;&nbsp;&nbsp;
-              <a href="about"
+              <a href="{{ url_for('.about') }}"
                  class="hornav">about</a>&nbsp;&nbsp;&nbsp;
-              <a href="mailto:{{ contactEmail|e }}"
+              <a href="mailto:{{ contact_email }}"
                  class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
               <a href="#bottom" class="hornav">go to bottom</a>&nbsp;&nbsp;&nbsp;
             </td>
@@ -111,37 +116,37 @@
         </td>
       </tr>
 
-{# Fields are: url, id, caption, subnav #}
+{# Fields are: view, view_args, id, caption, subnav #}
 {% set navigation_menu = [
-    ('index', 'homepage', 'Home', False),
-    ('check', 'name-checker', 'Name Checker', False),
-    ('syntaxCheck', 'syntax-checker', 'Syntax Checker', False),
-    ('positionConverter', 'position-converter', 'Position Converter', False),
-    ('snp', 'snp-converter', 'SNP Converter', False),
-    ('nameGenerator', 'name-generator', 'Name Generator', False),
-    ('descriptionExtract', 'description-extractor', 'Description Extractor', False),
-    ('upload', 'reference-loader', 'Reference File Loader', False),
-    ('batch', 'batch-jobs', 'Batch Jobs', False),
-    ('batchNameChecker', 'batch-name-checker', 'Name Checker', True),
-    ('batchSyntaxChecker', 'batch-syntax-checker', 'Syntax Checker', True),
-    ('batchPositionConverter', 'batch-position-converter', 'Position Converter', True),
-    ('batchSnpConverter', 'batch-snp-converter', 'SNP Converter', True),
-    ('webservices', 'webservices', 'Web Services', False)
+    ('.homepage', {}, 'homepage', 'Home', False),
+    ('.name_checker', {}, 'name-checker', 'Name Checker', False),
+    ('.syntax_checker', {}, 'syntax-checker', 'Syntax Checker', False),
+    ('.position_converter', {}, 'position-converter', 'Position Converter', False),
+    ('.snp_converter', {}, 'snp-converter', 'SNP Converter', False),
+    ('.name_generator', {}, 'name-generator', 'Name Generator', False),
+    ('.description_extractor', {}, 'description-extractor', 'Description Extractor', False),
+    ('.reference_loader', {}, 'reference-loader', 'Reference File Loader', False),
+    ('.batch_jobs', {}, 'batch-jobs', 'Batch Jobs', False),
+    ('.batch_jobs', {'job_type': 'name-checker'}, 'batch-name-checker', 'Name Checker', True),
+    ('.batch_jobs', {'job_type': 'syntax-checker'}, 'batch-syntax-checker', 'Syntax Checker', True),
+    ('.batch_jobs', {'job_type': 'position-converter'}, 'batch-position-converter', 'Position Converter', True),
+    ('.batch_jobs', {'job_type': 'snp-converter'}, 'batch-snp-converter', 'SNP Converter', True),
+    ('.webservices', {}, 'webservices', 'Web Services', False)
 ] -%}
 {% set active_page = active_page|default('home') -%}
 
-{% for url, id, caption, subnav in navigation_menu %}
+{% for view, view_args, id, caption, subnav in navigation_menu %}
   <tr class="menu{% if id == active_page %} active{% endif %}">
     {% if subnav %}
       <td></td>
       <td valign="baseline" width="10" class="bullet sub"></td>
       <td colspan="2">
-        <a href="{{ url|e }}">{{ caption|e }}</a>
+        <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a>
       </td>
     {% else %}
       <td valign="top" width="20" class="bullet"></td>
       <td colspan="3">
-        <a href="{{ url|e }}">{{ caption|e }}</a>
+        <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a>
       </td>
     {% endif %}
   </tr>
@@ -274,21 +279,21 @@
 
 
     <center>
-      <h2>Mutalyzer {{ version|e }}<br>
+      <h2>Mutalyzer {{ mutalyzer_version }}<br>
         <small><small><small><small>
         {% if release %}
-          released on {{ releaseDate|e }}
+          released on {{ release_date }}
         {% else %}
           development version
         {% endif %}
         </small></small></small></small>
       </h2>
       HGVS nomenclature version
-      <span>{{ nomenclatureVersion|e }}</span>
+      <span>{{ nomenclature_version }}</span>
     </center>
     <p>
 
-    <h3><center>{{ page_title|e }}</center></h3>
+    <h3><center>{{ page_title }}</center></h3>
 
     {% block content %}{% endblock %}
 
@@ -320,7 +325,7 @@
         </td>
         <td align="middle">
           <img src = "static/images/LUMC_24x24.png" align = "middle">
-          &nbsp; &copy; {{ copyrightYears[0]|e }}-{{ copyrightYears[1]|e }}
+          &nbsp; &copy; {{ copyright_years[0] }}-{{ copyright_years[1] }}
           <a href = "http://www.lumc.nl">LUMC</a>
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
           &nbsp; &nbsp;
@@ -352,15 +357,15 @@
 {% if piwik %}
 <!-- Piwik -->
 <script type="text/javascript">
-var pkBaseURL = "{{ piwikBase|e }}/";
+var pkBaseURL = "{{ piwik_base_url }}/";
 document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
 </script><script type="text/javascript">
 try {
-var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", {{ piwikSite|e }});
+var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", {{ piwik_site_id }});
 piwikTracker.trackPageView();
 piwikTracker.enableLinkTracking();
 } catch( err ) {}
-</script><noscript><p><img src="{{ piwikBase|e }}/piwik.php?idsite={{ piwikSite|e }}" style="border:0" alt="" /></p></noscript>
+</script><noscript><p><img src="{{ piwik_base_url }}/piwik.php?idsite={{ piwik_site_id }}" style="border:0" alt="" /></p></noscript>
 <!-- End Piwik Tracking Code -->
 {% endif %}
   </body>

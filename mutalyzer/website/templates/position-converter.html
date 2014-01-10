@@ -12,7 +12,7 @@
   </p>
   <p>
   <b>Note:</b> The Position Converter does NOT check the description or
-  normalize it to HGVS. Use the <a href="check">Name Checker</a> for this.
+  normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Checker</a> for this.
   </p>
   <p>
   Example: NM_003002.2:c.274G&gt;T<br>
@@ -20,25 +20,25 @@
   or: NC_000011.9:g.111959693G&gt;T<br>
   </p>
   <table id="inputform">
-      <form action="" method="post" enctype="multipart/form-data">
+      <form action="{{ url_for('.position_converter') }}" method="get" enctype="multipart/form-data">
           <tr>
               <td><b>Assembly</b></td>
               <td>
                   <select name="assembly_name_or_alias">
                     {% for assembly in assemblies %}
-<option value="{{ assembly.name|e }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name|e }} &mdash; {{ assembly.name|e }}{% if assembly.alias %} ({{ assembly.alias|e }}){% endif %}</option>
+<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
                     {% endfor %}
                   </select>
               </td>
           </tr>
           <tr>
               <td><b>Variant</b></td>
-              <td><input type="text" name="variant" value="{{ variant|e }}" style="width:500px"></td>
+              <td><input type="text" name="description" value="{{ description }}" style="width:500px"></td>
           </tr>
           <tr>
               <td colspan="2">
                 <input type="submit" value="Submit">
-                <input type="button" value="Clear field" onclick="clearField(this.form, 'variant');">
+                <input type="button" value="Clear field" onclick="clearField(this.form, 'description');">
                 <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter">Help</a>
               </td>
 
@@ -47,34 +47,34 @@
   </table> <!-- inputform -->
 </div>
 
-{% if variant %}
+{% if description %}
   <h3>Results:</h3>
 
   <div class="messages">
     {% for m in messages %}
-      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e
-      }})">{{ m.description|e }}</p>
+      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
+      }})">{{ m.description }}</p>
     {% endfor %}
-    <p>{{ summary|e }}</p>
+    <p>{{ summary }}</p>
   </div>
 
-  {% if gName %}
+  {% if chromosomal_description %}
     <p>
     <b>Chromosomal Variant:</b>
     </p>
-    <pre>{{ gName|e }}</pre>
-    {% if not cNames %}
+    <pre>{{ chromosomal_description }}</pre>
+    {% if not transcript_descriptions %}
       <p>
       <b>No transcripts found in mutation region</b>
       </p>
     {% endif %}
   {% endif %}
 
-  {% if cNames %}
+  {% if transcript_descriptions %}
     <p>
     <b>Found transcripts in mutation region:</b>
     </p>
-    <pre>{% for i in cNames %}{{ i|e }}<br>{% endfor %}</pre>
+    <pre>{% for d in transcript_descriptions %}{{ d }}<br>{% endfor %}</pre>
   {% endif %}
 {% endif %}
 

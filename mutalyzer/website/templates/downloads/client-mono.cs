@@ -2,10 +2,10 @@
   Example SOAP client for the Mutalyzer web service in C# for the Mono
   platform.
 
-  See {path}/webservices
+  See {{ url_for('.webservices', _external=True) }}
 
   Compilation instructions:
-    wsdl '{path}/services/?wsdl'
+    wsdl '{{ soap_wsdl_url }}'
     gmcs /target:library Mutalyzer.cs -r:System.Web.Services
     gmcs /r:Mutalyzer.dll client-mono.cs
 
@@ -18,19 +18,19 @@
 
 using System;
 
-class MutalyzerClient {{
+class MutalyzerClient {
 
-    public static void Main(String [] args) {{
+    public static void Main(String [] args) {
 
         String variant;
         checkSyntax argument;
         Mutalyzer mutalyzer;
         CheckSyntaxOutput result;
 
-        if (args.Length < 1) {{
+        if (args.Length < 1) {
             Console.WriteLine("Please provide a variant");
             Environment.Exit(1);
-        }}
+        }
 
         variant = args[0];
 
@@ -48,9 +48,9 @@ class MutalyzerClient {{
             Console.WriteLine("Not valid!");
 
         foreach (SoapMessage m in result.messages)
-            Console.WriteLine(String.Format("Message ({{0}}): {{1}}",
+            Console.WriteLine(String.Format("Message ({0}): {1}",
                                             m.errorcode, m.message));
 
-    }}
+    }
 
-}}
+}

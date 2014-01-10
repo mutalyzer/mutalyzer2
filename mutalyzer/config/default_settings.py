@@ -4,6 +4,11 @@ pointed-to by the `MUTALYZER_SETTINGS` environment variable.
 """
 
 
+# Todo: Find an alternative to the temporary directories/files defined here,
+#   since they are created even if the setting is reset from another
+#   configuration file, and they are never removed.
+
+
 # Use Mutalyzer in debug mode.
 DEBUG = False
 
@@ -67,6 +72,14 @@ PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 30
 # Expiration time for negative transcript->protein links from the NCBI (in
 # seconds).
 NEGATIVE_PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 5
+
+# URL to the SOAP webservice WSDL document. Used for linking to it from the
+# documentation page on the website.
+SOAP_WSDL_URL = 'https://mutalyzer.nl/services/?wsdl'
+
+# URL to the HTTP/RPC+JSON webservice root (without trailing slash). Used for
+# linking to it from the documentation page on the website.
+JSON_ROOT_URL = 'https://mutalyzer.nl/json'
 
 # Is Piwik enabled?
 PIWIK = False

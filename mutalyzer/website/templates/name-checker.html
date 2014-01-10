@@ -20,19 +20,19 @@
     <div id="output">
       <div>
       Please insert the mutation name using the
-      <span class = "helper"
-      title = "Human Genome Variation Society standard variant nomenclature">
-        <a href = "http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
+      <span class="helper"
+      title="Human Genome Variation Society standard variant nomenclature">
+        <a href="http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
         &lt;accession number&gt;.&lt;version
         number&gt;(&lt;gene symbol&gt;):&lt;sequence
         type&gt;.&lt;variant description&gt;
       </div><br>
       Example: AB026906.1:c.274G&gt;T<br>
       <br>
-      <form action="" method="get">
-        <input type="text" name="name" value="{{ name|e }}" style="width:100%"><br>
+      <form action="{{ url_for('.name_checker') }}" method="get">
+        <input type="text" name="description" value="{{ description }}" style="width:100%"><br>
         <input type="submit" value="Submit">
-        <input type="button" value="Clear field" onclick="clearField(this.form, 'name');">
+        <input type="button" value="Clear field" onclick="clearField(this.form, 'description');">
         <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameChecker">Help</a>
       </form>
     </div>
@@ -43,32 +43,32 @@
     <b>Overview of the raw variants:</b>
     </p>
     {% for i in visualisation %}
-      <p>Raw variant {{ loop.index }}: {{ i[0]|e }}</p>
-      <pre>{{ i[1]|e }}<br>{{ i[2]|e }}</pre>
+      <p>Raw variant {{ loop.index }}: {{ i[0] }}</p>
+      <pre>{{ i[1] }}<br>{{ i[2] }}</pre>
     {% endfor %}
   {% endif %}
 
   {% if browserLink %}
     <p>
-    <a href="{{ browserLink|e }}">View original variant in UCSC Genome Browser</a>
+    <a href="{{ browserLink }}">View original variant in UCSC Genome Browser</a>
     </p>
   {% endif %}
 </div>
 
-{% if name %}
+{% if description %}
   <h3>Name checker results:</h3>
 
   <div class="messages">
     {% for m in messages %}
-      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e
-      }})">{{ m.description|e }}</p>
+      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
+      }})">{{ m.description }}</p>
     {% endfor %}
-    <p>{{ summary|e }}</p>
+    <p>{{ summary }}</p>
   </div>
 
-  {% if parseError %}
+  {% if parse_error %}
     <h4>Details of the parse error:</h4>
-    <pre>{{ parseError[0]|e }}<br>{{ parseError[1]|e }}</pre>
+    <pre>{{ parse_error[0] }}<br>{{ parse_error[1] }}</pre>
     <p>
     The &quot;^&quot; indicates the position where the error occurred.
     </p>
@@ -82,14 +82,14 @@
       (Not for use in LSDBs in case of protein-coding transcripts).</p>
     {% endif %}
     <p>
-    <tt><a href="check?name={{ genomicDescription|urlencode }}">{{ genomicDescription|e }}</a></tt>
+    <tt><a href="{{ url_for('.name_checker', description=genomicDescription) }}">{{ genomicDescription }}</a></tt>
     </p>
   {% endif %}
 
   {% if chromDescription %}
     <p>Alternative chromosomal position:</p>
     <p>
-    <tt>{{ chromDescription|e }}</tt>
+    <tt>{{ chromDescription }}</tt>
     </p>
   {% endif %}
 
@@ -98,9 +98,9 @@
     <p>
     {% for i in descriptions %}
       {% if i.endswith('?') %}
-        <tt>{{ i|e }}</tt>
+        <tt>{{ i }}</tt>
       {% else %}
-        <tt><a href="check?name={{ i|urlencode }}">{{ i|e }}</a></tt>
+        <tt><a href="{{ url_for('.name_checker', description=i) }}">{{ i }}</a></tt>
       {% endif %}
       <br>
     {% endfor %}
@@ -113,7 +113,7 @@
     </p>
     <p>
     {% for i in protDescriptions %}
-      <tt>{{ i|e }}</tt><br>
+      <tt>{{ i }}</tt><br>
     {% endfor %}
     </p>
   {% endif %}
@@ -126,7 +126,7 @@
         <p><b>Reference protein:</b></p>
         <pre>
         {%- for i in oldProtein -%}
-          {{- i -}}<br>
+          {{- i|safe -}}<br>
         {%- endfor -%}
         </pre>
 
@@ -135,7 +135,7 @@
         {% if newProtein %}
           <pre>
             {%- for i in newProtein -%}
-              {{- i -}}<br>
+              {{- i|safe -}}<br>
             {%- endfor -%}
           </pre>
         {% else %}
@@ -146,11 +146,11 @@
         {% endif %}
 
         {% if altStart %}
-          <p><b>Alternative protein using start codon {{ altStart|e }}</b></p>
+          <p><b>Alternative protein using start codon {{ altStart }}</b></p>
           {% if altProtein %}
             <pre>
               {%- for i in altProtein -%}
-                {{- i -}}<br>
+                {{- i|safe -}}<br>
               {%- endfor -%}
             </pre>
           {% else %}
@@ -172,7 +172,7 @@
           <tr>
             <td>{{ loop.index }}</td>
             {% for j in i %}
-              <td>{{ j|e }}</td>
+              <td>{{ j }}</td>
             {% endfor %}
           </tr>
         {% endfor %}
@@ -188,13 +188,13 @@
           </tr>
           <tr>
             <td>Start</td>
-            <td>{{ cdsStart_g|e }}</td>
-            <td>{{ cdsStart_c|e }}</td>
+            <td>{{ cdsStart_g }}</td>
+            <td>{{ cdsStart_c }}</td>
           </tr>
           <tr>
             <td>Stop</td>
-            <td>{{ cdsStop_g|e }}</td>
-            <td>{{ cdsStop_c|e }}</td>
+            <td>{{ cdsStop_g }}</td>
+            <td>{{ cdsStop_c }}</td>
           </tr>
           <tr>
           </tr>
@@ -216,12 +216,12 @@
           <td>{{ loop.index }}</td>
           <td>
             {% for j in i[0] %}
-              {{ j|e }}{{ ',' if not loop.last }}
+              {{ j }}{{ ',' if not loop.last }}
             {% endfor %}
           </td>
           <td>
             {% for j in i[1] %}
-              {{ j|e }}{{ ',' if not loop.last }}
+              {{ j }}{{ ',' if not loop.last }}
             {% endfor %}
           </td>
         </tr>
@@ -242,7 +242,7 @@
       {% for i in legends %}
         <tr>
           {% for j in i %}
-            <td>{{ j|e if j else '' }}</td>
+            <td>{{ j if j else '' }}</td>
           {% endfor %}
         </tr>
       {% endfor %}
@@ -253,14 +253,14 @@
     <p><b>Links:</b></p>
     <p>
     Download this reference sequence file:
-    <a href="Reference/{{ reference|urlencode }}">{{ reference|e }}</a>
+    <a href="{{ url_for('.reference', filename=reference_filename) }}">{{ reference_filename }}</a>
     </p>
   {% endif %}
 
   {% if extractedDescription %}
     <p><b>Experimental services:</b></p>
-    <p>Genomic description: <tt>{{ extractedDescription|e }}</tt></p>
-    <p>Protein description: <tt>{{ extractedProtein|e }}</tt></p>
+    <p>Genomic description: <tt>{{ extractedDescription }}</tt></p>
+    <p>Protein description: <tt>{{ extractedProtein }}</tt></p>
   {% endif %}
 {% endif %}
 

@@ -112,59 +112,8 @@ class File() :
         @return: list of lists
         @rtype: list
         """
-
-        # If we naively assume the input file uses \n characters as
-        # newlines, the CSV parser can trip over e.g. Windows style
-        # newlines. It will probably complain with a message like:
-        #
-        #   new-line character seen in unquoted field - do you need to open
-        #   the file in universal-newline mode?
-        #
-        # Here we try to support multiplatform newline modes in the input
-        # file, so \n, \r, \r\n are all recognized as a newline.
-        #
-        # This can be done by opening the file in 'U' mode, but in this case
-        # we already have an opened file (probably, if the call originated
-        # from a web request, opened by the web.py input handler, which uses
-        # the Python cgi module for opening uploaded files).
-        #
-        # A fix is to get the handle's file descriptor and create a new
-        # handle for it, using 'U' mode.
-        #
-        # However, sometimes our handler has no .fileno(), for example when
-        # the input file is quite small (< 1kb). In that case, the cgi
-        # module seems to optimize things and use a StringIO for the file,
-        # which of course has no .fileno().
-        #
-        # So our solution is:
-        # - We have .fileno(): Create a new handle, using 'U' mode.
-        # - We have no .fileno(): Replace all newlines by \n (in-memory)
-        #   and wrap the result in a new StringIO.
-
-        if hasattr(handle, 'fileno'):
-            # Todo: We get the following error in our logs (exact origin
-            # unknown):
-            #
-            #   close failed in file object destructor:
-            #   IOError: [Errno 9] Bad file descriptor
-            #
-            # I am unable to find the reason for this. Everything seems to
-            # be working though.
-            new_handle = os.fdopen(handle.fileno(), 'rU')
-        elif hasattr(handle, 'getvalue'):
-            data = handle.getvalue()
-            data = data.replace('\r\n', '\n').replace('\r', '\n')
-            new_handle = StringIO(data)
-        else:
-            self.__output.addMessage(__file__, 4, "EBPARSE",
-                                     "Fatal error parsing input file, please"
-                                     " report this as a bug including the"
-                                     " input file.")
-            return None
-
-        # I don't think the .seek(0) is needed now we created a new handle
-        new_handle.seek(0)
-        buf = new_handle.read(BUFFER_SIZE)
+        handle.seek(0)
+        buf = handle.read(BUFFER_SIZE)
 
         # Default dialect
         dialect = 'excel'
@@ -186,14 +135,14 @@ class File() :
 #        if dialect.delimiter == ":":
 #            dialect.delimiter = "\t"
 
-        new_handle.seek(0)
-        reader = csv.reader(new_handle, dialect)
+        handle.seek(0)
+        reader = csv.reader(handle, dialect)
 
         ret = []
         for i in reader:
             ret.append(i)
 
-        new_handle.close()
+        handle.close()
         return ret
     #__parseCsvFile
 

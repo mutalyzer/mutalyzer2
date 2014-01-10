@@ -19,23 +19,23 @@ sequence when no appropriate RefSeq, GenBank or LRG file is available.
 </p>
 <p>
 Please select one of the options below to upload or retrieve your reference
-sequence (maximum size is {{ maxSize|e }} megabytes):
+sequence (maximum size is {{ max_file_size }} megabytes):
 </p>
 
-<form name="invoer" enctype="multipart/form-data" action="" method="post">
+<form name="invoer" enctype="multipart/form-data" action="{{ url_for('.reference_loader') }}" method="post">
   <table border="0" cellpadding="0" cellspacing="0">
     <tr valign="top">
       <th width="100" style="text-align: left; padding-left : 70px">Options</th>
       <td>
-        <input type="radio" name="invoermethode" value="file" checked onClick="updateVisibility();">
+        <input type="radio" name="method" value="upload" checked onClick="updateVisibility();">
         The reference sequence file is a local file<br>
-        <input type="radio" name="invoermethode" value="url" onClick="updateVisibility();">
+        <input type="radio" name="method" value="url" onClick="updateVisibility();">
         The reference sequence file can be found at the following URL<br>
-        <input type="radio" name="invoermethode" value="gene" onClick="updateVisibility();">
+        <input type="radio" name="method" value="slice_gene" onClick="updateVisibility();">
         Retrieve part of the reference genome for a (HGNC) gene symbol<br>
-        <input type="radio" name="invoermethode" value="chr" onClick="updateVisibility();">
+        <input type="radio" name="method" value="slice_accession" onClick="updateVisibility();">
         Retrieve a range of a chromosome by accession number<br>
-        <input type="radio" name="invoermethode" value="chrname" onClick="updateVisibility();">
+        <input type="radio" name="method" value="slice_chromosome" onClick="updateVisibility();">
         Retrieve a range of a chromosome by name<br>
       </td>
     </tr>
@@ -44,17 +44,17 @@ sequence (maximum size is {{ maxSize|e }} megabytes):
       <th width="100" style="text-align : left; padding-left : 70px">Input
       </th>
       <td>
-        <span id="file_label">
+        <span id="upload_label">
           <i>Please select the GenBank file in plain text format</i><br>
-          <input type="file" name="bestandsveld"><br>
+          <input type="file" name="file"><br>
         </span>
         <span id="url_label">
           <i>Please enter the URL of the GenBank file in plain text
              (including http://)</i>
           <br>
-          <input type="text" name="urlveld"><br>
+          <input type="text" name="url"><br>
         </span>
-        <span id="gene_label">
+        <span id="slice_gene_label">
           <i>Please enter the Gene symbol and organism name without spaces
           and specify the length of the flanking sequences</i>
           <br>
@@ -73,33 +73,33 @@ sequence (maximum size is {{ maxSize|e }} megabytes):
             </tr>
             <tr>
               <td>Number of 5' flanking nucleotides</td>
-              <td><input type="text" name="fiveutr" value="5000"></td>
+              <td><input type="text" name="upstream" value="5000"></td>
             </tr>
                 <tr><td>Number of 3' flanking nucleotides</td>
-              <td><input type="text" name="threeutr" value="2000"></td>
+              <td><input type="text" name="downstream" value="2000"></td>
             </tr>
             </table>
         </span>
-        <span id="range_label">
+        <span id="slice_accession_label">
           <i>Please enter the accession number of the chromosome or contig
           and specify the range</i><br>
           <table>
             <tr>
               <td>Chromosome accession number</td>
-              <td><input type="text" name="chracc"></td>
+              <td><input type="text" name="accession"></td>
             </tr>
             <tr>
               <td>Start position</td>
-              <td><input type="text" name="start"></td>
+              <td><input type="text" name="accession_start"></td>
             </tr>
             <tr>
               <td>Stop position</td>
-              <td><input type="text" name="stop"></td>
+              <td><input type="text" name="accession_stop"></td>
             </tr>
             <tr>
               <td>Orientation</td>
               <td>
-                <select name="orientation">
+                <select name="accession_orientation">
                   <option value="1">Forward</option>
                   <option value="2">Reverse</option>
                 </select>
@@ -107,36 +107,36 @@ sequence (maximum size is {{ maxSize|e }} megabytes):
             </tr>
           </table>
         </span>
-        <span id="chrname_label">
+        <span id="slice_chromosome_label">
           <i>Please enter the name of the chromosome
           and specify the range</i><br>
           <table>
             <tr>
               <td>Assembly</td>
               <td>
-                <select name="chrnameassembly">
+                <select name="assembly_name_or_alias">
                   {% for assembly in assemblies %}
-<option value="{{ assembly.name|e }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name|e }} &mdash; {{ assembly.name|e }}{% if assembly.alias %} ({{assembly.alias|e }}){% endif %}</option>
+<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{assembly.alias }}){% endif %}</option>
                   {% endfor %}
                 </select>
               </td>
             </tr>
             <tr>
               <td>Chromosome name</td>
-              <td><input type="text" name="chrname"></td>
+              <td><input type="text" name="chromosome"></td>
             </tr>
             <tr>
               <td>Start position</td>
-              <td><input type="text" name="chrnamestart"></td>
+              <td><input type="text" name="chromosome_start"></td>
             </tr>
             <tr>
               <td>Stop position</td>
-              <td><input type="text" name="chrnamestop"></td>
+              <td><input type="text" name="chromosome_stop"></td>
             </tr>
             <tr>
               <td>Orientation</td>
               <td>
-                <select name="chrnameorientation">
+                <select name="chromosome_orientation">
                   <option value="1">Forward</option>
                   <option value="2">Reverse</option>
                 </select>
@@ -144,10 +144,6 @@ sequence (maximum size is {{ maxSize|e }} megabytes):
             </tr>
           </table>
         </span>
-        <input type="hidden" name="method" value="gbupload">
-        <input type="hidden" name="client" value="human">
-        <input type="hidden" name="location" value="file">
-        <input type="hidden" name="bestandsnaam" value="">
       </td>
     </tr>
     <tr height="20px"></tr>
@@ -168,22 +164,22 @@ sequence (maximum size is {{ maxSize|e }} megabytes):
 
   <pre>
   {% for i in errors %}
-    {{ i|e }}<br>
+    {{ i }}<br>
   {% endfor %}
   </pre>
 {% endif %}
 
-{% if UD %}
+{% if ud %}
   <p>
   <b>Output:</b>
   </p>
   <p>
   Your reference sequence was loaded successfully.<br>
   You now can use mutalyzer with the following accession number as
-  reference: <b>{{ UD|e }}</b>
+  reference: <b>{{ ud }}</b>
   </p>
   <p>
-  <a href="Reference/{{ UD|urlencode }}.gb">Download this reference sequence.</a>
+  <a href="{{ url_for('.reference', filename=ud + '.gb') }}">Download this reference sequence.</a>
   </p>
 {% endif %}
 

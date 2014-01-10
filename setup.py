@@ -45,7 +45,8 @@ setup(
               'mutalyzer.db',
               'mutalyzer.entrypoints',
               'mutalyzer.parsers',
-              'mutalyzer.services'],
+              'mutalyzer.services',
+              'mutalyzer.website'],
     include_package_data=True,
     entry_points = {'console_scripts': [
         'mutalyzer = mutalyzer.entrypoints.mutalyzer:main',

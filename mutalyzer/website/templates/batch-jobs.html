@@ -1,13 +1,7 @@
 {% extends "base.html" %}
 
-{% if batchType == "NameChecker" %}
-  {% set active_page = "batch-name-checker" %}
-{% elif batchType == "SyntaxChecker" %}
-  {% set active_page = "batch-syntax-checker" %}
-{% elif batchType == "PositionConverter" %}
-  {% set active_page = "batch-position-converter" %}
-{% elif batchType == "SnpConverter" %}
-  {% set active_page = "batch-snp-converter" %}
+{% if job_type %}
+  {% set active_page = "batch-" + job_type %}
 {% else %}
   {% set active_page = "batch-jobs" %}
 {% endif %}
@@ -30,7 +24,7 @@
     and the maximum size is <span tal:content = "maxSize"></span> megabytes.
     </p>
   <h5>We accept two types of input files, you can download examples below</h5>
-  <h5>New Style <a href="downloads/batchtestnew.txt">Download Example File</a></h5>
+  <h5>New Style <a href="{{ url_for('.downloads', filename='batchtestnew.txt') }}">Download Example File</a></h5>
   <div style="padding-left:20px; width:400px">
       <p>This file format has no header-row. Each row consists of one or
         more tab delimited fields, where every field contains a single
@@ -42,7 +36,7 @@
       </table>
   </div>
   <h5>Old Style:
-      <a href="downloads/batchtestold.txt">Download Example File</a></h5>
+      <a href="{{ url_for('.downloads', filename='batchtestold.txt') }}">Download Example File</a></h5>
   <div style="padding-left:20px; width:400px">
       <p >This file format has a header-row, which consists of
       three tab delimited fields. In each following row the
@@ -67,36 +61,36 @@
 </div>
 
 <table id="inputform">
-    <form action="" method="post" enctype="multipart/form-data">
+    <form action="{{ url_for('.batch_jobs_submit') }}" method="post" enctype="multipart/form-data">
         <tr id="batchRow">
             <td><b>BatchType</b></td>
             <td>
-          <select id="batchType" name="batchType" onchange="return changeBatch(this)">
-              <option value="NameChecker">Name Checker</option>
-              <option value="SyntaxChecker">Syntax Checker</option>
-              <option value="PositionConverter">Position Converter</option>
-              <option value="SnpConverter">SNP Converter</option>
+          <select id="job_type" name="job_type" onchange="return changeBatch(this)">
+              <option value="name-checker"{% if job_type == "name-checker" %} selected="selected"{% endif %}>Name Checker</option>
+              <option value="syntax-checker"{% if job_type == "syntax-checker" %} selected="selected"{% endif %}>Syntax Checker</option>
+              <option value="position-converter"{% if job_type == "position-converter" %} selected="selected"{% endif %}>Position Converter</option>
+              <option value="snp-converter"{% if job_type == "snp-converter" %} selected="selected"{% endif %}>SNP Converter</option>
           </select>
             </td>
           </tr>
         <tr>
-        <tr id="build" style="display:none">
-            <td><b>Build</b></td>
+        <tr id="assembly_name_or_alias" style="display:none">
+            <td><b>Assembly</b></td>
             <td>
-                <select name="arg1">
+                <select name="assembly_name_or_alias">
                     {% for assembly in assemblies %}
-<option value="{{ assembly.name|e }}"{% if default_assembly in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name|e }} &mdash; {{ assembly.name|e }}{% if assembly.alias %} ({{ assembly.alias|e }}){% endif %}</option>
+<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
                     {% endfor %}
                 </select>
             </td>
         </tr>
         <tr>
             <td><b>Email</b></td>
-            <td><input type="text" name="batchEmail" value="{{ lastpost|e }}" style="width:200px"></td>
+            <td><input type="text" name="email" value="{{ email }}" style="width:200px"></td>
         </tr>
         <tr>
             <td><b>File</b></td>
-            <td><input type="file" name="batchFile" style="width:200px"></td>
+            <td><input type="file" name="file" style="width:200px"></td>
         </tr>
         <tr>
             <td colspan="2">
@@ -114,11 +108,6 @@ initpage = function() {
     oldload();
   onloadBatch();
 }
-</script>
-
-<script language="javascript">
-document.getElementById('batchType').selectedIndex = {{ selected|e }};
-document.getElementById('batchRow').style.display = '{{ hideTypes|e }}';
 window.onload = initpage;
 </script>
 
@@ -128,8 +117,8 @@ window.onload = initpage;
   </p>
   <div class="messages">
     {% for m in errors %}
-      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e
-      }})">{{ m.description|e }}</p>
+      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
+      }})">{{ m.description }}</p>
     {% endfor %}
   </div>
 {% endif %}
@@ -140,15 +129,10 @@ window.onload = initpage;
   </p>
   <div class="messages">
     {% for m in messages %}
-      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e }})">{{ m.description|e }}</p>
+      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
     {% endfor %}
-    <p>{{ summary|e }}</p>
+    <p>{{ summary }}</p>
   </div>
-  {% if resultID %}
-    <div id="percent">Your job is in progress and currently at 0%</div>
-    <input id="resultID" type="hidden" name="resultID" value="{{ resultID|e }}">
-    <input id="totalJobs" type="hidden" name="totalJobs" value="{{ totalJobs|e }}">
-  {% endif %}
 {% endif %}
 
 {% endblock content %}

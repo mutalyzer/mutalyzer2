@@ -1698,8 +1698,9 @@ def check_variant(description, output):
             assembly = Assembly.query.filter_by(alias='hg19').first()
             if assembly:
                 converter = Converter(assembly, output)
+                version = int(parsed_description.Version) if parsed_description.Version else None
                 chromosomal_positions = converter.chromosomal_positions(
-                    locations, parsed_description.RefSeqAcc, parsed_description.Version or None)
+                    locations, parsed_description.RefSeqAcc, version)
                 if chromosomal_positions:
                     output.addOutput('rawVariantsChromosomal',
                                      (chromosomal_positions[0], chromosomal_positions[1],

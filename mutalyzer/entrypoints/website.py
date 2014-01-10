@@ -36,39 +36,32 @@ also serve the static files.
 
 
 import argparse
-import os
-import pkg_resources
 
 from .. import website
 
 
-application = website.app.wsgifunc()
+application = website.create_app()
 
 
-def debugserver():
+def debugserver(port):
     """
     Run the website with the Python built-in HTTP server.
     """
-    # There's really no sane way to make web.py serve static files other than
-    # providing it with a `static` directory, so we just jump to the template
-    # directory where it can find this.
-    os.chdir(pkg_resources.resource_filename('mutalyzer', 'templates'))
-
-    website.app.run()
+    application.run(port=port, debug=True, use_reloader=False)
 
 
 def main():
     """
-    Command-line interface to the website.
+    Command-line interface to the website..
     """
     parser = argparse.ArgumentParser(
         description='Mutalyzer website.')
     parser.add_argument(
-        'port', metavar='NUMBER', type=int, nargs='?', default=8080,
-        help='port to run the website on (default: 8080)')
+        '-p', '--port', metavar='NUMBER', dest='port', type=int,
+        default=8089, help='port to run the website on (default: 8080)')
 
     args = parser.parse_args()
-    debugserver()
+    debugserver(args.port)
 
 
 if __name__ == '__main__':

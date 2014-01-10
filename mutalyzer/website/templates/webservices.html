@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% set active_page = "webservices" %}
+{% set page_title = "Web Services" %}
+
+{% block content %}
+
+<p>
+Most Mutalyzer functionality is programmatically available through two
+interfaces: a SOAP web service and a HTTP/RPC+JSON web service.
+</p>
+
+<h3>SOAP web service</h3>
+
+<p>
+A <a href="services/?wsdl">WSDL description</a> is available
+for easy generation of client programs in many languages. See the
+<a href="{{ url_for('.soap_api') }}">annotated API</a> for detailed
+documentation.
+</p>
+
+<p>
+The following are some example client programs for SOAP web service. They
+use the <a href="{{ url_for('.soap_api', _anchor='op.checkSyntax') }}">checkSyntax</a>
+method to determine if a variant description adheres to
+the <span class="helper" title="Human Genome Variation Society standard variant nomenclature">
+<a href="http://www.hgvs.org/mutnomen">HGVS</a> format</span>.
+</p>
+
+<ul>
+  <li>Python client using the suds library:
+    <a href="{{ url_for('.downloads', filename='client-suds.py') }}"><tt>client-suds.py</tt></a>
+  <li>Python client using the soappy library:
+    <a href="{{ url_for('.downloads', filename='client-soappy.py') }}"><tt>client-soappy.py</tt></a>
+  <li>Ruby client using the Savon library:
+    <a href="{{ url_for('.downloads', filename='client-savon.rb') }}"><tt>client-savon.rb</tt></a>
+  <li>Mono client in C#:
+    <a href="{{ url_for('.downloads', filename='client-mono.cs') }}"><tt>client-mono.cs</tt></a>
+  <li>PHP client using the PHP5 SOAP extension:
+    <a href="{{ url_for('.downloads', filename='client-php.php') }}"><tt>client-php.php</tt></a>
+</ul>
+
+<p>
+Here is an example that could be used for
+<a href="{{ url_for('.downloads', filename='textmining.py') }}">text
+ mining</a> on a <a href="{{ url_for('.downloads',
+ filename='textmining_sample.txt') }}">sample</a> input file.
+</p>
+
+<h3>HTTP/RPC+JSON web service</h3>
+
+<p>
+The HTTP/RPC+JSON web service is experimental and currently undocumented.
+It can be called using HTTP GET requests on
+<code>{{ json_root_url }}/method?param=value</code>
+where <code>method</code> is the name of the method to be called and method
+parameters are expected as <code>param=value</code> query string
+parameters. Responses are JSON-encoded.
+</p>
+
+<p>
+Example: <a href="{{ json_root_url }}/checkSyntax?variant=AB026906.1:c.274del"><tt>checkSyntax?variant=AB026906.1:c.274del</tt></a>
+</p>
+
+<p>
+For now, you can work from this example using the above mentioned
+<a href="{{ url_for('.soap_api') }}">annotated SOAP API</a>, since the
+HTTP/RPC+JSON web service mirrors the functionality of the SOAP web service.
+</p>
+
+{% endblock content %}

@@ -31,7 +31,7 @@ algorithm for:
 </ul>
 
 <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
-  <form action="" method="post">
+  <form action="{{ url_for('.description_extractor') }}" method="get">
     Please supply a reference sequence and an observed sequence.<br>
     <br>
     <div style="border: 1px solid grey; padding: 20px">
@@ -39,8 +39,8 @@ algorithm for:
       <br>
       Example: <tt>ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</tt><br>
       <br>
-      <input type="text" name="referenceSeq" value="{{ lastReferenceSeq|e }}" style="width:100%"><br>
-      <input type="button" value="Clear field" onclick="clearField(this.form, 'referenceSeq');">
+      <input type="text" name="reference_sequence" value="{{ reference_sequence }}" style="width:100%"><br>
+      <input type="button" value="Clear field" onclick="clearField(this.form, 'reference_sequence');">
     </div>
     <br>
     <div style="border: 1px solid grey; padding: 20px">
@@ -48,8 +48,8 @@ algorithm for:
       <br>
       Example: <tt>ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</tt><br>
       <br>
-      <input type="text" name="variantSeq" value="{{ lastVariantSeq|e }}" style="width:100%"><br>
-      <input type="button" value="Clear field" onclick="clearField(this.form, 'variantSeq');">
+      <input type="text" name="variant_sequence" value="{{ variant_sequence }}" style="width:100%"><br>
+      <input type="button" value="Clear field" onclick="clearField(this.form, 'variant_sequence');">
     </div>
     <br>
     <input type="submit" value="Submit">
@@ -57,14 +57,14 @@ algorithm for:
   </form>
 </div>
 
-{% if description is defined %}
+{% if description %}
   <h3>Variant Description Extractor results:</h3>
 
   <div class="messages">
     {% for m in messages %}
-      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e }})">{{ m.description|e }}</p>
+      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
     {% endfor %}
-    <p>{{ summary|e }}</p>
+    <p>{{ summary }}</p>
   </div>
 
   {% if not errors %}
@@ -72,7 +72,7 @@ algorithm for:
     <b>Genomic description:</b>
     </p>
     <p>
-    <tt>g.{{ description|e }}</tt>
+    <tt>g.{{ description }}</tt>
     </p>
     <p>
     <b>Overview of the raw variants:</b>
@@ -87,11 +87,15 @@ algorithm for:
         <td>Shift</td>
         <td>Description</td>
       </tr>
-      {% for i in visualisation %}
+      {% for raw_var in raw_vars %}
         <tr>
-          {% for j in i %}
-            <td>{{ j|e }}</td>
-          {% endfor %}
+          <td>{{ raw_var.start }}</td>
+          <td>{{ raw_var.end }}</td>
+          <td>{{ raw_var.type }}</td>
+          <td>{{ raw_var.deleted }}</td>
+          <td>{{ raw_var.inserted }}</td>
+          <td>{{ raw_var.shift }}</td>
+          <td>{{ raw_var.hgvs }}</td>
         </tr>
       {% endfor %}
     </table>

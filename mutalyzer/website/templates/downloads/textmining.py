@@ -3,7 +3,7 @@
 # Example SOAP client for the Mutalyzer web service in Python using the
 # SOAPpy library.
 #
-# See {path}/webservices
+# See {{ url_for('.webservices', _external=True) }}
 #
 # Usage:
 #   python client-soappy.py < textfile
@@ -14,7 +14,7 @@
 import sys
 from SOAPpy import WSDL
 
-URL = '{path}/services/?wsdl'
+URL = '{{ soap_wsdl_url }}'
 
 o = WSDL.Proxy(URL)
 

@@ -8,40 +8,40 @@
 <div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
   <p>
   Please insert the
-  <a href = "http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
+  <a href="http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
   number below. Mutalyzer will retrieve the HGVS description of the SNP
   specified on the reference sequence(s) used by dbSNP.
   </p>
   <p>
   Example: rs9919552
   </p>
-  <form action="" method="post">
-    <input type="text" name="rsId" style="width:25%"><br>
+  <form action="{{ url_for('.snp_converter') }}" method="get">
+    <input type="text" name="rs_id" value="{{ rs_id }}" style="width:25%"><br>
     <input type="submit" value="Submit">
-    <input type="button" value="Clear field" onclick="clearField(this.form, 'rsId');">
+    <input type="button" value="Clear field" onclick="clearField(this.form, 'rs_id');">
     <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SnpConverter">Help</a>
   </form>
 </div>
 
-{% if lastpost %}
+{% if rs_id %}
   <h3>SNP converter results:</h3>
 
   <div class="messages">
     {% for m in messages %}
-      <p class="{{ m.class|e }}" title="{{ m.level|e }} (origin: {{ m.origin|e
-      }})">{{ m.description|e }}</p>
+      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
+      }})">{{ m.description }}</p>
     {% endfor %}
-    <p>{{ summary|e }}</p>
+    <p>{{ summary }}</p>
   </div>
 
   <h4>dbSNP rs ID:</h4>
   <p>
-  <tt>{{ lastpost|e }}</tt>
+  <tt>{{ rs_id }}</tt>
   </p>
   <h4>HGVS descriptions:</h4>
   <p>
-  {% for i in snp %}
-    <tt>{{ i|e }}</tt><br>
+  {% for d in descriptions %}
+    <tt>{{ d }}</tt><br>
   {% endfor %}
   </p>
 {% endif %}

@@ -3,7 +3,7 @@
 # Example SOAP client for the Mutalyzer web service in Ruby using the savon
 # library.
 #
-# See {path}/webservices
+# See {{ url_for('.webservices', _external=True) }}
 #
 # Usage:
 #   ruby client-savon.rb 'NM_002001.2:c.1del'
@@ -14,7 +14,7 @@
 require 'rubygems'
 require 'savon'
 
-URL = '{path}/services/?wsdl'
+URL = '{{ soap_wsdl_url }}'
 
 HTTPI.log = false
 
@@ -33,7 +33,7 @@ client = Savon::Client.new do
 end
 
 response = client.request :check_syntax do
-  soap.body = {{ :variant => ARGV[0] }}
+  soap.body = { :variant => ARGV[0] }
 end
 
 result = response.to_hash[:check_syntax_response][:check_syntax_result]
@@ -53,7 +53,7 @@ if result[:messages]
   end
 
   result[:messages][:soap_message].each do |m|
-    puts "Message (#{{m[:errorcode]}}): #{{m[:message]}}"
+    puts "Message (#{m[:errorcode]}): #{m[:message]}"
   end
 
 end

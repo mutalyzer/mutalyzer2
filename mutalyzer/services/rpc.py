@@ -96,7 +96,6 @@ class MutalyzerService(ServiceBase):
         # Todo: Set maximum request size by specifying the max_content_length
         #     argument for spyne.server.wsgi.WsgiApplication in all webservice
         #     instantiations.
-
         max_size = settings.MAX_FILE_SIZE
 
         batch_file = tempfile.TemporaryFile()
@@ -120,7 +119,7 @@ class MutalyzerService(ServiceBase):
             raise Fault('EPARSE', 'Could not parse input file, please check your file format.')
 
         result_id = scheduler.addJob('job@webservice', job, columns,
-                                     'webservice', batch_types[process], argument)
+                                     batch_types[process], argument)
         return result_id
 
     @srpc(Mandatory.String, _returns=Integer)
@@ -159,7 +158,7 @@ class MutalyzerService(ServiceBase):
         if left > 0:
             raise Fault('EBATCHNOTREADY', 'Batch job result is not yet ready.')
 
-        filename = 'Results_%s.txt' % job_id
+        filename = 'batch-job-%s.txt' % job_id
         handle = open(os.path.join(settings.CACHE_DIR, filename))
         return handle
 

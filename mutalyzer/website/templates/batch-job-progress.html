@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% set active_page = "batch-jobs" %}
+
+{% set page_title = "Batch Job Interface" %}
+
+{% block content %}
+
+{% if result_id %}
+  <div id="if_items_left"{% if not items_left %} style="display:none"{% endif %}>
+    <p>Your job is in progress with <span id="items_left">{{ items_left }}</span> items remaining.</p>
+    <p>You will receive an email when the job is finished.</p>
+  </div>
+  <div id="ifnot_items_left"{% if items_left %} style="display:none"{% endif %}>
+    <p>Your job is finished, please download the results:
+    <a href="{{ url_for('.batch_job_result', result_id=result_id) }}">batch-job-{{ result_id }}.txt</a>
+    </p>
+  </div>
+  {% if items_left %}
+    <script type="text/javascript">
+function check_items_left() {
+  $.ajax({
+    type: 'GET',
+    cache: false,
+    url: '{{ url_for('.batch_job_progress') }}',
+    data: { json: 1, result_id: "{{ result_id }}" }
+  }).done(function(data) {
+    if (data.complete) {
+      $('#if_items_left').hide();
+      $('#ifnot_items_left').show();
+    } else {
+      $('#items_left').text(data.items_left);
+      setTimeout(function() {
+        check_items_left();
+      }, 3000);
+    }
+  });
+}
+check_items_left();
+    </script>
+  {% endif %}
+{% else %}
+  <p>Unknow batch job.</p>
+{% endif %}
+
+{% endblock content %}

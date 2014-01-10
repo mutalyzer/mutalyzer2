@@ -374,9 +374,7 @@ Mutalyzer batch scheduler""" % url)
                 else:
                     print ('Job %s finished, email %s file %s'
                            % (batch_job.id, batch_job.email, batch_job.id))
-                    self.__sendMail(
-                        batch_job.email, '%sResults_%s.txt'
-                        % (batch_job.download_url_prefix, batch_job.result_id))
+                    self.__sendMail(batch_job.email, batch_job.download_url)
                     session.delete(batch_job)
                     session.commit()
     #process
@@ -430,7 +428,7 @@ Mutalyzer batch scheduler""" % url)
             outputline += batchOutput[0]
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
+        filename = "%s/batch-job-%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -505,7 +503,7 @@ Mutalyzer batch scheduler""" % url)
             result = "|".join(output.getBatchMessages(2))
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
+        filename = "%s/batch-job-%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -608,7 +606,7 @@ Mutalyzer batch scheduler""" % url)
         error = "%s" % "|".join(O.getBatchMessages(2))
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
+        filename = "%s/batch-job-%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -671,7 +669,7 @@ Mutalyzer batch scheduler""" % url)
         outputline += "%s\t" % "|".join(O.getBatchMessages(2))
 
         #Output
-        filename = "%s/Results_%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
+        filename = "%s/batch-job-%s.txt" % (settings.CACHE_DIR, batch_job.result_id)
         if not os.path.exists(filename) :
             # If the file does not yet exist, create it with the correct
             # header above it. The header is read from the config file as
@@ -696,30 +694,33 @@ Mutalyzer batch scheduler""" % url)
                      "Finished SNP converter batch rs%s" % cmd)
     #_processSNP
 
-
-    def addJob(self, eMail, queue, columns, fromHost, jobType,
-               Arg1):
+    def addJob(self, email, queue, columns, job_type, argument=None,
+               create_download_url=None):
         """
         Add a job to the Database and start the BatchChecker.
 
-        @arg eMail:         e-mail address of batch supplier
-        @type eMail:        string
+        @arg email:         e-mail address of batch supplier
+        @type email:        string
         @arg queue:         A list of jobs
         @type queue:        list
         @arg columns:       The number of columns.
         @type columns:      int
-        @arg fromHost:      From where is the request made
-        @type fromHost:
-        @arg jobType:       The type of Batch Job that should be run
-        @type jobType:
-        @arg Arg1:          Batch Arguments, for now only build info
-        @type Arg1:
+        @arg job_type:       The type of Batch Job that should be run
+        @type job_type:
+        @arg argument:          Batch Arguments, for now only build info
+        @type argument:
+        @arg create_download_url: Function accepting a result_id and returning
+                                  the URL for downloading the batch job
+                                  result. Can be None.
+        @type create_download_url: function
 
-        @return: resultID
+        @return: result_id
         @rtype:
         """
         # Add jobs to the database
-        batch_job = BatchJob(jobType, email=eMail, download_url_prefix=fromHost, argument=Arg1)
+        batch_job = BatchJob(job_type, email=email, argument=argument)
+        if create_download_url:
+            batch_job.download_url = create_download_url(batch_job.result_id)
         session.add(batch_job)
 
         for i, inputl in enumerate(queue):
@@ -746,16 +747,7 @@ Mutalyzer batch scheduler""" % url)
             item = BatchQueueItem(batch_job, inputl, flags=flag)
             session.add(item)
 
-        # Spawn child
-        # Todo: Executable should be in bin/ directory.
-        #p = subprocess.Popen(["MutalyzerBatch",
-        #    "bin/batch_daemon"], executable="python")
-
-        #Wait for the BatchChecker to fork of the Daemon
-        #p.communicate()
-
         session.commit()
-
         return batch_job.result_id
     #addJob
 #Scheduler

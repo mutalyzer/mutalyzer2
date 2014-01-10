@@ -449,7 +449,7 @@ function update(){
     var vari = hgvs[1];
 
     var encVar = encodeURIComponent(vari);
-    var url = "check?name="+ref+encVar;
+    var url = "name-checker?description="+ref+encVar;
     var link = ref+vari;
     var Output = "<a href=\""+url+"\">"+link+"</a>";
 

@@ -1,2 +1,2 @@
 include AUTHORS README.md
-recursive-include mutalyzer/templates *
+recursive-include mutalyzer/website/templates *

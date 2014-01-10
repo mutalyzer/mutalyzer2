@@ -18,43 +18,43 @@ for the checks:
 </p>
 <ul>
   <li>
-    The <a href = "check">Name Checker</a> takes the complete sequence
+    The <a href="{{ url_for('.name_checker') }}">Name Checker</a> takes the complete sequence
     variant description as input and checks whether it is correct.
   </li>
   <li>
-    The <a href = "syntaxCheck">Syntax Checker</a> takes the complete
+    The <a href="{{ url_for('.syntax_checker') }}">Syntax Checker</a> takes the complete
     sequence variant description as input and checks whether the syntax
     is correct.
   </li>
   <li>
-    The <a href = "positionConverter">Position Converter</a> can convert
+    The <a href="{{ url_for('.position_converter') }}">Position Converter</a> can convert
     chromosomal positions to transcript orientated positions and vice
     versa.
   </li>
   <li>
-    The <a href = "snp">SNP converter</a> allows you to convert a
+    The <a href="{{ url_for('.snp_converter') }}">SNP converter</a> allows you to convert a
     dbSNP rsId to HGVS notation.
   </li>
   <li>
-    The <a href = "nameGenerator">Name Generator</a> is a user friendly
+    The <a href="{{ url_for('.name_generator') }}">Name Generator</a> is a user friendly
     interface that helps to make a valid HGVS variant description.
   </li>
   <li>
-    The <a href = "descriptionExtract">Description Extractor</a> allows
+    The <a href="{{ url_for('.description_extractor') }}">Description Extractor</a> allows
     you to generate the HGVS variant description from a reference
     sequence and an observed sequence.
   </li>
   <li>
-    The <a href = "upload">Reference File Loader</a> allows you to load and
+    The <a href="{{ url_for('.reference_loader') }}">Reference File Loader</a> allows you to load and
     use your own reference sequence.
   </li>
   <li>
-    The <a href="batch">Batch Checkers</a> are interfaces that accept a
+    The <a href="{{ url_for('.batch_jobs') }}">Batch Checkers</a> are interfaces that accept a
     list of inputs. These interfaces can be used for large quantities of
     checks.
   </li>
   <li>
-    The <a href = "webservices">Web services</a> page provides instructions
+    The <a href="{{ url_for('.webservices') }}">Web services</a> page provides instructions
     for the web services.
   </li>
 </ul>

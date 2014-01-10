@@ -9,6 +9,7 @@ This program is intended to be run daily from cron. Example:
 
 # Todo: Merge this script with mapping_import, the difference between the two
 #   makes no sense.
+# Todo: Check if the input file is sorted as required and abort if not.
 
 
 import argparse
