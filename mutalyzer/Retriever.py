@@ -63,13 +63,7 @@ class Retriever(object) :
         - uploadrecord(raw_data) ; Let someone upload a GenBank file.
         - loadrecord(identifier) ; Load a record, store it in the cache, manage
         the cache and return the record.
-
-    Inherited methods from Db.Output:
-        - WarningMsg(filename, message) ; Print a warning message.
-        - ErrorMsg(filename, message)   ; Print an error message and log it.
-        - LogMsg(filename, message)     ; Log a message.
     """
-
     def __init__(self, output) :
         """
         Use variables from the configuration file for some simple

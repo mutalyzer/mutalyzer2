@@ -30,7 +30,6 @@ from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
 from mutalyzer import stats
 from mutalyzer import variantchecker
-from mutalyzer import Db
 from mutalyzer.mapping import Converter
 from mutalyzer import File
 from mutalyzer import Retriever

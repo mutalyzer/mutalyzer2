@@ -42,7 +42,6 @@ from mutalyzer.services import soap
 from mutalyzer import variantchecker
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
-from mutalyzer import Db
 from mutalyzer import Scheduler
 from mutalyzer import Retriever
 from mutalyzer import File

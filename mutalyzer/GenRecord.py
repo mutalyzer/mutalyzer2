@@ -6,7 +6,6 @@ search for them each time.
 
 @requires: Crossmap
 @requires: Bio
-@requires: Db
 """
 # Public classes:
 #     - PList     ; Store a general location and a list of splice sites.
@@ -20,7 +19,6 @@ import Bio
 
 from mutalyzer import util
 from mutalyzer import Crossmap
-from mutalyzer import Db
 
 
 SPLICE_ALARM = 2

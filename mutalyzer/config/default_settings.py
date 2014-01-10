@@ -33,15 +33,6 @@ REDIS_URI = None
 # Database connection URI (can be any SQLAlchemy connection URI).
 DATABASE_URI = 'sqlite://'
 
-# Host name for local MySQL databases.
-MYSQL_HOST = 'localhost'
-
-# User for local MySQL databases.
-MYSQL_USER = 'mutalyzer'
-
-# Local MySQL database name.
-MYSQL_DATABASE = 'mutalyzer'
-
 # Default genome assembly (by name or alias).
 DEFAULT_ASSEMBLY = 'hg19'
 

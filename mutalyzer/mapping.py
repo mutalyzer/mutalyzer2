@@ -18,7 +18,6 @@ import MySQLdb
 
 from mutalyzer.db.models import Chromosome, TranscriptMapping
 from mutalyzer.grammar import Grammar
-from mutalyzer import Db
 from mutalyzer import Crossmap
 from mutalyzer import Retriever
 from mutalyzer.models import SoapMessage, Mapping, Transcript

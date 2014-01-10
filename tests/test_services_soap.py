@@ -15,7 +15,6 @@ from spyne.model.fault import Fault
 from suds.client import Client
 
 import mutalyzer
-from mutalyzer import Db
 from mutalyzer.output import Output
 from mutalyzer.services.soap import application
 from mutalyzer.sync import CacheSync
