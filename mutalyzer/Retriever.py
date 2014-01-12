@@ -681,6 +681,8 @@ class GenBankRetriever(Retriever):
                 raw_data = handle.read()
                 md5sum = self._calcHash(raw_data)
 
+                UD = None
+
                 try:
                     reference = Reference.query.filter_by(checksum=md5sum).one()
                 except NoResultFound:
