@@ -78,8 +78,10 @@ class MutalyzerService(ServiceBase):
         scheduler = Scheduler.Scheduler()
         file_instance = File.File(output)
 
-        batch_types = ['NameChecker', 'SyntaxChecker', 'PositionConverter',
-                       'SnpConverter']
+        batch_types = {'NameChecker': 'name-checker',
+                       'SyntaxChecker': 'syntax-checker',
+                       'PositionConverter': 'position-converter',
+                       'SnpConverter': 'snp-converter'}
 
         if process not in batch_types:
             raise Fault('EARG',
@@ -118,7 +120,7 @@ class MutalyzerService(ServiceBase):
             raise Fault('EPARSE', 'Could not parse input file, please check your file format.')
 
         result_id = scheduler.addJob('job@webservice', job, columns,
-                                     'webservice', process, argument)
+                                     'webservice', batch_types[process], argument)
         return result_id
 
     @srpc(Mandatory.String, _returns=Integer)

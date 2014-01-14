@@ -15,8 +15,10 @@ from sqlalchemy.orm import backref, relationship
 from mutalyzer import db
 
 
-BATCH_JOB_TYPES = ('NameChecker', 'SyntaxChecker', 'PositionConverter',
-                   'SnpConverter')
+BATCH_JOB_TYPES = ('name-checker',
+                   'syntax-checker',
+                   'position-converter',
+                   'snp-converter')
 
 
 @event.listens_for(Engine, 'connect')

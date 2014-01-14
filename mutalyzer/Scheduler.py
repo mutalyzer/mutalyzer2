@@ -358,13 +358,13 @@ Mutalyzer batch scheduler""" % url)
                 if batch_queue_item is not None:
                     item, flags = batch_queue_item
 
-                    if batch_job.job_type == 'NameChecker':
+                    if batch_job.job_type == 'name-checker':
                         self._processNameBatch(batch_job, item, flags)
-                    elif batch_job.job_type == 'SyntaxChecker':
+                    elif batch_job.job_type == 'syntax-checker':
                         self._processSyntaxCheck(batch_job, item, flags)
-                    elif batch_job.job_type == 'PositionConverter':
+                    elif batch_job.job_type == 'position-converter':
                         self._processConversion(batch_job, item, flags)
-                    elif batch_job.job_type == 'SnpConverter':
+                    elif batch_job.job_type == 'snp-converter':
                         self._processSNP(batch_job, item, flags)
                     else:
                         # Unknown job type, should never happen.
