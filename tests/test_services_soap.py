@@ -3,24 +3,30 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
+import bz2
 import datetime
 import logging
 import os
 import tempfile
-import time
 
+from Bio import Entrez
+from mock import patch
 from nose.tools import *
 from spyne.server.null import NullServer
 from spyne.model.fault import Fault
 from suds.client import Client
 
 import mutalyzer
+from mutalyzer.config import settings
 from mutalyzer.output import Output
 from mutalyzer.services.soap import application
 from mutalyzer.sync import CacheSync
-from mutalyzer.util import skip, slow
+from mutalyzer import Scheduler
 
-import utils
+from fixtures import database, cache, hg19, hg19_transcript_mappings
+from utils import MutalyzerTest
+from utils import fix
+
 
 # Suds logs an awful lot of things with level=DEBUG, including entire WSDL
 # files and SOAP responses. On any error, this is all dumped to the console,
@@ -44,15 +50,12 @@ def _write_wsdl(server):
     return wsdl_filename
 
 
-class TestServicesSoap():
+class TestServicesSoap(MutalyzerTest):
     """
     Test the Mutalyzer SOAP interface.
     """
     def setup(self):
-        """
-        Initialize test server.
-        """
-        utils.create_test_environment(database=True)
+        super(TestServicesSoap, self).setup()
         self.server = NullServer(application, ostr=True)
         # Unfortunately there's no easy way to just give a SUDS client a
         # complete WSDL string, it only accepts a URL to it. So we create one.
@@ -60,10 +63,7 @@ class TestServicesSoap():
         self.client = Client('file://%s' % self.wsdl, cache=None)
 
     def teardown(self):
-        """
-        Remove temporary file used for WSDL.
-        """
-        utils.destroy_environment()
+        super(TestServicesSoap, self).teardown()
         os.unlink(self.wsdl)
 
     def _call(self, method, *args, **kwargs):
@@ -106,6 +106,7 @@ class TestServicesSoap():
         # See https://github.com/arskom/spyne/issues/318
         self._call('checkSyntax')
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_transcriptinfo_valid(self):
         """
         Running transcriptInfo with valid arguments should get us a Transcript
@@ -117,6 +118,7 @@ class TestServicesSoap():
         assert_equal(r.trans_stop, 1066)
         assert_equal(r.CDS_stop, 774)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_gtoc_valid(self):
         """
         Running numberConversion with valid g variant should give a list of
@@ -127,6 +129,7 @@ class TestServicesSoap():
         assert_equal(type(r.string), list)
         assert 'NM_002001.2:c.1del' in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_ctog_valid(self):
         """
         Running numberConversion with valid c variant should give a list of
@@ -137,22 +140,20 @@ class TestServicesSoap():
         assert_equal(type(r.string), list)
         assert 'NC_000001.10:g.159272155del' in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_gtoc_gene(self):
         """
         Running numberConversion with valid g variant and a gene name should
         give a list of c variant names on transcripts for the given gene.
         """
         r = self._call('numberConversion',
-                       build='hg19', variant='NC_000011.9:g.111959693G>T', gene='C11orf57')
+                       build='hg19', variant='NC_000023.10:g.32827640G>A', gene='DMD')
         assert_equal(type(r.string), list)
-        # Fix for r536: disable the -u and +d convention.
-        #assert 'NM_001082969.1:c.*2178+d3819G>T' in r.string
-        #assert 'NM_001082970.1:c.*2178+d3819G>T' in r.string
-        #assert 'NM_018195.3:c.*2178+d3819G>T' in r.string
-        assert 'NM_001082969.1:c.*5997G>T' in r.string
-        assert 'NM_001082970.1:c.*5997G>T' in r.string
-        assert 'NM_018195.3:c.*5997G>T' in r.string
+        assert 'NM_004007.2:c.250C>T' in r.string
+        assert 'NM_004011.3:c.-397314C>T' in r.string
+        assert 'NM_004019.2:c.-1542694C>T' in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_gtoc_no_transcripts(self):
         """
         Running numberConversion with valid g variant but no transcripts
@@ -162,6 +163,7 @@ class TestServicesSoap():
                        build='hg19', variant='chr7:g.345T>C')
         assert_false(r)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_gtoc_required_gene(self):
         """
         Running numberConversion with valid g variant but no transcripts
@@ -175,6 +177,7 @@ class TestServicesSoap():
         #assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
         assert 'XM_001715131.2:c.*19483A>G' in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_gettranscriptsbygenename_valid(self):
         """
         Running getTranscriptsByGeneName with valid gene name should give a
@@ -183,15 +186,12 @@ class TestServicesSoap():
         r = self._call('getTranscriptsByGeneName',
                        build='hg19', name='DMD')
         assert_equal(type(r.string), list)
-        for t in ['NM_004006.2',
-                  'NM_000109.3',
-                  'NM_004021.2',
-                  'NM_004009.3',
-                  'NM_004007.2',
-                  'NM_004018.2',
-                  'NM_004022.2']:
+        for t in ['NM_004011.3',
+                  'NM_004019.2',
+                  'NM_004007.2']:
             assert t in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_gettranscriptsbygenename_invalid(self):
         """
         Running getTranscriptsByGeneName with invalid gene name should not
@@ -201,6 +201,7 @@ class TestServicesSoap():
                        build='hg19', name='BOGUSGENE')
         assert_false(r)
 
+    @fix(database, cache('AF230870.1'))
     def test_gettranscriptsandinfo_valid(self):
         """
         Running getTranscriptsAndInfo with a valid genomic reference should
@@ -213,7 +214,7 @@ class TestServicesSoap():
                   'mtmB2_v001']:
             assert t in names
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database, cache('AL449423.14'))
     def test_gettranscriptsandinfo_restricted_valid(self):
         """
         Running getTranscriptsAndInfo with a valid genomic reference and a
@@ -232,21 +233,22 @@ class TestServicesSoap():
                   'C9orf53_v001']:
             assert_false(t in names)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_gettranscriptsmapping(self):
         """
         Running getTranscriptsMapping should give a list of
         TranscriptMappingInfo objects.
         """
         r = self._call('getTranscriptsMapping',
-                       'hg19', 'chr16', 70680470, 70807150, 1)
+                       'hg19', 'chrX', 31200000, 31210000, 1)
         assert_equal(type(r.TranscriptMappingInfo), list)
         names = [t.name for t in r.TranscriptMappingInfo]
-        for t in ('NM_152456',
-                  'NM_138383',
-                  'NM_018052',
-                  'NR_034083'):
+        for t in ('NM_004011',
+                  'NM_004019',
+                  'NM_004007'):
             assert t in names
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo(self):
         """
         Running mappingInfo should give a Mapping object.
@@ -261,61 +263,68 @@ class TestServicesSoap():
         assert_equal(r.startmain, 1388)
         assert_equal(r.endmain, 1388)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo(self):
         """
         Running mappingInfo should give a Mapping object.
         """
         r = self._call('mappingInfo',
-                       '3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.112039014G>T')
+                       '3.0-beta-06', 'hg19', 'NM_002001.2', 'g.159272168G>T')
         assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 112039014)
+        assert_equal(r.start_g, 159272168)
         assert_equal(r.startoffset, 0)
         assert_equal(r.mutationType, 'subst')
-        assert_equal(r.end_g, 112039014)
-        assert_equal(r.startmain, 175)
-        assert_equal(r.endmain, 175)
+        assert_equal(r.end_g, 159272168)
+        assert_equal(r.startmain, 14)
+        assert_equal(r.endmain, 14)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo_compound(self):
         """
-        Running mappingInfo with compound variant should give a Mapping object.
+        Running mappingInfo with compound variant should give a Mapping
+        object.
         """
         r = self._call('mappingInfo',
-                       '3.0-beta-06', 'hg19', 'NM_001008541.1', 'g.[112039014G>T;112039018T>A]')
+                       '3.0-beta-06', 'hg19', 'NM_002001.2', 'g.[159272168G>T;159272174T>A]')
         assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 112039014)
+        assert_equal(r.start_g, 159272168)
         assert_equal(r.startoffset, 0)
         assert_equal(r.mutationType, 'compound')
-        assert_equal(r.end_g, 112039018)
-        assert_equal(r.startmain, 175)
-        assert_equal(r.endmain, 179)
+        assert_equal(r.end_g, 159272174)
+        assert_equal(r.startmain, 14)
+        assert_equal(r.endmain, 20)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo_reverse(self):
         """
-        Running mappingInfo on a reverse transcript should give a Mapping object.
+        Running mappingInfo on a reverse transcript should give a Mapping
+        object.
         """
         r = self._call('mappingInfo',
-                       '3.0-beta-06', 'hg19', 'NM_000035.3', 'g.104184170_104184179del')
+                       '3.0-beta-06', 'hg19', 'NM_004011.3', 'g.31152229_31152239del')
         assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 104184170)
+        assert_equal(r.start_g, 31152229)
         assert_equal(r.startoffset, 0)
         assert_equal(r.mutationType, 'del')
-        assert_equal(r.end_g, 104184179)
-        assert_equal(r.startmain, 1016)
-        assert_equal(r.endmain, 1007)
+        assert_equal(r.end_g, 31152239)
+        assert_equal(r.startmain, 6981)
+        assert_equal(r.endmain, 6971)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo_compound_reverse(self):
         """
-        Running mappingInfo with compound variant on a reverse transcript should give a Mapping object.
+        Running mappingInfo with compound variant on a reverse transcript
+        should give a Mapping object.
         """
         r = self._call('mappingInfo',
-                       '3.0-beta-06', 'hg19', 'NM_000035.3', 'g.[104184170_104184179del;104184182_104184183del]')
+                       '3.0-beta-06', 'hg19', 'NM_004011.3', 'g.[31152229_31152232del;31152235_31152239del]')
         assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 104184170)
+        assert_equal(r.start_g, 31152229)
         assert_equal(r.startoffset, 0)
         assert_equal(r.mutationType, 'compound')
-        assert_equal(r.end_g, 104184183)
-        assert_equal(r.startmain, 1016)
-        assert_equal(r.endmain, 1003)
+        assert_equal(r.end_g, 31152239)
+        assert_equal(r.startmain, 6981)
+        assert_equal(r.endmain, 6971)
 
     def test_info(self):
         """
@@ -325,6 +334,7 @@ class TestServicesSoap():
         assert_equal(type(r.versionParts.string), list)
         assert_equal(r.version, mutalyzer.__version__)
 
+    @fix(database, cache('AB026906.1', 'AL449423.14', 'NM_003002.2'))
     def test_getcache(self):
         """
         Running the getCache method should give us the expected number of
@@ -334,23 +344,31 @@ class TestServicesSoap():
 
         output = Output(__file__)
         sync = CacheSync(output)
-        cache = sync.local_cache(created_since)
 
         r = self._call('getCache', created_since)
-        if len(cache) > 0:
-            assert_equal(len(r.CacheEntry), len(cache))
+        assert_equal(len(r.CacheEntry), 3)
 
     def test_getdbsnpdescriptions(self):
         """
         Running getdbSNPDescriptions method should give us the expected HGVS
         descriptions for the given dbSNP id.
         """
-        r = self._call('getdbSNPDescriptions', 'rs9919552')
+        # Patch Retriever.snpConvert to return rs9919552.
+        def mock_efetch(*args, **kwargs):
+            path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'data',
+                                'rs9919552.xml.bz2')
+            return bz2.BZ2File(path)
+
+        with patch.object(Entrez, 'efetch', mock_efetch):
+            r = self._call('getdbSNPDescriptions', 'rs9919552')
+
         assert 'NC_000011.9:g.111959625C>T' in r.string
         assert 'NG_012337.2:g.7055C>T' in r.string
         assert 'NM_003002.3:c.204C>T' in r.string
         assert 'NP_002993.1:p.Ser68=' in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_gettranscripts(self):
         """
         Running getTranscripts should give a list of transcripts.
@@ -358,15 +376,11 @@ class TestServicesSoap():
         r = self._call('getTranscripts',
                        build='hg19', chrom='chrX', pos=32237295)
         assert_equal(type(r.string), list)
-        for t in ['NM_000109',
-                  'NM_004006',
-                  'NM_004007',
-                  'NM_004009',
-                  'NM_004010',
-                  'NM_004011',
-                  'NM_004012']:
+        for t in ['NM_004011',
+                  'NM_004007']:
             assert t in r.string
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_gettranscripts_with_versions(self):
         """
         Running getTranscripts with versions=True should give a list
@@ -375,15 +389,11 @@ class TestServicesSoap():
         r = self._call('getTranscripts',
                        build='hg19', chrom='chrX', pos=32237295, versions=True)
         assert_equal(type(r.string), list)
-        for t in ['NM_000109.3',
-                  'NM_004006.2',
-                  'NM_004007.2',
-                  'NM_004009.3',
-                  'NM_004010.3',
-                  'NM_004011.3',
-                  'NM_004012.3']:
+        for t in ['NM_004011.3',
+                  'NM_004007.2']:
             assert t in r.string
 
+    @fix(database, cache('NM_003002.2'))
     def test_runmutalyzer(self):
         """
         Just a runMutalyzer test.
@@ -393,19 +403,33 @@ class TestServicesSoap():
         assert_equal(r.genomicDescription, 'NM_003002.2:n.335G>T')
         assert 'NM_003002.2(SDHD_v001):c.274G>T' in r.transcriptDescriptions.string
 
+    @fix(database)
     def test_runmutalyzer_reference_info_nm(self):
         """
         Get reference info for an NM variant without version.
         """
-        r = self._call('runMutalyzer', 'NM_003002:c.274G>T')
+        # Patch GenBankRetriever.fetch to return the contents of NM_003002.2
+        # for NM_003002.
+        def mock_efetch(*args, **kwargs):
+            if kwargs.get('id') != 'NM_003002':
+                return Entrez.efetch(*args, **kwargs)
+            path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'data',
+                                'NM_003002.2.gb.bz2')
+            return bz2.BZ2File(path)
+
+        with patch.object(Entrez, 'efetch', mock_efetch):
+            r = self._call('runMutalyzer', 'NM_003002:c.274G>T')
+
         assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NM_003002.3')
-        assert_equal(r.sourceId, 'NM_003002.3')
+        assert_equal(r.referenceId, 'NM_003002.2')
+        assert_equal(r.sourceId, 'NM_003002.2')
         assert_equal(r.sourceAccession, 'NM_003002')
-        assert_equal(r.sourceVersion, '3')
-        assert_equal(r.sourceGi, '452405284')
+        assert_equal(r.sourceVersion, '2')
+        assert_equal(r.sourceGi, '222352156')
         assert_equal(r.molecule, 'n')
 
+    @fix(database, cache('NM_003002.2'))
     def test_runmutalyzer_reference_info_nm_version(self):
         """
         Get reference info for an NM variant with version.
@@ -419,23 +443,7 @@ class TestServicesSoap():
         assert_equal(r.sourceGi, '222352156')
         assert_equal(r.molecule, 'n')
 
-    def test_runmutalyzer_reference_info_ud(self):
-        """
-        Get reference info for a UD variant after creating it.
-
-            UD_129433404385: NC_000023.10 31135344 33362726 2 NULL 2011-10-04 13:15:04
-        """
-        ud = str(self._call('sliceChromosome',
-                            'NC_000023.10', 31135344, 33362726, 2))
-        r = self._call('runMutalyzer', ud + ':g.1del')
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, ud)
-        assert_equal(r.sourceId, 'NC_000023.10')
-        assert_equal(r.sourceAccession, 'NC_000023')
-        assert_equal(r.sourceVersion, '10')
-        assert_equal(r.sourceGi, '224589822')
-        assert_equal(r.molecule, 'g')
-
+    @fix(database, cache('LRG_1'))
     def test_runmutalyzer_reference_info_lrg(self):
         """
         Get reference info for an LRG variant.
@@ -446,37 +454,51 @@ class TestServicesSoap():
         assert_equal(r.sourceId, 'LRG_1')
         assert_equal(r.molecule, 'g')
 
+    @fix(database, cache('NG_012772.1'))
     def test_runmutalyzer_reference_info_ng(self):
         """
         Get reference info for an NG variant without version.
         """
-        r = self._call('runMutalyzer', 'NG_012772:g.18964del')
+        # Patch GenBankRetriever.fetch to return the contents of NG_012772.1
+        # for NG_012772.
+        def mock_efetch(*args, **kwargs):
+            if kwargs.get('id') != 'NG_012772':
+                return Entrez.efetch(*args, **kwargs)
+            path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'data',
+                                'NG_012772.1.gb.bz2')
+            return bz2.BZ2File(path)
+
+        with patch.object(Entrez, 'efetch', mock_efetch):
+            r = self._call('runMutalyzer', 'NG_012772:g.18964del')
+
         assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_012772.3')
-        assert_equal(r.sourceId, 'NG_012772.3')
+        assert_equal(r.referenceId, 'NG_012772.1')
+        assert_equal(r.sourceId, 'NG_012772.1')
         assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '3')
-        assert_equal(r.sourceGi, '388428999')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '256574794')
         assert_equal(r.molecule, 'g')
 
+    @fix(database, cache('NG_009105.1'))
     def test_runmutalyzer_reference_info_ng_version(self):
         """
         Get reference info for an NG variant with version.
         """
-        r = self._call('runMutalyzer', 'NG_012772.3:g.18964del')
+        r = self._call('runMutalyzer', 'NG_009105.1:g.18964del')
         assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_012772.3')
-        assert_equal(r.sourceId, 'NG_012772.3')
-        assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '3')
-        assert_equal(r.sourceGi, '388428999')
+        assert_equal(r.referenceId, 'NG_009105.1')
+        assert_equal(r.sourceId, 'NG_009105.1')
+        assert_equal(r.sourceAccession, 'NG_009105')
+        assert_equal(r.sourceVersion, '1')
+        assert_equal(r.sourceGi, '216548283')
         assert_equal(r.molecule, 'g')
 
+    @fix(database, cache('NG_012772.1'))
     def test_runmutalyzer_reference_info_gi(self):
         """
         Get reference info for a GI variant.
         """
-        self._call('runMutalyzer', 'NG_012772.1:g.1del') # Make sure the server has this reference cached
         r = self._call('runMutalyzer', 'gi256574794:g.18964del')
         assert_equal(r.errors, 0)
         assert_equal(r.referenceId, 'NG_012772.1')
@@ -486,85 +508,121 @@ class TestServicesSoap():
         assert_equal(r.sourceGi, '256574794')
         assert_equal(r.molecule, 'g')
 
+    @fix(database, cache('NM_000143.3'))
     def test_runmutalyzer_exons(self):
         """
         Exon table in runMutalyzer output.
         """
-        r = self._call('runMutalyzer', 'NM_004959.4:c.630_636del')
+        r = self._call('runMutalyzer', 'NM_000143.3:c.630_636del')
         assert_equal(r.errors, 0)
-        expected_exons = [(1, 172, '-187', '-16'),
-                          (173, 289, '-15', '102'),
-                          (290, 431, '103', '244'),
-                          (432, 1057, '245', '870'),
-                          (1058, 1177, '871', '990'),
-                          (1178, 1325, '991', '1138'),
-                          (1326, 3095, '1139', '*1522')]
+        expected_exons = [(1, 195, '-63', '132'),
+                          (196, 330, '133', '267'),
+                          (331, 441, '268', '378'),
+                          (442, 618, '379', '555'),
+                          (619, 801, '556', '738'),
+                          (802, 967, '739', '904'),
+                          (968, 1171, '905', '1108'),
+                          (1172, 1299, '1109', '1236'),
+                          (1300, 1453, '1237', '1390'),
+                          (1454, 1867, '1391', '*271')]
         assert_equal(len(r.exons.ExonInfo), len(expected_exons))
         for exon, expected_exon in zip(r.exons.ExonInfo, expected_exons):
             assert_equal((exon.gStart, exon.gStop, exon.cStart, exon.cStop),
                          expected_exon)
 
-    def test_gettranscriptsandinfo_slice(self):
-        """
-        Running getTranscriptsAndInfo on a chromosomal slice should include
-        chromosomal positions.
-
-        slice: 48284003 - 48259456 (COL1A1 with 5001 and 2001 borders)
-        translation start: 48284003 - 5001 + 1 = 48279003
-        translation end: 48259456 + 2001 = 48261457
-        """
-        ud = str(self._call('sliceChromosomeByGene',
-                            'COL1A1', 'human', 5000, 2000))
-        r = self._call('getTranscriptsAndInfo', ud)
-        assert_equal(type(r.TranscriptInfo), list)
-        names = [t.name for t in r.TranscriptInfo]
-        assert 'COL1A1_v001' in names
-        for t in r.TranscriptInfo:
-            if t.name != 'COL1A1_v001':
-                continue
-            assert_equal(t.cTransStart, '-129')
-            assert_equal(t.gTransStart, 5001)
-            assert_equal(t.chromTransStart, 48279003)
-            assert_equal(t.cTransEnd, '*1406')
-            assert_equal(t.gTransEnd, 22547)
-            assert_equal(t.chromTransEnd, 48261457)
-            assert_equal(t.sortableTransEnd, 4883)
-            assert_equal(t.cCDSStart, '1')
-            assert_equal(t.gCDSStart, 5130)
-            assert_equal(t.chromCDSStart, 48278874)
-            assert_equal(t.cCDSStop, '3477')
-            assert_equal(t.gCDSStop, 21141)
-            assert_equal(t.chromCDSStop, 48262863)
-
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
-    @slow
+    @fix(database, cache('AB026906.1', 'NM_003002.2', 'AL449423.14'))
     def test_batchjob(self):
         """
         Submit a batch job.
         """
         variants = ['AB026906.1(SDHD):g.7872G>T',
-                    'NM_003002.1:c.3_4insG',
+                    'NM_003002.2:c.3_4insG',
                     'AL449423.14(CDKN2A_v002):c.5_400del']
-        data = '\n'.join(variants).encode('base64')
+        data = '\n'.join(variants) + '\n' #.encode('base64')
 
         result = self._call('submitBatchJob', data, 'NameChecker')
-        job_id = int(result)
+        job_id = str(result)
 
-        for _ in range(50):
-            try:
-                result = self._call('getBatchJob', job_id)
-                break
-            except Fault:
-                result = self._call('monitorBatchJob', job_id)
-                assert int(result) <= len(variants)
-                time.sleep(1)
-        else:
-            assert False
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == len(variants)
 
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == 0
+
+        result = self._call('getBatchJob', job_id)
         assert_equal(len(result.decode('base64').strip().split('\n')) - 1,
                      len(variants))
 
-    @slow
+    @fix(database)
+    def test_batchjob_newlines_unix(self):
+        """
+        Submit a batch job with UNIX newlines.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.2:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        data = '\n'.join(variants) + '\n'
+
+        result = self._call('submitBatchJob', data, 'SyntaxChecker')
+        job_id = str(result)
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == len(variants)
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == 0
+
+    @fix(database)
+    def test_batchjob_newlines_mac(self):
+        """
+        Submit a batch job with Mac newlines.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.2:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        data = '\r'.join(variants) + '\r'
+
+        result = self._call('submitBatchJob', data, 'SyntaxChecker')
+        job_id = str(result)
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == len(variants)
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == 0
+
+    @fix(database)
+    def test_batchjob_newlines_windows(self):
+        """
+        Submit a batch job with Windows newlines.
+        """
+        variants = ['AB026906.1(SDHD):g.7872G>T',
+                    'NM_003002.2:c.3_4insG',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        data = '\r\n'.join(variants) + '\r\n'
+
+        result = self._call('submitBatchJob', data, 'SyntaxChecker')
+        job_id = str(result)
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == len(variants)
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == 0
+
+    @fix(database)
     def test_batchjob_toobig(self):
         """
         Submit the batch name checker with a too big input file.
@@ -579,8 +637,8 @@ feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui
 blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla
 facilisi."""
         data = seed
-        # Very crude way of creating something at least 6MB in size
-        while len(data) < 6000000:
+        # Very crude way of creating something big.
+        while len(data) <= settings.MAX_FILE_SIZE:
             data += data
 
         try:

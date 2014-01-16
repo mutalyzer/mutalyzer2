@@ -5,33 +5,34 @@ Tests for the mapping module.
 
 #import logging; logging.basicConfig()
 from nose.tools import *
+from sqlalchemy import or_
 
 from mutalyzer.db.models import Assembly
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
 
-import utils
+from fixtures import database, hg19, hg19_transcript_mappings
+from utils import MutalyzerTest
 
 
-class TestConverter():
+class TestConverter(MutalyzerTest):
     """
     Test the Converter class.
     """
+    fixtures = (database, hg19, hg19_transcript_mappings)
+
     def setup(self):
-        """
-        Initialize test converter module.
-        """
-        utils.create_test_environment(database=True)
+        super(TestConverter, self).setup()
         self.output = Output(__file__)
 
-    def teardown(self):
-        utils.destroy_environment()
-
-    def _converter(self, build):
+    def _converter(self, assembly_name_or_alias):
         """
-        Create a Converter instance for a given build.
+        Create a Converter instance for a given genome assembly.
         """
-        assembly = Assembly.query.first()
+        assembly = Assembly.query \
+            .filter(or_(Assembly.name == assembly_name_or_alias,
+                        Assembly.alias == assembly_name_or_alias)) \
+            .one()
         return Converter(assembly, self.output)
 
     def test_converter(self):
@@ -80,6 +81,11 @@ class TestConverter():
 
         See also bug #58.
         """
+        # Todo: This test is bogus now that we use a fixture that has just the
+        #   mapping to chromosome 6. However, I think we only get this mapping
+        #   from our current source (NCBI seq_gene.md) anyway, so I'm not sure
+        #   where we got the other mappings from in the past (but haven't
+        #   investigated really).
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_000500.5:c.92C>T')
         assert_equal(genomic, 'NC_000006.11:g.32006291C>T')
@@ -105,15 +111,10 @@ class TestConverter():
         is exactly on the border of an exon.
 
         Bug reported February 24, 2012 by S Venkata Suresh Kumar.
-
-        Note: You need the full hg18 and hg19 databases for these tests to
-            pass (i.e. the one used on the production server, possibly
-            updated with newer mappings from the NCBI).
         """
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000001.10:g.115259837_115259837delT', 'list')
         assert 'NM_001007553.1:c.3863delA' not in coding
-        assert 'NM_001007553.2:c.3863delA' not in coding
         assert 'NM_001007553.1:c.*953delA' in coding
         assert 'NM_001130523.1:c.*953delA' in coding
 
@@ -127,9 +128,7 @@ class TestConverter():
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000001.10:g.160012314_160012329del16', 'list')
         assert 'NM_002241.4:c.-27250-7_-27242del16' not in coding
-        #assert 'NM_002241.3:c.-27340-7_-27332del16' not in coding
         assert 'NM_002241.4:c.1-7_9del16' in coding
-        #assert 'NM_002241.3:c.1-7_9del16' in coding
 
     def test_range_order_forward_correct(self):
         """

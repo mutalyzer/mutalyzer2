@@ -3,10 +3,13 @@ Tests for the Scheduler module.
 """
 
 
+import bz2
 import os
 import StringIO
 
 #import logging; logging.basicConfig()
+from Bio import Entrez
+from mock import patch
 from nose.tools import *
 
 from mutalyzer.config import settings
@@ -15,18 +18,16 @@ from mutalyzer import File
 from mutalyzer import output
 from mutalyzer import Scheduler
 
-import utils
+from fixtures import database, cache
+from utils import MutalyzerTest
+from utils import fix
 
 
-class TestScheduler():
+class TestScheduler(MutalyzerTest):
     """
     Test the Scheduler class.
     """
-    def setup(self):
-        utils.create_test_environment(database=True)
-
-    def teardown(self):
-        utils.destroy_environment()
+    fixtures = (database, )
 
     @staticmethod
     def _batch_job(variants, expected, job_type, argument=None):
@@ -36,23 +37,19 @@ class TestScheduler():
         batch_file = StringIO.StringIO('\n'.join(variants) + '\n')
         job, columns = file_instance.parseBatchFile(batch_file)
         result_id = scheduler.addJob('test@test.test', job, columns,
-                                     None, job_type, argument)
+                                     job_type)
 
-        left = BatchQueueItem.query \
-            .join(BatchJob) \
-            .filter_by(result_id=result_id) \
-            .count()
+        batch_job = BatchJob.query.filter_by(result_id=result_id).one()
+
+        left = batch_job.batch_queue_items.count()
         assert_equal(left, len(variants))
 
         scheduler.process()
 
-        left = BatchQueueItem.query \
-            .join(BatchJob) \
-            .filter_by(result_id=result_id) \
-            .count()
+        left = batch_job.batch_queue_items.count()
         assert_equal(left, 0)
 
-        filename = 'Results_%s.txt' % result_id
+        filename = 'batch-job-%s.txt' % result_id
         result = open(os.path.join(settings.CACHE_DIR, filename))
 
         next(result) # Header.
@@ -69,8 +66,9 @@ class TestScheduler():
                      'OK'],
                     ['AL449423.14(CDKN2A_v002):c.5_400del',
                      'OK']]
-        self._batch_job(variants, expected, 'SyntaxChecker')
+        self._batch_job(variants, expected, 'syntax-checker')
 
+    @fix(cache('AB026906.1', 'NM_000059.3'))
     def test_name_checker(self):
         """
         Simple name checker batch job.
@@ -114,7 +112,7 @@ class TestScheduler():
                      'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
                      '',
                      'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
-        self._batch_job(variants, expected, 'NameChecker')
+        self._batch_job(variants, expected, 'name-checker')
 
     def test_name_checker_altered(self):
         """
@@ -179,8 +177,21 @@ class TestScheduler():
                      'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
                      '',
                      'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
-        self._batch_job(variants, expected, 'NameChecker')
 
+        # Patch GenBankRetriever.fetch to return the contents of NM_000059.3
+        # for NM_000059.
+        def mock_efetch(*args, **kwargs):
+            if kwargs.get('id') != 'NM_000059':
+                return Entrez.efetch(*args, **kwargs)
+            path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'data',
+                                'NM_000059.3.gb.bz2')
+            return bz2.BZ2File(path)
+
+        with patch.object(Entrez, 'efetch', mock_efetch):
+            self._batch_job(variants, expected, 'name-checker')
+
+    @fix(cache('NM_000059.3'))
     def test_name_checker_skipped(self):
         """
         Name checker job with skipped entries.
@@ -211,4 +222,12 @@ class TestScheduler():
                      'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
                      '',
                      'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
-        self._batch_job(variants, expected, 'NameChecker')
+
+        # Patch GenBankRetriever.fetch to fail on NM_1234567890.3.
+        def mock_efetch(*args, **kwargs):
+            if kwargs.get('id') != 'NM_1234567890.3':
+                return Entrez.efetch(*args, **kwargs)
+            raise IOError()
+
+        with patch.object(Entrez, 'efetch', mock_efetch):
+            self._batch_job(variants, expected, 'name-checker')

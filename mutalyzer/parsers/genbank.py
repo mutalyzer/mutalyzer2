@@ -10,7 +10,6 @@ from itertools import izip_longest
 
 from Bio import SeqIO, Entrez
 from Bio.Alphabet import ProteinAlphabet
-from sqlalchemy import and_, or_
 
 from mutalyzer.config import settings
 from mutalyzer.db import queries

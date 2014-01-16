@@ -10,19 +10,13 @@ from nose.tools import *
 import mutalyzer
 from mutalyzer import describe
 
-import utils
+from utils import MutalyzerTest
 
 
-class TestDescribe():
+class TestDescribe(MutalyzerTest):
     """
     Test the mytalyzer.describe module.
     """
-    def setup(self):
-        utils.create_test_environment()
-
-    def teardown(self):
-        utils.destroy_environment()
-
     def test1(self):
         """
         Test 1.

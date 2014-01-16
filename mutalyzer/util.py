@@ -809,42 +809,6 @@ def format_usage(usage=None, keywords={}):
 #format_usage
 
 
-def slow(f):
-    """
-    Decorator for slow tests. This makes them to pass immediately, without
-    running them. But only if the environment variable MUTALYZER_QUICK_TEST
-    is 1.
-
-    @todo: I don't think this actually belongs here (a separate util module
-      for the unit tests?).
-    """
-    @wraps(f)
-    def slow_f(*args, **kwargs):
-        if 'MUTALYZER_QUICK_TEST' in os.environ \
-               and os.environ['MUTALYZER_QUICK_TEST'] == '1':
-            return
-        else:
-            return f(*args, **kwargs)
-    return slow_f
-#slow
-
-
-def skip(f):
-    """
-    Decorator to disable a unit test. This makes it pass immediately, without
-    running them.
-
-    @todo: Perhaps it's possible to indicate to nose that the test is skipped?
-    @todo: I don't think this actually belongs here (a separate util module
-      for the unit tests?).
-    """
-    @wraps(f)
-    def disabled_f(*args, **kwargs):
-        return
-    return disabled_f
-#skip
-
-
 def singleton(cls):
     """
     Decorator to define a class with a singleton instance.

@@ -91,10 +91,7 @@ class Scheduler() :
         @arg url: The url containing the results
         @type url: string
         """
-        # Mail is set to 'test@test.test" if the batch job was submitted from
-        # a unit test.
-        # Todo: Use `settings.TESTING` instead.
-        if mailTo == 'test@test.test':
+        if settings.TESTING:
             return
 
         # Mail is set to 'job@webservice' if the batch job was submitted using

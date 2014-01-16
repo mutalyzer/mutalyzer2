@@ -101,7 +101,7 @@ class File() :
         return ret
     #__tempFileWrapper
 
-    def __parseCsvFile(self, handle) :
+    def __parseCsvFile(self, handle_) :
         """
         Parse a CSV file.
         The stream is not rewinded after use.
@@ -112,6 +112,14 @@ class File() :
         @return: list of lists
         @rtype: list
         """
+        # We wrap the file in a temporary file just to have universal newlines
+        # which is not always possible to have on incoming files (thinks web
+        # and rpc frontends). This transparently solves the problem of Unix
+        # versus Windows versus Mac style newlines.
+        handle = tempfile.TemporaryFile('rU+w')
+        for chunk in handle_:
+            handle.write(chunk)
+
         handle.seek(0)
         buf = handle.read(BUFFER_SIZE)
 

@@ -11,23 +11,17 @@ import mutalyzer
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 
-import utils
+from utils import MutalyzerTest
 
 
-class TestGrammar():
+class TestGrammar(MutalyzerTest):
     """
     Test the mytalyzer.grammar module.
     """
     def setup(self):
-        """
-        Initialize test Grammar instance.
-        """
-        utils.create_test_environment()
+        super(TestGrammar, self).setup()
         self.output = Output(__file__)
         self.grammar = Grammar(self.output)
-
-    def teardown(self):
-        utils.destroy_environment()
 
     def _parse(self, description):
         """

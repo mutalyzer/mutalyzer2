@@ -8,22 +8,16 @@ from nose.tools import *
 
 from mutalyzer.parsers import genbank
 
-import utils
+from utils import MutalyzerTest
 
 
-class TestMutator():
+class TestMutator(MutalyzerTest):
     """
     Test the mutator module.
     """
     def setup(self):
-        """
-        Initialize test mutator module.
-        """
-        utils.create_test_environment(database=True)
+        super(TestMutator, self).setup()
         self.gb_parser = genbank.GBparser()
-
-    def teardown(self):
-        utils.destroy_environment()
 
     def test_product_lists_mismatch(self):
         """

@@ -292,7 +292,7 @@ def name_checker():
         'cdsStop_c'           : output.getIndexedOutput('cdsStop_c', 0),
         'restrictionSites'    : output.getOutput('restrictionSites'),
         'legends'             : output.getOutput('legends'),
-        'reference_filename'  : reference_filename,
+        'reference_filename'  : reference_filename,  # Todo: Download link is not shown...
         'browserLink'         : browser_link,
         'extractedDescription': extracted,
         'extractedProtein'    : extractedProt,

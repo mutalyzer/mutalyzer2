@@ -6,372 +6,236 @@ Tests for the WSGI interface to Mutalyzer.
 
 
 #import logging; logging.basicConfig()
+import bz2
+import cgi
+import logging
+from mock import patch
 import os
 import re
-import urllib2
+from StringIO import StringIO
 import time
-import web
-from nose.tools import *
-from webtest import TestApp
-import logging
 import urllib
-import cgi
+import urllib2
 
-# Todo: Since the `mutalyzer.website` module accesses the configuration
-#     settings at import time, we need to pre-populate those. This hack can
-#     be removed once we moved from web.py to Flask and refactored the web
-#     application into an application factory (which does not access the
-#     configuration settings at import time).
-from mutalyzer.config import settings
-settings.configure(dict(
-    DEBUG        = True,
-    TESTING      = True,
-    CACHE_DIR    = None,
-    DATABASE_URI = 'sqlite://',
-    LOG_FILE     = None))
+from Bio import Entrez
+import lxml.html
+from nose.tools import *
 
 import mutalyzer
-from mutalyzer import website
-from mutalyzer.util import slow, skip
+from mutalyzer import Scheduler
+from mutalyzer.website import create_app
 
-import utils
+from fixtures import cache, database, hg19, hg19_transcript_mappings
+from utils import MutalyzerTest
+from utils import fix
 
 
 BATCH_RESULT_URL = 'http://localhost/mutalyzer/Results_{id}.txt'
 
 
-class TestWSGI():
+class TestWebsite(MutalyzerTest):
     """
     Test the Mutalyzer WSGI interface.
     """
     def setup(self):
-        """
-        Initialize test application.
-        """
-        utils.create_test_environment(database=True)
-        web.config.debug = False
-        application = website.app.wsgifunc()
-        self.app = TestApp(application)
+        super(TestWebsite, self).setup()
+        self.app = create_app().test_client()
 
-    def teardown(self):
-        utils.destroy_environment()
-
-    def test_root(self):
-        """
-        Expect the index HTML page.
-        """
-        r = self.app.get('')
-        assert_equal(r.status, '301 Moved Permanently')
-        assert r.location.endswith('/')
-        r = r.follow()
-        assert_equal(r.status, '200 OK')
-        # We check for <html> to make sure the menu template is included
-        r.mustcontain('<html>',
-                      'Welcome to the Mutalyzer website',
-                      '</html>')
-
-    def test_index(self):
+    def test_homepage(self):
         """
         Expect the index HTML page.
         """
         r = self.app.get('/')
-        assert_equal(r.status, '200 OK')
-        # We check for <html> to make sure the menu template is included
-        r.mustcontain('<html>',
-                      'Welcome to the Mutalyzer website',
-                      '</html>')
-
-    def test_index_explicit(self):
-        """
-        Expect the index HTML page.
-        """
-        r = self.app.get('/index')
-        assert_equal(r.status, '200 OK')
-        # We check for <html> to make sure the menu template is included
-        r.mustcontain('<html>',
-                      'Welcome to the Mutalyzer website',
-                      '</html>')
+        assert_equal(r.status_code, 200)
+        assert 'Welcome to the Mutalyzer website' in r.data
 
     def test_about(self):
         """
-        See if my name is on the About page ;)
+        See if people get proper credit.
         """
         r = self.app.get('/about')
         assert_equal(r.status, '200 OK')
-        r.mustcontain('Martijn Vermaat')
+        assert 'Jonathan Vis' in r.data
 
     def test_non_existing(self):
         """
         Expect a 404 response.
         """
-        r = self.app.get('/this/doesnotexist', status=404)
+        r = self.app.get('/this/doesnotexist')
+        assert_equal(r.status_code, 404)
 
+    @fix(database)
     def test_menu_links(self):
         """
         Test all links in the main menu.
         """
         ignore = []  # This could contain relative links we want to skip
         r = self.app.get('/')
-        for link in r.lxml.cssselect('#menu a'):
+
+        dom = lxml.html.fromstring(r.data)
+
+        for link in dom.cssselect('#menu a'):
             href = link.get('href')
-            if href.startswith('http://') or href.startswith('https://') \
-            or href in ignore:
+            if (href.startswith('http://') or
+                href.startswith('https://') or
+                href in ignore):
                 continue
             if not href.startswith('/'):
                 href = '/' + href
-            self.app.get(href)
+
+            r = self.app.get(href)
+            assert_equal(r.status_code, 200)
 
     def test_description_extractor(self):
         """
         Submit the variant description extractor.
         """
-        r = self.app.get('/descriptionExtract')
-        form = r.forms[0]
-        form['referenceSeq'] = 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA'
-        form['variantSeq'] = 'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA'
-        r = form.submit()
-        r.mustcontain('g.[5_6insTT;17del;26A&gt;C;35dup]')
+        r = self.app.get('/description-extractor', query_string={
+                'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+                'variant_sequence': 'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA'})
+        assert 'g.[5_6insTT;17del;26A&gt;C;35dup]' in r.data
 
     def test_checksyntax_valid(self):
         """
         Submit the check syntax form with a valid variant.
         """
-        r = self.app.get('/syntaxCheck')
-        form = r.forms[0]
-        form['variant'] = 'AB026906.1:c.274G>T'
-        r = form.submit()
-        r.mustcontain('The syntax of this variant is OK!')
+        r = self.app.get('/syntax-checker',
+                         query_string={'description': 'AB026906.1:c.274G>T'})
+        assert 'The syntax of this variant is OK!' in r.data
 
     def test_checksyntax_invalid(self):
         """
         Submit the check syntax form with an invalid variant.
         """
-        r = self.app.get('/syntaxCheck')
-        form = r.forms[0]
-        form['variant'] = 'AB026906.1:c.27'
-        r = form.submit()
-        r.mustcontain('Fatal',
-                      'Details of the parse error')
+        r = self.app.get('/syntax-checker',
+                         query_string={'description': 'AB026906.1:c.27'})
+        assert 'Fatal' in r.data
+        assert 'Details of the parse error' in r.data
 
+    @fix(database, cache('NM_002001.2'))
     def test_check_valid(self):
         """
         Submit the name checker form with a valid variant.
         Should include form and main HTML layout.
         """
-        r = self.app.get('/check')
-        form = r.forms[0]
-        form['name'] = 'NM_002001.2:g.1del'
-        r = form.submit()
-        r.mustcontain('0 Errors',
-                      '0 Warnings',
-                      'Raw variant 1: deletion of 1',
-                      '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input type="text" name="name" value="NM_002001.2:g.1del" style="width:100%">')
-
-    def test_check_more_valid(self):
-        """
-        Test the name checker for some more variants.
-        """
-        def check_name(name):
-            r = self.app.get('/check?name=%s' % name)
-            r.mustcontain('0 Errors')
-        names = ['NG_012337.1:g.7055C>T']
-        for name in names:
-            check_name(name)
-
-    def test_check_post(self):
-        """
-        Test the name checker for a POST request.
-
-        We accept POST requests for backwards compatibility.
-        """
-        def check_name(name):
-            r = self.app.post('/check', {'name': name})
-            assert_equal(r.status, '301 Moved Permanently')
-            assert r.location.endswith('/check?name=%s' % urllib.quote(name))
-        names = ['NG_012337.1:g.7055C>T']
-        for name in names:
-            check_name(name)
-
-    def test_check_post_old(self):
-        """
-        Test the name checker for a POST request with the old parameter
-        name.
-
-        We accept POST requests for backwards compatibility.
-        """
-        def check_name(name):
-            r = self.app.post('/check', {'mutationName': name})
-            assert_equal(r.status, '301 Moved Permanently')
-            assert r.location.endswith('/check?name=%s' % urllib.quote(name))
-        names = ['NG_012337.1:g.7055C>T']
-        for name in names:
-            check_name(name)
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NM_002001.2:g.1del'})
+        assert '0 Errors' in r.data
+        assert '0 Warnings' in r.data
+        assert 'Raw variant 1: deletion of 1' in r.data
+        assert '<a href="#bottom" class="hornav">go to bottom</a>' in r.data
+        assert '<input type="text" name="description" value="NM_002001.2:g.1del" style="width:100%">' in r.data
 
     def test_check_invalid(self):
         """
         Submit the name checker form with an invalid variant.
         """
-        r = self.app.get('/check')
-        form = r.forms[0]
-        form['name'] = 'NM_002001.2'
-        r = form.submit()
-        r.mustcontain('1 Error',
-                      '0 Warnings',
-                      'Details of the parse error')
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NM_002001.2'})
+        assert '1 Error' in r.data
+        assert '0 Warnings' in r.data
+        assert 'Details of the parse error' in r.data
 
+    @fix(database, cache('NP_064445.1'))
     def test_check_protein_reference(self):
         """
         Submit the name checker form with a protein reference sequence (not
         supported).
         """
-        r = self.app.get('/check')
-        form = r.forms[0]
-        form['name'] = 'BAA81889.1:c.274G>T'
-        r = form.submit()
-        r.mustcontain('1 Error',
-                      '0 Warnings',
-                      'Protein reference sequences are not supported')
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NP_064445.1:c.274G>T'})
+        assert '1 Error' in r.data
+        assert '0 Warnings' in r.data
+        assert 'Protein reference sequences are not supported' in r.data
 
+    @fix(database, cache('NM_002001.2'))
     def test_check_noninteractive(self):
         """
         Submit the name checker form non-interactively.
         Should not include form and main layout HTML.
         """
-        r = self.app.get('/check?name=NM_002001.2:g.1del&standalone=1')
-        assert_false('<a href="#bottom" class="hornav">go to bottom</a>' in r)
-        assert_false('<input type="text" name="name" value="NM_002001.2:g.1del" style="width:100%">' in r)
-        r.mustcontain('0 Errors',
-                      '0 Warnings',
-                      'Raw variant 1: deletion of 1',
-                      '<html>',
-                      '</html>')
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NM_002001.2:g.1del',
+                                       'standalone': '1'})
+        assert '<a href="#bottom" class="hornav">go to bottom</a>' not in r.data
+        assert '<input type="text" name="description" value="NM_002001.2:g.1del" style="width:100%">' not in r.data
+        assert '0 Errors' in r.data
+        assert '0 Warnings' in r.data
+        assert 'Raw variant 1: deletion of 1' in r.data
 
+    @fix(database, cache('NG_012772.1'))
     def test_check_interactive_links(self):
         """
         Submitting interactively should have links to transcripts also
         interactive.
         """
-        r = self.app.get('/check?name=%s' % urllib.quote('NG_012337.1:g.7055C>T'))
-        r.mustcontain('0 Errors')
-        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1:g.7055C>T')))
-        # Fix for r536: disable the -u and +d convention.
-        #r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
-        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-2133G>A')))
-        r.mustcontain('"check?name=%s"' % cgi.escape(urllib.quote('NG_012337.1(SDHD_v001):c.204C>T')))
-
-    @skip
-    def test_check_noninteractive_links(self):
-        """
-        Submitting non-interactively should have links to transcripts also
-        non-interactive.
-
-        Todo: This is hard to implement in TAL, do this when we move to
-            another template language. See Trac issue #97.
-        """
-        r = self.app.get('/check?name=%s&standalone=1' % urllib.quote('NG_012337.1:g.7055C>T'))
-        r.mustcontain('0 Errors')
-        r.mustcontain('"check?name=%s&standalone=1"' % cgi.escape(urllib.quote('NG_012337.1:g.7055C>T')))
-        r.mustcontain('"check?name=%s&standalone=1"' % cgi.escape(urllib.quote('NG_012337.1(TIMM8B_v001):c.-30-u2103G>A')))
-        r.mustcontain('"check?name=%s&standalone=1"' % cgi.escape(urllib.quote('NG_012337.1(SDHD_v001):c.204C>T')))
-
-    def test_check_noninteractive_old(self):
-        """
-        Submit the name checker form non-interactively in the old style.
-        Should redirect to new style.
-        """
-        r = self.app.get('/check?mutationName=NM_002001.2:g.1del')
-        assert_equal(r.status, '301 Moved Permanently')
-        assert r.location.endswith('/check?name=%s&standalone=1' % urllib.quote('NM_002001.2:g.1del'))
-
-    def test_check_browser_link(self):
-        """
-        Submit the name checker form with a coding variant on a transcript.
-        Should include link to UCSC Genome Browser.
-        """
-        r = self.app.get('/check')
-        form = r.forms[0]
-        form['name'] = 'NM_003002.2:c.274G>T'
-        r = form.submit()
-        # Note: the r.environ does not work in versions higher than webob 1.1.1
-        bed_track = urllib.quote(r.environ['wsgi.url_scheme'] + '://' + r.environ['HTTP_HOST'] + '/bed?name=' + urllib.quote('NM_003002.2:c.274G>T'))
-        r.mustcontain('<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr11:111959685-111959705&amp;hgt.customText=%s">View original variant in UCSC Genome Browser</a>' % bed_track)
-
-    def test_checkforward(self):
-        """
-        A checkForward request should redirect to the name checker.
-
-        This is for backwards compatibility with old bookmarks.
-        """
-        r = self.app.get('/checkForward?mutationName=%s' % urllib.quote('NM_002001.2:g.1del'))
-        assert_equal(r.status, '301 Moved Permanently')
-        assert r.location.endswith('/check?name=%s' % urllib.quote('NM_002001.2:g.1del'))
-        r = r.follow()
-        r.mustcontain('0 Errors',
-                      '0 Warnings',
-                      'Raw variant 1: deletion of 1',
-                      '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input type="text" name="name" value="NM_002001.2:g.1del" style="width:100%">')
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NG_012772.1:g.128del'})
+        assert '0 Errors' in r.data
+        assert 'href="/name-checker?description=NG_012772.1%3Ag.128del"' in r.data
+        assert 'href="/name-checker?description=NG_012772.1%28BRCA2_v001%29%3Ac.-5100del"' in r.data
 
     def test_snp_converter_valid(self):
         """
         Submit the SNP converter form with a valid SNP.
         """
-        r = self.app.get('/snp')
-        form = r.forms[0]
-        form['rsId'] = 'rs9919552'
-        r = form.submit()
-        r.mustcontain('0 Errors',
-                      '0 Warnings',
-                      'NC_000011.9:g.111959625C&gt;T',
-                      'NG_012337.2:g.7055C&gt;T',
-                      'NM_003002.3:c.204C&gt;T',
-                      'NP_002993.1:p.Ser68=')
+        # Patch Retriever.snpConvert to return rs9919552.
+        def mock_efetch(*args, **kwargs):
+            path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                'data',
+                                'rs9919552.xml.bz2')
+            return bz2.BZ2File(path)
+
+        with patch.object(Entrez, 'efetch', mock_efetch):
+            r = self.app.get('/snp-converter',
+                             query_string={'rs_id': 'rs9919552'})
+        assert '0 Errors' in r.data
+        assert '0 Warnings' in r.data
+        assert 'NC_000011.9:g.111959625C&gt;T' in r.data
+        assert 'NG_012337.2:g.7055C&gt;T' in r.data
+        assert 'NM_003002.3:c.204C&gt;T' in r.data
+        assert 'NP_002993.1:p.Ser68=' in r.data
 
     def test_snp_converter_invalid(self):
         """
         Submit the SNP converter form with an invalid SNP.
         """
-        r = self.app.get('/snp')
-        form = r.forms[0]
-        form['rsId'] = 'r9919552'
-        r = form.submit()
-        r.mustcontain('1 Error',
-                      '0 Warnings',
-                      'Fatal',
-                      'This is not a valid dbSNP id')
+        r = self.app.get('/snp-converter',
+                         query_string={'rs_id': 'r9919552'})
 
+        assert '1 Error' in r.data
+        assert '0 Warnings' in r.data
+        assert 'Fatal' in r.data
+        assert 'This is not a valid dbSNP id' in r.data
+
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_position_converter_c2g(self):
         """
         Submit the position converter form with a valid variant.
         """
-        r = self.app.get('/positionConverter')
-        form = r.forms[0]
-        form['assembly_name_or_alias'] = 'hg19'
-        form['variant'] = 'NM_003002.2:c.204C>T'
-        r = form.submit()
-        r.mustcontain('NC_000011.9:g.111959625C&gt;T')
+        r = self.app.get('/position-converter',
+                         query_string={'assembly_name_or_alias': 'hg19',
+                                       'description': 'NM_003002.2:c.204C>T'})
+        assert 'NC_000011.9:g.111959625C&gt;T' in r.data
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_position_converter_g2c(self):
         """
         Submit the position converter form with a valid variant.
         """
-        r = self.app.get('/positionConverter')
-        form = r.forms[0]
-        form['assembly_name_or_alias'] = 'hg19'
-        form['variant'] = 'NC_000011.9:g.111959625C>T'
-        r = form.submit()
-        r.mustcontain('NM_003002.2:c.204C&gt;T')
+        r = self.app.get('/position-converter',
+                         query_string={'assembly_name_or_alias': 'hg19',
+                                       'description': 'NC_000011.9:g.111959625C>T'})
+        assert 'NM_003002.2:c.204C&gt;T' in r.data
 
-    @slow
-    def _batch(self, batch_type='NameChecker', arg1=None, file="", size=0,
-               header='', lines=None):
+    def _batch(self, job_type='name-checker', assembly_name_or_alias=None,
+               file="", size=0, header='', lines=None):
         """
         Submit a batch form.
 
-        @kwarg batch_type: Type of batch job to test. One of NameChecker,
-                           SyntaxChecker, PositionConverter.
-        @kwarg arg1: Optional extra argument for the batch job.
+        @kwarg batch_type: Type of batch job to test. One of name-checker,
+                           syntax-checker, position-converter.
+        @kwarg argument: Optional extra argument for the batch job.
         @kwarg file: String with variants to use as input for the batch job.
         @kwarg size: Number of variants in input.
         @kwarg header: Message that must be found in the batch job result.
@@ -379,73 +243,71 @@ class TestWSGI():
 
         @return: The batch result document.
         @rtype: string
-
-        @note: Since the batch files are processed by a running batch daemon
-            process, the result gets written to the directory defined by the
-            system-wide configuration (e.g. /var/mutalyzer/cache), thus
-            inaccessible for the TestApp instance under our current user.
-            The 'solution' for this is to download the results via a running
-            webserver that should be using the same configuration as the batch
-            daemon. Yes, this is a hack.
         """
-        r = self.app.get('/batch')
-        form = r.forms[0]
-        if arg1:
-            form['arg1'] = arg1
-        form['batchType'] = batch_type
-        form['batchEmail'] = 'test@test.test'
-        form.set('batchFile', ('test_%s.txt' % batch_type,
-                               file))
-        r = form.submit()
-        id = r.lxml.cssselect('#jobID')[0].get('value')
-        max_tries = 60
-        for i in range(max_tries):
-            r = self.app.get('/progress?jobID=' + id + '&totalJobs=' + str(size) + '&ajax=1')
-            assert_equal(r.content_type, 'text/plain')
-            #print '%s: %s' % (batch_type, r.body)
-            if r.body == 'OK': break
-            assert re.match('[0-9]+', r.body)
-            time.sleep(2)
-        assert_equal(r.body, 'OK')
-        # Actually, this only means the last entry was taken from the database
-        # queue. It might still be processing, in which case we miss some
-        # expected output. So let's wait a few seconds.
-        time.sleep(2)
-        # This is a hack to get to the batch results (see @note above).
-        response = urllib2.urlopen(BATCH_RESULT_URL.format(id=id))
-        assert_equal(response.info().getheader('Content-Type'), 'text/plain')
-        result = response.read()
-        assert header in result
+        data = {'job_type': job_type,
+                'email': 'test@test.test',
+                'file': (StringIO(file), 'test.txt')}
+        if assembly_name_or_alias is not None:
+            data['assembly_name_or_alias'] = assembly_name_or_alias
+
+        r = self.app.post('/batch-jobs',
+                          data=data)
+        progress_url = '/' + r.location.split('/')[-1]
+
+        r = self.app.get(progress_url)
+        assert '<div id="if_items_left">' in r.data
+        assert '<div id="ifnot_items_left" style="display:none">' in r.data
+        assert ('<span id="items_left">%d</span>' % size) in r.data
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        r = self.app.get(progress_url)
+        assert '<div id="if_items_left" style="display:none">' in r.data
+        assert '<div id="ifnot_items_left">' in r.data
+
+        dom = lxml.html.fromstring(r.data)
+        result_url = dom.cssselect('#ifnot_items_left a')[0].attrib['href']
+
         if not lines:
             lines = size
-        assert_equal(len(result.strip().split('\n')) - 1, lines)
-        return result
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+        r = self.app.get(result_url)
+        assert 'text/plain' in r.headers['Content-Type']
+        assert header in r.data
+        assert_equal(len(r.data.strip().split('\n')) - 1, lines)
+
+        return r.data
+
+    @fix(database, cache('AB026906.1', 'NM_003002.2', 'AL449423.14'))
     def test_batch_namechecker(self):
         """
         Submit the batch name checker form.
         """
         variants=['AB026906.1(SDHD):g.7872G>T',
-                  'NM_003002.1:c.3_4insG',
+                  'NM_003002.2:c.3_4insG',
                   'AL449423.14(CDKN2A_v002):c.5_400del']
-        self._batch('NameChecker',
+        self._batch('name-checker',
                     file='\n'.join(variants),
                     size=len(variants),
-                    header='Input\tErrors | Messages')
+                    header='Input\tErrors and warnings')
 
+    @fix(database)
     def test_batch_namechecker_extra_tab(self):
         """
-        Submit the batch name checker form with lines ending with tab
+        Submit the batch syntax checker form with lines ending with tab
         characters.
         """
-        variants=['AB026906.1(SDHD):g.7872G>T\t']
-        self._batch('NameChecker',
+        variants=['AB026906.1(SDHD):g.7872G>T\t',
+                  'AB026906.1(SDHD):g.7872G>T\t',
+                  'AB026906.1(SDHD):g.7872G>T\t']
+        self._batch('syntax-checker',
                     file='\n'.join(variants),
-                    size=len(variants),
-                    header='Input\tErrors | Messages')
+                    size=len(variants) * 2,
+                    lines=len(variants),
+                    header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker(self):
         """
         Submit the batch syntax checker form.
@@ -453,67 +315,67 @@ class TestWSGI():
         variants = ['AB026906.1(SDHD):g.7872G>T',
                     'NM_003002.1:c.3_4insG',
                     'AL449423.14(CDKN2A_v002):c.5_400del']
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\n'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_batch_positionconverter(self):
         """
         Submit the batch position converter form.
         """
         variants = ['NM_003002.2:c.204C>T',
                     'NC_000011.9:g.111959625C>T']
-        self._batch('PositionConverter',
-                    arg1='hg19',
+        self._batch('position-converter',
+                    assembly_name_or_alias='hg19',
                     file='\n'.join(variants),
                     size=len(variants),
                     header='Input Variant')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_newlines_unix(self):
         """
-        Submit the batch syntax checker form with unix line endings.
+        Submit batch syntax checker job with Unix line endings.
         """
         variants = ['AB026906.1(SDHD):g.7872G>T',
                     'NM_003002.1:c.3_4insG',
                     'AL449423.14(CDKN2A_v002):c.5_400del']
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\n'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_newlines_mac(self):
         """
-        Submit the batch syntax checker form with mac line endings.
+        Submit batch syntax checker job with Mac line endings.
         """
         variants = ['AB026906.1(SDHD):g.7872G>T',
                     'NM_003002.1:c.3_4insG',
                     'AL449423.14(CDKN2A_v002):c.5_400del']
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\r'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_newlines_windows(self):
         """
-        Submit the batch syntax checker form with windows line endings.
+        Submit batch syntax checker job with Windows line endings.
         """
         variants = ['AB026906.1(SDHD):g.7872G>T',
                     'NM_003002.1:c.3_4insG',
                     'AL449423.14(CDKN2A_v002):c.5_400del']
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\r\n'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_newlines_big_unix(self):
         """
-        Submit the batch syntax checker form with unix line ending
-        styles and a big input file.
+        Submit big batch syntax checker job with Unix line endings.
         """
         samples = ['AB026906.1(SDHD):g.7872G>T',
                    'NM_003002.1:c.3_4insG',
@@ -522,16 +384,15 @@ class TestWSGI():
         # Create 240 variants out of 3 samples
         for i in range(80):
             variants.extend(samples)
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\n'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_newlines_big_mac(self):
         """
-        Submit the batch syntax checker form with mac line ending
-        styles and a big input file.
+        Submit big batch syntax checker job with Mac line endings.
         """
         samples = ['AB026906.1(SDHD):g.7872G>T',
                    'NM_003002.1:c.3_4insG',
@@ -540,16 +401,15 @@ class TestWSGI():
         # Create 240 variants out of 3 samples
         for i in range(80):
             variants.extend(samples)
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\r'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_newlines_big_windows(self):
         """
-        Submit the batch syntax checker form with windows line ending
-        styles and a big input file.
+        Submit big batch syntax checker job with Windows line endings.
         """
         samples = ['AB026906.1(SDHD):g.7872G>T',
                    'NM_003002.1:c.3_4insG',
@@ -558,12 +418,12 @@ class TestWSGI():
         # Create 240 variants out of 3 samples
         for i in range(80):
             variants.extend(samples)
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\r\n'.join(variants),
                     size=len(variants),
                     header='Input\tStatus')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(database)
     def test_batch_syntaxchecker_oldstyle(self):
         """
         Submit the batch syntax checker form with old style input file.
@@ -572,60 +432,28 @@ class TestWSGI():
                     'AB026906.1\tSDHD\tg.7872G>T',
                     'NM_003002.1\t\tc.3_4insG',
                     'AL449423.14\tCDKN2A_v002\tc.5_400del']
-        self._batch('SyntaxChecker',
+        self._batch('syntax-checker',
                     file='\n'.join(variants),
                     size=len(variants)-1,
                     header='Input\tStatus')
 
-    @slow
+    @fix(database, cache('AB026906.1'))
     def test_batch_namechecker_restriction_sites(self):
         """
         Submit the batch name checker form and see if restriction site effects
         are added.
-
-        Note that we use the @slow decorator here even though it is already
-        applied to self._batch. The reason is that we use the result from
-        self._batch, which does not exist if @slow checks are disabled.
         """
         variants=['AB026906.1:c.274G>T',
                   'AB026906.1:c.[274G>T;143A>G;15G>T]']
-        results = self._batch('NameChecker',
+        results = self._batch('name-checker',
                               file='\n'.join(variants),
                               size=len(variants),
-                              header='Input\tErrors | Messages').strip().split('\n')
+                              header='Input\tErrors and warnings').strip().split('\n')
         assert 'Restriction Sites Created\tRestriction Sites Deleted' in results[0]
         assert 'CviQI,RsaI\tBccI' in results[1]
         assert 'CviQI,RsaI;HhaI,HinP1I;SfcI\tBccI;;BpmI,BsaXI (2),MnlI' in results[2]
 
-    @slow
-    def test_batch_syntaxchecker_toobig(self):
-        """
-        Submit the batch syntax checker with a too big input file.
-        """
-        seed = """
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy
-nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi
-enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis
-nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in
-hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu
-feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui
-blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla
-facilisi."""
-        file = seed
-        # Very crude way of creating something at least 6MB in size
-        while len(file) < 6000000:
-            file += file
-        r = self.app.get('/batch')
-        form = r.forms[0]
-        form['batchType'] = 'SyntaxChecker'
-        form['batchEmail'] = 'm.vermaat.hg@lumc.nl'
-        form.set('batchFile', ('test_batch_toobig.txt',
-                               file))
-        r = form.submit(status=413)
-        assert_equal(r.content_type, 'text/plain')
-
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
-    @slow
+    @fix(database)
     def test_batch_multicolumn(self):
         """
         Submit the batch syntax checker with a multiple-colums input file.
@@ -635,7 +463,7 @@ facilisi."""
         variants = [('AB026906.1(SDHD):g.7872G>T', 'NM_003002.1:c.3_4insG'),
                     ('NM_003002.1:c.3_4insG', 'AB026906.1(SDHD):g.7872G>T'),
                     ('AL449423.14(CDKN2A_v002):c.5_400del', 'AL449423.14(CDKN2A_v002):c.5_400del')]
-        result = self._batch('SyntaxChecker',
+        result = self._batch('syntax-checker',
                              file='\n'.join(['\t'.join(r) for r in variants]),
                              size=len(variants) * 2,
                              header='Input\tStatus',
@@ -647,198 +475,219 @@ facilisi."""
         """
         Download a Python example client for the web service.
         """
-        r = self.app.get('/download/client-suds.py')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('#!/usr/bin/env python')
+        r = self.app.get('/downloads/client-suds.py')
+        assert 'text/plain' in r.headers['Content-Type']
+        assert '#!/usr/bin/env python' in r.data
 
     def test_download_rb(self):
         """
         Download a Ruby example client for the web service.
         """
-        r = self.app.get('/download/client-savon.rb')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('#!/usr/bin/env ruby')
+        r = self.app.get('/downloads/client-savon.rb')
+        assert 'text/plain' in r.headers['Content-Type']
+        assert '#!/usr/bin/env ruby' in r.data
 
     def test_download_cs(self):
         """
         Download a C# example client for the web service.
         """
-        r = self.app.get('/download/client-mono.cs')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('public static void Main(String [] args) {')
+        r = self.app.get('/downloads/client-mono.cs')
+        assert_equal(r.headers['Content-Type'], 'text/plain')
+        assert 'public static void Main(String [] args) {' in r.data
 
     def test_download_php(self):
         """
         Download a PHP example client for the web service.
         """
-        r = self.app.get('/download/client-php.php')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('<?php')
+        r = self.app.get('/downloads/client-php.php')
+        assert 'text/plain' in r.headers['Content-Type']
+        assert '<?php' in r.data
 
     def test_downloads_batchtest(self):
         """
         Download the batch test example file.
         """
         r = self.app.get('/downloads/batchtestnew.txt')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('NM_003002.1:c.3_4insG')
+        assert 'text/plain' in r.headers['Content-Type']
+        assert 'NM_003002.1:c.3_4insG' in r.data
 
     def test_annotated_soap_api(self):
         """
         Test the SOAP documentation generated from the WSDL.
         """
         r = self.app.get('/soap-api')
-        assert_equal(r.content_type, 'text/html')
-        r.mustcontain('Web Service: Mutalyzer')
+        assert 'text/html' in r.headers['Content-Type']
+        assert 'Web Service: Mutalyzer' in r.data
 
+    @fix(database, cache('NG_012337.1'))
     def test_getgs(self):
         """
         Test the /getGS interface used by LOVD2.
         """
-        r = self.app.get('/getGS?variantRecord=NM_003002.2&forward=1&mutationName=NG_012337.1:g.7055C%3ET')
-        r.mustcontain('0 Errors',
-                      '0 Warnings',
-                      'Raw variant 1: substitution at 7055')
-        assert_equal(r.body.find('go to bottom'), -1)
-        assert_equal(r.body.find('<input'), -1)
+        r = self.app.get('/getGS',
+                         query_string={'variantRecord': 'NM_003002.2',
+                                       'forward': '1',
+                                       'mutationName': 'NG_012337.1:g.7055C>T'},
+                         follow_redirects=True)
+        assert '0 Errors' in r.data
+        assert '0 Warnings' in r.data
+        assert 'Raw variant 1: substitution at 7055' in r.data
+        assert 'go to bottom' not in r.data
+        assert '<input' not in r.data
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_g2c(self):
         """
         Test the /Variant_info interface used by LOVD2 (g to c).
         """
-        r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=g.48374289_48374389del')
-        assert_equal(r.content_type, 'text/plain')
+        r = self.app.get('/Variant_info',
+                         query_string={'LOVD_ver': '2.0-29',
+                                       'build': 'hg19',
+                                       'acc': 'NM_203473.1',
+                                       'var': 'g.48374289_48374389del'})
+        assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
-        assert_equal(r.body, expected)
+        assert_equal(r.data, expected)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_c2g(self):
         """
         Test the /Variant_info interface used by LOVD2 (c to g).
         """
-        r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=c.1020_1072%2B48del')
-        assert_equal(r.content_type, 'text/plain')
+        r = self.app.get('/Variant_info',
+                         query_string={'LOVD_ver': '2.0-29',
+                                       'build': 'hg19',
+                                       'acc': 'NM_203473.1',
+                                       'var': 'c.1020_1072+48del'})
+        assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
-        assert_equal(r.body, expected)
+        assert_equal(r.data, expected)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_c2g_downstream(self):
         """
         Test the /Variant_info interface used by LOVD2 (c variant downstream
         notation to g).
         """
-        r = self.app.get('/Variant_info?LOVD_ver=2.0-29&build=hg19&acc=NM_203473.1&var=c.1709%2Bd187del')
-        assert_equal(r.content_type, 'text/plain')
+        r = self.app.get('/Variant_info',
+                         query_string={'LOVD_ver': '2.0-29',
+                                       'build': 'hg19',
+                                       'acc': 'NM_203473.1',
+                                       'var': 'c.1709+d187del'})
+        assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['1709', '187', '1709', '187', '48379389', '48379389', 'del'])
-        assert_equal(r.body, expected)
+        assert_equal(r.data, expected)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_no_variant(self):
         """
         Test the /Variant_info interface used by LOVD2 (without variant).
         """
-        r = self.app.get('/Variant_info?LOVD_ver=2.0-32&build=hg19&acc=NM_001083962.1')
+        r = self.app.get('/Variant_info',
+                         query_string={'LOVD_ver': '2.0-29',
+                                       'build': 'hg19',
+                                       'acc': 'NM_203473.1'})
+        assert 'text/plain' in r.headers['Content-Type']
         assert_equal(r.content_type, 'text/plain')
-        expected = '\n'.join(['-612', '7720', '2016'])
-        assert_equal(r.body, expected)
+        expected = '\n'.join(['-158', '1709', '1371'])
+        assert_equal(r.data, expected)
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_ivs(self):
         """
         Test the /Variant_info interface used by LOVD2 (with IVS positioning).
         """
-        r = self.app.get('/Variant_info?LOVD_ver=2.0-33&build=hg19&acc=NM_000249.3&var=c.IVS10%2B3A%3EG')
-        assert_equal(r.content_type, 'text/plain')
+        r = self.app.get('/Variant_info',
+                         query_string={'LOVD_ver': '2.0-33',
+                                       'build': 'hg19',
+                                       'acc': 'NM_000249.3',
+                                       'var': 'c.IVS10+3A>G'})
+        assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['884', '3', '884', '3', '37059093', '37059093', 'subst'])
-        assert_equal(r.body, expected)
+        assert_equal(r.data, expected)
 
+    @fix(database)
     def test_upload_local_file(self):
         """
         Test the genbank uploader.
-
-        @todo: Use another genbank file to get a UD number and check that
-        we can then check variants using that UD number.
-        @todo: This genbank file location is bogus. The tests directory is not
-            included with the package installation.
         """
-        test_genbank_file = os.path.join(os.path.realpath(os.path.dirname(__file__)),
-                                         'data', 'AB026906.1.gb')
-        r = self.app.get('/upload')
-        form = r.forms[0]
-        form['invoermethode'] = 'file'
-        form.set('bestandsveld', ('test_upload.gb',
-                                  open(test_genbank_file, 'r').read()))
-        r = form.submit()
-        r.mustcontain('Your reference sequence was loaded successfully.')
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'AB026906.1.gb.bz2')
+        r = self.app.post('/reference-loader',
+                          data={'method': 'upload',
+                                'file': (bz2.BZ2File(path), 'AB026906.1.gb')})
+        assert 'Your reference sequence was loaded successfully.' in r.data
 
+        dom = lxml.html.fromstring(r.data)
+        reference_url = dom.cssselect('#reference_download')[0].attrib['href']
+
+        r = self.app.get(reference_url)
+        assert_equal(r.data, bz2.BZ2File(path).read())
+
+    @fix(database)
     def test_upload_local_file_invalid(self):
         """
         Test the genbank uploader with a non-genbank file.
-
-        @note: We add the current time to the file contents to make sure it is
-            not recognized by its hash.
         """
-        r = self.app.get('/upload')
-        form = r.forms[0]
-        form['invoermethode'] = 'file'
-        form.set('bestandsveld', ('test_upload.gb',
-                                  'this is not a genbank file (%s)\n' % time.ctime()))
-        r = form.submit()
-        r.mustcontain('The file could not be parsed.')
-        print r.body
+        r = self.app.post('/reference-loader',
+                          data={'method': 'upload',
+                                'file': (StringIO('this is not a genbank file'), 'AB026906.1.gb')})
+        assert 'Your reference sequence was loaded successfully.' not in r.data
+        assert 'The file could not be parsed.' in r.data
 
+    @fix(database, cache('NM_002001.2'))
     def test_reference(self):
         """
         Test if reference files are cached.
         """
-        r = self.app.get('/check')
-        form = r.forms[0]
-        form['name'] = 'AB026906.1:c.274G>T'
-        r = form.submit()
-        r.mustcontain('0 Errors',
-                      '1 Warning',
-                      'Raw variant 1: substitution at 7872',
-                      '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input type="text" name="name" value="AB026906.1:c.274G&gt;T" style="width:100%">')
-        r = self.app.get('/Reference/AB026906.1.gb')
-        assert_equal(r.content_type, 'text/plain')
-        assert_equal(r.content_length, 26427)
-        r.mustcontain('ggaaaaagtc tctcaaaaaa cctgctttat')
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NM_002001.2:g.1del'})
+        assert '0 Errors' in r.data
 
+        r = self.app.get('/reference/NM_002001.2.gb')
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'NM_002001.2.gb.bz2')
+        assert_equal(r.data, bz2.BZ2File(path).read())
+
+    @fix(database, cache('NM_002001.2'))
     def test_reference_head(self):
         """
         Test if reference files are cached, by issuing a HEAD request.
-
-        Note: The WebTest module also checks that the response to a HEAD
-            request is empty, as it should be.
         """
-        r = self.app.get('/check')
-        form = r.forms[0]
-        form['name'] = 'AB026906.1:c.274G>T'
-        r = form.submit()
-        r.mustcontain('0 Errors',
-                      '1 Warning',
-                      'Raw variant 1: substitution at 7872',
-                      '<a href="#bottom" class="hornav">go to bottom</a>',
-                      '<input type="text" name="name" value="AB026906.1:c.274G&gt;T" style="width:100%">')
-        r = self.app.head('/Reference/AB026906.1.gb')
-        assert_equal(r.content_type, 'text/plain')
+        r = self.app.get('/name-checker',
+                         query_string={'description': 'NM_002001.2:g.1del'})
+        assert '0 Errors' in r.data
 
+        r = self.app.head('/reference/NM_002001.2.gb')
+        assert_equal(r.status_code, 200)
+
+    @fix(database)
     def test_reference_head_none(self):
         """
         Test if non-existing reference files gives a 404 on a HEAD request.
         """
-        r = self.app.head('/Reference/AB026906.78.gb', status=404)
+        r = self.app.head('/reference/NM_002001.2.gb')
+        assert_equal(r.status_code, 404)
 
+    @fix(database, hg19, hg19_transcript_mappings, cache('NM_003002.2'))
     def test_bed(self):
         """
         BED track for variant.
         """
-        r = self.app.get('/bed?name=NM_003002.2%3Ac.274G%3ET')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('\t'.join(['chr11', '111959694', '111959695', '274G>T', '0', '+']))
+        r = self.app.get('/bed',
+                         query_string={'description': 'NM_003002.2:c.274G>T'})
+        assert 'text/plain' in r.headers['Content-Type']
+        assert '\t'.join(['chr11', '111959694', '111959695', '274G>T', '0', '+']) in r.data
 
+    @fix(database, hg19, hg19_transcript_mappings, cache('NM_000132.3'))
     def test_bed_reverse(self):
         """
         BED track for variant on reverse strand.
         """
-        r = self.app.get('/bed?name=NM_000132.3%3Ac.%5B4374A%3ET%3B4380_4381del%5D')
-        assert_equal(r.content_type, 'text/plain')
-        r.mustcontain('\t'.join(['chrX', '154157690', '154157691', '4374A>T', '0', '-']))
-        r.mustcontain('\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '0', '-']))
+        r = self.app.get('/bed',
+                         query_string={'description': 'NM_000132.3:c.[4374A>T;4380_4381del]'})
+        assert 'text/plain' in r.headers['Content-Type']
+        assert '\t'.join(['chrX', '154157690', '154157691', '4374A>T', '0', '-']) in r.data
+        assert '\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '0', '-']) in r.data

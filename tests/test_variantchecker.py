@@ -9,47 +9,33 @@ from nose.tools import *
 from mutalyzer.output import Output
 from mutalyzer.Retriever import GenBankRetriever
 from mutalyzer.variantchecker import check_variant
-from mutalyzer.util import slow, skip
 
-import utils
+from fixtures import REFERENCES
+from fixtures import database, cache, hg19, hg19_transcript_mappings
+from utils import MutalyzerTest
+from utils import fix
 
 
-class TestVariantchecker():
+# Todo: We had a test for checking a variant on a CONTIG RefSeq reference
+#   (NG_005990.1), but instead we should have separate tests for the retriever
+#   module, including a test for fetching a CONTIG RefSeq reference.
+
+
+class TestVariantchecker(MutalyzerTest):
     """
     Test the variantchecker module.
     """
+    fixtures = (database, )
+
     def setup(self):
         """
         Initialize test variantchecker module.
         """
-        utils.create_test_environment(database=True)
+        super(TestVariantchecker, self).setup()
         self.output = Output(__file__)
         self.retriever = GenBankRetriever(self.output)
 
-    def teardown(self):
-        utils.destroy_environment()
-
-    def _slice(self, chromosome, start, stop, orientation):
-        """
-        Get a UD slice.
-
-        Orientation: 1 for forward, 2 for reverse.
-        """
-        return self.retriever.retrieveslice(chromosome, start, stop, orientation)
-
-    def _slice_gene(self, gene, organism='human', upstream=5000, downstream=2000):
-        """
-        Get a UD slice for a gene.
-        """
-        return self.retriever.retrievegene(gene, organism, upstream, downstream)
-
-    def _load_record(self, identifier):
-        """
-        Load a record in the database and cache.
-        """
-        return self.retriever.loadrecord(identifier)
-
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_in_frame(self):
         """
         Simple in-frame deletion should give a simple description on protein
@@ -64,7 +50,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_insertion_in_frame(self):
         """
         Simple in-frame insertion should give a simple description on protein
@@ -79,7 +65,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_insertion_in_frame(self):
         """
         Simple in-frame deletion/insertion should give a simple description on
@@ -95,7 +81,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_insertion_in_frame_complete(self):
         """
         Simple in-frame deletion/insertion should give a simple description on
@@ -111,6 +97,7 @@ class TestVariantchecker():
                in self.output.getOutput('protDescriptions')
         assert self.output.getOutput('newprotein')
 
+    @fix(cache('NM_003002.2'))
     def test_est_warning_nm_est(self):
         """
         Warning for EST positioning on NM reference.
@@ -119,6 +106,7 @@ class TestVariantchecker():
         west = self.output.getMessagesWithErrorCode('WEST')
         assert len(west) == 1
 
+    @fix(cache('NM_003002.2'))
     def test_no_est_warning_nm_c(self):
         """
         No EST warning for c. positioning on NM reference.
@@ -127,6 +115,7 @@ class TestVariantchecker():
         west = self.output.getMessagesWithErrorCode('WEST')
         assert len(west) == 0
 
+    @fix(cache('NM_003002.2'))
     def test_no_est_warning_nm_n(self):
         """
         No EST warning for n. positioning on NM reference.
@@ -135,6 +124,7 @@ class TestVariantchecker():
         west = self.output.getMessagesWithErrorCode('WEST')
         assert len(west) == 0
 
+    @fix(cache('NG_012772.1'))
     def test_est_warning_ng_est(self):
         """
         Warning for EST positioning on NG reference.
@@ -143,6 +133,7 @@ class TestVariantchecker():
         west = self.output.getMessagesWithErrorCode('WEST')
         assert len(west) == 1
 
+    @fix(cache('NG_012772.1'))
     def test_no_est_warning_ng_g(self):
         """
         No EST warning for g. positioning on NG reference.
@@ -151,6 +142,7 @@ class TestVariantchecker():
         west = self.output.getMessagesWithErrorCode('WEST')
         assert len(west) == 0
 
+    @fix(cache('AA010203.1'))
     def test_no_est_warning_est_est(self):
         """
         No warning for EST positioning on EST reference.
@@ -159,6 +151,7 @@ class TestVariantchecker():
         west = self.output.getMessagesWithErrorCode('WEST')
         assert len(west) == 0
 
+    @fix(cache('NM_003002.2'))
     def test_roll(self):
         """
         Just a variant where we should roll.
@@ -167,6 +160,7 @@ class TestVariantchecker():
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
+    @fix(cache('NM_003002.2'))
     def test_no_roll(self):
         """
         Just a variant where we cannot roll.
@@ -175,6 +169,7 @@ class TestVariantchecker():
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert_equal(len(wroll), 0)
 
+    @fix(cache('NM_000088.3'))
     def test_no_roll_splice(self):
         """
         Here we can roll but should not, because it is over a splice site.
@@ -185,6 +180,7 @@ class TestVariantchecker():
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert_equal(len(wroll), 0)
 
+    @fix(cache('NM_000088.3'))
     def test_partial_roll_splice(self):
         """
         Here we can roll two positions, but should roll only one because
@@ -196,6 +192,7 @@ class TestVariantchecker():
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
+    @fix(cache('NM_000088.3'))
     def test_roll_after_splice(self):
         """
         Here we can roll and should, we stay in the same exon.
@@ -204,7 +201,7 @@ class TestVariantchecker():
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
         assert len(wroll) > 0
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_roll_both_ins(self):
         """
         Insertion that rolls should not use the same inserted sequence in
@@ -238,7 +235,7 @@ class TestVariantchecker():
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_roll_reverse_ins(self):
         """
         Insertion that rolls on the reverse strand should not use the same
@@ -249,7 +246,7 @@ class TestVariantchecker():
         assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_roll_message_forward(self):
         """
         Roll warning message should only be shown for currently selected
@@ -259,7 +256,7 @@ class TestVariantchecker():
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 0)
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_roll_message_reverse(self):
         """
         Roll warning message should only be shown for currently selected
@@ -269,6 +266,7 @@ class TestVariantchecker():
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
         assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 1)
 
+    @fix(cache('NM_000143.3'))
     def test_ins_cds_start(self):
         """
         Insertion on CDS start boundary should not be included in CDS.
@@ -277,6 +275,7 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput("newprotein", 0), None)
         # Todo: Is this a good test?
 
+    @fix(cache('NM_000143.3'))
     def test_ins_cds_start_after(self):
         """
         Insertion after CDS start boundary should be included in CDS.
@@ -285,6 +284,7 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput("newprotein", 0), '?')
         # Todo: Is this a good test?
 
+    @fix(cache('NG_012772.1'))
     def test_del_splice_site(self):
         """
         Deletion hitting one splice site should not do a protein prediction.
@@ -296,6 +296,7 @@ class TestVariantchecker():
         # prediction is done.
         assert not self.output.getOutput('newprotein')
 
+    @fix(cache('NG_012772.1'))
     def test_del_exon(self):
         """
         Deletion of an entire exon should be possible.
@@ -307,6 +308,7 @@ class TestVariantchecker():
         # prediction is done.
         assert self.output.getOutput('newprotein')
 
+    @fix(cache('NG_012772.1'))
     def test_del_exon_exact(self):
         """
         Deletion of exactly an exon should be possible.
@@ -318,6 +320,7 @@ class TestVariantchecker():
         # prediction is done.
         assert self.output.getOutput('newprotein')
 
+    @fix(cache('NG_012772.1'))
     def test_del_exon_in_frame(self):
         """
         Deletion of an entire exon with length a triplicate should give a
@@ -335,6 +338,7 @@ class TestVariantchecker():
         assert self.output.getOutput('newprotein')
         # Todo: assert that protein products indeed have only this difference.
 
+    @fix(cache('NG_012772.1'))
     def test_del_exons(self):
         """
         Deletion of two entire exons should be possible.
@@ -346,6 +350,7 @@ class TestVariantchecker():
         # prediction is done.
         assert self.output.getOutput('newprotein')
 
+    @fix(cache('NG_012772.1'))
     def test_del_intron(self):
         """
         Deletion of an entire intron should be possible (fusion of remaining
@@ -358,6 +363,7 @@ class TestVariantchecker():
         # prediction is done.
         assert self.output.getOutput('newprotein')
 
+    @fix(cache('NG_012772.1'))
     def test_del_intron_exact(self):
         """
         Deletion of exactly an intron should be possible (fusion of flanking
@@ -373,6 +379,7 @@ class TestVariantchecker():
         assert self.output.getOutput('oldprotein')
         assert not self.output.getOutput('newprotein')
 
+    @fix(cache('NG_012772.1'))
     def test_del_intron_in_frame(self):
         """
         Deletion of an entire intron should be possible (fusion of remaining
@@ -386,6 +393,7 @@ class TestVariantchecker():
         assert self.output.getOutput('newprotein')
         # Todo: assert that protein products indeed have only this difference.
 
+    @fix(cache('NG_012772.1'))
     def test_del_exon_unknown_offsets(self):
         """
         Deletion of an entire exon with unknown offsets should be possible.
@@ -406,6 +414,7 @@ class TestVariantchecker():
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
 
+    @fix(cache('NG_012772.1'))
     def test_del_exon_unknown_offsets_in_frame(self):
         """
         Deletion of an entire exon with unknown offsets and length a
@@ -429,6 +438,7 @@ class TestVariantchecker():
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
 
+    @fix(cache('NG_012772.1'))
     def test_del_exon_unknown_offsets_composed(self):
         """
         Deletion of an entire exon with unknown offsets and another composed
@@ -449,7 +459,7 @@ class TestVariantchecker():
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_del_exon_unknown_offsets_reverse(self):
         """
         Deletion of an entire exon with unknown offsets should be possible,
@@ -470,6 +480,7 @@ class TestVariantchecker():
         # Todo: .c notation should still be c.632-?_681+?del, but what about
         # other transcripts?
 
+    @fix(cache('NM_000143.3'))
     def test_del_exon_transcript_reference(self):
         """
         Deletion of entire exon on a transcript reference should remove the
@@ -477,13 +488,15 @@ class TestVariantchecker():
         of the flanking exons (as would happen using the mechanism for genomic
         references).
         """
-        check_variant('NM_018723.3:c.758_890del', self.output)
+        #check_variant('NM_018723.3:c.758_890del', self.output)
+        check_variant('NM_000143.3:c.739_904del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
         assert_equal(self.output.getOutput('removedSpliceSites'), [2])
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
 
+    @fix(cache('AB026906.1'))
     def test_ins_range(self):
         """
         Insertion of a range is not implemented yet.
@@ -491,20 +504,13 @@ class TestVariantchecker():
         check_variant('AB026906.1:c.274_275ins262_268', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
+    @fix(cache('AB026906.1'))
     def test_delins_range(self):
         """
         Deletion/insertion of a range is not implemented yet.
         """
         check_variant('AB026906.1:c.274delins262_268', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
-
-    def test_contig_reference(self):
-        """
-        Variant description on a CONTIG RefSeq reference.
-        """
-        check_variant('NG_005990.1:g.1del', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_005990.1:g.1del')
 
     def test_no_reference(self):
         """
@@ -513,6 +519,7 @@ class TestVariantchecker():
         check_variant('g.244355733del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOREF')), 1)
 
+    @fix(cache('NM_003002.2'), hg19, hg19_transcript_mappings)
     def test_chromosomal_positions(self):
         """
         Variants on transcripts in c. notation should have chromosomal positions
@@ -522,6 +529,7 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
                      ('chr11', '+', [('274G>T', (111959695, 111959695))]))
 
+    @fix(cache('NM_002001.2'))
     def test_ex_notation(self):
         """
         Variant description using EX notation should not crash but deletion of
@@ -530,6 +538,7 @@ class TestVariantchecker():
         check_variant('NM_002001.2:c.EX1del', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('IDELSPLICE')), 1)
 
+    @fix(cache('LRG_1'))
     def test_lrg_reference(self):
         """
         We should be able to use LRG reference sequence without error.
@@ -540,30 +549,11 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'LRG_1:g.6855G>T')
 
-    def test_lrg_reference_new(self):
-        """
-        We should be able to use new LRG reference sequence without error.
-
-        Note that all LRG sequences are now in a new format and essentially
-        this test is no different from the previous, except that LRG_218 was
-        not yet in our cache which makes it easier to test the new format.
-        """
-        check_variant('LRG_218:c.1786_1788delAAT', self.output)
-        error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-
-    def test_non_numeric_locus_tag_ending(self):
-        """
-        Locus tag in NC_002128 does not end in an underscore and three digits
-        but we should not crash on it.
-        """
-        check_variant('NC_002128(tagA):c.3del', self.output)
-
+    @fix(cache('NM_002001.2'))
     def test_gi_reference_plain(self):
         """
         Test reference sequence notation with GI number.
         """
-        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -572,11 +562,11 @@ class TestVariantchecker():
         assert '31317229(FCER1A_v001):c.6del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('NM_002001.2'))
     def test_gi_reference_prefix(self):
         """
         Test reference sequence notation with GI number and prefix.
         """
-        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('GI31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -585,11 +575,11 @@ class TestVariantchecker():
         assert '31317229(FCER1A_v001):c.6del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('NM_002001.2'))
     def test_gi_reference_prefix_colon(self):
         """
         Test reference sequence notation with GI number and prefix with colon.
         """
-        assert self._load_record('NM_002001.2')  # Make sure it's in our database
         check_variant('GI:31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -598,6 +588,7 @@ class TestVariantchecker():
         assert '31317229(FCER1A_v001):c.6del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('NM_002001.2'))
     def test_nop_nm(self):
         """
         Variant on NM without effect should be described as '='.
@@ -610,11 +601,12 @@ class TestVariantchecker():
         assert 'NM_002001.2(FCER1A_v001):c.=' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('DMD'))
     def test_nop_ud(self):
         """
         Variant on UD without effect should be described as '='.
         """
-        ud = self._slice_gene('DMD')
+        ud = REFERENCES['DMD']['accession']
         check_variant(ud + ':g.5T>T', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -625,12 +617,13 @@ class TestVariantchecker():
         assert ud + '(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('DPYD'))
     def test_ud_reverse_sequence(self):
         """
         Variant on UD from reverse strand should have reverse complement
         sequence.
         """
-        ud = self._slice_gene('DPYD')
+        ud = REFERENCES['DPYD']['accession']
         check_variant(ud + '(DPYD_v1):c.85C>T', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -641,11 +634,12 @@ class TestVariantchecker():
         assert ud + '(DPYD_v001):c.85C>T' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('MARK1'))
     def test_ud_forward_sequence(self):
         """
         Variant on UD from forward strand should have forward sequence.
         """
-        ud = self._slice_gene('MARK1')
+        ud = REFERENCES['MARK1']['accession']
         check_variant(ud + '(MARK1_v001):c.400T>C', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -656,12 +650,14 @@ class TestVariantchecker():
         assert ud + '(MARK1_v001):c.400T>C' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('chr9_reverse'))
     def test_ud_reverse_range(self):
         """
         Variant on UD from reverse strand should have reversed range
         positions.
         """
-        ud = self._slice('NC_000009.11', 32922603, 33006639, 2)
+        # This is just some slice on from the reverse strand of hg19 chr9.
+        ud = REFERENCES['chr9_reverse']['accession']
         check_variant(ud + ':g.10624_78132del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -670,11 +666,12 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      ud + ':g.10624_78132del')
 
+    @fix(cache('MARK1'))
     def test_ud_forward_range(self):
         """
         Variant on UD from forward strand should have forward range positions.
         """
-        ud = self._slice_gene('MARK1')
+        ud = REFERENCES['MARK1']['accession']
         check_variant(ud + '(MARK1_v001):c.400_415del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -683,13 +680,15 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      ud + ':g.76614_76629del')
 
+    @fix(cache('chr9_reverse'))
     def test_ud_reverse_del_length(self):
         """
         Variant on UD from reverse strand should have reversed range
         positions, but not reverse complement of first argument (it is not a
         sequence, but a length).
         """
-        ud = self._slice('NC_000009.11', 32922603, 33006639, 2)
+        # This is just some slice on from the reverse strand of hg19 chr9.
+        ud = REFERENCES['chr9_reverse']['accession']
         check_variant(ud + ':g.10624_78132del67509', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -698,6 +697,7 @@ class TestVariantchecker():
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      ud + ':g.10624_78132del')
 
+    @fix(cache('DPYD'))
     def test_ud_reverse_roll(self):
         """
         Variant on UD from reverse strand should roll the oposite direction.
@@ -709,7 +709,7 @@ class TestVariantchecker():
                 g.   748  749  750  751  752  753
             chr g.   868  867  866  865  864  863
         """
-        ud = self._slice_gene('DPYD')
+        ud = REFERENCES['DPYD']['accession']
         check_variant(ud + '(DPYD_v001):c.104del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -720,6 +720,7 @@ class TestVariantchecker():
         assert ud + '(DPYD_v001):c.105del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('MARK1'))
     def test_ud_forward_roll(self):
         """
         Variant on UD from forward strand should roll the same.
@@ -731,7 +732,7 @@ class TestVariantchecker():
                 g.   612  613  614  615  616
             chr g.   179  180  181  182  183
         """
-        ud = self._slice_gene('MARK1')
+        ud = REFERENCES['MARK1']['accession']
         check_variant(ud + '(MARK1_v001):c.400del', self.output)
         error_count, _, _ = self.output.Summary()
         assert_equal(error_count, 0)
@@ -742,7 +743,7 @@ class TestVariantchecker():
         assert ud + '(MARK1_v001):c.401del' \
                in self.output.getOutput('descriptions')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_with_sequence_forward_genomic(self):
         """
         Specify the deleted sequence in a deletion.
@@ -753,7 +754,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
                in self.output.getOutput('descriptions')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_with_length_forward_genomic(self):
         """
         Specify the deleted sequence length in a deletion.
@@ -764,7 +765,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
                in self.output.getOutput('descriptions')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_with_sequence_reverse_coding(self):
         """
         Specify the deleted sequence in a deletion on the reverse strand.
@@ -775,7 +776,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
                in self.output.getOutput('descriptions')
 
-    @skip # Todo: AL449423.14 no longer contains gene annotations.
+    @fix(cache('AL449423.14'))
     def test_deletion_with_length_reverse_coding(self):
         """
         Specify the deleted sequence length in a deletion on the reverse strand.
@@ -786,6 +787,7 @@ class TestVariantchecker():
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('NG_008939.1'))
     def test_deletion_with_sequence_reverse_ng_coding(self):
         """
         Specify the deleted sequence in a deletion on the reverse strand
@@ -797,6 +799,7 @@ class TestVariantchecker():
         assert 'NG_008939.1(PCCB_v001):c.155_157del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('NG_008939.1'))
     def test_deletion_with_length_reverse_ng_coding(self):
         """
         Specify the deleted sequence length in a deletion on the reverse strand
@@ -808,6 +811,7 @@ class TestVariantchecker():
         assert 'NG_008939.1(PCCB_v001):c.155_157del' \
                in self.output.getOutput('descriptions')
 
+    @fix(cache('AB026906.1'))
     def test_inversion(self):
         """
         Inversion variant.
@@ -818,6 +822,7 @@ class TestVariantchecker():
         assert 'AB026906.1(SDHD_v001):c.274_275inv' \
             in self.output.getOutput('descriptions')
 
+    @fix(cache('NM_000193.2'))
     def test_delins_with_length(self):
         """
         Delins with explicit length of deleted sequence (bug #108).
@@ -825,6 +830,7 @@ class TestVariantchecker():
         check_variant('NM_000193.2:c.108_109del2insG', self.output)
         assert 'NM_000193.2(SHH_i001):p.(Lys38Serfs*2)' in self.output.getOutput('protDescriptions')
 
+    @fix(cache('NG_009105.1'))
     def test_protein_level_description(self):
         """
         Currently protein level descriptions are not implemented.
@@ -832,6 +838,7 @@ class TestVariantchecker():
         check_variant('NG_009105.1(OPN1LW):p.=', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
+    @fix(cache('NP_064445.1'))
     def test_protein_reference(self):
         """
         Currently protein references are not implemented.
@@ -839,28 +846,33 @@ class TestVariantchecker():
         check_variant('NP_064445.1:p.=', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
+    @fix(cache('A1BG'))
     def test_wnomrna_other(self):
         """
         Warning for no mRNA field on other than currently selected transcript
         should give WNOMRNA_OTHER warning.
         """
-        ud = self._slice_gene('A1BG') # Contains ZNF497 (v1 and v2) with no mRNA
+        # Contains ZNF497 (v1 and v2) with no mRNA
+        ud = REFERENCES['A1BG']['accession']
         check_variant(ud + '(A1BG_v001):c.13del', self.output)
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
         assert len(wnomrna_other) == 3
 
+    @fix(cache('A1BG'))
     def test_wnomrna(self):
         """
         Warning for no mRNA field on currently selected transcript should give
         WNOMRNA warning.
         """
-        ud = self._slice_gene('A1BG') # Contains ZNF497 (v1 and v2) with no mRNA
+        # Contains ZNF497 (v1 and v2) with no mRNA
+        ud = REFERENCES['A1BG']['accession']
         check_variant(ud + '(ZNF497_v001):c.13del', self.output)
         wnomrna = self.output.getMessagesWithErrorCode('WNOMRNA')
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
         assert len(wnomrna) == 1
         assert len(wnomrna_other) == 2
 
+    @fix(cache('L41870.1'))
     def test_mrna_ref_adjacent_exons_warn(self):
         """
         Warning for mRNA reference where exons are not adjacent.
@@ -871,10 +883,11 @@ class TestVariantchecker():
         w_exon_annotation = self.output.getMessagesWithErrorCode('WEXON_ANNOTATION')
         assert len(w_exon_annotation) == 1
 
+    @fix(cache('NM_003002.2'))
     def test_mrna_ref_adjacent_exons_no_warn(self):
         """
         No warning for mRNA reference where exons are adjacent.
         """
-        check_variant('NM_133378.3:c.1del', self.output)
+        check_variant('NM_003002.2:c.1del', self.output)
         w_exon_annotation = self.output.getMessagesWithErrorCode('WEXON_ANNOTATION')
         assert len(w_exon_annotation) == 0

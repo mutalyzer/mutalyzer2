@@ -10,8 +10,6 @@ spyne==2.10.9
 suds==0.4
 wsgiref==0.1.2
 xlrd==0.9.2
-WebOb==1.1.1
-WebTest==1.4.2
 cssselect==0.9.1
 Jinja2==2.7.1
 -e git+https://github.com/mammadori/magic-python.git#egg=Magic_file_extensions
@@ -19,3 +17,4 @@ Flask==0.10.1
 SQLAlchemy==0.9.1
 redis==2.8.0
 mockredispy==2.8.0.2
+mock==1.0.1

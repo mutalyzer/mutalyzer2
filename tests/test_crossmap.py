@@ -8,19 +8,13 @@ from nose.tools import *
 
 from mutalyzer.Crossmap import Crossmap
 
-import utils
+from utils import MutalyzerTest
 
 
-class TestCrossmap():
+class TestCrossmap(MutalyzerTest):
     """
     Test the Crossmap class.
     """
-    def setup(self):
-        utils.create_test_environment(database=True)
-
-    def teardown(self):
-        utils.destroy_environment()
-
     def test_splice_sites(self):
         """
         Check whether the gene on the forward strand has the right splice

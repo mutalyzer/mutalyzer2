@@ -16,6 +16,7 @@ from spyne.model.complex import Array
 from spyne.model.fault import Fault
 import os
 import socket
+from cStringIO import StringIO
 import tempfile
 from operator import itemgetter, attrgetter
 from sqlalchemy import and_, or_
@@ -96,24 +97,15 @@ class MutalyzerService(ServiceBase):
         # Todo: Set maximum request size by specifying the max_content_length
         #     argument for spyne.server.wsgi.WsgiApplication in all webservice
         #     instantiations.
-        max_size = settings.MAX_FILE_SIZE
+        if sum(len(s) for s in data) > settings.MAX_FILE_SIZE:
+            raise Fault('EMAXSIZE',
+                        'Only files up to %d megabytes are accepted.'
+                        % (settings.MAX_FILE_SIZE // 1048576))
 
-        batch_file = tempfile.TemporaryFile()
-        size = 0
-        try:
-            for chunk in data:
-                size += len(chunk)
-                if size > max_size:
-                    raise Fault('EMAXSIZE',
-                                'Only files up to %s megabytes are accepted.' % (float(max_size) / 1048576))
-                batch_file.write(chunk)
-            batch_file.seek(0)
-            job, columns = file_instance.parseBatchFile(batch_file)
-        finally:
-            try:
-                batch_file.close()
-            except IOError:
-                pass
+        batch_file = StringIO(data)
+
+        job, columns = file_instance.parseBatchFile(batch_file)
+        batch_file.close()
 
         if job is None:
             raise Fault('EPARSE', 'Could not parse input file, please check your file format.')

@@ -9,7 +9,9 @@ from spyne.server.null import NullServer
 import mutalyzer
 from mutalyzer.services.json import application
 
-import utils
+from fixtures import database, hg19, hg19_transcript_mappings
+from utils import MutalyzerTest
+from utils import fix
 
 
 # Todo: We currently have no way of testing POST requests to the JSON API. We
@@ -20,19 +22,13 @@ import utils
 # [2] https://github.com/LUMC/spyne/commit/58660dec28d47b1c3bf1e46d20f55a913ad036cd
 
 
-class TestServicesJson():
+class TestServicesJson(MutalyzerTest):
     """
     Test the Mutalyzer HTTP/RPC+JSON interface.
     """
     def setup(self):
-        """
-        Initialize test server.
-        """
-        utils.create_test_environment(database=True)
+        super(TestServicesJson, self).setup()
         self.server = NullServer(application, ostr=True)
-
-    def teardown(self):
-        utils.destroy_environment()
 
     def _call(self, method, *args, **kwargs):
         r = getattr(self.server.service, method)(*args, **kwargs)
@@ -64,6 +60,7 @@ class TestServicesJson():
         #assert_equal(r['faultcode'], 'Client.ValidationError')
         pass
 
+    @fix(database, hg19, hg19_transcript_mappings)
     def test_transcriptinfo_valid(self):
         """
         Running transcriptInfo with valid arguments should get us a Transcript
