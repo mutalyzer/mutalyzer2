@@ -160,12 +160,13 @@ class Converter(object) :
 
         if version in versions:
             mappings = TranscriptMapping.query.join(Chromosome).filter(
-                TranscriptMapping.accession == acc, TranscriptMapping.version == version,
+                TranscriptMapping.accession == acc,
+                TranscriptMapping.version == version,
                 Chromosome.assembly == self.assembly)
             if selector:
-                mappings = mappings.filter_by(gene=selector)
+                mappings = mappings.filter(TranscriptMapping.gene == selector)
             if selector_version:
-                mappings = mappings.filter_by(transcript=selector_version)
+                mappings = mappings.filter(TranscriptMapping.transcript == selector_version)
 
             # Todo: The 'order by chrom asc' is a quick hack to make sure we
             #   first get a primary assembly mapping instead of some haplotype
