@@ -784,7 +784,7 @@ class GenBankRetriever(Retriever):
                 # It is still in the cache, so filename is valid.
                 pass
 
-            if reference.slice_accession:
+            elif reference.slice_accession:
                 # It was previously created by slicing.
                 cast_orientation = {None: None,
                                     'forward': 1,
