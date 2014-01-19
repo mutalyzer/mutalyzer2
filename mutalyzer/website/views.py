@@ -1043,18 +1043,22 @@ def lovd_variant_info():
 
 
 # Register redirects for backwards compatibility.
-website.add_url_route('/index', 'homepage', homepage, alias=True)
-website.add_url_route('/nameGenerator', name_generator, alias=True)
-website.add_url_route('/syntaxCheck', syntax_checker, alias=True)
-website.add_url_route('/check', name_checker, alias=True)
-website.add_url_route('/checkForward', name_checker, alias=True)
-website.add_url_route('/positionConverter', position_converter, alias=True)
-website.add_url_route('/snp', snp_converter, alias=True)
-website.add_url_route('/upload', reference_loader, alias=True)
-website.add_url_route('/descriptionExtract', description_extractor, alias=True)
-website.add_url_route('/Reference/<string:filename>', reference, alias=True)
-website.add_url_route('/batch', batch_jobs, alias=True)
-website.add_url_route('/batchNameChecker', batch_jobs, alias=True)
-website.add_url_route('/batchSyntaxChecker', batch_jobs, alias=True)
-website.add_url_route('/batchPositionConverter', batch_jobs, alias=True)
-website.add_url_route('/batchSnpConverter', batch_jobs, alias=True)
+website.add_url_rule('/index', view_func=homepage, alias=True)
+website.add_url_rule('/nameGenerator', view_func=name_generator, alias=True)
+website.add_url_rule('/syntaxCheck', view_func=syntax_checker, alias=True)
+website.add_url_rule('/check', view_func=name_checker, alias=True)
+website.add_url_rule('/checkForward', view_func=name_checker, alias=True)
+website.add_url_rule('/positionConverter', view_func=position_converter,
+                     alias=True)
+website.add_url_rule('/snp', view_func=snp_converter, alias=True)
+website.add_url_rule('/upload', view_func=reference_loader, alias=True)
+website.add_url_rule('/descriptionExtract', view_func=description_extractor,
+                     alias=True)
+website.add_url_rule('/Reference/<string:filename>', view_func=reference,
+                     alias=True)
+website.add_url_rule('/batch', view_func=batch_jobs, alias=True)
+website.add_url_rule('/batchNameChecker', view_func=batch_jobs, alias=True)
+website.add_url_rule('/batchSyntaxChecker', view_func=batch_jobs, alias=True)
+website.add_url_rule('/batchPositionConverter', view_func=batch_jobs,
+                     alias=True)
+website.add_url_rule('/batchSnpConverter', view_func=batch_jobs, alias=True)
