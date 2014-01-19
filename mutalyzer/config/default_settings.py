@@ -4,11 +4,6 @@ pointed-to by the `MUTALYZER_SETTINGS` environment variable.
 """
 
 
-# Todo: Find an alternative to the temporary directories/files defined here,
-#   since they are created even if the setting is reset from another
-#   configuration file, and they are never removed.
-
-
 # Use Mutalyzer in debug mode.
 DEBUG = False
 
@@ -22,8 +17,7 @@ EMAIL = 'mutalyzer@humgen.nl'
 
 # The cache directory. Used to store uploaded and downloaded files (e.g.,
 # reference files from NCBI or user) and batch job results.
-import tempfile
-CACHE_DIR = tempfile.mkdtemp()
+CACHE_DIR = '/tmp'
 
 # Maximum size of the cache directory (in bytes).
 MAX_CACHE_SIZE = 50 * 1048576 # 50 MB
@@ -42,11 +36,7 @@ DATABASE_URI = 'sqlite://'
 DEFAULT_ASSEMBLY = 'hg19'
 
 # Name and location of the log file.
-import os
-import tempfile
-log_handle, log_filename = tempfile.mkstemp()
-os.close(log_handle)
-LOG_FILE = log_filename
+LOG_FILE = '/tmp/mutalyzer.log'
 
 # Level of logged messages.
 LOG_LEVEL = 3
