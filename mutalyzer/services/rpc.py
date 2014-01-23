@@ -19,7 +19,7 @@ import socket
 from cStringIO import StringIO
 import tempfile
 from operator import itemgetter, attrgetter
-from sqlalchemy import and_, or_
+from sqlalchemy.orm.exc import NoResultFound
 
 import mutalyzer
 from mutalyzer.config import settings
@@ -184,17 +184,17 @@ class MutalyzerService(ServiceBase):
             "Received request getTranscripts(%s %s %s %s)" % (build, chrom,
             pos, versions))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
 
-        chromosome = Chromosome.query.filter_by(assembly=assembly,
-                                                name=chrom).first()
-        if not chromosome:
+        try:
+            chromosome = assembly.chromosomes.filter_by(name=chrom).one()
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
             raise Fault("EARG", "The chrom argument (%s) was not a valid " \
                             "chromosome name." % chrom)
@@ -224,9 +224,9 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsByGene(%s %s)" % (build, name))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -270,17 +270,17 @@ class MutalyzerService(ServiceBase):
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
 
-        chromosome = Chromosome.query.filter_by(assembly=assembly,
-                                                name=chrom).first()
-        if not chromosome:
+        try:
+            chromosome = assembly.chromosomes.filter_by(name=chrom).one()
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
             raise Fault("EARG", "The chrom argument (%s) was not a valid " \
                             "chromosome name." % chrom)
@@ -337,17 +337,17 @@ class MutalyzerService(ServiceBase):
             'getTranscriptsMapping(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
             method))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
 
-        chromosome = Chromosome.query.filter_by(assembly=assembly,
-                                                name=chrom).first()
-        if not chromosome:
+        try:
+            chromosome = assembly.chromosomes.filter_by(name=chrom).one()
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
             raise Fault("EARG", "The chrom argument (%s) was not a valid " \
                             "chromosome name." % chrom)
@@ -404,9 +404,9 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request getGeneName(%s %s)" % (build, accno))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -472,9 +472,9 @@ class MutalyzerService(ServiceBase):
             "Reveived request mappingInfo(%s %s %s %s)" % (LOVD_ver, build,
             accNo, variant))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -518,9 +518,9 @@ class MutalyzerService(ServiceBase):
             "Received request transcriptInfo(%s %s %s)" % (LOVD_ver, build,
             accNo))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             O.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -552,17 +552,17 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request chromAccession(%s %s)" % (build, name))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
 
-        chromosome = Chromosome.query.filter_by(assembly=assembly,
-                                                name=name).first()
-        if not chromosome:
+        try:
+            chromosome = assembly.chromosomes.filter_by(name=name).one()
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % name)
             raise Fault("EARG", "The name argument (%s) was not a valid " \
                             "chromosome name." % name)
@@ -590,17 +590,17 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request chromName(%s %s)" % (build, accNo))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
 
-        chromosome = Chromosome.query.filter_by(assembly=assembly,
-                                                accession=accNo).first()
-        if not chromosome:
+        try:
+            chromosome = assembly.chromosomes.filter_by(accession=accNo).one()
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % accNo)
             raise Fault("EARG", "The accNo argument (%s) was not a valid " \
                             "chromosome accession." % accNo)
@@ -629,9 +629,9 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request getchromName(%s %s)" % (build, acc))
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
@@ -672,9 +672,9 @@ class MutalyzerService(ServiceBase):
 
         stats.increment_counter('position-converter/webservice')
 
-        assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                             Assembly.alias == build)).first()
-        if not assembly:
+        try:
+            assembly = Assembly.by_name_or_alias(build)
+        except NoResultFound:
             O.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \

@@ -50,10 +50,8 @@ setup(
     include_package_data=True,
     entry_points = {'console_scripts': [
         'mutalyzer = mutalyzer.entrypoints.mutalyzer:main',
+        'mutalyzer-admin = mutalyzer.entrypoints.admin:main',
         'mutalyzer-batch-processor = mutalyzer.entrypoints.batch_processor:main',
-        'mutalyzer-cache-sync = mutalyzer.entrypoints.cache_sync:main',
-        'mutalyzer-mapping-import = mutalyzer.entrypoints.mapping_import:main',
-        'mutalyzer-mapping-update = mutalyzer.entrypoints.mapping_update:main',
         'mutalyzer-service-json = mutalyzer.entrypoints.service_json:main',
         'mutalyzer-service-soap = mutalyzer.entrypoints.service_soap:main',
         'mutalyzer-website = mutalyzer.entrypoints.website:main']},

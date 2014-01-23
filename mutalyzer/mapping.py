@@ -11,16 +11,23 @@ update the database with this information.
 
 
 from collections import defaultdict
-from operator import attrgetter
+from itertools import groupby
+from operator import attrgetter, itemgetter
 
 from Bio.Seq import reverse_complement
 import MySQLdb
 
+from mutalyzer.db import session
 from mutalyzer.db.models import Chromosome, TranscriptMapping
 from mutalyzer.grammar import Grammar
+from mutalyzer.models import SoapMessage, Mapping, Transcript
+from mutalyzer.output import Output
 from mutalyzer import Crossmap
 from mutalyzer import Retriever
-from mutalyzer.models import SoapMessage, Mapping, Transcript
+
+
+class MapviewSortError(Exception):
+    pass
 
 
 def _construct_change(var, reverse=False):
@@ -749,3 +756,234 @@ class Converter(object) :
         return HGVS_notatations
     #chrom2c
 #Converter
+
+
+def import_from_ucsc_by_gene(assembly, gene):
+    """
+    Import transcript mappings for a gene from the UCSC.
+
+    .. todo: Also report how much was added/updated.
+    """
+    connection = MySQLdb.connect(user='genome',
+                                 host='genome-mysql.cse.ucsc.edu',
+                                 db=assembly.alias)
+
+    query = """
+        SELECT DISTINCT
+          acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts,
+          exonEnds, name2 AS geneName, chrom, strand, protAcc
+        FROM gbStatus, refGene, refLink
+        WHERE type = "mRNA"
+        AND refGene.name = acc
+        AND acc = mrnaAcc
+        AND name2 = %s
+    """
+    parameters = gene
+
+    cursor = connection.cursor()
+    cursor.execute(query, parameters)
+    result = cursor.fetchall()
+    cursor.close()
+
+    for (acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, exonEnds,
+         geneName, chrom, strand, protAcc) in result:
+        chromosome = assembly.chromosomes.filter_by(name=chrom).one()
+        orientation = 'reverse' if strand == '-' else 'forward'
+        exon_starts = [int(i) + 1 for i in exonStarts.split(',') if i]
+        exon_stops = [int(i) for i in exonEnds.split(',') if i]
+        if cdsStart and cdsEnd:
+            cds = cdsStart + 1, cdsEnd
+        else:
+            cds = None
+        mapping = TranscriptMapping.create_or_update(
+            chromosome, 'refseq', acc, geneName, orientation, txStart + 1,
+            txEnd, exon_starts, exon_stops, 'ucsc', cds=cds,
+            version=int(version))
+        session.add(mapping)
+
+    session.commit()
+
+
+def import_from_reference(assembly, reference):
+    """
+    Import transcript mappings from a genomic reference.
+
+    .. todo: Also report how much was added/updated.
+
+    .. note: Currently no exon locations are supported, this has only been
+       tested on mtDNA.
+    """
+    chromosome = assembly.chromosomes.filter_by(name='chrM').one()
+
+    output = Output(__file__)
+    retriever = Retriever.GenBankRetriever(output)
+    record = retriever.loadrecord(reference)
+
+    select_transcript = len(record.geneList) > 1
+
+    for gene in record.geneList:
+        # We support exactly one transcript per gene.
+        try:
+            transcript = sorted(gene.transcriptList, key=attrgetter('name'))[0]
+        except IndexError:
+            continue
+
+        # We use gene.location for now, it is always present and the same
+        # for our purposes.
+        #start, stop = transcript.mRNA.location[0], transcript.mRNA.location[1]
+        start, stop = gene.location
+
+        orientation = 'reverse' if gene.orientation == -1 else 'forward'
+
+        try:
+            cds = transcript.CDS.location
+        except AttributeError:
+            cds = None
+
+        mapping = TranscriptMapping.create_or_update(
+            chromosome, 'refseq', record.source_accession, gene.name,
+            orientation, start, stop, [start], [stop], 'reference', cds=cds,
+            select_transcript=select_transcript,
+            version=int(record.source_version))
+        session.add(mapping)
+
+    session.commit()
+
+
+def import_from_mapview_file(assembly, mapview_file, group_label):
+    """
+    Import transcript mappings from an NCBI mapview file.
+
+    We require that this file is first sorted on the `feature_id` column
+    (#11), which always contains the gene identifier, and then on the
+    `chromosome` column (#2).
+
+        sort -k 11,11 -k 2,2 seq_gene.md > seq_gene.by_gene.md
+
+    Raises :exc:`ValueError` if `mapview_file` is not sorted this way.
+
+    The NCBI mapping file consists of entries, one per line, in order of
+    their location in the genome (more specifically by start location).
+    Every entry has a 'group_label' column, denoting the assembly it is
+    from. We only use entries where this value is `group_label`.
+
+    There are four types of entries (for our purposes):
+    - Gene: Name, identifier, and location of a gene.
+    - Transcript: Name, gene id, and location of a transcript.
+    - UTR: Location and transcript of a non-coding exon (or part of it).
+    - CDS: Location and transcript of a coding exon (or part of it).
+
+    A bit troublesome for us is that exons are split in UTR exons and CDS
+    exons, with exons overlapping the UTR/CDS border defined as two
+    separate entries (one of type UTR and one of type CDS).
+
+    Another minor annoyance is that some transcripts (~ 15) are split over
+    two contigs (NT_*). In that case, they are defined by two entries in
+    the file, where we should merge them by taking the start position of
+    the first and the stop position of the second.
+
+    To complicate this annoyance, some genes (e.g. in the PAR) are mapped
+    on both the X and Y chromosomes, but stored in the file just like the
+    transcripts split over two contigs. However, these ones should of
+    course not be merged.
+
+    Our strategy is too sort by gene and chromosome and process the file
+    grouped by these two fields.
+    """
+    columns = ['taxonomy', 'chromosome', 'start', 'stop', 'orientation',
+               'contig', 'ctg_start', 'ctg_stop', 'ctg_orientation',
+               'feature_name', 'feature_id', 'feature_type', 'group_label',
+               'transcript', 'evidence_code']
+
+    chromosomes = assembly.chromosomes.all()
+
+    def read_records(mapview_file):
+        for line in mapview_file:
+            if line.startswith('#'):
+                continue
+            record = dict(zip(columns, line.rstrip().split('\t')))
+
+            # Only use records from the given assembly.
+            if record['group_label'] != group_label:
+                continue
+
+            # Only use records on chromosomes we know.
+            try:
+                record['chromosome'] = next(c for c in chromosomes if
+                                            c.name == 'chr' + record['chromosome'])
+            except StopIteration:
+                continue
+
+            record['start'] = int(record['start'])
+            record['stop'] = int(record['stop'])
+
+            yield record
+
+    def build_mappings(records):
+        # We structure the records per transcript and per record type. This is
+        # generalized to a list of records for each type, but we expect only
+        # one GENE record (with `-` as transcript value).
+        # Note that there can be more than one RNA record per transcript if it
+        # is split over different reference contigs.
+        by_transcript = defaultdict(lambda: defaultdict(list))
+        for r in records:
+            by_transcript[r['transcript']][r['feature_type']].append(r)
+
+        gene = by_transcript['-']['GENE'][0]['feature_name']
+
+        for transcript, by_type in by_transcript.items():
+            if transcript == '-':
+                continue
+            accession, version = transcript.split('.')
+            version = int(version)
+            chromosome = by_type['RNA'][0]['chromosome']
+            orientation = 'reverse' if by_type['RNA'][0]['orientation'] == '-' else 'forward'
+            start = min(t['start'] for t in by_type['RNA'])
+            stop = max(t['stop'] for t in by_type['RNA'])
+
+            exon_starts = []
+            exon_stops = []
+            cds_positions = []
+            for exon in sorted(by_type['UTR'] + by_type['CDS'],
+                               key=itemgetter('start')):
+                if exon_stops and exon_stops[-1] > exon['start'] - 1:
+                    # This exon starts before the end of the previous exon. We
+                    # have no idea what to do in this case, so we ignore it.
+                    # The number of transcripts affected is very small (e.g.,
+                    # NM_031860.1 and NM_001184961.1 in the GRCh37 assembly).
+                    continue
+                if exon['feature_type'] == 'CDS':
+                    cds_positions.extend([exon['start'], exon['stop']])
+                if exon_stops and exon_stops[-1] == exon['start'] - 1:
+                    # This exon must be merged with the previous one because
+                    # it is split over two entries (a CDS part and a UTR part
+                    # or split over different reference contigs).
+                    exon_stops[-1] = exon['stop']
+                else:
+                    exon_starts.append(exon['start'])
+                    exon_stops.append(exon['stop'])
+
+            if cds_positions:
+                cds = min(cds_positions), max(cds_positions)
+            else:
+                cds = None
+
+            yield TranscriptMapping.create_or_update(
+                chromosome, 'refseq', accession, gene, orientation, start,
+                stop, exon_starts, exon_stops, 'ncbi', cds=cds,
+                version=version)
+
+    processed_keys = set()
+
+    for key, records in groupby(read_records(mapview_file),
+                              itemgetter('feature_id', 'chromosome')):
+        if key in processed_keys:
+            raise MapviewSortError('Mapview file must be sorted by feature_id '
+                                   'and chromosome (try `sort -k 11,11 -k '
+                                   '2,2`)')
+        processed_keys.add(key)
+
+        for mapping in build_mappings(records):
+            session.add(mapping)
+
+    session.commit()

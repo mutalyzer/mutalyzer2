@@ -7,8 +7,9 @@ from datetime import datetime
 import sqlite3
 import uuid
 
-from sqlalchemy import (event, Boolean, Column, DateTime, Enum, ForeignKey,
-                        Index, Integer, String, Text, TypeDecorator)
+from sqlalchemy import event, or_
+from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Index,
+                        Integer, String, Text, TypeDecorator)
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import backref, relationship
 
@@ -273,6 +274,16 @@ class Assembly(db.Base):
     def __repr__(self):
         return '<Assembly %r taxonomy=%r>' % (self.name,
                                               self.taxonomy_common_name)
+
+    @classmethod
+    def by_name_or_alias(cls, name_or_alias):
+        """
+        Returns an :class:`Assembly` instance for the given `name_or_alias` if
+        it exists, or raises :exc:`sqlalchemy.orm.exc.NoResultFound`
+        otherwise.
+        """
+        return cls.query.filter(or_(cls.name == name_or_alias,
+                                    cls.alias == name_or_alias)).one()
 
 
 class Chromosome(db.Base):

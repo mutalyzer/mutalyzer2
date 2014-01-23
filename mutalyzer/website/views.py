@@ -16,7 +16,7 @@ from flask import (abort, current_app, jsonify, make_response, redirect,
 import jinja2
 from lxml import etree
 from spyne.server.http import HttpBase
-from sqlalchemy import and_, or_
+from sqlalchemy.orm.exc import NoResultFound
 
 import mutalyzer
 from mutalyzer import (describe, File, Retriever, Scheduler, stats, util,
@@ -396,10 +396,9 @@ def position_converter():
     chromosomal_description = None
     transcript_descriptions = None
 
-    assembly = Assembly.query.filter(
-        or_(Assembly.name == assembly_name_or_alias,
-            Assembly.alias == assembly_name_or_alias)).first()
-    if not assembly:
+    try:
+        assembly = Assembly.by_name_or_alias(assembly_name_or_alias)
+    except NoResultFound:
         output.addMessage(__file__, 3, 'ENOASSEMBLY',
                           'Not a valid assembly.')
     else:
@@ -617,10 +616,9 @@ def reference_loader_submit():
 
             assembly_name_or_alias = request.form.get('assembly_name_or_alias',
                                                       settings.DEFAULT_ASSEMBLY)
-            assembly = Assembly.query.filter(
-                or_(Assembly.name == assembly_name_or_alias,
-                    Assembly.alias == assembly_name_or_alias)).first()
-            if not assembly:
+            try:
+                assembly = Assembly.by_name_or_alias(assembly_name_or_alias)
+            except NoResultFound:
                 raise InputException('Invalid assembly')
 
             if not chromosome_name.startswith('chr'):
@@ -770,9 +768,9 @@ def batch_jobs_submit():
         errors.append('Please select a local file for upload.')
 
     if job_type == 'position-converter':
-        if not Assembly.query.filter(
-            or_(Assembly.name == assembly_name_or_alias,
-                Assembly.alias == assembly_name_or_alias)).first():
+        try:
+            Assembly.by_name_or_alias(assembly_name_or_alias)
+        except NoResultFound:
             errors.append('Not a valid assembly.')
         argument = assembly_name_or_alias
     else:
@@ -996,9 +994,9 @@ def lovd_variant_info():
                       % (accession, description, lovd_version, build,
                          request.remote_addr))
 
-    assembly = Assembly.query.filter(or_(Assembly.name == build,
-                                         Assembly.alias == build)).first()
-    if not assembly:
+    try:
+        assembly = Assembly.by_name_or_alias(build)
+    except NoResultFound:
         response = make_response('invalid build')
         response.headers['Content-Type'] = 'text/plain'
         return response
