@@ -3,14 +3,14 @@ Command line interface to Mutalyzer administrative tools.
 """
 
 
-# Todo: Manage genome assemblies.
-
-
 import argparse
+import json
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from ..db.models import Assembly
+from ..db import session
+from ..db.models import Assembly, Chromosome
 from .. import mapping
 from .. import output
 from .. import sync
@@ -18,6 +18,46 @@ from .. import sync
 
 class UserError(Exception):
     pass
+
+
+def import_assembly(assembly_file):
+    """
+    Import genome assembly definition from a JSON file.
+    """
+    try:
+        definition = json.load(assembly_file)
+    except ValueError:
+        raise UserError('Not a valid JSON file: %s' % assembly_file.name)
+
+    try:
+        Assembly.by_name_or_alias(definition['name'])
+    except NoResultFound:
+        pass
+    else:
+        raise UserError('Assembly with this name or alias already exists: %s'
+                        % definition['name'])
+
+    if definition['alias'] is not None:
+        try:
+            Assembly.by_name_or_alias(definition['alias'])
+        except NoResultFound:
+            pass
+        else:
+            raise UserError('Assembly with this name or alias already '
+                            'exists: %s' % definition['alias'])
+
+    assembly = Assembly(definition['name'], definition['taxonomy_id'],
+                        definition['taxonomy_common_name'],
+                        definition['alias'])
+    session.add(assembly)
+
+    for chromosome_definition in definition['chromosomes']:
+        chromosome = Chromosome(assembly, chromosome_definition['name'],
+                                chromosome_definition['accession'],
+                                chromosome_definition['organelle_type'])
+        session.add(chromosome)
+
+    session.commit()
 
 
 def import_mapview(assembly_name_or_alias, mapview_file, group_label):
@@ -86,6 +126,15 @@ def main():
         description='Mutalyzer administrative tools.')
     subparsers = parser.add_subparsers(
         title='subcommands', dest='subcommand', help='subcommand help')
+
+    p = subparsers.add_parser(
+        'import-assembly', help='import assembly definition from JSON file',
+        description=import_assembly.__doc__.split('\n\n')[0])
+    p.set_defaults(func=import_assembly)
+    p.add_argument(
+        'assembly_file', metavar='FILE', type=argparse.FileType('r'),
+        help='genome assembly definition JSON file (example: '
+        'extras/assemblies/GRCh37.json)')
 
     p = subparsers.add_parser(
         'import-mapview', help='import mappings from NCBI mapview file',

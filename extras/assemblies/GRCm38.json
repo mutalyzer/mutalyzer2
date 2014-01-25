@@ -1,0 +1,118 @@
+{
+  "name": "GRCm38",
+  "alias": "mm10",
+  "taxonomy_id": 10090,
+  "taxonomy_common_name": "Mus musculus",
+  "chromosomes": [
+    {
+      "organelle_type": "chromosome",
+      "name": "chr1",
+      "accession": "NC_000067.65"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr2",
+      "accession": "NC_000068.70"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr3",
+      "accession": "NC_000069.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr4",
+      "accession": "NC_000070.66"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr5",
+      "accession": "NC_000071.65"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr6",
+      "accession": "NC_000072.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr7",
+      "accession": "NC_000073.61"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr8",
+      "accession": "NC_000074.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr9",
+      "accession": "NC_000075.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr10",
+      "accession": "NC_000076.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr11",
+      "accession": "NC_000077.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr12",
+      "accession": "NC_000078.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr13",
+      "accession": "NC_000079.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr14",
+      "accession": "NC_000080.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr15",
+      "accession": "NC_000081.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr16",
+      "accession": "NC_000082.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr17",
+      "accession": "NC_000083.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr18",
+      "accession": "NC_000084.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chr19",
+      "accession": "NC_000085.60"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chrX",
+      "accession": "NC_000086.71"
+    },
+    {
+      "organelle_type": "chromosome",
+      "name": "chrY",
+      "accession": "NC_000087.74"
+    },
+    {
+      "organelle_type": "mitochondrion",
+      "name": "chrM",
+      "accession": "NC_005089.1"
+    }
+  ]
+}
