@@ -20,7 +20,6 @@ module much more.
 import time
 
 from mutalyzer.redisclient import client
-from mutalyzer.config import settings
 
 
 # Label, bucket definition, expiration time in seconds.
