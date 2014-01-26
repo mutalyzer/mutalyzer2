@@ -19,8 +19,8 @@ from spyne.server.http import HttpBase
 from sqlalchemy.orm.exc import NoResultFound
 
 import mutalyzer
-from mutalyzer import (describe, File, Retriever, Scheduler, stats, util,
-                       variantchecker)
+from mutalyzer import (announce, describe, File, Retriever, Scheduler, stats,
+                       util, variantchecker)
 from mutalyzer.config import settings
 from mutalyzer.db import session
 from mutalyzer.db.models import BATCH_JOB_TYPES
@@ -46,7 +46,8 @@ def add_globals():
             'json_root_url'       : settings.JSON_ROOT_URL,
             'piwik'               : settings.PIWIK,
             'piwik_base_url'      : settings.PIWIK_BASE_URL,
-            'piwik_site_id'       : settings.PIWIK_SITE_ID}
+            'piwik_site_id'       : settings.PIWIK_SITE_ID,
+            'announcement'        : announce.get_announcement()}
 
 
 @website.route('/')

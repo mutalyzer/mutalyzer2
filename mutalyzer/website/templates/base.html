@@ -277,6 +277,9 @@
     <td width="0"></td>
     <td width="0">
 
+    {% if announcement %}
+      <p><b>Announcement:</b> {{ announcement.body }}{% if announcement.url %} <a href="{{ announcement.url }}">read more</a>{% endif %}</p>
+    {% endif %}
 
     <center>
       <h2>Mutalyzer {{ mutalyzer_version }}<br>

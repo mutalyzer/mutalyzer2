@@ -9,6 +9,7 @@ import json
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
+from .. import announce
 from ..db import session
 from ..db.models import Assembly, Chromosome
 from .. import mapping
@@ -113,6 +114,20 @@ def sync_cache(wsdl_url, url_template, history=7):
     cache_sync.sync_with_remote(wsdl_url, url_template, history)
 
 
+def set_announcement(body, url=None):
+    """
+    Set announcement to show to the user.
+    """
+    announce.set_announcement(body, url=url)
+
+
+def unset_announcement():
+    """
+    Unset announcement to show to the user.
+    """
+    announce.unset_announcement()
+
+
 def main():
     """
     Command-line interface to Mutalyzer administrative tools.
@@ -193,6 +208,23 @@ def main():
         '-H', '--history', metavar='DAYS', dest='history', type=int,
         default=7, help='number of days to go back in the remote cache '
         '(default: 7)')
+
+    p = subparsers.add_parser(
+        'set-announcement', help='set user announcement',
+        description=set_announcement.__doc__.split('\n\n')[0],
+        epilog='The announcement is shown on every page of the website.')
+    p.set_defaults(func=set_announcement)
+    p.add_argument(
+        'body', metavar='ANNOUNCEMENT',
+        help='announcement text to show to the user')
+    p.add_argument(
+        '--url', metavar='URL', dest='url',
+        help='URL to more information on the announcement')
+
+    p = subparsers.add_parser(
+        'unset-announcement', help='unset user announcement',
+        description=unset_announcement.__doc__.split('\n\n')[0])
+    p.set_defaults(func=unset_announcement)
 
     args = parser.parse_args()
 
