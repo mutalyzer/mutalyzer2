@@ -3,6 +3,10 @@ Queries on database models.
 """
 
 
+# Todo: Some (all) of these are probably better defined as class methods on
+#   the models they work with.
+
+
 from datetime import datetime, timedelta
 
 from sqlalchemy import and_, or_
@@ -17,7 +21,7 @@ def pop_batch_queue_item(batch_job):
     Get the next batch queue item for the given batch job. Return its fields
     as a tuple `item`, `flags` and remove it from the database.
 
-    If not batch queue item could be found for this batch job, return `None`.
+    If no batch queue item could be found for this batch job, return `None`.
 
     .. note:: Originally, finding the next batch queue item was done using a
         more complicated query::
