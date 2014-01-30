@@ -1,1 +1,0 @@
-../LUMC_Presentation_Skeleton/Makefile
