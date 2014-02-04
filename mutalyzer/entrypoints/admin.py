@@ -3,13 +3,27 @@ Command line interface to Mutalyzer administrative tools.
 """
 
 
+# Todo: Group subcommands to subsubcommands. For example:
+#
+#     mutalyzer-admin announcement unset
+#
+# instead of
+#
+#     mutalyzer-admin unset-announcement
+
+
 import argparse
 import json
+import os
 
+import alembic.command
+import alembic.config
+from alembic.migration import MigrationContext
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from .. import announce
+from .. import db
 from ..db import session
 from ..db.models import Assembly, Chromosome
 from .. import mapping
@@ -128,6 +142,28 @@ def unset_announcement():
     announce.unset_announcement()
 
 
+def setup_database(alembic_config_path=None, destructive=False):
+    """
+    Setup database tables (if they do not yet exist).
+    """
+    if alembic_config_path and not os.path.isfile(alembic_config_path):
+        raise UserError('Cannot find Alembic configuration: %s'
+                        % alembic_config_path)
+
+    if destructive:
+        db.Base.metadata.drop_all(db.session.get_bind())
+
+    db.Base.metadata.create_all(db.session.get_bind())
+
+    if alembic_config_path:
+        context = MigrationContext.configure(db.session.connection())
+        if destructive or context.get_current_revision() is None:
+            alembic_config = alembic.config.Config(alembic_config_path)
+            alembic.command.stamp(alembic_config, 'head')
+
+    db.session.commit()
+
+
 def main():
     """
     Command-line interface to Mutalyzer administrative tools.
@@ -225,6 +261,20 @@ def main():
         'unset-announcement', help='unset user announcement',
         description=unset_announcement.__doc__.split('\n\n')[0])
     p.set_defaults(func=unset_announcement)
+
+    p = subparsers.add_parser(
+        'setup-database', help='setup database',
+        description=setup_database.__doc__.split('\n\n')[0],
+        epilog='If Alembic config is given (--alembic-config), this also '
+        'prepares the database for future migrations with Alembic '
+        '(recommended).')
+    p.add_argument(
+        '--destructive', dest='destructive', action='store_true',
+        help='delete any existing tables and data')
+    p.add_argument(
+        '-c', '--alembic-config', metavar='ALEMBIC_CONFIG',
+        dest='alembic_config_path', help='path to Alembic configuration file')
+    p.set_defaults(func=setup_database)
 
     args = parser.parse_args()
 

@@ -499,17 +499,3 @@ Index('transcript_mapping_transcript',
       TranscriptMapping.gene, TranscriptMapping.transcript,
       TranscriptMapping.chromosome_id,
       unique=True)
-
-
-def create_all():
-    db.Base.metadata.drop_all(db.session.get_bind())
-    db.Base.metadata.create_all(db.session.get_bind())
-    db.session.commit()
-
-    # Todo: Use alembic.
-
-    # if using alembic:
-    #from alembic.config import Config
-    #from alembic import command
-    #alembic_cfg = Config("alembic.ini")
-    #command.stamp(alembic_cfg, "head")

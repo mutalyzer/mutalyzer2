@@ -18,3 +18,4 @@ SQLAlchemy==0.9.1
 redis==2.8.0
 mockredispy==2.8.0.2
 mock==1.0.1
+alembic==0.6.2
