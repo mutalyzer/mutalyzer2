@@ -154,14 +154,15 @@ def setup_database(alembic_config_path=None, destructive=False):
         db.Base.metadata.drop_all(db.session.get_bind())
 
     db.Base.metadata.create_all(db.session.get_bind())
+    db.session.commit()
 
     if alembic_config_path:
         context = MigrationContext.configure(db.session.connection())
         if destructive or context.get_current_revision() is None:
+            # We need to close the current session before running Alembic.
+            db.session.remove()
             alembic_config = alembic.config.Config(alembic_config_path)
             alembic.command.stamp(alembic_config, 'head')
-
-    db.session.commit()
 
 
 def main():
