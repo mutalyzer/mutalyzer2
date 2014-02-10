@@ -3,15 +3,6 @@ Command line interface to Mutalyzer administrative tools.
 """
 
 
-# Todo: Group subcommands to subsubcommands. For example:
-#
-#     mutalyzer-admin announcement unset
-#
-# instead of
-#
-#     mutalyzer-admin unset-announcement
-
-
 import argparse
 import json
 import os
@@ -35,9 +26,9 @@ class UserError(Exception):
     pass
 
 
-def import_assembly(assembly_file):
+def add_assembly(assembly_file):
     """
-    Import genome assembly definition from a JSON file.
+    Add genome assembly definition from a JSON file.
     """
     try:
         definition = json.load(assembly_file)
@@ -73,6 +64,24 @@ def import_assembly(assembly_file):
         session.add(chromosome)
 
     session.commit()
+
+
+def list_assemblies():
+    """
+    List genome assemblies.
+    """
+    assemblies = Assembly.query \
+        .order_by(Assembly.taxonomy_common_name.asc(),
+                  Assembly.name.asc()) \
+        .all()
+
+    for assembly in assemblies:
+        if assembly.alias:
+            name = '%s (%s)' % (assembly.name, assembly.alias)
+        else:
+            name = assembly.name
+        print '%s, %s (%s)' % (name, assembly.taxonomy_common_name,
+                               assembly.taxonomy_id)
 
 
 def import_mapview(assembly_name_or_alias, mapview_file, group_label):
@@ -179,16 +188,30 @@ def main():
     subparsers = parser.add_subparsers(
         title='subcommands', dest='subcommand', help='subcommand help')
 
-    p = subparsers.add_parser(
-        'import-assembly', help='import assembly definition from JSON file',
-        description=import_assembly.__doc__.split('\n\n')[0])
-    p.set_defaults(func=import_assembly)
+    # Subparsers for 'assemblies'.
+    s = subparsers.add_parser(
+        'assemblies', help='manage genome assemblies',
+        description='Manage genome assemblies and their transcript mappings.'
+        ).add_subparsers()
+
+    # Subparser 'assemblies list'.
+    p = s.add_parser(
+        'list', help='list assemblies',
+        description=list_assemblies.__doc__.split('\n\n')[0])
+    p.set_defaults(func=list_assemblies)
+
+    # Subparser 'assemblies add'.
+    p = s.add_parser(
+        'add', help='add assembly definition from JSON file',
+        description=add_assembly.__doc__.split('\n\n')[0])
+    p.set_defaults(func=add_assembly)
     p.add_argument(
         'assembly_file', metavar='FILE', type=argparse.FileType('r'),
         help='genome assembly definition JSON file (example: '
         'extras/assemblies/GRCh37.json)')
 
-    p = subparsers.add_parser(
+    # Subparser 'assemblies import-mapview'.
+    p = s.add_parser(
         'import-mapview', help='import mappings from NCBI mapview file',
         parents=[assembly_parser],
         description=import_mapview.__doc__.split('\n\n')[0],
@@ -204,7 +227,8 @@ def main():
         help='use only entries with this group label (example: '
         'GRCh37.p2-Primary Assembly)')
 
-    p = subparsers.add_parser(
+    # Subparser 'assemblies import-gene'.
+    p = s.add_parser(
         'import-gene', help='import mappings by gene from UCSC database',
         parents=[assembly_parser],
         description=import_gene.__doc__.split('\n\n')[0],
@@ -217,7 +241,8 @@ def main():
         help='gene to import all transcript mappings for from the UCSC '
         'database (example: TTN)')
 
-    p = subparsers.add_parser(
+    # Subparser 'assemblies import-reference'.
+    p = s.add_parser(
         'import-reference', help='import mappings from reference',
         parents=[assembly_parser],
         description=import_reference.__doc__.split('\n\n')[0],
@@ -230,6 +255,32 @@ def main():
         help='genomic reference to import all genes from (example: '
         'NC_012920.1)')
 
+    # Subparsers for 'announcement'.
+    s = subparsers.add_parser(
+        'announcement', help='manage user announcement',
+        description='Manage announcement to show to the user.',
+        epilog='The announcement is shown on every page of the website.'
+        ).add_subparsers()
+
+    # Subparser 'announcement set'.
+    p = s.add_parser(
+        'set', help='set user announcement',
+        description=set_announcement.__doc__.split('\n\n')[0])
+    p.set_defaults(func=set_announcement)
+    p.add_argument(
+        'body', metavar='ANNOUNCEMENT',
+        help='announcement text to show to the user')
+    p.add_argument(
+        '--url', metavar='URL', dest='url',
+        help='URL to more information on the announcement')
+
+    # Subparser 'announcement unset'.
+    p = s.add_parser(
+        'unset', help='unset user announcement',
+        description=unset_announcement.__doc__.split('\n\n')[0])
+    p.set_defaults(func=unset_announcement)
+
+    # Subparser 'sync-cache'.
     p = subparsers.add_parser(
         'sync-cache', help='synchronize cache with remote Mutalyzer',
         description=sync_cache.__doc__.split('\n\n')[0],
@@ -246,23 +297,7 @@ def main():
         default=7, help='number of days to go back in the remote cache '
         '(default: 7)')
 
-    p = subparsers.add_parser(
-        'set-announcement', help='set user announcement',
-        description=set_announcement.__doc__.split('\n\n')[0],
-        epilog='The announcement is shown on every page of the website.')
-    p.set_defaults(func=set_announcement)
-    p.add_argument(
-        'body', metavar='ANNOUNCEMENT',
-        help='announcement text to show to the user')
-    p.add_argument(
-        '--url', metavar='URL', dest='url',
-        help='URL to more information on the announcement')
-
-    p = subparsers.add_parser(
-        'unset-announcement', help='unset user announcement',
-        description=unset_announcement.__doc__.split('\n\n')[0])
-    p.set_defaults(func=unset_announcement)
-
+    # Subparser 'setup-database'.
     p = subparsers.add_parser(
         'setup-database', help='setup database',
         description=setup_database.__doc__.split('\n\n')[0],
