@@ -451,7 +451,7 @@ class TestWebsite(MutalyzerTest):
                               header='Input\tErrors and warnings').strip().split('\n')
         assert 'Restriction Sites Created\tRestriction Sites Deleted' in results[0]
         assert 'CviQI,RsaI\tBccI' in results[1]
-        assert 'CviQI,RsaI;HhaI,HinP1I;SfcI\tBccI;;BpmI,BsaXI (2),MnlI' in results[2]
+        assert 'CviQI,RsaI;HhaI,HinP1I;SfcI\tBccI;;BpmI,BsaXI (2),LpnPI,MnlI' in results[2]
 
     @fix(database)
     def test_batch_multicolumn(self):
