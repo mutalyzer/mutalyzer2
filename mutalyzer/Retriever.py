@@ -590,8 +590,16 @@ class GenBankRetriever(Retriever):
         query = "%s[Gene] AND %s[Orgn]" % (gene, organism)
         try:
             handle = Entrez.esearch(db = "gene", term = query)
-            searchresult = Entrez.read(handle)
-            handle.close()
+            try:
+                searchresult = Entrez.read(handle)
+            except Entrez.Parser.ValidationError:
+                self._output.addMessage(__file__, -1, 'INFO',
+                                        'Error reading Entrez esearch result.')
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not search for gene %s.' % gene)
+                return None
+            finally:
+                handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
             self._output.addMessage(__file__, -1, 'INFO',
                                     'Error connecting to Entrez esearch: %s' % str(e))
@@ -604,8 +612,16 @@ class GenBankRetriever(Retriever):
         for i in searchresult["IdList"] :                 # Inspect all results.
             try:
                 handle = Entrez.esummary(db = "gene", id = i)
-                summary = Entrez.read(handle)
-                handle.close()
+                try:
+                    summary = Entrez.read(handle)
+                except Entrez.Parser.ValidationError:
+                    self._output.addMessage(__file__, -1, 'INFO',
+                                            'Error reading Entrez esummary result.')
+                    self._output.addMessage(__file__, 4, 'ERETR',
+                                            'Could not get mapping information for gene %s.' % gene)
+                    return None
+                finally:
+                    handle.close()
             except (IOError, urllib2.HTTPError, HTTPException) as e:
                 self._output.addMessage(__file__, -1, 'INFO',
                                         'Error connecting to Entrez esummary: %s' % str(e))
