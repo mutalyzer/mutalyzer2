@@ -532,7 +532,7 @@ class Converter(object) :
         else:
             description = '[' + ';'.join(descriptions) + ']'
 
-        if self.mapping.chromosome.organelle_type == 'mitochondrion':
+        if self.mapping.chromosome.organelle == 'mitochondrion':
             return "%s:m.%s" % (self.mapping.chromosome.accession, description)
         else:
             return "%s:g.%s" % (self.mapping.chromosome.accession, description)

@@ -5,112 +5,112 @@
   "taxonomy_common_name": "Mus musculus",
   "chromosomes": [
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr1",
       "accession": "NC_000067.65"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr2",
       "accession": "NC_000068.70"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr3",
       "accession": "NC_000069.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr4",
       "accession": "NC_000070.66"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr5",
       "accession": "NC_000071.65"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr6",
       "accession": "NC_000072.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr7",
       "accession": "NC_000073.61"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr8",
       "accession": "NC_000074.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr9",
       "accession": "NC_000075.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr10",
       "accession": "NC_000076.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr11",
       "accession": "NC_000077.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr12",
       "accession": "NC_000078.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr13",
       "accession": "NC_000079.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr14",
       "accession": "NC_000080.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr15",
       "accession": "NC_000081.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr16",
       "accession": "NC_000082.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr17",
       "accession": "NC_000083.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr18",
       "accession": "NC_000084.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chr19",
       "accession": "NC_000085.60"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chrX",
       "accession": "NC_000086.71"
     },
     {
-      "organelle_type": "chromosome",
+      "organelle": "nucleus",
       "name": "chrY",
       "accession": "NC_000087.74"
     },
     {
-      "organelle_type": "mitochondrion",
+      "organelle": "mitochondrion",
       "name": "chrM",
       "accession": "NC_005089.1"
     }

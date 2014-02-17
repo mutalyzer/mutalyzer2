@@ -304,9 +304,11 @@ class Chromosome(db.Base):
     #: Chromosome accession number (e.g., ``NC_000001.10``, ``NC_012920.1``).
     accession = Column(String(30), nullable=False)
 
-    #: Type of organelle.
-    organelle_type = Column(Enum('chromosome', 'mitochondrion',
-                                 name='organelle_type'))
+    # Todo: Use constant definitions for this type.
+    #: Enclosing organelle. Used to differentiate between references requiring
+    #: ``m.`` and ``g.`` descriptions.
+    organelle = Column(Enum('nucleus', 'mitochondrion',
+                            name='organelle'))
 
     #: The :class:`Assembly` this chromosome is in.
     assembly = relationship(
@@ -317,11 +319,11 @@ class Chromosome(db.Base):
                         cascade='all, delete-orphan',
                         passive_deletes=True))
 
-    def __init__(self, assembly, name, accession, organelle_type):
+    def __init__(self, assembly, name, accession, organelle):
         self.assembly = assembly
         self.name = name
         self.accession = accession
-        self.organelle_type = organelle_type
+        self.organelle = organelle
 
     def __repr__(self):
         return '<Chromosome %r accession=%r>' % (self.name, self.accession)

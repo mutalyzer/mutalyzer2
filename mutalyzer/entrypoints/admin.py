@@ -60,7 +60,7 @@ def add_assembly(assembly_file):
     for chromosome_definition in definition['chromosomes']:
         chromosome = Chromosome(assembly, chromosome_definition['name'],
                                 chromosome_definition['accession'],
-                                chromosome_definition['organelle_type'])
+                                chromosome_definition['organelle'])
         session.add(chromosome)
 
     session.commit()
