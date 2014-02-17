@@ -26,6 +26,14 @@
 
 \pagenumbering{arabic}
 
+\section{A word of warning} \label{sec:warning}
+Please note that this document is heavily out of date. Please refer to the
+Sphinx-based documentation in the parent directory and to the comments in the
+source code. Any remaining relevant sections from this document have to be
+moved to the Sphinx-based documentation at some point.
+
+\newpage
+
 \section{Introduction} \label{sec:introduction}
 This document is intended for developers. It describes the internal workings
 of the Mutalyzer \thisversion\ modules and their interactions.
@@ -36,27 +44,27 @@ This document is for internal use only.
 
 \section{Modules} \label{sec:modules}
 Mutalyzer \thisversion\ consists of several modules, which can be used in a
-number of combinations. Several possible combinations are described in 
+number of combinations. Several possible combinations are described in
 Sections~\ref{sec:programs}~and~\ref{sec:interfaces}.
 
 In this section, we give a global overview of all modules and their function,
-for a detailed description of the module interface, please refer to the 
+for a detailed description of the module interface, please refer to the
 API~\cite{API} documentation.
 
 \subsection{The Config module} \label{subsec:config}
 The \texttt{Config} module loads the configuration file
-(\texttt{mutalyzer.conf}) and processes the variables. 
+(\texttt{mutalyzer.conf}) and processes the variables.
 
 \begin{itemize}
 \item Numbers will be converted to integers.
-\item If necessary, integers will be multiplied by a constant (to convert 
+\item If necessary, integers will be multiplied by a constant (to convert
       megabytes to bytes for example).
 \item Variables are stored in a specific sub class of the \texttt{Config}
-      class. 
+      class.
 \end{itemize}
 
 So all the variables that are associated with the \texttt{Retriever} module for
-example, are stored in the \texttt{Config.Retriever} class. Upon making an 
+example, are stored in the \texttt{Config.Retriever} class. Upon making an
 instance of the \texttt{Retriever} class, this object can be passed to it to
 initialise the class.
 
@@ -70,7 +78,7 @@ the constructor to make the module aware of the program that constructed it.
 This is a way to make a distinction between different programs and interfaces
 in the log file.
 
-Messages are stored in a list of \emph{message objects}. A message object 
+Messages are stored in a list of \emph{message objects}. A message object
 consists of the fields described in Table~\ref{tab:message}.
 
 \begin{table}[H]
@@ -80,7 +88,7 @@ Field name & Description \\
 \hline
 origin      & Name of the module creating this object. \\
 level       & Importance of the message (see Table~\ref{tab:messagelevel}). \\
-code        & The error code of the message 
+code        & The error code of the message
               (see Appendix~\ref{subsec:error}). \\
 description & A description of the message.
 \end{tabular}
@@ -89,7 +97,7 @@ description & A description of the message.
 \end{table}
 
 In the message object, the \emph{file name} field refers to the program in
-which the message was generated, the \emph{severity level}, as described in 
+which the message was generated, the \emph{severity level}, as described in
 Table~\ref{tab:messagelevel} indicates the class of the message, ranging from a
 log message to to fatal error, the \emph{code} field refers to the type of
 message and the \emph{description} field is used for a long descriptive
@@ -112,19 +120,19 @@ $5$           & Off     & Show nothing. \\
 \end{table}
 
 The \emph{code} field can be used by a program that uses this module as a means to alter the control flow, instead of parsing the description (that is likely
-to change in later versions). The codes and their meaning can be found in 
+to change in later versions). The codes and their meaning can be found in
 Appendix~\ref{subsec:error}.
 
 The \emph{severity level} field is used both for logging as well as for
 retrieving messages, both ways are controlled by configuration variables that
-are passed to the \texttt{Output} module at the time of construction. 
+are passed to the \texttt{Output} module at the time of construction.
 The \texttt{outputlevel} variable is used by the \texttt{getMessages()} member
 function. All messages of which the level exceeds the value of this variable
 will be returned as a list. Logging is controlled by the \texttt{loglevel}
 variable. All messages of which the level exceeds the values of this variable
 will be logged. Additionally, the level $-1$ is reserved for logging
 exclusively. Messages that are generated with this level, will not appear when
-using the \texttt{getMessages()} function. 
+using the \texttt{getMessages()} function.
 
 In Table~\ref{tab:outputconfig} all configurable settings of this module are
 described.
@@ -139,21 +147,21 @@ datestring  & Prefix for each log message. \\
 loglevel    & Level at which messages are logged. \\
 outputlevel & Level at which messages are returned by \texttt{getMessages()}.
 \end{tabular}
-\caption{Configuration variables of the \texttt{Output} object} 
+\caption{Configuration variables of the \texttt{Output} object}
 \label{tab:outputconfig}
 \end{center}
 \end{table}
 
-For storage of output, a dictionary is used. The values in this dictionary 
+For storage of output, a dictionary is used. The values in this dictionary
 are lists. A pair (key, value) can be set by using the \texttt{addOutput()}
 function. Subsequent calls to this function with the same key as parameter,
 will expand the list that is pointed to by the key.
 
 For retrieval of output, the \texttt{getOutput()} and
-\texttt{getIndexedOutput()} functions can be used. Both functions require a 
+\texttt{getIndexedOutput()} functions can be used. Both functions require a
 key name as argument. The first one returns the entire list pointed at by the
 key, while the second one only returns one element of this list. The index of
-this element is passed as a parameter. If either the key or (in the latter 
+this element is passed as a parameter. If either the key or (in the latter
 case) the index does not exist, an empty list is returned.
 
 \subsection{The Db module} \label{subsec:db}
@@ -181,9 +189,9 @@ The \texttt{Db} module has the following derived classes:
 
 The \texttt{Mapping} class provides an interface for databases that contain
 mapping information. At the time of this writing, mapping information of
-human builds \emph{hg18} and \emph{hg19}~\cite{GN} are available. This class 
+human builds \emph{hg18} and \emph{hg19}~\cite{GN} are available. This class
 provides functions to convert chromosomal positions into transcript oriented
-positions and vice versa. These conversions are needed for the mapping of 
+positions and vice versa. These conversions are needed for the mapping of
 data in locus specific databases~\cite{LOVD} (from transcript level to
 chromosome level), or for the analysis of variants discovered in Next
 Generation Sequencing projects (in which case the conversion is likely to be
@@ -213,16 +221,16 @@ Variable        & Description \\
 \hline
 internalDb      & Name of the internal database. \\
 dbNames         & List of MySQL mapping database names. \\
-LocalMySQLuser  & MySQL username for the local databases (internalDb and 
+LocalMySQLuser  & MySQL username for the local databases (internalDb and
                   dbNames). \\
 LocalMySQLhost  & Host name for the local databases. \\
 RemoteMySQLuser & MySQL username for the UCSC database. \\
 RemoteMySQLhost & Host name for the UCSC database. \\
-UpdateInterval  & Retrieve all entries modified within a certain number of 
+UpdateInterval  & Retrieve all entries modified within a certain number of
                   days. \\
 TempFile        & Temporary file for updated UCSC mapping information.
 \end{tabular}
-\caption{Configuration variables of the \texttt{Db} object} 
+\caption{Configuration variables of the \texttt{Db} object}
 \label{tab:dbconfig}
 \end{center}
 \end{table}
@@ -243,7 +251,7 @@ within a reference sequence file has changed (without changing anything
 crucial), so the version number of this retrieved file was not increased. An
 other useful function is one that returns a new \texttt{UD} number. \texttt{UD}
 numbers are assigned to files that are local to the Mutalyzer installation.
-They will also be discussed in Section~\ref{subsubsec:genbankretriever}. 
+They will also be discussed in Section~\ref{subsubsec:genbankretriever}.
 
 The \texttt{Retriever} class is configured with variables shown in
 Table~\ref{tab:retrieverconfig}.
@@ -260,7 +268,7 @@ maxDldSize & The maximum size of a downloaded reference sequence file in
              megabytes. \\
 minDldSize & The minimum size of a downloaded reference sequence file in bytes.
 \end{tabular}
-\caption{Configuration variables of the \texttt{Retriever} object} 
+\caption{Configuration variables of the \texttt{Retriever} object}
 \label{tab:retrieverconfig}
 \end{center}
 \end{table}
@@ -268,7 +276,7 @@ minDldSize & The minimum size of a downloaded reference sequence file in bytes.
 \subsubsection{The GenBankRetriever class} \label{subsubsec:genbankretriever}
 The \texttt{GenBankRetriever} class provides functions to retrieve a
 \emph{GenBank} file from the NCBI~\cite{NCBI}. There are several interfaces
-that accomplish this task: 
+that accomplish this task:
 
 \begin{itemize}
 \item Automatic retrieval.
@@ -295,9 +303,9 @@ variable). Then, the \texttt{efetch()} function from the Biopython package can
 be used to retrieve the sequence of interest. The retrieved slice is placed in
 the cache and is given its unique \texttt{UD} number. After retrieval, the
 md5sum is calculated and stored in the internal database together with the
-accession number of the chromosome or contig, the \texttt{UD} number, the 
+accession number of the chromosome or contig, the \texttt{UD} number, the
 orientation and the positions used to make the slice in the \texttt{GBInfo}
-table. 
+table.
 
 Retrieval by gene name can only be done for builds of genomes that are
 considered current by the NCBI. At the time of this writing, for example, a
@@ -328,18 +336,18 @@ After successful retrieval, the file is given a \texttt{UD} number and is
 placed in the cache directory. The md5sum of the file, as well as its
 \texttt{UD} number and the original hyperlink are stored in the database.
 
-Each interface stores information about the origin and the way of retrieval 
+Each interface stores information about the origin and the way of retrieval
 in the local database in the \texttt{GBInfo} table. This is done to ease the
 task of retrieving a deleted file from the cache. If for example, an
 \texttt{UD} number of a deleted file is given, the database can be queried to
 see if there is still enough information to re-retrieve the reference sequence
 file. If the way of retrieval was by slicing (and thus also by retrieving via
-gene symbol), the coordinates and orientation, together with the accession 
+gene symbol), the coordinates and orientation, together with the accession
 number of the chromosome or contig can be used to make the \texttt{UD}
 available again. If necessary, the md5sum is updated.
 
 When a file is deleted where the method of retrieval was via a hyperlink, the
-file is downloaded again, but is only revived if and only if the md5sum 
+file is downloaded again, but is only revived if and only if the md5sum
 matches. Manually uploaded files can not be revived.
 
 An other use of the md5sum is preventing multiple uploads. If the md5sum is
@@ -356,11 +364,11 @@ The \texttt{Mutator} module provides a class that has a number of standard
 mutation functions like \texttt{delM()}, \texttt{insM()}, etc. which are all
 wrappers for the private \texttt{\_\_mutate()} member function. This function
 operates under the assumption that every mutation can be written as a
-\emph{deletion-insertion}. The wrapper functions convert positions to 
+\emph{deletion-insertion}. The wrapper functions convert positions to
 \emph{interbase coordinates} when needed and call the \texttt{\_\_mutate()}
-function. Each wrapper function stores a triple (descriptive message, old 
-sequence, new sequence) in the \texttt{Output} object under the name 
-\texttt{visualisation}. The old- and new sequence are returned by the 
+function. Each wrapper function stores a triple (descriptive message, old
+sequence, new sequence) in the \texttt{Output} object under the name
+\texttt{visualisation}. The old- and new sequence are returned by the
 \texttt{\_\_mutate()} function.
 
 The \texttt{\_\_mutate()} function performs the following tasks:
@@ -389,14 +397,14 @@ maxvissize    & Maximum length of visualised mutations. \\
 flankclipsize & Length of the flanking sequences of the clipped mutations (see
                 maxvissize).
 \end{tabular}
-\caption{Configuration variables of the \texttt{Mutator} object} 
+\caption{Configuration variables of the \texttt{Mutator} object}
 \label{tab:mutatorconfig}
 \end{center}
 \end{table}
 
-If the original or mutated part of a sequence exceeds the \texttt{maxvissize} 
+If the original or mutated part of a sequence exceeds the \texttt{maxvissize}
 configuration value, this subsequence is broken up in three parts. The outer
-parts consist of the head and tail of the subsequence (of length 
+parts consist of the head and tail of the subsequence (of length
 \texttt{flankclipsize}) and the center part of the subsequence is replaced by
 a number to indicate the length of the subsequence that is not shown. Now the
 shortest subsequence is padded to align the flanking sequences vertically.
@@ -418,7 +426,7 @@ special care must be taken when mutating a sequence. A deletion or insertion
 will result in a position shift that will alter the coordinates of all
 downstream mutations. Therefore, when a mutation is requested (by calling the
 \texttt{\_\_mutate()} function), the coordinates are converted to the correct
-ones. This is done by registering each position where a \emph{shift} occurs 
+ones. This is done by registering each position where a \emph{shift} occurs
 and the length and direction of this shift. By iterating through this list, the
 correct coordinate can be calculated (iteration stops when we find a shift
 position that is larger than the requested position).
@@ -439,9 +447,9 @@ resultsDir                 & Location of the results. \\
 PIDfile                    & Location of the PID file. \\
 nameCheckOutHeader         & The output header for NameChecking \\
 syntaxCheckOutHeader       & The output header for NameChecking \\
-positionConverterOutHeader & The output header for NameChecking 
+positionConverterOutHeader & The output header for NameChecking
 \end{tabular}
-\caption{Configuration variables of the \texttt{Scheduler} object} 
+\caption{Configuration variables of the \texttt{Scheduler} object}
 \label{tab:schedulerconfig}
 \end{center}
 \end{table}
@@ -464,7 +472,7 @@ bufSize  & Amount of bytes to be read for determining the file type. \\
 header   & The obligatory header in batch request files. \\
 tempDir  & Directory for temporary files.
 \end{tabular}
-\caption{Configuration variables of the \texttt{File} object} 
+\caption{Configuration variables of the \texttt{File} object}
 \label{tab:fileconfig}
 \end{center}
 \end{table}
@@ -481,7 +489,7 @@ function is used. This also uses the \texttt{bufSize} configuration variable to
 read part of a stream and subsequently guess its file type. This function
 returns two values; the \emph{mime type} and a \emph{description}. The latter
 is sometimes needed when a container file format is used (as is the case with
-OpenOffice documents). Once the file type is successfully determined, the 
+OpenOffice documents). Once the file type is successfully determined, the
 appropriate parser is selected.
 
 \subsection{The GenRecord module} \label{subsec:genrecord}
@@ -492,14 +500,14 @@ appropriate parser is selected.
 \begin{tabular}{l|p{9cm}}
 Variable    & Description \\
 \hline
-upstream    & Number of upstream nucleotides when searching for a 
-              transcript. \\ 
-downstream  & Number of downstream nucleotides when searching for a 
-              transcript. \\ 
-spliceAlarm & \\ 
+upstream    & Number of upstream nucleotides when searching for a
+              transcript. \\
+downstream  & Number of downstream nucleotides when searching for a
+              transcript. \\
+spliceAlarm & \\
 spliceWarn  &
 \end{tabular}
-\caption{Configuration variables of the \texttt{GenRecord} object} 
+\caption{Configuration variables of the \texttt{GenRecord} object}
 \label{tab:genrecordconfig}
 \end{center}
 \end{table}
@@ -548,25 +556,25 @@ convert from a \emph{genomic coordinate} to a \emph{transcript oriented}
 coordinate or a \emph{coding sequence oriented} coordinate. In the remainder
 of this section we shall refer to genomic coordinates as \emph{g.}, transcript oriented as \emph{n.} and coding sequence oriented as \emph{c.} coordinates.
 Coordinate conversion is done by linking each splice site to either an n. or
-g. coordinate. 
+g. coordinate.
 
 The class is initialised by passing an RNA list, a CDS list and an orientation
 of the transcript to the constructor. If a CDS is given, the resulting
 crossmapper will convert from g. to c. coordinates. If no CDS is given, it will
-convert g. to n. coordinates. 
+convert g. to n. coordinates.
 
 Most internal functions are operators that deal with mathematical exceptions
 when using the ``biological'' coordinates. The number $0$ does not exist for
 example, making $-1$ and $1$ neighbouring integers, which makes calculations
 awkward. These internal functions take care of these problems.
 
-When a crossmapper is made that converts from g. to c. (a CDS was given at 
-construction time), the \emph{CDS stop} coordinate in c. notation is stored 
+When a crossmapper is made that converts from g. to c. (a CDS was given at
+construction time), the \emph{CDS stop} coordinate in c. notation is stored
 separately. Internally the crossmapper does not work with ``star'' (*)
 positions for positions between CDS stop and \emph{transcription stop}. The
 conversion to ``star''-notation is done at the very end.
 
-After initialisation, two main functions are available, \texttt{g2x} and 
+After initialisation, two main functions are available, \texttt{g2x} and
 \texttt{x2g}. Their behaviour depends upon the initialisation of the class and
 is described in Table~\ref{tab:behaviour}.
 
@@ -593,10 +601,10 @@ The second element of the tuple $b$ is the ``offset'' coordinate, this
 coordinate refers to the distance to the closest \emph{splice site}. A tuple
 $(21, -2)$ for example, means that there is a splice site at position $21$ and
 that the coordinate of interest lies $2$ positions before this splice site (in
-an \emph{intron}). 
+an \emph{intron}).
 
-As mentioned before, this function does not take CDS stop into account. It is 
-not concerned with positions upstream or downstream of the transcript either. 
+As mentioned before, this function does not take CDS stop into account. It is
+not concerned with positions upstream or downstream of the transcript either.
 These final conversions are discussed further on in this section.
 
 The function \texttt{x2g()} takes a tuple $(a, b)$ as argument (discussed
@@ -606,7 +614,7 @@ The most important wrapper functions of the \texttt{Crossmap} class are:
 \begin{itemize}
 \item \texttt{int2main()} converts a $a$ coordinate to a string in
       ``star''-notation.
-\item \texttt{main2int()} converts a string in ``star''-notation to the $a$ 
+\item \texttt{main2int()} converts a string in ``star''-notation to the $a$
       coordinate.
 \item \texttt{int2offset()} converts the $b$ coordinate to an
       ``offset''-notation, adding an ``u'' for offsets upstream of the
@@ -617,7 +625,7 @@ The most important wrapper functions of the \texttt{Crossmap} class are:
 
 Other wrapper functions in this class only call the wrappers described above.
 
-Finally, there are a couple of functions that offer more information of a 
+Finally, there are a couple of functions that offer more information of a
 transcript; an \texttt{info()} function that gives information about
 transcription start, transcription stop and CDS stop, a function
 \texttt{getSpliceSite()} that returns the genomic coordinate of a splice site
@@ -632,13 +640,13 @@ modules.
 \subsection{Mutalyzer} \label{subsec:mutalyzer}
 The \texttt{Mutalyzer} program (also known as the \texttt{name checker} perform
 several tasks; \emph{semantic checking}, \emph{position conversion},
-\emph{visualisation} and \emph{effect prediction} to some extent. 
+\emph{visualisation} and \emph{effect prediction} to some extent.
 %TODO more
 
 \subsubsection{Semantic checks}
 The main function of \texttt{Mutalyzer} program, is \emph{semantic name
 checking}. It uses the \texttt{Parser} module for syntactic checking and the
-generation of a parse tree, and applies the given description to a reference 
+generation of a parse tree, and applies the given description to a reference
 sequence. This reference sequence is provided by either the \texttt{LRGparser}
 of \texttt{GBparser} module. By combining the variant description and the
 interpreted reference sequence file, semantic checking can be done.
@@ -664,7 +672,7 @@ to this kind of ambiguity.
 Every description can be written as a deletion/insertion (\emph{delins})
 operation, but using this representation is not necessarily the shortest one. A
 delins of one nucleotide, for example should be written as a substitution.
-Several checks are implemented to reduce one representation to an other. In 
+Several checks are implemented to reduce one representation to an other. In
 Table~\ref{tab:erosion} a list of possibly ``disguised'' variants is shown.
 
 \begin{table}[H]
@@ -674,7 +682,7 @@ Variant type & Could be \\
 \hline
 delins & del, ins, dup, subst, inv \\
 ins    & dup \\
-inv    & subst 
+inv    & subst
 \end{tabular}
 \end{center}
 \caption{Disguised variants.} \label{tab:erosion}
@@ -683,7 +691,7 @@ inv    & subst
 Apart from this possible disguise, a variant can be described using too much
 nucleotides, or a range that is too large. A delins can include part of the
 flanking sequence of the real change. To prevent this, the \emph{longest common
-prefix} and \emph{longest common suffix} are pruned. Likewise, an inversion 
+prefix} and \emph{longest common suffix} are pruned. Likewise, an inversion
 can be too large when the \emph{reverse complement} of a prefix is a suffix.
 This is pruned in a similar way. Finally, a delins, subst or inv can have no
 effect at all.
@@ -696,7 +704,7 @@ nucleotides is given, this stretch must match the reference sequence.
 The effect prediction is very limited. \texttt{Mutalyzer} is able to detect
 variants that hit a splice site and a start codon and issue a warning
 accordingly. From the generated variant description however, some effects can
-be deduced. A variant that is at position $x+2$ for example, has a high 
+be deduced. A variant that is at position $x+2$ for example, has a high
 probability of destroying a splice site.
 
 In case of a variant in the start codon, a warning is given, but in case the
@@ -713,14 +721,14 @@ There are two major cases to distinguish:
 \end{itemize}
 
 To distinguish between these cases, a combination of the \texttt{CrossMap}
-and \texttt{Mutator} functions is used. 
+and \texttt{Mutator} functions is used.
 
 \begin{itemize} % FIXME Is this true? Not just CDS len?
-\item Take the original CDS stop variable, located in the \texttt{CrossMap} 
+\item Take the original CDS stop variable, located in the \texttt{CrossMap}
       object.
 \item Convert this to a genomic position (also using the \texttt{CrossMap}
       module.
-\item Use the \texttt{Mutator} module to get the location of the CDS stop 
+\item Use the \texttt{Mutator} module to get the location of the CDS stop
       variable in the new (mutated) coordinate system.
 \item Convert this new position back to a CDS oriented position.
 \end{itemize}
@@ -737,10 +745,10 @@ If the reading frame is not disrupted, we first calculate the \emph{longest
 common prefix}, remove this from both the original and mutated protein and then
 by calculating and removing the \emph{longest common suffix}. The string that
 is left, is in general a delins, but can often be simplified by using a number
-of rules. These rules are applied in the \texttt{findInFrameDescription()} 
+of rules. These rules are applied in the \texttt{findInFrameDescription()}
 function.
 
-Also, effects on restriction sites are reported, as described in 
+Also, effects on restriction sites are reported, as described in
 Section~\ref{subsec:mutator}
 
 Both of these functions are wrapped by the \texttt{\_\_toProtDescr()} function
@@ -754,11 +762,11 @@ used later on for visualisation.
 \subsubsection{Visualisation} \label{subsubsec:visualisation}
 To aid in the analysis of both variants on DNA as well as the derived protein
 description, a number of visualisations are made. First of all, all raw
-variants are shown as described in Section~\ref{subsec:mutator}. 
+variants are shown as described in Section~\ref{subsec:mutator}.
 
 Apart from this, both the original and the mutated protein are shown and the
 differences between them are highlighted. This is done by using the positions
-returned by the \texttt{\_\_toProtDescr()} function as described in 
+returned by the \texttt{\_\_toProtDescr()} function as described in
 Section~\ref{subsubsec:effect}.
 
 \subsection{VarInfo} \label{subsec:varinfo}

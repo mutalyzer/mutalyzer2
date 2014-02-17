@@ -23,11 +23,11 @@ def process():
 
     def handle_exit(signum, stack_frame):
         if scheduler.stopped():
-            sys.stderr.write('mutalyzer-batchd: Terminated\n')
+            sys.stderr.write('mutalyzer-batch-processor: Terminated\n')
             sys.exit(1)
         if signum == signal.SIGINT:
-            sys.stderr.write('mutalyzer-batchd: Hitting Ctrl+C again will '
-                             'terminate any running job!\n')
+            sys.stderr.write('mutalyzer-batch-processor: Hitting Ctrl+C '
+                             'again will terminate any running job!\n')
         scheduler.stop()
 
     signal.signal(signal.SIGTERM, handle_exit)
@@ -41,7 +41,7 @@ def process():
         # Wait a bit and process any possible new jobs.
         time.sleep(1)
 
-    sys.stderr.write('mutalyzer-batchd: Graceful shutdown\n')
+    sys.stderr.write('mutalyzer-batch-processor: Graceful shutdown\n')
     sys.exit(0)
 
 

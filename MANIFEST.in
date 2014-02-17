@@ -1,2 +1,2 @@
-include AUTHORS README.md
+include AUTHORS.rst CHANGES.rst LICENSE.rst README.rst
 recursive-include mutalyzer/website/templates *

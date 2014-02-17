@@ -1,11 +1,13 @@
 """
 WSGI interface to the Mutalyzer website.
 
-The WSGI interface is exposed through the module variable 'application'.
+The WSGI interface is exposed through the module variable :data:`application`.
 Static files are not handled by this interface and should be served through
-the '/static' url prefix separately.
+the ``/static`` url prefix separately.
 
-Example Apache/mod_wsgi configuration:
+Example *Apache/mod_wsgi* configuration:
+
+.. code-block:: apache
 
     Alias /static /var/www/mutalyzer/static
     WSGIScriptAlias / /usr/local/bin/mutalyzer-website
@@ -14,6 +16,8 @@ Another common practice is to use Nginx to directly serve the static files
 and act as a reverse proxy server to the Mutalyzer HTTP server.
 
 Example Nginx configuration:
+
+.. code-block:: nginx
 
     server {
       listen 80;
@@ -40,6 +44,7 @@ import argparse
 from .. import website
 
 
+#: WSGI application instance.
 application = website.create_app()
 
 

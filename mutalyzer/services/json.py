@@ -11,7 +11,7 @@ import mutalyzer
 from mutalyzer.services import rpc
 
 
-# HTTP/RPC application.
+#: HTTP/RPC+JSON application.
 application = Application([rpc.MutalyzerService], tns=mutalyzer.SOAP_NAMESPACE,
                           in_protocol=HttpRpc(validator='soft'),
                           out_protocol=JsonDocument(),

@@ -20,6 +20,7 @@ import flask.config
 from mutalyzer import util
 
 
+#: Environment variable used for locating the settings module.
 ENVIRONMENT_VARIABLE = 'MUTALYZER_SETTINGS'
 
 
@@ -104,4 +105,6 @@ class LazySettings(util.LazyObject):
         self._callbacks[key].append(callback)
 
 
+#: Global :class:`LazySettings` instance. Use this for querying configuration
+#: settings.
 settings = LazySettings()

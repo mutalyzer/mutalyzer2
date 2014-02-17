@@ -3,9 +3,13 @@ WSGI interface to the Mutalyzer SOAP webservice.
 
 Example Apache/mod_wsgi configuration:
 
+.. code-block:: apache
+
     WSGIScriptAlias /soap /usr/local/bin/mutalyzer-service-soap
 
 Be sure to have this line first if you also define a / alias, like this:
+
+.. code-block:: apache
 
     WSGIScriptAlias /soap /usr/local/bin/mutalyzer-service-soap
     WSGIScriptAlias / /usr/local/bin/mutalyzer-website
@@ -23,6 +27,7 @@ from spyne.server.wsgi import WsgiApplication
 from ..services import soap
 
 
+#: WSGI application instance.
 application = WsgiApplication(soap.application)
 
 

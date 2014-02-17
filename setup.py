@@ -2,13 +2,13 @@ import os
 import sys
 from setuptools import setup
 
-if sys.version_info < (2, 6):
-    raise Exception('Mutalyzer requires Python 2.6 or higher.')
+if sys.version_info < (2, 7):
+    raise Exception('Mutalyzer requires Python 2.7 or higher.')
 
 install_requires = []
 
 try:
-    with open('README.md') as readme:
+    with open('README.rst') as readme:
         long_description = readme.read()
 except IOError:
     long_description = 'See https://mutalyzer.nl'
@@ -57,11 +57,3 @@ setup(
         'mutalyzer-website = mutalyzer.entrypoints.website:main']},
     zip_safe=False
 )
-
-# Things not handled by this setup.py:
-# - Copy extras/config.example to /etc/mutalyzer/config
-# - Database setup
-# - Chown /var/log/mutalyzer.log and /var/cache/mutalyzer
-# - Copy extras/init.d/mutalyzer-batchd to /etc/init.d/mutalyzer-batchd
-# - Copy doc to /usr/share/doc
-# Check extras/post-install.sh for these.

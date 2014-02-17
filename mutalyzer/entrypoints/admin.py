@@ -130,6 +130,8 @@ def sync_cache(wsdl_url, url_template, history=7):
 
     This program is intended to be run daily from cron. Example:
 
+    .. code-block:: none
+
         25 5 * * *  mutalyzer-cache-sync 'http://dom1/?wsdl' 'http://dom1/{file}' -H 7
         55 5 * * *  mutalyzer-cache-sync 'http://dom2/?wsdl' 'http://dom2/{file}' -H 7
     """

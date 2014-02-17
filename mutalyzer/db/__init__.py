@@ -66,11 +66,17 @@ def configure_session(uri):
 settings.on_update(configure_session, 'DATABASE_URI')
 
 
-# Session are automatically created where needed and are scoped by thread.
+# Sessions are automatically created where needed and are scoped by thread.
 session_factory = SessionFactory()
+
+#: Global scoped :class:`sqlalchemy.orm.session.Session` instance. Use this
+#: for all database communication, except for querying models. For the latter,
+#: each model has a `query` property that is a
+#: :class:`sqlalchemy.orm.query.Query` object against the model and the
+#: current `Session` when called.
 session = scoped_session(session_factory)
 
 
-# Base class to use in our models.
+#: Base class to use for our models.
 Base = declarative_base()
 Base.query = session.query_property()

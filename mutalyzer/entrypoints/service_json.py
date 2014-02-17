@@ -3,9 +3,13 @@ WSGI interface to the Mutalyzer HTTP/RPC+JSON webservice.
 
 Example Apache/mod_wsgi configuration:
 
+.. code-block:: apache
+
     WSGIScriptAlias /json /usr/local/bin/mutalyzer-service-json
 
 Be sure to have this line first if you also define a / alias, like this:
+
+.. code-block:: apache
 
     WSGIScriptAlias /json /usr/local/bin/mutalyzer-service-json
     WSGIScriptAlias / /usr/local/bin/mutalyzer-website
@@ -23,6 +27,7 @@ from spyne.server.wsgi import WsgiApplication
 from ..services import json
 
 
+#: WSGI application instance.
 application = WsgiApplication(json.application)
 
 

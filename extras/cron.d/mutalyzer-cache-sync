@@ -1,2 +1,0 @@
-# Synchronize the local cache with the live server every morning at 05:25
-#25 5 * * * www-data <MUTALYZER_BIN_CACHE_SYNC> 'https://mutalyzer.nl/services/?wsdl' 'https://mutalyzer.nl/Reference/{file}' 3

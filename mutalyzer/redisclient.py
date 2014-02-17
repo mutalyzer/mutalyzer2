@@ -40,4 +40,6 @@ class LazyClient(util.LazyObject):
             self._wrapped = redis.StrictRedis.from_url(settings.REDIS_URI)
 
 
+#: Global :class:`LazyClient` instance. Use this for all communication with
+#: Redis.
 client = LazyClient()

@@ -880,17 +880,20 @@ def lovd_get_gs():
     LOVD bypass to get the correct GeneSymbol incl Transcript variant.
 
     Used by LOVD to get the correct transcript variant out of a genomic
-    record. LOVD uses a genomic reference (NC_?) in combination with a gene
-    symbol to pass variant info to mutalyzer. Mutalyzer 1.0 was only using
-    the first transcript. LOVD supplies the NM of the transcript needed but
-    this was ignored. This helper allows LOVD to get the requested
+    record. LOVD uses a genomic reference (``NC_``?) in combination with a
+    gene symbol to pass variant info to mutalyzer. Mutalyzer 1.0 was only
+    using the first transcript. LOVD supplies the NM of the transcript needed
+    but this was ignored. This helper allows LOVD to get the requested
     transcript variant from a genomic reference.
 
     Parameters:
 
-    - `mutationName`: The mutationname without gene symbol.
-    - `variantRecord`: The NM reference of the variant.
-    - `forward`: If set this forwards the request to the name checker.
+    mutationName
+      The mutationname without gene symbol.
+    variantRecord
+      The NM reference of the variant.
+    forward
+      If set this forwards the request to the name checker.
 
     Returns: Output of name checker if `forward` is set, otherwise the
     gene symbol with the variant notation as string.
@@ -960,28 +963,42 @@ def lovd_variant_info():
 
     Parameters:
 
-    - `LOVD_ver`: The version of the calling LOVD.
-    - `build`: The human genome build (hg19 assumed).
-    - `acc`: The accession number (NM number).
-    - `var`: A description of the variant.
+    LOVD_ver
+      The version of the calling LOVD.
+    build
+      The human genome build (hg19 assumed).
+    acc
+      The accession number (NM number).
+    var
+      A description of the variant.
 
     Returns:
-    - start_main   ; The main coordinate of the start position in I{c.}
-                     (non-star) notation.
-    - start_offset ; The offset coordinate of the start position in I{c.}
-                     notation (intronic position).
-    - end_main     ; The main coordinate of the end position in I{c.}
-                     (non-star) notation.
-    - end_offset   ; The offset coordinate of the end position in I{c.}
-                     notation (intronic position).
-    - start_g      ; The I{g.} notation of the start position.
-    - end_g        ; The I{g.} notation of the end position.
-    - type         ; The mutation type.
+
+    start_main
+      The main coordinate of the start position in I{c.} (non-star) notation.
+    start_offset
+      The offset coordinate of the start position in I{c.} notation (intronic
+      position).
+    end_main
+      The main coordinate of the end position in I{c.} (non-star) notation.
+    end_offset
+      The offset coordinate of the end position in I{c.} notation (intronic
+      position).
+    start_g
+      The I{g.} notation of the start position.
+    end_g
+      The I{g.} notation of the end position.
+    type
+      The mutation type.
 
     Returns (alternative):
-    - trans_start  ; Transcription start in I{c.} notation.
-    - trans_stop   ; Transcription stop in I{c.} notation.
-    - CDS_stop     ; CDS stop in I{c.} notation.
+
+    trans_start
+      Transcription start in I{c.} notation.
+    trans_stop
+      Transcription stop in I{c.} notation.
+    CDS_stop
+      CDS stop in I{c.} notation.
     """
     lovd_version = request.args['LOVD_ver']
     build = request.args['build']

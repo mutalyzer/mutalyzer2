@@ -1,5 +1,5 @@
 """
-Module for synchronizing the database with other Mutalyzer instances.
+Synchronizing the reference file cache with other Mutalyzer instances.
 """
 
 
@@ -19,6 +19,7 @@ from mutalyzer.db.models import Reference
 from mutalyzer import Retriever
 
 
+#: Default number of days to go back in synchronization.
 DEFAULT_CREATED_SINCE_DAYS = 7
 
 
@@ -30,22 +31,22 @@ class CacheSync(object):
         """
         Instantiate the object.
 
-        @arg output: An output object.
-        @type output: mutalyzer.output.Output
+        :arg output: An output object.
+        :type output: :class:`mutalyzer.output.Output`
         """
         self._output = output
 
     def local_cache(self, created_since=None):
         """
-        Get all entries in the local cache with creation date {created_since}
+        Get all entries in the local cache with creation date `created_since`
         or later.
 
-        @kwarg created_since: Only entries with this creation date or later
-            are returned.
-        @type created_since: datatime.datetime
+        :arg created_since: Only entries with this creation date or later
+          are returned.
+        :type created_since: datatime.datetime
 
-        @return: List of cache entries.
-        @rtype: list(dictionary)
+        :return: List of cache entries.
+        :rtype: list(dict)
         """
         if not created_since:
             created_since = datetime.today() - \
@@ -81,17 +82,17 @@ class CacheSync(object):
 
     def remote_cache(self, remote_wsdl, created_since=None):
         """
-        Get all entries in the remote cache with creation date {created_since}
+        Get all entries in the remote cache with creation date `created_since`
         or later.
 
-        @arg remote_wsdl: The url of the remote SOAP WSDL description.
-        @type remote_wsdl: string
-        @kwarg created_since: Only entries with this creation date or later
-            are returned.
-        @type created_since: datatime.datetime
+        :arg remote_wsdl: The url of the remote SOAP WSDL description.
+        :type remote_wsdl: str
+        :arg created_since: Only entries with this creation date or later
+          are returned.
+        :type created_since: datatime.datetime
 
-        @return: List of cache entries.
-        @rtype: list(dictionary)
+        :return: List of cache entries.
+        :rtype: list(dict)
         """
         self._output.addMessage(__file__, -1, 'INFO', 'Getting remote cache'
                                 ' from %s' % remote_wsdl)
@@ -122,12 +123,12 @@ class CacheSync(object):
 
     def store_remote_file(self, name, url):
         """
-        Download a remote file located at {url} and store it as {name}.
+        Download a remote file located at `url` and store it as `name`.
 
-        @arg name: Name to store the file under.
-        @type name: string
-        @arg url: Url to the remote file.
-        @type url: string
+        :arg name: Name to store the file under.
+        :type name: str
+        :arg url: Url to the remote file.
+        :type url: str
         """
         if not re.match('^[\da-zA-Z\._-]+$', name):
             return
@@ -146,23 +147,25 @@ class CacheSync(object):
         """
         Synchronize the local cache with the remote cache.
 
+        ::
+
             >>> wsdl = 'http://mutalyzer.nl/mutalyzer/services/?wsdl'
             >>> template = 'http://mutalyzer.nl/mutalyzer/Reference/{file}'
             >>> self.sync_with_remote(wsdl, template)
             (14, 3)
 
-        @arg remote_wsdl: The url of the remote SOAP WSDL description.
-        @type remote_wsdl: string
-        @arg url_template: Formatting string containing a {file} occurence,
-            see examle usage above.
-        @string url_template: string
-        @kwarg days: Only remote entries added this number of days ago or
-            later are considered.
-        @type days: int
+        :arg remote_wsdl: The url of the remote SOAP WSDL description.
+        :type remote_wsdl: str
+        :arg url_template: Formatting string containing a ``{file}``
+          occurence, see example usage above.
+        :string url_template: str
+        :arg days: Only remote entries added this number of days ago or
+          later are considered.
+        :type days: int
 
-        @return: The number of entries added to the local cache and the number
-            cache files downloaded from the remote site.
-        @rtype: tuple(int, int)
+        :return: The number of entries added to the local cache and the number
+          cache files downloaded from the remote site.
+        :rtype: tuple(int, int)
         """
         self._output.addMessage(__file__, -1, 'INFO', 'Starting cache sync')
 
