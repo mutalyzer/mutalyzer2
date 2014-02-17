@@ -143,15 +143,25 @@ class GBparser():
             pass
 
         handle = Entrez.esearch(db = "nucleotide", term = transcriptAcc)
-        result = Entrez.read(handle)
-        handle.close()
+        try:
+            result = Entrez.read(handle)
+        except Entrez.Parser.ValidationError:
+            # Todo: Log this error.
+            return None
+        finally:
+            handle.close()
 
         transcriptGI = result["IdList"][0]
 
         handle = Entrez.elink(dbfrom = "nucleotide", db = "protein",
                               id = transcriptGI)
-        result = Entrez.read(handle)
-        handle.close()
+        try:
+            result = Entrez.read(handle)
+        except Entrez.Parser.ValidationError:
+            # Todo: Log this error.
+            return None
+        finally:
+            handle.close()
 
         if not result[0]["LinkSetDb"] :
             self.__database.insertLink(transcriptAcc, None)
