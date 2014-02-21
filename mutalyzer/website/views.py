@@ -274,15 +274,9 @@ def name_checker():
         allele = describe.describe(output.getIndexedOutput('original', 0),
                                    output.getIndexedOutput('mutated', 0))
         if allele:
-            extracted = describe.alleleDescription(allele)
-
-        if output.getIndexedOutput('oldprotein', 0):
-            prot_allele = describe.describe(
-                output.getIndexedOutput('oldprotein', 0),
-                output.getIndexedOutput('newprotein', 0, default=''),
-                DNA=False)
-            if prot_allele:
-                extractedProt = describe.alleleDescription(prot_allele)
+            extracted = describe.allele_description(allele)
+        if prot_allele:
+            extractedProt = describe.allele_description(prot_allele)
 
     else:
         extracted = extractedProt = ''
@@ -702,7 +696,7 @@ def description_extractor():
                           'Variant sequence is not DNA.')
 
     raw_vars = describe.describe(reference_sequence, variant_sequence)
-    description = describe.alleleDescription(raw_vars)
+    description = describe.allele_description(raw_vars)
 
     errors, warnings, summary = output.Summary()
     messages = map(util.message_info, output.getMessages())

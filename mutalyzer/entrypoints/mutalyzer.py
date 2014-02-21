@@ -93,21 +93,24 @@ def check_name(description):
         for i in O.getOutput("legends") :
             print i
 
-        allele = describe.describe(O.getIndexedOutput("original", 0),
+        extracted_allele = describe.describe(
+            O.getIndexedOutput("original", 0),
             O.getIndexedOutput("mutated", 0))
-        prot_allele = describe.describe(O.getIndexedOutput("oldprotein", 0),
-            O.getIndexedOutput("newprotein", 0, default=""), DNA=False)
+        extracted_protein_allele = describe.describe(
+            O.getIndexedOutput("oldprotein", 0),
+            O.getIndexedOutput("newprotein", 0, default=""),
+            DNA=False)
 
-        extracted = extractedProt = '(skipped)'
+        extracted = extracted_protein = '(skipped)'
 
-        if allele:
-            extracted = describe.alleleDescription(allele)
-        if prot_allele:
-            extractedProt = describe.alleleDescription(prot_allele)
+        if extracted_allele:
+            extracted = describe.allele_description(extracted_allele)
+        if extracted_protein_allele:
+            extracted_protein = describe.allele_description(extracted_protein_allele)
 
         print "\nExperimental services:"
         print extracted
-        print extractedProt
+        print extracted_protein
         #print "+++ %s" % O.getOutput("myTranscriptDescription")
 
 

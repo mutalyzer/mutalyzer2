@@ -1241,7 +1241,7 @@ class MutalyzerService(ServiceBase):
 
         result = Allele()
         result.allele = describe.describe(reference, observed)
-        result.description = describe.alleleDescription(result.allele)
+        result.description = describe.allele_description(result.allele)
 
         output.addMessage(__file__, -1, 'INFO',
             'Finished processing descriptionExtract')

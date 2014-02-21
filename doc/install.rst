@@ -100,7 +100,7 @@ covered here.
 Assuming you created and activated a virtual environment for Mutalyzer,
 install all required Python packages::
 
-    $ sudo apt-get install python-dev libmysqlclient-dev libxml2-dev libxslt-dev
+    $ sudo apt-get install python-dev libmysqlclient-dev libxml2-dev libxslt-dev swig
     $ pip install -r requirements.txt
 
 Install Mutalyzer::

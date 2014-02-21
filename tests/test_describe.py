@@ -25,7 +25,7 @@ class TestDescribe(MutalyzerTest):
         result = describe.describe(
             'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
             'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA')
-        description = describe.alleleDescription(result)
+        description = describe.allele_description(result)
         assert description == '[5_6insTT;17del;26A>C;35dup]'
 
     def test2(self):
@@ -35,7 +35,7 @@ class TestDescribe(MutalyzerTest):
         result = describe.describe(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTACTGTG',
             'TAAGCACCAGGAGTCCATGAAGAAGCTGGATCCTCCCATGGAATCCCCTACTCTACTGTG')
-        description = describe.alleleDescription(result)
+        description = describe.allele_description(result)
         assert description == '[26A>C;30C>A;35G>C]'
 
     def test3(self):
@@ -45,7 +45,7 @@ class TestDescribe(MutalyzerTest):
         result = describe.describe(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTA',
             'TAAGCACCAGGAGTCCATGAAGAAGCCATGTCCTGCCATGGAATCCCCTACTCTA')
-        description = describe.alleleDescription(result)
+        description = describe.allele_description(result)
         assert description == '[26_29inv;30C>G]'
 
     def test4(self):
@@ -55,5 +55,5 @@ class TestDescribe(MutalyzerTest):
         result = describe.describe(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTA',
             'TAAGCACCAGGAGTCCATGAAGAAGCCATGTCCTGCCATGAATCCCCTACTCTA')
-        description = describe.alleleDescription(result)
+        description = describe.allele_description(result)
         assert description == '[26_29inv;30C>G;41del]'
