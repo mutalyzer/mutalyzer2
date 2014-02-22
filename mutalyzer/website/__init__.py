@@ -3,6 +3,7 @@ Mutalyzer website interface using the Flask framework.
 """
 
 
+import os
 import pkg_resources
 
 from flask import Flask
@@ -57,7 +58,8 @@ def create_app():
         'mutalyzer', 'website/templates/static')
 
     app = Flask('mutalyzer',
-                template_folder=template_folder, static_folder=static_folder)
+                template_folder=os.path.abspath(template_folder),
+                static_folder=os.path.abspath(static_folder))
 
     app.config.update(DEBUG=settings.DEBUG,
                       TESTING=settings.TESTING,
