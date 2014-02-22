@@ -162,7 +162,6 @@ def database():
     Fixture for database table definitions.
     """
     Base.metadata.create_all(session.get_bind())
-    session.commit()
 
 
 def hg19():

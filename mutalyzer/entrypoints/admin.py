@@ -161,9 +161,7 @@ def setup_database(alembic_config_path=None, destructive=False):
 
     if destructive:
         db.Base.metadata.drop_all(db.session.get_bind())
-
     db.Base.metadata.create_all(db.session.get_bind())
-    db.session.commit()
 
     if alembic_config_path:
         context = MigrationContext.configure(db.session.connection())

@@ -42,6 +42,13 @@ def create_engine():
             connect_args={'check_same_thread': False},
             poolclass=StaticPool)
 
+        engine = sqlalchemy.create_engine(url, **options)
+
+        # For convenience, we also create tables if we're using an SQLite
+        # in-memory database. By definition they won't yet exist
+        Base.metadata.create_all(engine)
+        return engine
+
     return sqlalchemy.create_engine(url, **options)
 
 
