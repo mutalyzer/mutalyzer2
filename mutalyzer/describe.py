@@ -264,20 +264,20 @@ class RawVar(models.RawVar):
         if not self.start:
             return "="
 
-        descr = "%i" % self.start
+        descr = "{}".format(self.start)
 
         if self.end:
-            descr += "_%i" % self.end
+            descr += "_{}".format(self.end)
 
         if self.type != "subst":
-            descr += "%s" % self.type
+            descr += "{}".format(self.type)
 
             if self.inserted:
-                return descr + "%s" % self.inserted
+                return descr + "{}".format(self.inserted)
             return descr
         #if
 
-        return descr + "%s>%s" % (self.deleted, self.inserted)
+        return descr + "{}>{}".format(self.deleted, self.inserted)
     #__DNADescription
 
     def __proteinDescription(self):
@@ -300,22 +300,22 @@ class RawVar(models.RawVar):
             if self.type == "ext":
                 descr += '*'
             else:
-                descr += "%s" % seq3(self.startAA)
+                descr += "{}".format(seq3(self.startAA))
         #if
         else:
-            descr += "%s" % seq3(self.deleted)
-        descr += "%i" % self.start
+            descr += "{}".format(seq3(self.deleted))
+        descr += "{}".format(self.start)
         if self.end:
-            descr += "_%s%i" % (seq3(self.endAA), self.end)
+            descr += "_{}{}".format(seq3(self.endAA), self.end)
         if self.type not in ["subst", "stop", "ext", "fs"]: # fs is not a type
             descr += self.type
         if self.inserted:
-            descr += "%s" % seq3(self.inserted)
+            descr += "{}".format(seq3(self.inserted))
 
         if self.type == "stop":
             return descr + '*'
         if self.term:
-            return descr + "fs*%i" % self.term
+            return descr + "fs*{}".format(self.term)
         return descr
     #__proteinDescription
 
@@ -424,7 +424,7 @@ def allele_description(allele):
     @rval: unicode
     """
     if len(allele) > 1:
-        return "[%s]" % ';'.join(map(lambda x: x.hgvs, allele))
+        return "[{}]".format(';'.join(map(lambda x: x.hgvs, allele)))
     return allele[0].hgvs
 #allele_description
 
@@ -450,7 +450,7 @@ def printpos(s, start, end, fill=0):
     #       visualisation in the __mutate() function of mutator.py
     fs = 10 # Flank size.
 
-    return "%s %s%s %s" % (s[start - fs:start], s[start:end], '-' * fill,
+    return "{} {}{} {}".format(s[start - fs:start], s[start:end], '-' * fill,
         s[end:end + fs])
 #printpos
 
