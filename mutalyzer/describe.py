@@ -193,6 +193,31 @@ class Seq(object):
     #dump
 #Seq
 
+class SeqList(object):
+    """
+    Container for a list of Seq objects.
+    """
+    def __init__(self, seq_list=[]):
+        self.seq_list = seq_list
+
+    def __str__(self):
+        representation = ';'.join(map(str, self.seq_list))
+
+        if len(self.seq_list) > 1:
+            return "[{}]".format(representation)
+        return representation
+    #__str__
+
+    def __len__(self):
+        return len(str(self))
+
+    def __iter__(self):
+        return iter(self.seq_list)
+
+    def append(self, item):
+        self.seq_list.append(item)
+#SeqList
+
 class RawVar(models.RawVar):
     """
     Container for a raw variant.
@@ -210,7 +235,7 @@ class RawVar(models.RawVar):
     """
 
     def __init__(self, DNA=True, start=0, start_offset=0, end=0, end_offset=0,
-        type="none", deleted="", inserted="", shift=0, startAA="", endAA="",
+        type="none", deleted="", inserted=None, shift=0, startAA="", endAA="",
         term=0):
         """
         Initialise the class with the appropriate values.
@@ -228,7 +253,7 @@ class RawVar(models.RawVar):
         @arg deleted: Deleted part of the reference sequence.
         @type deleted: unicode
         @arg inserted: Inserted part.
-        @type inserted: unicode
+        @type inserted: object
         @arg shift: Amount of freedom.
         @type shift: int
         """
@@ -454,7 +479,7 @@ def printpos(s, start, end, fill=0):
         s[end:end + fs])
 #printpos
 
-def var2RawVar(s1, s2, var, DNA=True):
+def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
     """
     """
     # Unknown.
@@ -484,8 +509,8 @@ def var2RawVar(s1, s2, var, DNA=True):
         #if
         return RawVar(DNA=DNA, start=var.reference_start,
             end=var.reference_start + 1,
-            inserted=s2[var.sample_start:var.sample_end], type="ins",
-            shift=shift)
+            inserted=seq_list or SeqList(s2[var.sample_start:var.sample_end]),
+            type="ins", shift=shift)
     #if
 
     # Deletion.
@@ -515,7 +540,8 @@ def var2RawVar(s1, s2, var, DNA=True):
     # Simple InDel.
     if var.reference_start + 1 == var.reference_end:
         return RawVar(DNA=DNA, start=var.reference_start + 1,
-            inserted=s2[var.sample_start:var.sample_end], type="delins")
+            inserted=seq_list or s2[var.sample_start:var.sample_end],
+            type="delins")
 
     # Inversion.
     if var.type & extractor.REVERSE_COMPLEMENT:
@@ -532,8 +558,8 @@ def var2RawVar(s1, s2, var, DNA=True):
 
     # InDel.
     return RawVar(DNA=DNA, start=var.reference_start + 1,
-        end=var.reference_end, inserted=s2[var.sample_start:var.sample_end],
-        type="delins")
+        end=var.reference_end, inserted=seq_list or
+        s2[var.sample_start:var.sample_end], type="delins")
 #var2RawVar
 
 def describe(s1, s2, DNA=True):
@@ -586,24 +612,35 @@ def describe(s1, s2, DNA=True):
 
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
                 0):
+            #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end
+
             if variant.type & extractor.TRANSPOSITION_OPEN:
                 in_transposition = True
-                seq_list = []
+                seq_list = SeqList()
 
             if in_transposition:
                 if variant.type & extractor.IDENTITY:
-                    seq_list.append(Seq(reference=s2, # This should be s1.
-                        start=variant.sample_start, end=variant.sample_end,
-                        reverse=variant.type & extractor.REVERSE_COMPLEMENT))
+                    seq_list.append(Seq(reference=s1,
+                        start=variant.sample_start + 1, end=variant.sample_end,
+                        reverse=False))
+                elif variant.type & extractor.REVERSE_COMPLEMENT:
+                    seq_list.append(Seq(reference=s1,
+                        start=variant.sample_start + 1, end=variant.sample_end,
+                        reverse=True))
                 else:
                     seq_list.append(Seq(
                         sequence=s2[variant.sample_start:variant.sample_end]))
             #if
-            elif variant.type != extractor.IDENTITY:
+            elif not (variant.type & extractor.IDENTITY):
                description.append(var2RawVar(s1, s2, variant, DNA=DNA))
 
             if variant.type & extractor.TRANSPOSITION_CLOSE:
                 in_transposition = False
+                description.append(var2RawVar(s1, s2, variant, seq_list,
+                    DNA=DNA))
+                for i in seq_list:
+                    print i.dump()
+            #if
         #for
     #else
 
