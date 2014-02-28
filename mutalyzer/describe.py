@@ -160,6 +160,39 @@ def findFS(peptide, altPeptide, FS):
     return maxFS - 1, fsStart
 #findFS
 
+class Seq(object):
+    """
+    Container for an inserted sequence.
+    """
+    def __init__(self, sequence="", reference="", start=0, end=0,
+            reverse=False):
+        """
+        """
+        self.sequence = sequence
+        self.reference = reference
+        self.start = start
+        self.end = end
+        self.reverse = reverse
+    #__init__
+
+    def __str__(self):
+        if self.sequence:
+            return self.sequence
+
+        inverted = "inv" if self.reverse else ""
+        return "{}_{}{}".format(self.start, self.end, inverted)
+    #__str__
+
+    def dump(self):
+        """
+        Debug function.
+        """
+        if self.sequence:
+            return self.sequence
+        return self.reference[self.start:self.end]
+    #dump
+#Seq
+
 class RawVar(models.RawVar):
     """
     Container for a raw variant.
@@ -485,7 +518,7 @@ def var2RawVar(s1, s2, var, DNA=True):
             inserted=s2[var.sample_start:var.sample_end], type="delins")
 
     # Inversion.
-    if var.type == extractor.REVERSE_COMPLEMENT:
+    if var.type & extractor.REVERSE_COMPLEMENT:
         trim = palinsnoop(s1[var.reference_start:var.reference_end])
 
         if trim > 0: # Partial palindrome.
@@ -549,10 +582,30 @@ def describe(s1, s2, DNA=True):
         #if
     #if
     else:
+        in_transposition = False
+
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
-            0):
-            if variant.type != extractor.IDENTITY:
-                description.append(var2RawVar(s1, s2, variant, DNA=DNA))
+                0):
+            if variant.type & extractor.TRANSPOSITION_OPEN:
+                in_transposition = True
+                seq_list = []
+
+            if in_transposition:
+                if variant.type & extractor.IDENTITY:
+                    seq_list.append(Seq(reference=s2, # This should be s1.
+                        start=variant.sample_start, end=variant.sample_end,
+                        reverse=variant.type & extractor.REVERSE_COMPLEMENT))
+                else:
+                    seq_list.append(Seq(
+                        sequence=s2[variant.sample_start:variant.sample_end]))
+            #if
+            elif variant.type != extractor.IDENTITY:
+               description.append(var2RawVar(s1, s2, variant, DNA=DNA))
+
+            if variant.type & extractor.TRANSPOSITION_CLOSE:
+                in_transposition = False
+        #for
+    #else
 
     # Nothing happened.
     if not description:
