@@ -608,15 +608,17 @@ def describe(s1, s2, DNA=True):
         #if
     #if
     else:
-        in_transposition = False
+        in_transposition = 0
 
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
                 0):
             #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end
 
             if variant.type & extractor.TRANSPOSITION_OPEN:
-                in_transposition = True
-                seq_list = SeqList()
+                if not in_transposition:
+                    seq_list = SeqList()
+                in_transposition += 1
+            #if
 
             if in_transposition:
                 if variant.type & extractor.IDENTITY:
@@ -635,11 +637,13 @@ def describe(s1, s2, DNA=True):
                description.append(var2RawVar(s1, s2, variant, DNA=DNA))
 
             if variant.type & extractor.TRANSPOSITION_CLOSE:
-                in_transposition = False
-                description.append(var2RawVar(s1, s2, variant, seq_list,
-                    DNA=DNA))
-                for i in seq_list:
-                    print i.dump()
+                in_transposition -= 1
+
+                if not in_transposition:
+                    description.append(var2RawVar(s1, s2, variant, seq_list,
+                        DNA=DNA))
+                #for i in seq_list:
+                #    print i.dump()
             #if
         #for
     #else
