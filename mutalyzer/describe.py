@@ -485,7 +485,7 @@ def var2RawVar(s1, s2, var, DNA=True):
             inserted=s2[var.sample_start:var.sample_end], type="delins")
 
     # Inversion.
-    if var.type == extractor.VARIANT_REVERSE_COMPLEMENT:
+    if var.type == extractor.REVERSE_COMPLEMENT:
         trim = palinsnoop(s1[var.reference_start:var.reference_end])
 
         if trim > 0: # Partial palindrome.
@@ -551,7 +551,7 @@ def describe(s1, s2, DNA=True):
     else:
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
             0):
-            if variant.type != extractor.VARIANT_IDENTITY:
+            if variant.type != extractor.IDENTITY:
                 description.append(var2RawVar(s1, s2, variant, DNA=DNA))
 
     # Nothing happened.
