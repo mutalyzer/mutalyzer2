@@ -205,18 +205,26 @@ class Grammar():
              Suppress(']')) ^ (RangeLoc + Suppress('[') + Number + \
              Suppress(']')) ^ AbrSSR
 
-    # BNF: Ins -> RangeLoc `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
-    Ins = RangeLoc + Literal('ins')('MutationType') + \
-          ((NtString ^ Number)('Arg1') ^ RangeLoc ^ \
-          FarLoc('OptRef')) + Optional(Nest)
+    # BNF: Seq -> (Nt+ | Number | RangeLoc | FarLoc) Nest?
+    Seq = Group(NtString('Sequence') ^ Number ^ RangeLoc('Range') ^ \
+                FarLoc('OptRef') + Optional(Nest))('Seq')
+
+    # BNF: SeqList -> Seq (`;' Seq)*
+    SeqList = delimitedList(Seq, delim=';')('SeqList')
+
+    # BNF: SimpleSeqList -> (`[' SeqList `]') | Seq
+    SimpleSeqList = Suppress('[') + SeqList + Suppress(']') ^ Seq
+
+    # BNF: Ins -> RangeLoc `ins' SimpleSeqList
+    Ins = RangeLoc + Literal('ins')('MutationType') + SimpleSeqList
 
     # BNF: Indel -> (RangeLoc | PtLoc) `del' (Nt+ | Number)?
-    #          `ins' (Nt+ | Number | RangeLoc | FarLoc) Nest?
+    #          `ins' SimpleSeqList
     # Note that the alternative PtLoc is not included in [3].
     Indel = (RangeLoc ^ Group(PtLoc('PtLoc'))('StartLoc')) + Literal('del') + \
             Optional(NtString ^ Number)('Arg1') + \
             Literal('ins').setParseAction(replaceWith('delins'))('MutationType') + \
-            ((NtString ^ Number)('Arg2') ^ RangeLoc ^ FarLoc) + Optional(Nest)
+            SimpleSeqList
 
     # BNF: Inv -> RangeLoc `inv' (Nt+ | Number)? Nest?
     Inv = RangeLoc + Literal('inv')('MutationType') + \

@@ -248,6 +248,21 @@ def hg19_transcript_mappings():
     session.add(TranscriptMapping(
             chromosome_11,
             'refseq',
+            'NM_012459',
+            'TIMM8B',
+            'reverse',
+            111955524,
+            111957522,
+            [111955524, 111957364],
+            [111956186, 111957522],
+            'ncbi',
+            transcript=1,
+            cds=(111956019, 111957492),
+            select_transcript=False,
+            version=2))
+    session.add(TranscriptMapping(
+            chromosome_11,
+            'refseq',
             'NR_028383',
             'TIMM8B',
             'reverse',

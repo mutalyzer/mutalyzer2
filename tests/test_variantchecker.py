@@ -66,6 +66,21 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('newprotein')
 
     @fix(cache('AL449423.14'))
+    def test_insertion_list_in_frame(self):
+        """
+        Simple in-frame insertion of a list should give a simple description
+        on protein level.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162ins[ATC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61938_61939insGAT')
+        assert 'AL449423.14(CDKN2A_v001):c.161_162insATC' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsIleSer)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
+    @fix(cache('AL449423.14'))
     def test_deletion_insertion_in_frame(self):
         """
         Simple in-frame deletion/insertion should give a simple description on
@@ -82,12 +97,45 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('newprotein')
 
     @fix(cache('AL449423.14'))
+    def test_deletion_insertion_list_in_frame(self):
+        """
+        Simple in-frame deletion-insertion of a list should give a simple
+        description on protein level.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162delins[ATCCC]',
+                      self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
+    @fix(cache('AL449423.14'))
     def test_deletion_insertion_in_frame_complete(self):
         """
         Simple in-frame deletion/insertion should give a simple description on
         protein level, also with the optional deleted sequence argument.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delTGinsATCCC',
+                      self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
+               in self.output.getOutput('descriptions')
+        assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
+               in self.output.getOutput('protDescriptions')
+        assert self.output.getOutput('newprotein')
+
+    @fix(cache('AL449423.14'))
+    def test_deletion_insertion_list_in_frame_complete(self):
+        """
+        Simple in-frame deletion-insertion of a list should give a simple
+        description on protein level, also with the optional deleted sequence
+        argument.
+        """
+        check_variant('AL449423.14(CDKN2A_v001):c.161_162delTGins[ATCCC]',
                       self.output)
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'AL449423.14:g.61938_61939delinsGGGAT')
@@ -496,20 +544,318 @@ class TestVariantchecker(MutalyzerTest):
         # prediction is done.
         assert self.output.getOutput('newprotein')
 
-    @fix(cache('AB026906.1'))
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq(self):
+        """
+        Insertion of a sequence.
+        """
+        check_variant('NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+
+    @fix(cache('NG_012337.1'))
+    def test_ins_seq_reverse(self):
+        """
+        Insertion of a sequence on reverse strand.
+        """
+        check_variant('NG_012337.1(TIMM8B_v001):c.12_13insGATC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_012337.1:g.4911_4912insATCG')
+        assert 'NG_012337.1(TIMM8B_v001):c.12_13insGATC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
     def test_ins_range(self):
         """
-        Insertion of a range is not implemented yet.
+        Insertion of a range.
         """
-        check_variant('AB026906.1:c.274_275ins262_268', self.output)
+        check_variant('NG_008939.1:g.5207_5208ins4300_4320', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq_list(self):
+        """
+        Insertion of a sequence as a list.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCTCATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_012337.1'))
+    def test_ins_seq_list_reverse(self):
+        """
+        Insertion of a sequence as a list on reverse strand.
+        """
+        check_variant('NG_012337.1(TIMM8B_v001):c.12_13ins[GATC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_012337.1:g.4911_4912insATCG')
+        assert 'NG_012337.1(TIMM8B_v001):c.12_13insGATC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_list(self):
+        """
+        Insertion of a range as a list.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[4300_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq_seq(self):
+        """
+        Insertion of two sequences.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCTC;ATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_012337.1'))
+    def test_ins_seq_seq_reverse(self):
+        """
+        Insertion of two sequences on reverse strand.
+        """
+        check_variant('NG_012337.1(TIMM8B_v001):c.12_13ins[TTT;GATC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_012337.1:g.4911_4912insATCAAAG')
+        assert 'NG_012337.1(TIMM8B_v001):c.12_13insTTTGATC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_range(self):
+        """
+        Insertion of two ranges.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[4300_4309;4310_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq_range(self):
+        """
+        Insertion of a sequence and a range.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCT;4310_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_seq(self):
+        """
+        Insertion of a range and a sequence.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[4300_4309;CATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq_coding(self):
+        """
+        Insertion of a sequence (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq_list_coding(self):
+        """
+        Insertion of a sequence as a list (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157ins[GTCCTGTGCTCATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_seq_seq_coding(self):
+        """
+        Insertion of two sequences (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157ins[GTCCTGTGCTC;ATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_coding(self):
+        """
+        Insertion of a range (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157ins180_188', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
-    @fix(cache('AB026906.1'))
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_list_coding(self):
+        """
+        Insertion of a range as a list (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157ins[180_188]', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq(self):
+        """
+        Insertion-deletion of a sequence.
+        """
+        check_variant('NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
     def test_delins_range(self):
         """
-        Deletion/insertion of a range is not implemented yet.
+        Insertion-deletion of a range.
         """
-        check_variant('AB026906.1:c.274delins262_268', self.output)
+        check_variant('NG_008939.1:g.5207_5212delins4300_4320', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq_list(self):
+        """
+        Insertion-deletion of a sequence as a list.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCTCATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_list(self):
+        """
+        Insertion-deletion of a range as a list.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[4300_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq_seq(self):
+        """
+        Insertion-deletion of two sequences.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCT;CATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_range(self):
+        """
+        Insertion-deletion of two ranges.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[4300_4309;4310_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq_range(self):
+        """
+        Insertion-deletion of a sequence and a range.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCT;4310_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_seq(self):
+        """
+        Insertion-deletion of a range and a sequence.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[4300_4309;CATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq_coding(self):
+        """
+        Insertion-deletion of a sequence (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq_list_coding(self):
+        """
+        Insertion-deletion of a sequence as a list (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delins[GTCCTGTGCTCATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_seq_seq_coding(self):
+        """
+        Insertion-deletion of two sequences (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delins[GTCCTGTGCT;CATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_coding(self):
+        """
+        Insertion-deletion of a range (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delins180_188', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_list_coding(self):
+        """
+        Insertion-deletion of a range as a list (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delins[180_188]', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
     def test_no_reference(self):

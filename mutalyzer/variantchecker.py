@@ -1185,25 +1185,74 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     if variant.MutationType == 'inv':
         apply_inversion(first, last, mutator, record, output)
 
-    # Insertion.
-    if variant.MutationType == 'ins':
-        # Check if the inserted sequence is not a range.
-        # Todo: Implement this feature.
-        if not argument:
-            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
-                              'Insertion of a range is not implemented yet.')
-            raise _RangeInsertionError()
-        apply_insertion(first, last, argument, mutator, record, output)
+    # Parse a Seq object containing a Sequence or a Range into a string.
+    def parse_sequence(seq):
+        if seq.Sequence:
+            if transcript and transcript.CM.orientation == -1:
+                return Bio.Seq.reverse_complement(str(seq.Sequence))
+            return seq.Sequence
 
-    # DelIns.
-    if variant.MutationType == 'delins':
-        # Check if the inserted sequence is not a range.
-        # Todo: Implement this feature.
-        if not sequence:
-            output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
-                              'Insertion of a range is not implemented yet.')
-            raise _RangeInsertionError()
-        apply_delins(first, last, sequence, mutator, record, output)
+        if seq.StartLoc and seq.EndLoc:
+            if transcript:
+                output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                                  'The insertion of a range is only supported '
+                                  'with genomic positioning.')
+                raise _RangeInsertionError()
+
+            try:
+                range_first, range_last = _genomic_to_genomic(
+                    seq.StartLoc.PtLoc, seq.EndLoc.PtLoc)
+            except _UnknownPositionError:
+                output.addMessage(__file__, 4, 'EUNKNOWN',
+                                  'Unknown positions (denoted by "?") are '
+                                  'not supported.')
+                raise
+            except _RawVariantError:
+                output.addMessage(__file__, 4, 'EPOSITION',
+                                  'Could not determine range.')
+                raise
+
+            if range_last < range_first:
+                output.addMessage(__file__, 3, 'ERANGE',
+                                  'End position is smaller than the begin '
+                                  'position.')
+                raise _RawVariantError()
+
+            if range_first < 1:
+                output.addMessage(__file__, 4, 'ERANGE',
+                                  'Position %i is out of range.' % range_first)
+                raise _RawVariantError()
+
+            if range_last > len(mutator.orig):
+                output.addMessage(__file__, 4, 'ERANGE',
+                                  'Position %s is out of range.' % range_last)
+                raise _RawVariantError()
+
+            return mutator.orig[range_first - 1:range_last]
+
+        output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
+                          'Only the insertion of a sequence or a range is '
+                          'implemented.')
+        raise _RawVariantError()
+
+    if variant.MutationType in ('ins', 'delins'):
+        if variant.SeqList:
+            if transcript and transcript.CM.orientation == -1:
+                seqs = reversed(variant.SeqList)
+            else:
+                seqs = variant.SeqList
+            insertion = ''.join(str(parse_sequence(seq))
+                                for seq in seqs)
+        else:
+            insertion = parse_sequence(variant.Seq)
+
+        # Insertion.
+        if variant.MutationType == 'ins':
+            apply_insertion(first, last, insertion, mutator, record, output)
+
+        # DelIns.
+        if variant.MutationType == 'delins':
+            apply_delins(first, last, insertion, mutator, record, output)
 #process_raw_variant
 
 

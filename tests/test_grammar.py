@@ -41,6 +41,34 @@ class TestGrammar(MutalyzerTest):
         self._parse('NM_002001.2:c.[(12del;12del)]')
         self._parse('NM_002001.2:c.[((12del)?;12del)?]')
 
+    def test_compound_insertion(self):
+        """
+        Some some compound insertions.
+        """
+        self._parse('NM_002001.2:c.15_16insA')
+        self._parse('NM_002001.2:c.15_16insATC')
+        self._parse('NM_002001.2:c.15_16ins[A]')
+        self._parse('NM_002001.2:c.15_16ins[ATC]')
+        self._parse('NM_002001.2:c.15_16ins28_39')
+        self._parse('NM_002001.2:c.15_16ins[28_39]')
+        self._parse('NM_002001.2:c.15_16ins[28_39;A]')
+        self._parse('NM_002001.2:c.15_16ins[28_39;ATC]')
+        self._parse('NM_002001.2:c.15_16ins[28_39;A;ATC]')
+
+    def test_compound_delins(self):
+        """
+        Some some compound deletion-insertions.
+        """
+        self._parse('NM_002001.2:c.12_17delinsA')
+        self._parse('NM_002001.2:c.12_17delinsATC')
+        self._parse('NM_002001.2:c.12_17delins[A]')
+        self._parse('NM_002001.2:c.12_17delins[ATC]')
+        self._parse('NM_002001.2:c.12_17delins28_39')
+        self._parse('NM_002001.2:c.12_17delins[28_39]')
+        self._parse('NM_002001.2:c.12_17delins[28_39;A]')
+        self._parse('NM_002001.2:c.12_17delins[28_39;ATC]')
+        self._parse('NM_002001.2:c.12_17delins[28_39;A;ATC]')
+
     def test_protein_variants(self):
         """
         Some protein variants.

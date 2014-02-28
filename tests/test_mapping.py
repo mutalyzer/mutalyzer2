@@ -301,3 +301,37 @@ class TestConverter(MutalyzerTest):
         genomic = converter.c2chrom('NM_017780.2(CHD8):c.109A>T')
         erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
         assert_equal(len(erange), 1)
+
+    def test_ins_seq_chrom2c(self):
+        """
+        Insertion of a sequence (chrom2c).
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111957482_111957483insGAT', 'list')
+        assert 'NM_003002.2:c.-150_-149insGAT' in coding
+        assert 'NM_012459.2:c.10_11insATC' in coding
+
+    def test_ins_seq_seq(self):
+        """
+        Insertion of two sequences (chrom2c).
+        """
+        converter = self._converter('hg19')
+        coding = converter.chrom2c('NC_000011.9:g.111957482_111957483ins[GAT;AAA]', 'list')
+        assert 'NM_003002.2:c.-150_-149ins[GAT;AAA]' in coding
+        assert 'NM_012459.2:c.10_11ins[TTT;ATC]' in coding
+
+    def test_ins_seq_c2chrom_reverse(self):
+        """
+        Insertion of a sequence on reverse strand (c2chrom).
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_012459.2:c.10_11insATC')
+        assert_equal(genomic, 'NC_000011.9:g.111957482_111957483insGAT')
+
+    def test_ins_seq_seq_c2chrom_reverse(self):
+        """
+        Insertion of two sequences on reverse strand (c2chrom).
+        """
+        converter = self._converter('hg19')
+        genomic = converter.c2chrom('NM_012459.2:c.10_11ins[TTT;ATC]')
+        assert_equal(genomic, 'NC_000011.9:g.111957482_111957483ins[GAT;AAA]')

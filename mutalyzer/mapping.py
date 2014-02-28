@@ -56,10 +56,27 @@ def _construct_change(var, reverse=False):
         arg1 = var.Arg1
         arg2 = var.Arg2
 
+    def parse_sequence(seq):
+        if not seq.Sequence:
+            raise NotImplementedError('Only explicit sequences are supported '
+                                      'for insertions.')
+        if reverse:
+            return reverse_complement(str(seq.Sequence))
+        return seq.Sequence
+
     if var.MutationType == 'subst':
         change = '%s>%s' % (arg1, arg2)
-    elif var.MutationType == 'delins' and arg2:
-        change = '%s%s' % (var.MutationType, arg2)
+    elif var.MutationType in ('ins', 'delins'):
+        if var.SeqList:
+            if reverse:
+                seqs = reversed(var.SeqList)
+            else:
+                seqs = var.SeqList
+            insertion = '[' + ';'.join(str(parse_sequence(seq))
+                                       for seq in seqs) + ']'
+        else:
+            insertion = parse_sequence(var.Seq)
+        change = '%s%s' % (var.MutationType, insertion)
     else:
         change = '%s%s' % (var.MutationType, arg1 or arg2 or '')
 
@@ -506,8 +523,14 @@ class Converter(object) :
         # Construct the variant descriptions
         descriptions = []
         for variant, mapping in zip(variants, mappings):
-            f_change = _construct_change(variant)
-            r_change = _construct_change(variant, reverse=True)
+            try:
+                f_change = _construct_change(variant)
+                r_change = _construct_change(variant, reverse=True)
+            except NotImplementedError as e:
+                self.__output.addMessage(__file__, 3, 'ENOTIMPLEMENTED',
+                                         str(e))
+                return None
+
             if self.mapping.orientation == 'forward':
                 change = f_change
             else :
@@ -723,8 +746,13 @@ class Converter(object) :
 
             mutations = []
             for variant, cmap in zip(variants, core_mapping):
-                f_change = _construct_change(variant)
-                r_change = _construct_change(variant, reverse=True)
+                try:
+                    f_change = _construct_change(variant)
+                    r_change = _construct_change(variant, reverse=True)
+                except NotImplementedError as e:
+                    self.__output.addMessage(__file__, 4,
+                                             "ENOTIMPLEMENTEDERROR", str(e))
+                    return None
 
                 startp = self.crossmap.tuple2string((cmap.startmain, cmap.startoffset))
                 endp = self.crossmap.tuple2string((cmap.endmain, cmap.endoffset))
