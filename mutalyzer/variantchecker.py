@@ -1228,7 +1228,11 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                                   'Position %s is out of range.' % range_last)
                 raise _RawVariantError()
 
-            return mutator.orig[range_first - 1:range_last]
+            insertion = mutator.orig[range_first - 1:range_last]
+            if seq.Inv:
+                insertion = Bio.Seq.reverse_complement(str(insertion))
+
+            return insertion
 
         output.addMessage(__file__, 4, 'ENOTIMPLEMENTED',
                           'Only the insertion of a sequence or a range is '

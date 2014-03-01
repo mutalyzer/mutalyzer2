@@ -205,8 +205,9 @@ class Grammar():
              Suppress(']')) ^ (RangeLoc + Suppress('[') + Number + \
              Suppress(']')) ^ AbrSSR
 
-    # BNF: Seq -> (Nt+ | Number | RangeLoc | FarLoc) Nest?
-    Seq = Group(NtString('Sequence') ^ Number ^ RangeLoc('Range') ^ \
+    # BNF: Seq -> (Nt+ | Number | RangeLoc `inv'? | FarLoc) Nest?
+    Seq = Group(NtString('Sequence') ^ Number ^ \
+                (RangeLoc('Range') + Optional(Literal('inv')('Inv'))) ^ \
                 FarLoc('OptRef') + Optional(Nest))('Seq')
 
     # BNF: SeqList -> Seq (`;' Seq)*

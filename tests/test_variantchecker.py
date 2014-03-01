@@ -580,6 +580,18 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
 
     @fix(cache('NG_008939.1'))
+    def test_ins_range_inv(self):
+        """
+        Insertion of an inverse range.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins4300_4320inv', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGCCAGATAATGAGCACAGGAC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGCCAGATAATGAGCACAGGAC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
     def test_ins_seq_list(self):
         """
         Insertion of a sequence as a list.
@@ -610,6 +622,18 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_inv_list(self):
+        """
+        Insertion of an inverse range as a list.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[4300_4320inv]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGCCAGATAATGAGCACAGGAC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGCCAGATAATGAGCACAGGAC' \
                in self.output.getOutput('descriptions')
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
 
@@ -648,6 +672,18 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
 
     @fix(cache('NG_008939.1'))
+    def test_ins_range_range_inv(self):
+        """
+        Insertion of a range and an inverse range.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[4300_4309;4310_4320inv]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTGCCAGATAATG')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTGCCAGATAATG' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
     def test_ins_seq_range(self):
         """
         Insertion of a sequence and a range.
@@ -659,6 +695,17 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
 
     @fix(cache('NG_008939.1'))
+    def test_ins_seq_range_inv(self):
+        """
+        Insertion of a sequence and an inverse range.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCT;4310_4320inv]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insGTCCTGTGCTGCCAGATAATG')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTGCCAGATAATG' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
     def test_ins_range_seq(self):
         """
         Insertion of a range and a sequence.
@@ -667,6 +714,17 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_inv_seq(self):
+        """
+        Insertion of an inverse range and a sequence.
+        """
+        check_variant('NG_008939.1:g.5207_5208ins[4300_4309inv;CATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5208insAGCACAGGACCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.156_157insAGCACAGGACCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
     @fix(cache('NG_008939.1'))
@@ -711,11 +769,27 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
     @fix(cache('NG_008939.1'))
+    def test_ins_range_inv_coding(self):
+        """
+        Insertion of an inverse range (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157ins180_188inv', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    @fix(cache('NG_008939.1'))
     def test_ins_range_list_coding(self):
         """
         Insertion of a range as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins[180_188]', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    @fix(cache('NG_008939.1'))
+    def test_ins_range_inv_list_coding(self):
+        """
+        Insertion of an inverse range as a list (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_157ins[180_188inv]', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
     @fix(cache('NG_008939.1'))
@@ -738,6 +812,18 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_inv(self):
+        """
+        Insertion-deletion of an inverse range.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins4300_4320inv', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGCCAGATAATGAGCACAGGAC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGCCAGATAATGAGCACAGGAC' \
                in self.output.getOutput('descriptions')
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
 
@@ -765,6 +851,18 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
 
     @fix(cache('NG_008939.1'))
+    def test_delins_range_inv_list(self):
+        """
+        Insertion-deletion of an inverse range as a list.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[4300_4320inv]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5212delinsGCCAGATAATGAGCACAGGAC')
+        assert 'NG_008939.1(PCCB_v001):c.156_161delinsGCCAGATAATGAGCACAGGAC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
     def test_delins_seq_seq(self):
         """
         Insertion-deletion of two sequences.
@@ -788,6 +886,20 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
 
     @fix(cache('NG_008939.1'))
+    def test_delins_range_inv_range(self):
+        """
+        Insertion-deletion of an inverse range and a range.
+
+        Note that the delins is also shortened by one position here.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[4300_4309inv;4310_4320]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5208_5212delinsGCACAGGACCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.157_161delinsGCACAGGACCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+
+    @fix(cache('NG_008939.1'))
     def test_delins_seq_range(self):
         """
         Insertion-deletion of a sequence and a range.
@@ -799,6 +911,19 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
 
     @fix(cache('NG_008939.1'))
+    def test_delins_seq_range_inv(self):
+        """
+        Insertion-deletion of a sequence and an inverse range.
+
+        Note that the delins is also shortened by one position here.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCT;4310_4320inv]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5207_5211delinsGTCCTGTGCTGCCAGATAAT')
+        assert 'NG_008939.1(PCCB_v001):c.156_160delinsGTCCTGTGCTGCCAGATAAT' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
     def test_delins_range_seq(self):
         """
         Insertion-deletion of a range and a sequence.
@@ -807,6 +932,19 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
                      'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
+               in self.output.getOutput('descriptions')
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_inv_seq(self):
+        """
+        Insertion-deletion of an inverse range and a sequence.
+
+        Note that the delins is also shortened by one position here.
+        """
+        check_variant('NG_008939.1:g.5207_5212delins[4300_4309inv;CATTATCTGGC]', self.output)
+        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
+                     'NG_008939.1:g.5208_5212delinsGCACAGGACCATTATCTGGC')
+        assert 'NG_008939.1(PCCB_v001):c.157_161delinsGCACAGGACCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
     @fix(cache('NG_008939.1'))
@@ -851,11 +989,27 @@ class TestVariantchecker(MutalyzerTest):
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
     @fix(cache('NG_008939.1'))
+    def test_delins_range_inv_coding(self):
+        """
+        Insertion-deletion of an inverse range (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delins180_188inv', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    @fix(cache('NG_008939.1'))
     def test_delins_range_list_coding(self):
         """
         Insertion-deletion of a range as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins[180_188]', self.output)
+        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+
+    @fix(cache('NG_008939.1'))
+    def test_delins_range_inv_list_coding(self):
+        """
+        Insertion-deletion of an inverse range as a list (coding).
+        """
+        check_variant('NG_008939.1(PCCB_v001):c.156_161delins[180_188inv]', self.output)
         assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
 
     def test_no_reference(self):
