@@ -155,13 +155,6 @@ def syntax_checker():
                       % (description, request.remote_addr))
     stats.increment_counter('syntax-checker/website')
 
-    # Todo: This doesn't belong here.
-    if ',' in description:
-        output.addMessage(__file__, 2, 'WCOMMASYNTAX',
-                          'Comma\'s are not allowed in the syntax, '
-                          'autofixed.')
-        description = description.replace(',', '')
-
     grammar = Grammar(output)
     grammar.parse(description)
 
