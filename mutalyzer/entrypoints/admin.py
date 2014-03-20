@@ -294,6 +294,7 @@ def main():
         '-H', '--history', metavar='DAYS', dest='history', type=int,
         default=7, help='number of days to go back in the remote cache '
         '(default: 7)')
+    p.set_defaults(func=sync_cache)
 
     # Subparser 'setup-database'.
     p = subparsers.add_parser(

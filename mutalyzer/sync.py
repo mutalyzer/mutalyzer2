@@ -5,10 +5,12 @@ Module for synchronizing the database with other Mutalyzer instances.
 
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
+from datetime import datetime, timedelta
 import os
 import re
-from datetime import datetime, timedelta
 import urllib2
+
+from sqlalchemy.orm.exc import NoResultFound
 from suds.client import Client
 
 from mutalyzer.config import settings
