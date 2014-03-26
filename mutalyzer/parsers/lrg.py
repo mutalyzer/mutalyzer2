@@ -254,6 +254,9 @@ def genesFromUpdatable(updParsed):
         transcripts = transcriptsFromParsed(geneData["transcripts"])
         if not transcripts:
             transcripts = _emptyTranscripts(geneData)
+            # Todo: For now we skip genes for which we have no transcripts
+            #   since we don't know how to name them anyway.
+            continue
         gene.transcriptList = transcripts
         genes.append(gene)
     #for
@@ -286,8 +289,10 @@ def transcriptsFromParsed(parsedData):
 
     # Second add the transcripts not linked
     # FIXME: How to name these transcripts?
-    for trData in nofixed:
-        transcripts.append(_transcriptPopulator("", trData))
+    # Todo: For now we skip these transcripts since we don't know how to name
+    #   them.
+    #for trData in nofixed:
+    #    transcripts.append(_transcriptPopulator("", trData))
 
     return transcripts
 #transcriptsFromParsed
