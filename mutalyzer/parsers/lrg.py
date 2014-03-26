@@ -192,7 +192,16 @@ def create_record(data):
         # ending position, keep the possibility in mind that multiple CDS
         # regions are given
         CDSPList = GenRecord.PList()
-        for CDS in tData.getElementsByTagName("coding_region"):
+        for cds_id, CDS in enumerate(tData.getElementsByTagName("coding_region")):
+            if cds_id > 0:
+                # Todo: For now, we only support one CDS per transcript and
+                #   ignore all others.
+                #   By the way, I don't think the loop and sorting of CDS
+                #   positions makes any sense here, but I leave it in place
+                #   and just ignore everything except the first iteration.
+                #translationName = CDS.getElementsByTagName("translation")[0].getAttribute("name").encode("utf8")[1:]
+                #print 'Ignoring transcript %s translation %s' % (transcriptName, translationName)
+                continue
             coordinates = _get_coordinates(CDS, lrg_id)
             CDSPList.positionList.extend(\
             [int(coordinates["start"]), int(coordinates["end"])])
