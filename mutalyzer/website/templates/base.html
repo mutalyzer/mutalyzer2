@@ -278,7 +278,7 @@
     <td width="0">
 
     {% if announcement %}
-      <p><b>Announcement:</b> {{ announcement.body }}{% if announcement.url %} <a href="{{ announcement.url }}">read more</a>{% endif %}</p>
+      <p><b>Announcement:</b> {% if announcement.url %}<a href="{{ announcement.url }}">{% endif %}{{ announcement.body }}{% if announcement.url %}</a>{% endif %}</p>
     {% endif %}
 
     <center>
