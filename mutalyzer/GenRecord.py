@@ -845,6 +845,7 @@ class GenRecord() :
                 self.__output.addMessage(__file__, 2, warning,
                     "Mutation on splice site in gene %s %s." % (
                     gene.name, str_transcript))
+                transcript.translate = False
             elif intronPos <= config.get('spliceWarn'):
                 self.__output.addMessage(__file__, 2, warning,
                     "Mutation near splice site in gene %s %s." % (
