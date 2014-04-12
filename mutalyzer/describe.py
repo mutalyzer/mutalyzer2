@@ -164,12 +164,12 @@ class Seq(object):
     """
     Container for an inserted sequence.
     """
-    def __init__(self, sequence="", reference="", start=0, end=0,
-            reverse=False):
+    #def __init__(self, sequence="", reference="", start=0, end=0,
+    def __init__(self, sequence="", start=0, end=0, reverse=False):
         """
         """
         self.sequence = sequence
-        self.reference = reference
+        #self.reference = reference
         self.start = start
         self.end = end
         self.reverse = reverse
@@ -183,14 +183,14 @@ class Seq(object):
         return "{}_{}{}".format(self.start, self.end, inverted)
     #__str__
 
-    def dump(self):
-        """
-        Debug function.
-        """
-        if self.sequence:
-            return self.sequence
-        return self.reference[self.start:self.end]
-    #dump
+    #def dump(self):
+    #    """
+    #    Debug function.
+    #    """
+    #    if self.sequence:
+    #        return self.sequence
+    #    return self.reference[self.start:self.end]
+    ##dump
 #Seq
 
 class SeqList(object):
@@ -624,11 +624,11 @@ def describe(s1, s2, DNA=True):
 
             if in_transposition:
                 if variant.type & extractor.IDENTITY:
-                    seq_list.append(Seq(reference=s1,
+                    seq_list.append(Seq(#reference=s1,
                         start=variant.sample_start + 1, end=variant.sample_end,
                         reverse=False))
                 elif variant.type & extractor.REVERSE_COMPLEMENT:
-                    seq_list.append(Seq(reference=s1,
+                    seq_list.append(Seq(#reference=s1,
                         start=variant.sample_start + 1, end=variant.sample_end,
                         reverse=True))
                 else:
