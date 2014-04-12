@@ -235,8 +235,9 @@ class RawVar(models.RawVar):
     """
 
     def __init__(self, DNA=True, start=0, start_offset=0, end=0, end_offset=0,
-        type="none", deleted="", inserted=None, shift=0, startAA="", endAA="",
-        term=0):
+            sample_start=0, sample_start_offset=0, sample_end=0,
+            sample_end_offset=0, type="none", deleted="", inserted=None,
+            shift=0, startAA="", endAA="", term=0):
         """
         Initialise the class with the appropriate values.
 
@@ -248,6 +249,14 @@ class RawVar(models.RawVar):
         @type end: int
         @arg end_offset:
         @type end_offset: int
+        @arg sample_start: Start position.
+        @type sample_start: int
+        @arg sample_start_offset:
+        @type sample_start_offset: int
+        @arg sample_end: End position.
+        @type sample_end: int
+        @arg sample_end_offset:
+        @type sample_end_offset: int
         @arg type: Variant type.
         @type type: unicode
         @arg deleted: Deleted part of the reference sequence.
@@ -264,6 +273,10 @@ class RawVar(models.RawVar):
         self.start_offset = start_offset
         self.end = end
         self.end_offset = end_offset
+        self.sample_start = sample_start
+        self.sample_start_offset = sample_start_offset
+        self.sample_end = sample_end
+        self.sample_end_offset = sample_end_offset
         self.type = type
         self.deleted = deleted
         self.inserted = inserted
@@ -503,9 +516,11 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
 
             if ins_length == 1:
                 return RawVar(DNA=DNA, start=var.reference_start, type="dup",
-                    shift=shift)
+                    shift=shift, sample_start=var.sample_start,
+                    sample_end=var.sample_end)
             return RawVar(DNA=DNA, start=var.reference_start - ins_length + 1,
-                end=var.reference_end, type="dup", shift=shift)
+                end=var.reference_end, type="dup", shift=shift,
+                sample_start=var.sample_start, sample_end=var.sample_end)
         #if
         return RawVar(DNA=DNA, start=var.reference_start,
             end=var.reference_start + 1,
@@ -525,9 +540,11 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
 
         if var.reference_start == var.reference_end:
             return RawVar(DNA=DNA, start=var.reference_start, type="del",
-                shift=shift)
+                shift=shift, sample_start=var.sample_start,
+                sample_end=var.sample_end)
         return RawVar(DNA=DNA, start=var.reference_start,
-            end=var.reference_end, type="del", shift=shift)
+            end=var.reference_end, type="del", shift=shift,
+            sample_start=var.sample_start, sample_end=var.sample_end)
     #if
 
     # Substitution.
@@ -536,14 +553,16 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
 
         return RawVar(DNA=DNA, start=var.reference_start + 1,
             deleted=s1[var.reference_start], inserted=s2[var.sample_start],
-            type="subst")
+            type="subst", sample_start=var.sample_start,
+            sample_end=var.sample_end)
     #if
 
     # Simple InDel.
     if var.reference_start + 1 == var.reference_end:
         return RawVar(DNA=DNA, start=var.reference_start + 1,
             inserted=seq_list or s2[var.sample_start:var.sample_end],
-            type="delins")
+            type="delins", sample_start=var.sample_start,
+            sample_end=var.sample_end)
 
     # Inversion.
     if var.type & extractor.REVERSE_COMPLEMENT:
@@ -555,13 +574,15 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         #if
 
         return RawVar(DNA=DNA, start=var.reference_start + 1,
-            end=var.reference_end, type="inv")
+            end=var.reference_end, type="inv", sample_start=var.sample_start,
+            sample_end=var.sample_end)
     #if
 
     # InDel.
     return RawVar(DNA=DNA, start=var.reference_start + 1,
         end=var.reference_end, inserted=seq_list or
-        s2[var.sample_start:var.sample_end], type="delins")
+        s2[var.sample_start:var.sample_end], type="delins",
+        sample_start=var.sample_start, sample_end=var.sample_end)
 #var2RawVar
 
 def describe(s1, s2, DNA=True):
