@@ -8,13 +8,17 @@ Mutalyzer command-line name checker.
 from __future__ import unicode_literals
 
 import argparse
-import sys
+import json
 
 from . import _cli_string
 from .. import describe
 from .. import output
 from .. import variantchecker
 
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
 
 def check_name(description):
     """
@@ -93,13 +97,16 @@ def check_name(description):
         for i in O.getOutput("legends") :
             print i
 
-        extracted_allele = describe.describe(
-            O.getIndexedOutput("original", 0),
-            O.getIndexedOutput("mutated", 0))
-        extracted_protein_allele = describe.describe(
-            O.getIndexedOutput("oldprotein", 0),
-            O.getIndexedOutput("newprotein", 0, default=""),
-            DNA=False)
+        reference_sequence = O.getIndexedOutput("original", 0)
+        sample_sequence = O.getIndexedOutput("mutated", 0)
+
+        extracted_allele = describe.describe(reference_sequence,
+            sample_sequence)
+        #extracted_protein_allele = describe.describe(
+        #    O.getIndexedOutput("oldprotein", 0),
+        #    O.getIndexedOutput("newprotein", 0, default=""),
+        #    DNA=False)
+        extracted_protein_allele = ""
 
         extracted = extracted_protein = '(skipped)'
 
@@ -112,6 +119,9 @@ def check_name(description):
         print extracted
         print extracted_protein
         #print "+++ %s" % O.getOutput("myTranscriptDescription")
+        print json.dumps({"reference_sequence": reference_sequence,
+            "sample_sequence": sample_sequence, "allele_description":
+            extracted_allele}, cls=MyEncoder)
 
 
 def main():
