@@ -111,6 +111,15 @@ If everything's okay, install Mutalyzer::
 
     $ python setup.py install
 
+.. note:: If you're planning on modifying the Mutalyzer source code, it might
+    be convenient to install Mutalyzer in *development mode*::
+
+        $ python setup.py develop
+
+    Instead of copying the source code to the installation directory, this
+    only links from the installation directory to the source code such that
+    any changes you make to it are directly available in the environment.
+
 .. seealso::
 
    `virtualenv`_
