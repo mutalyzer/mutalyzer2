@@ -193,29 +193,14 @@ class Seq(object):
     ##dump
 #Seq
 
-class SeqList(object):
-    """
-    Container for a list of Seq objects.
-    """
-    def __init__(self, seq_list=[]):
-        self.seq_list = seq_list
-
+class SeqList(list):
     def __str__(self):
-        representation = ';'.join(map(str, self.seq_list))
+        representation = ';'.join(map(str, self))
 
-        if len(self.seq_list) > 1:
+        if len(self) > 1:
             return "[{}]".format(representation)
         return representation
     #__str__
-
-    def __len__(self):
-        return len(str(self))
-
-    def __iter__(self):
-        return iter(self.seq_list)
-
-    def append(self, item):
-        self.seq_list.append(item)
 #SeqList
 
 class RawVar(models.RawVar):
