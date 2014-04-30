@@ -619,12 +619,13 @@ def describe(s1, s2, DNA=True):
             description[-1].update()
         #if
     #if
-    else:
+    else: # DNA description extraction, the only thing that `works'.
         in_transposition = 0
 
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
                 0):
             #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end
+            print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE
 
             if variant.type & extractor.TRANSPOSITION_OPEN:
                 if not in_transposition:
