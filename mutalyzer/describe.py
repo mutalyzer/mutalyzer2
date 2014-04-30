@@ -514,8 +514,8 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         return RawVar(DNA=DNA, start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
-            SeqList([s2[var.sample_start:var.sample_end]]), type="ins",
-            shift=shift, sample_start=var.sample_start,
+            SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
+            type="ins", shift=shift, sample_start=var.sample_start,
             sample_end=var.sample_end)
     #if
 
@@ -549,7 +549,8 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
     # Simple InDel.
     if var.reference_start + 1 == var.reference_end:
         return RawVar(DNA=DNA, start=var.reference_start + 1,
-            inserted=seq_list or s2[var.sample_start:var.sample_end],
+            inserted=seq_list or
+            SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
             type="delins", sample_start=var.sample_start,
             sample_end=var.sample_end)
 
@@ -570,8 +571,9 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
     # InDel.
     return RawVar(DNA=DNA, start=var.reference_start + 1,
         end=var.reference_end, inserted=seq_list or
-        s2[var.sample_start:var.sample_end], type="delins",
-        sample_start=var.sample_start, sample_end=var.sample_end)
+        SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
+        type="delins", sample_start=var.sample_start,
+        sample_end=var.sample_end)
 #var2RawVar
 
 def describe(s1, s2, DNA=True):
