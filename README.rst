@@ -2,7 +2,7 @@ Mutalyzer
 =========
 
 Mutalyzer is an HGVS variant nomenclature checker. The canonical Mutalyzer
-installation can be found at [mutalyzer.nl](https://mutalyzer.nl).
+installation can be found at `mutalyzer.nl <https://mutalyzer.nl>`_.
 
 
 Documentation
