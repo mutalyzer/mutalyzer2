@@ -44,6 +44,7 @@ Additional notes
 
    development
    todo
+   new-organism
    changelog
    copyright
 
