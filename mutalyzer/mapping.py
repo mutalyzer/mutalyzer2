@@ -886,7 +886,7 @@ def import_from_mapview_file(assembly, mapview_file, group_label):
     (#11), which always contains the gene identifier, and then on the
     `chromosome` column (#2).
 
-        sort -k 11,11 -k 2,2 seq_gene.md > seq_gene.by_gene.md
+        sort -t $'\t' -k 11,11 -k 2,2 seq_gene.md > seq_gene.by_gene.md
 
     Raises :exc:`ValueError` if `mapview_file` is not sorted this way.
 
@@ -1004,7 +1004,7 @@ def import_from_mapview_file(assembly, mapview_file, group_label):
     processed_keys = set()
 
     for key, records in groupby(read_records(mapview_file),
-                              itemgetter('feature_id', 'chromosome')):
+                                itemgetter('feature_id', 'chromosome')):
         if key in processed_keys:
             raise MapviewSortError('Mapview file must be sorted by feature_id '
                                    'and chromosome (try `sort -k 11,11 -k '

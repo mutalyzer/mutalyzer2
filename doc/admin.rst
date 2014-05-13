@@ -63,7 +63,7 @@ For example, to import transcript mappings for the GRCh37 assembly, run the
 following::
 
     $ wget ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_gene.md.gz
-    $ zcat seq_gene.md.gz | sort -k 11,11 -k 2,2 > seq_gene.sorted.md
+    $ zcat seq_gene.md.gz | sort -t $'\t' -k 11,11 -k 2,2 > seq_gene.sorted.md
     $ mutalyzer-admin assemblies import-mapview seq_gene.sorted.md 'GRCh37.p2-Primary Assembly'
 
 .. note:: The last argument, ``GRCh37.p2-Primary Assembly``, defines the group

@@ -217,7 +217,7 @@ def main():
         description=import_mapview.__doc__.split('\n\n')[0],
         epilog='Note: We require that FILE is sorted on the `feature_id` '
         '(#11) and `chromosome` (#2) columns. This can be done with a '
-        '`sort -k 11,11 -k 2,2` command.')
+        '`sort -t $\'\\t\' -k 11,11 -k 2,2` command.')
     p.set_defaults(func=import_mapview)
     p.add_argument(
         'mapview_file', metavar='FILE', type=argparse.FileType('r'),
