@@ -62,11 +62,11 @@ genome assemblies as used by their `Map Viewer
 For example, to import transcript mappings for the GRCh37 assembly, run the
 following::
 
-    $ wget ftp://ftp.ncbi.nih.gov/genomes/H_sapiens/ARCHIVE/BUILD.37.2/mapview/seq_gene.md.gz
+    $ wget ftp://ftp.ncbi.nlm.nih.gov/genomes/MapView/Homo_sapiens/sequence/ANNOTATION_RELEASE.105/initial_release/seq_gene.md.gz
     $ zcat seq_gene.md.gz | sort -t $'\t' -k 11,11 -k 2,2 > seq_gene.sorted.md
-    $ mutalyzer-admin assemblies import-mapview seq_gene.sorted.md 'GRCh37.p2-Primary Assembly'
+    $ mutalyzer-admin assemblies import-mapview seq_gene.sorted.md 'GRCh37.p13-Primary Assembly'
 
-.. note:: The last argument, ``GRCh37.p2-Primary Assembly``, defines the group
+.. note:: The last argument, ``GRCh37.p13-Primary Assembly``, defines the group
           label to filter the file on. You would usually want to include it.
 
 
