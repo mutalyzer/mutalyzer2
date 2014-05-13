@@ -1,0 +1,133 @@
+{
+  "name": "GRCh38",
+  "alias": "hg38",
+  "taxonomy_id": 9606,
+  "taxonomy_common_name": "Homo sapiens",
+  "chromosomes": [
+    {
+      "organelle": "nucleus",
+      "name": "chr1",
+      "accession": "NC_000001.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr2",
+      "accession": "NC_000002.12"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr3",
+      "accession": "NC_000003.12"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr4",
+      "accession": "NC_000004.12"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr5",
+      "accession": "NC_000005.10"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr6",
+      "accession": "NC_000006.12"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr7",
+      "accession": "NC_000007.14"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr8",
+      "accession": "NC_000008.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr9",
+      "accession": "NC_000009.12"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr10",
+      "accession": "NC_000010.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr11",
+      "accession": "NC_000011.10"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr12",
+      "accession": "NC_000012.12"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr13",
+      "accession": "NC_000013.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr14",
+      "accession": "NC_000014.9"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr15",
+      "accession": "NC_000015.10"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr16",
+      "accession": "NC_000016.10"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr17",
+      "accession": "NC_000017.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr18",
+      "accession": "NC_000018.10"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr19",
+      "accession": "NC_000019.10"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr20",
+      "accession": "NC_000020.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr21",
+      "accession": "NC_000021.9"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr22",
+      "accession": "NC_000022.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrX",
+      "accession": "NC_000023.11"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrY",
+      "accession": "NC_000024.10"
+    },
+    {
+      "organelle": "mitochondrion",
+      "name": "chrM",
+      "accession": "NC_012920.1"
+    }
+  ]
+}
