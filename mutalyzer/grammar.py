@@ -78,8 +78,11 @@ class Grammar():
     # BNF: ProtIso -> `_i' Number
     ProtIso = Suppress('_i') + Number('ProtIso')
 
+    # BNF: GeneName -> ([a-Z] | [0-9] | `-')+
+    GeneName = Word(alphanums + '-', min=1)
+
     # BNF: GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
-    GeneSymbol = Suppress('(') + Group(Name('GeneSymbol') + \
+    GeneSymbol = Suppress('(') + Group(GeneName('GeneSymbol') + \
                  Optional(TransVar ^ ProtIso))('Gene') + Suppress(')')
 
     # BNF: GI -> (`GI' | `GI:')? Number
