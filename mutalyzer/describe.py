@@ -19,7 +19,7 @@ from mutalyzer import models
 from extractor import extractor
 
 
-def makeFSTables(table_id):
+def make_fs_tables(table_id):
     """
     For every pair of amino acids, calculate the set of possible amino acids in
     a different reading frame. Do this for both alternative reading frames (+1
@@ -41,19 +41,19 @@ def makeFSTables(table_id):
         reverse_table[table[i]].append(i)
 
     # Make the frame shift tables.
-    FS1 = collections.defaultdict(set)
-    FS2 = collections.defaultdict(set)
-    for AA_i in reverse_table:
-        for AA_j in reverse_table:
-            for codon_i in reverse_table[AA_i]:
-                for codon_j in reverse_table[AA_j]:
-                    FS1[AA_i + AA_j].add(table[(codon_i + codon_j)[1:4]]) # +1.
-                    FS2[AA_i + AA_j].add(table[(codon_i + codon_j)[2:5]]) # +2.
+    fs1 = collections.defaultdict(set)
+    fs2 = collections.defaultdict(set)
+    for aa_i in reverse_table:
+        for aa_j in reverse_table:
+            for codon_i in reverse_table[aa_i]:
+                for codon_j in reverse_table[aa_j]:
+                    fs1[aa_i + aa_j].add(table[(codon_i + codon_j)[1:4]]) # +1.
+                    fs2[aa_i + aa_j].add(table[(codon_i + codon_j)[2:5]]) # +2.
                 #for
-    return FS1, FS2
-#makeFSTables
+    return fs1, fs2
+#make_fs_tables
 
-def __makeOverlaps(peptide):
+def _peptide_overlaps(peptide):
     """
     Make a list of overlapping 2-mers of {peptide} in order of appearance.
 
@@ -63,102 +63,102 @@ def __makeOverlaps(peptide):
     @rtype: list(unicode)
     """
     return map(lambda x: peptide[x:x+2], range(len(peptide) - 1))
-#__makeOverlaps
+#_peptide_overlaps
 
-def __options(pList, peptidePrefix, FS, output):
+def _options(peptide_overlaps, peptide_prefix, fs, output):
     """
     Enumerate all peptides that could result from a frame shift.
 
-    @arg pList: List of overlapping 2-mers of a peptide.
-    @type pList: list(unicode)
-    @arg peptidePrefix: Prefix of a peptide in the alternative reading frame.
-    @type peptidePrefix: unicode
-    @arg FS: Frame shift table.
-    @type FS: dict
+    @arg peptide_overlaps: List of overlapping 2-mers of a peptide.
+    @type peptide_overlaps: list(unicode)
+    @arg peptide_prefix: Prefix of a peptide in the alternative reading frame.
+    @type peptide_prefix: unicode
+    @arg fs: Frame shift table.
+    @type fs: dict
     @arg output: List of peptides, should be empty initially.
     @type output: list(unicode)
     """
-    if not pList:
-        output.append(peptidePrefix)
+    if not peptide_overlaps:
+        output.append(peptide_prefix)
         return
     #if
-    for i in FS[pList[0]]:
-        __options(pList[1:], peptidePrefix + i, FS, output)
-#__options
+    for i in fs[peptide_overlaps[0]]:
+        _options(peptide_overlaps[1:], peptide_prefix + i, fs, output)
+#_options
 
-def enumFS(peptide, FS):
+def enum_fs(peptide, fs):
     """
     Enumerate all peptides that could result from a frame shift.
 
     @arg peptide: Original peptide sequence.
     @type peptide: unicode
-    @arg FS: Frame shift table.
-    @type FS: dict
+    @arg fs: Frame shift table.
+    @type fs: dict
     """
     output = []
 
-    __options(__makeOverlaps(peptide), "", FS, output)
+    _options(_peptide_overlaps(peptide), "", fs, output)
     return output
-#enumFS
+#enum_fs
 
-def fitFS(peptide, altPeptide, FS):
+def fit_fs(peptide, alternative_peptide, fs):
     """
-    Check whether peptide {altPeptide} is a possible frame shift of peptide
-    {peptide}.
+    Check whether peptide {alternative_peptide} is a possible frame shift of
+    peptide {peptide}.
 
     @arg peptide: Original peptide sequence.
     @type peptide: unicode
-    @arg altPeptide: Observed peptide sequence.
-    @type altPeptide: unicode
-    @arg FS: Frame shift table.
-    @type FS: dict
+    @arg alternative_peptide: Observed peptide sequence.
+    @type alternative_peptide: unicode
+    @arg fs: Frame shift table.
+    @type fs: dict
     """
     # Todo: This is a temporary fix to prevent crashing on frameshift
     #     detection (I think bug #124).
     return False
 
-    if len(peptide) < len(altPeptide):
+    if len(peptide) < len(alternative_peptide):
         return False
 
-    pList = __makeOverlaps(peptide)
+    peptide_overlaps = _peptide_overlaps(peptide)
 
-    for i in range(len(altPeptide)):
-        if not altPeptide[i] in FS[pList[i]]:
+    for i in range(len(alternative_peptide)):
+        if not alternative_peptide[i] in fs[peptide_overlaps[i]]:
             return False
     return True
-#fitFS
+#fit_fs
 
-def findFS(peptide, altPeptide, FS):
+def find_fs(peptide, alternative_peptide, fs):
     """
-    Find the longest part of {altPeptide} that fits in {peptide} in a certain
-    frame given by {FS}.
+    Find the longest part of {alternative_peptide} that fits in {peptide} in a
+    certain frame given by {fs}.
 
     @arg peptide: Original peptide sequence.
     @type peptide: unicode
-    @arg altPeptide: Observed peptide sequence.
-    @type altPeptide: unicode
-    @arg FS: Frame shift table.
-    @type FS: dict
+    @arg alternative_peptide: Observed peptide sequence.
+    @type alternative_peptide: unicode
+    @arg fs: Frame shift table.
+    @type fs: dict
 
     @returns: The length and the offset in {peptide} of the largest frameshift.
     @rtype: tuple(int, int)
     """
-    pList = __makeOverlaps(peptide)
-    maxFS = 0
-    fsStart = 0
+    peptide_overlaps = _peptide_overlaps(peptide)
+    max_fs = 0
+    fs_start = 0
 
-    for i in range(len(pList))[::-1]:
-        for j in range(min(i + 1, len(altPeptide))):
-            if not altPeptide[::-1][j] in FS[pList[i - j]]:
+    for i in range(len(peptide_overlaps))[::-1]:
+        for j in range(min(i + 1, len(alternative_peptide))):
+            if not alternative_peptide[::-1][j] in fs[peptide_overlaps[i - j]]:
                 break
-        if j >= maxFS:
-            maxFS = j
-            fsStart = i - j + 2
+        if j >= max_fs:
+            max_fs = j
+            fs_start = i - j + 2
         #if
     #for
 
-    return maxFS - 1, fsStart
-#findFS
+    return max_fs - 1, fs_start
+#find_fs
 
 class Seq(object):
     """
@@ -218,10 +218,11 @@ class RawVar(models.RawVar):
     Container for a raw variant.
     """
 
-    def __init__(self, DNA=True, start=0, start_offset=0, end=0, end_offset=0,
+    def __init__(self, dna=True, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
             sample_end_offset=0, type="none", deleted=SeqList([Seq()]),
-            inserted=SeqList([Seq()]), shift=0, startAA="", endAA="", term=0):
+            inserted=SeqList([Seq()]), shift=0, start_aa="", end_aa="",
+            term=0):
         """
         Initialise the class with the appropriate values.
 
@@ -252,7 +253,7 @@ class RawVar(models.RawVar):
         """
         # TODO: Will this container be used for all variants, or only genomic?
         #       start_offset and end_offset may be never used.
-        self.DNA = DNA
+        self.dna = dna
         self.start = start
         self.start_offset = start_offset
         self.end = end
@@ -265,15 +266,13 @@ class RawVar(models.RawVar):
         self.deleted = deleted
         self.inserted = inserted
         self.shift = shift
-        self.startAA = startAA
-        self.endAA = endAA
+        self.start_aa = start_aa
+        self.end_aa = end_aa
         self.term = term
         self.update()
-        #self.hgvs = self.description()
-        #self.hgvsLength = self.descriptionLength()
     #__init__
 
-    def __DNADescription(self):
+    def _dna_description(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
@@ -283,23 +282,23 @@ class RawVar(models.RawVar):
         if not self.start:
             return "="
 
-        descr = "{}".format(self.start)
+        description = "{}".format(self.start)
 
         if self.start != self.end:
-            descr += "_{}".format(self.end)
+            description += "_{}".format(self.end)
 
         if self.type != "subst":
-            descr += "{}".format(self.type)
+            description += "{}".format(self.type)
 
             if self.type in ("ins", "delins"):
-                return descr + "{}".format(self.inserted)
-            return descr
+                return description + "{}".format(self.inserted)
+            return description
         #if
 
-        return descr + "{}>{}".format(self.deleted, self.inserted)
-    #__DNADescription
+        return description + "{}>{}".format(self.deleted, self.inserted)
+    #_dna_description
 
-    def __proteinDescription(self):
+    def _protein_description(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
@@ -314,31 +313,31 @@ class RawVar(models.RawVar):
         if not self.start:
             return "="
 
-        descr = ""
+        description = ""
         if not self.deleted:
             if self.type == "ext":
-                descr += '*'
+                description += '*'
             else:
-                descr += "{}".format(seq3(self.startAA))
+                description += "{}".format(seq3(self.start_aa))
         #if
         else:
-            descr += "{}".format(seq3(self.deleted))
-        descr += "{}".format(self.start)
+            description += "{}".format(seq3(self.deleted))
+        description += "{}".format(self.start)
         if self.end:
-            descr += "_{}{}".format(seq3(self.endAA), self.end)
+            description += "_{}{}".format(seq3(self.end_aa), self.end)
         if self.type not in ["subst", "stop", "ext", "fs"]: # fs is not a type
-            descr += self.type
+            description += self.type
         if self.inserted:
-            descr += "{}".format(seq3(self.inserted))
+            description += "{}".format(seq3(self.inserted))
 
         if self.type == "stop":
-            return descr + '*'
+            return description + '*'
         if self.term:
-            return descr + "fs*{}".format(self.term)
-        return descr
-    #__proteinDescription
+            return description + "fs*{}".format(self.term)
+        return description
+    #_protein_description
 
-    def __DNADescriptionLength(self):
+    def _dna_description_length(self):
         """
         Give the standardised length of the HGVS description of the raw variant
         stored in this class.
@@ -353,23 +352,23 @@ class RawVar(models.RawVar):
         if not self.start: # `=' or `?'
             return 1
 
-        descrLen = 1 # Start position.
+        description_length = 1 # Start position.
 
         if self.end: # '_' and end position.
-            descrLen += 2
+            description_length += 2
 
         if self.type != "subst":
-            descrLen += len(self.type)
+            description_length += len(self.type)
 
             if self.inserted:
-                return descrLen + len(self.inserted)
-            return descrLen
+                return description_length + len(self.inserted)
+            return description_length
         #if
 
         return 4 # Start position, '>' and end position.
-    #__DNAdescriptionLength
+    #_dna_description_length
 
-    def __proteinDescriptionLength(self):
+    def _protein_description_length(self):
         """
         Give the standardised length of the HGVS description of the raw variant
         stored in this class.
@@ -384,40 +383,40 @@ class RawVar(models.RawVar):
         if not self.start: # =
             return 1
 
-        descrLen = 1      # Start position.
+        description_length = 1      # Start position.
         if not self.deleted and self.type == "ext":
-            descrLen += 1 # *
+            description_length += 1 # *
         else:
-            descrLen += 3 # One amino acid.
+            description_length += 3 # One amino acid.
         if self.end:
-            descrLen += 5 # `_' + one amino acid + end position.
+            description_length += 5 # `_' + one amino acid + end position.
         if self.type not in ["subst", "stop", "ext", "fs"]:
-            descrLen += len(self.type)
+            description_length += len(self.type)
         if self.inserted:
-            descrLen += 3 * len(self.inserted)
+            description_length += 3 * len(self.inserted)
         if self.type == "stop":
-            return descrLen + 1 # *
+            return description_length + 1 # *
         if self.term:
-            return descrLen + len(self.type) + 2 # `*' + length until stop.
-        return descrLen
-    #__proteinDescriptionLength
+            return description_length + len(self.type) + 2 # `*' + until stop.
+        return description_length
+    #_protein_description_length
 
     def update(self):
         """
         """
         self.hgvs = self.description()
-        self.hgvsLength = self.descriptionLength()
+        self.hgvs_length = self.description_length()
     #update
 
     def description(self):
         """
         """
-        if self.DNA:
-            return self.__DNADescription()
-        return self.__proteinDescription()
+        if self.dna:
+            return self._dna_description()
+        return self._protein_description()
     #description
 
-    def descriptionLength(self):
+    def description_length(self):
         """
         Give the standardised length of the HGVS description of the raw variant
         stored in this class.
@@ -426,11 +425,11 @@ class RawVar(models.RawVar):
             variant stored in this class.
         @rtype: int
         """
-        if self.DNA:
-            return self.__DNADescriptionLength()
-        return self.__proteinDescriptionLength()
-    #descriptionLength
-#DescribeRawVar
+        if self.dna:
+            return self._dna_description_length()
+        return self._protein_description_length()
+    #description_length
+#RawVar
 
 def allele_description(allele):
     """
@@ -447,7 +446,7 @@ def allele_description(allele):
     return allele[0].hgvs
 #allele_description
 
-def alleleDescriptionLength(allele):
+def allele_description_length(allele):
     """
     Calculate the standardised length of an HGVS allele description.
 
@@ -458,8 +457,8 @@ def alleleDescriptionLength(allele):
     @rval: int
     """
     # NOTE: Do we need to count the ; and [] ?
-    return sum(map(lambda x: x.hgvsLength, allele))
-#alleleDescriptionLength
+    return sum(map(lambda x: x.hgvs_length, allele))
+#allele_description_length
 
 def printpos(s, start, end, fill=0):
     """
@@ -473,12 +472,12 @@ def printpos(s, start, end, fill=0):
         s[end:end + fs])
 #printpos
 
-def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
+def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
     """
     """
     # Unknown.
     if s1 == '?' or s2 == '?':
-        return [RawVar(DNA=DNA, type="unknown")]
+        return [RawVar(dna=dna, type="unknown")]
 
     # Insertion / Duplication.
     if var.reference_start == var.reference_end:
@@ -495,13 +494,13 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
             s1[var.reference_start - ins_length:var.reference_start] ==
             s2[var.sample_start:var.sample_end]):
 
-            return RawVar(DNA=DNA, start=var.reference_start - ins_length + 1,
+            return RawVar(dna=dna, start=var.reference_start - ins_length + 1,
                 end=var.reference_end, type="dup", shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
                 inserted=SeqList([Seq(sequence=s2[
                 var.sample_start:var.sample_end])]))
         #if
-        return RawVar(DNA=DNA, start=var.reference_start,
+        return RawVar(dna=dna, start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
             SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
@@ -517,7 +516,7 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         var.reference_start += shift3
         var.reference_end += shift3
 
-        return RawVar(DNA=DNA, start=var.reference_start + 1,
+        return RawVar(dna=dna, start=var.reference_start + 1,
             end=var.reference_end, type="del", shift=shift,
             sample_start=var.sample_start, sample_end=var.sample_end + 1,
             deleted=SeqList([Seq(sequence=s1[
@@ -528,7 +527,7 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
     if (var.reference_start + 1 == var.reference_end and
         var.sample_start + 1 == var.sample_end):
 
-        return RawVar(DNA=DNA, start=var.reference_start + 1,
+        return RawVar(dna=dna, start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
             sample_end=var.sample_end, type="subst",
             deleted=SeqList([Seq(sequence=s1[var.reference_start])]),
@@ -544,7 +543,7 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
             var.sample_end -= trim
         #if
 
-        return RawVar(DNA=DNA, start=var.reference_start + 1,
+        return RawVar(dna=dna, start=var.reference_start + 1,
             end=var.reference_end, type="inv",
             sample_start=var.sample_start + 1, sample_end=var.sample_end,
             deleted=SeqList([Seq(sequence=s1[
@@ -554,15 +553,15 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
     #if
 
     # InDel.
-    return RawVar(DNA=DNA, start=var.reference_start + 1,
+    return RawVar(dna=dna, start=var.reference_start + 1,
         end=var.reference_end, deleted=SeqList([Seq(sequence=s1[
                 var.reference_start:var.reference_end])]), inserted=seq_list or
         SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
         type="delins", sample_start=var.sample_start + 1,
         sample_end=var.sample_end)
-#var2RawVar
+#var_to_rawvar
 
-def describe(s1, s2, DNA=True):
+def describe(s1, s2, dna=True):
     """
     Give an allele description of the change from {s1} to {s2}.
 
@@ -576,31 +575,33 @@ def describe(s1, s2, DNA=True):
     """
     description = []
 
-    if not DNA:
-        FS1, FS2 = makeFSTables(1)
-        longestFSf = max(findFS(s1, s2, FS1), findFS(s1, s2, FS2))
-        longestFSr = max(findFS(s2, s1, FS1), findFS(s2, s1, FS2))
+    if not dna:
+        fs1, fs2 = make_fs_tables(1)
+        longest_fs_f = max(find_fs(s1, s2, fs1), find_fs(s1, s2, fs2))
+        longest_fs_r = max(find_fs(s2, s1, fs1), find_fs(s2, s1, fs2))
 
-        if longestFSf > longestFSr:
-            print s1[:longestFSf[1]], s1[longestFSf[1]:]
-            print s2[:len(s2) - longestFSf[0]], s2[len(s2) - longestFSf[0]:]
-            s1_part = s1[:longestFSf[1]]
-            s2_part = s2[:len(s2) - longestFSf[0]]
-            term = longestFSf[0]
+        if longest_fs_f > longest_fs_r:
+            print s1[:longest_fs_f[1]], s1[longest_fs_f[1]:]
+            print s2[:len(s2) - longest_fs_f[0]], \
+                s2[len(s2) - longest_fs_f[0]:]
+            s1_part = s1[:longest_fs_f[1]]
+            s2_part = s2[:len(s2) - longest_fs_f[0]]
+            term = longest_fs_f[0]
         #if
         else:
-            print s1[:len(s1) - longestFSr[0]], s1[len(s1) - longestFSr[0]:]
-            print s2[:longestFSr[1]], s2[longestFSr[1]:]
-            s1_part = s1[:len(s1) - longestFSr[0]]
-            s2_part = s2[:longestFSr[1]]
-            term = len(s2) - longestFSr[1]
+            print s1[:len(s1) - longest_fs_r[0]], \
+                s1[len(s1) - longest_fs_r[0]:]
+            print s2[:longest_fs_r[1]], s2[longest_fs_r[1]:]
+            s1_part = s1[:len(s1) - longest_fs_r[0]]
+            s2_part = s2[:longest_fs_r[1]]
+            term = len(s2) - longest_fs_r[1]
         #else
 
         s1_part = s1
         s2_part = s2
         for variant in extractor.extract(unicode(s1_part), len(s1_part),
             unicode(s2_part), len(s2_part), 1):
-            description.append(var2RawVar(s1, s2, variant, DNA=DNA))
+            description.append(var_to_rawvar(s1, s2, variant, dna=dna))
 
         if description:
             description[-1].term = term + 2
@@ -635,14 +636,14 @@ def describe(s1, s2, DNA=True):
                         sequence=s2[variant.sample_start:variant.sample_end]))
             #if
             elif not (variant.type & extractor.IDENTITY):
-               description.append(var2RawVar(s1, s2, variant, DNA=DNA))
+               description.append(var_to_rawvar(s1, s2, variant, dna=dna))
 
             if variant.type & extractor.TRANSPOSITION_CLOSE:
                 in_transposition -= 1
 
                 if not in_transposition:
-                    description.append(var2RawVar(s1, s2, variant, seq_list,
-                        DNA=DNA))
+                    description.append(var_to_rawvar(s1, s2, variant, seq_list,
+                        dna=dna))
                 #for i in seq_list:
                 #    print i.dump()
             #if
@@ -651,7 +652,7 @@ def describe(s1, s2, DNA=True):
 
     # Nothing happened.
     if not description:
-        return [RawVar(DNA=DNA)]
+        return [RawVar(dna=dna)]
 
     return description
 #describe
