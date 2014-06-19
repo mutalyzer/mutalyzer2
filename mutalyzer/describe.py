@@ -187,6 +187,9 @@ class Seq(object):
         return "{}_{}{}".format(self.start, self.end, inverted)
     #__str__
 
+    def __nonzero__(self):
+         return bool(self.sequence)
+
     #def dump(self):
     #    """
     #    Debug function.
@@ -205,28 +208,20 @@ class SeqList(list):
             return "[{}]".format(representation)
         return representation
     #__str__
+
+    def __nonzero__(self):
+        return bool(self[0])
 #SeqList
 
 class RawVar(models.RawVar):
     """
     Container for a raw variant.
-
-    To use this class correctly, do not supply more than the minimum amount of
-    data. The {description()} function may not work properly if too much
-    information is given.
-
-    Example: if {end} is initialised for a substitution, a range will be
-      retuned, resulting in a description like: 100_100A>T
-
-    Note: As a workaround for a classname conflict in Spyne, this class is
-    named `DescribeRawVar` instead of just `RawVar`. We might want to reconsider
-    this name at some point.
     """
 
     def __init__(self, DNA=True, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
-            sample_end_offset=0, type="none", deleted="", inserted=None,
-            shift=0, startAA="", endAA="", term=0):
+            sample_end_offset=0, type="none", deleted=SeqList([Seq()]),
+            inserted=SeqList([Seq()]), shift=0, startAA="", endAA="", term=0):
         """
         Initialise the class with the appropriate values.
 
@@ -282,9 +277,6 @@ class RawVar(models.RawVar):
         """
         Give the HGVS description of the raw variant stored in this class.
 
-        Note that this function relies on the absence of values to make the
-        correct description. Also see the comment in the class definition.
-
         @returns: The HGVS description of the raw variant stored in this class.
         @rtype: unicode
         """
@@ -299,7 +291,7 @@ class RawVar(models.RawVar):
         if self.type != "subst":
             descr += "{}".format(self.type)
 
-            if self.inserted:
+            if self.type in ("ins", "delins"):
                 return descr + "{}".format(self.inserted)
             return descr
         #if
@@ -505,7 +497,9 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
 
             return RawVar(DNA=DNA, start=var.reference_start - ins_length + 1,
                 end=var.reference_end, type="dup", shift=shift,
-                sample_start=var.sample_start + 1, sample_end=var.sample_end)
+                sample_start=var.sample_start + 1, sample_end=var.sample_end,
+                inserted=SeqList([Seq(sequence=s2[
+                var.sample_start:var.sample_end])]))
         #if
         return RawVar(DNA=DNA, start=var.reference_start,
             end=var.reference_start + 1,
@@ -520,12 +514,14 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         shift5, shift3 = roll(s1, var.reference_start + 1, var.reference_end)
         shift = shift5 + shift3
 
-        var.reference_start += shift3 + 1
+        var.reference_start += shift3
         var.reference_end += shift3
 
-        return RawVar(DNA=DNA, start=var.reference_start,
+        return RawVar(DNA=DNA, start=var.reference_start + 1,
             end=var.reference_end, type="del", shift=shift,
-            sample_start=var.sample_start, sample_end=var.sample_end + 1)
+            sample_start=var.sample_start, sample_end=var.sample_end + 1,
+            deleted=SeqList([Seq(sequence=s1[
+                var.reference_start:var.reference_end])]))
     #if
 
     # Substitution.
@@ -534,8 +530,9 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
 
         return RawVar(DNA=DNA, start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
-            sample_end=var.sample_end, deleted=s1[var.reference_start],
-            inserted=s2[var.sample_start], type="subst")
+            sample_end=var.sample_end, type="subst",
+            deleted=SeqList([Seq(sequence=s1[var.reference_start])]),
+            inserted=SeqList([Seq(sequence=s2[var.sample_start])]))
     #if
 
     # Inversion.
@@ -549,12 +546,17 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
 
         return RawVar(DNA=DNA, start=var.reference_start + 1,
             end=var.reference_end, type="inv",
-            sample_start=var.sample_start + 1, sample_end=var.sample_end)
+            sample_start=var.sample_start + 1, sample_end=var.sample_end,
+            deleted=SeqList([Seq(sequence=s1[
+                var.reference_start:var.reference_end])]),
+            inserted=SeqList([Seq(sequence=s2[
+                var.sample_start:var.reference_end])]))
     #if
 
     # InDel.
     return RawVar(DNA=DNA, start=var.reference_start + 1,
-        end=var.reference_end, inserted=seq_list or
+        end=var.reference_end, deleted=SeqList([Seq(sequence=s1[
+                var.reference_start:var.reference_end])]), inserted=seq_list or
         SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
         type="delins", sample_start=var.sample_start + 1,
         sample_end=var.sample_end)
