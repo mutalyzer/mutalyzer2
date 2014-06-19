@@ -293,7 +293,7 @@ class RawVar(models.RawVar):
 
         descr = "{}".format(self.start)
 
-        if self.end:
+        if self.start != self.end:
             descr += "_{}".format(self.end)
 
         if self.type != "subst":
@@ -503,19 +503,15 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
             s1[var.reference_start - ins_length:var.reference_start] ==
             s2[var.sample_start:var.sample_end]):
 
-            if ins_length == 1:
-                return RawVar(DNA=DNA, start=var.reference_start, type="dup",
-                    shift=shift, sample_start=var.sample_start,
-                    sample_end=var.sample_end)
             return RawVar(DNA=DNA, start=var.reference_start - ins_length + 1,
                 end=var.reference_end, type="dup", shift=shift,
-                sample_start=var.sample_start, sample_end=var.sample_end)
+                sample_start=var.sample_start + 1, sample_end=var.sample_end)
         #if
         return RawVar(DNA=DNA, start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
             SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
-            type="ins", shift=shift, sample_start=var.sample_start,
+            type="ins", shift=shift, sample_start=var.sample_start + 1,
             sample_end=var.sample_end)
     #if
 
@@ -527,13 +523,9 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         var.reference_start += shift3 + 1
         var.reference_end += shift3
 
-        if var.reference_start == var.reference_end:
-            return RawVar(DNA=DNA, start=var.reference_start, type="del",
-                shift=shift, sample_start=var.sample_start,
-                sample_end=var.sample_end)
         return RawVar(DNA=DNA, start=var.reference_start,
             end=var.reference_end, type="del", shift=shift,
-            sample_start=var.sample_start, sample_end=var.sample_end)
+            sample_start=var.sample_start, sample_end=var.sample_end + 1)
     #if
 
     # Substitution.
@@ -541,18 +533,10 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         var.sample_start + 1 == var.sample_end):
 
         return RawVar(DNA=DNA, start=var.reference_start + 1,
-            deleted=s1[var.reference_start], inserted=s2[var.sample_start],
-            type="subst", sample_start=var.sample_start,
-            sample_end=var.sample_end)
+            end=var.reference_end, sample_start=var.sample_start + 1,
+            sample_end=var.sample_end, deleted=s1[var.reference_start],
+            inserted=s2[var.sample_start], type="subst")
     #if
-
-    # Simple InDel.
-    if var.reference_start + 1 == var.reference_end:
-        return RawVar(DNA=DNA, start=var.reference_start + 1,
-            inserted=seq_list or
-            SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
-            type="delins", sample_start=var.sample_start,
-            sample_end=var.sample_end)
 
     # Inversion.
     if var.type & extractor.REVERSE_COMPLEMENT:
@@ -564,15 +548,15 @@ def var2RawVar(s1, s2, var, seq_list=[], DNA=True):
         #if
 
         return RawVar(DNA=DNA, start=var.reference_start + 1,
-            end=var.reference_end, type="inv", sample_start=var.sample_start,
-            sample_end=var.sample_end)
+            end=var.reference_end, type="inv",
+            sample_start=var.sample_start + 1, sample_end=var.sample_end)
     #if
 
     # InDel.
     return RawVar(DNA=DNA, start=var.reference_start + 1,
         end=var.reference_end, inserted=seq_list or
         SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
-        type="delins", sample_start=var.sample_start,
+        type="delins", sample_start=var.sample_start + 1,
         sample_end=var.sample_end)
 #var2RawVar
 
@@ -627,7 +611,7 @@ def describe(s1, s2, DNA=True):
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
                 0):
             #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end
-            print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE
+            #print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE
 
             if variant.type & extractor.TRANSPOSITION_OPEN:
                 if not in_transposition:
