@@ -19,12 +19,20 @@ You can also use the built-in HTTP server by running this file directly.
 
 
 import argparse
+import logging
 import sys
 
 from wsgiref.simple_server import make_server
 from spyne.server.wsgi import WsgiApplication
 
+from ..config import settings
 from ..services import json
+
+
+# Setup logging.
+log_level = logging.INFO if settings.DEBUG else logging.ERROR
+logging.basicConfig(level=log_level)
+logging.getLogger('spyne.protocol.xml').setLevel(log_level)
 
 
 #: WSGI application instance.
