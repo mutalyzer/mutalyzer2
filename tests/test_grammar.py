@@ -143,3 +143,9 @@ class TestGrammar(MutalyzerTest):
         #self._parse('NM_000076.2(CDKN1C_i001):p.(*317Cext*1)')
         self._parse('NM_000076.2(CDKN1C_i001):p.(*317CextX1)')
         #self._parse('t(X;17)(DMD:p.Met1_Val1506; SGCA:p.Val250_*387)')
+
+    def test_minus_in_gene_symbol(self):
+        """
+        Gene symbol is allowed to contain a minus character.
+        """
+        self._parse('UD_132464528477(KRTAP2-4_v001):c.100del')
