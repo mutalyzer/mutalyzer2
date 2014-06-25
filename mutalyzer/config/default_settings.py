@@ -25,6 +25,12 @@ MAX_CACHE_SIZE = 50 * 1048576 # 50 MB
 # Maximum size for uploaded and downloaded files (in bytes).
 MAX_FILE_SIZE = 10 * 1048576 # 10 MB
 
+# The WSGI application runs behind a reverse proxy (e.g., nginx using
+# proxy_pass). This needs to be set if the application is mapped to a URL
+# other than / or a different HTTP scheme is used by the reverse proxy.
+# http://flask.pocoo.org/snippets/35/
+REVERSE_PROXIED = False
+
 # Redis connection URI (can be any redis-py connection URI). Set to `None` to
 # silently use a mock Redis. Redis is only used for non-essential features.
 REDIS_URI = None
