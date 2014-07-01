@@ -1135,10 +1135,10 @@ class MutalyzerService(ServiceBase):
         result = InfoOutput()
         result.version = mutalyzer.__version__
         result.versionParts = mutalyzer.__version_info__
-        if mutalyzer.RELEASE:
-            result.releaseDate = mutalyzer.__date__
-        else:
+        if mutalyzer.__version_info__[-1] == 'dev':
             result.releaseDate = ''
+        else:
+            result.releaseDate = mutalyzer.__date__
         result.nomenclatureVersion = mutalyzer.NOMENCLATURE_VERSION
         result.nomenclatureVersionParts = mutalyzer.NOMENCLATURE_VERSION_INFO
         result.serverName = socket.gethostname()

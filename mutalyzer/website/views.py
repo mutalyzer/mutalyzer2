@@ -39,7 +39,7 @@ def add_globals():
     return {'mutalyzer_version'   : mutalyzer.__version__,
             'nomenclature_version': mutalyzer.NOMENCLATURE_VERSION,
             'release_date'        : mutalyzer.__date__,
-            'release'             : mutalyzer.RELEASE,
+            'release'             : mutalyzer.__version_info__[-1] != 'dev',
             'copyright_years'     : mutalyzer.COPYRIGHT_YEARS,
             'contact_email'       : settings.EMAIL,
             'soap_wsdl_url'       : settings.SOAP_WSDL_URL,
