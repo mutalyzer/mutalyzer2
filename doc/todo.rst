@@ -30,24 +30,10 @@ grepping the source code for ``Todo``.
   obscures the control flow. The logging part should use the standard logging
   module. The data gathering by the Output object is probably better handled
   by explicitely returning data objects from functions.
-- Migrate from TAL to a more mondern and maintained Python template library,
-  for example jinja.
-- Develop a large test suite.
-- Create a web interface url to watch the progress of a batch job.
-- Create web services for the batch jobs (steal ideas from Jeroen's DVD
-  web service).
-- Use virtualenv?
-- Use SQLAlchemy?
-- Password for MySQL user.
-- In deployment, remove old versions of Mutalyzer package?
 - Check for os.path.join vulnerabilities.
-- Use a standard solution for the database migrations in extras/migrations.
-- Use something like Sphinx to generate development documentation from code.
 - There are some problems with the batch architecture, especially that there
   cannot be multiple workers without synchronisation problems.
   Good read: http://news.ycombinator.com/item?id=3002861
   Suggestion: http://celeryproject.org/
-- Have a normal 404 page.
-- Maintenance (and/or read-only) mode.
-- Cleanup this document.
-- Be more explicit in all the type of descriptions we don't currently support.
+- Be more explicit in all the type of descriptions we don't currently
+  support.
