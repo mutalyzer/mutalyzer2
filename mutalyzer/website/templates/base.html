@@ -1,32 +1,32 @@
 <html>
   <head>
     <link rel="shortcut icon"
-      href="static/images/favicon.ico"
+      href="{{ url_for('static', filename='images/favicon.ico') }}"
       type="image/x-icon">
     <link rel="stylesheet"
       type="text/css"
-      href="static/css/style.css">
+      href="{{ url_for('static', filename='css/style.css') }}">
     <script
       type="text/javascript"
       language="javascript"
-      src="static/js/jquery-1.10.2.min.js">
+      src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}">
     </script>
     <script
       type="text/javascript"
       language="javascript"
-      src="static/js/interface.js">
+      src="{{ url_for('static', filename='js/interface.js') }}">
     </script>
     <script
       type="text/javascript"
       language="javascript"
-      src="static/js/generator.js">
+      src="{{ url_for('static', filename='js/generator.js') }}">
     </script>
     <meta http-equiv="Content-Type"
       content="text/html; charset=iso-8859-1">
     <title>Mutalyzer {{ mutalyzer_version }} &mdash; {{ page_title }}</title>
   </head>
   <body
-    style="background-image: url('static/images/background.gif');
+    style="background-image: url('{{ url_for('static', filename='images/background.gif') }}');
            background-repeat: repeat-y;"
     leftmargin="0"
     topmargin="0"
@@ -44,14 +44,14 @@
         <td rowspan="2"
           valign="bottom"
           width="180">
-          <a href="{{ url_for('.homepage') }}"
+          <a href="{{ url_for('website.homepage') }}"
             target="_top"><img
-              src="static/images/mutalyzer_logo_bw.png" width="180" height="112"
+              src="{{ url_for('static', filename='images/mutalyzer_logo_bw.png') }}" width="180" height="112"
               alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
         <td valign="top"
           bgcolor="#FFFFFF"
           width="20"><img
-            src="static/images/1x1b.gif" height="1" width="20" border="0">
+            src="{{ url_for('static', filename='images/1x1b.gif') }}" height="1" width="20" border="0">
         </td>
         <td align="left"
           valign="bottom"
@@ -59,8 +59,8 @@
           width="98%">
           <!-- Banner -->
           <center>
-            <a href="{{ url_for('.homepage') }}"><img
-                src="static/images/mutalyzer_logo.png"
+            <a href="{{ url_for('website.homepage') }}"><img
+                src="{{ url_for('static', filename='images/mutalyzer_logo.png') }}"
                 width="90%"
                 height="90"
                 alt="Rauzy color fractal"
@@ -80,9 +80,9 @@
                  class="hornav">previous page</a>&nbsp;&nbsp;&nbsp;
             </td>
             <td align="right">
-              <a href="{{ url_for('.homepage') }}"
+              <a href="{{ url_for('website.homepage') }}"
                  class="hornav">home</a>&nbsp;&nbsp;&nbsp;
-              <a href="{{ url_for('.about') }}"
+              <a href="{{ url_for('website.about') }}"
                  class="hornav">about</a>&nbsp;&nbsp;&nbsp;
               <a href="mailto:{{ contact_email }}"
                  class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
@@ -96,7 +96,7 @@
       <tr>
         <td colspan="3"
           bgcolor="#000000"><img
-            src="static/images/1x1b.gif"
+            src="{{ url_for('static', filename='images/1x1b.gif') }}"
             height="1"
             border="0"></td>
       </tr>
@@ -112,26 +112,26 @@
       <table id="menu" width="180" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td valign="top" width="20">
-          <img src="static/images/1x1b.gif" height="19" border="0">
+          <img src="{{ url_for('static', filename='images/1x1b.gif') }}" height="19" border="0">
         </td>
       </tr>
 
 {# Fields are: view, view_args, id, caption, subnav #}
 {% set navigation_menu = [
-    ('.homepage', {}, 'homepage', 'Home', False),
-    ('.name_checker', {}, 'name-checker', 'Name Checker', False),
-    ('.syntax_checker', {}, 'syntax-checker', 'Syntax Checker', False),
-    ('.position_converter', {}, 'position-converter', 'Position Converter', False),
-    ('.snp_converter', {}, 'snp-converter', 'SNP Converter', False),
-    ('.name_generator', {}, 'name-generator', 'Name Generator', False),
-    ('.description_extractor', {}, 'description-extractor', 'Description Extractor', False),
-    ('.reference_loader', {}, 'reference-loader', 'Reference File Loader', False),
-    ('.batch_jobs', {}, 'batch-jobs', 'Batch Jobs', False),
-    ('.batch_jobs', {'job_type': 'name-checker'}, 'batch-name-checker', 'Name Checker', True),
-    ('.batch_jobs', {'job_type': 'syntax-checker'}, 'batch-syntax-checker', 'Syntax Checker', True),
-    ('.batch_jobs', {'job_type': 'position-converter'}, 'batch-position-converter', 'Position Converter', True),
-    ('.batch_jobs', {'job_type': 'snp-converter'}, 'batch-snp-converter', 'SNP Converter', True),
-    ('.webservices', {}, 'webservices', 'Web Services', False)
+    ('website.homepage', {}, 'homepage', 'Home', False),
+    ('website.name_checker', {}, 'name-checker', 'Name Checker', False),
+    ('website.syntax_checker', {}, 'syntax-checker', 'Syntax Checker', False),
+    ('website.position_converter', {}, 'position-converter', 'Position Converter', False),
+    ('website.snp_converter', {}, 'snp-converter', 'SNP Converter', False),
+    ('website.name_generator', {}, 'name-generator', 'Name Generator', False),
+    ('website.description_extractor', {}, 'description-extractor', 'Description Extractor', False),
+    ('website.reference_loader', {}, 'reference-loader', 'Reference File Loader', False),
+    ('website.batch_jobs', {}, 'batch-jobs', 'Batch Jobs', False),
+    ('website.batch_jobs', {'job_type': 'name-checker'}, 'batch-name-checker', 'Name Checker', True),
+    ('website.batch_jobs', {'job_type': 'syntax-checker'}, 'batch-syntax-checker', 'Syntax Checker', True),
+    ('website.batch_jobs', {'job_type': 'position-converter'}, 'batch-position-converter', 'Position Converter', True),
+    ('website.batch_jobs', {'job_type': 'snp-converter'}, 'batch-snp-converter', 'SNP Converter', True),
+    ('website.webservices', {}, 'webservices', 'Web Services', False)
 ] -%}
 {% set active_page = active_page|default('home') -%}
 
@@ -235,25 +235,25 @@
 
       <tr>
         <td width="20"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           height="10"
           width="20"
           border="0">
         </td>
         <td width="12"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           height="10"
           width="10"
           border="0">
         </td>
         <td valign="top" width="12"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           height="10"
           width="10"
           border="0">
         </td>
         <td valign="top" width="136"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           height="10"
           width="136"
           border="0">
@@ -263,7 +263,7 @@
 
     </td>
     <td width="20"><img
-      src="static/images/1x1b.gif"
+      src="{{ url_for('static', filename='images/1x1b.gif') }}"
       height="1"
       width="20"
       border="0">
@@ -308,7 +308,7 @@
         align="center">
       <tr>
         <td colspan="2"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           width="1"
           height="20"
           border="0">
@@ -316,7 +316,7 @@
       </tr>
       <tr>
         <td bgcolor="#000000" colspan="3"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           width="100%"
           height="1"
           border="0"></td>
@@ -327,7 +327,7 @@
              class="hornav">previous page</a>
         </td>
         <td align="middle">
-          <img src = "static/images/LUMC_24x24.png" align = "middle">
+          <img src = "{{ url_for('static', filename='images/LUMC_24x24.png') }}" align = "middle">
           &nbsp; &copy; {{ copyright_years[0] }}-{{ copyright_years[1] }}
           <a href = "http://www.lumc.nl">LUMC</a>
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
@@ -346,7 +346,7 @@
       </tr>
       <tr>
         <td colspan="2"><img
-          src="static/images/1x1b.gif"
+          src="{{ url_for('static', filename='images/1x1b.gif') }}"
           width="1"
           height="10"
           border="0">

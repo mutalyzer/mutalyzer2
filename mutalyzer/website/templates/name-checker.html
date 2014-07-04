@@ -1,7 +1,7 @@
 {% if not standalone %}{% extends "base.html" %}{% endif -%}
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="static/css/style.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
     <title></title>
   </head>
   <body>
