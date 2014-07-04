@@ -4,10 +4,110 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
+Version 2.0.0
+-------------
+
+Release date to be decided.
+
+This release does not bring many new features, but comes with significant
+changes to the technical infrastructure. `Merge request #6
+<https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/6>`_ tracks most of
+this.
+
+Some highlights especially users of the webservices should be aware of:
+
+- HTTP/RPC+JSON webservice has changed response format (wrapper object
+  removed). See below for an :ref:`example <changelog_200_example>`.
+- No more plain HTTP access, only redirects to HTTPS.
+- Many website entrypoints have changed URLs and form parameter names (the old
+  ones have HTTP redirects).
+- Removed old redirects from paths starting with ``/2.0/``.
+- In maintenance mode, all requests get a *Service Temporarily Unavailable*
+  response with status code 503.
+
+Other changes:
+
+- Fix running Mutalyzer in a `virtual environment
+  <http://virtualenv.readthedocs.org/>`_ and have an up-to-date
+  ``requirements.txt`` for `pip <http://pip.readthedocs.org/>`_ (`#4
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/4>`_).
+- Switch from TAL to Jinja2 (`#3
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/3>`_).
+- Refactor user interfaces (`#5
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/5>`_).
+- Move from configobj to Python module based config (`#7
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/7>`_).
+- Use SQLAlchemy as ORM (`#8
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/8>`_).
+- Use Redis for stat counters (`#10
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/10>`_).
+- Port website from web.py to Flask (`#11
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/11>`_).
+- Isolated unit tests using fixtures and an in-memory database (`#12
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/12>`_).
+- Display announcement on website (`#14
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/14>`_).
+- Database migrations with Alembic (`#15
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/15>`_).
+- Update documentation and use Sphinx (`#16
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/16>`_).
+- Move to `semantic versioning <http://semver.org/>`_, starting with version
+  2.0.0 (`#22 <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/22>`_).
+- Add 404 not found page.
+- Don't auto remove comma characters in syntax checker.
+- Add a dash (``-``) as an allowed character in the gene name.
+- Range, reverse complement range, and compound
+  insertions/insertion-deletions.
+
+.. _changelog_200_example:
+
+The wrapper object has been removed from the HTTP/RPC+JSON webservice response
+format. As an example, consider an old response format for the `checkSyntax`
+method:
+
+.. code-block:: json
+
+    {
+      "checkSyntaxResponse": {
+        "checkSyntaxResult": {
+          "valid": true,
+          "messages": {
+            "SoapMessage": []
+          }
+        }
+      }
+    }
+
+The new response format is:
+
+.. code-block:: json
+
+    {
+      "valid": true,
+      "messages": []
+    }
+
+
+
+Version 2.0.beta-32
+-------------------
+
+Released on June 26th 2014.
+
+ * Link to `Visual interface for Variant Description Extractor
+   <https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/News/2014-06-26-visual-interface>`_
+   announcement.
+
+
 Version 2.0.beta-31
 -------------------
 
-Release date to be decided.
+Released on March 27th 2014.
+
+- Due to incorrect interpretation, temporarily only support one CDS per
+  transcript (ignore all others) in LRG.
+- Due to incorrect interpretation, temporarily ignore transcripts without a
+  fixed id.
 
 
 Version 2.0.beta-30
