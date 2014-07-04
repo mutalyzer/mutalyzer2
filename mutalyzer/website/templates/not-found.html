@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% set active_page = "not-found" %}
+{% set page_title = "Page Not Found" %}
+
+{% block content %}
+
+<p>
+Uh oh! Page not found!
+</p>
+
+<p>
+The page you are looking for is not here. Let's try one of the following
+remedies to get you back on track...
+</p>
+
+<ul>
+  <li>Go to the <a href="{{ url_for('website.homepage') }}">Mutalyzer homepage</a>.</li>
+  <li>Search Google for <a href="https://www.google.com/search?q={{ (['mutalyzer'] + terms)|join(' ')|urlencode }}">{{ (['mutalyzer'] + terms)|join(' ') }}</a>.</li>
+  <li>Notify us if you think <a href="mailto:{{ contact_email }}">this is an error</a>.</li>
+</ul>
+
+{% endblock content %}

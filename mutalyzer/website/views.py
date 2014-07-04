@@ -34,20 +34,45 @@ from mutalyzer.services import soap
 website = Blueprint('website', __name__)
 
 
+global_context = {
+    'mutalyzer_version'   : mutalyzer.__version__,
+    'nomenclature_version': mutalyzer.NOMENCLATURE_VERSION,
+    'release_date'        : mutalyzer.__date__,
+    'release'             : mutalyzer.__version_info__[-1] != 'dev',
+    'copyright_years'     : mutalyzer.COPYRIGHT_YEARS,
+    'contact_email'       : settings.EMAIL,
+    'soap_wsdl_url'       : settings.SOAP_WSDL_URL,
+    'json_root_url'       : settings.JSON_ROOT_URL,
+    'piwik'               : settings.PIWIK,
+    'piwik_base_url'      : settings.PIWIK_BASE_URL,
+    'piwik_site_id'       : settings.PIWIK_SITE_ID,
+    'announcement'        : announce.get_announcement()}
+
+
 @website.context_processor
 def add_globals():
-    return {'mutalyzer_version'   : mutalyzer.__version__,
-            'nomenclature_version': mutalyzer.NOMENCLATURE_VERSION,
-            'release_date'        : mutalyzer.__date__,
-            'release'             : mutalyzer.__version_info__[-1] != 'dev',
-            'copyright_years'     : mutalyzer.COPYRIGHT_YEARS,
-            'contact_email'       : settings.EMAIL,
-            'soap_wsdl_url'       : settings.SOAP_WSDL_URL,
-            'json_root_url'       : settings.JSON_ROOT_URL,
-            'piwik'               : settings.PIWIK,
-            'piwik_base_url'      : settings.PIWIK_BASE_URL,
-            'piwik_site_id'       : settings.PIWIK_SITE_ID,
-            'announcement'        : announce.get_announcement()}
+    return global_context
+
+
+def request_terms():
+    """
+    List of terms associated with the request (i.e., from the request path and
+    query string).
+    """
+    terms = request.path.lstrip('/').split('/')
+    terms += [s for item in request.args.iteritems() for s in item]
+    return terms
+
+
+@website.errorhandler(404)
+def error_not_found(error):
+    return render_template('not-found.html', terms=request_terms()), 404
+
+
+@website.app_errorhandler(404)
+def app_error_not_found(error):
+    return render_template('not-found.html', terms=request_terms(),
+                           **global_context), 404
 
 
 @website.route('/')
