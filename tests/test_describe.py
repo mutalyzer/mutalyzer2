@@ -163,12 +163,12 @@ class TestDescribe(MutalyzerTest):
         """
         Test 17.
         """
-        self._single_variant("ACGTCGTATCGCTAGCTTCGGGGGATAGATAGAGATATAGAGAT",
-            ("inv", 7, 8, 7, 8, "AT", "TA", "7_8inv"))
+        self._single_variant("ACGTCTCTTCGCTAGCTTCGGGGGATAGATAGAGATATAGAGAT",
+            ("inv", 6, 7, 6, 7, "GA", "TC", "6_7inv"))
 
     def test18(self):
         """
         Test 18.
         """
-        self._single_variant("ACGTCGTATCGCTAGCTTCGGGGGATAGATAGAGATATAGAGAT",
+        self._single_variant("ACGTCGTCTCGCTAGCTTCGGGGGATAGATAGAGATATAGAGAT",
             ("delins", 7, 8, 7, 8, "AT", "TC", "7_8delinsTC"))
