@@ -180,7 +180,7 @@ class Reference(db.Base):
     #: The orientation on the accession number from which we took a slice, if
     #: available.
     slice_orientation = Column(Enum('forward', 'reverse',
-                                    name='slice_orentation'))
+                                    name='slice_orientation'))
 
     #: The URL from which the reference file was downloaded, if available.
     download_url = Column(String(255), index=True, unique=True)
@@ -373,7 +373,7 @@ class TranscriptMapping(db.Base):
 
     # Todo: Use constants and some utilities for conversion.
     #: The orientation of the transcript on the chromosome.
-    orientation = Column(Enum('forward', 'reverse', name='orentation'),
+    orientation = Column(Enum('forward', 'reverse', name='orientation'),
                          nullable=False)
 
     #: The start position of the transcript on the chromosome.
