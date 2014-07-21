@@ -3,6 +3,9 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
+# We need this for the models to be registered in the metadata.
+from mutalyzer.db import models
+
 from mutalyzer import db
 from mutalyzer.config import settings
 
