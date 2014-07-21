@@ -5,7 +5,6 @@ Tests for the mutalyzer.grammar module.
 
 #import logging; logging.basicConfig()
 import os
-from nose.tools import *
 
 import mutalyzer
 from mutalyzer.grammar import Grammar
@@ -28,7 +27,7 @@ class TestGrammar(MutalyzerTest):
         Parse a variant description.
         """
         self.grammar.parse(description)
-        assert_equal(self.output.getOutput('parseError'), [])
+        assert self.output.getOutput('parseError') == []
 
     def test_some_variants(self):
         """

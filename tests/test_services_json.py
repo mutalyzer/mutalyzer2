@@ -3,7 +3,6 @@ Tests for the JSON interface to Mutalyzer.
 """
 
 
-from nose.tools import *
 import simplejson as json
 from spyne.server.null import NullServer
 import mutalyzer
@@ -39,7 +38,7 @@ class TestServicesJson(MutalyzerTest):
         Running checkSyntax with a valid variant name should return True.
         """
         r = self._call('checkSyntax', variant='AB026906.1:c.274G>T')
-        assert_equal(r, {'valid': True, 'messages': []})
+        assert r == {'valid': True, 'messages': []}
 
     def test_checksyntax_invalid(self):
         """
@@ -47,7 +46,7 @@ class TestServicesJson(MutalyzerTest):
         and give at least one error message.
         """
         r = self._call('checkSyntax', variant='0:abcd')
-        assert_equal(r['valid'], False)
+        assert r['valid'] == False
         assert len(r['messages']) >= 1
 
     def test_checksyntax_empty(self):
@@ -57,7 +56,7 @@ class TestServicesJson(MutalyzerTest):
         # The validator doesn't work with NullServer, so we cannot do this
         # test. See https://github.com/arskom/spyne/issues/318
         #r = self._call('checkSyntax')
-        #assert_equal(r['faultcode'], 'Client.ValidationError')
+        #assert r['faultcode'] == 'Client.ValidationError'
         pass
 
     @fix(database, hg19, hg19_transcript_mappings)
@@ -68,14 +67,14 @@ class TestServicesJson(MutalyzerTest):
         """
         r = self._call('transcriptInfo', LOVD_ver='123', build='hg19',
                        accNo='NM_002001.2')
-        assert_equal(r['trans_start'], -99)
-        assert_equal(r['trans_stop'], 1066)
-        assert_equal(r['CDS_stop'], 774)
+        assert r['trans_start'] == -99
+        assert r['trans_stop'] == 1066
+        assert r['CDS_stop'] == 774
 
     def test_info(self):
         """
         Running the info method should give us some version information.
         """
         r = self._call('info')
-        assert_equal(type(r['versionParts']), list)
-        assert_equal(r['version'], mutalyzer.__version__)
+        assert type(r['versionParts']) == list
+        assert r['version'] == mutalyzer.__version__

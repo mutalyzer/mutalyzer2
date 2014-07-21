@@ -7,7 +7,6 @@ Tests for the mutalyzer.mutator module.
 import re
 import os
 import random
-from nose.tools import *
 from Bio.Seq import Seq
 
 import mutalyzer
@@ -49,7 +48,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(_seq(l))
         # Numbering is 1-based
         for i in range(1, l + 1):
-            assert_equal(m.shift(i), i)
+            assert m.shift(i) == i
 
     def test_shift_del_example(self):
         """
@@ -57,9 +56,9 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
-        assert_equal(m.shift(1), 1)
-        assert_equal(m.shift(2), 2)
-        assert_equal(m.shift(3), 2)
+        assert m.shift(1) == 1
+        assert m.shift(2) == 2
+        assert m.shift(3) == 2
 
     def test_shift_del(self):
         """
@@ -70,9 +69,9 @@ class TestMutator(MutalyzerTest):
             m = self._mutator(_seq(l))
             m.deletion(d, d)
             for p in range(1, d + 1):
-                assert_equal(m.shift(p), p)
+                assert m.shift(p) == p
             for p in range(d + 1, l + 1):
-                assert_equal(m.shift(p), p - 1)
+                assert m.shift(p) == p - 1
 
     def test_shift_del2(self):
         """
@@ -83,9 +82,9 @@ class TestMutator(MutalyzerTest):
             m = self._mutator(_seq(l))
             m.deletion(d, d + 1)
             for p in range(1, d + 2):
-                assert_equal(m.shift(p), p)
+                assert m.shift(p) == p
             for p in range(d + 2, l + 1):
-                assert_equal(m.shift(p), p - 2)
+                assert m.shift(p) == p - 2
 
     def test_shift_ins_example(self):
         """
@@ -93,9 +92,9 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
-        assert_equal(m.shift(1), 1)
-        assert_equal(m.shift(2), 2)
-        assert_equal(m.shift(3), 4)
+        assert m.shift(1) == 1
+        assert m.shift(2) == 2
+        assert m.shift(3) == 4
 
     def test_shift_ins(self):
         """
@@ -106,9 +105,9 @@ class TestMutator(MutalyzerTest):
             m = self._mutator(_seq(l))
             m.insertion(i, 'T')
             for p in range(1, i + 1):
-                assert_equal(m.shift(p), p)
+                assert m.shift(p) == p
             for p in range(i + 1, l + 1):
-                assert_equal(m.shift(p), p + 1)
+                assert m.shift(p) == p + 1
 
     def test_shift_ins2(self):
         """
@@ -119,9 +118,9 @@ class TestMutator(MutalyzerTest):
             m = self._mutator(_seq(l))
             m.insertion(i, 'TT')
             for p in range(1, i + 1):
-                assert_equal(m.shift(p), p)
+                assert m.shift(p) == p
             for p in range(i + 1, l + 1):
-                assert_equal(m.shift(p), p + 2)
+                assert m.shift(p) == p + 2
 
     def test_shift_sites_no_change(self):
         """
@@ -137,7 +136,7 @@ class TestMutator(MutalyzerTest):
         l = 30
         sites = [4, 9, 14, 19, 25, 27]
         m = self._mutator(_seq(l))
-        assert_equal(m.shift_sites(sites), sites)
+        assert m.shift_sites(sites) == sites
 
     def test_shift_sites_acc_del_before(self):
         """
@@ -149,7 +148,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(13, 13)   # g.13del
-        assert_equal(m.shift_sites(sites), [4, 9, 13, 16, 24, 26])
+        assert m.shift_sites(sites) == [4, 9, 13, 16, 24, 26]
 
     def test_shift_sites_acc_del_after(self):
         """
@@ -159,7 +158,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(14, 14)   # g.14del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 16, 24, 26])
+        assert m.shift_sites(sites) == [4, 9, 14, 16, 24, 26]
 
     def test_shift_sites_don_del_before(self):
         """
@@ -169,7 +168,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(17, 17)   # g.17del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 16, 24, 26])
+        assert m.shift_sites(sites) == [4, 9, 14, 16, 24, 26]
 
     def test_shift_sites_don_del_after(self):
         """
@@ -181,7 +180,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(18, 18)   # g.18del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 24, 26])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 24, 26]
 
     def test_shift_sites_acc_del2_before(self):
         """
@@ -193,7 +192,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(12, 13)   # g.12_13del
-        assert_equal(m.shift_sites(sites), [4, 9, 12, 15, 23, 25])
+        assert m.shift_sites(sites) == [4, 9, 12, 15, 23, 25]
 
     def test_shift_sites_acc_del2_on(self):
         """
@@ -207,7 +206,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(13, 14)   # g.13_14del
-        assert_equal(m.shift_sites(sites), [4, 9, 13, 15, 23, 25])
+        assert m.shift_sites(sites) == [4, 9, 13, 15, 23, 25]
 
     def test_shift_sites_acc_del2_after(self):
         """
@@ -217,7 +216,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(14, 15)   # g.14_15del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 15, 23, 25])
+        assert m.shift_sites(sites) == [4, 9, 14, 15, 23, 25]
 
     def test_shift_sites_don_del2_before(self):
         """
@@ -227,7 +226,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(16, 17)   # g.16_17del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 15, 23, 25])
+        assert m.shift_sites(sites) == [4, 9, 14, 15, 23, 25]
 
     def test_shift_sites_don_del2_on(self):
         """
@@ -241,7 +240,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(17, 18)   # g.17_18del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 16, 23, 25])
+        assert m.shift_sites(sites) == [4, 9, 14, 16, 23, 25]
 
     def test_shift_sites_don_del2_after(self):
         """
@@ -253,7 +252,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.deletion(18, 19)   # g.18_19del
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 23, 25])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 23, 25]
 
     def test_shift_sites_acc_ins_before(self):
         """
@@ -265,7 +264,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(12, 'A')   # g.12_13insA
-        assert_equal(m.shift_sites(sites), [4, 9, 15, 18, 26, 28])
+        assert m.shift_sites(sites) == [4, 9, 15, 18, 26, 28]
 
     def test_shift_sites_acc_ins_on(self):
         """
@@ -275,7 +274,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(13, 'A')   # g.13_14insA
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 18, 26, 28])
+        assert m.shift_sites(sites) == [4, 9, 14, 18, 26, 28]
 
     def test_shift_sites_first_acc_ins_on(self):
         """
@@ -285,7 +284,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(3, 'A')   # g.3_4insA
-        assert_equal(m.shift_sites(sites), [5, 10, 15, 18, 26, 28])
+        assert m.shift_sites(sites) == [5, 10, 15, 18, 26, 28]
 
     def test_shift_sites_acc_ins_after(self):
         """
@@ -295,7 +294,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(14, 'A')   # g.14_15insA
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 18, 26, 28])
+        assert m.shift_sites(sites) == [4, 9, 14, 18, 26, 28]
 
     def test_shift_sites_don_ins_before(self):
         """
@@ -305,7 +304,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(16, 'A')   # g.16_17insA
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 18, 26, 28])
+        assert m.shift_sites(sites) == [4, 9, 14, 18, 26, 28]
 
     def test_shift_sites_don_ins_on(self):
         """
@@ -315,7 +314,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(17, 'A')   # g.17_18insA
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 18, 26, 28])
+        assert m.shift_sites(sites) == [4, 9, 14, 18, 26, 28]
 
     def test_shift_sites_last_don_ins_on(self):
         """
@@ -325,7 +324,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(27, 'A')   # g.27_28insA
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 25, 27])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 25, 27]
 
     def test_shift_sites_don_ins_after(self):
         """
@@ -337,7 +336,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(18, 'A')   # g.18_19insA
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 26, 28])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 26, 28]
 
     def test_shift_sites_acc_ins2_before(self):
         """
@@ -349,7 +348,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(12, 'AT')   # g.12_13insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 16, 19, 27, 29])
+        assert m.shift_sites(sites) == [4, 9, 16, 19, 27, 29]
 
     def test_shift_sites_first_acc_ins2_on(self):
         """
@@ -359,7 +358,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(3, 'AT')   # g.3_4insAT
-        assert_equal(m.shift_sites(sites), [6, 11, 16, 19, 27, 29])
+        assert m.shift_sites(sites) == [6, 11, 16, 19, 27, 29]
 
     def test_shift_sites_acc_ins2_after(self):
         """
@@ -369,7 +368,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(14, 'AT')   # g.14_15insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 19, 27, 29])
+        assert m.shift_sites(sites) == [4, 9, 14, 19, 27, 29]
 
     def test_shift_sites_don_ins2_before(self):
         """
@@ -379,7 +378,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(16, 'AT')   # g.16_17insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 19, 27, 29])
+        assert m.shift_sites(sites) == [4, 9, 14, 19, 27, 29]
 
     def test_shift_sites_last_don_ins2_on(self):
         """
@@ -389,7 +388,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(27, 'AT')   # g.27_28insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 25, 27])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 25, 27]
 
     def test_shift_sites_don_ins2_after(self):
         """
@@ -401,7 +400,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(18, 'AT')   # g.18_19insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 27, 29])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 27, 29]
 
     def test_shift_sites_acc_ins3_before(self):
         """
@@ -413,7 +412,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(12, 'ATT')   # g.12_13insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 17, 20, 28, 30])
+        assert m.shift_sites(sites) == [4, 9, 17, 20, 28, 30]
 
     def test_shift_sites_acc_ins3_on(self):
         """
@@ -423,7 +422,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(13, 'ATT')   # g.13_14insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 20, 28, 30])
+        assert m.shift_sites(sites) == [4, 9, 14, 20, 28, 30]
 
     def test_shift_sites_first_acc_ins3_on(self):
         """
@@ -433,7 +432,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(3, 'ATT')   # g.3_4insATT
-        assert_equal(m.shift_sites(sites), [7, 12, 17, 20, 28, 30])
+        assert m.shift_sites(sites) == [7, 12, 17, 20, 28, 30]
 
     def test_shift_sites_acc_ins3_after(self):
         """
@@ -443,7 +442,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(14, 'ATT')   # g.14_15insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 20, 28, 30])
+        assert m.shift_sites(sites) == [4, 9, 14, 20, 28, 30]
 
     def test_shift_sites_don_ins3_before(self):
         """
@@ -453,7 +452,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(16, 'ATT')   # g.16_17insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 20, 28, 30])
+        assert m.shift_sites(sites) == [4, 9, 14, 20, 28, 30]
 
     def test_shift_sites_don_ins3_on(self):
         """
@@ -463,7 +462,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(17, 'ATT')   # g.17_18insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 20, 28, 30])
+        assert m.shift_sites(sites) == [4, 9, 14, 20, 28, 30]
 
     def test_shift_sites_last_don_ins3_on(self):
         """
@@ -473,7 +472,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(27, 'ATT')   # g.27_28insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 25, 27])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 25, 27]
 
     def test_shift_sites_don_ins3_after(self):
         """
@@ -485,7 +484,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 14, 17, 25, 27]
         m = self._mutator(_seq(l))
         m.insertion(18, 'ATT')   # g.18_19insATT
-        assert_equal(m.shift_sites(sites), [4, 9, 14, 17, 28, 30])
+        assert m.shift_sites(sites) == [4, 9, 14, 17, 28, 30]
 
     def test_shift_sites_adj_del_before1(self):
         """
@@ -502,7 +501,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(16, 16)   # g.16del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 16, 17, 26])
+        assert m.shift_sites(sites) == [4, 9, 10, 16, 17, 26]
 
     def test_shift_sites_adj_del_before(self):
         """
@@ -512,7 +511,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(17, 17)   # g.17del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 16, 17, 26])
+        assert m.shift_sites(sites) == [4, 9, 10, 16, 17, 26]
 
     def test_shift_sites_adj_del_after(self):
         """
@@ -522,7 +521,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(18, 18)   # g.18del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 17, 18, 26])
+        assert m.shift_sites(sites) == [4, 9, 10, 17, 18, 26]
 
     def test_shift_sites_adj_del_after1(self):
         """
@@ -532,7 +531,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(19, 19)   # g.19del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 17, 18, 26])
+        assert m.shift_sites(sites) == [4, 9, 10, 17, 18, 26]
 
     def test_shift_sites_adj_ins_before(self):
         """
@@ -542,7 +541,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insertion(16, 'A')   # g.16_17insA
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 18, 19, 28])
+        assert m.shift_sites(sites) == [4, 9, 10, 18, 19, 28]
 
     def test_shift_sites_adj_ins_on(self):
         """
@@ -558,7 +557,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insertion(17, 'A')   # g.17_18insA
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 18, 19, 28])
+        assert m.shift_sites(sites) == [4, 9, 10, 18, 19, 28]
 
     def test_shift_sites_adj_ins_after(self):
         """
@@ -568,7 +567,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insertion(18, 'A')   # g.18_19insA
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 17, 18, 28])
+        assert m.shift_sites(sites) == [4, 9, 10, 17, 18, 28]
 
     def test_shift_sites_adj_del2_before1(self):
         """
@@ -578,7 +577,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(15, 16)   # g.15_16del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 15, 16, 25])
+        assert m.shift_sites(sites) == [4, 9, 10, 15, 16, 25]
 
     def test_shift_sites_adj_del2_before(self):
         """
@@ -588,7 +587,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(16, 17)   # g.16_17del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 15, 16, 25])
+        assert m.shift_sites(sites) == [4, 9, 10, 15, 16, 25]
 
     def test_shift_sites_adj_del2_on(self):
         """
@@ -603,7 +602,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(17, 18)   # g.17_18del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 16, 17, 25])
+        assert m.shift_sites(sites) == [4, 9, 10, 16, 17, 25]
 
     def test_shift_sites_adj_del2_after(self):
         """
@@ -613,7 +612,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(18, 19)   # g.18_19del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 17, 18, 25])
+        assert m.shift_sites(sites) == [4, 9, 10, 17, 18, 25]
 
     def test_shift_sites_adj_del2_after1(self):
         """
@@ -623,7 +622,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.deletion(19, 20)   # g.19_20del
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 17, 18, 25])
+        assert m.shift_sites(sites) == [4, 9, 10, 17, 18, 25]
 
     def test_shift_sites_adj_ins2_before(self):
         """
@@ -633,7 +632,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insertion(16, 'AT')   # g.16_17insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 19, 20, 29])
+        assert m.shift_sites(sites) == [4, 9, 10, 19, 20, 29]
 
     def test_shift_sites_adj_ins2_on(self):
         """
@@ -649,7 +648,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insertion(17, 'AT')   # g.17_18insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 19, 20, 29])
+        assert m.shift_sites(sites) == [4, 9, 10, 19, 20, 29]
 
     def test_shift_sites_adj_ins2_after(self):
         """
@@ -659,7 +658,7 @@ class TestMutator(MutalyzerTest):
         sites = [4, 9, 10, 17, 18, 27]
         m = self._mutator(_seq(l))
         m.insertion(18, 'AT')   # g.18_19insAT
-        assert_equal(m.shift_sites(sites), [4, 9, 10, 17, 18, 29])
+        assert m.shift_sites(sites) == [4, 9, 10, 17, 18, 29]
 
     def test_del(self):
         """
@@ -667,7 +666,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('ACGATCG')))
+        assert str(m.mutated) == str(Seq('ACGATCG'))
 
     def test_largedel(self):
         """
@@ -675,7 +674,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 7)
-        assert_equal(str(m.mutated), str(Seq('AG')))
+        assert str(m.mutated) == str(Seq('AG'))
 
     def test_ins(self):
         """
@@ -683,7 +682,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
-        assert_equal(str(m.mutated), str(Seq('ATACGATCG')))
+        assert str(m.mutated) == str(Seq('ATACGATCG'))
 
     def test_largeins(self):
         """
@@ -691,7 +690,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
-        assert_equal(str(m.mutated), str(Seq('ATATCGCGATCG')))
+        assert str(m.mutated) == str(Seq('ATATCGCGATCG'))
 
     def test_sub(self):
         """
@@ -699,7 +698,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.substitution(3, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATGGATCG')))
+        assert str(m.mutated) == str(Seq('ATGGATCG'))
 
     def test_adjecent_del_sub_1(self):
         """
@@ -710,7 +709,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.substitution(3, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGGATCG')))
+        assert str(m.mutated) == str(Seq('AGGATCG'))
 
     def test_adjecent_del_sub_2(self):
         """
@@ -719,7 +718,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGGATCG')))
+        assert str(m.mutated) == str(Seq('AGGATCG'))
 
     def test_near_adjecent_del_sub_1(self):
         """
@@ -728,7 +727,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.substitution(4, 'T')
-        assert_equal(str(m.mutated), str(Seq('ACTATCG')))
+        assert str(m.mutated) == str(Seq('ACTATCG'))
 
     def test_near_adjecent_del_sub_2(self):
         """
@@ -737,7 +736,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(4, 4)
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGCATCG')))
+        assert str(m.mutated) == str(Seq('AGCATCG'))
 
     def test_adjecent_largedel_sub_1(self):
         """
@@ -747,7 +746,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 6)
         m.substitution(7, 'T')
-        assert_equal(str(m.mutated), str(Seq('ATG')))
+        assert str(m.mutated) == str(Seq('ATG'))
 
     def test_adjecent_largedel_sub_2(self):
         """
@@ -757,7 +756,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 7)
         m.substitution(2, 'C')
-        assert_equal(str(m.mutated), str(Seq('ACG')))
+        assert str(m.mutated) == str(Seq('ACG'))
 
     def test_near_adjecent_largedel_sub_1(self):
         """
@@ -766,7 +765,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 5)
         m.substitution(7, 'T')
-        assert_equal(str(m.mutated), str(Seq('ATTG')))
+        assert str(m.mutated) == str(Seq('ATTG'))
 
     def test_near_adjecent_largedel_sub_2(self):
         """
@@ -775,7 +774,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(4, 7)
         m.substitution(2, 'C')
-        assert_equal(str(m.mutated), str(Seq('ACCG')))
+        assert str(m.mutated) == str(Seq('ACCG'))
 
     def test_adjectent_del_ins_1(self):
         """
@@ -784,7 +783,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGCGATCG')))
+        assert str(m.mutated) == str(Seq('AGCGATCG'))
 
     def test_adjectent_del_ins_2(self):
         """
@@ -793,7 +792,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.insertion(2, 'A')
-        assert_equal(str(m.mutated), str(Seq('ATAGATCG')))
+        assert str(m.mutated) == str(Seq('ATAGATCG'))
 
     def test_near_adjectent_del_ins(self):
         """
@@ -802,7 +801,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.insertion(3, 'T')
-        assert_equal(str(m.mutated), str(Seq('ACTGATCG')))
+        assert str(m.mutated) == str(Seq('ACTGATCG'))
 
     def test_adjecent_ins_sub_1(self):
         """
@@ -812,7 +811,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
         m.substitution(3, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATAGGATCG')))
+        assert str(m.mutated) == str(Seq('ATAGGATCG'))
 
     def test_adjecent_ins_sub_2(self):
         """
@@ -822,7 +821,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGACGATCG')))
+        assert str(m.mutated) == str(Seq('AGACGATCG'))
 
     def test_near_adjecent_ins_sub(self):
         """
@@ -832,7 +831,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
         m.substitution(4, 'T')
-        assert_equal(str(m.mutated), str(Seq('ATACTATCG')))
+        assert str(m.mutated) == str(Seq('ATACTATCG'))
 
     def test_adjecent_largeins_sub_1(self):
         """
@@ -842,7 +841,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
         m.substitution(3, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATATCGGGATCG')))
+        assert str(m.mutated) == str(Seq('ATATCGGGATCG'))
 
     def test_adjecent_largeins_sub_2(self):
         """
@@ -852,7 +851,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGATCGCGATCG')))
+        assert str(m.mutated) == str(Seq('AGATCGCGATCG'))
 
     def test_near_adjecent_largeins_sub(self):
         """
@@ -862,7 +861,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
         m.substitution(4, 'T')
-        assert_equal(str(m.mutated), str(Seq('ATATCGCTATCG')))
+        assert str(m.mutated) == str(Seq('ATATCGCTATCG'))
 
     def test_adjecent_del_del_1(self):
         """
@@ -871,7 +870,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.deletion(3, 3)
-        assert_equal(str(m.mutated), str(Seq('AGATCG')))
+        assert str(m.mutated) == str(Seq('AGATCG'))
 
     def test_adjecent_del_del_2(self):
         """
@@ -880,7 +879,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.deletion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AGATCG')))
+        assert str(m.mutated) == str(Seq('AGATCG'))
 
     def test_adjecent_delins_snp_1(self):
         """
@@ -889,7 +888,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 2, 'A')
         m.substitution(3, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAGGATCG')))
+        assert str(m.mutated) == str(Seq('AAGGATCG'))
 
     def test_adjecent_delins_snp_2(self):
         """
@@ -898,7 +897,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 3, 'A')
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGAGATCG')))
+        assert str(m.mutated) == str(Seq('AGAGATCG'))
 
     def test_adjecent_largedelins_eq_snp_1(self):
         """
@@ -908,7 +907,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAA')
         m.substitution(7, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAAAAAGG')))
+        assert str(m.mutated) == str(Seq('AAAAAAGG'))
 
     def test_adjecent_largedelins_min_snp_1(self):
         """
@@ -918,7 +917,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.substitution(7, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAAAGG')))
+        assert str(m.mutated) == str(Seq('AAAAGG'))
 
     def test_adjecent_largedelins_plus_snp_1(self):
         """
@@ -928,7 +927,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.substitution(7, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAAAAAAAGG')))
+        assert str(m.mutated) == str(Seq('AAAAAAAAGG'))
 
     def test_adjecent_largedelins_eq_snp_2(self):
         """
@@ -938,7 +937,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAA')
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGAAAAAG')))
+        assert str(m.mutated) == str(Seq('AGAAAAAG'))
 
     def test_adjecent_largedelins_min_snp_2(self):
         """
@@ -948,7 +947,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGAAAG')))
+        assert str(m.mutated) == str(Seq('AGAAAG'))
 
     def test_adjecent_largedelins_plus_snp_2(self):
         """
@@ -958,7 +957,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.substitution(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AGAAAAAAAG')))
+        assert str(m.mutated) == str(Seq('AGAAAAAAAG'))
 
     def test_adjecent_delins_del_1(self):
         """
@@ -967,7 +966,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 2, 'A')
         m.deletion(3, 3)
-        assert_equal(str(m.mutated), str(Seq('AAGATCG')))
+        assert str(m.mutated) == str(Seq('AAGATCG'))
 
     def test_adjecent_delins_del_2(self):
         """
@@ -976,7 +975,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 3, 'A')
         m.deletion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAGATCG')))
+        assert str(m.mutated) == str(Seq('AAGATCG'))
 
     def test_adjecent_largedelins_eq_del_1(self):
         """
@@ -986,7 +985,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAA')
         m.deletion(7, 7)
-        assert_equal(str(m.mutated), str(Seq('AAAAAAG')))
+        assert str(m.mutated) == str(Seq('AAAAAAG'))
 
     def test_adjecent_largedelins_min_del_1(self):
         """
@@ -996,7 +995,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.deletion(7, 7)
-        assert_equal(str(m.mutated), str(Seq('AAAAG')))
+        assert str(m.mutated) == str(Seq('AAAAG'))
 
     def test_adjecent_largedelins_plus_del_1(self):
         """
@@ -1006,7 +1005,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.deletion(7, 7)
-        assert_equal(str(m.mutated), str(Seq('AAAAAAAAG')))
+        assert str(m.mutated) == str(Seq('AAAAAAAAG'))
 
     def test_adjecent_largedelins_eq_del_2(self):
         """
@@ -1016,7 +1015,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAA')
         m.deletion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAAAAAG')))
+        assert str(m.mutated) == str(Seq('AAAAAAG'))
 
     def test_adjecent_largedelins_min_del_2(self):
         """
@@ -1026,7 +1025,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.deletion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAAAG')))
+        assert str(m.mutated) == str(Seq('AAAAG'))
 
     def test_adjecent_largedelins_plus_del_2(self):
         """
@@ -1036,7 +1035,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.deletion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAAAAAAAG')))
+        assert str(m.mutated) == str(Seq('AAAAAAAAG'))
 
     def test_adjectent_delins_ins_1(self):
         """
@@ -1045,7 +1044,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 2, 'A')
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAGCGATCG')))
+        assert str(m.mutated) == str(Seq('AAGCGATCG'))
 
     def test_adjectent_delins_ins_2(self):
         """
@@ -1054,7 +1053,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 3, 'A')
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATGAGATCG')))
+        assert str(m.mutated) == str(Seq('ATGAGATCG'))
 
     def test_adjectent_largedelins_eq_ins_1(self):
         """
@@ -1063,7 +1062,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAA')
         m.insertion(6, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAAAAAGCG')))
+        assert str(m.mutated) == str(Seq('AAAAAAGCG'))
 
     def test_adjectent_largedelins_min_ins_1(self):
         """
@@ -1072,7 +1071,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.insertion(6, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAAAGCG')))
+        assert str(m.mutated) == str(Seq('AAAAGCG'))
 
     def test_adjectent_largedelins_plus_ins_1(self):
         """
@@ -1081,7 +1080,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.insertion(6, 'G')
-        assert_equal(str(m.mutated), str(Seq('AAAAAAAAGCG')))
+        assert str(m.mutated) == str(Seq('AAAAAAAAGCG'))
 
     def test_adjectent_largedelins_eq_ins_2(self):
         """
@@ -1090,7 +1089,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAA')
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATGAAAAAG')))
+        assert str(m.mutated) == str(Seq('ATGAAAAAG'))
 
     def test_adjectent_largedelins_min_ins_2(self):
         """
@@ -1099,7 +1098,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATGAAAG')))
+        assert str(m.mutated) == str(Seq('ATGAAAG'))
 
     def test_adjectent_largedelins_plus_ins_2(self):
         """
@@ -1108,7 +1107,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATGAAAAAAAG')))
+        assert str(m.mutated) == str(Seq('ATGAAAAAAAG'))
 
     def test_adjectent_delins_del_delins(self):
         """
@@ -1117,7 +1116,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 3, 'A')
         m.delins(4, 4, 'T')
-        assert_equal(str(m.mutated), str(Seq('AATATCG')))
+        assert str(m.mutated) == str(Seq('AATATCG'))
 
     def test_adjectent_largedelins_plus_delins_1(self):
         """
@@ -1126,7 +1125,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.delins(7, 7, 'T')
-        assert_equal(str(m.mutated), str(Seq('AAAAAAAATG')))
+        assert str(m.mutated) == str(Seq('AAAAAAAATG'))
 
     def test_adjectent_largedelins_plus_delins_2(self):
         """
@@ -1135,7 +1134,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.delins(2, 2, 'C')
-        assert_equal(str(m.mutated), str(Seq('ACAAAAAAAG')))
+        assert str(m.mutated) == str(Seq('ACAAAAAAAG'))
 
     def test_adjectent_largedelins_min_delins_1(self):
         """
@@ -1144,7 +1143,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.delins(7, 7, 'T')
-        assert_equal(str(m.mutated), str(Seq('AAAATG')))
+        assert str(m.mutated) == str(Seq('AAAATG'))
 
     def test_adjectent_largedelins_min_delins_2(self):
         """
@@ -1153,7 +1152,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.delins(2, 2, 'C')
-        assert_equal(str(m.mutated), str(Seq('ACAAAG')))
+        assert str(m.mutated) == str(Seq('ACAAAG'))
 
     def test_adjectent_del_dup_1(self):
         """
@@ -1162,7 +1161,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.duplication(3, 3)
-        assert_equal(str(m.mutated), str(Seq('ACCGATCG')))
+        assert str(m.mutated) == str(Seq('ACCGATCG'))
 
     def test_adjectent_del_dup_2(self):
         """
@@ -1171,7 +1170,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.duplication(2, 2)
-        assert_equal(str(m.mutated), str(Seq('ATTGATCG')))
+        assert str(m.mutated) == str(Seq('ATTGATCG'))
 
     def test_adjectent_ins_dup_1(self):
         """
@@ -1180,7 +1179,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.duplication(3, 3)
-        assert_equal(str(m.mutated), str(Seq('ATGCCGATCG')))
+        assert str(m.mutated) == str(Seq('ATGCCGATCG'))
 
     def test_adjectent_ins_dup_2(self):
         """
@@ -1189,7 +1188,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.duplication(2, 2)
-        assert_equal(str(m.mutated), str(Seq('ATTGCGATCG')))
+        assert str(m.mutated) == str(Seq('ATTGCGATCG'))
 
     def test_adjectent_ins_ins_1(self):
         """
@@ -1198,7 +1197,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.insertion(3, 'A')
-        assert_equal(str(m.mutated), str(Seq('ATGCAGATCG')))
+        assert str(m.mutated) == str(Seq('ATGCAGATCG'))
 
     def test_adjectent_ins_ins_2(self):
         """
@@ -1207,7 +1206,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(3, 'A')
         m.insertion(2, 'G')
-        assert_equal(str(m.mutated), str(Seq('ATGCAGATCG')))
+        assert str(m.mutated) == str(Seq('ATGCAGATCG'))
 
     def test_ins_ins(self):
         """
@@ -1225,7 +1224,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.inversion(2, 2)
         m.inversion(3, 3)
-        assert_equal(str(m.mutated), str(Seq('AAGGATCG')))
+        assert str(m.mutated) == str(Seq('AAGGATCG'))
 
     def test_adjecent_inv_inv_2(self):
         """
@@ -1234,7 +1233,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.inversion(3, 3)
         m.inversion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAGGATCG')))
+        assert str(m.mutated) == str(Seq('AAGGATCG'))
 
     def test_adjecent_dup_dup_1(self):
         """
@@ -1243,7 +1242,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.duplication(2, 2)
         m.duplication(3, 3)
-        assert_equal(str(m.mutated), str(Seq('ATTCCGATCG')))
+        assert str(m.mutated) == str(Seq('ATTCCGATCG'))
 
     def test_adjecent_dup_dup_2(self):
         """
@@ -1252,7 +1251,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.duplication(3, 3)
         m.duplication(2, 2)
-        assert_equal(str(m.mutated), str(Seq('ATTCCGATCG')))
+        assert str(m.mutated) == str(Seq('ATTCCGATCG'))
 
     def test_adjecent_del_inv_1(self):
         """
@@ -1261,7 +1260,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.inversion(3, 3)
-        assert_equal(str(m.mutated), str(Seq('AGGATCG')))
+        assert str(m.mutated) == str(Seq('AGGATCG'))
 
     def test_adjecent_del_inv_2(self):
         """
@@ -1270,7 +1269,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.inversion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAGATCG')))
+        assert str(m.mutated) == str(Seq('AAGATCG'))
 
     def test_adjecent_ins_inv_1(self):
         """
@@ -1279,7 +1278,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.inversion(3, 3)
-        assert_equal(str(m.mutated), str(Seq('ATGGGATCG')))
+        assert str(m.mutated) == str(Seq('ATGGGATCG'))
 
     def test_adjecent_ins_inv_2(self):
         """
@@ -1288,4 +1287,4 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.inversion(2, 2)
-        assert_equal(str(m.mutated), str(Seq('AAGCGATCG')))
+        assert str(m.mutated) == str(Seq('AAGCGATCG'))

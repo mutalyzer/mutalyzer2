@@ -11,7 +11,7 @@ import tempfile
 
 from Bio import Entrez
 from mock import patch
-from nose.tools import *
+import pytest
 from spyne.server.null import NullServer
 from spyne.model.fault import Fault
 from suds.client import Client
@@ -77,14 +77,14 @@ class TestServicesSoap(MutalyzerTest):
         Running the ping method should return 'pong'.
         """
         r = self._call('ping')
-        assert_equal(r, 'pong')
+        assert r == 'pong'
 
     def test_checksyntax_valid(self):
         """
         Running checkSyntax with a valid variant name should return True.
         """
         r = self._call('checkSyntax', 'AB026906.1:c.274G>T')
-        assert_equal(r.valid, True)
+        assert r.valid == True
 
     def test_checksyntax_invalid(self):
         """
@@ -92,10 +92,9 @@ class TestServicesSoap(MutalyzerTest):
         and give at least one error message.
         """
         r = self._call('checkSyntax', '0:abcd')
-        assert_equal(r.valid, False)
+        assert r.valid == False
         assert len(r.messages.SoapMessage) >= 1
 
-    @raises(Fault)
     def test_checksyntax_empty(self):
         """
         Running checkSyntax with no variant name should raise exception.
@@ -104,7 +103,8 @@ class TestServicesSoap(MutalyzerTest):
         # these type of tests. However, in this case we implemented our own
         # check instead of relying on the validator.
         # See https://github.com/arskom/spyne/issues/318
-        self._call('checkSyntax')
+        with pytest.raises(Fault):
+            self._call('checkSyntax')
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_transcriptinfo_valid(self):
@@ -114,9 +114,9 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('transcriptInfo',
                        LOVD_ver='123', build='hg19', accNo='NM_002001.2')
-        assert_equal(r.trans_start, -99)
-        assert_equal(r.trans_stop, 1066)
-        assert_equal(r.CDS_stop, 774)
+        assert r.trans_start == -99
+        assert r.trans_stop == 1066
+        assert r.CDS_stop == 774
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_gtoc_valid(self):
@@ -126,7 +126,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('numberConversion',
                        build='hg19', variant='NC_000001.10:g.159272155del')
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         assert 'NM_002001.2:c.1del' in r.string
 
     @fix(database, hg19, hg19_transcript_mappings)
@@ -137,7 +137,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('numberConversion',
                        build='hg19', variant='NM_002001.2:c.1del')
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         assert 'NC_000001.10:g.159272155del' in r.string
 
     @fix(database, hg19, hg19_transcript_mappings)
@@ -148,7 +148,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('numberConversion',
                        build='hg19', variant='NC_000023.10:g.32827640G>A', gene='DMD')
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         assert 'NM_004007.2:c.250C>T' in r.string
         assert 'NM_004011.3:c.-397314C>T' in r.string
         assert 'NM_004019.2:c.-1542694C>T' in r.string
@@ -161,7 +161,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('numberConversion',
                        build='hg19', variant='chr7:g.345T>C')
-        assert_false(r)
+        assert not r
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_numberconversion_gtoc_required_gene(self):
@@ -172,7 +172,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('numberConversion',
                        build='hg19', variant='chr7:g.345T>C', gene='LOC100132858')
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         # Fix for r536: disable the -u and +d convention.
         #assert 'XM_001715131.2:c.1155+d19483A>G' in r.string
         assert 'XM_001715131.2:c.*19483A>G' in r.string
@@ -185,7 +185,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('getTranscriptsByGeneName',
                        build='hg19', name='DMD')
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         for t in ['NM_004011.3',
                   'NM_004019.2',
                   'NM_004007.2']:
@@ -199,7 +199,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('getTranscriptsByGeneName',
                        build='hg19', name='BOGUSGENE')
-        assert_false(r)
+        assert not r
 
     @fix(database, cache('AF230870.1'))
     def test_gettranscriptsandinfo_valid(self):
@@ -208,7 +208,7 @@ class TestServicesSoap(MutalyzerTest):
         give a list of TranscriptInfo objects.
         """
         r = self._call('getTranscriptsAndInfo', 'AF230870.1')
-        assert_equal(type(r.TranscriptInfo), list)
+        assert type(r.TranscriptInfo) == list
         names = [t.name for t in r.TranscriptInfo]
         for t in ['mtmC2_v001',
                   'mtmB2_v001']:
@@ -222,7 +222,7 @@ class TestServicesSoap(MutalyzerTest):
         to the gene.
         """
         r = self._call('getTranscriptsAndInfo', 'AL449423.14', 'CDKN2A')
-        assert_equal(type(r.TranscriptInfo), list)
+        assert type(r.TranscriptInfo) == list
         names = [t.name for t in r.TranscriptInfo]
         for t in ['CDKN2A_v008',
                   'CDKN2A_v007']:
@@ -231,7 +231,7 @@ class TestServicesSoap(MutalyzerTest):
                   'CDKN2B_v001',
                   'MTAP_v005',
                   'C9orf53_v001']:
-            assert_false(t in names)
+            assert t not in names
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_gettranscriptsmapping(self):
@@ -241,7 +241,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('getTranscriptsMapping',
                        'hg19', 'chrX', 31200000, 31210000, 1)
-        assert_equal(type(r.TranscriptMappingInfo), list)
+        assert type(r.TranscriptMappingInfo) == list
         names = [t.name for t in r.TranscriptMappingInfo]
         for t in ('NM_004011',
                   'NM_004019',
@@ -255,13 +255,13 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('mappingInfo',
                        '3.0-beta-06', 'hg19', 'NM_001100.3', 'g.112037014G>T')
-        assert_equal(r.endoffset, 117529978)
-        assert_equal(r.start_g, 112037014)
-        assert_equal(r.startoffset, 117529978)
-        assert_equal(r.mutationType, "subst")
-        assert_equal(r.end_g, 112037014)
-        assert_equal(r.startmain, 1388)
-        assert_equal(r.endmain, 1388)
+        assert r.endoffset == 117529978
+        assert r.start_g == 112037014
+        assert r.startoffset == 117529978
+        assert r.mutationType == "subst"
+        assert r.end_g == 112037014
+        assert r.startmain == 1388
+        assert r.endmain == 1388
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo(self):
@@ -270,13 +270,13 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('mappingInfo',
                        '3.0-beta-06', 'hg19', 'NM_002001.2', 'g.159272168G>T')
-        assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 159272168)
-        assert_equal(r.startoffset, 0)
-        assert_equal(r.mutationType, 'subst')
-        assert_equal(r.end_g, 159272168)
-        assert_equal(r.startmain, 14)
-        assert_equal(r.endmain, 14)
+        assert r.endoffset == 0
+        assert r.start_g == 159272168
+        assert r.startoffset == 0
+        assert r.mutationType == 'subst'
+        assert r.end_g == 159272168
+        assert r.startmain == 14
+        assert r.endmain == 14
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo_compound(self):
@@ -286,13 +286,13 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('mappingInfo',
                        '3.0-beta-06', 'hg19', 'NM_002001.2', 'g.[159272168G>T;159272174T>A]')
-        assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 159272168)
-        assert_equal(r.startoffset, 0)
-        assert_equal(r.mutationType, 'compound')
-        assert_equal(r.end_g, 159272174)
-        assert_equal(r.startmain, 14)
-        assert_equal(r.endmain, 20)
+        assert r.endoffset == 0
+        assert r.start_g == 159272168
+        assert r.startoffset == 0
+        assert r.mutationType == 'compound'
+        assert r.end_g == 159272174
+        assert r.startmain == 14
+        assert r.endmain == 20
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo_reverse(self):
@@ -302,13 +302,13 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('mappingInfo',
                        '3.0-beta-06', 'hg19', 'NM_004011.3', 'g.31152229_31152239del')
-        assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 31152229)
-        assert_equal(r.startoffset, 0)
-        assert_equal(r.mutationType, 'del')
-        assert_equal(r.end_g, 31152239)
-        assert_equal(r.startmain, 6981)
-        assert_equal(r.endmain, 6971)
+        assert r.endoffset == 0
+        assert r.start_g == 31152229
+        assert r.startoffset == 0
+        assert r.mutationType == 'del'
+        assert r.end_g == 31152239
+        assert r.startmain == 6981
+        assert r.endmain == 6971
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_mappinginfo_compound_reverse(self):
@@ -318,21 +318,21 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('mappingInfo',
                        '3.0-beta-06', 'hg19', 'NM_004011.3', 'g.[31152229_31152232del;31152235_31152239del]')
-        assert_equal(r.endoffset, 0)
-        assert_equal(r.start_g, 31152229)
-        assert_equal(r.startoffset, 0)
-        assert_equal(r.mutationType, 'compound')
-        assert_equal(r.end_g, 31152239)
-        assert_equal(r.startmain, 6981)
-        assert_equal(r.endmain, 6971)
+        assert r.endoffset == 0
+        assert r.start_g == 31152229
+        assert r.startoffset == 0
+        assert r.mutationType == 'compound'
+        assert r.end_g == 31152239
+        assert r.startmain == 6981
+        assert r.endmain == 6971
 
     def test_info(self):
         """
         Running the info method should give us some version information.
         """
         r = self._call('info')
-        assert_equal(type(r.versionParts.string), list)
-        assert_equal(r.version, mutalyzer.__version__)
+        assert type(r.versionParts.string) == list
+        assert r.version == mutalyzer.__version__
 
     @fix(database, cache('AB026906.1', 'AL449423.14', 'NM_003002.2'))
     def test_getcache(self):
@@ -346,7 +346,7 @@ class TestServicesSoap(MutalyzerTest):
         sync = CacheSync(output)
 
         r = self._call('getCache', created_since)
-        assert_equal(len(r.CacheEntry), 3)
+        assert len(r.CacheEntry) == 3
 
     def test_getdbsnpdescriptions(self):
         """
@@ -375,7 +375,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('getTranscripts',
                        build='hg19', chrom='chrX', pos=32237295)
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         for t in ['NM_004011',
                   'NM_004007']:
             assert t in r.string
@@ -388,7 +388,7 @@ class TestServicesSoap(MutalyzerTest):
         """
         r = self._call('getTranscripts',
                        build='hg19', chrom='chrX', pos=32237295, versions=True)
-        assert_equal(type(r.string), list)
+        assert type(r.string) == list
         for t in ['NM_004011.3',
                   'NM_004007.2']:
             assert t in r.string
@@ -399,8 +399,8 @@ class TestServicesSoap(MutalyzerTest):
         Just a runMutalyzer test.
         """
         r = self._call('runMutalyzer', 'NM_003002.2:c.274G>T')
-        assert_equal(r.errors, 0)
-        assert_equal(r.genomicDescription, 'NM_003002.2:n.335G>T')
+        assert r.errors == 0
+        assert r.genomicDescription == 'NM_003002.2:n.335G>T'
         assert 'NM_003002.2(SDHD_v001):c.274G>T' in r.transcriptDescriptions.string
 
     @fix(database)
@@ -421,13 +421,13 @@ class TestServicesSoap(MutalyzerTest):
         with patch.object(Entrez, 'efetch', mock_efetch):
             r = self._call('runMutalyzer', 'NM_003002:c.274G>T')
 
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NM_003002.2')
-        assert_equal(r.sourceId, 'NM_003002.2')
-        assert_equal(r.sourceAccession, 'NM_003002')
-        assert_equal(r.sourceVersion, '2')
-        assert_equal(r.sourceGi, '222352156')
-        assert_equal(r.molecule, 'n')
+        assert r.errors == 0
+        assert r.referenceId == 'NM_003002.2'
+        assert r.sourceId == 'NM_003002.2'
+        assert r.sourceAccession == 'NM_003002'
+        assert r.sourceVersion == '2'
+        assert r.sourceGi == '222352156'
+        assert r.molecule == 'n'
 
     @fix(database, cache('NM_003002.2'))
     def test_runmutalyzer_reference_info_nm_version(self):
@@ -435,13 +435,13 @@ class TestServicesSoap(MutalyzerTest):
         Get reference info for an NM variant with version.
         """
         r = self._call('runMutalyzer', 'NM_003002.2:c.274G>T')
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NM_003002.2')
-        assert_equal(r.sourceId, 'NM_003002.2')
-        assert_equal(r.sourceAccession, 'NM_003002')
-        assert_equal(r.sourceVersion, '2')
-        assert_equal(r.sourceGi, '222352156')
-        assert_equal(r.molecule, 'n')
+        assert r.errors == 0
+        assert r.referenceId == 'NM_003002.2'
+        assert r.sourceId == 'NM_003002.2'
+        assert r.sourceAccession == 'NM_003002'
+        assert r.sourceVersion == '2'
+        assert r.sourceGi == '222352156'
+        assert r.molecule == 'n'
 
     @fix(database, cache('LRG_1'))
     def test_runmutalyzer_reference_info_lrg(self):
@@ -449,10 +449,10 @@ class TestServicesSoap(MutalyzerTest):
         Get reference info for an LRG variant.
         """
         r = self._call('runMutalyzer', 'LRG_1t1:c.266G>T')
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'LRG_1')
-        assert_equal(r.sourceId, 'LRG_1')
-        assert_equal(r.molecule, 'g')
+        assert r.errors == 0
+        assert r.referenceId == 'LRG_1'
+        assert r.sourceId == 'LRG_1'
+        assert r.molecule == 'g'
 
     @fix(database, cache('NG_012772.1'))
     def test_runmutalyzer_reference_info_ng(self):
@@ -472,13 +472,13 @@ class TestServicesSoap(MutalyzerTest):
         with patch.object(Entrez, 'efetch', mock_efetch):
             r = self._call('runMutalyzer', 'NG_012772:g.18964del')
 
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_012772.1')
-        assert_equal(r.sourceId, 'NG_012772.1')
-        assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '256574794')
-        assert_equal(r.molecule, 'g')
+        assert r.errors == 0
+        assert r.referenceId == 'NG_012772.1'
+        assert r.sourceId == 'NG_012772.1'
+        assert r.sourceAccession == 'NG_012772'
+        assert r.sourceVersion == '1'
+        assert r.sourceGi == '256574794'
+        assert r.molecule == 'g'
 
     @fix(database, cache('NG_009105.1'))
     def test_runmutalyzer_reference_info_ng_version(self):
@@ -486,13 +486,13 @@ class TestServicesSoap(MutalyzerTest):
         Get reference info for an NG variant with version.
         """
         r = self._call('runMutalyzer', 'NG_009105.1:g.18964del')
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_009105.1')
-        assert_equal(r.sourceId, 'NG_009105.1')
-        assert_equal(r.sourceAccession, 'NG_009105')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '216548283')
-        assert_equal(r.molecule, 'g')
+        assert r.errors == 0
+        assert r.referenceId == 'NG_009105.1'
+        assert r.sourceId == 'NG_009105.1'
+        assert r.sourceAccession == 'NG_009105'
+        assert r.sourceVersion == '1'
+        assert r.sourceGi == '216548283'
+        assert r.molecule == 'g'
 
     @fix(database, cache('NG_012772.1'))
     def test_runmutalyzer_reference_info_gi(self):
@@ -500,13 +500,13 @@ class TestServicesSoap(MutalyzerTest):
         Get reference info for a GI variant.
         """
         r = self._call('runMutalyzer', 'gi256574794:g.18964del')
-        assert_equal(r.errors, 0)
-        assert_equal(r.referenceId, 'NG_012772.1')
-        assert_equal(r.sourceId, 'NG_012772.1')
-        assert_equal(r.sourceAccession, 'NG_012772')
-        assert_equal(r.sourceVersion, '1')
-        assert_equal(r.sourceGi, '256574794')
-        assert_equal(r.molecule, 'g')
+        assert r.errors == 0
+        assert r.referenceId == 'NG_012772.1'
+        assert r.sourceId == 'NG_012772.1'
+        assert r.sourceAccession == 'NG_012772'
+        assert r.sourceVersion == '1'
+        assert r.sourceGi == '256574794'
+        assert r.molecule == 'g'
 
     @fix(database, cache('NM_000143.3'))
     def test_runmutalyzer_exons(self):
@@ -514,7 +514,7 @@ class TestServicesSoap(MutalyzerTest):
         Exon table in runMutalyzer output.
         """
         r = self._call('runMutalyzer', 'NM_000143.3:c.630_636del')
-        assert_equal(r.errors, 0)
+        assert r.errors == 0
         expected_exons = [(1, 195, '-63', '132'),
                           (196, 330, '133', '267'),
                           (331, 441, '268', '378'),
@@ -525,10 +525,9 @@ class TestServicesSoap(MutalyzerTest):
                           (1172, 1299, '1109', '1236'),
                           (1300, 1453, '1237', '1390'),
                           (1454, 1867, '1391', '*271')]
-        assert_equal(len(r.exons.ExonInfo), len(expected_exons))
+        assert len(r.exons.ExonInfo) == len(expected_exons)
         for exon, expected_exon in zip(r.exons.ExonInfo, expected_exons):
-            assert_equal((exon.gStart, exon.gStop, exon.cStart, exon.cStop),
-                         expected_exon)
+            assert (exon.gStart, exon.gStop, exon.cStart, exon.cStop) == expected_exon
 
     @fix(database, cache('AB026906.1', 'NM_003002.2', 'AL449423.14'))
     def test_batchjob(self):
@@ -553,8 +552,7 @@ class TestServicesSoap(MutalyzerTest):
         assert int(result) == 0
 
         result = self._call('getBatchJob', job_id)
-        assert_equal(len(result.decode('base64').strip().split('\n')) - 1,
-                     len(variants))
+        assert len(result.decode('base64').strip().split('\n')) - 1 == len(variants)
 
     @fix(database)
     def test_batchjob_newlines_unix(self):

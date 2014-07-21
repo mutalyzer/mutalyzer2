@@ -19,7 +19,6 @@ import urllib2
 
 from Bio import Entrez
 import lxml.html
-from nose.tools import *
 
 import mutalyzer
 from mutalyzer import Scheduler
@@ -46,7 +45,7 @@ class TestWebsite(MutalyzerTest):
         Expect the index HTML page.
         """
         r = self.app.get('/')
-        assert_equal(r.status_code, 200)
+        assert r.status_code == 200
         assert 'Welcome to the Mutalyzer website' in r.data
 
     def test_about(self):
@@ -54,7 +53,7 @@ class TestWebsite(MutalyzerTest):
         See if people get proper credit.
         """
         r = self.app.get('/about')
-        assert_equal(r.status, '200 OK')
+        assert r.status == '200 OK'
         assert 'Jonathan Vis' in r.data
 
     def test_non_existing(self):
@@ -62,7 +61,7 @@ class TestWebsite(MutalyzerTest):
         Expect a 404 response.
         """
         r = self.app.get('/this/doesnotexist')
-        assert_equal(r.status_code, 404)
+        assert r.status_code == 404
 
     @fix(database)
     def test_menu_links(self):
@@ -84,7 +83,7 @@ class TestWebsite(MutalyzerTest):
                 href = '/' + href
 
             r = self.app.get(href)
-            assert_equal(r.status_code, 200)
+            assert r.status_code == 200
 
     def test_description_extractor(self):
         """
@@ -275,7 +274,7 @@ class TestWebsite(MutalyzerTest):
         r = self.app.get(result_url)
         assert 'text/plain' in r.headers['Content-Type']
         assert header in r.data
-        assert_equal(len(r.data.strip().split('\n')) - 1, lines)
+        assert len(r.data.strip().split('\n')) - 1 == lines
 
         return r.data
 
@@ -469,7 +468,7 @@ class TestWebsite(MutalyzerTest):
                              header='Input\tStatus',
                              lines=len(variants))
         for line in result.splitlines()[1:]:
-            assert_equal(len(line.split('\t')), len(variants[0]) * 2)
+            assert len(line.split('\t')) == len(variants[0]) * 2
 
     def test_download_py(self):
         """
@@ -492,7 +491,7 @@ class TestWebsite(MutalyzerTest):
         Download a C# example client for the web service.
         """
         r = self.app.get('/downloads/client-mono.cs')
-        assert_equal(r.headers['Content-Type'], 'text/plain')
+        assert r.headers['Content-Type'] == 'text/plain'
         assert 'public static void Main(String [] args) {' in r.data
 
     def test_download_php(self):
@@ -547,7 +546,7 @@ class TestWebsite(MutalyzerTest):
                                        'var': 'g.48374289_48374389del'})
         assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
-        assert_equal(r.data, expected)
+        assert r.data == expected
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_c2g(self):
@@ -561,7 +560,7 @@ class TestWebsite(MutalyzerTest):
                                        'var': 'c.1020_1072+48del'})
         assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['1020', '0', '1072', '48', '48374289', '48374389', 'del'])
-        assert_equal(r.data, expected)
+        assert r.data == expected
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_c2g_downstream(self):
@@ -576,7 +575,7 @@ class TestWebsite(MutalyzerTest):
                                        'var': 'c.1709+d187del'})
         assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['1709', '187', '1709', '187', '48379389', '48379389', 'del'])
-        assert_equal(r.data, expected)
+        assert r.data == expected
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_no_variant(self):
@@ -588,9 +587,9 @@ class TestWebsite(MutalyzerTest):
                                        'build': 'hg19',
                                        'acc': 'NM_203473.1'})
         assert 'text/plain' in r.headers['Content-Type']
-        assert_equal(r.content_type, 'text/plain')
+        assert r.content_type == 'text/plain'
         expected = '\n'.join(['-158', '1709', '1371'])
-        assert_equal(r.data, expected)
+        assert r.data == expected
 
     @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_ivs(self):
@@ -604,7 +603,7 @@ class TestWebsite(MutalyzerTest):
                                        'var': 'c.IVS10+3A>G'})
         assert 'text/plain' in r.headers['Content-Type']
         expected = '\n'.join(['884', '3', '884', '3', '37059093', '37059093', 'subst'])
-        assert_equal(r.data, expected)
+        assert r.data == expected
 
     @fix(database)
     def test_upload_local_file(self):
@@ -623,7 +622,7 @@ class TestWebsite(MutalyzerTest):
         reference_url = dom.cssselect('#reference_download')[0].attrib['href']
 
         r = self.app.get(reference_url)
-        assert_equal(r.data, bz2.BZ2File(path).read())
+        assert r.data == bz2.BZ2File(path).read()
 
     @fix(database)
     def test_upload_local_file_invalid(self):
@@ -649,7 +648,7 @@ class TestWebsite(MutalyzerTest):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             'data',
                             'NM_002001.2.gb.bz2')
-        assert_equal(r.data, bz2.BZ2File(path).read())
+        assert r.data == bz2.BZ2File(path).read()
 
     @fix(database, cache('NM_002001.2'))
     def test_reference_head(self):
@@ -661,7 +660,7 @@ class TestWebsite(MutalyzerTest):
         assert '0 Errors' in r.data
 
         r = self.app.head('/reference/NM_002001.2.gb')
-        assert_equal(r.status_code, 200)
+        assert r.status_code == 200
 
     @fix(database)
     def test_reference_head_none(self):
@@ -669,7 +668,7 @@ class TestWebsite(MutalyzerTest):
         Test if non-existing reference files gives a 404 on a HEAD request.
         """
         r = self.app.head('/reference/NM_002001.2.gb')
-        assert_equal(r.status_code, 404)
+        assert r.status_code == 404
 
     @fix(database, hg19, hg19_transcript_mappings, cache('NM_003002.2'))
     def test_bed(self):

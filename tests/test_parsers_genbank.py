@@ -4,7 +4,6 @@ Tests for the mutalyzer.parsers.genbank module.
 
 
 #import logging; logging.basicConfig()
-from nose.tools import *
 
 from mutalyzer.parsers import genbank
 
@@ -33,4 +32,4 @@ class TestMutator(MutalyzerTest):
                  (['a b c', 'a b c'], (-1, -1)),
                  (['a b c d a b', 'a b'], (2, 2))]
         for test in tests:
-            assert_equal(self.gb_parser._find_mismatch(test[0]), test[1])
+            assert self.gb_parser._find_mismatch(test[0]) == test[1]

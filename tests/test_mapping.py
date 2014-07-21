@@ -4,7 +4,6 @@ Tests for the mapping module.
 
 
 #import logging; logging.basicConfig()
-from nose.tools import *
 from sqlalchemy import or_
 
 from mutalyzer.db.models import Assembly
@@ -41,7 +40,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_003002.2:c.274G>T')
-        assert_equal(genomic, 'NC_000011.9:g.111959695G>T')
+        assert genomic == 'NC_000011.9:g.111959695G>T'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.274G>T' in coding
         # Fix for r536: disable the -u and +d convention.
@@ -54,7 +53,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NR_028383.1:n.-2173C>A')
-        assert_equal(genomic, 'NC_000011.9:g.111959695G>T')
+        assert genomic == 'NC_000011.9:g.111959695G>T'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.274G>T' in coding
         # Fix for r536: disable the -u and +d convention.
@@ -67,7 +66,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_003002.2:c.[274G>T;278A>G]')
-        assert_equal(genomic, 'NC_000011.9:g.[111959695G>T;111959699A>G]')
+        assert genomic == 'NC_000011.9:g.[111959695G>T;111959699A>G]'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.[274G>T;278A>G]' in coding
         assert 'NR_028383.1:n.[-2173C>A;-2177T>C]' in coding
@@ -88,7 +87,7 @@ class TestConverter(MutalyzerTest):
         #   investigated really).
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_000500.5:c.92C>T')
-        assert_equal(genomic, 'NC_000006.11:g.32006291C>T')
+        assert genomic == 'NC_000006.11:g.32006291C>T'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_000500.5:c.92C>T' in coding
 
@@ -136,7 +135,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_003002.2:c.-1_274del')
-        assert_equal(genomic, 'NC_000011.9:g.111957631_111959695del')
+        assert genomic == 'NC_000011.9:g.111957631_111959695del'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.-1_274del' in coding
 
@@ -146,9 +145,9 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_003002.2:c.274_-1del')
-        assert_equal(genomic, None)
+        assert genomic == None
         erange = self.output.getMessagesWithErrorCode('ERANGE')
-        assert_equal(len(erange), 1)
+        assert len(erange) == 1
 
     def test_range_order_reverse_correct(self):
         """
@@ -157,7 +156,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_001162505.1:c.-1_40del')
-        assert_equal(genomic, 'NC_000020.10:g.48770135_48770175del')
+        assert genomic == 'NC_000020.10:g.48770135_48770175del'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_001162505.1:c.-1_40del' in coding
 
@@ -167,9 +166,9 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_001162505.1:c.40_-1del')
-        assert_equal(genomic, None)
+        assert genomic == None
         erange = self.output.getMessagesWithErrorCode('ERANGE')
-        assert_equal(len(erange), 1)
+        assert len(erange) == 1
 
     def test_range_order_incorrect_chrom2c(self):
         """
@@ -177,9 +176,9 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         coding = converter.chrom2c('NC_000011.9:g.111959695_111957631del', 'list')
-        assert_equal(coding, None)
+        assert coding == None
         erange = self.output.getMessagesWithErrorCode('ERANGE')
-        assert_equal(len(erange), 1)
+        assert len(erange) == 1
 
     def test_delins_large_ins_c2chrom(self):
         """
@@ -187,7 +186,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_003002.2:c.274delinsTAAA')
-        assert_equal(genomic, 'NC_000011.9:g.111959695delinsTAAA')
+        assert genomic == 'NC_000011.9:g.111959695delinsTAAA'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.274delinsTAAA' in coding
 
@@ -197,7 +196,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_003002.2:c.274delGinsTAAA')
-        assert_equal(genomic, 'NC_000011.9:g.111959695delinsTAAA')
+        assert genomic == 'NC_000011.9:g.111959695delinsTAAA'
         coding = converter.chrom2c(genomic, 'list')
         assert 'NM_003002.2:c.274delinsTAAA' in coding
 
@@ -240,7 +239,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NC_012920.1(ND4_v001):c.1271del')
-        assert_equal(genomic, 'NC_012920.1:m.12030del')
+        assert genomic == 'NC_012920.1:m.12030del'
 
     def test_nm_without_selector_chrom2c(self):
         """
@@ -248,7 +247,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_017780.2:c.109A>T')
-        assert_equal(genomic, 'NC_000008.10:g.61654100A>T')
+        assert genomic == 'NC_000008.10:g.61654100A>T'
 
     def test_nm_with_selector_chrom2c(self):
         """
@@ -256,7 +255,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_017780.2(CHD7_v001):c.109A>T')
-        assert_equal(genomic, 'NC_000008.10:g.61654100A>T')
+        assert genomic == 'NC_000008.10:g.61654100A>T'
 
     def test_nm_c2chrom_no_selector(self):
         """
@@ -274,7 +273,7 @@ class TestConverter(MutalyzerTest):
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_017780.2(CHD8):c.109A>T')
         erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
-        assert_equal(len(erange), 1)
+        assert len(erange) == 1
 
     def test_incorrect_selector_version_c2chrom(self):
         """
@@ -283,7 +282,7 @@ class TestConverter(MutalyzerTest):
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_017780.2(CHD7_v002):c.109A>T')
         erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
-        assert_equal(len(erange), 1)
+        assert len(erange) == 1
 
     def test_no_selector_version_c2chrom(self):
         """
@@ -291,7 +290,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_017780.2(CHD7):c.109A>T')
-        assert_equal(genomic, 'NC_000008.10:g.61654100A>T')
+        assert genomic == 'NC_000008.10:g.61654100A>T'
 
     def test_incorrect_selector_no_selector_version_c2chrom(self):
         """
@@ -300,7 +299,7 @@ class TestConverter(MutalyzerTest):
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_017780.2(CHD8):c.109A>T')
         erange = self.output.getMessagesWithErrorCode('EACCNOTINDB')
-        assert_equal(len(erange), 1)
+        assert len(erange) == 1
 
     def test_ins_seq_chrom2c(self):
         """
@@ -326,7 +325,7 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_012459.2:c.10_11insATC')
-        assert_equal(genomic, 'NC_000011.9:g.111957482_111957483insGAT')
+        assert genomic == 'NC_000011.9:g.111957482_111957483insGAT'
 
     def test_ins_seq_seq_c2chrom_reverse(self):
         """
@@ -334,4 +333,4 @@ class TestConverter(MutalyzerTest):
         """
         converter = self._converter('hg19')
         genomic = converter.c2chrom('NM_012459.2:c.10_11ins[TTT;ATC]')
-        assert_equal(genomic, 'NC_000011.9:g.111957482_111957483ins[GAT;AAA]')
+        assert genomic == 'NC_000011.9:g.111957482_111957483ins[GAT;AAA]'

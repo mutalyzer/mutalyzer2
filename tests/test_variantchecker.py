@@ -4,7 +4,6 @@ Tests for the variantchecker module.
 
 
 #import logging; logging.basicConfig()
-from nose.tools import *
 
 from mutalyzer.output import Output
 from mutalyzer.Retriever import GenBankRetriever
@@ -42,8 +41,8 @@ class TestVariantchecker(MutalyzerTest):
         level.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_163del', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61937_61939del')
+        assert (self.output.getIndexedOutput('genomicDescription', 0) ==
+                'AL449423.14:g.61937_61939del')
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54_Gly55delinsSer)' \
@@ -57,8 +56,8 @@ class TestVariantchecker(MutalyzerTest):
         level.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162insATC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61938_61939insGAT')
+        assert (self.output.getIndexedOutput('genomicDescription', 0) ==
+                'AL449423.14:g.61938_61939insGAT')
         assert 'AL449423.14(CDKN2A_v001):c.161_162insATC' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsIleSer)' \
@@ -72,8 +71,8 @@ class TestVariantchecker(MutalyzerTest):
         on protein level.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162ins[ATC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61938_61939insGAT')
+        assert (self.output.getIndexedOutput('genomicDescription', 0) ==
+                'AL449423.14:g.61938_61939insGAT')
         assert 'AL449423.14(CDKN2A_v001):c.161_162insATC' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsIleSer)' \
@@ -88,8 +87,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delinsATCCC',
                       self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.61938_61939delinsGGGAT'
         assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
@@ -104,8 +102,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delins[ATCCC]',
                       self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.61938_61939delinsGGGAT'
         assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
@@ -120,8 +117,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delTGinsATCCC',
                       self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.61938_61939delinsGGGAT'
         assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
@@ -137,8 +133,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_162delTGins[ATCCC]',
                       self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61938_61939delinsGGGAT')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.61938_61939delinsGGGAT'
         assert 'AL449423.14(CDKN2A_v001):c.161_162delinsATCCC' \
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
@@ -215,7 +210,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NM_003002.2:c.274del', self.output)
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
-        assert_equal(len(wroll), 0)
+        assert len(wroll) == 0
 
     @fix(cache('NM_000088.3'))
     def test_no_roll_splice(self):
@@ -226,7 +221,7 @@ class TestVariantchecker(MutalyzerTest):
         wrollback = self.output.getMessagesWithErrorCode('IROLLBACK')
         assert len(wrollback) > 0
         wroll = self.output.getMessagesWithErrorCode('WROLLFORWARD')
-        assert_equal(len(wroll), 0)
+        assert len(wroll) == 0
 
     @fix(cache('NM_000088.3'))
     def test_partial_roll_splice(self):
@@ -280,8 +275,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AL449423.14:g.65470_65471insTAC', self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
-        assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
-        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
+        assert 'AL449423.14:g.65471_65472insACT' == self.output.getIndexedOutput('genomicDescription', 0, '')
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
 
     @fix(cache('AL449423.14'))
     def test_roll_reverse_ins(self):
@@ -291,8 +286,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AL449423.14:g.65471_65472insACT', self.output)
         assert 'AL449423.14(CDKN2A_v001):c.99_100insTAG' in self.output.getOutput('descriptions')
-        assert_equal ('AL449423.14:g.65471_65472insACT', self.output.getIndexedOutput('genomicDescription', 0, ''))
-        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
+        assert 'AL449423.14:g.65471_65472insACT' == self.output.getIndexedOutput('genomicDescription', 0, '')
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
 
     @fix(cache('AL449423.14'))
     def test_roll_message_forward(self):
@@ -301,8 +296,8 @@ class TestVariantchecker(MutalyzerTest):
         strand (forward).
         """
         check_variant('AL449423.14:g.65470_65471insTAC', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 1)
-        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 0)
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
+        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 0
 
     @fix(cache('AL449423.14'))
     def test_roll_message_reverse(self):
@@ -311,8 +306,8 @@ class TestVariantchecker(MutalyzerTest):
         strand (reverse).
         """
         check_variant('AL449423.14(CDKN2A_v001):c.98_99insGTA', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLFORWARD')), 0)
-        assert_equal(len(self.output.getMessagesWithErrorCode('WROLLREVERSE')), 1)
+        assert len(self.output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
+        assert len(self.output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
 
     @fix(cache('NM_000143.3'))
     def test_ins_cds_start(self):
@@ -320,7 +315,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion on CDS start boundary should not be included in CDS.
         """
         check_variant('NM_000143.3:c.-1_1insCAT', self.output)
-        assert_equal(self.output.getIndexedOutput("newprotein", 0), None)
+        assert self.output.getIndexedOutput("newprotein", 0) == None
         # Todo: Is this a good test?
 
     @fix(cache('NM_000143.3'))
@@ -329,7 +324,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion after CDS start boundary should be included in CDS.
         """
         check_variant('NM_000143.3:c.1_2insCAT', self.output)
-        assert_equal(self.output.getIndexedOutput("newprotein", 0), '?')
+        assert self.output.getIndexedOutput("newprotein", 0) == '?'
         # Todo: Is this a good test?
 
     @fix(cache('NG_012772.1'))
@@ -339,7 +334,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NG_012772.1(BRCA2_v001):c.632-5_670del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert_equal(self.output.getOutput('removedSpliceSites'), [])
+        assert self.output.getOutput('removedSpliceSites') == []
         # Todo: For now, the following is how to check if no protein
         # prediction is done.
         assert not self.output.getOutput('newprotein')
@@ -351,7 +346,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NG_012772.1(BRCA2_v001):c.632-5_681+7del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -362,8 +357,8 @@ class TestVariantchecker(MutalyzerTest):
         Deletion of exactly an exon should be possible.
         """
         check_variant('NG_012772.1(BRCA2_v001):c.632_681del', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) == 0
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -380,7 +375,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NG_012772.1(BRCA2_v001):c.68-7_316+7del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -393,7 +388,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NG_012772.1(BRCA2_v001):c.632-5_793+7del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert_equal(self.output.getOutput('removedSpliceSites'), [4])
+        assert self.output.getOutput('removedSpliceSites') == [4]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -406,7 +401,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NG_012772.1(BRCA2_v001):c.622_674del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -418,8 +413,8 @@ class TestVariantchecker(MutalyzerTest):
         exons).
         """
         check_variant('NG_012772.1(BRCA2_v001):c.681+1_682-1del', self.output)
-        assert_equal(self.output.getMessagesWithErrorCode('WOVERSPLICE'), [])
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert self.output.getMessagesWithErrorCode('WOVERSPLICE') == []
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Note: The protein prediction is done, but 'newprotein' is not set
         # because we have no change. So to check if the prediction is done, we
         # check if 'oldprotein' is set and to check if the prediction is
@@ -435,7 +430,7 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NG_012772.1(BRCA2_v001):c.622_672del', self.output)
         assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) > 0
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -453,8 +448,7 @@ class TestVariantchecker(MutalyzerTest):
         # prediction is done.
         assert self.output.getOutput('newprotein')
         # Genomic positions should be centered in flanking introns and unsure.
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_012772.1:g.(17550_19725)del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012772.1:g.(17550_19725)del'
         assert 'NG_012772.1(BRCA2_v001):c.632-?_681+?del' \
                in self.output.getOutput('descriptions')
         assert 'NG_012772.1(BRCA2_i001):p.(Val211Glufs*10)' \
@@ -479,8 +473,7 @@ class TestVariantchecker(MutalyzerTest):
         # prediction is done.
         assert self.output.getOutput('newprotein')
         # Genomic positions should be centered in flanking introns and unsure.
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_012772.1:g.(7324_11720)del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012772.1:g.(7324_11720)del'
         assert 'NG_012772.1(BRCA2_v001):c.68-?_316+?del' \
                in self.output.getOutput('descriptions')
         # Todo: .c notation should still be c.632-?_681+?del, but what about
@@ -500,8 +493,7 @@ class TestVariantchecker(MutalyzerTest):
         # prediction is done.
         assert self.output.getOutput('newprotein')
         # Genomic positions should be centered in flanking introns and unsure.
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_012772.1:g.[(17550_19725)del;19017del]')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012772.1:g.[(17550_19725)del;19017del]'
         assert 'NG_012772.1(BRCA2_v001):c.[632-?_681+?del;681+4del]' \
                in self.output.getOutput('descriptions')
         # Todo: .c notation should still be c.632-?_681+?del, but what about
@@ -521,8 +513,7 @@ class TestVariantchecker(MutalyzerTest):
         # prediction is done.
         assert self.output.getOutput('newprotein')
         # Genomic positions should be centered in flanking introns and unsure.
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.(60314_63683)del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.(60314_63683)del'
         assert 'AL449423.14(CDKN2A_v001):c.151-?_457+?del' \
                in self.output.getOutput('descriptions')
         # Todo: .c notation should still be c.632-?_681+?del, but what about
@@ -538,8 +529,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         #check_variant('NM_018723.3:c.758_890del', self.output)
         check_variant('NM_000143.3:c.739_904del', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('WOVERSPLICE')), 0)
-        assert_equal(self.output.getOutput('removedSpliceSites'), [2])
+        assert len(self.output.getMessagesWithErrorCode('WOVERSPLICE')) == 0
+        assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
         assert self.output.getOutput('newprotein')
@@ -550,8 +541,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence.
         """
         check_variant('NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -562,8 +552,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence on reverse strand.
         """
         check_variant('NG_012337.1(TIMM8B_v001):c.12_13insGATC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_012337.1:g.4911_4912insATCG')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012337.1:g.4911_4912insATCG'
         assert 'NG_012337.1(TIMM8B_v001):c.12_13insGATC' \
                in self.output.getOutput('descriptions')
 
@@ -573,11 +562,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a range.
         """
         check_variant('NG_008939.1:g.5207_5208ins4300_4320', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_ins_range_inv(self):
@@ -585,11 +573,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of an inverse range.
         """
         check_variant('NG_008939.1:g.5207_5208ins4300_4320inv', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGCCAGATAATGAGCACAGGAC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGCCAGATAATGAGCACAGGAC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGCCAGATAATGAGCACAGGAC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_ins_seq_list(self):
@@ -597,8 +584,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence as a list.
         """
         check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCTCATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -608,8 +594,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence as a list on reverse strand.
         """
         check_variant('NG_012337.1(TIMM8B_v001):c.12_13ins[GATC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_012337.1:g.4911_4912insATCG')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012337.1:g.4911_4912insATCG'
         assert 'NG_012337.1(TIMM8B_v001):c.12_13insGATC' \
                in self.output.getOutput('descriptions')
 
@@ -619,11 +604,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a range as a list.
         """
         check_variant('NG_008939.1:g.5207_5208ins[4300_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_ins_range_inv_list(self):
@@ -631,11 +615,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of an inverse range as a list.
         """
         check_variant('NG_008939.1:g.5207_5208ins[4300_4320inv]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGCCAGATAATGAGCACAGGAC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGCCAGATAATGAGCACAGGAC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGCCAGATAATGAGCACAGGAC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_ins_seq_seq(self):
@@ -643,8 +626,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of two sequences.
         """
         check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCTC;ATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -654,8 +636,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of two sequences on reverse strand.
         """
         check_variant('NG_012337.1(TIMM8B_v001):c.12_13ins[TTT;GATC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_012337.1:g.4911_4912insATCAAAG')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012337.1:g.4911_4912insATCAAAG'
         assert 'NG_012337.1(TIMM8B_v001):c.12_13insTTTGATC' \
                in self.output.getOutput('descriptions')
 
@@ -665,11 +646,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of two ranges.
         """
         check_variant('NG_008939.1:g.5207_5208ins[4300_4309;4310_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_ins_range_range_inv(self):
@@ -677,11 +657,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a range and an inverse range.
         """
         check_variant('NG_008939.1:g.5207_5208ins[4300_4309;4310_4320inv]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTGCCAGATAATG')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTGCCAGATAATG'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTGCCAGATAATG' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_ins_seq_range(self):
@@ -689,8 +668,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence and a range.
         """
         check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCT;4310_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -700,8 +678,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence and an inverse range.
         """
         check_variant('NG_008939.1:g.5207_5208ins[GTCCTGTGCT;4310_4320inv]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTGCCAGATAATG')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTGCCAGATAATG'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTGCCAGATAATG' \
                in self.output.getOutput('descriptions')
 
@@ -711,8 +688,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a range and a sequence.
         """
         check_variant('NG_008939.1:g.5207_5208ins[4300_4309;CATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -722,8 +698,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of an inverse range and a sequence.
         """
         check_variant('NG_008939.1:g.5207_5208ins[4300_4309inv;CATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insAGCACAGGACCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insAGCACAGGACCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insAGCACAGGACCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -733,8 +708,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -744,8 +718,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a sequence as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins[GTCCTGTGCTCATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -755,8 +728,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of two sequences (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins[GTCCTGTGCTC;ATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5208insGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_157insGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -766,7 +738,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a range (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins180_188', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_ins_range_inv_coding(self):
@@ -774,7 +746,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of an inverse range (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins180_188inv', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_ins_range_list_coding(self):
@@ -782,7 +754,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of a range as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins[180_188]', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_ins_range_inv_list_coding(self):
@@ -790,7 +762,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion of an inverse range as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_157ins[180_188inv]', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_delins_seq(self):
@@ -798,8 +770,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a sequence.
         """
         check_variant('NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -809,11 +780,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a range.
         """
         check_variant('NG_008939.1:g.5207_5212delins4300_4320', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_delins_range_inv(self):
@@ -821,11 +791,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of an inverse range.
         """
         check_variant('NG_008939.1:g.5207_5212delins4300_4320inv', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGCCAGATAATGAGCACAGGAC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGCCAGATAATGAGCACAGGAC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGCCAGATAATGAGCACAGGAC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_delins_seq_list(self):
@@ -833,8 +802,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a sequence as a list.
         """
         check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCTCATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -844,11 +812,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a range as a list.
         """
         check_variant('NG_008939.1:g.5207_5212delins[4300_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_delins_range_inv_list(self):
@@ -856,11 +823,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of an inverse range as a list.
         """
         check_variant('NG_008939.1:g.5207_5212delins[4300_4320inv]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGCCAGATAATGAGCACAGGAC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGCCAGATAATGAGCACAGGAC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGCCAGATAATGAGCACAGGAC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_delins_seq_seq(self):
@@ -868,8 +834,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of two sequences.
         """
         check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCT;CATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -879,11 +844,10 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of two ranges.
         """
         check_variant('NG_008939.1:g.5207_5212delins[4300_4309;4310_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_delins_range_inv_range(self):
@@ -893,11 +857,10 @@ class TestVariantchecker(MutalyzerTest):
         Note that the delins is also shortened by one position here.
         """
         check_variant('NG_008939.1:g.5207_5212delins[4300_4309inv;4310_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5208_5212delinsGCACAGGACCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5208_5212delinsGCACAGGACCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.157_161delinsGCACAGGACCATTATCTGGC' \
                in self.output.getOutput('descriptions')
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 0)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
     @fix(cache('NG_008939.1'))
     def test_delins_seq_range(self):
@@ -905,8 +868,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a sequence and a range.
         """
         check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCT;4310_4320]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -918,8 +880,7 @@ class TestVariantchecker(MutalyzerTest):
         Note that the delins is also shortened by one position here.
         """
         check_variant('NG_008939.1:g.5207_5212delins[GTCCTGTGCT;4310_4320inv]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5211delinsGTCCTGTGCTGCCAGATAAT')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5211delinsGTCCTGTGCTGCCAGATAAT'
         assert 'NG_008939.1(PCCB_v001):c.156_160delinsGTCCTGTGCTGCCAGATAAT' \
                in self.output.getOutput('descriptions')
 
@@ -929,8 +890,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a range and a sequence.
         """
         check_variant('NG_008939.1:g.5207_5212delins[4300_4309;CATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -942,8 +902,7 @@ class TestVariantchecker(MutalyzerTest):
         Note that the delins is also shortened by one position here.
         """
         check_variant('NG_008939.1:g.5207_5212delins[4300_4309inv;CATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5208_5212delinsGCACAGGACCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5208_5212delinsGCACAGGACCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.157_161delinsGCACAGGACCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -953,8 +912,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a sequence (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -964,8 +922,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a sequence as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins[GTCCTGTGCTCATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -975,8 +932,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of two sequences (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins[GTCCTGTGCT;CATTATCTGGC]', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5207_5212delinsGTCCTGTGCTCATTATCTGGC'
         assert 'NG_008939.1(PCCB_v001):c.156_161delinsGTCCTGTGCTCATTATCTGGC' \
                in self.output.getOutput('descriptions')
 
@@ -986,7 +942,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a range (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins180_188', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_delins_range_inv_coding(self):
@@ -994,7 +950,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of an inverse range (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins180_188inv', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_delins_range_list_coding(self):
@@ -1002,7 +958,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of a range as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins[180_188]', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NG_008939.1'))
     def test_delins_range_inv_list_coding(self):
@@ -1010,14 +966,14 @@ class TestVariantchecker(MutalyzerTest):
         Insertion-deletion of an inverse range as a list (coding).
         """
         check_variant('NG_008939.1(PCCB_v001):c.156_161delins[180_188inv]', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     def test_no_reference(self):
         """
         Variant description without a reference.
         """
         check_variant('g.244355733del', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOREF')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOREF')) == 1
 
     @fix(cache('NM_003002.2'), hg19, hg19_transcript_mappings)
     def test_chromosomal_positions(self):
@@ -1026,8 +982,7 @@ class TestVariantchecker(MutalyzerTest):
         defined.
         """
         check_variant('NM_003002.2:c.274G>T', self.output)
-        assert_equal(self.output.getIndexedOutput('rawVariantsChromosomal', 0),
-                     ('chr11', '+', [('274G>T', (111959695, 111959695))]))
+        assert self.output.getIndexedOutput('rawVariantsChromosomal', 0) == ('chr11', '+', [('274G>T', (111959695, 111959695))])
 
     @fix(cache('NM_002001.2'))
     def test_ex_notation(self):
@@ -1036,7 +991,7 @@ class TestVariantchecker(MutalyzerTest):
         one exon should delete two splice sites.
         """
         check_variant('NM_002001.2:c.EX1del', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('IDELSPLICE')), 1)
+        assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) == 1
 
     @fix(cache('LRG_1'))
     def test_lrg_reference(self):
@@ -1045,9 +1000,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('LRG_1t1:c.266G>T', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'LRG_1:g.6855G>T')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'LRG_1:g.6855G>T'
 
     @fix(cache('NM_002001.2'))
     def test_gi_reference_plain(self):
@@ -1056,9 +1010,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     '31317229:n.105del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicDescription', 0) == '31317229:n.105del'
         assert '31317229(FCER1A_v001):c.6del' \
                in self.output.getOutput('descriptions')
 
@@ -1069,9 +1022,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('GI31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     '31317229:n.105del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicDescription', 0) == '31317229:n.105del'
         assert '31317229(FCER1A_v001):c.6del' \
                in self.output.getOutput('descriptions')
 
@@ -1082,9 +1034,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('GI:31317229:c.6del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     '31317229:n.105del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicDescription', 0) == '31317229:n.105del'
         assert '31317229(FCER1A_v001):c.6del' \
                in self.output.getOutput('descriptions')
 
@@ -1095,9 +1046,8 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NM_002001.2:c.1_3delinsATG', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NM_002001.2:n.=')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NM_002001.2:n.='
         assert 'NM_002001.2(FCER1A_v001):c.=' \
                in self.output.getOutput('descriptions')
 
@@ -1109,11 +1059,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['DMD']['accession']
         check_variant(ud + ':g.5T>T', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000023.10:g.=')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.=')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000023.10:g.='
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.='
         assert ud + '(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
 
@@ -1126,11 +1074,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['DPYD']['accession']
         check_variant(ud + '(DPYD_v1):c.85C>T', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000001.10:g.98348885G>A')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.42731C>T')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000001.10:g.98348885G>A'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.42731C>T'
         assert ud + '(DPYD_v001):c.85C>T' \
                in self.output.getOutput('descriptions')
 
@@ -1142,11 +1088,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['MARK1']['accession']
         check_variant(ud + '(MARK1_v001):c.400T>C', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000001.10:g.220773181T>C')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.76614T>C')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000001.10:g.220773181T>C'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.76614T>C'
         assert ud + '(MARK1_v001):c.400T>C' \
                in self.output.getOutput('descriptions')
 
@@ -1160,11 +1104,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['chr9_reverse']['accession']
         check_variant(ud + ':g.10624_78132del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000009.11:g.32928508_32996016del')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.10624_78132del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000009.11:g.32928508_32996016del'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.10624_78132del'
 
     @fix(cache('MARK1'))
     def test_ud_forward_range(self):
@@ -1174,11 +1116,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['MARK1']['accession']
         check_variant(ud + '(MARK1_v001):c.400_415del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000001.10:g.220773181_220773196del')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.76614_76629del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000001.10:g.220773181_220773196del'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.76614_76629del'
 
     @fix(cache('chr9_reverse'))
     def test_ud_reverse_del_length(self):
@@ -1191,11 +1131,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['chr9_reverse']['accession']
         check_variant(ud + ':g.10624_78132del67509', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000009.11:g.32928508_32996016del')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.10624_78132del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000009.11:g.32928508_32996016del'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.10624_78132del'
 
     @fix(cache('DPYD'))
     def test_ud_reverse_roll(self):
@@ -1212,11 +1150,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['DPYD']['accession']
         check_variant(ud + '(DPYD_v001):c.104del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000001.10:g.98348867del')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.42751del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000001.10:g.98348867del'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.42751del'
         assert ud + '(DPYD_v001):c.105del' \
                in self.output.getOutput('descriptions')
 
@@ -1235,11 +1171,9 @@ class TestVariantchecker(MutalyzerTest):
         ud = REFERENCES['MARK1']['accession']
         check_variant(ud + '(MARK1_v001):c.400del', self.output)
         error_count, _, _ = self.output.Summary()
-        assert_equal(error_count, 0)
-        assert_equal(self.output.getIndexedOutput('genomicChromDescription', 0),
-                     'NC_000001.10:g.220773182del')
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     ud + ':g.76615del')
+        assert error_count == 0
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000001.10:g.220773182del'
+        assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.76615del'
         assert ud + '(MARK1_v001):c.401del' \
                in self.output.getOutput('descriptions')
 
@@ -1249,8 +1183,7 @@ class TestVariantchecker(MutalyzerTest):
         Specify the deleted sequence in a deletion.
         """
         check_variant('AL449423.14:g.65471_65472delTC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.65471_65472del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.65471_65472del'
         assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
                in self.output.getOutput('descriptions')
 
@@ -1260,8 +1193,7 @@ class TestVariantchecker(MutalyzerTest):
         Specify the deleted sequence length in a deletion.
         """
         check_variant('AL449423.14:g.65471_65472del2', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.65471_65472del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.65471_65472del'
         assert 'AL449423.14(CDKN2A_v001):c.98_99del' \
                in self.output.getOutput('descriptions')
 
@@ -1271,8 +1203,7 @@ class TestVariantchecker(MutalyzerTest):
         Specify the deleted sequence in a deletion on the reverse strand.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_163delTGG', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61937_61939del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.61937_61939del'
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
                in self.output.getOutput('descriptions')
 
@@ -1282,8 +1213,7 @@ class TestVariantchecker(MutalyzerTest):
         Specify the deleted sequence length in a deletion on the reverse strand.
         """
         check_variant('AL449423.14(CDKN2A_v001):c.161_163del3', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AL449423.14:g.61937_61939del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.61937_61939del'
         assert 'AL449423.14(CDKN2A_v001):c.161_163del' \
                in self.output.getOutput('descriptions')
 
@@ -1294,8 +1224,7 @@ class TestVariantchecker(MutalyzerTest):
         using a genomic reference.
         """
         check_variant('NG_008939.1:c.155_157delAAC', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5206_5208del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5206_5208del'
         assert 'NG_008939.1(PCCB_v001):c.155_157del' \
                in self.output.getOutput('descriptions')
 
@@ -1306,8 +1235,7 @@ class TestVariantchecker(MutalyzerTest):
         using a genomic reference.
         """
         check_variant('NG_008939.1:c.155_157del3', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'NG_008939.1:g.5206_5208del')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_008939.1:g.5206_5208del'
         assert 'NG_008939.1(PCCB_v001):c.155_157del' \
                in self.output.getOutput('descriptions')
 
@@ -1317,8 +1245,7 @@ class TestVariantchecker(MutalyzerTest):
         Inversion variant.
         """
         check_variant('AB026906.1:c.274_275inv', self.output)
-        assert_equal(self.output.getIndexedOutput('genomicDescription', 0),
-                     'AB026906.1:g.7872_7873inv')
+        assert self.output.getIndexedOutput('genomicDescription', 0) == 'AB026906.1:g.7872_7873inv'
         assert 'AB026906.1(SDHD_v001):c.274_275inv' \
             in self.output.getOutput('descriptions')
 
@@ -1336,7 +1263,7 @@ class TestVariantchecker(MutalyzerTest):
         Currently protein level descriptions are not implemented.
         """
         check_variant('NG_009105.1(OPN1LW):p.=', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('NP_064445.1'))
     def test_protein_reference(self):
@@ -1344,7 +1271,7 @@ class TestVariantchecker(MutalyzerTest):
         Currently protein references are not implemented.
         """
         check_variant('NP_064445.1:p.=', self.output)
-        assert_equal(len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')), 1)
+        assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
     @fix(cache('A1BG'))
     def test_wnomrna_other(self):

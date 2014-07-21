@@ -27,7 +27,7 @@ In general, try to follow the `PEP 8`_ guidelines for Python code and `PEP
 Unit tests
 ----------
 
-To run the unit tests with `nose`_, just run ``nosetests -v``.
+To run the unit tests with `pytest`_, just run ``py.test``.
 
 
 Working with feature branches
@@ -128,7 +128,7 @@ Releasing a new version is done as follows:
        git commit -am 'Open development for X.Y.Z+1'
 
 
-.. _nose: https://nose.readthedocs.org/
+.. _pytest: http://pytest.org/
 .. _PEP 8: http://www.python.org/dev/peps/pep-0008/
 .. _PEP 257: http://www.python.org/dev/peps/pep-0257/
 .. _SemVer: http://semver.org/

@@ -10,7 +10,6 @@ import StringIO
 #import logging; logging.basicConfig()
 from Bio import Entrez
 from mock import patch
-from nose.tools import *
 
 from mutalyzer.config import settings
 from mutalyzer.db.models import BatchJob, BatchQueueItem
@@ -42,19 +41,18 @@ class TestScheduler(MutalyzerTest):
         batch_job = BatchJob.query.filter_by(result_id=result_id).one()
 
         left = batch_job.batch_queue_items.count()
-        assert_equal(left, len(variants))
+        assert left == len(variants)
 
         scheduler.process()
 
         left = batch_job.batch_queue_items.count()
-        assert_equal(left, 0)
+        assert left == 0
 
         filename = 'batch-job-%s.txt' % result_id
         result = open(os.path.join(settings.CACHE_DIR, filename))
 
         next(result) # Header.
-        assert_equal(expected,
-                     [line.strip().split('\t') for line in result])
+        assert expected == [line.strip().split('\t') for line in result]
 
     def test_syntax_checker(self):
         """

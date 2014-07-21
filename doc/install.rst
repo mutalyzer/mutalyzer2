@@ -103,11 +103,7 @@ install all required Python packages::
     $ sudo apt-get install python-dev libmysqlclient-dev libxml2-dev libxslt-dev
     $ pip install -r requirements.txt
 
-Now might be a good time to run the unit tests::
-
-    $ nosetests -v
-
-If everything's okay, install Mutalyzer::
+Install Mutalyzer::
 
     $ python setup.py install
 
@@ -119,6 +115,10 @@ If everything's okay, install Mutalyzer::
     Instead of copying the source code to the installation directory, this
     only links from the installation directory to the source code such that
     any changes you make to it are directly available in the environment.
+
+Now might be a good time to run the unit tests::
+
+    $ py.test
 
 .. seealso::
 
