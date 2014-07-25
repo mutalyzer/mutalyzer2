@@ -633,7 +633,7 @@ def describe(s1, s2, dna=True):
             #if
 
             if in_transposition:
-                if variant.type & extractor.IDENTITY:
+                if not variant.type:
                     seq_list.append(Seq(#reference=s1,
                         start=variant.sample_start + 1, end=variant.sample_end,
                         reverse=False))
@@ -645,7 +645,7 @@ def describe(s1, s2, dna=True):
                     seq_list.append(Seq(
                         sequence=s2[variant.sample_start:variant.sample_end]))
             #if
-            elif not (variant.type & extractor.IDENTITY):
+            elif variant.type:
                description.append(var_to_rawvar(s1, s2, variant, dna=dna))
 
             if variant.type & extractor.TRANSPOSITION_CLOSE:
