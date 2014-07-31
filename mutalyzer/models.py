@@ -114,6 +114,10 @@ class RawVar(ComplexModel):
     sample_start_offset = Mandatory.Integer
     sample_end = Mandatory.Integer
     sample_end_offset = Mandatory.Integer
+    transposition_start = Mandatory.Integer
+    transposition_start_offset = Mandatory.Integer
+    transposition_end = Mandatory.Integer
+    transposition_end_offset = Mandatory.Integer
     type = Mandatory.Unicode
     deleted = Mandatory.Unicode
     inserted = Mandatory.Unicode

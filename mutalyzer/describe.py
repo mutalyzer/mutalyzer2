@@ -217,8 +217,8 @@ class SeqList(list):
         return representation
     #__str__
 
-    def __nonzero__(self):
-        return bool(self[0])
+    #def __nonzero__(self):
+    #    return bool(len(self))
 #SeqList
 
 class RawVar(models.RawVar):
@@ -623,8 +623,8 @@ def describe(s1, s2, dna=True):
 
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
                 0):
-            #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end
-            #print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE
+            #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end, variant.transposition_start, variant.transposition_end
+            #print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE 
 
             if variant.type & extractor.TRANSPOSITION_OPEN:
                 if not in_transposition:
@@ -635,18 +635,18 @@ def describe(s1, s2, dna=True):
             if in_transposition:
                 if variant.type & extractor.IDENTITY:
                     seq_list.append(Seq(#reference=s1,
-                        start=variant.sample_start + 1, end=variant.sample_end,
-                        reverse=False))
+                        start=variant.transposition_start + 1,
+                        end=variant.transposition_end, reverse=False))
                 elif variant.type & extractor.REVERSE_COMPLEMENT:
                     seq_list.append(Seq(#reference=s1,
-                        start=variant.sample_start + 1, end=variant.sample_end,
-                        reverse=True))
+                        start=variant.transposition_start + 1,
+                        end=variant.transposition_end, reverse=True))
                 else:
                     seq_list.append(Seq(
                         sequence=s2[variant.sample_start:variant.sample_end]))
             #if
             elif not (variant.type & extractor.IDENTITY):
-               description.append(var_to_rawvar(s1, s2, variant, dna=dna))
+                description.append(var_to_rawvar(s1, s2, variant, dna=dna))
 
             if variant.type & extractor.TRANSPOSITION_CLOSE:
                 in_transposition -= 1
