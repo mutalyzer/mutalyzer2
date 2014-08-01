@@ -33,7 +33,7 @@ class TestDescribe(MutalyzerTest):
         assert result[0].sample_end == expected[4]
         assert result[0].deleted[0].sequence == expected[5]
         assert result[0].inserted[0].sequence == expected[6]
-        assert result[0].hgvs == expected[7]
+        assert unicode(result[0]) == expected[7]
 
     def test1(self):
         """

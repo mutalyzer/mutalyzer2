@@ -3,12 +3,37 @@
 
 from mutalyzer import models
 
+class HGVSList(list):
+    """
+    Container for a list of sequences or variants.
+    """
+    def __str__(self):
+        if len(self) > 1:
+            return "[{}]".format(';'.join(map(str, self)))
+        return str(self[0])
+    #__str__
+#HGVSList
+
+class Allele(HGVSList):
+    pass
+
+class SeqList(HGVSList):
+    pass
+
 class Seq(object):
     """
     Container for an inserted sequence.
     """
     def __init__(self, sequence="", start=0, end=0, reverse=False):
         """
+        :arg sequence: Literal inserted sequence.
+        :type sequence: str
+        :arg start: Start position for a transposed sequence.
+        :type start: int
+        :arg end: End position for a transposed sequence.
+        :type end: int
+        :arg reverse: Inverted transposed sequence.
+        :type reverse: bool
         """
         self.sequence = sequence
         self.start = start
@@ -32,19 +57,10 @@ class Seq(object):
          return bool(self.sequence)
 #Seq
 
-class SeqList(list):
-    def __str__(self):
-        if len(self) > 1:
-            return "[{}]".format(';'.join(map(str, self)))
-        return str(self[0])
-    #__str__
-#SeqList
-
 class DNAVar(models.DNAVar):
     """
     Container for a DNA variant.
     """
-
     def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
             sample_end_offset=0, type="none", deleted=SeqList([Seq()]),
@@ -124,9 +140,8 @@ class DNAVar(models.DNAVar):
 
 class ProteinVar(models.ProteinVar):
     """
-    Container for a raw variant.
+    Container for a protein variant.
     """
-
     def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
             type="none", deleted=SeqList([Seq()]), inserted=SeqList([Seq()]),
             shift=0, term=0):
@@ -202,17 +217,3 @@ class ProteinVar(models.ProteinVar):
         return description
     #__str__
 #ProteinVar
-
-class Allele(list):
-    def __str__(self):
-        """
-        Convert a list of raw variants to an HGVS allele description.
-
-        :returns: The HGVS description of {allele}.
-        :rtype: str
-        """
-        if len(self) > 1:
-            return "[{}]".format(';'.join(map(lambda x: str(x), self)))
-        return str(self[0])
-    #__str__
-#Allele
