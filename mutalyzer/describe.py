@@ -218,15 +218,7 @@ class SeqList(list):
     #__str__
 #SeqList
 
-class HGVSVar(object):
-    # NOTE: This may be obsolete, but check the JSON generation.
-    def update(self):
-        self.hgvs = str(self)
-        self.hgvs_length = len(self)
-    #update
-#HGVSVar
-
-class DNAVar(models.DNAVar, HGVSVar):
+class DNAVar(models.DNAVar):
     """
     Container for a DNA variant.
     """
@@ -277,7 +269,6 @@ class DNAVar(models.DNAVar, HGVSVar):
         self.deleted = deleted
         self.inserted = inserted
         self.shift = shift
-        self.update()
     #__init__
 
     def __str__(self):
@@ -307,41 +298,9 @@ class DNAVar(models.DNAVar, HGVSVar):
 
         return description + "{}>{}".format(self.deleted, self.inserted)
     #__str__
-
-    def __len__(self):
-        """
-        Give the standardised length of the HGVS description of the raw variant
-        stored in this class.
-
-        Note that this function relies on the absence of values to make the
-        correct description. Also see the comment in the class definition.
-
-        :returns: The standardised length of the HGVS description of the raw
-            variant stored in this class.
-        :rtype: int
-        """
-        # NOTE: Obsolete?
-        if self.type in ("none", "unknown"): # `=' or `?'
-            return 1
-
-        description_length = 1 # Start position.
-
-        if self.start != self.end: # '_' and end position.
-            description_length += 2
-
-        if self.type != "subst":
-            description_length += len(self.type)
-
-            if self.type in ("ins", "delins"):
-                return description_length + len(self.inserted)
-            return description_length
-        #if
-
-        return 4 # Start position, '>' and end position.
-    #__len__
 #DNAVar
 
-class ProteinVar(models.ProteinVar, HGVSVar):
+class ProteinVar(models.ProteinVar):
     """
     Container for a raw variant.
     """
@@ -380,7 +339,6 @@ class ProteinVar(models.ProteinVar, HGVSVar):
         self.inserted = inserted
         self.shift = shift
         self.term = term
-        self.update()
     #__init__
 
     def __str__(self):
@@ -421,40 +379,6 @@ class ProteinVar(models.ProteinVar, HGVSVar):
             return description + "fs*{}".format(self.term)
         return description
     #__str__
-
-    def __len__(self):
-        """
-        Give the standardised length of the HGVS description of the raw variant
-        stored in this class.
-
-        Note that this function relies on the absence of values to make the
-        correct description. Also see the comment in the class definition.
-
-        :returns: The standardised length of the HGVS description of the raw
-            variant stored in this class.
-        :rtype: int
-        """
-        # NOTE: Obsolete?
-        if not self.start: # =
-            return 1
-
-        description_length = 1      # Start position.
-        if not self.deleted and self.type == "ext":
-            description_length += 1 # *
-        else:
-            description_length += 3 # One amino acid.
-        if self.end:
-            description_length += 5 # `_' + one amino acid + end position.
-        if self.type not in ["subst", "stop", "ext", "fs"]:
-            description_length += len(self.type)
-        if self.inserted:
-            description_length += 3 * len(self.inserted)
-        if self.type == "stop":
-            return description_length + 1 # *
-        if self.term:
-            return description_length + len(self.type) + 2 # `*' + until stop.
-        return description_length
-    #__len__
 #ProteinVar
 
 class Allele(list):
@@ -466,21 +390,9 @@ class Allele(list):
         :rtype: str
         """
         if len(self) > 1:
-            return "[{}]".format(';'.join(map(lambda x: x.hgvs, self)))
-        return self[0].hgvs
+            return "[{}]".format(';'.join(map(lambda x: str(x), self)))
+        return str(self[0])
     #__str__
-
-    def length(self):
-        """
-        Calculate the standardised length of an HGVS allele description.
-
-        :returns: The standardised length of the HGVS description of {allele}.
-        :rtype: int
-        """
-        # NOTE: Do we need to count the ; and [] ?
-        # NOTE: Obsolete?
-        return sum(map(lambda x: x.hgvs_length, self))
-    #length
 #Allele
 
 
@@ -671,8 +583,6 @@ def describe_protein(s1, s2):
 
     if description:
         description[-1].term = term + 2
-        description[-1].update()
-    #if
 
     return description
 #describe_protein
