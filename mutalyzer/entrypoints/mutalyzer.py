@@ -111,9 +111,9 @@ def check_name(description):
         extracted = extracted_protein = '(skipped)'
 
         if extracted_allele:
-            extracted = describe.allele_description(extracted_allele)
+            extracted = extracted_allele
         if extracted_protein_allele:
-            extracted_protein = describe.allele_description(extracted_protein_allele)
+            extracted_protein = extracted_protein_allele
 
         print "\nExperimental services:"
         print extracted

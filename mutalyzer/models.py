@@ -130,6 +130,56 @@ class RawVar(ComplexModel):
 #RawVar
 
 
+class _RawVar(ComplexModel):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    start = Mandatory.Integer
+    end = Mandatory.Integer
+    sample_start = Mandatory.Integer
+    sample_end = Mandatory.Integer
+    type = Mandatory.Unicode
+    deleted = Mandatory.Unicode
+    inserted = Mandatory.Unicode
+    shift = Mandatory.Integer
+    hgvs = Mandatory.Unicode
+    hgvs_length = Mandatory.Integer
+#_RawVar
+
+
+class DNAVar(_RawVar):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    start_offset = Mandatory.Integer
+    end_offset = Mandatory.Integer
+    sample_start_offset = Mandatory.Integer
+    sample_end_offset = Mandatory.Integer
+#DNAVar
+
+
+class RNAVar(DNAVar):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = SOAP_NAMESPACE
+#RNAVar
+
+
+class ProteinVar(_RawVar):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    term = Mandatory.Integer
+#ProteinVar
+
+
 class Allele(ComplexModel):
     """
     Used in MutalyzerOutput data type.

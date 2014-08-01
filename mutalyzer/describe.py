@@ -9,6 +9,7 @@ leading from one sequence to an other.
 from __future__ import unicode_literals
 
 import collections
+
 from Bio.SeqUtils import seq3
 from Bio.Data import CodonTable
 
@@ -17,6 +18,18 @@ from mutalyzer.util import palinsnoop, roll, reverse_complement
 from mutalyzer import models
 
 from extractor import extractor
+
+
+def printpos(s, start, end, fill=0):
+    """
+    For debugging purposes.
+    """
+    # TODO: See if this can partially replace or be merged with the
+    #       visualisation in the __mutate() function of mutator.py
+    fs = 10 # Flank size.
+
+    return "{} {}{} {}".format(s[start - fs:start], s[start:end], '-' * fill,
+        s[end:end + fs])
 
 
 def make_fs_tables(table_id):
@@ -172,12 +185,10 @@ class Seq(object):
     """
     Container for an inserted sequence.
     """
-    #def __init__(self, sequence="", reference="", start=0, end=0,
     def __init__(self, sequence="", start=0, end=0, reverse=False):
         """
         """
         self.sequence = sequence
-        #self.reference = reference
         self.start = start
         self.end = end
         self.reverse = reverse
@@ -197,15 +208,6 @@ class Seq(object):
 
     def __nonzero__(self):
          return bool(self.sequence)
-
-    #def dump(self):
-    #    """
-    #    Debug function.
-    #    """
-    #    if self.sequence:
-    #        return self.sequence
-    #    return self.reference[self.start:self.end]
-    ##dump
 #Seq
 
 class SeqList(list):
@@ -216,21 +218,24 @@ class SeqList(list):
             return "[{}]".format(representation)
         return representation
     #__str__
-
-    #def __nonzero__(self):
-    #    return bool(len(self))
 #SeqList
 
-class RawVar(models.RawVar):
+class HGVSVar(object):
+    def update(self):
+        self.hgvs = str(self)
+        self.hgvs_length = len(self)
+    #update
+#HGVSVar
+
+class DNAVar(models.DNAVar, HGVSVar):
     """
-    Container for a raw variant.
+    Container for a DNA variant.
     """
 
-    def __init__(self, dna=True, start=0, start_offset=0, end=0, end_offset=0,
+    def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
             sample_end_offset=0, type="none", deleted=SeqList([Seq()]),
-            inserted=SeqList([Seq()]), shift=0, start_aa="", end_aa="",
-            term=0):
+            inserted=SeqList([Seq()]), shift=0):
         """
         Initialise the class with the appropriate values.
 
@@ -261,7 +266,6 @@ class RawVar(models.RawVar):
         """
         # TODO: Will this container be used for all variants, or only genomic?
         #       start_offset and end_offset may be never used.
-        self.dna = dna
         self.start = start
         self.start_offset = start_offset
         self.end = end
@@ -274,13 +278,10 @@ class RawVar(models.RawVar):
         self.deleted = deleted
         self.inserted = inserted
         self.shift = shift
-        self.start_aa = start_aa
-        self.end_aa = end_aa
-        self.term = term
         self.update()
     #__init__
 
-    def _dna_description(self):
+    def __str__(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
@@ -306,9 +307,83 @@ class RawVar(models.RawVar):
         #if
 
         return description + "{}>{}".format(self.deleted, self.inserted)
-    #_dna_description
+    #__str__
 
-    def _protein_description(self):
+    def __len__(self):
+        """
+        Give the standardised length of the HGVS description of the raw variant
+        stored in this class.
+
+        Note that this function relies on the absence of values to make the
+        correct description. Also see the comment in the class definition.
+
+        :returns: The standardised length of the HGVS description of the raw
+            variant stored in this class.
+        :rtype: int
+        """
+        if self.type in ("none", "unknown"): # `=' or `?'
+            return 1
+
+        description_length = 1 # Start position.
+
+        if self.start != self.end: # '_' and end position.
+            description_length += 2
+
+        if self.type != "subst":
+            description_length += len(self.type)
+
+            if self.type in ("ins", "delins"):
+                return description_length + len(self.inserted)
+            return description_length
+        #if
+
+        return 4 # Start position, '>' and end position.
+    #__len__
+#DNAVar
+
+class ProteinVar(models.ProteinVar, HGVSVar):
+    """
+    Container for a raw variant.
+    """
+
+    def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
+            type="none", deleted=SeqList([Seq()]), inserted=SeqList([Seq()]),
+            shift=0, term=0):
+        """
+        Initialise the class with the appropriate values.
+
+        :arg start: Start position.
+        :type start: int
+        :arg end: End position.
+        :type end: int
+        :arg sample_start: Start position.
+        :type sample_start: int
+        :arg sample_end: End position.
+        :type sample_end: int
+        :arg type: Variant type.
+        :type type: str
+        :arg deleted: Deleted part of the reference sequence.
+        :type deleted: str
+        :arg inserted: Inserted part.
+        :type inserted: object
+        :arg shift: Amount of freedom.
+        :type shift: int
+        :arg term:
+        :type term:
+        """
+        self.start = start
+        self.end = end
+        self.sample_start = sample_start
+        self.sample_end = sample_end
+        self.type = type
+        self.deleted = deleted
+        self.inserted = inserted
+        self.shift = shift
+        self.term = term
+        self.update()
+    #__init__
+
+    def __str__(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
@@ -345,40 +420,9 @@ class RawVar(models.RawVar):
         if self.term:
             return description + "fs*{}".format(self.term)
         return description
-    #_protein_description
+    #__str__
 
-    def _dna_description_length(self):
-        """
-        Give the standardised length of the HGVS description of the raw variant
-        stored in this class.
-
-        Note that this function relies on the absence of values to make the
-        correct description. Also see the comment in the class definition.
-
-        :returns: The standardised length of the HGVS description of the raw
-            variant stored in this class.
-        :rtype: int
-        """
-        if self.type in ("none", "unknown"): # `=' or `?'
-            return 1
-
-        description_length = 1 # Start position.
-
-        if self.start != self.end: # '_' and end position.
-            description_length += 2
-
-        if self.type != "subst":
-            description_length += len(self.type)
-
-            if self.type in ("ins", "delins"):
-                return description_length + len(self.inserted)
-            return description_length
-        #if
-
-        return 4 # Start position, '>' and end position.
-    #_dna_description_length
-
-    def _protein_description_length(self):
+    def __len__(self):
         """
         Give the standardised length of the HGVS description of the raw variant
         stored in this class.
@@ -409,85 +453,41 @@ class RawVar(models.RawVar):
         if self.term:
             return description_length + len(self.type) + 2 # `*' + until stop.
         return description_length
-    #_protein_description_length
+    #__len__
+#ProteinVar
 
-    def update(self):
+class Allele(list):
+    def __str__(self):
         """
-        """
-        self.hgvs = self.description()
-        self.hgvs_length = self.description_length()
-    #update
+        Convert a list of raw variants to an HGVS allele description.
 
-    def description(self):
+        :returns: The HGVS description of {allele}.
+        :rtype: str
         """
-        """
-        if self.dna:
-            return self._dna_description()
-        return self._protein_description()
-    #description
+        if len(self) > 1:
+            return "[{}]".format(';'.join(map(lambda x: x.hgvs, self)))
+        return self[0].hgvs
+    #__str__
 
-    def description_length(self):
+    def length(self):
         """
-        Give the standardised length of the HGVS description of the raw variant
-        stored in this class.
+        Calculate the standardised length of an HGVS allele description.
 
-        :returns: The standardised length of the HGVS description of the raw
-            variant stored in this class.
+        :returns: The standardised length of the HGVS description of {allele}.
         :rtype: int
         """
-        if self.dna:
-            return self._dna_description_length()
-        return self._protein_description_length()
-    #description_length
-#RawVar
+        # NOTE: Do we need to count the ; and [] ?
+        return sum(map(lambda x: x.hgvs_length, self))
+    #length
+#Allele
 
-def allele_description(allele):
-    """
-    Convert a list of raw variants to an HGVS allele description.
 
-    :arg allele: A list of raw variants representing an allele description.
-    :type allele: list(RawVar)
-
-    :returns: The HGVS description of {allele}.
-    :rtype: unicode
-    """
-    if len(allele) > 1:
-        return "[{}]".format(';'.join(map(lambda x: x.hgvs, allele)))
-    return allele[0].hgvs
-#allele_description
-
-def allele_description_length(allele):
-    """
-    Calculate the standardised length of an HGVS allele description.
-
-    :arg allele: A list of raw variants representing an allele description.
-    :type allele: list(RawVar)
-
-    :returns: The standardised length of the HGVS description of {allele}.
-    :rtype: int
-    """
-    # NOTE: Do we need to count the ; and [] ?
-    return sum(map(lambda x: x.hgvs_length, allele))
-#allele_description_length
-
-def printpos(s, start, end, fill=0):
-    """
-    For debugging purposes.
-    """
-    # TODO: See if this can partially replace or be merged with the
-    #       visualisation in the __mutate() function of mutator.py
-    fs = 10 # Flank size.
-
-    return "{} {}{} {}".format(s[start - fs:start], s[start:end], '-' * fill,
-        s[end:end + fs])
-#printpos
-
-def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
+def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar):
     """
     """
     # Unknown.
     if s1 == '?' or s2 == '?':
-        return [RawVar(dna=dna, type="unknown")]
+        return [container(type="unknown")]
 
     # Insertion / Duplication.
     if var.reference_start == var.reference_end:
@@ -500,17 +500,17 @@ def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
         var.sample_start += shift3
         var.sample_end += shift3
 
-        if (var.sample_start - ins_length >= 0 and
+        if not seq_list and (var.sample_start - ins_length >= 0 and
             s1[var.reference_start - ins_length:var.reference_start] ==
             s2[var.sample_start:var.sample_end]):
 
-            return RawVar(dna=dna, start=var.reference_start - ins_length + 1,
+            return container(start=var.reference_start - ins_length + 1,
                 end=var.reference_end, type="dup", shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
                 inserted=SeqList([Seq(sequence=s2[
                 var.sample_start:var.sample_end])]))
         #if
-        return RawVar(dna=dna, start=var.reference_start,
+        return container(start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
             SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
@@ -526,7 +526,7 @@ def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
         var.reference_start += shift3
         var.reference_end += shift3
 
-        return RawVar(dna=dna, start=var.reference_start + 1,
+        return container(start=var.reference_start + 1,
             end=var.reference_end, type="del", shift=shift,
             sample_start=var.sample_start, sample_end=var.sample_end + 1,
             deleted=SeqList([Seq(sequence=s1[
@@ -537,7 +537,7 @@ def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
     if (var.reference_start + 1 == var.reference_end and
         var.sample_start + 1 == var.sample_end):
 
-        return RawVar(dna=dna, start=var.reference_start + 1,
+        return container(start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
             sample_end=var.sample_end, type="subst",
             deleted=SeqList([Seq(sequence=s1[var.reference_start])]),
@@ -553,7 +553,7 @@ def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
             var.sample_end -= trim
         #if
 
-        return RawVar(dna=dna, start=var.reference_start + 1,
+        return container(start=var.reference_start + 1,
             end=var.reference_end, type="inv",
             sample_start=var.sample_start + 1, sample_end=var.sample_end,
             deleted=SeqList([Seq(sequence=s1[
@@ -563,7 +563,7 @@ def var_to_rawvar(s1, s2, var, seq_list=[], dna=True):
     #if
 
     # InDel.
-    return RawVar(dna=dna, start=var.reference_start + 1,
+    return container(start=var.reference_start + 1,
         end=var.reference_end, deleted=SeqList([Seq(sequence=s1[
                 var.reference_start:var.reference_end])]), inserted=seq_list or
         SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
@@ -583,7 +583,7 @@ def describe(s1, s2, dna=True):
     :returns: A list of RawVar objects, representing the allele.
     :rtype: list(RawVar)
     """
-    description = []
+    description = Allele()
 
     if not dna:
         fs1, fs2 = make_fs_tables(1)
@@ -611,7 +611,7 @@ def describe(s1, s2, dna=True):
         s2_part = s2
         for variant in extractor.extract(unicode(s1_part), len(s1_part),
             unicode(s2_part), len(s2_part), 1):
-            description.append(var_to_rawvar(s1, s2, variant, dna=dna))
+            description.append(var_to_rawvar(s1, s2, variant, container=ProteinVar))
 
         if description:
             description[-1].term = term + 2
@@ -623,8 +623,8 @@ def describe(s1, s2, dna=True):
 
         for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2),
                 0):
-            #print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end, variant.transposition_start, variant.transposition_end
-            #print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE 
+            print variant.type, variant.reference_start, variant.reference_end, variant.sample_start, variant.sample_end, variant.transposition_start, variant.transposition_end
+            print variant.type & extractor.TRANSPOSITION_OPEN, variant.type & extractor.TRANSPOSITION_CLOSE
 
             if variant.type & extractor.TRANSPOSITION_OPEN:
                 if not in_transposition:
@@ -646,14 +646,13 @@ def describe(s1, s2, dna=True):
                         sequence=s2[variant.sample_start:variant.sample_end]))
             #if
             elif not (variant.type & extractor.IDENTITY):
-                description.append(var_to_rawvar(s1, s2, variant, dna=dna))
+                description.append(var_to_rawvar(s1, s2, variant))
 
             if variant.type & extractor.TRANSPOSITION_CLOSE:
                 in_transposition -= 1
 
                 if not in_transposition:
-                    description.append(var_to_rawvar(s1, s2, variant, seq_list,
-                        dna=dna))
+                    description.append(var_to_rawvar(s1, s2, variant, seq_list))
                 #for i in seq_list:
                 #    print i.dump()
             #if
@@ -662,7 +661,7 @@ def describe(s1, s2, dna=True):
 
     # Nothing happened.
     if not description:
-        return [RawVar(dna=dna)]
+        return Allele(RawVar())
 
     return description
 #describe
