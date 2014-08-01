@@ -100,28 +100,28 @@ def check_name(description):
         reference_sequence = O.getIndexedOutput("original", 0)
         sample_sequence = O.getIndexedOutput("mutated", 0)
 
-        extracted_allele = describe.describe(reference_sequence,
+        described_allele = describe.describe_dna(reference_sequence,
             sample_sequence)
-        #extracted_protein_allele = describe.describe(
+        #described_protein_allele = describe.describe(
         #    O.getIndexedOutput("oldprotein", 0),
         #    O.getIndexedOutput("newprotein", 0, default=""),
         #    DNA=False)
-        extracted_protein_allele = ""
+        described_protein_allele = ""
 
-        extracted = extracted_protein = '(skipped)'
+        described = described_protein = '(skipped)'
 
-        if extracted_allele:
-            extracted = extracted_allele
-        if extracted_protein_allele:
-            extracted_protein = extracted_protein_allele
+        if described_allele:
+            described = described_allele
+        if described_protein_allele:
+            described_protein = described_protein_allele
 
         print "\nExperimental services:"
-        print extracted
-        print extracted_protein
+        print described
+        print described_protein
         #print "+++ %s" % O.getOutput("myTranscriptDescription")
         print json.dumps({"reference_sequence": reference_sequence,
             "sample_sequence": sample_sequence, "allele_description":
-            extracted_allele}, cls=MyEncoder)
+            described_allele}, cls=MyEncoder)
 
 
 def main():
