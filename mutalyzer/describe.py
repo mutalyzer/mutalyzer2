@@ -624,6 +624,8 @@ def describe_dna(s1, s2):
         #if
     #for
 
+    if not description:
+        return Allele([DNAVar()])
     return description
 #describe_dna
 

@@ -25,7 +25,7 @@ class TestDescribe(MutalyzerTest):
         """
         reference = "ACGTCGATTCGCTAGCTTCGGGGGATAGATAGAGATATAGAGAT"
 
-        result = describe.describe(reference, sample)
+        result = describe.describe_dna(reference, sample)
         assert result[0].type == expected[0]
         assert result[0].start == expected[1]
         assert result[0].end == expected[2]
@@ -39,41 +39,37 @@ class TestDescribe(MutalyzerTest):
         """
         Test 1.
         """
-        result = describe.describe(
+        result = describe.describe_dna(
             'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
             'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA')
-        description = describe.allele_description(result)
-        assert description == '[5_6insTT;17del;26A>C;35dup]'
+        assert unicode(result) == '[5_6insTT;17del;26A>C;35dup]'
 
     def test2(self):
         """
         Test 2.
         """
-        result = describe.describe(
+        result = describe.describe_dna(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTACTGTG',
             'TAAGCACCAGGAGTCCATGAAGAAGCTGGATCCTCCCATGGAATCCCCTACTCTACTGTG')
-        description = describe.allele_description(result)
-        assert description == '[26A>C;30C>A;35G>C]'
+        assert unicode(result) == '[26A>C;30C>A;35G>C]'
 
     def test3(self):
         """
         Test 3.
         """
-        result = describe.describe(
+        result = describe.describe_dna(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTA',
             'TAAGCACCAGGAGTCCATGAAGAAGCCATGTCCTGCCATGGAATCCCCTACTCTA')
-        description = describe.allele_description(result)
-        assert description == '[26_29inv;30C>G]'
+        assert unicode(result) == '[26_29inv;30C>G]'
 
     def test4(self):
         """
         Test 4.
         """
-        result = describe.describe(
+        result = describe.describe_dna(
             'TAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTA',
             'TAAGCACCAGGAGTCCATGAAGAAGCCATGTCCTGCCATGAATCCCCTACTCTA')
-        description = describe.allele_description(result)
-        assert description == '[26_29inv;30C>G;41del]'
+        assert unicode(result) == '[26_29inv;30C>G;41del]'
 
     def test5(self):
         """
