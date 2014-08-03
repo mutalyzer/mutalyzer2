@@ -17,10 +17,10 @@ class HGVSList(list):
 class Allele(HGVSList):
     pass
 
-class SeqList(HGVSList):
+class ISeqList(HGVSList):
     pass
 
-class Seq(object):
+class ISeq(object):
     """
     Container for an inserted sequence.
     """
@@ -55,7 +55,7 @@ class Seq(object):
 
     def __nonzero__(self):
          return bool(self.sequence)
-#Seq
+#ISeq
 
 class DNAVar(models.DNAVar):
     """
@@ -63,8 +63,8 @@ class DNAVar(models.DNAVar):
     """
     def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
-            sample_end_offset=0, type="none", deleted=SeqList([Seq()]),
-            inserted=SeqList([Seq()]), shift=0):
+            sample_end_offset=0, type="none", deleted=ISeqList([ISeq()]),
+            inserted=ISeqList([ISeq()]), shift=0):
         """
         Initialise the class with the appropriate values.
 
@@ -143,8 +143,8 @@ class ProteinVar(models.ProteinVar):
     Container for a protein variant.
     """
     def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
-            type="none", deleted=SeqList([Seq()]), inserted=SeqList([Seq()]),
-            shift=0, term=0):
+            type="none", deleted=ISeqList([ISeq()]),
+            inserted=ISeqList([ISeq()]), shift=0, term=0):
         """
         Initialise the class with the appropriate values.
 

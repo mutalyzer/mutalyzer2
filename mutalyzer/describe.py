@@ -14,7 +14,7 @@ from Bio.SeqUtils import seq3
 from Bio.Data import CodonTable
 
 from mutalyzer.util import palinsnoop, roll
-from mutalyzer.variant import Seq, SeqList, DNAVar, ProteinVar, Allele
+from mutalyzer.variant import ISeq, ISeqList, DNAVar, ProteinVar, Allele
 
 from extractor import extractor
 
@@ -206,13 +206,13 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar):
             return container(start=var.reference_start - ins_length + 1,
                 end=var.reference_end, type="dup", shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
-                inserted=SeqList([Seq(sequence=s2[
+                inserted=ISeqList([ISeq(sequence=s2[
                 var.sample_start:var.sample_end])]))
         #if
         return container(start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
-            SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
+            ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end])]),
             type="ins", shift=shift, sample_start=var.sample_start + 1,
             sample_end=var.sample_end)
     #if
@@ -228,7 +228,7 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar):
         return container(start=var.reference_start + 1,
             end=var.reference_end, type="del", shift=shift,
             sample_start=var.sample_start, sample_end=var.sample_end + 1,
-            deleted=SeqList([Seq(sequence=s1[
+            deleted=ISeqList([ISeq(sequence=s1[
                 var.reference_start:var.reference_end])]))
     #if
 
@@ -239,8 +239,8 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar):
         return container(start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
             sample_end=var.sample_end, type="subst",
-            deleted=SeqList([Seq(sequence=s1[var.reference_start])]),
-            inserted=SeqList([Seq(sequence=s2[var.sample_start])]))
+            deleted=ISeqList([ISeq(sequence=s1[var.reference_start])]),
+            inserted=ISeqList([ISeq(sequence=s2[var.sample_start])]))
     #if
 
     # Inversion.
@@ -255,17 +255,17 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar):
         return container(start=var.reference_start + 1,
             end=var.reference_end, type="inv",
             sample_start=var.sample_start + 1, sample_end=var.sample_end,
-            deleted=SeqList([Seq(sequence=s1[
+            deleted=ISeqList([ISeq(sequence=s1[
                 var.reference_start:var.reference_end])]),
-            inserted=SeqList([Seq(sequence=s2[
+            inserted=ISeqList([ISeq(sequence=s2[
                 var.sample_start:var.reference_end])]))
     #if
 
     # InDel.
     return container(start=var.reference_start + 1,
-        end=var.reference_end, deleted=SeqList([Seq(sequence=s1[
+        end=var.reference_end, deleted=ISeqList([ISeq(sequence=s1[
                 var.reference_start:var.reference_end])]), inserted=seq_list or
-        SeqList([Seq(sequence=s2[var.sample_start:var.sample_end])]),
+        ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end])]),
         type="delins", sample_start=var.sample_start + 1,
         sample_end=var.sample_end)
 #var_to_rawvar
@@ -295,19 +295,19 @@ def describe_dna(s1, s2):
 
         if variant.type & extractor.TRANSPOSITION_OPEN:
             if not in_transposition:
-                seq_list = SeqList()
+                seq_list = ISeqList()
             in_transposition += 1
         #if
 
         if in_transposition:
             if variant.type & extractor.IDENTITY:
-                seq_list.append(Seq(start=variant.transposition_start + 1,
+                seq_list.append(ISeq(start=variant.transposition_start + 1,
                     end=variant.transposition_end, reverse=False))
             elif variant.type & extractor.REVERSE_COMPLEMENT:
-                seq_list.append(Seq(start=variant.transposition_start + 1,
+                seq_list.append(ISeq(start=variant.transposition_start + 1,
                     end=variant.transposition_end, reverse=True))
             else:
-                seq_list.append(Seq(
+                seq_list.append(ISeq(
                     sequence=s2[variant.sample_start:variant.sample_end]))
         #if
         elif not (variant.type & extractor.IDENTITY):
