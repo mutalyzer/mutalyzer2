@@ -12,10 +12,10 @@ def main():
     ref = "ACGTCGATTCGCTAGCTTCGGGGGATAGATAGAGATATAGAGATATTTTT"
     alt = "ACGTCGGTTCGCTAGCTTCGGGGGATAGATAGATATATAGAGATATTTTT"
 
-    extracted_allele = describe.describe(ref, alt)
+    extracted_allele = describe.describe_dna(ref, alt)
 
     print extracted_allele
-    print describe.allele_description(extracted_allele)
+    #print describe.allele_description(extracted_allele)
     print json.dumps({"reference_sequence": ref, "sample_sequence": alt,
         "allele_description": extracted_allele}, cls=MyEncoder)
 #main
