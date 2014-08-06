@@ -25,9 +25,9 @@ def main():
 
     extracted_allele = describe.describe_dna(ref, alt)
 
-    print "Description Extractor Version " + describe.extractor.VERSION
-    #print "HGVS: " + describe.allele_description(extracted_allele)
-    print "JSON: " + json.dumps({"reference_sequence": ref, "sample_sequence": alt, "allele_description": extracted_allele}, cls=MyEncoder)
+    #print "Description Extractor Version " + describe.extractor.VERSION
+    print extracted_allele
+    #print "JSON: " + json.dumps({"reference_sequence": ref, "sample_sequence": alt, "allele_description": extracted_allele}, cls=MyEncoder)
 
 #main
 

@@ -303,14 +303,13 @@ def describe_dna(s1, s2):
     description = Allele()
     in_transposition = 0
 
-    variant_extract = extractor.extract(str(s1), len(s1), str(s2), len(s2), 0)
-    for variant in variant_extract.variants:
-        print (variant.type, variant.reference_start,
-            variant.reference_end, variant.sample_start,
-            variant.sample_end, variant.transposition_start,
-            variant.transposition_end)
-        print (variant.type & extractor.TRANSPOSITION_OPEN, variant.type &
-            extractor.TRANSPOSITION_CLOSE)
+    for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2), 0):
+       # print (variant.type, variant.reference_start,
+       #     variant.reference_end, variant.sample_start,
+       #     variant.sample_end, variant.transposition_start,
+       #     variant.transposition_end)
+       # print (variant.type & extractor.TRANSPOSITION_OPEN, variant.type &
+       #     extractor.TRANSPOSITION_CLOSE)
 
         if variant.type & extractor.TRANSPOSITION_OPEN:
             if not in_transposition:
