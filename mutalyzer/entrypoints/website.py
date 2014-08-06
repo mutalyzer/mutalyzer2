@@ -41,11 +41,15 @@ also serve the static files.
 
 import argparse
 
+from . import _ReverseProxied
+from ..config import settings
 from .. import website
 
 
 #: WSGI application instance.
 application = website.create_app()
+if settings.REVERSE_PROXIED:
+    application.wsgi_app = _ReverseProxied(application.wsgi_app)
 
 
 def debugserver(port):

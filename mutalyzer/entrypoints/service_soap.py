@@ -25,6 +25,7 @@ import sys
 from wsgiref.simple_server import make_server
 from spyne.server.wsgi import WsgiApplication
 
+from . import _ReverseProxied
 from ..config import settings
 from ..services import soap
 
@@ -37,6 +38,8 @@ logging.getLogger('spyne.protocol.xml').setLevel(log_level)
 
 #: WSGI application instance.
 application = WsgiApplication(soap.application)
+if settings.REVERSE_PROXIED:
+    application = _ReverseProxied(application)
 
 
 def debugserver(port):
