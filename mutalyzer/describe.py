@@ -200,11 +200,12 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         var.sample_start += shift3
         var.sample_end += shift3
 
-        # FIXME: seq_list may still be dup
-        if not seq_list and (var.sample_start - ins_length >= 0 and
+        if (var.sample_start - ins_length >= 0 and
             s1[var.reference_start - ins_length:var.reference_start] ==
             s2[var.sample_start:var.sample_end]):
 
+            # NOTE: We may want to omit the inserted / deleted sequence and
+            # use the ranges instead.
             return container(start=var.reference_start - ins_length + 1,
                 end=var.reference_end, type="dup", shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
@@ -321,8 +322,8 @@ def describe_dna(s1, s2):
                     weight_position=extracted.weight_position))
         #if
         elif not (variant.type & extractor.IDENTITY):
-            description.append(var_to_rawvar(s1, s2, variant),
-                weight_position=extracted.weight_position)
+            description.append(var_to_rawvar(s1, s2, variant,
+                weight_position=extracted.weight_position))
 
         if variant.type & extractor.TRANSPOSITION_CLOSE:
             in_transposition -= 1
