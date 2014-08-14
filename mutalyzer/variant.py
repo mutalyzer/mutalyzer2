@@ -1,8 +1,18 @@
 """
 """
 
-from extractor.extractor import WEIGHT_SEPARATOR
+from extractor import extractor
+
 from mutalyzer import models
+
+weights = {
+    "subst": extractor.WEIGHT_SUBSTITUTION,
+    "del": extractor.WEIGHT_DELETION,
+    "ins": extractor.WEIGHT_INSERTION,
+    "dup": extractor.WEIGHT_INSERTION,
+    "inv": extractor.WEIGHT_INVERSION,
+    "delins": extractor.WEIGHT_DELETION_INSERTION
+}
 
 class HGVSList(list):
     """
@@ -15,11 +25,12 @@ class HGVSList(list):
     #__str__
 
     def weight(self):
-        W = sum(map(lambda x: x.weight, self))
+        weight = sum(map(lambda x: x.weight(), self))
 
         if len(self) > 1:
-            return W + (len(self) + 1) * WEIGHT_SEPARATOR
-        return W
+            return weight + (len(self) + 1) * extractor.WEIGHT_SEPARATOR
+        return weight
+    #weight
 #HGVSList
 
 class Allele(HGVSList):
@@ -32,7 +43,8 @@ class ISeq(object):
     """
     Container for an inserted sequence.
     """
-    def __init__(self, sequence="", start=0, end=0, weight=0, reverse=False):
+    def __init__(self, sequence="", start=0, end=0, reverse=False,
+            weight_position=1):
         """
         :arg sequence: Literal inserted sequence.
         :type sequence: str
@@ -40,16 +52,14 @@ class ISeq(object):
         :type start: int
         :arg end: End position for a transposed sequence.
         :type end: int
-        :arg weight: Weight of the variant (normalised length).
-        :type weight: int
         :arg reverse: Inverted transposed sequence.
         :type reverse: bool
         """
         self.sequence = sequence
         self.start = start
         self.end = end
-        self.weight = weight
         self.reverse = reverse
+        self.weight_position = weight_position
 
         self.type = "trans"
         if self.sequence:
@@ -57,7 +67,7 @@ class ISeq(object):
     #__init__
 
     def __str__(self):
-        if self.sequence:
+        if self.type == "ins":
             return self.sequence
 
         inverted = "inv" if self.reverse else ""
@@ -66,6 +76,15 @@ class ISeq(object):
 
     def __nonzero__(self):
          return bool(self.sequence)
+
+    def weight(self):
+        if self.type == "ins":
+            return len(self.sequence) * extractor.WEIGHT_BASE
+
+        inverse_weight = weights["inv"] if self.reverse else 0
+        return (self.weight_position * 2 + extractor.WEIGHT_SEPARATOR +
+            inverse_weight)
+    #weight
 #ISeq
 
 class DNAVar(models.DNAVar):
@@ -75,7 +94,7 @@ class DNAVar(models.DNAVar):
     def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
             sample_end_offset=0, type="none", deleted=ISeqList([ISeq()]),
-            inserted=ISeqList([ISeq()]), weight=0, shift=0):
+            inserted=ISeqList([ISeq()]), shift=0, weight_position=1):
         """
         Initialise the class with the appropriate values.
 
@@ -101,8 +120,6 @@ class DNAVar(models.DNAVar):
         :type deleted: str
         :arg inserted: Inserted part.
         :type inserted: object
-        :arg weight: Weight of the variant (normalised length).
-        :type weight: int
         :arg shift: Amount of freedom.
         :type shift: int
         """
@@ -119,7 +136,7 @@ class DNAVar(models.DNAVar):
         self.type = type
         self.deleted = deleted
         self.inserted = inserted
-        self.weight = weight
+        self.weight_position = weight_position
         self.shift = shift
     #__init__
 
@@ -150,6 +167,19 @@ class DNAVar(models.DNAVar):
 
         return description + "{}>{}".format(self.deleted, self.inserted)
     #__str__
+
+    def weight(self):
+        if self.type == "unknown":
+            return -1
+        if self.type == "none":
+            return 0
+
+        weight = self.weight_position
+        if self.start != self.end:
+            weight += self.weight_position + extractor.WEIGHT_SEPARATOR
+
+        return weight + weights[self.type] + self.inserted.weight()
+    #weight
 #DNAVar
 
 class ProteinVar(models.ProteinVar):
@@ -158,7 +188,7 @@ class ProteinVar(models.ProteinVar):
     """
     def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
             type="none", deleted=ISeqList([ISeq()]),
-            inserted=ISeqList([ISeq()]), weight=0, shift=0, term=0):
+            inserted=ISeqList([ISeq()]), shift=0, term=0):
         """
         Initialise the class with the appropriate values.
 
@@ -176,8 +206,6 @@ class ProteinVar(models.ProteinVar):
         :type deleted: str
         :arg inserted: Inserted part.
         :type inserted: object
-        :arg weight: Weight of the variant (normalised length).
-        :type weight: int
         :arg shift: Amount of freedom.
         :type shift: int
         :arg term:
@@ -190,7 +218,6 @@ class ProteinVar(models.ProteinVar):
         self.type = type
         self.deleted = deleted
         self.inserted = inserted
-        self.weight = weight
         self.shift = shift
         self.term = term
     #__init__

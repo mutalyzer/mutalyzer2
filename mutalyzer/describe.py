@@ -181,28 +181,17 @@ def find_fs(peptide, alternative_peptide, fs):
 #find_fs
 
 
-def var_to_rawvar(s1, s2, var, weight_position, seq_list=[], container=DNAVar):
+def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
+        weight_position=1):
     """
     """
     # Unknown.
     if s1 == '?' or s2 == '?':
-        return [container(type="unknown")]
-
-
-    ins_length = var.sample_end - var.sample_start
-    weight = 0
-
-    if seq_list:
-        inserted = seq_list
-        weight = seq_list.weight()
-    else:
-        inserted = ISeqList([ISeq(
-            sequence=s2[var.sample_start:var.sample_end],
-            weight=ins_length)])
-
+        return [container(type="unknown", weight_position=weight_position)]
 
     # Insertion / Duplication.
     if var.reference_start == var.reference_end:
+        ins_length = var.sample_end - var.sample_start
         shift5, shift3 = roll(s2, var.sample_start + 1, var.sample_end)
         shift = shift5 + shift3
 
@@ -211,7 +200,7 @@ def var_to_rawvar(s1, s2, var, weight_position, seq_list=[], container=DNAVar):
         var.sample_start += shift3
         var.sample_end += shift3
 
-        # FIXME: range can be a duplication.
+        # FIXME: seq_list may still be dup
         if not seq_list and (var.sample_start - ins_length >= 0 and
             s1[var.reference_start - ins_length:var.reference_start] ==
             s2[var.sample_start:var.sample_end]):
@@ -220,16 +209,15 @@ def var_to_rawvar(s1, s2, var, weight_position, seq_list=[], container=DNAVar):
                 end=var.reference_end, type="dup", shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
                 inserted=ISeqList([ISeq(sequence=s2[
-                var.sample_start:var.sample_end])]), weight=var.weight)
+                var.sample_start:var.sample_end])]),
+                weight_position=weight_position)
         #if
-
-        weight += (2 * weight_position + extractor.WEIGHT_SEPARATOR +
-            extractor.WEIGHT_INSERTION)
-
         return container(start=var.reference_start,
-            end=var.reference_start + 1, inserted=inserted, type="ins",
-            shift=shift, sample_start=var.sample_start + 1,
-            sample_end=var.sample_end, weight=weight)
+            end=var.reference_start + 1,
+            inserted=seq_list or
+            ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end])]),
+            type="ins", shift=shift, sample_start=var.sample_start + 1,
+            sample_end=var.sample_end, weight_position=weight_position)
     #if
 
     # Deletion.
@@ -243,8 +231,9 @@ def var_to_rawvar(s1, s2, var, weight_position, seq_list=[], container=DNAVar):
         return container(start=var.reference_start + 1,
             end=var.reference_end, type="del", shift=shift,
             sample_start=var.sample_start, sample_end=var.sample_end + 1,
-            weight=var.weight, deleted=ISeqList([ISeq(sequence=s1[
-                var.reference_start:var.reference_end])]))
+            deleted=ISeqList([ISeq(sequence=s1[
+                var.reference_start:var.reference_end])]),
+            weight_position=weight_position)
     #if
 
     # Substitution.
@@ -253,9 +242,10 @@ def var_to_rawvar(s1, s2, var, weight_position, seq_list=[], container=DNAVar):
 
         return container(start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
-            sample_end=var.sample_end, type="subst", weight=var.weight,
+            sample_end=var.sample_end, type="subst",
             deleted=ISeqList([ISeq(sequence=s1[var.reference_start])]),
-            inserted=ISeqList([ISeq(sequence=s2[var.sample_start])]))
+            inserted=ISeqList([ISeq(sequence=s2[var.sample_start])]),
+            weight_position=weight_position)
     #if
 
     # Inversion.
@@ -273,19 +263,17 @@ def var_to_rawvar(s1, s2, var, weight_position, seq_list=[], container=DNAVar):
             deleted=ISeqList([ISeq(sequence=s1[
                 var.reference_start:var.reference_end])]),
             inserted=ISeqList([ISeq(sequence=s2[
-                var.sample_start:var.reference_end])]), weight=var.weight)
+                var.sample_start:var.reference_end])]),
+            weight_position=weight_position)
     #if
 
     # InDel.
-    weight += weight_position + extractor.WEIGHT_DELETION_INSERTION
-    if var.reference_start + 1 == var.reference_end:
-        weight += weight_position + extractor.WEIGHT_SEPARATOR
-
     return container(start=var.reference_start + 1,
         end=var.reference_end, deleted=ISeqList([ISeq(sequence=s1[
-            var.reference_start:var.reference_end])]), inserted=seq_list,
+                var.reference_start:var.reference_end])]), inserted=seq_list or
+        ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end])]),
         type="delins", sample_start=var.sample_start + 1,
-        sample_end=var.sample_end, weight=var.weight)
+        sample_end=var.sample_end, weight_position=weight_position)
 #var_to_rawvar
 
 def describe_dna(s1, s2):
@@ -303,7 +291,8 @@ def describe_dna(s1, s2):
     description = Allele()
     in_transposition = 0
 
-    for variant in extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2), 0):
+    extracted = extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2), 0)
+    for variant in extracted.variants:
        # print (variant.type, variant.reference_start,
        #     variant.reference_end, variant.sample_start,
        #     variant.sample_end, variant.transposition_start,
@@ -320,27 +309,27 @@ def describe_dna(s1, s2):
         if in_transposition:
             if variant.type & extractor.IDENTITY:
                 seq_list.append(ISeq(start=variant.transposition_start + 1,
-                    end=variant.transposition_end, weight=variant.weight,
-                    reverse=False))
+                    end=variant.transposition_end, reverse=False,
+                    weight_position=extracted.weight_position))
             elif variant.type & extractor.REVERSE_COMPLEMENT:
                 seq_list.append(ISeq(start=variant.transposition_start + 1,
-                    end=variant.transposition_end, weight=variant.weight,
-                    reverse=True))
+                    end=variant.transposition_end, reverse=True,
+                    weight_position=extracted.weight_position))
             else:
                 seq_list.append(ISeq(
                     sequence=s2[variant.sample_start:variant.sample_end],
-                    weight=variant.weight))
+                    weight_position=extracted.weight_position))
         #if
         elif not (variant.type & extractor.IDENTITY):
-            description.append(var_to_rawvar(s1, s2, variant,
-                variant_extract.weight_position))
+            description.append(var_to_rawvar(s1, s2, variant),
+                weight_position=extracted.weight_position)
 
         if variant.type & extractor.TRANSPOSITION_CLOSE:
             in_transposition -= 1
 
             if not in_transposition:
-                description.append(var_to_rawvar(s1, s2, variant,
-                    variant_extract.weight_position, seq_list))
+                description.append(var_to_rawvar(s1, s2, variant, seq_list,
+                    weight_position=extracted.weight_position))
         #if
     #for
 
