@@ -1,6 +1,7 @@
 """
 """
 
+from extractor.extractor import WEIGHT_SEPARATOR
 from mutalyzer import models
 
 class HGVSList(list):
@@ -12,6 +13,13 @@ class HGVSList(list):
             return "[{}]".format(';'.join(map(str, self)))
         return str(self[0])
     #__str__
+
+    def weight(self):
+        W = sum(map(lambda x: x.weight, self))
+
+        if len(self) > 1:
+            return W + (len(self) + 1) * WEIGHT_SEPARATOR
+        return W
 #HGVSList
 
 class Allele(HGVSList):
@@ -24,7 +32,7 @@ class ISeq(object):
     """
     Container for an inserted sequence.
     """
-    def __init__(self, sequence="", start=0, end=0, reverse=False):
+    def __init__(self, sequence="", start=0, end=0, weight=0, reverse=False):
         """
         :arg sequence: Literal inserted sequence.
         :type sequence: str
@@ -32,12 +40,15 @@ class ISeq(object):
         :type start: int
         :arg end: End position for a transposed sequence.
         :type end: int
+        :arg weight: Weight of the variant (normalised length).
+        :type weight: int
         :arg reverse: Inverted transposed sequence.
         :type reverse: bool
         """
         self.sequence = sequence
         self.start = start
         self.end = end
+        self.weight = weight
         self.reverse = reverse
 
         self.type = "trans"
@@ -64,7 +75,7 @@ class DNAVar(models.DNAVar):
     def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
             sample_end_offset=0, type="none", deleted=ISeqList([ISeq()]),
-            inserted=ISeqList([ISeq()]), shift=0):
+            inserted=ISeqList([ISeq()]), weight=0, shift=0):
         """
         Initialise the class with the appropriate values.
 
@@ -90,6 +101,8 @@ class DNAVar(models.DNAVar):
         :type deleted: str
         :arg inserted: Inserted part.
         :type inserted: object
+        :arg weight: Weight of the variant (normalised length).
+        :type weight: int
         :arg shift: Amount of freedom.
         :type shift: int
         """
@@ -106,6 +119,7 @@ class DNAVar(models.DNAVar):
         self.type = type
         self.deleted = deleted
         self.inserted = inserted
+        self.weight = weight
         self.shift = shift
     #__init__
 
@@ -144,7 +158,7 @@ class ProteinVar(models.ProteinVar):
     """
     def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
             type="none", deleted=ISeqList([ISeq()]),
-            inserted=ISeqList([ISeq()]), shift=0, term=0):
+            inserted=ISeqList([ISeq()]), weight=0, shift=0, term=0):
         """
         Initialise the class with the appropriate values.
 
@@ -162,6 +176,8 @@ class ProteinVar(models.ProteinVar):
         :type deleted: str
         :arg inserted: Inserted part.
         :type inserted: object
+        :arg weight: Weight of the variant (normalised length).
+        :type weight: int
         :arg shift: Amount of freedom.
         :type shift: int
         :arg term:
@@ -174,6 +190,7 @@ class ProteinVar(models.ProteinVar):
         self.type = type
         self.deleted = deleted
         self.inserted = inserted
+        self.weight = weight
         self.shift = shift
         self.term = term
     #__init__
