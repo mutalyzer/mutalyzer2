@@ -210,13 +210,15 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
                 end=var.reference_end, type="dup", shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
                 inserted=ISeqList([ISeq(sequence=s2[
-                var.sample_start:var.sample_end])]),
+                var.sample_start:var.sample_end],
+                    weight_position=weight_position)]),
                 weight_position=weight_position)
         #if
         return container(start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
-            ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end])]),
+            ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end],
+                weight_position=weight_position)]),
             type="ins", shift=shift, sample_start=var.sample_start + 1,
             sample_end=var.sample_end, weight_position=weight_position)
     #if
@@ -233,7 +235,8 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
             end=var.reference_end, type="del", shift=shift,
             sample_start=var.sample_start, sample_end=var.sample_end + 1,
             deleted=ISeqList([ISeq(sequence=s1[
-                var.reference_start:var.reference_end])]),
+                var.reference_start:var.reference_end],
+                weight_position=weight_position)]),
             weight_position=weight_position)
     #if
 
@@ -244,8 +247,10 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         return container(start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
             sample_end=var.sample_end, type="subst",
-            deleted=ISeqList([ISeq(sequence=s1[var.reference_start])]),
-            inserted=ISeqList([ISeq(sequence=s2[var.sample_start])]),
+            deleted=ISeqList([ISeq(sequence=s1[var.reference_start],
+                weight_position=weight_position)]),
+            inserted=ISeqList([ISeq(sequence=s2[var.sample_start],
+                weight_position=weight_position)]),
             weight_position=weight_position)
     #if
 
@@ -262,17 +267,22 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
             end=var.reference_end, type="inv",
             sample_start=var.sample_start + 1, sample_end=var.sample_end,
             deleted=ISeqList([ISeq(sequence=s1[
-                var.reference_start:var.reference_end])]),
+                var.reference_start:var.reference_end],
+                weight_position=weight_position)]),
             inserted=ISeqList([ISeq(sequence=s2[
-                var.sample_start:var.reference_end])]),
+                var.sample_start:var.reference_end],
+                weight_position=weight_position)]),
             weight_position=weight_position)
     #if
 
     # InDel.
     return container(start=var.reference_start + 1,
         end=var.reference_end, deleted=ISeqList([ISeq(sequence=s1[
-                var.reference_start:var.reference_end])]), inserted=seq_list or
-        ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end])]),
+                var.reference_start:var.reference_end],
+                weight_position=weight_position)]),
+        inserted=seq_list or
+        ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end],
+            weight_position=weight_position)]),
         type="delins", sample_start=var.sample_start + 1,
         sample_end=var.sample_end, weight_position=weight_position)
 #var_to_rawvar
