@@ -5,6 +5,9 @@
 Running Mutalyzer
 =================
 
+Please make sure Mutalyzer can find its configuration file, as detailed in
+:ref:`config`.
+
 Mutalyzer comes with a number of different interfaces, of which the website is
 perhaps the main one. It can be started using a built-in test server that's
 useful for development and debugging purposes like this::

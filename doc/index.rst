@@ -16,6 +16,7 @@ Information for getting Mutalyzer running on a system.
 .. toctree::
    :maxdepth: 2
 
+   download
    install
    config
    run
