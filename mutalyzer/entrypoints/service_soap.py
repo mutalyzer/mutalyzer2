@@ -42,13 +42,13 @@ if settings.REVERSE_PROXIED:
     application = _ReverseProxied(application)
 
 
-def debugserver(port):
+def debugserver(host, port):
     """
     Run the webservice with the Python built-in HTTP server.
     """
-    sys.stderr.write('Listening on http://localhost:%d/\n' % port)
-    sys.stderr.write('WDSL file is at http://localhost:%d/?wsdl\n' % port)
-    make_server('localhost', port, application).serve_forever()
+    sys.stderr.write('Listening on http://%s:%d/\n' % (host, port))
+    sys.stderr.write('WDSL file is at http://%s:%d/?wsdl\n' % (host, port))
+    make_server(host, port, application).serve_forever()
 
 
 def main():
@@ -58,11 +58,15 @@ def main():
     parser = argparse.ArgumentParser(
         description='Mutalyzer SOAP webservice.')
     parser.add_argument(
-        '-p', '--port', metavar='NUMBER', dest='port', type=int,
-        default=8081, help='port to run the webservice on (default: 8081)')
+        '-H', '--host', metavar='HOSTNAME', dest='host', default='127.0.0.1',
+        help='hostname to listen on (default: 127.0.0.1; specify 0.0.0.0 to '
+        'listen on all hostnames)')
+    parser.add_argument(
+        '-p', '--port', metavar='PORT', dest='port', type=int,
+        default=8081, help='port to listen on (default: 8081)')
 
     args = parser.parse_args()
-    debugserver(args.port)
+    debugserver(args.host, args.port)
 
 
 if __name__ == '__main__':

@@ -52,11 +52,11 @@ if settings.REVERSE_PROXIED:
     application.wsgi_app = _ReverseProxied(application.wsgi_app)
 
 
-def debugserver(port):
+def debugserver(host, port):
     """
     Run the website with the Python built-in HTTP server.
     """
-    application.run(port=port, debug=True, use_reloader=False)
+    application.run(host=host, port=port, debug=True, use_reloader=False)
 
 
 def main():
@@ -66,11 +66,15 @@ def main():
     parser = argparse.ArgumentParser(
         description='Mutalyzer website.')
     parser.add_argument(
-        '-p', '--port', metavar='NUMBER', dest='port', type=int,
-        default=8089, help='port to run the website on (default: 8080)')
+        '-H', '--host', metavar='HOSTNAME', dest='host', default='127.0.0.1',
+        help='hostname to listen on (default: 127.0.0.1; specify 0.0.0.0 to '
+        'listen on all hostnames)')
+    parser.add_argument(
+        '-p', '--port', metavar='PORT', dest='port', type=int,
+        default=8089, help='port to listen on (default: 8080)')
 
     args = parser.parse_args()
-    debugserver(args.port)
+    debugserver(args.host, args.port)
 
 
 if __name__ == '__main__':
