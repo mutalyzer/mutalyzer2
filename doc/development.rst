@@ -24,10 +24,28 @@ In general, try to follow the `PEP 8`_ guidelines for Python code and `PEP
 257`_ for docstrings.
 
 
+Installation
+------------
+
+As a developer, you probably want to install the Mutalyzer package in
+development mode. This will allow you to edit files directly in the source
+directory without having to reinstall.
+
+Please refer to :ref:`install` for general installation instructions. For
+development mode installation, instead of using ``python setup.py install``,
+use::
+
+    python setup.py develop
+
+
 Unit tests
 ----------
 
-To run the unit tests with `pytest`_, just run ``py.test``.
+We use `pytest`_ for the unit tests. To run them, just type ``py.test`` from
+the Mutalyzer source directory.
+
+.. note:: The Mutalyzer package must be installed before running the unit
+          tests.
 
 
 Working with feature branches
