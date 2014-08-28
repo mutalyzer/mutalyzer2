@@ -58,7 +58,7 @@ def check_website(mutalyzer_url):
     """
     response = urllib2.urlopen(mutalyzer_url)
     html = response.read()
-    assert 'Welcome to the Mutalyzer web site' in html
+    assert 'Welcome to the Mutalyzer website' in html
 
 
 def check_soap(mutalyzer_url):
@@ -85,7 +85,7 @@ def check_batch(mutalyzer_url):
     data = '\n'.join(variants).encode('base64')
     result = service.submitBatchJob(data, 'NameChecker')
 
-    job_id = int(result)
+    job_id = result
 
     for _ in range(BATCH_MAX_POLL):
         try:
