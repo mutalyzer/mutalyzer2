@@ -19,6 +19,7 @@ import argparse
 import logging
 import sys
 import time
+import traceback
 import urllib2
 
 from suds import WebFault
@@ -40,6 +41,12 @@ def main(mutalyzer_url):
     checks = check_website, check_soap, check_batch
     try:
         [check(mutalyzer_url) for check in checks]
+    except AssertionError:
+        _, _, tb = sys.exc_info()
+        filename, line, function, text = traceback.extract_tb(tb)[-1]
+        sys.stderr.write('Failed: %s (line %d)\n' %
+                         (text, line))
+        sys.exit(1)
     except BaseException as e:
         sys.stderr.write(str(e) + '\n')
         sys.exit(1)
