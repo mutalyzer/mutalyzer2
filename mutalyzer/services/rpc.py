@@ -102,7 +102,7 @@ class MutalyzerService(ServiceBase):
                         'Only files up to %d megabytes are accepted.'
                         % (settings.MAX_FILE_SIZE // 1048576))
 
-        batch_file = StringIO(data)
+        batch_file = StringIO(''.join(data))
 
         job, columns = file_instance.parseBatchFile(batch_file)
         batch_file.close()
