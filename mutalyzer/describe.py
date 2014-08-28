@@ -271,7 +271,7 @@ def fitFS(peptide, altPeptide, FS):
     return True
 #fitFS
 
-class RawVar(models.RawVar):
+class DescribeRawVar(models.RawVar):
     """
     Container for a raw variant.
 
