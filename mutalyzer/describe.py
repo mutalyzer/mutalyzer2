@@ -281,6 +281,10 @@ class DescribeRawVar(models.RawVar):
 
     Example: if {end} is initialised for a substitution, a range will be
       retuned, resulting in a description like: 100_100A>T
+
+    Note: As a workaround for a classname conflict in Spyne, this class is
+    named `DescribeRawVar` instead of just `RawVar`. We might want to reconsider
+    this name at some point.
     """
 
     def __init__(self, DNA=True, start=0, start_offset=0, end=0, end_offset=0,
@@ -477,14 +481,14 @@ class DescribeRawVar(models.RawVar):
             return self.__DNADescriptionLength()
         return self.__proteinDescriptionLength()
     #descriptionLength
-#RawVar
+#DescribeRawVar
 
 def alleleDescription(allele):
     """
     Convert a list of raw variants to an HGVS allele description.
 
     @arg allele: A list of raw variants representing an allele description.
-    @type allele: list(RawVar)
+    @type allele: list(DescribeRawVar)
 
     @returns: The HGVS description of {allele}.
     @rval: str
@@ -499,7 +503,7 @@ def alleleDescriptionLength(allele):
     Calculate the standardised length of an HGVS allele description.
 
     @arg allele: A list of raw variants representing an allele description.
-    @type allele: list(RawVar)
+    @type allele: list(DescribeRawVar)
 
     @returns: The standardised length of the HGVS description of {allele}.
     @rval: int
@@ -538,8 +542,8 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     arg s2_end: End of the range on {s2}.
     type s2_end: int
 
-    @returns: A list of RawVar objects, representing the allele.
-    @rval: list(RawVar)
+    @returns: A list of DescribeRawVar objects, representing the allele.
+    @rval: list(DescribeRawVar)
     """
     # TODO: Instead of copying this function and adjusting it to make it work
     #       for proteins, consider disabling parts like the inversion.
@@ -547,7 +551,7 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
 
     # Nothing happened.
     if s1 == s2:
-        return [RawVar()]
+        return [DescribeRawVar()]
 
     # Insertion / Duplication.
     if s1_start == s1_end:
@@ -564,11 +568,11 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
             s1[s1_start - ins_length:s1_start] == s2[s2_start:s2_end]:
 
             if ins_length == 1:
-                return [RawVar(start=s1_start, type="dup", shift=shift)]
-            return [RawVar(start=s1_start - ins_length + 1, end=s1_end,
+                return [DescribeRawVar(start=s1_start, type="dup", shift=shift)]
+            return [DescribeRawVar(start=s1_start - ins_length + 1, end=s1_end,
                 type="dup", shift=shift)]
         #if
-        return [RawVar(start=s1_start, end=s1_start + 1,
+        return [DescribeRawVar(start=s1_start, end=s1_start + 1,
             inserted=s2[s2_start:s2_end], type="ins", shift=shift)]
     #if
 
@@ -581,18 +585,18 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
         s1_end += shift3
 
         if s1_start == s1_end:
-            return [RawVar(start=s1_start, type="del", shift=shift)]
-        return [RawVar(start=s1_start, end=s1_end, type="del", shift=shift)]
+            return [DescribeRawVar(start=s1_start, type="del", shift=shift)]
+        return [DescribeRawVar(start=s1_start, end=s1_end, type="del", shift=shift)]
     #if
 
     # Substitution.
     if s1_start + 1 == s1_end and s2_start + 1 == s2_end:
-        return [RawVar(start=s1_start + 1, deleted=s1[s1_start],
+        return [DescribeRawVar(start=s1_start + 1, deleted=s1[s1_start],
             inserted=s2[s2_start], type="subst")]
 
     # Simple InDel.
     if s1_start + 1 == s1_end:
-        return [RawVar(start=s1_start + 1, inserted=s2[s2_start:s2_end],
+        return [DescribeRawVar(start=s1_start + 1, inserted=s2[s2_start:s2_end],
             type="delins")]
 
     # TODO: Refactor the code after this point.
@@ -610,7 +614,7 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
         lcs_r_len = 0 # s1_end_r and s2_end_r should not be used after this.
 
     # Inversion or Compound variant.
-    default = [RawVar(start=s1_start + 1, end=s1_end,
+    default = [DescribeRawVar(start=s1_start + 1, end=s1_end,
         inserted=s2[s2_start:s2_end], type="delins")]
 
     if not (lcs_f_len or lcs_r_len) : # Optimisation, not really needed.
@@ -626,7 +630,7 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
 
         # Simple Inversion.
         if s2_end - s2_start == lcs_r_len and s1_end - s1_start == lcs_r_len:
-            return [RawVar(start=s1_start + 1, end=s1_end, type="inv")]
+            return [DescribeRawVar(start=s1_start + 1, end=s1_end, type="inv")]
 
         r1_len = s1_end_r - lcs_r_len
         r2_len = s1_end - s1_start - s1_end_r
@@ -651,7 +655,7 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
                 s1_end - r2_len + lcp, s1_end, s2_end - m1_len + lcp, s2_end)
         #if
 
-        partial = leftRv + [RawVar(start=s1_start + r1_len + 1,
+        partial = leftRv + [DescribeRawVar(start=s1_start + r1_len + 1,
             end=s1_end - r2_len, type="inv")] + rightRv
     #if
 
@@ -690,29 +694,29 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     arg s2_end: End of the range on {s2}.
     type s2_end: int
 
-    @returns: A list of RawVar objects, representing the allele.
-    @rval: list(RawVar)
+    @returns: A list of DescribeRawVar objects, representing the allele.
+    @rval: list(DescribeRawVar)
     """
     if s1 == '?' or s2 == '?':
-        return [RawVar(DNA=False, type="unknown")]
+        return [DescribeRawVar(DNA=False, type="unknown")]
 
     # One of the sequences is missing.
     if not (s1 and s2):
-        return [RawVar(DNA=False)]
+        return [DescribeRawVar(DNA=False)]
 
     # Nothing happened.
     if s1 == s2:
-        return [RawVar(DNA=False)]
+        return [DescribeRawVar(DNA=False)]
 
     # Substitution.
     if s1_start + 1 == s1_end and  s2_start + 1 == s2_end:
-        return [RawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
+        return [DescribeRawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
             inserted=s2[s2_start], type="subst")]
 
     # Insertion / Duplication / Extention.
     if s1_start == s1_end:
         if len(s1) == s1_start + 1:
-            return [RawVar(DNA=False, start=s1_start + 1,
+            return [DescribeRawVar(DNA=False, start=s1_start + 1,
                 inserted=s2[s2_start], term=abs(len(s1) - len(s2)),
                 type="ext")]
         ins_length = s2_end - s2_start
@@ -728,13 +732,13 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
             s1[s1_start - ins_length:s1_start] == s2[s2_start:s2_end]:
 
             if ins_length == 1:
-                return [RawVar(DNA=False, start=s1_start,
+                return [DescribeRawVar(DNA=False, start=s1_start,
                     startAA=s1[s1_start - 1], type="dup", shift=shift)]
-            return [RawVar(DNA=False, start=s1_start - ins_length + 1,
+            return [DescribeRawVar(DNA=False, start=s1_start - ins_length + 1,
                 startAA=s1[s1_start - ins_length], end=s1_end,
                 endAA=s1[s1_end - 1], type="dup", shift=shift)]
         #if
-        return [RawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
+        return [DescribeRawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
             end=s1_start + 1, endAA=s1[s1_end], inserted=s2[s2_start:s2_end],
             type="ins", shift=shift)]
     #if
@@ -742,7 +746,7 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     # Deletion / Inframe stop.
     if s2_start == s2_end:
         if len(s2) == s2_end + 1:
-            return [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
+            return [DescribeRawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
                 type="stop")]
         shift5, shift3 = roll(s1, s1_start + 1, s1_end)
         shift = shift5 + shift3
@@ -751,15 +755,15 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
         s1_end += shift3
 
         if s1_start == s1_end:
-            return [RawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
+            return [DescribeRawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
                  type="del", shift=shift)]
-        return [RawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
+        return [DescribeRawVar(DNA=False, start=s1_start, startAA=s1[s1_start - 1],
             end=s1_end, endAA=s1[s1_end - 1], type="del", shift=shift)]
     #if
 
     # Simple InDel.
     if s1_start + 1 == s1_end:
-        return [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
+        return [DescribeRawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
             inserted=s2[s2_start:s2_end], type="delins")]
 
     # Frameshift.
@@ -771,7 +775,7 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
             fitFS(s1[s1_start + 1:], s2[s2_start + 1:], FS2) or
             fitFS(s2[s2_start + 1:], s1[s1_start + 2:], FS1) or
             fitFS(s2[s2_start + 1:], s1[s1_start + 2:], FS2)):
-            return [RawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
+            return [DescribeRawVar(DNA=False, start=s1_start + 1, deleted=s1[s1_start],
                 inserted=s2[s2_start], term=len(s2) - s2_start, type="fs")]
     #if
 
@@ -780,7 +784,7 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
         (s2_start, s2_end))
 
     # InDel.
-    default = [RawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
+    default = [DescribeRawVar(DNA=False, start=s1_start + 1, startAA=s1[s1_start],
         end=s1_end, endAA=s1[s1_end], inserted=s2[s2_start:s2_end],
         type="delins")]
 
@@ -810,8 +814,8 @@ def describe(original, mutated, DNA=True):
     @arg mutated:
     @type mutated: str
 
-    @returns: A list of RawVar objects, representing the allele.
-    @rval: list(RawVar)
+    @returns: A list of DescribeRawVar objects, representing the allele.
+    @rval: list(DescribeRawVar)
     """
     s1 = str(original)
     s2 = str(mutated)
