@@ -12,6 +12,7 @@ import sys
 import time
 
 from .. import config
+from .. import db
 from .. import Scheduler
 
 
@@ -36,6 +37,8 @@ def process():
     while True:
         # Process batch jobs.
         scheduler.process()
+        db.session.remove()
+
         if scheduler.stopped():
             break
         # Wait a bit and process any possible new jobs.
