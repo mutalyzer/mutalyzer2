@@ -47,8 +47,6 @@ class Retriever(object) :
         configuration file to initialise the class private variables.
 
     Private methods:
-        - _foldersize(folder) ; Return the size of a folder.
-        - _cleancache()       ; Keep the cache at a maximum size.
         - _nametofile(name)   ; Convert a name to a filename.
         - _write(raw_data, filename, extract) ; Write a record to a file.
         - _calcHash(content)  ; Calculate the md5sum of 'content'.
@@ -80,54 +78,6 @@ class Retriever(object) :
         Entrez.email = settings.EMAIL
         self.fileType = None
     #__init__
-
-    def _foldersize(self, folder) :
-        """
-        Return the size of a folder in bytes.
-
-        @arg folder: Name of a directory
-        @type folder: string
-
-        @return: The size of the directory
-        @rtype: integer
-        """
-
-        folder_size = 0
-        for (path, dirs, files) in os.walk(folder) :
-            for fileName in files :
-                folder_size += os.path.getsize(os.path.join(path, fileName))
-
-        return folder_size
-    #_foldersize
-
-    def _cleancache(self) :
-        """
-        Keep removing files until the size of the cache is less than the
-        maximum size.
-        First, the cache checked for its size, if it exceeds the maximum
-        size the ``oldest'' files are deleted. Note that accessing a file
-        makes it ``new''.
-        """
-        if self._foldersize(settings.CACHE_DIR) < settings.MAX_CACHE_SIZE:
-            return
-
-        # Build a list of files sorted by access time.
-        cachelist = []
-        for (path, dirs, files) in os.walk(settings.CACHE_DIR) :
-            for filename in files :
-                filepath = os.path.join(path, filename)
-                cachelist.append(
-                    (os.stat(filepath).st_atime, filepath))
-        cachelist.sort()
-
-        # Now start removing pairs of files until the size of the folder is
-        # small enough (or until the list is exhausted).
-        for i in range(0, len(cachelist)) :
-            os.remove(cachelist[i][1])
-            if self._foldersize(settings.CACHE_DIR) < settings.MAX_CACHE_SIZE:
-                break;
-        #for
-    #_cleancache
 
     def _nametofile(self, name) :
         """
@@ -161,9 +111,6 @@ class Retriever(object) :
         out_handle = open(self._nametofile(filename), "w")
         out_handle.write(data)
         out_handle.close()
-
-        # Since we put something in the cache, check if it needs cleaning.
-        self._cleancache()
 
         return out_handle.name      # return the full path to the file
     #_write

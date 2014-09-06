@@ -19,9 +19,6 @@ EMAIL = 'mutalyzer@humgen.nl'
 # reference files from NCBI or user) and batch job results.
 CACHE_DIR = '/tmp'
 
-# Maximum size of the cache directory (in bytes).
-MAX_CACHE_SIZE = 50 * 1048576 # 50 MB
-
 # Maximum size for uploaded and downloaded files (in bytes).
 MAX_FILE_SIZE = 10 * 1048576 # 10 MB
 
