@@ -44,7 +44,7 @@ Additional notes
    :maxdepth: 2
 
    development
-   todo
+   issues
    new-organism
    changelog
    copyright
