@@ -497,8 +497,8 @@ class GenBankRetriever(Retriever):
             if md5sum != currentmd5sum :
                 self._output.addMessage(__file__, -1, "WHASH",
                     "Warning: Hash of %s changed from %s to %s." % (
-                    UD, currentmd5sum, md5sum))
-                Reference.query.filter_by(accession=UD).update({'checksum': md5sum})
+                    reference.accession, currentmd5sum, md5sum))
+                Reference.query.filter_by(accession=reference.accession).update({'checksum': md5sum})
                 session.commit()
             #if
         else : # We haven't seen it before, so give it a name.
