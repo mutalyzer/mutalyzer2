@@ -648,3 +648,22 @@ facilisi."""
             # - EMAXSIZE: Raised by Mutalyzer, depending on the
             #     batchInputMaxSize configuration setting.
             assert e.faultcode in ('senv:Client.RequestTooLong', 'EMAXSIZE')
+
+    @fix(database)
+    def test_upload_local_genbank(self):
+        """
+        Upload local genbank file.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'AB026906.1.gb.bz2')
+        with bz2.BZ2File(path) as f:
+            data = f.read()
+
+        result = self._call('upLoadGenBankLocalFile', data)
+        ud = str(result)
+
+        r = self._call('runMutalyzer', ud + '(SDHD):g.7872G>T')
+        assert r.errors == 0
+        assert r.genomicDescription == ud + ':g.7872G>T'
+        assert ud + '(SDHD_v001):c.274G>T' in r.transcriptDescriptions.string

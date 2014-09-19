@@ -1039,16 +1039,49 @@ class MutalyzerService(ServiceBase):
         return transcripts
     #getTranscriptsAndInfo
 
-    @srpc(Mandatory.String, _returns=Mandatory.String)
-    def upLoadGenBankLocalFile(content) :
+    @srpc(Mandatory.ByteArray, _returns=Mandatory.String)
+    def upLoadGenBankLocalFile(data):
         """
-        Not implemented yet.
+        Upload a genbank file.
+
+        @arg data: Genbank file.
+        @return: UD accession number for the uploaded genbank file.
         """
-        raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
+        output = Output(__file__)
+        retriever = Retriever.GenBankRetriever(output)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Received request uploadGenBankLocalFile()')
+
+        # Note that the max file size check below might be bogus, since Spyne
+        # first checks the total request size, which by default has a maximum
+        # of 2 megabytes.
+        # In that case, a senv:Client.RequestTooLong faultstring is returned.
+
+        # Todo: Set maximum request size by specifying the max_content_length
+        #     argument for spyne.server.wsgi.WsgiApplication in all webservice
+        #     instantiations.
+        if sum(len(s) for s in data) > settings.MAX_FILE_SIZE:
+            raise Fault('EMAXSIZE',
+                        'Only files up to %d megabytes are accepted.'
+                        % (settings.MAX_FILE_SIZE // 1048576))
+
+        ud = retriever.uploadrecord(''.join(data))
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing uploadGenBankLocalFile()')
+
+        # Todo: use SOAP Fault object here (see Trac issue #41).
+        if not ud:
+            error = 'The request could not be completed\n' \
+                    + '\n'.join(map(lambda m: str(m), output.getMessages()))
+            raise Exception(error)
+
+        return ud
     #upLoadGenBankLocalFile
 
     @srpc(Mandatory.String, _returns=Mandatory.String)
-    def upLoadGenBankRemoteFile(url) :
+    def uploadGenBankRemoteFile(url) :
         """
         Not implemented yet.
         """
