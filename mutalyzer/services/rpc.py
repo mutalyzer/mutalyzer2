@@ -29,6 +29,7 @@ from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
+from mutalyzer import announce
 from mutalyzer import stats
 from mutalyzer import variantchecker
 from mutalyzer.mapping import Converter
@@ -1160,6 +1161,9 @@ class MutalyzerService(ServiceBase):
                 version as a list of strings.
             - serverName: The name of the server that is being queried.
             - contactEmail: The email address to contact for more information.
+            - announcement: Announcement body text.
+            - announcementUrl: URL to go with the announcement for further
+                information.
         @rtype: object
         """
         output = Output(__file__)
@@ -1176,6 +1180,11 @@ class MutalyzerService(ServiceBase):
         result.nomenclatureVersionParts = mutalyzer.NOMENCLATURE_VERSION_INFO
         result.serverName = socket.gethostname()
         result.contactEmail = mutalyzer.__contact__
+
+        announcement = announce.get_announcement()
+        if announcement:
+            result.announcement = announcement['body']
+            result.announcementUrl = announcement['url']
 
         output.addMessage(__file__, -1, 'INFO', 'Finished processing info')
         return result

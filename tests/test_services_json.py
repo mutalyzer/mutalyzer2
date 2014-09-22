@@ -6,6 +6,7 @@ Tests for the JSON interface to Mutalyzer.
 import simplejson as json
 from spyne.server.null import NullServer
 import mutalyzer
+from mutalyzer import announce
 from mutalyzer.services.json import application
 
 from fixtures import database, hg19, hg19_transcript_mappings
@@ -78,3 +79,21 @@ class TestServicesJson(MutalyzerTest):
         r = self._call('info')
         assert type(r['versionParts']) == list
         assert r['version'] == mutalyzer.__version__
+
+    def test_info_announcement(self):
+        """
+        Running the info method should show us the current announcement
+        """
+        announce.set_announcement('Test announcement')
+        r = self._call('info')
+        assert type(r['announcement']) == str
+        assert r['announcement'] == 'Test announcement'
+
+        announce.set_announcement('New announcement')
+        r = self._call('info')
+        assert type(r['announcement']) == str
+        assert r['announcement'] == 'New announcement'
+
+        announce.unset_announcement()
+        r = self._call('info')
+        assert not r.get('announcement')

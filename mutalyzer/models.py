@@ -290,6 +290,8 @@ class InfoOutput(ComplexModel):
     nomenclatureVersionParts = Array(String)
     serverName = String
     contactEmail = String
+    announcement = String
+    announcementUrl = String
 #InfoOutput
 
 

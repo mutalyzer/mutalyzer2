@@ -21,7 +21,7 @@ from Bio import Entrez
 import lxml.html
 
 import mutalyzer
-from mutalyzer import Scheduler
+from mutalyzer import announce, Scheduler
 from mutalyzer.website import create_app
 
 from fixtures import cache, database, hg19, hg19_transcript_mappings
@@ -84,6 +84,25 @@ class TestWebsite(MutalyzerTest):
 
             r = self.app.get(href)
             assert r.status_code == 200
+
+    def test_announcement(self):
+        """
+        We should always see the current announcement.
+        """
+        announce.set_announcement('Test announcement')
+        r = self.app.get('/syntax-checker')
+        assert r.status == '200 OK'
+        assert 'Test announcement' in r.data
+
+        announce.set_announcement('New announcement')
+        r = self.app.get('/syntax-checker')
+        assert r.status == '200 OK'
+        assert 'New announcement' in r.data
+
+        announce.unset_announcement()
+        r = self.app.get('/syntax-checker')
+        assert r.status == '200 OK'
+        assert 'nnouncement' not in r.data
 
     def test_description_extractor(self):
         """
