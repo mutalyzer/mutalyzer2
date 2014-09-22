@@ -34,24 +34,26 @@ from mutalyzer.services import soap
 website = Blueprint('website', __name__)
 
 
-global_context = {
-    'mutalyzer_version'   : mutalyzer.__version__,
-    'nomenclature_version': mutalyzer.NOMENCLATURE_VERSION,
-    'release_date'        : mutalyzer.__date__,
-    'release'             : mutalyzer.__version_info__[-1] != 'dev',
-    'copyright_years'     : mutalyzer.COPYRIGHT_YEARS,
-    'contact_email'       : settings.EMAIL,
-    'soap_wsdl_url'       : settings.SOAP_WSDL_URL,
-    'json_root_url'       : settings.JSON_ROOT_URL,
-    'piwik'               : settings.PIWIK,
-    'piwik_base_url'      : settings.PIWIK_BASE_URL,
-    'piwik_site_id'       : settings.PIWIK_SITE_ID,
-    'announcement'        : announce.get_announcement()}
-
-
-@website.context_processor
-def add_globals():
-    return global_context
+def global_context():
+    """
+    Create a context of global template variables.
+    """
+    # Note that this cannot be a static module variable, since we want to call
+    # `announce.get_announcement()` on each request, not once during startup.
+    return {
+        'mutalyzer_version'   : mutalyzer.__version__,
+        'nomenclature_version': mutalyzer.NOMENCLATURE_VERSION,
+        'release_date'        : mutalyzer.__date__,
+        'release'             : mutalyzer.__version_info__[-1] != 'dev',
+        'copyright_years'     : mutalyzer.COPYRIGHT_YEARS,
+        'contact_email'       : settings.EMAIL,
+        'soap_wsdl_url'       : settings.SOAP_WSDL_URL,
+        'json_root_url'       : settings.JSON_ROOT_URL,
+        'piwik'               : settings.PIWIK,
+        'piwik_base_url'      : settings.PIWIK_BASE_URL,
+        'piwik_site_id'       : settings.PIWIK_SITE_ID,
+        'announcement'        : announce.get_announcement()
+    }
 
 
 def request_terms():
@@ -64,6 +66,11 @@ def request_terms():
     return terms
 
 
+@website.context_processor
+def add_globals():
+    return global_context()
+
+
 @website.errorhandler(404)
 def error_not_found(error):
     return render_template('not-found.html', terms=request_terms()), 404
@@ -72,7 +79,7 @@ def error_not_found(error):
 @website.app_errorhandler(404)
 def app_error_not_found(error):
     return render_template('not-found.html', terms=request_terms(),
-                           **global_context), 404
+                           **global_context()), 404
 
 
 @website.route('/')
