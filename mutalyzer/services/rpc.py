@@ -65,7 +65,7 @@ class MutalyzerService(ServiceBase):
               - EPARSE: The batch input could not be parsed.
               - EMAXSIZE: Input file exceeds maximum size.
 
-        @arg data: Input file.
+        @arg data: Input file (base64 encoded).
         @arg process: Optional type of the batch job, choose from: NameChecker
             (default), SyntaxChecker, PositionConverter, SnpConverter.
         @arg argument: Additional argument. Currently only used if batch_type
@@ -1041,11 +1041,11 @@ class MutalyzerService(ServiceBase):
     #getTranscriptsAndInfo
 
     @srpc(Mandatory.ByteArray, _returns=Mandatory.String)
-    def upLoadGenBankLocalFile(data):
+    def uploadGenBankLocalFile(data):
         """
         Upload a genbank file.
 
-        @arg data: Genbank file.
+        @arg data: Genbank file (base64 encoded).
         @return: UD accession number for the uploaded genbank file.
         """
         output = Output(__file__)
