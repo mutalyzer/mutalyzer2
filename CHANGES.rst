@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.0
 -------------
 
-Release date to be decided.
+Released on September 26th 2014.
 
 This release does not bring many new features, but comes with significant
 changes to the technical infrastructure. `Merge request #6
