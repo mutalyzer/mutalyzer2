@@ -27,6 +27,13 @@ Some highlights especially users of the webservices should be aware of:
 
 Other changes:
 
+- Upload a genbank file using the SOAP webservice (`uploadGenBankLocalFile`).
+- Do not cleanup the cache during request handling (`#18
+  <https://git.lumc.nl/mutalyzer/mutalyzer/issues/18>`_).
+- Add GRCh38 (hg38) assembly (`#20
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/20>`_).
+- Move from nose to `pytest <http://pytest.org/>`_ for unit tests (`#23
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/23>`_).
 - Fix running Mutalyzer in a `virtual environment
   <http://virtualenv.readthedocs.org/>`_ and have an up-to-date
   ``requirements.txt`` for `pip <http://pip.readthedocs.org/>`_ (`#4
@@ -88,15 +95,24 @@ The new response format is:
     }
 
 
+Version 2.0.beta-33
+-------------------
+
+Released on August 19th 2014.
+
+- Link to `Upcoming server update
+  <https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/News/2014-08-19-upcoming-server-update>`
+  announcement.
+
 
 Version 2.0.beta-32
 -------------------
 
 Released on June 26th 2014.
 
- * Link to `Visual interface for Variant Description Extractor
-   <https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/News/2014-06-26-visual-interface>`_
-   announcement.
+- Link to `Visual interface for Variant Description Extractor
+  <https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/News/2014-06-26-visual-interface>`_
+  announcement.
 
 
 Version 2.0.beta-31
