@@ -660,7 +660,7 @@ facilisi."""
         with bz2.BZ2File(path) as f:
             data = f.read()
 
-        result = self._call('upLoadGenBankLocalFile', data)
+        result = self._call('uploadGenBankLocalFile', data)
         ud = str(result)
 
         r = self._call('runMutalyzer', ud + '(SDHD):g.7872G>T')
