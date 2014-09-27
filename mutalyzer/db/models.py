@@ -102,8 +102,8 @@ class BatchJob(db.Base):
         self.added = datetime.now()
 
     def __repr__(self):
-        return '<BatchJob %r filename=%r email=%r>' \
-            % (self.job_type, self.filename, self.email)
+        return '<BatchJob %r result_id=%r email=%r>' \
+            % (self.job_type, self.result_id, self.email)
 
 
 class BatchQueueItem(db.Base):
