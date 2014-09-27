@@ -9,6 +9,9 @@ Version 2.0.1
 
 Release date to be decided.
 
+- Fix POST requests to the HTTP/RPC+JSON webservice. This was a regression
+  from version 2.0.beta-33. Thanks to Ken Doig for reporting the issue.
+
 
 Version 2.0.0
 -------------
