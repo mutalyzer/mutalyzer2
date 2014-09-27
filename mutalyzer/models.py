@@ -20,7 +20,7 @@ Additional attributes values for the spyne String model:
 """
 
 
-from spyne.model.primitive import String, Integer, Boolean, DateTime
+from spyne.model.primitive import String, Integer, Boolean, DateTime, Unicode
 from spyne.model.binary import ByteArray
 from spyne.model.complex import ComplexModel, Array
 
@@ -33,6 +33,7 @@ class Mandatory(object):
     the String model.
     """
     String = String(type_name='mandatory_string', min_occurs=1, nillable=False)
+    Unicode = Unicode(type_name='mandatory_unicode', min_occurs=1, nillable=False)
     Integer = Integer(type_name='mandatory_integer', min_occurs=1, nillable=False)
     Boolean = Boolean(type_name='mandatory_boolean', min_occurs=1, nillable=False)
     DateTime = DateTime(type_name='mandatory_date_time', min_occurs=1, nillable=False)
