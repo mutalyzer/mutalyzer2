@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.1
 -------------
 
-Release date to be decided.
+Released on September 27th 2014.
 
 - Fix POST requests to the HTTP/RPC+JSON webservice. This was a regression
   from version 2.0.beta-33. Thanks to Ken Doig for reporting the issue.
