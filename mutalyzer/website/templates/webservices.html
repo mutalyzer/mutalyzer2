@@ -41,26 +41,18 @@ the <span class="helper" title="Human Genome Variation Society standard variant 
 </ul>
 
 <p>
-Here is an example that could be used for
-<a href="{{ url_for('.downloads', filename='textmining.py') }}">text
- mining</a> on a <a href="{{ url_for('.downloads',
- filename='textmining_sample.txt') }}">sample</a> input file.
+Here is an example that could be used for <a href="{{ url_for('.downloads', filename='textmining.py') }}">text  mining</a> on a <a href="{{ url_for('.downloads',  filename='textmining_sample.txt') }}">sample</a> input file.
 </p>
 
 <h3>HTTP/RPC+JSON web service</h3>
 
 <p>
-The HTTP/RPC+JSON web service is experimental and currently undocumented.
-It can be called using HTTP GET requests on
-<code>{{ json_root_url }}/method?param=value</code>
-where <code>method</code> is the name of the method to be called and method
-parameters are expected as <code>param=value</code> query string
-parameters. Responses are JSON-encoded.
+The HTTP/RPC+JSON web service is experimental and currently undocumented. It can be called using HTTP GET requests on <code>{{ json_root_url }}/method?param=value</code> where <code>method</code> is the name of the method to be called and method parameters are expected as <code>param=value</code> query string parameters. Responses are JSON-encoded.
 </p>
 
 <p>
-Example: <a href="{{ json_root_url }}/checkSyntax?variant=AB026906.1:c.274del"><tt>checkSyntax?variant=AB026906.1:c.274del</tt></a>
-</p>
+Example: 
+<pre><a href="{{ json_root_url }}/checkSyntax?variant=AB026906.1:c.274del">checkSyntax?variant=AB026906.1:c.274del</pre></a>
 
 <p>
 For now, you can work from this example using the above mentioned

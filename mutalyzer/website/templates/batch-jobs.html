@@ -10,98 +10,101 @@
 
 {% block content %}
 
-<p>
-<a href="#" onclick="toggle_visibility('help');">Toggle File Format Help</a>
-</p>
+    <form action="{{ url_for('.batch_jobs_submit') }}" method="post" enctype="multipart/form-data">
+		<!-- BatchType -->
+		<div class="form-group">
+			<label>Batch job type</label>
+			<div class="radio">
+				<label><input onchange="return changeBatch(this);" type="radio" name="job_type" value="name-checker"{% if job_type == "name-checker" %} checked{% endif %} />Name Checker</label>
+			</div>
+			<div class="radio">
+				<label><input onchange="return changeBatch(this);" type="radio" name="job_type" value="syntax-checker"{% if job_type == "syntax-checker" %} checked{% endif %} />Syntax Checker</label>
+			</div>
+			<div class="radio">
+				<label><input onchange="return changeBatch(this);" type="radio" name="job_type" value="position-converter"{% if job_type == "position-converter" %} checked{% endif %} />Position Converter</label>
+			</div>
+			<div class="radio">
+				<label><input onchange="return changeBatch(this);" type="radio" name="job_type" value="snp-converter"{% if job_type == "snp-converter" %} checked{% endif %} />SNP Converter</label>
+			</div>
+
+			<div id="assembly_name_or_alias" style="display:none" class="form-group">
+				<label>Assembly</label>
+				<select name="assembly_name_or_alias" class="form-control">
+					{% for assembly in assemblies %}
+					<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
+					{% endfor %}
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label for="email">Email address</label>
+				<input name="email" type="email" class="form-control" placeholder="Email address" required value="{{ email }}">
+			</div>
+
+			<div class="form-group">
+				<label for="file">File</label>
+				<input type="file" name="file">
+			</div>
+		</div>
+
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary" value="Submit">
+			<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/BatchCheckers" target="new" class="btn btn-default pull-right">Help</a>
+			<a href="#" onclick="toggle_visibility('help');" class="btn btn-default pull-right">File format help <span class="caret"></span></a>
+
+		</div>
+	</form>
 
 <div id='help' style="display:none">
-  <p>The mutalyzer batch checker accepts the following file formats:
+	<h3>Help</h3>
+  <p>The mutalyzer batch checker accepts the following file formats:</p>
     <ul>
         <li>Tab delimited text file / CSV file</li>
         <li>Microsoft Excel file</li>
         <li>OpenOffice ODS file</li>
     </ul>
+    <p>
     The maximum file size is {{ max_file_size }} megabytes, and the maximum
     length per entry (variant description) is 200 characters.
     </p>
-  <h5>We accept two types of input files, you can download examples below</h5>
-  <h5>New Style <a href="{{ url_for('.downloads', filename='batchtestnew.txt') }}">Download Example File</a></h5>
-  <div style="padding-left:20px; width:400px">
-      <p>This file format has no header-row. Each row consists of one or
-        more tab delimited fields, where every field contains a single
-        variant description (or dbSNP rs number in case of the SNP Converter).
-        Note that all rows must have the same number of fields.</p>
-      <table>
-          <tr><td>AB026906.1:c.274G&gt;T</td></tr>
-          <tr><td>AL449423.14(CDKN2A_v002):c.5_400del</td></tr>
-      </table>
-  </div>
-  <h5>Old Style:
-      <a href="{{ url_for('.downloads', filename='batchtestold.txt') }}">Download Example File</a></h5>
-  <div style="padding-left:20px; width:400px">
+  We accept two types of input files, you can download examples below.
+
+	<h4>New Style</h4>
+	<p>This file format has no header-row. Each row consists of one or more tab delimited fields, where every field contains a single variant description (or dbSNP rs number in case of the SNP Converter). Note that all rows must have the same number of fields.</p>
+	  <table class="table">
+	      <tr><td>AB026906.1:c.274G&gt;T</td></tr>
+	      <tr><td>AL449423.14(CDKN2A_v002):c.5_400del</td></tr>
+	  </table>
+  	<a href="{{ url_for('.downloads', filename='batchtestnew.txt') }}">Download new style example file</a>
+
+
+  <h4>Old Style</h4>
       <p >This file format has a header-row, which consists of
       three tab delimited fields. In each following row the
       corressponding data is also tab delimited.</p>
-      <table>
-          <tr>
-              <td>AccNo</td><td>Genesymbol</td><td>Mutation</td>
-          </tr>
+      <table class="table">
+          <thead>
+              <th>AccNo</th>
+			  <th>Genesymbol</th>
+			  <th>Mutation</th>
+          </thead>
           <tr>
               <td>AB026906.1</td><td>SDHD</td><td>g.7872G>T</td>
           </tr>
       </table>
-  </div>
-  <h5>Output Format</h5>
-  <div style="padding-left:20px; width:400px">
-      <p>The output of a Mutalyzer Batch run is a tab delimited CSV file,
+
+	  <a href="{{ url_for('.downloads', filename='batchtestold.txt') }}">Download old style example file</a>
+
+
+  <h4>Output Format</h4>
+	<p>
+		The output of a Mutalyzer Batch run is a tab delimited CSV file,
         which has a header-row to clarify the results. We recommend opening
         the file in a spreadsheet program, such as OpenOffice Calc or
         Microsoft Excel.<BR />
-        Note that empty lines are removed from the batch input file.</p>
-  </div>
+        Note that empty lines are removed from the batch input file.
+	</p>
 </div>
-
-<table id="inputform">
-    <form action="{{ url_for('.batch_jobs_submit') }}" method="post" enctype="multipart/form-data">
-        <tr id="batchRow">
-            <td><b>BatchType</b></td>
-            <td>
-          <select id="job_type" name="job_type" onchange="return changeBatch(this)">
-              <option value="name-checker"{% if job_type == "name-checker" %} selected="selected"{% endif %}>Name Checker</option>
-              <option value="syntax-checker"{% if job_type == "syntax-checker" %} selected="selected"{% endif %}>Syntax Checker</option>
-              <option value="position-converter"{% if job_type == "position-converter" %} selected="selected"{% endif %}>Position Converter</option>
-              <option value="snp-converter"{% if job_type == "snp-converter" %} selected="selected"{% endif %}>SNP Converter</option>
-          </select>
-            </td>
-          </tr>
-        <tr>
-        <tr id="assembly_name_or_alias" style="display:none">
-            <td><b>Assembly</b></td>
-            <td>
-                <select name="assembly_name_or_alias">
-                    {% for assembly in assemblies %}
-<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
-                    {% endfor %}
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td><b>Email</b></td>
-            <td><input type="text" name="email" value="{{ email }}" style="width:200px"></td>
-        </tr>
-        <tr>
-            <td><b>File</b></td>
-            <td><input type="file" name="file" style="width:200px"></td>
-        </tr>
-        <tr>
-            <td colspan="2">
-              <input type="submit" value="Submit">
-              <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/BatchCheckers">Help</a>
-            </td>
-        </tr>
-    </form>
-</table>
-
 <script language="javascript">
 oldload = window.onload
 initpage = function() {
@@ -113,15 +116,16 @@ window.onload = initpage;
 </script>
 
 {% if errors %}
-  <p>
-  <b>Errors:</b>
-  </p>
-  <div class="messages">
+  <div class="alert alert-danger">
+  <h4>Batch not started</h4>
+  <p>The batch process was not started due to the following errors:</p>
+  <ul>
     {% for m in errors %}
-      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
-      }})">{{ m.description }}</p>
+      <li class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
+      }})">{{ m.description }}</li>
     {% endfor %}
-  </div>
+  </ul>
+	</div>
 {% endif %}
 
 {% if messages %}

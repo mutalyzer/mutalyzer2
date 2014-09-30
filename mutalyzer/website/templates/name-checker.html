@@ -1,271 +1,335 @@
-{% if not standalone %}{% extends "base.html" %}{% endif -%}
-<html>
-  <head>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
-    <title></title>
-  </head>
-  <body>
-    <div>
-      <center>
-        <h3>Name Checker</h3>
-      </center>
+{% if not standalone %}
+	{% extends "base.html" %}
+{% endif -%}
 
-{% set active_page = "name-checker" %}
-{% set page_title = "Name Checker" %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="http://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic"
+          rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" >
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!--[if lt IE 9]>
+      <script src="{{ url_for('static', filename='js/html5shiv.min.js')
+      }}"></script>
+      <script src="{{ url_for('static', filename='js/respond.min.js')
+      }}"></script>
+    <![endif]-->
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+
+    <title>Mutalyzer {{ mutalyzer_version }} &mdash; {{ page_title }}</title>
+  </head>
+
+<body>
+
+	<h1>Name Checker</h1>
+
+	{% set active_page = "name-checker" %}
+	{% set page_title = "Name Checker" %}
+
+    <div class="container-fluid" >
 
 {% block content %}
 
-<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
-  {% if not standalone %}
-    <div id="output">
-      <div>
-      Please insert the mutation name using the
-      <span class="helper"
-      title="Human Genome Variation Society standard variant nomenclature">
-        <a href="http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
-        &lt;accession number&gt;.&lt;version
-        number&gt;(&lt;gene symbol&gt;):&lt;sequence
-        type&gt;.&lt;variant description&gt;
-      </div><br>
-      Example: AB026906.1:c.274G&gt;T<br>
-      <br>
-      <form action="{{ url_for('.name_checker') }}" method="get">
-        <input type="text" name="description" value="{{ description }}" style="width:100%"><br>
-        <input type="submit" value="Submit">
-        <input type="button" value="Clear field" onclick="clearField(this.form, 'description');">
-        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameChecker">Help</a>
-      </form>
-    </div>
-  {% endif %}
+		{% if parse_error %}
+			<div class="alert alert-danger">
+				<h4>Parse error</h4>
+				<p>The &quot;^&quot; indicates the position where the error occurred:</p>
+			    <pre>{{ parse_error[0] }}<br>{{ parse_error[1] }}</pre>
+			</div><!--  alert alert-danger -->
+		{% endif %} <!-- if parse_error -->
 
-  {% if visualisation %}
-    <p>
-    <b>Overview of the raw variants:</b>
-    </p>
-    {% for i in visualisation %}
-      <p>Raw variant {{ loop.index }}: {{ i[0] }}</p>
-      <pre>{{ i[1] }}<br>{{ i[2] }}</pre>
-    {% endfor %}
-  {% endif %}
+        {% if messages %}
+            {% for m in messages %}
+                {% if m.class == "error" %}
+                    <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+                {% elif m.class == "warning" %}
+                    <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+                {% endif %}
+            {% endfor %}
+        {% endif %} <!-- messages -->
 
-  {% if browserLink %}
-    <p>
-    <a href="{{ browserLink }}">View original variant in UCSC Genome Browser</a>
-    </p>
-  {% endif %}
-</div>
-
-{% if description %}
-  <h3>Name checker results:</h3>
-
-  <div class="messages">
-    {% for m in messages %}
-      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
-      }})">{{ m.description }}</p>
-    {% endfor %}
-    <p>{{ summary }}</p>
-  </div>
-
-  {% if parse_error %}
-    <h4>Details of the parse error:</h4>
-    <pre>{{ parse_error[0] }}<br>{{ parse_error[1] }}</pre>
-    <p>
-    The &quot;^&quot; indicates the position where the error occurred.
-    </p>
-  {% endif %}
-
-  {% if genomicDescription %}
-    {% if genomicDNA %}
-      <p><b>Genomic description:</b></p>
-    {% else %}
-      <p><b>Description relative to transcription start:</b><br>
-      (Not for use in LSDBs in case of protein-coding transcripts).</p>
-    {% endif %}
-    <p>
-    <tt><a href="{{ url_for('.name_checker', description=genomicDescription) }}">{{ genomicDescription }}</a></tt>
-    </p>
-  {% endif %}
-
-  {% if chromDescription %}
-    <p>Alternative chromosomal position:</p>
-    <p>
-    <tt>{{ chromDescription }}</tt>
-    </p>
-  {% endif %}
-
-  {% if descriptions %}
-    <p><b>Affected transcripts:</b></p>
-    <p>
-    {% for i in descriptions %}
-      {% if i.endswith('?') %}
-        <tt>{{ i }}</tt>
-      {% else %}
-        <tt><a href="{{ url_for('.name_checker', description=i) }}">{{ i }}</a></tt>
-      {% endif %}
-      <br>
-    {% endfor %}
-    </p>
-  {% endif %}
-
-  {% if protDescriptions %}
-    <p>
-    <b>Affected proteins:</b>
-    </p>
-    <p>
-    {% for i in protDescriptions %}
-      <tt>{{ i }}</tt><br>
-    {% endfor %}
-    </p>
-  {% endif %}
-
-  {% if transcriptInfo %}
-    <p><b>Detailed information about the selected transcript:</b></p>
-    <div style = "background-color : aliceblue; padding : 20px; border: 1px solid grey">
-
-      {% if oldProtein %}
-        <p><b>Reference protein:</b></p>
-        <pre>
-        {%- for i in oldProtein -%}
-          {{- i|safe -}}<br>
-        {%- endfor -%}
-        </pre>
-
-        <p><b>Protein predicted from variant coding sequence:</b></p>
-
-        {% if newProtein %}
-          <pre>
-            {%- for i in newProtein -%}
-              {{- i|safe -}}<br>
-            {%- endfor -%}
-          </pre>
+        {% if summary == "0 Errors, 0 Warnings."%}
+            <p class="alert alert-success summary">{{ summary }}</p>
         {% else %}
-          <p>
-          No change: Predicted protein (not shown) equals reference
-          protein.
-          </p>
+            <p>{{summary}}</p>
+            <hr />
         {% endif %}
 
-        {% if altStart %}
-          <p><b>Alternative protein using start codon {{ altStart }}</b></p>
-          {% if altProtein %}
-            <pre>
-              {%- for i in altProtein -%}
-                {{- i|safe -}}<br>
-              {%- endfor -%}
-            </pre>
-          {% else %}
-            <p>No change: Predicted protein (not shown) equals reference protein.</p>
-          {% endif %}
+	    {% if not standalone %}
+            <p>
+                Please insert the mutation name using the <a href="http://www.hgvs.org/mutnomen" title="Human Genome Variation Society standard variant nomenclature" alt="Human Genome Variation Society standard variant nomenclature">HGVS</a> format: <br/>
+
+                <code>&lt;accession number&gt;.&lt;version number&gt;(&lt;gene symbol&gt;):&lt;sequence type&gt;.&lt;variant description&gt;</code>
+            </p>
+
+            <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code>	</p>
+
+            <form class="form" action="{{ url_for('.name_checker') }}" method="get">
+            <div class="form-group">
+                <label for="description">HGVS Description</label>
+                <input class="form-control form-pre example-target" type="text" name="description" id="hgvs" value="{{ description }}" placeholder="Mutation name using HGVS format">
+            </div>
+
+            <div class="form-group button-group">
+                <input type="submit" class="btn btn-primary" value="Check name">
+                <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameChecker" target="new" class="btn btn-default pull-right">Help</a>
+                <input type="reset" class="btn btn-default pull-right" value="Undo">
+            </div>
+            </form>
         {% endif %}
-      {% endif %}
 
-      <p><b>Exon information:</b></p>
-      <table class = "raTable">
-        <tr>
-          <td>Number</td>
-          <td>Start (g.)</td>
-          <td>Stop (g.)</td>
-          <td>Start {{ '(c.)' if transcriptCoding else '(n.)' }}</td>
-          <td>Stop {{ '(c.)' if transcriptCoding else '(n.)' }}</td>
-        </tr>
-        {% for i in exonInfo %}
-          <tr>
-            <td>{{ loop.index }}</td>
-            {% for j in i %}
-              <td>{{ j }}</td>
-            {% endfor %}
-          </tr>
-        {% endfor %}
-      </table>
-      {% if transcriptCoding %}
-        <p><b><span class = "helper" title = "Coding Sequence">CDS</span>
-        information:</b></p>
-        <table class = "raTable">
-          <tr>
-            <td></td>
-            <td>g.</td>
-            <td>c.</td>
-          </tr>
-          <tr>
-            <td>Start</td>
-            <td>{{ cdsStart_g }}</td>
-            <td>{{ cdsStart_c }}</td>
-          </tr>
-          <tr>
-            <td>Stop</td>
-            <td>{{ cdsStop_g }}</td>
-            <td>{{ cdsStop_c }}</td>
-          </tr>
-          <tr>
-          </tr>
-        </table>
-      {% endif %}
-    </div>
-  {% endif %}
+	<hr />
+	<div class="row">
+		<div class="col-md-8 name-checker-left-column">
+			{% if visualisation %}
+				<h3>Overview of the raw variants</h3>
+				{% for i in visualisation %}
+					<p>Raw variant {{ loop.index }}: {{ i[0] }}</p>
+					<pre>{{ i[1] }}<br>{{ i[2] }}</pre>
+				{% endfor %}
+			{% endif %} <!-- if visualisation -->
 
-  {% if restrictionSites %}
-    <p><b>Effects on Restriction sites:</b></p>
-    <table class = "laTable">
-      <tr>
-        <td>Raw variant</td>
-        <td>Created</td>
-        <td>Deleted</td>
-      </tr>
-      {% for i in restrictionSites %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>
-            {% for j in i[0] %}
-              {{ j }}{{ ',' if not loop.last }}
-            {% endfor %}
-          </td>
-          <td>
-            {% for j in i[1] %}
-              {{ j }}{{ ',' if not loop.last }}
-            {% endfor %}
-          </td>
-        </tr>
-      {% endfor %}
-    </table>
-  {% endif %}
+			{% if browserLink %}
+				<p>
+				<a href="{{ browserLink }}">View original variant in UCSC Genome Browser</a>
+				</p>
+			{% endif %} <!-- if browserLink -->
 
-  {% if legends %}
-    <p><b>Legend:</b></p>
-    <table class = "laTable">
-      <tr>
-        <td>Name</td>
-        <td>ID</td>
-        <td>Locus tag</td>
-        <td>Product</td>
-        <td>Link method</td>
-      </tr>
-      {% for i in legends %}
-        <tr>
-          {% for j in i %}
-            <td>{{ j if j else '' }}</td>
-          {% endfor %}
-        </tr>
-      {% endfor %}
-    </table>
-  {% endif %}
+			{% if not parse_error %}
+				{% if description %}
+					<h3>Name checker results</h3>
 
-  {% if reference_filename and not standalone %}
-    <p><b>Links:</b></p>
-    <p>
-    Download this reference sequence file:
-    <a href="{{ url_for('.reference', filename=reference_filename) }}">{{ reference_filename }}</a>
-    </p>
-  {% endif %}
+					{% if genomicDescription %}
+						{% if genomicDNA %}
+							<h4>Genomic description</h4>
+						{% else %} <!-- if genomicDNA -->
+							<h4>Description relative to transcription start</h4>
+							(Not for use in LSDBs in case of protein-coding transcripts).
+						{% endif %} <!-- if genomicDNA -->
+						<code><a href="{{ url_for('.name_checker', description=genomicDescription) }}">{{ genomicDescription }}</a></code>
+					{% endif %} <!-- if genomicDescription -->
 
-  {% if extractedDescription %}
-    <p><b>Experimental services:</b></p>
-    <p>Genomic description: <tt>{{ extractedDescription }}</tt></p>
-    <p>Protein description: <tt>{{ extractedProtein }}</tt></p>
-  {% endif %}
-{% endif %}
+					{% if chromDescription %}
+						<p>Alternative chromosomal position:</p>
+						<code>{{ chromDescription }}</code>
+					{% endif %} <!-- if chromDescription -->
 
+					{% if descriptions %}
+						<h4>Affected transcripts:</h4>
+						{% for i in descriptions %}
+							{% if i.endswith('?') %}
+								<code>{{ i }}</code>
+								{% else %}
+								<code><a href="{{ url_for('.name_checker', description=i) }}">{{ i }}</a></code>
+							{% endif %} <!-- if endswith -->
+						{% endfor %} <!-- for i in descriptions -->
+					{% endif %} <!-- if descriptions -->
+
+					{% if protDescriptions %}
+						<h4>Affected proteins:</h4>
+						<p>
+						{% for i in protDescriptions %}
+							<code>{{ i }}</code>
+						{% endfor %} <!-- for i in protDescriptions -->
+						</p>
+					{% endif %} <!-- if protDescriptions -->
+
+					{% if transcriptInfo %}
+						{% if oldProtein %}
+						<h4>Reference protein</h4>
+						<pre>
+						{%- for i in oldProtein -%}
+							{{-i |safe -}}<br>
+						{%- endfor -%}
+						</pre>
+
+						<h4>Protein codedicted from variant coding sequence</h4>
+						{% if newProtein %}
+							<pre>
+							{%- for i in newProtein -%}
+								{{- i|safe -}}<br>
+							{%- endfor -%} <!-- for i in newProtein -->
+							</pre>
+						{% else %} <!-- if newProtein -->
+							<p>
+							No change: codedicted protein (not shown) equals reference
+							protein.
+							</p>
+						{% endif %} <!-- if newProtein -->
+
+						{% if altStart %}
+							<h4>Alternative protein using start codon {{ altStart }}</h4>
+							{% if altProtein %}
+								<pre>
+								{%- for i in altProtein -%}
+									{{- i|safe -}}<br>
+								{%- endfor -%} <!-- for i in altProtein -->
+								</pre>
+							{% else %} <!-- if altProtein -->
+								<p>No change: codedicted protein (not shown) equals reference protein.</p>
+							{% endif %} <!-- if altProtein -->
+						{% endif %} <!-- if altStart -->
+					{% endif %} <!-- if transcriptInfo -->
+
+					{% if restrictionSites %}
+						<h4>Effects on Restriction sites</h4>
+						<div class="code">
+							<table class="table table3">
+								<thead>
+								<th>Raw variant</th>
+								<th>Created</th>
+								<th>Deleted</th>
+								</thead>
+								{% for i in restrictionSites %}
+									<tr>
+									<td>{{ loop.index }}</td>
+									<td>
+									{% for j in i[0] %}
+										{{ j }}{{ ',' if not loop.last }}
+									{% endfor %}
+									</td>
+									<td>
+									{% for j in i[1] %}
+										{{ j }}{{ ',' if not loop.last }}
+									{% endfor %}
+									</td>
+									</tr>
+								{% endfor %}
+							</table>
+						</div>
+					{% endif %} <!-- if restrictionSites -->
+
+					{% if extractedDescription %}
+						<h4>Experimental services</h4>
+						<p>Genomic description: <code>{{ extractedDescription }}</code></p>
+						<p>Protein description: <code>{{ extractedProtein }}</code></p>
+					{% endif %} <!-- if extractedDescription -->
+				{% endif %} <!-- description -->
+			{% endif %} <!-- parse_error -->
+		</div><!-- col-md-8 -->
+
+		<div class="col-md-4">
+			{% if description %}
+				<h4>Exon information</h4>
+				<div class="code">
+					<table class="table table2">
+						<thead>
+						<th>Number</th>
+						<th>Start (g.)</th>
+						<th>Stop (g.)</th>
+						<th>Start {{ '(c.)' if transcriptCoding else '(n.)' }}</th>
+						<th>Stop {{ '(c.)' if transcriptCoding else '(n.)' }}</th>
+						</thead>
+
+						{% for i in exonInfo %}
+							<tr>
+								<td>{{ loop.index }}</td>
+								{% for j in i %}
+									<td>{{ j }}</td>
+								{% endfor %}
+							</tr>
+						{% endfor %}
+					</table>
+				</div>
+
+				{% if transcriptCoding %}
+					<h4><span class = "helper" title = "Coding Sequence">CDS</span> information:</h4>
+					<div class="code">
+						<table class="table table3">
+						<thead>
+						<th></th>
+						<th>g.</th>
+						<th>c.</th>
+						</thead>
+						<tr>
+						<td>Start</td>
+						<td>{{ cdsStart_g }}</td>
+						<td>{{ cdsStart_c }}</td>
+						</tr>
+						<tr>
+						<td>Stop</td>
+						<td>{{ cdsStop_g }}</td>
+						<td>{{ cdsStop_c }}</td>
+						</tr>
+						<tr>
+						</tr>
+						</table>
+					</div>
+				{% endif %} <!-- if transcriptCoding -->
+				<!-- {% endif %} --> <!-- ??? -->
+
+
+				{% if reference_filename and not standalone %}
+					<h4>Links</h4>
+					<p>
+					Download this reference sequence file:
+					<a href="{{ url_for('.reference', filename=reference_filename) }}">{{ reference_filename }}</a>
+					</p>
+				{% endif %}
+
+			{% endif %} <!-- description -->
+		</div><!-- col-md-4 -->
+	</div><!-- row -->
+
+	{% if not parse_error %}
+	<div class="row">
+		<div class="col-md-12">
+			<hr />
+			{% if legends %}
+				<h4>Legend</h4>
+				<div class="code">
+				<table class="table table3">
+				  <thead>
+					<th>Name</th>
+					<th>ID</th>
+					<th>Locus tag</th>
+					<th>Product</th>
+					<th>Link method</th>
+				  </thead>
+				  {% for i in legends %}
+					<tr>
+					  {% for j in i %}
+						<td>{{ j if j else '' }}</td>
+					  {% endfor %}
+					</tr>
+				  {% endfor %}
+				</table>
+				</div>
+			{% endif %}
+		</div><!-- col-md-12 -->
+	</div><!-- row -->
+	{% endif %}
 {% endblock content %}
 
     </div>
-  </body>
+
+{% if piwik %}
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="{{ piwik_base_url }}/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', {{ piwik_site_id }}]);
+    var d=document, g=d.createElement('script'),
+  s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js';
+  s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img src="{{ piwik_base_url }}/piwik.php?idsite={{ piwik_site_id }}"
+                  style="border:0;" alt="" /></p></noscript>
+<!-- End Piwik Code -->
+{% endif %}
+</body>
 </html>

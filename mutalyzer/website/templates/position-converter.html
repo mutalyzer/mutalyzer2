@@ -5,7 +5,6 @@
 
 {% block content %}
 
-<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
   <p>
   Please supply the genome assembly which you want to use to convert your
   position.
@@ -15,52 +14,56 @@
   normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Checker</a> for this.
   </p>
   <p>
-  Example: NM_003002.2:c.274G&gt;T<br>
-  or: chr11:g.111959693G&gt;T<br>
-  or: NC_000011.9:g.111959693G&gt;T<br>
+  Examples: <code class="example-input">NM_003002.2:c.274G&gt;T</code>, <code class="example-input">chr11:g.111959693G&gt;T</code> and <code class="example-input">NC_000011.9:g.111959693G&gt;T</code>
   </p>
-  <table id="inputform">
-      <form action="{{ url_for('.position_converter') }}" method="get" enctype="multipart/form-data">
-          <tr>
-              <td><b>Assembly</b></td>
-              <td>
-                  <select name="assembly_name_or_alias">
-                    {% for assembly in assemblies %}
-<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
-                    {% endfor %}
-                  </select>
-              </td>
-          </tr>
-          <tr>
-              <td><b>Variant</b></td>
-              <td><input type="text" name="description" value="{{ description }}" style="width:500px"></td>
-          </tr>
-          <tr>
-              <td colspan="2">
-                <input type="submit" value="Submit">
-                <input type="button" value="Clear field" onclick="clearField(this.form, 'description');">
-                <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter">Help</a>
-              </td>
-
-          </tr>
-      </form>
-  </table> <!-- inputform -->
-</div>
+	<form class="form-horizontal" role="form" action="{{ url_for('.position_converter') }}" method="get" enctype="multipart/form-data">
+	
+		<div class="form-group">
+			<label for="assembly_name_or_alias" class="col-md-2 control-label">Build</label>
+			<div class="col-md-10">
+				<select name="assembly_name_or_alias" class="form-control">
+			{% for assembly in assemblies %}
+					<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
+			{% endfor %}
+				</select>
+			</div>
+		</div>
+			
+		<div class="form-group">
+			<label for="description" class="col-md-2 control-label">Variant</label>
+			<div class="col-md-10">
+				<input type="text" name="description" value="{{ description }}" class="form-control form-pre example-target" placeholder="Variant">
+			</div>
+		</div>
+		<div class="form-group">
+			<div class=" col-md-12">
+				<input type="submit" class="btn btn-primary" value="Submit">
+				<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
+				<input type="reset" class="btn btn-default pull-right" value="Undo">
+			</div>
+		</div>
+	</form>
 
 {% if description %}
-  <h3>Results:</h3>
+  <h3>Results</h3>
 
-  <div class="messages">
-    {% for m in messages %}
-      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
-      }})">{{ m.description }}</p>
-    {% endfor %}
-    <p>{{ summary }}</p>
-  </div>
+  {% for m in messages %}
+	{% if m.class == "error" %}
+		<div class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
+	{% elif m.class == "warning" %}
+		<div class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
+	{% endif %}
+  {% endfor %}
+  
+  {% if summary == "0 Errors, 0 Warnings."%}
+		<div class="alert success summary">{{ summary }}</div>
+  {% else %}
+	<div>{{summary}}</div>
+  {% endif %}
 
   {% if chromosomal_description %}
     <p>
-    <b>Chromosomal Variant:</b>
+    <h4>Chromosomal Variant:</h4>
     </p>
     <pre>{{ chromosomal_description }}</pre>
     {% if not transcript_descriptions %}

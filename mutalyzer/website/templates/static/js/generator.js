@@ -555,7 +555,9 @@ function variantOK(){
 }
 
 function show(id){
-    document.getElementById(id).style.display = "";
+    var el = document.getElementById(id);
+	 if (el) el.style.display = "";
+	 else alert(id);
 }
 
 function hide(id){
@@ -620,17 +622,18 @@ function addVariant() {
     var variantnmbr = variants.length;
     var newvar = newVariantField("sub");
 	variants[variants.length] = newvar;
-    var newvariant = document.createElement('fieldset');
-    newvariant.setAttribute("id", "variant"+variantnmbr);
+    var newvariant = document.createElement('div');
+    newvariant.setAttribute("class", "");
+     newvariant.setAttribute("id", "variant"+variantnmbr);
 
     //populate variant with variant template
     var variantHTML = document.getElementById("varianttemplate").innerHTML;
-    var finalHTML = "<legend>Variant "+(variantnmbr+1);
+    var finalHTML = "<h4>Variant "+(variantnmbr+1);
     if(variantnmbr>0){
         finalHTML += " <a onclick=\"removeVariant("+variantnmbr+");\""+
             " class=\"remove\">remove</a> ";
     }
-    finalHTML += "</legend>";
+    finalHTML += "</h4>";
 
     finalHTML += variantHTML.replace(/\{NMBR\}/g, variantnmbr);
 

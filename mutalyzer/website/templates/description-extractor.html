@@ -10,85 +10,88 @@
 </p>
 
 <p>
-Extract the HGVS variant description from a reference sequence and an
-observed sequence. For now, we require the user to fill in two
-sequences. After the testing phase, we plan to use the underlying
-algorithm for:
+Extract the HGVS variant description from a reference sequence and an observed sequence. For now, we require the user to fill in two sequences. After the testing phase, we plan to use the underlying algorithm for:
 </p>
 
 <ul>
   <li>
-    Disambiguation in the name checker. This will enable full support
-    for complex variants.
+    Disambiguation in the name checker. This will enable full support for complex variants.
   </li>
   <li>
-    Comparison of two reference sequences. Useful for migrating a
-    variant description to an other reference sequence.
+    Comparison of two reference sequences. Useful for migrating a variant description to an other reference sequence.
   </li>
   <li>
     Implementation of a Reference Sequence Editor.
   </li>
 </ul>
 
-<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
-  <form action="{{ url_for('.description_extractor') }}" method="get">
-    Please supply a reference sequence and an observed sequence.<br>
-    <br>
-    <div style="border: 1px solid grey; padding: 20px">
-      <b>Reference sequence:</b><br>
-      <br>
-      Example: <tt>ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</tt><br>
-      <br>
-      <input type="text" name="reference_sequence" value="{{ reference_sequence }}" style="width:100%"><br>
-      <input type="button" value="Clear field" onclick="clearField(this.form, 'reference_sequence');">
-    </div>
-    <br>
-    <div style="border: 1px solid grey; padding: 20px">
-      <b>Observed sequence:</b><br>
-      <br>
-      Example: <tt>ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</tt><br>
-      <br>
-      <input type="text" name="variant_sequence" value="{{ variant_sequence }}" style="width:100%"><br>
-      <input type="button" value="Clear field" onclick="clearField(this.form, 'variant_sequence');">
-    </div>
-    <br>
-    <input type="submit" value="Submit">
-    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/DescriptionExtractor">Help</a>
-  </form>
-</div>
+<p>
+	Please supply a reference sequence and an observed sequence.
+</p>
+
+	<form action="{{ url_for('.description_extractor') }}" method="get" class="form">
+		<div class="form-group">
+			<h3>Reference sequence</h3>
+			<p>Example: <code class="example-input">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
+			<input type="text" name="reference_sequence" value="{{ reference_sequence }}" class="form-control form-pre example-target" placeholder="Reference sequence">
+			<!-- <input type="button" value="Clear field" onclick="clearField(this.form, 'reference_sequence');" class="btn"> -->
+		</div>
+		<div class="form-group">
+			<h3>Observed sequence</h3>
+
+			<p>Example: <code class="example-input-2">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
+			<input type="text" name="variant_sequence" value="{{ variant_sequence }}" class="form-control form-pre example-target-2" placeholder="Observed sequence">
+			<!-- <input type="button" value="Clear field" onclick="clearField(this.form, 'variant_sequence');" class="btn"> -->
+		</div>
+		
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary" value="Submit">
+			<input type="reset" class="btn btn-default pull-right" value="Undo">
+			<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/DescriptionExtractor" target="new" class="btn btn-default pull-right">Help</a>
+		</div>
+	</form>
 
 {% if description %}
   <h3>Variant Description Extractor results:</h3>
 
-  <div class="messages">
-    {% for m in messages %}
-      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
-    {% endfor %}
-    <p>{{ summary }}</p>
-  </div>
+<table class="table">
+      {% for m in messages %}
+		{% if m.class == "error" %}
+			<tr><td class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</td></tr>
+		{% elif m.class == "warning" %}
+			<tr><td class="warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</td></tr>
+		{% endif %}
+      {% endfor %}
+	  
+	  {% if summary == "0 Errors, 0 Warnings."%}
+			<tr><td class="success summary">{{ summary }}</td>
+	  {% endif %}
+</table>
+
 
   {% if not errors %}
     <p>
     <b>Genomic description:</b>
     </p>
     <p>
-    <tt>g.{{ description }}</tt>
+    <pre>g.{{ description }}</pre>
     </p>
     <p>
     <b>Overview of the raw variants:</b>
     </p>
-    <table class="laTable">
-      <tr>
-        <td>Start</td>
-        <td>End</td>
-        <td>Type</td>
-        <td>Deleted</td>
-        <td>Inserted</td>
-        <td>Shift</td>
-        <td>Description</td>
-      </tr>
+    <table class="table">
+      <thead><tr>
+        <th>Start</th>
+        <th>End</th>
+        <th>Type</th>
+        <th>Deleted</th>
+        <th>Inserted</th>
+        <th>Shift</th>
+        <th>Description</th>
+      </tr></thead>
       {% for raw_var in raw_vars %}
-        <tr>
+       <tbody>
+		<tr>
           <td>{{ raw_var.start }}</td>
           <td>{{ raw_var.end }}</td>
           <td>{{ raw_var.type }}</td>
@@ -97,6 +100,7 @@ algorithm for:
           <td>{{ raw_var.shift }}</td>
           <td>{{ raw_var.hgvs }}</td>
         </tr>
+	   </tbody>
       {% endfor %}
     </table>
   {% endif %}

@@ -5,45 +5,68 @@
 
 {% block content %}
 
-<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
-  <p>
-  Please insert the
-  <a href="http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
-  number below. Mutalyzer will retrieve the HGVS description of the SNP
-  specified on the reference sequence(s) used by dbSNP.
-  </p>
-  <p>
-  Example: rs9919552
-  </p>
-  <form action="{{ url_for('.snp_converter') }}" method="get">
-    <input type="text" name="rs_id" value="{{ rs_id }}" style="width:25%"><br>
-    <input type="submit" value="Submit">
-    <input type="button" value="Clear field" onclick="clearField(this.form, 'rs_id');">
-    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SnpConverter">Help</a>
-  </form>
-</div>
+			{% if messages %}
+				{% for m in messages %}
+					{% if m.class == "error" %}
+						<p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+					{% elif m.class == "warning" %}
+						<p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+					{% endif %}
+				{% endfor %}
+			{% endif %} <!-- messages -->
+			
+			{% if summary == "0 Errors, 0 Warnings."%}
+				<p class="alert alert-success summary">{{ summary }}</p>
+			{% else %}
+				<p>{{summary}}</p>
+				<hr />
+			{% endif %}
+
+	<p>
+	Please insert the
+	<a href="http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
+	number below. Mutalyzer will retrieve the HGVS description of the SNP specified on the reference sequence(s) used by dbSNP.
+	</p>
+
+	<p>
+	Example: <code class="example-input">rs9919552</code>
+	</p>
+		
+	<form role="form" class="form" action="{{ url_for('.snp_converter') }}" method="get">
+	<div class="form-group">
+		<label for="description">dbSNP rs number</label>
+		<input type="text" class="form-control form-pre example-target" name="rs_id" placeholder="" value="{{ rs_id }}" ></input>
+	</div>		
+
+	<div class="form-group">
+		<input type="submit" class="btn btn-primary" value="Submit">
+		<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
+		<input type="reset" class="btn btn-default pull-right" value="Undo">
+	</div>
+	</form>
 
 {% if rs_id %}
-  <h3>SNP converter results:</h3>
+  <h3>SNP converter results</h3>
 
-  <div class="messages">
-    {% for m in messages %}
-      <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin
-      }})">{{ m.description }}</p>
-    {% endfor %}
-    <p>{{ summary }}</p>
-  </div>
-
-  <h4>dbSNP rs ID:</h4>
-  <p>
-  <tt>{{ rs_id }}</tt>
-  </p>
-  <h4>HGVS descriptions:</h4>
-  <p>
-  {% for d in descriptions %}
-    <tt>{{ d }}</tt><br>
+<!--   {% for m in messages %}
+	{% if m.class == "error" %}
+		<div class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
+	{% elif m.class == "warning" %}
+		<div class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
+	{% endif %}
   {% endfor %}
-  </p>
+  
+  {% if summary == "0 Errors, 0 Warnings."%}
+		<div class="alert success summary">{{ summary }}</div>
+  {% else %}
+	<div>{{summary}}</div>
+  {% endif %} -->
+      
+
+  <h4>dbSNP rs ID</h4>
+  <pre>{{ rs_id }}</pre>
+  <h4>HGVS descriptions</h4>
+  <pre>{% for d in descriptions %}{{ d }}</br>{% endfor %}</pre>
 {% endif %}
 
 {% endblock content %}
