@@ -18,6 +18,7 @@ def set_announcement(body, url=None):
     if url:
         announcement['url'] = url
 
+    unset_announcement()
     client.hmset('announcement', announcement)
 
 
