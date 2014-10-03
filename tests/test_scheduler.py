@@ -17,7 +17,7 @@ from mutalyzer import File
 from mutalyzer import output
 from mutalyzer import Scheduler
 
-from fixtures import database, cache
+from fixtures import database, cache, hg19, hg19_transcript_mappings
 from utils import MutalyzerTest
 from utils import fix
 
@@ -36,7 +36,7 @@ class TestScheduler(MutalyzerTest):
         batch_file = StringIO.StringIO('\n'.join(variants) + '\n')
         job, columns = file_instance.parseBatchFile(batch_file)
         result_id = scheduler.addJob('test@test.test', job, columns,
-                                     job_type)
+                                     job_type, argument=argument)
 
         batch_job = BatchJob.query.filter_by(result_id=result_id).one()
 
@@ -229,3 +229,17 @@ class TestScheduler(MutalyzerTest):
 
         with patch.object(Entrez, 'efetch', mock_efetch):
             self._batch_job(variants, expected, 'name-checker')
+
+    @fix(hg19, hg19_transcript_mappings)
+    def test_position_converter(self):
+        """
+        Simple position converter batch job.
+        """
+        variants = ['chr11:g.111959695G>T']
+        expected = [['chr11:g.111959695G>T',
+                     '',
+                     'NC_000011.9:g.111959695G>T',
+                     'NM_003002.2:c.274G>T',
+                     'NM_012459.2:c.-2203C>A',
+                     'NR_028383.1:n.-2173C>A']]
+        self._batch_job(variants, expected, 'position-converter', 'hg19')

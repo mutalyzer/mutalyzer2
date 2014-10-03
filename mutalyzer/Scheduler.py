@@ -19,6 +19,7 @@ import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 from sqlalchemy import func
+from sqlalchemy.orm.exc import NoResultFound
 
 import mutalyzer
 from mutalyzer.config import settings
@@ -557,7 +558,13 @@ Mutalyzer batch scheduler""" % url)
         if not skip :
             try :
                 #process
-                assembly = Assembly.get(int(batch_job.argument))
+                try:
+                    assembly = Assembly.by_name_or_alias(batch_job.argument)
+                except NoResultFound:
+                    O.addMessage(__file__, 3, 'ENOASSEMBLY',
+                                 'Not a valid assembly: ' + str(batch_job.argument))
+                    raise
+
                 converter = Converter(assembly, O)
 
                 #Also accept chr accNo
