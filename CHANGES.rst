@@ -25,7 +25,7 @@ Version 2.0.0
 Released on September 26th 2014.
 
 This release does not bring many new features, but comes with significant
-changes to the technical infrastructure. `Merge request #6
+changes to the technical infrastructure. `GitLab!6
 <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/6>`_ tracks most of
 this.
 
@@ -43,38 +43,39 @@ Some highlights especially users of the webservices should be aware of:
 Other changes:
 
 - Upload a genbank file using the SOAP webservice (`uploadGenBankLocalFile`).
-- Do not cleanup the cache during request handling (`#18
+- Do not cleanup the cache during request handling (`GitLab#18
   <https://git.lumc.nl/mutalyzer/mutalyzer/issues/18>`_).
-- Add GRCh38 (hg38) assembly (`#20
+- Add GRCh38 (hg38) assembly (`GitLab!20
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/20>`_).
-- Move from nose to `pytest <http://pytest.org/>`_ for unit tests (`#23
+- Move from nose to `pytest <http://pytest.org/>`_ for unit tests (`GitLab!23
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/23>`_).
 - Fix running Mutalyzer in a `virtual environment
   <http://virtualenv.readthedocs.org/>`_ and have an up-to-date
-  ``requirements.txt`` for `pip <http://pip.readthedocs.org/>`_ (`#4
+  ``requirements.txt`` for `pip <http://pip.readthedocs.org/>`_ (`GitLab!4
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/4>`_).
-- Switch from TAL to Jinja2 (`#3
+- Switch from TAL to Jinja2 (`GitLab!3
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/3>`_).
-- Refactor user interfaces (`#5
+- Refactor user interfaces (`GitLab!5
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/5>`_).
-- Move from configobj to Python module based config (`#7
+- Move from configobj to Python module based config (`GitLab!7
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/7>`_).
-- Use SQLAlchemy as ORM (`#8
+- Use SQLAlchemy as ORM (`GitLab!8
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/8>`_).
-- Use Redis for stat counters (`#10
+- Use Redis for stat counters (`GitLab!10
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/10>`_).
-- Port website from web.py to Flask (`#11
+- Port website from web.py to Flask (`GitLab!11
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/11>`_).
-- Isolated unit tests using fixtures and an in-memory database (`#12
+- Isolated unit tests using fixtures and an in-memory database (`GitLab!12
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/12>`_).
-- Display announcement on website (`#14
+- Display announcement on website (`GitLab!14
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/14>`_).
-- Database migrations with Alembic (`#15
+- Database migrations with Alembic (`GitLab!15
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/15>`_).
-- Update documentation and use Sphinx (`#16
+- Update documentation and use Sphinx (`GitLab!16
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/16>`_).
 - Move to `semantic versioning <http://semver.org/>`_, starting with version
-  2.0.0 (`#22 <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/22>`_).
+  2.0.0 (`GitLab!22
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/22>`_).
 - Add 404 not found page.
 - Don't auto remove comma characters in syntax checker.
 - Add a dash (``-``) as an allowed character in the gene name.
@@ -116,7 +117,7 @@ Version 2.0.beta-33
 Released on August 19th 2014.
 
 - Link to `Upcoming server update
-  <https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/News/2014-08-19-upcoming-server-update>`
+  <https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/News/2014-08-19-upcoming-server-update>`_
   announcement.
 
 
@@ -147,7 +148,7 @@ Version 2.0.beta-30
 Released on February 18th 2014.
 
 - Handle NCBI Entrez response validation errors (fixes, among other things,
-  `LOVD#29 <https://humgenprojects.lumc.nl/trac/LOVD3/ticket/29>`_).
+  `LOVD Trac#29 <https://humgenprojects.lumc.nl/trac/LOVD3/ticket/29>`_).
 - Loosen error severity when CDS cannot be translated.
 - Mutalyzer development migrated from Subversion to Git for version control.
 
@@ -183,7 +184,7 @@ Version 2.0.beta-26
 Released on April 9th 2013.
 
 - Added mm10 (Mouse) transcript mappings to position converter.
-- LRG parser updated to LRG 1.7 schema (`#127
+- LRG parser updated to LRG 1.7 schema (`Trac#127
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/127>`_).
 
 
@@ -196,7 +197,7 @@ Released on March 25th 2013.
 - Move documentation to Trac.
 - Exon table is included in `runMutalyzer` webservice results.
 - Temporarily disable frameshift detection in experimental description
-  extractor (`#124
+  extractor (`Trac#124
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/124>`_).
 - Allow selectors on transcript references in position converter.
 - Syntax checker now supports protein level variant descriptions.
@@ -207,7 +208,7 @@ Version 2.0.beta-24
 
 Released on December 10th 2012.
 
-- Rename some warning codes (webservice API) (`#98
+- Rename some warning codes (webservice API) (`Trac#98
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/98>`_).
 - Variants on mtDNA in position converter.
 
@@ -225,17 +226,17 @@ Version 2.0.beta-22
 
 Released on November 2nd 2012.
 
-- Submitting batch jobs via the web services (`#115
+- Submitting batch jobs via the web services (`Trac#115
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/115>`_).
-- Allow for leading whitespace in batch job input (`#107
+- Allow for leading whitespace in batch job input (`Trac#107
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/107>`_).
 - New `descriptionExtract` webservice function.
 - Name checker now includes description extractor output as an experimental
   service.
 - Slice chromosome by gene name in reference file loader is now case
-  insensitive (`#118
+  insensitive (`Trac#118
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/118>`_).
-- Warn on missing positioning scheme (`#114
+- Warn on missing positioning scheme (`Trac#114
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/114>`_).
 
 
@@ -245,10 +246,11 @@ Version 2.0.beta-21
 Released on July 23rd 2012.
 
 - Support compound variants in position converter.
-- Support non-coding transcripts in position converter (`#102
+- Support non-coding transcripts in position converter (`Trac#102
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/102>`_).
 - Move to new RPC library version, causing slight change in HTTP/RPC+JSON
-  webservice output (more wrappers around output), but fixes #104.
+  webservice output (more wrappers around output), but fixes `Trac#104
+  <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/104>`_.
 - Fix position converter for delins with explicit deleted sequence.
 - Fix description update from Version 2.0.beta-20 to use- notation instead of
   counting.
@@ -268,7 +270,7 @@ Version 2.0.beta-19
 
 Released on June 21st 2012.
 
-- Fix crash on inversions (`#99
+- Fix crash on inversions (`Trac#99
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/99>`_).
 
 
@@ -277,19 +279,19 @@ Version 2.0.beta-18
 
 Released on June 7th 2012.
 
-- Moved from soaplib to rpclib for webservices (`#66
+- Moved from soaplib to rpclib for webservices (`Trac#66
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/66>`_).
-- Added HTTP/RPC+JSON webservice (`#18
+- Added HTTP/RPC+JSON webservice (`Trac#18
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/18>`_).
-- Fixed name checker errors in some adjacent variants (`#83
+- Fixed name checker errors in some adjacent variants (`Trac#83
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/83>`_).
 - Name checker form now uses GET requests to support easier linking to result
   pages.
-- You can now specify chromosomes by name in the reference file loader (`#92
-  <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/92>`_).
-- Made batch daemon not crash on MySQL restarts (`#91
+- You can now specify chromosomes by name in the reference file loader
+  (`Trac#92 <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/92>`_).
+- Made batch daemon not crash on MySQL restarts (`Trac#91
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/91>`_).
-- Position converter now detects incorrect order in position ranges (`#95
+- Position converter now detects incorrect order in position ranges (`Trac#95
   <https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/95>`_).
 - Added NBIC logo to 'about' page.
 
