@@ -136,7 +136,11 @@ def sync_cache(wsdl_url, url_template, history=7):
         55 5 * * *  mutalyzer-cache-sync 'http://dom2/?wsdl' 'http://dom2/{file}' -H 7
     """
     cache_sync = sync.CacheSync(output.Output(__file__))
-    cache_sync.sync_with_remote(wsdl_url, url_template, history)
+    inserted, downloaded = cache_sync.sync_with_remote(wsdl_url, url_template,
+                                                       history)
+
+    print ('Added %d entries to the local cache and downloaded %d cache files.'
+           % (inserted, downloaded))
 
 
 def set_announcement(body, url=None):

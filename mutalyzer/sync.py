@@ -107,16 +107,21 @@ class CacheSync(object):
             """
             Create a nice dictionary out of the CacheEntry object.
             """
+            cast_orientation = {None: None,
+                                1: 'forward',
+                                2: 'reverse'}
+
             entry_dict =  {'name':    str(entry.name),
                            'hash':    str(entry.hash),
                            'created': entry.created}
             for attribute in ('gi', 'chromosomeName', 'url', 'cached'):
                 entry_dict[attribute] = str(entry[attribute]) \
                                         if attribute in entry else None
-            for attribute in ('chromosomeStart', 'chromosomeStop',
-                              'chromosomeOrientation'):
+            for attribute in ('chromosomeStart', 'chromosomeStop'):
                 entry_dict[attribute] = int(entry[attribute]) \
                                         if attribute in entry else None
+            entry_dict['chromosomeOrientation'] = cast_orientation[entry['chromosomeOrientation']] \
+                                                  if 'chromosomeOrientation' in entry else None
             return entry_dict
 
         return map(cache_entry_from_soap, cache.CacheEntry)
@@ -195,6 +200,8 @@ class CacheSync(object):
                                   slice_stop=entry['chromosomeStop'],
                                   slice_orientation=entry['chromosomeOrientation'],
                                   download_url=entry['url'])
+            session.add(reference)
+            session.commit()
             inserted += 1
             if not entry['chromosomeName'] and not entry['url'] \
                    and entry['cached']:
