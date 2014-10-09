@@ -9,6 +9,12 @@ Version 2.0.2
 
 Release date to be decided.
 
+- Fix incorrect GRCm38 chromosome accession number versions.
+- Fix crash in position converter batch jobs.
+- Upgrade the webservice library we use (Spyne, from 2.10.10 to 2.11.0). This
+  potentially affects behaviour of both our SOAP and HTTP/RPC+JSON
+  webservices, although our tests did not show any problems.
+
 
 Version 2.0.1
 -------------
