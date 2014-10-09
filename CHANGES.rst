@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.2
 -------------
 
-Release date to be decided.
+Released on October 9th 2014.
 
 - Fix incorrect GRCm38 chromosome accession number versions.
 - Fix crash in position converter batch jobs.
