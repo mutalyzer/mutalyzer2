@@ -18,6 +18,8 @@ simple and just use one global connection pool as created by `StrictRedis`.
 """
 
 
+from __future__ import unicode_literals
+
 import redis
 
 from mutalyzer.config import settings
@@ -37,7 +39,9 @@ class LazyClient(util.LazyObject):
             import mockredis
             self._wrapped = mockredis.MockRedis(strict=True)
         else:
-            self._wrapped = redis.StrictRedis.from_url(settings.REDIS_URI)
+            self._wrapped = redis.StrictRedis.from_url(settings.REDIS_URI,
+                                                       decode_responses=True,
+                                                       charset='utf-8')
 
 
 #: Global :class:`LazyClient` instance. Use this for all communication with

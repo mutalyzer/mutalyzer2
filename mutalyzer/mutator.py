@@ -12,12 +12,11 @@ The original as well as the mutated string are stored here.
 """
 
 
+from __future__ import unicode_literals
+
 from collections import defaultdict
 
 from Bio import Restriction
-from Bio.Seq import Seq
-from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA
-from Bio.Seq import reverse_complement
 
 from mutalyzer import util
 
@@ -46,7 +45,7 @@ class Mutator():
         Initialise the instance with the original sequence.
 
         @arg orig: The original sequence before mutation.
-        @type orig: str
+        @type orig: Bio.Seq.Seq
         @arg output: The output object.
         @type output: mutalyzer.Output.Output
         """
@@ -57,6 +56,8 @@ class Mutator():
         self._output = output
         self.orig = orig
 
+        # Note that we don't need to create a copy here, since mutation
+        # operations are not in place (`self._mutate`).
         self.mutated = orig
     #__init__
 
@@ -72,7 +73,7 @@ class Mutator():
         @rtype: dict
         """
         analysis = Restriction.Analysis(self._restriction_batch, sequence)
-        return dict((str(k), len(v)) for k, v in analysis.with_sites().items())
+        return dict((unicode(k), len(v)) for k, v in analysis.with_sites().items())
     #_restriction_count
 
     def _counts_diff(self, counts1, counts2):
@@ -109,10 +110,10 @@ class Mutator():
         @arg pos2: Second interbase position of the deleted sequence.
         @type pos2: int
         @arg ins: Inserted sequence.
-        @type ins: str
+        @type ins: unicode
 
         @return: Visualisation.
-        @rtype: str
+        @rtype: unicode
         """
         loflank = self.orig[max(pos1 - VIS_FLANK_LENGTH, 0):pos1]
         roflank = self.orig[pos2:pos2 + VIS_FLANK_LENGTH]
@@ -338,7 +339,7 @@ class Mutator():
         @arg pos2: Second interbase position of the deleted sequence.
         @type pos2: int
         @arg ins: Inserted sequence.
-        @type ins: str
+        @type ins: unicode
         """
         correct = 1 if pos1 == pos2 else 0
         self.mutated = (self.mutated[:self.shift(pos1 + 1) - 1] +
@@ -375,7 +376,7 @@ class Mutator():
         @arg pos: Interbase position where the insertion should take place.
         @type pos: int
         @arg ins: Inserted sequence.
-        @type ins: str
+        @type ins: unicode
         """
         visualisation = ['insertion between %i and %i' % (pos, pos + 1)]
         visualisation.extend(self._visualise(pos, pos, ins))
@@ -394,7 +395,7 @@ class Mutator():
         @arg pos2: Last nucleotide of the deleted sequence.
         @type pos2: int
         @arg ins: Inserted sequence.
-        @type ins: str
+        @type ins: unicode
         """
         visualisation = ['delins from %i to %i' % (pos1, pos2)]
         visualisation.extend(self._visualise(pos1 - 1, pos2, ins))
@@ -410,7 +411,7 @@ class Mutator():
         @arg pos: Position of the substitution.
         @type pos: int
         @arg nuc: Substituted nucleotide.
-        @type nuc: str
+        @type nuc: unicode
         """
         visualisation = ['substitution at %i' % pos]
         visualisation.extend(self._visualise(pos - 1, pos, nuc))
@@ -428,14 +429,13 @@ class Mutator():
         @arg pos2: Last nucleotide of the inverted sequence.
         @type pos2: int
         """
+        sequence = util.reverse_complement(unicode(self.orig[pos1 - 1:pos2]))
+
         visualisation = ['inversion between %i and %i' % (pos1, pos2)]
-        visualisation.extend(
-            self._visualise(pos1 - 1, pos2,
-                            reverse_complement(self.orig[pos1 - 1:pos2])))
+        visualisation.extend(self._visualise(pos1 - 1, pos2, sequence))
         self._output.addOutput('visualisation', visualisation)
 
-        self._mutate(pos1 - 1, pos2,
-                     reverse_complement(self.orig[pos1 - 1:pos2]))
+        self._mutate(pos1 - 1, pos2, sequence)
     #inversion
 
     def duplication(self, pos1, pos2):
@@ -447,11 +447,12 @@ class Mutator():
         @arg pos2: Last nucleotide of the duplicated sequence.
         @type pos2: int
         """
+        sequence = unicode(self.orig[pos1 - 1:pos2])
+
         visualisation = ['duplication from %i to %i' % (pos1, pos2)]
-        visualisation.extend(
-            self._visualise(pos2, pos2, self.orig[pos1 - 1:pos2]))
+        visualisation.extend(self._visualise(pos2, pos2, sequence))
         self._output.addOutput('visualisation', visualisation)
 
-        self._mutate(pos1 - 1, pos1 - 1, self.orig[pos1 - 1:pos2])
+        self._mutate(pos1 - 1, pos1 - 1, sequence)
     #duplication
 #Mutator

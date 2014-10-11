@@ -3,6 +3,8 @@ Tests for the variantchecker module.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 
 from mutalyzer.output import Output

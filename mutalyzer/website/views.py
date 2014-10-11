@@ -3,6 +3,8 @@ Mutalyzer website views.
 """
 
 
+from __future__ import unicode_literals
+
 import bz2
 import os
 import pkg_resources
@@ -144,7 +146,7 @@ def soap_api():
     xsl_doc = etree.parse(xsl_handle)
     transform = etree.XSLT(xsl_doc)
 
-    return make_response(str(transform(wsdl_doc)))
+    return make_response(unicode(transform(wsdl_doc)))
 
 
 @website.route('/downloads/<string:filename>')
@@ -159,7 +161,7 @@ def downloads(filename):
     except jinja2.exceptions.TemplateNotFound:
         abort(404)
 
-    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
     response.headers['Content-Disposition'] = ('attachment; filename="%s"'
                                                % filename)
     return response
@@ -233,10 +235,7 @@ def name_checker():
                       % (description, request.remote_addr))
     stats.increment_counter('name-checker/website')
 
-    # Todo: The following is probably a problem elsewhere too. We stringify
-    #   the variant, because a unicode string crashes BioPython's
-    #   `reverse_complement`.
-    variantchecker.check_variant(str(description), output)
+    variantchecker.check_variant(description, output)
 
     errors, warnings, summary = output.Summary()
     parse_error = output.getOutput('parseError')
@@ -272,18 +271,20 @@ def name_checker():
     # Experimental description extractor.
     if (output.getIndexedOutput('original', 0) and
         output.getIndexedOutput('mutated', 0)):
+        extracted = extractedProt = '(skipped)'
+
         allele = describe.describe(output.getIndexedOutput('original', 0),
                                    output.getIndexedOutput('mutated', 0))
-        prot_allele = describe.describe(
-            output.getIndexedOutput('oldprotein', 0),
-            output.getIndexedOutput('newprotein', 0, default=''),
-            DNA=False)
-
-        extracted = extractedProt = '(skipped)'
         if allele:
             extracted = describe.alleleDescription(allele)
-        if prot_allele:
-            extractedProt = describe.alleleDescription(prot_allele)
+
+        if output.getIndexedOutput('oldprotein', 0):
+            prot_allele = describe.describe(
+                output.getIndexedOutput('oldprotein', 0),
+                output.getIndexedOutput('newprotein', 0, default=''),
+                DNA=False)
+            if prot_allele:
+                extractedProt = describe.alleleDescription(prot_allele)
 
     else:
         extracted = extractedProt = ''
@@ -350,11 +351,10 @@ def bed():
 
     if not description:
         abort(404)
-        return render_template('name-checker.html')
 
     output = Output(__file__)
 
-    variantchecker.check_variant(str(description), output)
+    variantchecker.check_variant(description, output)
 
     raw_variants = output.getIndexedOutput('rawVariantsChromosomal', 0)
     if not raw_variants:
@@ -376,14 +376,14 @@ def bed():
 
     for descr, positions in raw_variants[2]:
         bed += '\t'.join([raw_variants[0],
-                          str(min(positions) - 1),
-                          str(max(positions)),
+                          unicode(min(positions) - 1),
+                          unicode(max(positions)),
                           descr,
                           '0',
                           raw_variants[1]]) + '\n'
 
     response = make_response(bed)
-    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return response
 
 
@@ -579,7 +579,7 @@ def reference_loader_submit():
     output = Output(__file__)
     output.addMessage(__file__, -1, 'INFO',
                       'Received request upload(%s) with arguments %s from %s'
-                      % (method, str(request.form), request.remote_addr))
+                      % (method, unicode(request.form), request.remote_addr))
 
     assemblies = Assembly.query \
         .order_by(Assembly.taxonomy_common_name.asc(),
@@ -668,11 +668,11 @@ def reference_loader_submit():
 
     if not ud:
         errors.append('The request could not be completed')
-        errors.extend(str(m) for m in output.getMessages())
+        errors.extend(unicode(m) for m in output.getMessages())
 
     output.addMessage(__file__, -1, 'INFO',
                       'Finished request upload(%s) with arguments %s from %s'
-                      % (method, str(request.form), request.remote_addr))
+                      % (method, unicode(request.form), request.remote_addr))
 
     return render_template('reference-loader.html',
                            assemblies=assemblies,
@@ -737,7 +737,7 @@ def reference(filename):
 
     response = make_response(bz2.BZ2File(file_path, 'r').read())
 
-    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
     response.headers['Content-Disposition'] = ('attachment; filename="%s"'
                                                % filename)
     return response
@@ -894,7 +894,7 @@ def batch_job_result(result_id):
 
     return send_from_directory(settings.CACHE_DIR,
                                'batch-job-%s.txt' % result_id,
-                               mimetype='text/plain',
+                               mimetype='text/plain; charset=utf-8',
                                as_attachment=True)
 
 
@@ -933,10 +933,7 @@ def lovd_get_gs():
                       % (mutation_name, variant_record, forward,
                          request.remote_addr))
 
-    # Todo: The following is probably a problem elsewhere too.
-    # We stringify the variant, because a unicode string crashes
-    # Bio.Seq.reverse_complement in mapping.py:607.
-    variantchecker.check_variant(str(mutation_name), output)
+    variantchecker.check_variant(mutation_name, output)
 
     output.addMessage(__file__, -1, 'INFO',
                       'Finished request getGS(%s, %s, %s)'
@@ -955,11 +952,11 @@ def lovd_get_gs():
                                         standalone=1))
             else:
                 response = make_response(l[0])
-                response.headers['Content-Type'] = 'text/plain'
+                response.headers['Content-Type'] = 'text/plain; charset=utf-8'
                 return response
 
     response = make_response('Transcript not found')
-    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return response
 
 
@@ -1041,7 +1038,7 @@ def lovd_variant_info():
         assembly = Assembly.by_name_or_alias(build)
     except NoResultFound:
         response = make_response('invalid build')
-        response.headers['Content-Type'] = 'text/plain'
+        response.headers['Content-Type'] = 'text/plain; charset=utf-8'
         return response
 
     converter = Converter(assembly, output)
@@ -1079,7 +1076,7 @@ def lovd_variant_info():
         response = re.sub('^Error \(.*\):', 'Error:', result)
 
     response = make_response(result)
-    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
     return response
 
 

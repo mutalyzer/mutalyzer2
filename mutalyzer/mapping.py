@@ -10,11 +10,12 @@ update the database with this information.
 """
 
 
+from __future__ import unicode_literals
+
 from collections import defaultdict
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
-from Bio.Seq import reverse_complement
 import MySQLdb
 
 from mutalyzer.db import session
@@ -24,6 +25,7 @@ from mutalyzer.models import SoapMessage, Mapping, Transcript
 from mutalyzer.output import Output
 from mutalyzer import Crossmap
 from mutalyzer import Retriever
+from mutalyzer import util
 
 
 class MapviewSortError(Exception):
@@ -40,28 +42,29 @@ def _construct_change(var, reverse=False):
     @type reverse: bool
 
     @return: Description of mutation (without reference and positions).
-    @rtype: string
+    @rtype: unicode
     """
+    # Note that the pyparsing parse tree yields `str('')` for nonexisting
+    # attributes, so we wrap the optional attributes in `unicode()`.
     if reverse:
-        # todo: if var.Arg1 is unicode, this crashes
         try:
-            arg1 = str(int(var.Arg1))
+            arg1 = unicode(int(var.Arg1))
         except ValueError:
-            arg1 = reverse_complement(str(var.Arg1) or '')
+            arg1 = util.reverse_complement(unicode(var.Arg1))
         try:
-            arg2 = str(int(var.Arg2))
+            arg2 = unicode(int(var.Arg2))
         except ValueError:
-            arg2 = reverse_complement(str(var.Arg2) or '')
+            arg2 = util.reverse_complement(unicode(var.Arg2))
     else:
-        arg1 = var.Arg1
-        arg2 = var.Arg2
+        arg1 = unicode(var.Arg1)
+        arg2 = unicode(var.Arg2)
 
     def parse_sequence(seq):
         if not seq.Sequence:
             raise NotImplementedError('Only explicit sequences are supported '
                                       'for insertions.')
         if reverse:
-            return reverse_complement(str(seq.Sequence))
+            return util.reverse_complement(seq.Sequence)
         return seq.Sequence
 
     if var.MutationType == 'subst':
@@ -72,7 +75,7 @@ def _construct_change(var, reverse=False):
                 seqs = reversed(var.SeqList)
             else:
                 seqs = var.SeqList
-            insertion = '[' + ';'.join(str(parse_sequence(seq))
+            insertion = '[' + ';'.join(parse_sequence(seq)
                                        for seq in seqs) + ']'
         else:
             insertion = parse_sequence(var.Seq)
@@ -161,11 +164,11 @@ class Converter(object) :
         Get data from database.
 
         @arg acc: NM_ accession number (without version)
-        @type acc: string
+        @type acc: unicode
         @arg version: version number
         @type version: integer
         @kwarg selector: Optional gene symbol selector.
-        @type selector: str
+        @type selector: unicode
         @kwarg selector_version: Optional transcript version selector.
         @type selector_version: int
         """
@@ -269,7 +272,7 @@ class Converter(object) :
         @arg Loc: A location in either I{g.} or I{c.} notation
         @type Loc: object
         @arg Type: The reference type
-        @type Type: string
+        @type Type: unicode
         @returns: triple:
             0. Main coordinate in I{c.} notation
             1. Offset coordinate in I{c.} notation
@@ -359,7 +362,7 @@ class Converter(object) :
         available.
 
         @arg accNo: transcript (NM_) accession number (with or without version)
-        @type accNo: string
+        @type accNo: unicode
 
         @return: transcription start, transcription end and CDS stop
         @rtype: triple
@@ -381,7 +384,7 @@ class Converter(object) :
         One of the entry points (called by the HTML publisher).
 
         @arg accNo: The full NM accession number (including version)
-        @type accNo: string
+        @type accNo: unicode
 
         @return: T ; ClassSerializer object with the types trans_start,
         trans_stop and CDS_stop
@@ -404,9 +407,9 @@ class Converter(object) :
         One of the entry points (called by the HTML publisher).
 
         @arg accNo: transcript (NM_) accession number (with version?)
-        @type accNo: string
+        @type accNo: unicode
         @arg mutation: the 'mutation' (e.g. c.123C>T)
-        @type mutation: string
+        @type mutation: unicode
 
         @return: ClassSerializer object
         @rtype: object
@@ -493,10 +496,10 @@ class Converter(object) :
         Converts a complete HGVS I{c.} notation into a chromosomal notation.
 
         @arg variant: The variant in HGVS I{c.} notation
-        @type variant: string
+        @type variant: unicode
 
         @return: var_in_g ; The variant in HGVS I{g.} notation
-        @rtype: string
+        @rtype: unicode
         """
         if self._parseInput(variant):
             acc = self.parseTree.RefSeqAcc
@@ -528,7 +531,7 @@ class Converter(object) :
                 r_change = _construct_change(variant, reverse=True)
             except NotImplementedError as e:
                 self.__output.addMessage(__file__, 3, 'ENOTIMPLEMENTED',
-                                         str(e))
+                                         unicode(e))
                 return None
 
             if self.mapping.orientation == 'forward':
@@ -568,14 +571,14 @@ class Converter(object) :
         @arg positions: Positions in c. notation to convert.
         @type positions: list
         @arg reference: Transcript reference.
-        @type reference: string
+        @type reference: unicode
         @kwarg version: Transcript reference version. If omitted, '0' is
             assumed.
-        @type version: string
+        @type version: unicode
 
         @return: Chromosome name, orientation (+ or -), and converted
             positions.
-        @rtype: tuple(string, string, list)
+        @rtype: tuple(unicode, unicode, list)
 
         This only works for positions on transcript references in c. notation.
         """
@@ -617,10 +620,10 @@ class Converter(object) :
     def correctChrVariant(self, variant) :
         """
         @arg variant:
-        @type variant: string
+        @type variant: unicode
 
         @return: variant ;
-        @rtype: string
+        @rtype: unicode
         """
 
         #Pre split check
@@ -651,12 +654,12 @@ class Converter(object) :
     def chrom2c(self, variant, rt, gene=None):
         """
         @arg variant: a variant description
-        @type variant: string
+        @type variant: unicode
         @arg rt: the return type
-        @type rt: string
+        @type rt: unicode
         @kwarg gene: Optional gene name. If given, return variant descriptions
             on all transcripts for this gene.
-        @type gene: string
+        @type gene: unicode
 
         @return: HGVS_notatations ;
         @rtype: dictionary or list
@@ -751,7 +754,7 @@ class Converter(object) :
                     r_change = _construct_change(variant, reverse=True)
                 except NotImplementedError as e:
                     self.__output.addMessage(__file__, 4,
-                                             "ENOTIMPLEMENTEDERROR", str(e))
+                                             "ENOTIMPLEMENTEDERROR", unicode(e))
                     return None
 
                 startp = self.crossmap.tuple2string((cmap.startmain, cmap.startoffset))
@@ -786,6 +789,8 @@ class Converter(object) :
 #Converter
 
 
+# Todo: This seems broken at the moment.
+# Todo: Correct handling of string encodings.
 def import_from_ucsc_by_gene(assembly, gene):
     """
     Import transcript mappings for a gene from the UCSC.
@@ -878,6 +883,7 @@ def import_from_reference(assembly, reference):
     session.commit()
 
 
+# Todo: File must be opened with the correct encoding.
 def import_from_mapview_file(assembly, mapview_file, group_label):
     """
     Import transcript mappings from an NCBI mapview file.

@@ -7,6 +7,8 @@ Queries on database models.
 #   the models they work with.
 
 
+from __future__ import unicode_literals
+
 from datetime import datetime, timedelta
 
 from sqlalchemy import and_, or_

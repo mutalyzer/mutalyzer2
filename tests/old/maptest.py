@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import sys, os, unittest, types
 
 #make it possible to import the Modules

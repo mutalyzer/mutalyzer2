@@ -4,6 +4,9 @@ mutalyzer GenRecord. Record populated with data from a GenBank file.
 """
 
 
+from __future__ import unicode_literals
+
+import codecs
 import re
 import bz2
 from itertools import izip_longest
@@ -41,7 +44,7 @@ class tempGene():
             - cdsList ; CDS list (including internal splice sites).
 
         @arg name: Gene name
-        @type name: string
+        @type name: unicode
         """
 
         self.name = name
@@ -75,8 +78,8 @@ class GBparser():
 
         ret = []
 
-        if not str(location.start).isdigit() or \
-           not str(location.end).isdigit() :
+        if not unicode(location.start).isdigit() or \
+           not unicode(location.end).isdigit() :
             return None
         #if
 
@@ -99,8 +102,8 @@ class GBparser():
 
         ret = []
 
-        if not str(locationList.location.start).isdigit() or \
-           not str(locationList.location.end).isdigit() :
+        if not unicode(locationList.location.start).isdigit() or \
+           not unicode(locationList.location.end).isdigit() :
             return None
         #if
 
@@ -128,10 +131,10 @@ class GBparser():
 
         @arg transcriptAcc: Accession number of the transcript for which we
                             want to find the protein
-        @type transcriptAcc: string
+        @type transcriptAcc: unicode
 
         @return: Accession number of a protein or None if nothing can be found
-        @rtype: string
+        @rtype: unicode
         """
         link = queries.get_transcript_protein_link(transcriptAcc)
         if link is not None:
@@ -146,7 +149,7 @@ class GBparser():
         finally:
             handle.close()
 
-        transcriptGI = result["IdList"][0]
+        transcriptGI = unicode(result["IdList"][0])
 
         handle = Entrez.elink(dbfrom = "nucleotide", db = "protein",
                               id = transcriptGI)
@@ -162,11 +165,11 @@ class GBparser():
             queries.update_transcript_protein_link(transcriptAcc)
             return None
 
-        proteinGI = result[0]["LinkSetDb"][0]["Link"][0]["Id"]
+        proteinGI = unicode(result[0]["LinkSetDb"][0]["Link"][0]["Id"])
 
         handle = Entrez.efetch(db='protein', id=proteinGI, rettype='acc', retmode='text')
 
-        proteinAcc = handle.read().split('.')[0]
+        proteinAcc = unicode(handle.read()).split('.')[0]
         handle.close()
 
         queries.update_transcript_protein_link(transcriptAcc, proteinAcc)
@@ -179,7 +182,7 @@ class GBparser():
         sentence from another. The index of the last word is counted backwards.
 
         @arg sentences: A list of sentences.
-        @type sentences: list of strings
+        @type sentences: list of unicode strings
 
         @return: The indices of the words where sentences start to differ,
             both are -1 when no mismatches are found.
@@ -217,7 +220,7 @@ class GBparser():
             [-1:1] yields the empty list.
         """
         # Create lists of words
-        lists = map(str.split, sentences)
+        lists = [s.split() for s in sentences]
 
         try:
             forward, reverse = [next(i for i, v in
@@ -239,7 +242,7 @@ class GBparser():
         @arg locus: The locus object on which the transfer should be performed
         @type locus: locus object
         @arg key: The name of the variable that should be transferred
-        @type key: string
+        @type key: unicode
         """
 
         if locus.qualifiers.has_key(key) :
@@ -315,7 +318,7 @@ class GBparser():
         @arg locusList: A list of loci
         @type locusList: list
         @arg tagName: Name of the tag to be checked
-        @type tagName: string
+        @type tagName: unicode
         """
 
         tags = []
@@ -476,13 +479,14 @@ class GBparser():
         Create a GenRecord.Record from a GenBank file
 
         @arg filename: The full path to the compressed GenBank file
-        @type filename: string
+        @type filename: unicode
 
         @return: A GenRecord.Record instance
         @rtype: object (record)
         """
         # first create an intermediate genbank record with BioPython
         file_handle = bz2.BZ2File(filename, "r")
+        file_handle = codecs.getreader('utf-8')(file_handle)
         biorecord = SeqIO.read(file_handle, "genbank")
         file_handle.close()
 

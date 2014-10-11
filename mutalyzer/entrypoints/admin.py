@@ -3,16 +3,19 @@ Command line interface to Mutalyzer administrative tools.
 """
 
 
+from __future__ import unicode_literals
+
 import argparse
 import json
 import os
+import sys
 
 import alembic.command
 import alembic.config
 from alembic.migration import MigrationContext
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
+from . import _cli_string
 from .. import announce
 from .. import db
 from ..db import session
@@ -96,7 +99,7 @@ def import_mapview(assembly_name_or_alias, mapview_file, group_label):
     try:
         mapping.import_from_mapview_file(assembly, mapview_file, group_label)
     except mapping.MapviewSortError as e:
-        raise UserError(str(e))
+        raise UserError(unicode(e))
 
 
 def import_gene(assembly_name_or_alias, gene):
@@ -184,8 +187,9 @@ def main():
     """
     assembly_parser = argparse.ArgumentParser(add_help=False)
     assembly_parser.add_argument(
-        '-a', '--assembly', metavar='ASSEMBLY', dest='assembly_name_or_alias',
-        default='hg19', help='assembly to import to (default: hg19)')
+        '-a', '--assembly', metavar='ASSEMBLY', type=_cli_string,
+        dest='assembly_name_or_alias', default='hg19',
+        help='assembly to import to (default: hg19)')
 
     parser = argparse.ArgumentParser(
         description='Mutalyzer administrative tools.')
@@ -227,7 +231,7 @@ def main():
         'mapview_file', metavar='FILE', type=argparse.FileType('r'),
         help='file from NCBI mapview (example: seq_gene.md), see note below')
     p.add_argument(
-        'group_label', metavar='GROUP_LABEL',
+        'group_label', metavar='GROUP_LABEL', type=_cli_string,
         help='use only entries with this group label (example: '
         'GRCh37.p2-Primary Assembly)')
 
@@ -241,7 +245,7 @@ def main():
         ' (i.e., NCBI mapview).')
     p.set_defaults(func=import_gene)
     p.add_argument(
-        'gene', metavar='GENE_SYMBOL',
+        'gene', metavar='GENE_SYMBOL', type=_cli_string,
         help='gene to import all transcript mappings for from the UCSC '
         'database (example: TTN)')
 
@@ -255,7 +259,7 @@ def main():
         'usual source (i.e., NCBI mapview).')
     p.set_defaults(func=import_reference)
     p.add_argument(
-        'reference', metavar='ACCESSION',
+        'reference', metavar='ACCESSION', type=_cli_string,
         help='genomic reference to import all genes from (example: '
         'NC_012920.1)')
 
@@ -272,10 +276,10 @@ def main():
         description=set_announcement.__doc__.split('\n\n')[0])
     p.set_defaults(func=set_announcement)
     p.add_argument(
-        'body', metavar='ANNOUNCEMENT',
+        'body', metavar='ANNOUNCEMENT', type=_cli_string,
         help='announcement text to show to the user')
     p.add_argument(
-        '--url', metavar='URL', dest='url',
+        '--url', metavar='URL', dest='url', type=_cli_string,
         help='URL to more information on the announcement')
 
     # Subparser 'announcement unset'.
@@ -290,10 +294,10 @@ def main():
         description=sync_cache.__doc__.split('\n\n')[0],
         epilog='Intended use is to run daily from cron.')
     p.add_argument(
-        'wsdl_url', metavar='WSDL_URL',
+        'wsdl_url', metavar='WSDL_URL', type=_cli_string,
         help='location of the remote WSDL description')
     p.add_argument(
-        'url_template', metavar='URL_TEMPLATE',
+        'url_template', metavar='URL_TEMPLATE', type=_cli_string,
         help='URL for remote downloads, in which the filename is to be '
         'substituted for {file}')
     p.add_argument(
@@ -313,7 +317,7 @@ def main():
         '--destructive', dest='destructive', action='store_true',
         help='delete any existing tables and data')
     p.add_argument(
-        '-c', '--alembic-config', metavar='ALEMBIC_CONFIG',
+        '-c', '--alembic-config', metavar='ALEMBIC_CONFIG', type=_cli_string,
         dest='alembic_config_path', help='path to Alembic configuration file')
     p.set_defaults(func=setup_database)
 
@@ -323,7 +327,7 @@ def main():
         args.func(**{k: v for k, v in vars(args).items()
                      if k not in ('func', 'subcommand')})
     except UserError as e:
-        parser.error(str(e))
+        parser.error(unicode(e))
 
 
 if __name__ == '__main__':

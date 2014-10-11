@@ -5,8 +5,12 @@ Mutalyzer command-line name checker.
 """
 
 
-import argparse
+from __future__ import unicode_literals
 
+import argparse
+import sys
+
+from . import _cli_string
 from .. import describe
 from .. import output
 from .. import variantchecker
@@ -114,7 +118,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Mutalyzer command-line name checker.')
     parser.add_argument(
-        'description', metavar='DESCRIPTION',
+        'description', metavar='DESCRIPTION', type=_cli_string,
         help='variant description to run the name checker on')
 
     args = parser.parse_args()

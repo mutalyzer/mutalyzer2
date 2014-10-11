@@ -39,9 +39,12 @@ also serve the static files.
 """
 
 
-import argparse
+from __future__ import unicode_literals
 
-from . import _ReverseProxied
+import argparse
+import sys
+
+from . import _cli_string, _ReverseProxied
 from ..config import settings
 from .. import website
 
@@ -66,9 +69,9 @@ def main():
     parser = argparse.ArgumentParser(
         description='Mutalyzer website.')
     parser.add_argument(
-        '-H', '--host', metavar='HOSTNAME', dest='host', default='127.0.0.1',
-        help='hostname to listen on (default: 127.0.0.1; specify 0.0.0.0 to '
-        'listen on all hostnames)')
+        '-H', '--host', metavar='HOSTNAME', type=_cli_string, dest='host',
+        default='127.0.0.1', help='hostname to listen on (default: '
+        '127.0.0.1; specify 0.0.0.0 to listen on all hostnames)')
     parser.add_argument(
         '-p', '--port', metavar='PORT', dest='port', type=int,
         default=8089, help='port to listen on (default: 8080)')

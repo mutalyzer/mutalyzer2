@@ -3,9 +3,11 @@ Tests for the Scheduler module.
 """
 
 
+from __future__ import unicode_literals
+
 import bz2
 import os
-import StringIO
+import io
 
 #import logging; logging.basicConfig()
 from Bio import Entrez
@@ -33,7 +35,7 @@ class TestScheduler(MutalyzerTest):
         file_instance = File.File(output.Output('test'))
         scheduler = Scheduler.Scheduler()
 
-        batch_file = StringIO.StringIO('\n'.join(variants) + '\n')
+        batch_file = io.BytesIO(('\n'.join(variants) + '\n').encode('utf-8'))
         job, columns = file_instance.parseBatchFile(batch_file)
         result_id = scheduler.addJob('test@test.test', job, columns,
                                      job_type, argument=argument)

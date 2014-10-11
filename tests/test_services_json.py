@@ -3,6 +3,8 @@ Tests for the JSON interface to Mutalyzer.
 """
 
 
+from __future__ import unicode_literals
+
 import simplejson as json
 from spyne.server.null import NullServer
 import mutalyzer
@@ -77,7 +79,7 @@ class TestServicesJson(MutalyzerTest):
         Running the info method should give us some version information.
         """
         r = self._call('info')
-        assert type(r['versionParts']) == list
+        assert isinstance(r['versionParts'], list)
         assert r['version'] == mutalyzer.__version__
 
     def test_info_announcement(self):
@@ -86,12 +88,12 @@ class TestServicesJson(MutalyzerTest):
         """
         announce.set_announcement('Test announcement')
         r = self._call('info')
-        assert type(r['announcement']) == str
+        assert isinstance(r['announcement'], unicode)
         assert r['announcement'] == 'Test announcement'
 
         announce.set_announcement('New announcement')
         r = self._call('info')
-        assert type(r['announcement']) == str
+        assert isinstance(r['announcement'], unicode)
         assert r['announcement'] == 'New announcement'
 
         announce.unset_announcement()

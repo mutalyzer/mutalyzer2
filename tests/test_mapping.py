@@ -3,6 +3,8 @@ Tests for the mapping module.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 from sqlalchemy import or_
 

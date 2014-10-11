@@ -23,6 +23,9 @@ Public classes:
 """
 
 
+from __future__ import unicode_literals
+
+import io
 import time
 
 from mutalyzer import util
@@ -71,12 +74,13 @@ class Output() :
             - _warnings   ; Initialised to 0.
 
         @arg instance: The filename of the module that created this object
-        @type instance: string
+        @type instance: unicode
         """
         self._outputData = {}
         self._messages = []
         self._instance = util.nice_filename(instance)
-        self._loghandle = open(settings.LOG_FILE, "a+")
+        self._loghandle = io.open(settings.LOG_FILE, mode='a+',
+                                  encoding='utf-8')
         self._errors = 0
         self._warnings = 0
     #__init__
@@ -147,7 +151,7 @@ class Output() :
             - _messages   ; The messages list.
 
         @arg errorcode: The error code to filter on
-        @type errorcode: string
+        @type errorcode: unicode
 
         @return: A filtered list
         @rtype: list
@@ -194,7 +198,7 @@ class Output() :
             - _outputData ; The output dictionary.
 
         @arg name: Name of a node in the output dictionary
-        @type name: string
+        @type name: unicode
         @arg data: The data to be stored at this node
         @type data: object
         """
@@ -258,7 +262,7 @@ class Output() :
                 - Number of errors
                 - Number of warnings
                 - Summary
-        @rtype: integer, integer, string
+        @rtype: integer, integer, unicode
         """
         e_s = 's'
         w_s = 's'
@@ -297,13 +301,13 @@ class Message() :
             - description ; A description of the message.
 
         @arg origin: Name of the module creating this object
-        @type origin: string
+        @type origin: unicode
         @arg level: Importance of the message
         @type level: integer
         @arg code: The error code of the message
-        @type code: string
+        @type code: unicode
         @arg description: A description of the message
-        @type description: string
+        @type description: unicode
         """
         self.origin = origin
         self.level = level
@@ -316,17 +320,17 @@ class Message() :
                (self.origin, self.level, self.code, self.description)
     #__repr__
 
-    def __str__(self):
+    def __unicode__(self):
         return '%s (%s): %s' % \
                (self.named_level(), self.origin, self.description)
-    #__str__
+    #__unicode__
 
     def named_level(self):
         """
         Get message log level as readable string.
 
         @return:     A readable description of the log level.
-        @rtype:      string
+        @rtype:      unicode
         """
         if self.level == 0:
             return "Debug"

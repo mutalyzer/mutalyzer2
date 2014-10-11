@@ -3,6 +3,8 @@ Tests for the Crossmap module.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 
 from mutalyzer.Crossmap import Crossmap

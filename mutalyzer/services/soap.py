@@ -3,6 +3,8 @@ Mutalyzer SOAP/1.1 web service.
 """
 
 
+from __future__ import unicode_literals
+
 from spyne.application import Application
 from spyne.protocol.soap import Soap11
 

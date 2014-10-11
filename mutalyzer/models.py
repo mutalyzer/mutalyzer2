@@ -8,6 +8,8 @@ from the Spyne model classes.
 """
 
 
+from __future__ import unicode_literals
+
 from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
 from spyne.model.binary import ByteArray
 from spyne.model.complex import ComplexModel, Array

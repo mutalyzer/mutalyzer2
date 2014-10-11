@@ -15,7 +15,7 @@ search for them each time.
 #     - GenRecord ; Convert a GenBank record to a nested dictionary.
 
 
-import Bio
+from __future__ import unicode_literals
 
 from mutalyzer import util
 from mutalyzer import Crossmap
@@ -85,7 +85,7 @@ class Locus(object) :
             - CM       ; A Crossmap object.
 
         @arg name: identifier of the locus
-        @type name: string
+        @type name: unicode
         """
 
         self.name = name
@@ -131,7 +131,7 @@ class Locus(object) :
         Expands the DNA description with a new raw variant.
 
         @arg rawVariant: description of a single mutation
-        @type rawVariant: string
+        @type rawVariant: unicode
         """
         if self.description:
             # Don't change anything if we already have an unknown value.
@@ -170,7 +170,7 @@ class Gene(object) :
             - __locusTag ;
 
         @arg name: gene name
-        @type name: string
+        @type name: unicode
         """
 
         self.name = name
@@ -199,14 +199,14 @@ class Gene(object) :
         Find a transcript, given its name.
 
         @arg name: transcript variant number
-        @type name: string
+        @type name: unicode
 
         @return: transcript
         @rtype: object
         """
 
         for i in self.transcriptList :
-            if i.name == name or i.name == str("%03i" % int(name)):
+            if i.name == name or i.name == "%03i" % int(name):
                 return i
         return None
     #findLocus
@@ -230,7 +230,7 @@ class Gene(object) :
         Look in the list of transcripts for a given protein accession number.
 
         @arg protAcc: protein accession number
-        @type protAcc: string
+        @type protAcc: unicode
 
         @return: transcript
         @rtype: object
@@ -300,7 +300,7 @@ class Record(object) :
         Returns a Gene object, given its name.
 
         @arg name: Gene name
-        @type name: string
+        @type name: unicode
 
         @return: Gene object
         @rtype: object
@@ -332,7 +332,7 @@ class Record(object) :
         Expands the DNA description with a new raw variant.
 
         @arg rawVariant: description of a single mutation
-        @type rawVariant: string
+        @type rawVariant: unicode
         """
 
         if self.description :
@@ -469,18 +469,18 @@ class GenRecord() :
         @arg gene: Gene
         @type gene: object
         @arg string: DNA sequence
-        @type string: string
+        @type string: unicode
         @kwarg string_reverse: DNA sequence to use (if not None) for the
             reverse complement.
 
         @return: reverse-complement (if applicable), otherwise return the
             original.
-        @rtype: string
+        @rtype: unicode
         """
         if gene.orientation == -1:
             if string_reverse:
                 string = string_reverse
-            return Bio.Seq.reverse_complement(string)
+            return util.reverse_complement(string)
         return string
     #__maybeInvert
 
@@ -639,15 +639,15 @@ class GenRecord() :
         @arg stop_g: stop position
         @type stop_g: integer
         @arg varType: variant type
-        @type varType: string
+        @type varType: unicode
         @arg arg1: argument 1 of a raw variant
-        @type arg1: string
+        @type arg1: unicode
         @arg arg2: argument 2 of a raw variant
-        @type arg2: string
+        @type arg2: unicode
         @arg roll: ???
         @type roll: tuple (integer, integer)
         @kwarg arg1_reverse: argument 1 to be used on reverse strand
-        @type arg1_reverse: string
+        @type arg1_reverse: unicode
         @kwarg start_fuzzy: Indicates if start position of variant is fuzzy.
         @type start_fuzzy: bool
         @kwarg stop_fuzzy: Indicates if stop position of variant is fuzzy.
@@ -666,8 +666,8 @@ class GenRecord() :
         else:
             chromStart = self.record.toChromPos(stop_g)
             chromStop = self.record.toChromPos(start_g)
-            chromArg1 = Bio.Seq.reverse_complement(arg1)
-            chromArg2 = Bio.Seq.reverse_complement(arg2)
+            chromArg1 = util.reverse_complement(arg1)
+            chromArg2 = util.reverse_complement(arg2)
             # Todo: Should we use arg1_reverse here?
 
         if roll :

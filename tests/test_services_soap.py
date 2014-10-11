@@ -3,6 +3,8 @@ Tests for the SOAP interface to Mutalyzer.
 """
 
 
+from __future__ import unicode_literals
+
 import bz2
 import datetime
 import logging
@@ -539,8 +541,8 @@ class TestServicesSoap(MutalyzerTest):
                     'AL449423.14(CDKN2A_v002):c.5_400del']
         data = '\n'.join(variants) + '\n' #.encode('base64')
 
-        result = self._call('submitBatchJob', data, 'NameChecker')
-        job_id = str(result)
+        result = self._call('submitBatchJob', data.encode('utf-8'), 'NameChecker')
+        job_id = unicode(result)
 
         result = self._call('monitorBatchJob', job_id)
         assert int(result) == len(variants)
@@ -564,8 +566,8 @@ class TestServicesSoap(MutalyzerTest):
                     'AL449423.14(CDKN2A_v002):c.5_400del']
         data = '\n'.join(variants) + '\n'
 
-        result = self._call('submitBatchJob', data, 'SyntaxChecker')
-        job_id = str(result)
+        result = self._call('submitBatchJob', data.encode('utf-8'), 'SyntaxChecker')
+        job_id = unicode(result)
 
         result = self._call('monitorBatchJob', job_id)
         assert int(result) == len(variants)
@@ -586,8 +588,8 @@ class TestServicesSoap(MutalyzerTest):
                     'AL449423.14(CDKN2A_v002):c.5_400del']
         data = '\r'.join(variants) + '\r'
 
-        result = self._call('submitBatchJob', data, 'SyntaxChecker')
-        job_id = str(result)
+        result = self._call('submitBatchJob', data.encode('utf-8'), 'SyntaxChecker')
+        job_id = unicode(result)
 
         result = self._call('monitorBatchJob', job_id)
         assert int(result) == len(variants)
@@ -608,8 +610,8 @@ class TestServicesSoap(MutalyzerTest):
                     'AL449423.14(CDKN2A_v002):c.5_400del']
         data = '\r\n'.join(variants) + '\r\n'
 
-        result = self._call('submitBatchJob', data, 'SyntaxChecker')
-        job_id = str(result)
+        result = self._call('submitBatchJob', data.encode('utf-8'), 'SyntaxChecker')
+        job_id = unicode(result)
 
         result = self._call('monitorBatchJob', job_id)
         assert int(result) == len(variants)
@@ -640,7 +642,7 @@ facilisi."""
             data += data
 
         try:
-            self._call('submitBatchJob', data.encode('base64'), 'NameChecker')
+            self._call('submitBatchJob', data.encode('utf-8'), 'NameChecker')
             assert False
         except Fault as e:
             # - senv:Client.RequestTooLong: Raised by Spyne, depending on
@@ -661,7 +663,7 @@ facilisi."""
             data = f.read()
 
         result = self._call('uploadGenBankLocalFile', data)
-        ud = str(result)
+        ud = unicode(result)
 
         r = self._call('runMutalyzer', ud + '(SDHD):g.7872G>T')
         assert r.errors == 0

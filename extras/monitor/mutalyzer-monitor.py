@@ -15,6 +15,8 @@ Currently implemented checks:
 """
 
 
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import sys

@@ -15,13 +15,14 @@ Module used to add and manage the Batch Jobs.
 #             - Batch Syntax Checker
 #             - Batch Position Converter
 
+from __future__ import unicode_literals
+
 import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
 from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 
-import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import queries, session
 from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
@@ -88,9 +89,9 @@ class Scheduler() :
         @todo: Handle Connection errors in a try, except clause
 
         @arg mailTo: The batch job submitter
-        @type mailTo: string
+        @type mailTo: unicode
         @arg url: The url containing the results
-        @type url: string
+        @type url: unicode
         """
         if settings.TESTING:
             return
@@ -410,7 +411,7 @@ Mutalyzer batch scheduler""" % url)
                 O.addMessage(__file__, 4, "EBATCHU",
                         "Unexpected error occurred, dev-team notified")
                 import traceback
-                O.addMessage(__file__, 4, "DEBUG", repr(traceback.format_exc()))
+                O.addMessage(__file__, 4, "DEBUG", unicode(repr(traceback.format_exc())))
             #except
             finally :
                 #check if we need to update the database
@@ -535,11 +536,11 @@ Mutalyzer batch scheduler""" % url)
             - Output written to outputfile.
 
         @arg cmd: The Syntax Checker input
-        @type cmd: string
+        @type cmd: unicode
         @arg i: The JobID
         @type i: integer
         @arg build: The build to use for the converter
-        @type build: string
+        @type build: unicode
         @arg flags: Flags of the current entry
         @type flags:
         """
@@ -562,7 +563,7 @@ Mutalyzer batch scheduler""" % url)
                     assembly = Assembly.by_name_or_alias(batch_job.argument)
                 except NoResultFound:
                     O.addMessage(__file__, 3, 'ENOASSEMBLY',
-                                 'Not a valid assembly: ' + str(batch_job.argument))
+                                 'Not a valid assembly: ' + batch_job.argument)
                     raise
 
                 converter = Converter(assembly, O)
@@ -704,7 +705,7 @@ Mutalyzer batch scheduler""" % url)
         Add a job to the Database and start the BatchChecker.
 
         @arg email:         e-mail address of batch supplier
-        @type email:        string
+        @type email:        unicode
         @arg queue:         A list of jobs
         @type queue:        list
         @arg columns:       The number of columns.

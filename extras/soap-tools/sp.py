@@ -11,6 +11,8 @@
 # This code is in the public domain; it can be used for whatever purpose
 # with absolutely no restrictions.
 
+from __future__ import unicode_literals
+
 import sys
 from SOAPpy import WSDL
 

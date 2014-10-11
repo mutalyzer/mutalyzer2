@@ -3,6 +3,8 @@ Mutalyzer web service HTTP/RPC with JSON response payloads.
 """
 
 
+from __future__ import unicode_literals
+
 from spyne.application import Application
 from spyne.protocol.http import HttpRpc
 from spyne.protocol.json import JsonDocument

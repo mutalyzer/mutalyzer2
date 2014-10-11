@@ -9,6 +9,8 @@ Mutalyzer RPC services.
 """
 
 
+from __future__ import unicode_literals
+
 from spyne.decorator import srpc
 from spyne.service import ServiceBase
 from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
@@ -16,16 +18,15 @@ from spyne.model.complex import Array
 from spyne.model.fault import Fault
 import os
 import socket
-from cStringIO import StringIO
-import tempfile
-from operator import itemgetter, attrgetter
+from io import BytesIO
+from operator import attrgetter
 from sqlalchemy.orm.exc import NoResultFound
 
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import session
-from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
-                                 BatchQueueItem, TranscriptMapping)
+from mutalyzer.db.models import (Assembly, BatchJob, BatchQueueItem,
+                                 TranscriptMapping)
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -103,7 +104,9 @@ class MutalyzerService(ServiceBase):
                         'Only files up to %d megabytes are accepted.'
                         % (settings.MAX_FILE_SIZE // 1048576))
 
-        batch_file = StringIO(''.join(data))
+        batch_file = BytesIO()
+        for d in data:
+            batch_file.write(d)
 
         job, columns = file_instance.parseBatchFile(batch_file)
         batch_file.close()
@@ -144,7 +147,7 @@ class MutalyzerService(ServiceBase):
 
         @arg job_id: Batch job identifier.
 
-        @return: Batch job result file.
+        @return: Batch job result file (UTF-8, base64 encoded).
         """
         left = BatchQueueItem.query.join(BatchJob).filter_by(result_id=job_id).count()
 
@@ -152,7 +155,7 @@ class MutalyzerService(ServiceBase):
             raise Fault('EBATCHNOTREADY', 'Batch job result is not yet ready.')
 
         filename = 'batch-job-%s.txt' % job_id
-        handle = open(os.path.join(settings.CACHE_DIR, filename))
+        handle = open(os.path.join(settings.CACHE_DIR, filename), 'rb')
         return handle
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer, Boolean,
@@ -804,23 +807,18 @@ class MutalyzerService(ServiceBase):
         result.sourceGi = O.getIndexedOutput('source_gi', 0)
         result.molecule = O.getIndexedOutput('molecule', 0)
 
-        # We force the results to strings here, because some results
-        # may be of type Bio.Seq.Seq which spyne doesn't like.
-        #
-        # todo: We might have to also do this elsewhere.
+        result.original = O.getIndexedOutput("original", 0)
+        result.mutated = O.getIndexedOutput("mutated", 0)
 
-        result.original = str(O.getIndexedOutput("original", 0))
-        result.mutated = str(O.getIndexedOutput("mutated", 0))
+        result.origMRNA = O.getIndexedOutput("origMRNA", 0)
+        result.mutatedMRNA = O.getIndexedOutput("mutatedMRNA", 0)
 
-        result.origMRNA = str(O.getIndexedOutput("origMRNA", 0))
-        result.mutatedMRNA = str(O.getIndexedOutput("mutatedMRNA", 0))
+        result.origCDS = O.getIndexedOutput("origCDS", 0)
+        result.newCDS = O.getIndexedOutput("newCDS", 0)
 
-        result.origCDS = str(O.getIndexedOutput("origCDS", 0))
-        result.newCDS = str(O.getIndexedOutput("newCDS", 0))
-
-        result.origProtein = str(O.getIndexedOutput("oldprotein", 0))
-        result.newProtein = str(O.getIndexedOutput("newprotein", 0))
-        result.altProtein = str(O.getIndexedOutput("altProtein", 0))
+        result.origProtein = O.getIndexedOutput("oldprotein", 0)
+        result.newProtein = O.getIndexedOutput("newprotein", 0)
+        result.altProtein = O.getIndexedOutput("altProtein", 0)
 
         result.chromDescription = \
             O.getIndexedOutput("genomicChromDescription", 0)
@@ -995,7 +993,7 @@ class MutalyzerService(ServiceBase):
                     transcript.CM.info()
                 cds_start = 1
 
-                t.cTransEnd = str(t.exons[-1].cStop)
+                t.cTransEnd = unicode(t.exons[-1].cStop)
                 t.gTransEnd = t.exons[-1].gStop
                 t.chromTransEnd = GenRecordInstance.record.toChromPos(
                     t.gTransEnd)
@@ -1009,15 +1007,15 @@ class MutalyzerService(ServiceBase):
                 t.name = '%s_v%s' % (gene.name, transcript.name)
                 t.id = transcript.transcriptID
                 t.product = transcript.transcriptProduct
-                t.cTransStart = str(trans_start)
+                t.cTransStart = unicode(trans_start)
                 t.gTransStart = transcript.CM.x2g(trans_start, 0)
                 t.chromTransStart = GenRecordInstance.record.toChromPos(
                     t.gTransStart)
-                t.cCDSStart = str(cds_start)
+                t.cCDSStart = unicode(cds_start)
                 t.gCDSStart = transcript.CM.x2g(cds_start, 0)
                 t.chromCDSStart = GenRecordInstance.record.toChromPos(
                     t.gCDSStart)
-                t.cCDSStop = str(cds_stop)
+                t.cCDSStop = unicode(cds_stop)
                 t.gCDSStop = transcript.CM.x2g(cds_stop, 0)
                 t.chromCDSStop = GenRecordInstance.record.toChromPos(t.gCDSStop)
                 t.locusTag = transcript.locusTag
@@ -1045,7 +1043,7 @@ class MutalyzerService(ServiceBase):
         """
         Upload a genbank file.
 
-        @arg data: Genbank file (base64 encoded).
+        @arg data: Genbank file (UTF-8, base64 encoded).
         @return: UD accession number for the uploaded genbank file.
         """
         output = Output(__file__)
@@ -1067,7 +1065,7 @@ class MutalyzerService(ServiceBase):
                         'Only files up to %d megabytes are accepted.'
                         % (settings.MAX_FILE_SIZE // 1048576))
 
-        ud = retriever.uploadrecord(''.join(data))
+        ud = retriever.uploadrecord(b''.join(data))
 
         output.addMessage(__file__, -1, 'INFO',
                           'Finished processing uploadGenBankLocalFile()')
@@ -1075,7 +1073,7 @@ class MutalyzerService(ServiceBase):
         # Todo: use SOAP Fault object here (see Trac issue #41).
         if not ud:
             error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: str(m), output.getMessages()))
+                    + '\n'.join(map(lambda m: unicode(m), output.getMessages()))
             raise Exception(error)
 
         return ud
@@ -1112,7 +1110,7 @@ class MutalyzerService(ServiceBase):
         # Todo: use SOAP Fault object here (see Trac issue #41).
         if not UD:
             error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: str(m), O.getMessages()))
+                    + '\n'.join(map(lambda m: unicode(m), O.getMessages()))
             raise Exception(error)
 
         return UD
@@ -1281,7 +1279,7 @@ class MutalyzerService(ServiceBase):
         messages = output.getMessages()
         if messages:
             error = 'The request could not be completed\n' + \
-                '\n'.join(map(lambda m: str(m), output.getMessages()))
+                '\n'.join(map(lambda m: unicode(m), output.getMessages()))
             raise Exception(error)
 
         return descriptions

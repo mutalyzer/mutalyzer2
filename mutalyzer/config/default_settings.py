@@ -4,6 +4,9 @@ pointed-to by the `MUTALYZER_SETTINGS` environment variable.
 """
 
 
+from __future__ import unicode_literals
+
+
 # Use Mutalyzer in debug mode.
 DEBUG = False
 

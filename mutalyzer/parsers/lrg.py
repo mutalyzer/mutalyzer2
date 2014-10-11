@@ -21,6 +21,8 @@ added in python2.5. Its main strengths are speed and readability [pythonesque].
 """
 
 
+from __future__ import unicode_literals
+
 import xml.dom.minidom
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
@@ -54,14 +56,14 @@ def _get_content(data, refname):
     @arg data:     a minidom object
     @type data:    object
     @arg refname:  the name of a member of the minidom object
-    @type refname: string
+    @type refname: unicode
 
-    @return: The UTF-8 content of the textnode or an emtpy string
+    @return: The content of the textnode or an emtpy string
     @rtype: string
     """
     temp = data.getElementsByTagName(refname)
     if temp:
-        return temp[0].lastChild.data.encode("utf8")
+        return temp[0].lastChild.data
     else:
         return ""
 #_get_content
@@ -75,14 +77,14 @@ def _attr2dict(attr):
     @type attr: object
 
     @return: A dictionary with pairing of node-attribute names and values.
-    Integer string values are converted to integers. String values are converted
-    to UTF-8
+    Integer string values are converted to integers.
     @rtype: dictionary
     """
     ret = {}
     for key, value in attr.items():
-        value = value.isdigit() and int(value) or value.encode("utf-8")
-        ret[key.encode("utf-8")] = value
+        if value.isdigit():
+            value = int(value)
+        ret[key] = value
     return ret
 #_attr2dict
 
@@ -166,7 +168,7 @@ def create_record(data):
     for tData in fixed.getElementsByTagName("transcript"):
         # iterate over the transcripts in the fixed section.
         # get the transcript from the updatable section and combine results
-        transcriptName = tData.getAttribute("name").encode("utf8")[1:]
+        transcriptName = tData.getAttribute("name")[1:]
         transcription = [t for t in gene.transcriptList if t.name ==
                 transcriptName][0]  #TODO?: swap with gene.findLocus
 

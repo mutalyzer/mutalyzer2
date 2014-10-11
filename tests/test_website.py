@@ -5,6 +5,8 @@ Tests for the WSGI interface to Mutalyzer.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 import bz2
 import cgi
@@ -12,7 +14,7 @@ import logging
 from mock import patch
 import os
 import re
-from StringIO import StringIO
+from io import BytesIO
 import time
 import urllib
 import urllib2
@@ -264,7 +266,7 @@ class TestWebsite(MutalyzerTest):
         """
         data = {'job_type': job_type,
                 'email': 'test@test.test',
-                'file': (StringIO(file), 'test.txt')}
+                'file': (BytesIO(file.encode('utf-8')), 'test.txt')}
         if assembly_name_or_alias is not None:
             data['assembly_name_or_alias'] = assembly_name_or_alias
 
@@ -510,7 +512,7 @@ class TestWebsite(MutalyzerTest):
         Download a C# example client for the web service.
         """
         r = self.app.get('/downloads/client-mono.cs')
-        assert r.headers['Content-Type'] == 'text/plain'
+        assert 'text/plain' in r.headers['Content-Type']
         assert 'public static void Main(String [] args) {' in r.data
 
     def test_download_php(self):
@@ -634,7 +636,7 @@ class TestWebsite(MutalyzerTest):
                                        'build': 'hg19',
                                        'acc': 'NM_203473.1'})
         assert 'text/plain' in r.headers['Content-Type']
-        assert r.content_type == 'text/plain'
+        assert 'text/plain' in r.content_type
         expected = '\n'.join(['-158', '1709', '1371'])
         assert r.data == expected
 
@@ -678,7 +680,7 @@ class TestWebsite(MutalyzerTest):
         """
         r = self.app.post('/reference-loader',
                           data={'method': 'upload',
-                                'file': (StringIO('this is not a genbank file'), 'AB026906.1.gb')})
+                                'file': (BytesIO('this is not a genbank file'.encode('utf-8')), 'AB026906.1.gb')})
         assert 'Your reference sequence was loaded successfully.' not in r.data
         assert 'The file could not be parsed.' in r.data
 

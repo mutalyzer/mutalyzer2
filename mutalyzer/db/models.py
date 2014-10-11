@@ -3,6 +3,8 @@ Models backed by SQL using SQLAlchemy.
 """
 
 
+from __future__ import unicode_literals
+
 from datetime import datetime
 import sqlite3
 import uuid
@@ -50,7 +52,7 @@ class Positions(TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value is not None:
-            value = ','.join(str(i) for i in value)
+            value = ','.join(unicode(i) for i in value)
         return value
 
     def process_result_value(self, value, dialect):
@@ -98,7 +100,7 @@ class BatchJob(db.Base):
         self.email = email
         self.download_url = download_url
         self.argument = argument
-        self.result_id = str(uuid.uuid4())
+        self.result_id = unicode(uuid.uuid4())
         self.added = datetime.now()
 
     def __repr__(self):

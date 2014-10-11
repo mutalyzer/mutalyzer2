@@ -9,6 +9,8 @@ crashed.
 """
 
 
+from __future__ import unicode_literals
+
 import os
 from mutalyzer import config
 

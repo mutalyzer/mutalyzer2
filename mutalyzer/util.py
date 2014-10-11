@@ -19,18 +19,78 @@ General utility functions.
 """
 
 
+from __future__ import unicode_literals
+
 from functools import wraps
 import inspect
 from itertools import izip_longest
 import math
 import operator
-import os
 import sys
 import time
 
-from Bio.Alphabet import IUPAC
-import Bio.Seq
 from Bio.SeqUtils import seq3
+
+
+# Taken from BioPython.
+AMBIGUOUS_DNA_COMPLEMENT = {
+    'A': 'T',
+    'C': 'G',
+    'G': 'C',
+    'T': 'A',
+    'M': 'K',
+    'R': 'Y',
+    'W': 'W',
+    'S': 'S',
+    'Y': 'R',
+    'K': 'M',
+    'V': 'B',
+    'H': 'D',
+    'D': 'H',
+    'B': 'V',
+    'X': 'X',
+    'N': 'N'}
+AMBIGUOUS_RNA_COMPLEMENT = {
+    'A': 'U',
+    'C': 'G',
+    'G': 'C',
+    'U': 'A',
+    'M': 'K',
+    'R': 'Y',
+    'W': 'W',
+    'S': 'S',
+    'Y': 'R',
+    'K': 'M',
+    'V': 'B',
+    'H': 'D',
+    'D': 'H',
+    'B': 'V',
+    'X': 'X',
+    'N': 'N'}
+
+
+def _make_translation_table(complement_mapping):
+    before = complement_mapping.keys()
+    before += [b.lower() for b in before]
+    after = complement_mapping.values()
+    after += [b.lower() for b in after]
+    return {ord(k): v for k, v in zip(before, after)}
+
+
+_dna_complement_table = _make_translation_table(AMBIGUOUS_DNA_COMPLEMENT)
+_rna_complement_table = _make_translation_table(AMBIGUOUS_RNA_COMPLEMENT)
+
+
+def reverse_complement(sequence):
+    """
+    Reverse complement of a sequence represented as unicode string.
+    """
+    if 'U' in sequence or 'u' in sequence:
+        table = _rna_complement_table
+    else:
+        table = _dna_complement_table
+
+    return ''.join(reversed(sequence.translate(table)))
 
 
 def grouper(iterable, n=2, fillvalue=None):
@@ -115,17 +175,17 @@ def splice(s, splice_sites):
         'bcdghijklmnoptuvw'
 
     @arg s: A DNA sequence.
-    @type s: string
+    @type s: any sequence type
     @arg splice_sites: A list of even length of integers.
     @type splice_sites: list
 
     @return: The concatenation of slices from the sequence that is present
              in the GenBank record.
-    @rtype: string
+    @rtype: type(s)
 
     @todo: Assert length of splice_sites is even.
     """
-    transcript = ''
+    transcript = s[:0]
 
     for acceptor, donor in grouper(splice_sites):
         transcript += s[acceptor - 1:donor]
@@ -146,7 +206,7 @@ def __nsplice(string, splice_sites, CDS, orientation) :
     @todo: documentation
     """
 
-    transcript = ""
+    transcript = string[:0]
     if orientation == 1 :
         for i in range(0, len(splice_sites), 2) :
             if CDS[0] >= splice_sites[i] and CDS[0] <= splice_sites[i + 1] :
@@ -212,13 +272,14 @@ def format_range(first, last):
     @type last: integer
 
     @return: {first}_{last} in case of a real range, {first} otherwise.
-    @rtype: string
+    @rtype: unicode
     """
     if first == last:
-        return str(first)
+        return unicode(first)
 
     return '%i_%i' % (first, last)
 #format_range
+
 
 def roll_(s, start, end) :
     """
@@ -239,6 +300,7 @@ def roll_(s, start, end) :
     return j, i
 #roll
 
+
 def roll(s, first, last):
     """
     Determine the variability of a variant by looking at cyclic
@@ -254,7 +316,7 @@ def roll(s, first, last):
         (1, 3)
 
     @arg s: A reference sequence.
-    @type s: string
+    @type s: any sequence type
     @arg first: First position of the pattern in the reference sequence.
     @type first: int
     @arg last: Last position of the pattern in the reference sequence.
@@ -302,13 +364,13 @@ def palinsnoop(s):
         0
 
     @arg s: A nucleotide sequence.
-    @type s: string
+    @type s: unicode
 
     @return: The number of elements that are palindromic or -1 if the string
              is a 'palindrome'.
-    @rtype: string
+    @rtype: int
     """
-    s_revcomp = Bio.Seq.reverse_complement(s)
+    s_revcomp = reverse_complement(s)
 
     for i in range(int(math.ceil(len(s) / 2.0))):
         if s[i] != s_revcomp[i]:
@@ -330,12 +392,12 @@ def longest_common_prefix(s1, s2):
         'abcdefg'
 
     @arg s1: The first string.
-    @type s1: string
+    @type s1: unicode
     @arg s2: The second string.
-    @type s2: string
+    @type s2: unicode
 
     @return: The longest common prefix of s1 and s2.
-    @rtype: string
+    @rtype: unicode
 
     @todo: This is mostly used just for the length of the returned string,
            and we could also return that directly.
@@ -359,9 +421,9 @@ def longest_common_suffix(s1, s2):
         'efg'
 
     @arg s1: The first string.
-    @type s1: string
+    @type s1: unicode
     @arg s2: The second string.
-    @type s2: string
+    @type s2: unicode
 
     @return: The longest common suffix of s1 and s2.
     @rtype: string
@@ -380,15 +442,15 @@ def trim_common(s1, s2):
         ('xyzef', 'abc', 3, 1)
 
     @arg s1: A string.
-    @type s1: string
+    @type s1: unicode
     @arg s2: Another string.
-    @type s2: string
+    @type s2: unicode
 
     @return: A tuple of:
-        - string: Trimmed version of s1.
-        - string: Trimmed version of s2.
-        - int:    Length of longest common prefix.
-        - int:    Length of longest common suffix.
+        - unicode: Trimmed version of s1.
+        - unicode: Trimmed version of s2.
+        - int:     Length of longest common prefix.
+        - int:     Length of longest common suffix.
 
     @todo: More intelligently handle longest_common_prefix().
     """
@@ -407,14 +469,14 @@ def is_dna(s):
         >>> is_dna('TACUGT')
         False
 
-    @arg s: Any string or Bio.Seq.Seq instance.
-    @type s: string
+    @arg s: Any string.
+    @type s: unicode
 
     @return: True if the string is a DNA string, False otherwise.
     @rtype: boolean
     """
-    for i in str(s):
-        if not i in IUPAC.unambiguous_dna.letters:
+    for i in s:
+        if i not in 'ATCG':
             return False
 
     return True
@@ -435,16 +497,16 @@ def in_frame_description(s1, s2) :
         ('p.(Pro4_Gln6delinsGlnGlnMet)', 3, 6, 6)
 
     @arg s1: The original protein.
-    @type s1: string
+    @type s1: unicode
     @arg s2: The mutated protein.
-    @type s2: string
+    @type s2: unicode
 
     @return: A tuple of:
-        - string ; Protein description of the change.
-        - int    ; First position of the change.
-        - int    ; Last position of the change in the first protein.
-        - int    ; Last position of the change in the second protein.
-    @rtype: tuple(string, int, int, int)
+        - unicode ; Protein description of the change.
+        - int     ; First position of the change.
+        - int     ; Last position of the change in the first protein.
+        - int     ; Last position of the change in the second protein.
+    @rtype: tuple(unicode, int, int, int)
 
     @todo: More intelligently handle longest_common_prefix().
     @todo: Refactor this code (too many return statements).
@@ -528,16 +590,16 @@ def out_of_frame_description(s1, s2):
         ('p.(Pro4Glnfs*5)', 3, 7, 7)
 
     @arg s1: The original protein.
-    @type s1: string
+    @type s1: unicode
     @arg s2: The mutated protein.
-    @type s2: string
+    @type s2: unicode
 
     @return: A tuple of:
-        - string ; Protein description of the change.
-        - int    ; First position of the change.
-        - int    ; Last position of the first protein.
-        - int    ; Last position of the second protein.
-    @rtype: tuple(string, int, int, int)
+        - unicode ; Protein description of the change.
+        - int     ; First position of the change.
+        - int     ; Last position of the first protein.
+        - int     ; Last position of the second protein.
+    @rtype: tuple(unicode, int, int, int)
 
     @todo: More intelligently handle longest_common_prefix().
     """
@@ -573,23 +635,23 @@ def protein_description(cds_stop, s1, s2) :
     @arg cds_stop: Position of the stop codon in c. notation (CDS length).
     @type cds_stop: int
     @arg s1: The original protein.
-    @type s1: string
+    @type s1: unicode
     @arg s2: The mutated protein.
-    @type s2: string
+    @type s2: unicode
 
     @return: A tuple of:
-        - string ; Protein description of the change.
-        - int    ; First position of the change.
-        - int    ; Last position of the change in the first protein.
-        - int    ; Last position of the change in the second protein.
-    @rtype: tuple(string, int, int, int)
+        - unicode ; Protein description of the change.
+        - int     ; First position of the change.
+        - int     ; Last position of the change in the first protein.
+        - int     ; Last position of the change in the second protein.
+    @rtype: tuple(unicode, int, int, int)
     """
     if cds_stop % 3:
-        description = out_of_frame_description(str(s1), str(s2))
+        description = out_of_frame_description(s1, s2)
     else:
-        description = in_frame_description(str(s1), str(s2))
+        description = in_frame_description(s1, s2)
 
-    if not s2 or str(s1[0]) != str(s2[0]):
+    if not s2 or s1[0] != s2[0]:
         # Mutation in start codon.
         return 'p.?', description[1], description[2], description[3]
 
@@ -603,7 +665,7 @@ def visualise_sequence(sequence, max_length=25, flank_size=6):
     string is clipped; otherwise the string is just returned.
 
     @arg sequence: DNA sequence.
-    @type sequence: str
+    @type sequence: unicode
     @arg max_length: Maximum length of visualised sequence.
     @type max_length: int
     @arg flank_size: Length of the flanks in clipped visualised sequence.
@@ -629,19 +691,19 @@ def _insert_tag(s, pos1, pos2, tag1, tag2):
     anything either.
 
     @arg s: A sequence.
-    @type s:
+    @type s: unicode
     @arg pos1: Position of tag1.
     @type pos1: int
     @arg pos2: Position of tag2.
     @type pos2: int
     @arg tag1: Content of tag1.
-    @type tag1: string
+    @type tag1: unicode
     @arg tag2: Content of tag2.
-    @type tag2: string
+    @type tag2: unicode
 
     @return: The original sequence, or a sequence with eiter tag1, tag2 or
              both tags inserted.
-    @rtype: string
+    @rtype: unicode
 
     @todo: Cleanup (note: only used in print_protein_html).
     """
@@ -670,7 +732,7 @@ def print_protein_html(s, first, last, O, where, text=False):
     and is suitable for viewing in a monospaced font.
 
     @arg s: A protein sequence.
-    @type s: string
+    @type s: unicode
     @arg first: First position to highlight.
     @type first: int
     @arg last: Last position to highlight.
@@ -678,7 +740,7 @@ def print_protein_html(s, first, last, O, where, text=False):
     @arg O: The Output object.
     @type O: Modules.Output.Output
     @arg where: Location in the {O} object to store the representation.
-    @type where: string
+    @type where: unicode
 
     @todo: Cleanup.
     """
@@ -701,7 +763,7 @@ def print_protein_html(s, first, last, O, where, text=False):
     o = 1
 
     # Add the first position.
-    output = '%s ' % str(o).rjust(m)
+    output = '%s ' % unicode(o).rjust(m)
 
     for i in range(0, len(s), block):
         # Add the blocks.
@@ -714,13 +776,13 @@ def print_protein_html(s, first, last, O, where, text=False):
             # Add the position (while escaping any potential highlighting).
             if text:
                 if first < o < last:
-                    output = '%s%s%s ' % (tag2, str(o).rjust(m), tag1)
+                    output = '%s%s%s ' % (tag2, unicode(o).rjust(m), tag1)
                 else:
-                    output = '%s ' % str(o).rjust(m)
+                    output = '%s ' % unicode(o).rjust(m)
             else:
                 output = \
                     '<tt style="color:000000;font-weight:normal">%s</tt> ' % \
-                    str(o).rjust(m)
+                    unicode(o).rjust(m)
 
     # Add last line.
     O.addOutput(where, output)
@@ -748,10 +810,10 @@ def nice_filename(filename):
     Strip the path and the extention from a filename.
 
     @arg filename: A complete path plus extention.
-    @type filename: string
+    @type filename: unicode
 
     @return: The bare filename without a path and extention.
-    @rtype: string
+    @rtype: unicode
     """
     return filename.split('/')[-1].split('.')[0]
 #nice_filename
@@ -788,16 +850,16 @@ def format_usage(usage=None, keywords={}):
 
     @kwarg usage: The string to format. If omitted, the calling module's
         docstring is used.
-    @type usage: string
+    @type usage: unicode
     @kwarg keywords: A dictionary of (keyword, value) pairs used to format
         the usage string. If it does not contain the key 'command', it is
         added with the value of sys.argv[0].
-    @type keywords: dictionary(string, string)
+    @type keywords: dictionary(unicode, unicode)
 
     @return: Formatted usage string. This is {usage} with any entries from
         {keywords} replaced and cut-off at the first occurence of two
         consecutive empty lines.
-    @rtype: string
+    @rtype: unicode
     """
     if not usage:
         caller = inspect.stack()[1]

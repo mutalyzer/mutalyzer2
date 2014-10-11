@@ -4,6 +4,8 @@ using SQLAlchemy.
 """
 
 
+from __future__ import unicode_literals
+
 import sqlalchemy
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.declarative import declarative_base

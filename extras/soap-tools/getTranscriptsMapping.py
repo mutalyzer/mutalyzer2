@@ -16,6 +16,8 @@ and printed to standard output.
 """
 
 
+from __future__ import unicode_literals
+
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
 import sys

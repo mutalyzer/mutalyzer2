@@ -3,6 +3,8 @@ Mutalyzer website interface using the Flask framework.
 """
 
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import pkg_resources

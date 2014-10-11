@@ -17,6 +17,8 @@ module much more.
 """
 
 
+from __future__ import unicode_literals
+
 import time
 
 from mutalyzer.redisclient import client
@@ -36,7 +38,8 @@ def increment_counter(counter):
     pipe.incr('counter:%s:total' % counter)
 
     for label, bucket, expire in INTERVALS:
-        key = 'counter:%s:%s:%s' % (counter, label, time.strftime(bucket))
+        key = 'counter:%s:%s:%s' % (counter, label,
+                                    unicode(time.strftime(bucket)))
         pipe.incr(key)
 
         # It's safe to just keep on expiring the counter, even if it already

@@ -16,6 +16,8 @@ Module for parsing CSV files and spreadsheets.
 #     - File ; Parse CSV files and spreadsheets.
 
 
+from __future__ import unicode_literals
+
 import magic           # open(), MAGIC_MIME, MAGIC_NONE
 import csv             # Sniffer(), reader(), Error
 import xlrd            # open_workbook()
@@ -23,10 +25,7 @@ import zipfile         # ZipFile()
 import xml.dom.minidom # parseString()
 import os              # remove()
 import tempfile
-import types           # UnicodeType
-from cStringIO import StringIO
 
-from mutalyzer import util
 from mutalyzer.config import settings
 
 
@@ -173,10 +172,10 @@ class File() :
         for i in range(sheet.nrows) :
             row = []
             for j in sheet.row_values(i) :
-                if type(j) == types.UnicodeType : # Convert the data to strings.
-                    row.append(j.encode("utf8"))
-                else :
-                    row.append(str(j))
+                if isinstance(j, unicode):
+                    row.append(j)
+                else:
+                    row.append(j.decode('utf-8'))
             #for
             ret.append(row)
         #for
@@ -209,7 +208,7 @@ class File() :
             for j in i.getElementsByTagName("table:table-cell") :
                 c = j.getElementsByTagName("text:p")
                 if c :
-                    row.append(c[0].lastChild.data.encode("utf8"))
+                    row.append(c[0].lastChild.data)
                 #if
             #for
             ret.append(row)
@@ -346,19 +345,19 @@ class File() :
         @arg handle: A handle to a stream
         @type handle: stream
 
-        @return: The mime type of a file
-        @rtype: string
+        @return: The mime type of a file and a textual description.
+        @rtype: unicode, unicode
         """
         handle.seek(0)
         buf = handle.read(BUFFER_SIZE)
 
         MagicInstance = magic.open(magic.MAGIC_MIME)
         MagicInstance.load()
-        mimeType = MagicInstance.buffer(buf).split(';')[0]
+        mimeType = MagicInstance.buffer(buf).decode('utf-8').split(';')[0]
         MagicInstance.close()
         MagicInstance = magic.open(magic.MAGIC_NONE)
         MagicInstance.load()
-        description = MagicInstance.buffer(buf)
+        description = MagicInstance.buffer(buf).decode('utf-8')
         del MagicInstance
         handle.seek(0)
 
@@ -419,9 +418,9 @@ def makeList(l, maxlen=10):
     @arg maxlen: maximum length of the string you want to return
     @type maxlen: integer
     @return: a list converted to a string with comma's and spaces
-    @rtype: string
+    @rtype: unicode
     """
-    ret = ", ".join(str(i) for i in l[:maxlen])
+    ret = ", ".join(i for i in l[:maxlen])
     if len(l)>maxlen:
         return ret+", ..."
     else:

@@ -3,6 +3,8 @@ Tests for the mutalyzer.grammar module.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 import os
 
