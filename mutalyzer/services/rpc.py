@@ -11,7 +11,7 @@ Mutalyzer RPC services.
 
 from spyne.decorator import srpc
 from spyne.service import ServiceBase
-from spyne.model.primitive import String, Integer, Boolean, DateTime, Unicode
+from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
 from spyne.model.complex import Array
 from spyne.model.fault import Fault
 import os
@@ -51,7 +51,7 @@ class MutalyzerService(ServiceBase):
         super(MutalyzerService, self).__init__(environ)
     #__init__
 
-    @srpc(Mandatory.ByteArray, Unicode, Unicode, _returns=String)
+    @srpc(Mandatory.ByteArray, Unicode, Unicode, _returns=Unicode)
     def submitBatchJob(data, process='NameChecker', argument=''):
         """
         Submit a batch job.
@@ -156,7 +156,7 @@ class MutalyzerService(ServiceBase):
         return handle
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer, Boolean,
-        _returns=Array(Mandatory.String))
+        _returns=Array(Mandatory.Unicode))
     def getTranscripts(build, chrom, pos, versions=False) :
         """
         Get all the transcripts that overlap with a chromosomal position.
@@ -215,7 +215,7 @@ class MutalyzerService(ServiceBase):
             return [m.accession for m in mappings]
     #getTranscripts
 
-    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
     def getTranscriptsByGeneName(build, name):
         """
         Todo: documentation.
@@ -244,7 +244,7 @@ class MutalyzerService(ServiceBase):
     #getTranscriptsByGene
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.String))
+        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.Unicode))
     def getTranscriptsRange(build, chrom, pos1, pos2, method) :
         """
         Get all the transcripts that overlap with a range on a chromosome.
@@ -387,7 +387,7 @@ class MutalyzerService(ServiceBase):
         return transcripts
     #getTranscriptsMapping
 
-    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def getGeneName(build, accno) :
         """
         Find the gene name associated with a transcript.
@@ -536,7 +536,7 @@ class MutalyzerService(ServiceBase):
         return T
     #transcriptInfo
 
-    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def chromAccession(build, name) :
         """
         Get the accession number of a chromosome, given a name.
@@ -574,7 +574,7 @@ class MutalyzerService(ServiceBase):
         return chromosome.accession
     #chromAccession
 
-    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def chromosomeName(build, accNo) :
         """
         Get the name of a chromosome, given a chromosome accession number.
@@ -612,7 +612,7 @@ class MutalyzerService(ServiceBase):
         return chromosome.name
     #chromosomeName
 
-    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def getchromName(build, acc) :
         """
         Get the chromosome name, given a transcript identifier (NM number).
@@ -650,7 +650,7 @@ class MutalyzerService(ServiceBase):
     #chromosomeName
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Unicode,
-          _returns=Array(Mandatory.String))
+          _returns=Array(Mandatory.Unicode))
     def numberConversion(build, variant, gene=None):
         """
         Converts I{c.} to I{g.} notation or vice versa
@@ -1040,7 +1040,7 @@ class MutalyzerService(ServiceBase):
         return transcripts
     #getTranscriptsAndInfo
 
-    @srpc(Mandatory.ByteArray, _returns=Mandatory.String)
+    @srpc(Mandatory.ByteArray, _returns=Mandatory.Unicode)
     def uploadGenBankLocalFile(data):
         """
         Upload a genbank file.
@@ -1081,7 +1081,7 @@ class MutalyzerService(ServiceBase):
         return ud
     #upLoadGenBankLocalFile
 
-    @srpc(Mandatory.Unicode, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, _returns=Mandatory.Unicode)
     def uploadGenBankRemoteFile(url) :
         """
         Not implemented yet.
@@ -1090,7 +1090,7 @@ class MutalyzerService(ServiceBase):
     #upLoadGenBankRemoteFile
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
-        Mandatory.Integer, _returns=Mandatory.String)
+        Mandatory.Integer, _returns=Mandatory.Unicode)
     def sliceChromosomeByGene(geneSymbol, organism, upStream,
         downStream) :
         """
@@ -1119,7 +1119,7 @@ class MutalyzerService(ServiceBase):
     #sliceChromosomeByGene
 
     @srpc(Mandatory.Unicode, Mandatory.Integer, Mandatory.Integer,
-        Mandatory.Integer, _returns=Mandatory.String)
+        Mandatory.Integer, _returns=Mandatory.Unicode)
     def sliceChromosome(chromAccNo, start, end, orientation) :
         """
         Todo: documentation, error handling, argument checking, tests.
@@ -1190,7 +1190,7 @@ class MutalyzerService(ServiceBase):
         return result
     #info
 
-    @srpc(_returns=Mandatory.String)
+    @srpc(_returns=Mandatory.Unicode)
     def ping():
         """
         Simple function to test the interface.
@@ -1253,7 +1253,7 @@ class MutalyzerService(ServiceBase):
         return map(cache_entry_to_soap, cache)
     #getCache
 
-    @srpc(Mandatory.Unicode, _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
     def getdbSNPDescriptions(rs_id):
         """
         Lookup HGVS descriptions for a dbSNP rs identifier.

@@ -1,26 +1,14 @@
 """
 Collection of serilizable objects used by the SOAP web service. They extend
-from the spyne ClassModel.
+from the Spyne model classes.
 
-Default attributes for the spyne ClassModel:
-- nillable = True
-- min_occurs = 0
-- max_occurs = 1
-
-Additional attributes values for the spyne String model:
-- min_len = 0
-- max_len = 'unbounded'
-- pattern = None
-
-@todo: Use Mandatory.* models in the ClassModel extensions?
-@todo: See if it improves client code if we use Array(_, nillable=False).
 @todo: Move all these models to the mutalyzer.services package and refactor
   all uses of them in other places. The SOAP_NAMESPACE variable can then also
   be moved there.
 """
 
 
-from spyne.model.primitive import String, Integer, Boolean, DateTime, Unicode
+from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
 from spyne.model.binary import ByteArray
 from spyne.model.complex import ComplexModel, Array
 
@@ -30,9 +18,8 @@ from mutalyzer import SOAP_NAMESPACE
 class Mandatory(object):
     """
     This is spyne.model.primitive.Mandatory, but without min_length=1 for
-    the String model.
+    the Unicode model.
     """
-    String = String(type_name='mandatory_string', min_occurs=1, nillable=False)
     Unicode = Unicode(type_name='mandatory_unicode', min_occurs=1, nillable=False)
     Integer = Integer(type_name='mandatory_integer', min_occurs=1, nillable=False)
     Boolean = Boolean(type_name='mandatory_boolean', min_occurs=1, nillable=False)
@@ -47,8 +34,8 @@ class SoapMessage(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    errorcode = Mandatory.String
-    message = Mandatory.String
+    errorcode = Mandatory.Unicode
+    message = Mandatory.Unicode
 #SoapMessage
 
 
@@ -64,7 +51,7 @@ class Mapping(ComplexModel):
     endoffset = Integer
     start_g = Integer
     end_g = Integer
-    mutationType = String
+    mutationType = Unicode
     errorcode = Integer
     messages = Array(SoapMessage)
 #Mapping
@@ -88,8 +75,8 @@ class RawVariant(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    description = Mandatory.String
-    visualisation = Mandatory.String
+    description = Mandatory.Unicode
+    visualisation = Mandatory.Unicode
 #RawVariant
 
 
@@ -104,14 +91,14 @@ class RawVar(ComplexModel):
     start_offset = Mandatory.Integer
     end = Mandatory.Integer
     end_offset = Mandatory.Integer
-    type = Mandatory.String
-    deleted = Mandatory.String
-    inserted = Mandatory.String
+    type = Mandatory.Unicode
+    deleted = Mandatory.Unicode
+    inserted = Mandatory.Unicode
     shift = Mandatory.Integer
-    startAA = Mandatory.String
-    endAA = Mandatory.String
+    startAA = Mandatory.Unicode
+    endAA = Mandatory.Unicode
     term = Mandatory.Integer
-    hgvs = Mandatory.String
+    hgvs = Mandatory.Unicode
     hgvsLength = Mandatory.Integer
 #RawVar
 
@@ -122,7 +109,7 @@ class Allele(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    description = Mandatory.String
+    description = Mandatory.Unicode
     allele = Array(RawVar)
 #Allele
 
@@ -133,10 +120,10 @@ class ExonInfo(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    cStart = Mandatory.String
+    cStart = Mandatory.Unicode
     gStart = Mandatory.Integer
     chromStart = Integer
-    cStop = Mandatory.String
+    cStop = Mandatory.Unicode
     gStop = Mandatory.Integer
     chromStop = Integer
 #ExonInfo
@@ -148,34 +135,34 @@ class MutalyzerOutput(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    referenceId = Mandatory.String
-    sourceId = Mandatory.String
-    sourceAccession = String
-    sourceVersion = String
-    sourceGi = String
-    molecule = Mandatory.String
+    referenceId = Mandatory.Unicode
+    sourceId = Mandatory.Unicode
+    sourceAccession = Unicode
+    sourceVersion = Unicode
+    sourceGi = Unicode
+    molecule = Mandatory.Unicode
 
-    original = String
-    mutated = String
+    original = Unicode
+    mutated = Unicode
 
-    origMRNA = String
-    mutatedMRNA= String
+    origMRNA = Unicode
+    mutatedMRNA= Unicode
 
-    origCDS = String
-    newCDS= String
+    origCDS = Unicode
+    newCDS= Unicode
 
-    origProtein = String
-    newProtein = String
-    altProtein = String
+    origProtein = Unicode
+    newProtein = Unicode
+    altProtein = Unicode
 
     errors = Integer
     warnings = Integer
-    summary = String
+    summary = Unicode
 
-    chromDescription = String
-    genomicDescription = String
-    transcriptDescriptions = Array(String)
-    proteinDescriptions = Array(String)
+    chromDescription = Unicode
+    genomicDescription = Unicode
+    transcriptDescriptions = Array(Unicode)
+    proteinDescriptions = Array(Unicode)
 
     exons = Array(ExonInfo)
 
@@ -191,8 +178,8 @@ class TranscriptNameInfo(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    transcriptName = Mandatory.String
-    productName = Mandatory.String
+    transcriptName = Mandatory.Unicode
+    productName = Mandatory.Unicode
 #TranscriptNameInfo
 
 
@@ -202,9 +189,9 @@ class ProteinTranscript(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    name = Mandatory.String
-    id = Mandatory.String
-    product = Mandatory.String
+    name = Mandatory.Unicode
+    id = Mandatory.Unicode
+    product = Mandatory.Unicode
 #ProteinTranscript
 
 
@@ -220,27 +207,27 @@ class TranscriptInfo(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    name = Mandatory.String
-    id = Mandatory.String
-    product = Mandatory.String
+    name = Mandatory.Unicode
+    id = Mandatory.Unicode
+    product = Mandatory.Unicode
 
-    cTransStart = Mandatory.String
+    cTransStart = Mandatory.Unicode
     gTransStart = Mandatory.Integer
     chromTransStart = Integer
-    cTransEnd = Mandatory.String
+    cTransEnd = Mandatory.Unicode
     gTransEnd = Mandatory.Integer
     chromTransEnd = Integer
     sortableTransEnd = Mandatory.Integer
 
-    cCDSStart = Mandatory.String
+    cCDSStart = Mandatory.Unicode
     gCDSStart = Mandatory.Integer
     chromCDSStart = Integer
-    cCDSStop = Mandatory.String
+    cCDSStop = Mandatory.Unicode
     gCDSStop = Mandatory.Integer
     chromCDSStop = Integer
 
-    locusTag = Mandatory.String
-    linkMethod = Mandatory.String
+    locusTag = Mandatory.Unicode
+    linkMethod = Mandatory.Unicode
 
     exons = Array(ExonInfo)
 
@@ -254,10 +241,10 @@ class TranscriptMappingInfo(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    name = Mandatory.String
+    name = Mandatory.Unicode
     version = Mandatory.Integer
-    gene = Mandatory.String
-    orientation = Mandatory.String
+    gene = Mandatory.Unicode
+    orientation = Mandatory.Unicode
 
     start = Mandatory.Integer
     stop = Mandatory.Integer
@@ -284,15 +271,15 @@ class InfoOutput(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    version = String
-    versionParts = Array(String)
-    releaseDate = String
-    nomenclatureVersion = String
-    nomenclatureVersionParts = Array(String)
-    serverName = String
-    contactEmail = String
-    announcement = String
-    announcementUrl = String
+    version = Unicode
+    versionParts = Array(Unicode)
+    releaseDate = Unicode
+    nomenclatureVersion = Unicode
+    nomenclatureVersionParts = Array(Unicode)
+    serverName = Unicode
+    contactEmail = Unicode
+    announcement = Unicode
+    announcementUrl = Unicode
 #InfoOutput
 
 
@@ -302,14 +289,14 @@ class CacheEntry(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    name = Mandatory.String
-    gi = String
-    hash = Mandatory.String
-    chromosomeName = String
+    name = Mandatory.Unicode
+    gi = Unicode
+    hash = Mandatory.Unicode
+    chromosomeName = Unicode
     chromosomeStart = Integer
     chromosomeStop = Integer
     chromosomeOrientation = Integer
-    url = String
+    url = Unicode
     created = Mandatory.DateTime
-    cached = String
+    cached = Unicode
 #CacheEntry
