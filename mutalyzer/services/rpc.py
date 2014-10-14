@@ -16,9 +16,9 @@ from spyne.service import ServiceBase
 from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
 from spyne.model.complex import Array
 from spyne.model.fault import Fault
+import io
 import os
 import socket
-from io import BytesIO
 from operator import attrgetter
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -91,6 +91,12 @@ class MutalyzerService(ServiceBase):
                         'The process argument must be one of %s.'
                         % ', '.join(batch_types))
 
+        # The Python type for `data` should be a sequence of `str` objects,
+        # but it seems we sometimes just get one `str` object. Perhaps only in
+        # the unit tests, but let's fix that anyway.
+        if isinstance(data, str):
+            data = [data]
+
         # Note that the max file size check below might be bogus, since Spyne
         # first checks the total request size, which by default has a maximum
         # of 2 megabytes.
@@ -104,7 +110,7 @@ class MutalyzerService(ServiceBase):
                         'Only files up to %d megabytes are accepted.'
                         % (settings.MAX_FILE_SIZE // 1048576))
 
-        batch_file = BytesIO()
+        batch_file = io.BytesIO()
         for d in data:
             batch_file.write(d)
 

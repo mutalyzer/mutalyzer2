@@ -773,7 +773,9 @@ def batch_jobs_submit():
     """
     job_type = request.form.get('job_type')
     email = request.form.get('email')
-    file = request.files.get('file')
+
+    # Note that this is always a seekable binary file object.
+    batch_file = request.files.get('file')
 
     assemblies = Assembly.query \
         .order_by(Assembly.taxonomy_common_name.asc(),
@@ -809,7 +811,7 @@ def batch_jobs_submit():
 
         scheduler = Scheduler.Scheduler()
         file_instance = File.File(output)
-        job, columns = file_instance.parseBatchFile(file)
+        job, columns = file_instance.parseBatchFile(batch_file)
 
         if job is None:
             errors.append('Could not parse input file, please check your '

@@ -30,12 +30,10 @@ class TestScheduler(MutalyzerTest):
     """
     fixtures = (database, )
 
-    @staticmethod
-    def _batch_job(variants, expected, job_type, argument=None):
+    def _batch_job(self, batch_file, expected, job_type, argument=None):
         file_instance = File.File(output.Output('test'))
         scheduler = Scheduler.Scheduler()
 
-        batch_file = io.BytesIO(('\n'.join(variants) + '\n').encode('utf-8'))
         job, columns = file_instance.parseBatchFile(batch_file)
         result_id = scheduler.addJob('test@test.test', job, columns,
                                      job_type, argument=argument)
@@ -43,7 +41,7 @@ class TestScheduler(MutalyzerTest):
         batch_job = BatchJob.query.filter_by(result_id=result_id).one()
 
         left = batch_job.batch_queue_items.count()
-        assert left == len(variants)
+        assert left == len(expected)
 
         scheduler.process()
 
@@ -56,6 +54,10 @@ class TestScheduler(MutalyzerTest):
         next(result) # Header.
         assert expected == [line.strip().split('\t') for line in result]
 
+    def _batch_job_plain_text(self, variants, expected, job_type, argument=None):
+        batch_file = io.BytesIO(('\n'.join(variants) + '\n').encode('utf-8'))
+        self._batch_job(batch_file, expected, job_type, argument=argument)
+
     def test_syntax_checker(self):
         """
         Simple syntax checker batch job.
@@ -66,7 +68,7 @@ class TestScheduler(MutalyzerTest):
                      'OK'],
                     ['AL449423.14(CDKN2A_v002):c.5_400del',
                      'OK']]
-        self._batch_job(variants, expected, 'syntax-checker')
+        self._batch_job_plain_text(variants, expected, 'syntax-checker')
 
     @fix(cache('AB026906.1', 'NM_000059.3'))
     def test_name_checker(self):
@@ -112,7 +114,7 @@ class TestScheduler(MutalyzerTest):
                      'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
                      '',
                      'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
-        self._batch_job(variants, expected, 'name-checker')
+        self._batch_job_plain_text(variants, expected, 'name-checker')
 
     def test_name_checker_altered(self):
         """
@@ -189,7 +191,7 @@ class TestScheduler(MutalyzerTest):
             return bz2.BZ2File(path)
 
         with patch.object(Entrez, 'efetch', mock_efetch):
-            self._batch_job(variants, expected, 'name-checker')
+            self._batch_job_plain_text(variants, expected, 'name-checker')
 
     @fix(cache('NM_000059.3'))
     def test_name_checker_skipped(self):
@@ -230,7 +232,7 @@ class TestScheduler(MutalyzerTest):
             raise IOError()
 
         with patch.object(Entrez, 'efetch', mock_efetch):
-            self._batch_job(variants, expected, 'name-checker')
+            self._batch_job_plain_text(variants, expected, 'name-checker')
 
     @fix(hg19, hg19_transcript_mappings)
     def test_position_converter(self):
@@ -244,4 +246,77 @@ class TestScheduler(MutalyzerTest):
                      'NM_003002.2:c.274G>T',
                      'NM_012459.2:c.-2203C>A',
                      'NR_028383.1:n.-2173C>A']]
-        self._batch_job(variants, expected, 'position-converter', 'hg19')
+        self._batch_job_plain_text(variants, expected, 'position-converter', 'hg19')
+
+    def test_ods_file(self):
+        """
+        OpenDocument Spreadsheet input for batch job.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'batch_input.ods')
+        batch_file = open(path, 'rb')
+        expected = [['AB026906.1:c.274G>T',
+                     'OK'],
+                    ['AL449423.14(CDKN2A_v002):c.5_400del',
+                     'OK']]
+
+        self._batch_job(batch_file, expected, 'syntax-checker')
+
+    def test_sxc_file(self):
+        """
+        OpenOffice.org 1.x Calc spreadsheet input for batch job.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'batch_input.sxc')
+        batch_file = open(path, 'rb')
+        expected = [['AB026906.1:c.274G>T',
+                     'OK'],
+                    ['AL449423.14(CDKN2A_v002):c.5_400del',
+                     'OK']]
+
+        self._batch_job(batch_file, expected, 'syntax-checker')
+
+    def test_xls_file(self):
+        """
+        Microsoft Excel 97/2000/XP/2003 input for batch job.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'batch_input.xls')
+        batch_file = open(path, 'rb')
+        expected = [['AB026906.1:c.274G>T',
+                     'OK'],
+                    ['AL449423.14(CDKN2A_v002):c.5_400del',
+                     'OK']]
+
+        self._batch_job(batch_file, expected, 'syntax-checker')
+
+    def test_xlsx_file(self):
+        """
+        Office Open XML Spreadsheet input for batch job.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'batch_input.xlsx')
+        batch_file = open(path, 'rb')
+        expected = [['AB026906.1:c.274G>T',
+                     'OK'],
+                    ['AL449423.14(CDKN2A_v002):c.5_400del',
+                     'OK']]
+
+        self._batch_job(batch_file, expected, 'syntax-checker')
+
+    def test_invalid_zip_file(self):
+        """
+        Random zip file input for batch job (invalid).
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'image.zip')
+        batch_file = open(path, 'rb')
+
+        file_instance = File.File(output.Output('test'))
+        job, columns = file_instance.parseBatchFile(batch_file)
+        assert job is None

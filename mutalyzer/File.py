@@ -18,19 +18,78 @@ Module for parsing CSV files and spreadsheets.
 
 from __future__ import unicode_literals
 
+import codecs
+import re
 import magic           # open(), MAGIC_MIME, MAGIC_NONE
 import csv             # Sniffer(), reader(), Error
 import xlrd            # open_workbook()
 import zipfile         # ZipFile()
 import xml.dom.minidom # parseString()
-import os              # remove()
-import tempfile
+import cchardet as chardet
 
 from mutalyzer.config import settings
 
 
-# Amount of bytes to be read for determining the file type.
+# Amount of bytes to be read from a file at a time (this is also the amount
+# read for determining the file type).
 BUFFER_SIZE = 32768
+
+
+class _UniversalNewlinesByteStreamIter(object):
+    """
+    The codecs module doesn't provide universal newline support. This class is
+    used as a stream wrapper that provides this functionality.
+
+    The wrapped stream must yield byte strings. We decode it using the given
+    encoding, normalise newlines, and yield UTF-8 encoded data (read method)
+    or lines (as iterator).
+
+    Adaptation from an old Cython version:
+    https://github.com/cython/cython/blob/076fac3/Cython/Utils.py
+    """
+    normalise_newlines = re.compile('\r\n?|\n').sub
+
+    def __init__(self, stream, encoding='utf-8', buffer_size=0x1000):
+        # let's assume .read() doesn't change
+        self.stream = codecs.getreader(encoding)(stream)
+        self._read = self.stream.read
+        self.buffer_size = buffer_size
+
+    def _read_normalised(self, count=None):
+        count = count or self.buffer_size
+        data = self._read(count)
+        if '\r' not in data:
+            return data
+        if data.endswith('\r'):
+            # may be missing a '\n'
+            data += self._read(1)
+        return self.normalise_newlines('\n', data)
+
+    def _readlines(self):
+        buffer = []
+        data = self._read_normalised()
+        while data:
+            buffer.append(data)
+            lines = ''.join(buffer).splitlines(True)
+            for line in lines[:-1]:
+                yield line
+            buffer = [lines[-1]]
+            data = self._read_normalised()
+
+        if buffer[0]:
+            yield buffer[0]
+
+    def seek(self, pos):
+        if pos == 0:
+            self.stream.seek(0)
+        else:
+            raise NotImplementedError
+
+    def read(self, count=-1):
+        return self._read_normalised(count).encode('utf-8')
+
+    def __iter__(self):
+        return (line.encode('utf-8') for line in self._readlines())
 
 
 class File() :
@@ -44,7 +103,6 @@ class File() :
         - __init__(config, output) ; Initialise the class.
 
     Private methods:
-        - __tempFileWrapper(func, handle) ; Call func() with a filename.
         - __parseCsvFile(handle)    ; Parse a CSV file.
         - __parseXlsFile(handle)    ; Parse an Excel file.
         - __parseOdsFile(handle)    ; Parse an OpenDocument Spreadsheet file.
@@ -70,56 +128,48 @@ class File() :
         self.__output = output #: The Output object
     #__init__
 
-    def __tempFileWrapper(self, func, handle) :
+    def __parseCsvFile(self, handle) :
         """
-        Make a temporary file, put the content of a stream in it and pass
-        the filename to a general function. Return whatever this function
-        returns.
+        Parse a CSV file. Does not reset the file handle to start.
 
-        @arg func: general function that needs a file name as argument
-        @type func: function
-        @arg handle: A stream
-        @type handle: stream
-
-        @return: unknown; the output of func().
-        @rtype: ?
-        """
-        write_handle, filename = tempfile.mkstemp(text=True)
-
-        # Dump the content of the stream pointed to by handle into the file.
-        handle.seek(0)
-        os.write(write_handle, handle.read())
-        os.close(write_handle)
-
-        # Open the file with func().
-        ret = func(filename)
-        # Apperantly apache will remove this file even when opened by the
-        # function *func
-        os.remove(filename)
-
-        return ret
-    #__tempFileWrapper
-
-    def __parseCsvFile(self, handle_) :
-        """
-        Parse a CSV file.
-        The stream is not rewinded after use.
-
-        @arg handle: A handle to a stream
-        @type handle: stream
+        @arg handle: CSV file. Must be a seekable binary file object.
+        @type handle: file object
 
         @return: list of lists
         @rtype: list
         """
-        # We wrap the file in a temporary file just to have universal newlines
-        # which is not always possible to have on incoming files (thinks web
-        # and rpc frontends). This transparently solves the problem of Unix
-        # versus Windows versus Mac style newlines.
-        handle = tempfile.TemporaryFile('rU+w')
-        for chunk in handle_:
-            handle.write(chunk)
-
+        buf = handle.read(BUFFER_SIZE)
+        result = chardet.detect(buf)
         handle.seek(0)
+
+        if result['confidence'] > 0.5:
+            encoding = result['encoding']
+        else:
+            encoding = 'utf-8'
+
+        # Python 2.7 makes it extraordinarily hard to do this correctly. We
+        # have a binary file object containing lines of text in a certain
+        # encoding with unknown style of line-endings.
+        #
+        # We want to correctly decode the file contents, accept any style of
+        # line-endings, parse the lines with the `csv` module, and return
+        # unicode strings.
+        #
+        # 1. `codecs.getreader` does not have a universal newlines mode.
+        # 2. `io.TextIOWrapper` cannot be wrapped around our file object,
+        #    since it is required to be an `io.BufferedIOBase`, which it
+        #    usually will not be.
+        # 3. The `csv` module cannot read unicode.
+        #
+        # Ugh.
+        #
+        # So, we use a stream wrapper that consumes byte strings, decodes to
+        # unicode, normalises newlines, and produces the result UTF-8 encoded.
+        # That's what we feed the `csv` module. We decode what it gives back
+        # to unicode strings. What a mess.
+        handle = _UniversalNewlinesByteStreamIter(handle, encoding=encoding,
+                                                  buffer_size=BUFFER_SIZE)
+
         buf = handle.read(BUFFER_SIZE)
 
         # Default dialect
@@ -147,40 +197,37 @@ class File() :
 
         ret = []
         for i in reader:
-            ret.append(i)
+            ret.append([c.decode('utf-8') for c in i])
 
-        handle.close()
         return ret
     #__parseCsvFile
 
     def __parseXlsFile(self, handle) :
         """
-        Parse an Excel file.
-        The stream is not rewinded after use.
+        Parse an Excel file. Does not reset the file handle to start.
 
-        @arg handle: A handle to a stream
-        @type handle: stream
+        @arg handle: Excel file. Must be a binary file object.
+        @type handle: file object
 
         @return: A list of lists
         @rtype: list
         """
 
-        workBook = self.__tempFileWrapper(xlrd.open_workbook, handle)
+        try:
+            workBook = xlrd.open_workbook(file_contents=handle.read())
+        except xlrd.XLRDError:
+            return None
+
         sheet = workBook.sheet_by_index(0)
 
         ret = []
         for i in range(sheet.nrows) :
             row = []
             for j in sheet.row_values(i) :
-                if isinstance(j, unicode):
-                    row.append(j)
-                else:
-                    row.append(j.decode('utf-8'))
+                row.append(j)
             #for
             ret.append(row)
         #for
-
-        del sheet, workBook
 
         return ret
     #__parseXlsFile
@@ -196,8 +243,8 @@ class File() :
         @return: A list of lists
         @rtype: list
         """
+        # Todo: Use a library for this.
 
-        #zipFile = self.__tempFileWrapper(zipfile.ZipFile, handle)
         zipFile = zipfile.ZipFile(handle)
         doc = xml.dom.minidom.parseString(zipFile.read("content.xml"))
         zipFile.close()
@@ -211,7 +258,8 @@ class File() :
                     row.append(c[0].lastChild.data)
                 #if
             #for
-            ret.append(row)
+            if row:
+                ret.append(row)
         #for
 
         return ret
@@ -342,8 +390,9 @@ class File() :
         Get the mime type of a stream by inspecting a fixed number of bytes.
         The stream is rewinded after use.
 
-        @arg handle: A handle to a stream
-        @type handle: stream
+        @arg handle: Stream to be inspected. Must be a seekable binary file
+          object.
+        @type handle: file object
 
         @return: The mime type of a file and a textual description.
         @rtype: unicode, unicode
@@ -358,7 +407,6 @@ class File() :
         MagicInstance = magic.open(magic.MAGIC_NONE)
         MagicInstance.load()
         description = MagicInstance.buffer(buf).decode('utf-8')
-        del MagicInstance
         handle.seek(0)
 
         return mimeType, description
@@ -367,22 +415,28 @@ class File() :
     def parseFileRaw(self, handle) :
         """
         Check which format a stream has and parse it with the appropriate
-        parser if the stream is recognised.
+        parser if the stream is recognised. Does not reset the file handle to
+        start.
 
-        @arg handle: A handle to a stream
-        @type handle: stream
+        @arg handle: Input file to be parsed. Must be a seekable binary file
+          object.
+        @type handle: file object
 
         @return: A list of lists, None if an error occured
         @rtype: list
         """
 
         mimeType = self.getMimeType(handle)
-        if mimeType[0] == "text/plain" :
+        if mimeType[0] == "text/plain":
             return self.__parseCsvFile(handle)
-        if mimeType[0] == "application/vnd.ms-office" :
+        if mimeType[0] in ('application/vnd.ms-excel',
+                           'application/vnd.ms-office',
+                           'application/msword',
+                           'application/zip'):
             return self.__parseXlsFile(handle)
-        if mimeType == ("application/octet-stream",
-                        "OpenDocument Spreadsheet") :
+        if (mimeType[0] == 'application/vnd.oasis.opendocument.spreadsheet' or
+            mimeType[1] in ('OpenDocument Spreadsheet',
+                            'OpenOffice.org 1.x Calc spreadsheet')):
             return self.__parseOdsFile(handle)
 
         return None
@@ -391,10 +445,12 @@ class File() :
     def parseBatchFile(self, handle) :
         """
         Check which format a stream has and parse it with the appropriate
-        parser if the stream is recognised.
+        parser if the stream is recognised. Does not reset the file handle to
+        start.
 
-        @arg handle: A handle to a stream
-        @type handle: stream
+        @arg handle: Batch job input file. Must be a seekable binary file
+          object.
+        @type handle: file object
 
         @return: A sanitised list of lists (without a header or empty lines)
                  (or None if an error occured) and the number of columns.

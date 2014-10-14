@@ -17,6 +17,7 @@ Module used to add and manage the Batch Jobs.
 
 from __future__ import unicode_literals
 
+import io
 import os                               # os.path.exists
 import smtplib                          # smtplib.STMP
 from email.mime.text import MIMEText    # MIMEText
@@ -449,11 +450,11 @@ Mutalyzer batch scheduler""" % url)
                       'Affected Proteins',
                       'Restriction Sites Created',
                       'Restriction Sites Deleted']
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
             handle.write("%s\n" % "\t".join(header))
         #if
         else :
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
 
         if flags and 'C' in flags:
             separator = '\t'
@@ -508,11 +509,11 @@ Mutalyzer batch scheduler""" % url)
             # header above it. The header is read from the config file as
             # a list. We need a tab delimited string.
             header = ['Input', 'Status']
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
             handle.write("%s\n" % "\t".join(header))
         #if
         else :
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
 
         if flags and 'C' in flags:
             separator = '\t'
@@ -620,11 +621,11 @@ Mutalyzer batch scheduler""" % url)
                       'Errors',
                       'Chromosomal Variant',
                       'Coding Variant(s)']
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
             handle.write("%s\n" % "\t".join(header))
         #if
         else :
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
 
         if flags and 'C' in flags:
             separator = '\t'
@@ -682,11 +683,11 @@ Mutalyzer batch scheduler""" % url)
             header = ['Input Variant',
                       'HGVS description(s)',
                       'Errors and warnings']
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
             handle.write("%s\n" % "\t".join(header))
         #if
         else :
-            handle = open(filename, 'a')
+            handle = io.open(filename, mode='a', encoding='utf-8')
 
         if flags and 'C' in flags:
             separator = '\t'
