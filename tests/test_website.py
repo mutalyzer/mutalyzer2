@@ -553,6 +553,34 @@ class TestWebsite(MutalyzerTest):
         assert 'go to bottom' not in r.data
         assert '<input' not in r.data
 
+    @fix(database, cache('NG_012337.1'))
+    def test_getgs_coding_multiple_transcripts(self):
+        """
+        Test the /getGS interface on a coding description and genomic
+        reference with multiple transcripts.
+        """
+        r = self.app.get('/getGS',
+                         query_string={'variantRecord': 'NM_003002.2',
+                                       'forward': '1',
+                                       'mutationName': 'NG_012337.1:c.45A>T'},
+                         follow_redirects=False)
+        assert '/name-checker?' in r.location
+        assert 'description=NG_012337.1' in r.location
+
+    @fix(database, cache('NG_008939.1'))
+    def test_getgs_variant_error(self):
+        """
+        Test the /getGS interface on a variant description with an error.
+        """
+        # The error is that position c.45 is a C, not an A.
+        r = self.app.get('/getGS',
+                         query_string={'variantRecord': 'NM_000532.4',
+                                       'forward': '1',
+                                       'mutationName': 'NG_008939.1:c.45A>T'},
+                         follow_redirects=False)
+        assert '/name-checker?' in r.location
+        assert 'description=NG_008939.1' in r.location
+
     @fix(database, hg19, hg19_transcript_mappings)
     def test_variantinfo_g2c(self):
         """
