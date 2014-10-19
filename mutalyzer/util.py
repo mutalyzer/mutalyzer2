@@ -93,6 +93,14 @@ def reverse_complement(sequence):
     return ''.join(reversed(sequence.translate(table)))
 
 
+def is_utf8_alias(encoding):
+    """
+    Returns `True` if the given encoding is recognized as UTF-8.
+    """
+    aliases = ('utf_8', 'u8', 'utf', 'utf8')
+    return encoding.lower().replace('-', '_') in aliases
+
+
 def grouper(iterable, n=2, fillvalue=None):
     """
     Make an iterator that takes {n} elements at a time from {iterable}, using

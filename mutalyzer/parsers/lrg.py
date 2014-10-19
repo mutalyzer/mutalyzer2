@@ -112,7 +112,7 @@ def create_record(data):
     Create a GenRecord.Record of a LRG <xml> formatted string.
 
     @arg data: Content of LRG file
-    @type data: string
+    @type data: byte string
 
     @return: GenRecord.Record instance
     @rtype: object

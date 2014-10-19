@@ -1058,6 +1058,12 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
                           'Received request uploadGenBankLocalFile()')
 
+        # The Python type for `data` should be a sequence of `str` objects,
+        # but it seems we sometimes just get one `str` object. Perhaps only in
+        # the unit tests, but let's fix that anyway.
+        if isinstance(data, str):
+            data = [data]
+
         # Note that the max file size check below might be bogus, since Spyne
         # first checks the total request size, which by default has a maximum
         # of 2 megabytes.
