@@ -9,6 +9,8 @@ Version 2.0.3
 
 Release date to be decided.
 
+- Fix several error cases in LOVD2 view on the name checker.
+
 
 Version 2.0.2
 -------------
