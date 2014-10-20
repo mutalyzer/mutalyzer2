@@ -14,7 +14,7 @@ from Bio import Entrez
 from mock import patch
 
 from mutalyzer.config import settings
-from mutalyzer.db.models import BatchJob, BatchQueueItem
+from mutalyzer.db.models import BatchJob
 from mutalyzer import File
 from mutalyzer import output
 from mutalyzer import Scheduler
@@ -49,7 +49,8 @@ class TestScheduler(MutalyzerTest):
         assert left == 0
 
         filename = 'batch-job-%s.txt' % result_id
-        result = open(os.path.join(settings.CACHE_DIR, filename))
+        result = io.open(os.path.join(settings.CACHE_DIR, filename),
+                         encoding='utf-8')
 
         next(result) # Header.
         assert expected == [line.strip().split('\t') for line in result]
@@ -320,3 +321,15 @@ class TestScheduler(MutalyzerTest):
         file_instance = File.File(output.Output('test'))
         job, columns = file_instance.parseBatchFile(batch_file)
         assert job is None
+
+    def test_unicode_input(self):
+        """
+        Simple input with some non-ASCII unicode characters.
+        """
+        variants = ['\u2026AB026906.1:c.274G>T',
+                    '\u2026AL449423.14(CDKN2A_v002):c.5_400del']
+        expected = [['\u2026AB026906.1:c.274G>T',
+                     '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)'],
+                    ['\u2026AL449423.14(CDKN2A_v002):c.5_400del',
+                     '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)']]
+        self._batch_job_plain_text(variants, expected, 'syntax-checker')

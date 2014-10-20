@@ -9,12 +9,11 @@ import bz2
 import os
 import pkg_resources
 import re
-from cStringIO import StringIO
 import urllib
 
 from flask import Blueprint
-from flask import (abort, current_app, jsonify, make_response, redirect,
-                   render_template, request, send_from_directory, url_for)
+from flask import (abort, jsonify, make_response, redirect, render_template,
+                   request, send_from_directory, url_for)
 import jinja2
 from lxml import etree
 from spyne.server.http import HttpBase
@@ -24,9 +23,8 @@ import mutalyzer
 from mutalyzer import (announce, describe, File, Retriever, Scheduler, stats,
                        util, variantchecker)
 from mutalyzer.config import settings
-from mutalyzer.db import session
 from mutalyzer.db.models import BATCH_JOB_TYPES
-from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
+from mutalyzer.db.models import Assembly, BatchJob
 from mutalyzer.grammar import Grammar
 from mutalyzer.mapping import Converter
 from mutalyzer.output import Output
@@ -137,13 +135,13 @@ def soap_api():
     """
     soap_server = HttpBase(soap.application)
     soap_server.doc.wsdl11.build_interface_document(settings.SOAP_WSDL_URL)
-    wsdl_handle = StringIO(soap_server.doc.wsdl11.get_interface_document())
+    wsdl_string = soap_server.doc.wsdl11.get_interface_document()
 
-    xsl_handle = open(os.path.join(
-            pkg_resources.resource_filename('mutalyzer', 'website/templates'),
-            'wsdl-viewer.xsl'), 'r')
-    wsdl_doc = etree.parse(wsdl_handle)
-    xsl_doc = etree.parse(xsl_handle)
+    xsl_file = os.path.join(
+        pkg_resources.resource_filename('mutalyzer', 'website/templates'),
+        'wsdl-viewer.xsl')
+    wsdl_doc = etree.fromstring(wsdl_string)
+    xsl_doc = etree.parse(xsl_file)
     transform = etree.XSLT(xsl_doc)
 
     return make_response(unicode(transform(wsdl_doc)))

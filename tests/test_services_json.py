@@ -9,6 +9,7 @@ import simplejson as json
 from spyne.server.null import NullServer
 import mutalyzer
 from mutalyzer import announce
+from mutalyzer import Scheduler
 from mutalyzer.services.json import application
 
 from fixtures import database, hg19, hg19_transcript_mappings
@@ -99,3 +100,45 @@ class TestServicesJson(MutalyzerTest):
         announce.unset_announcement()
         r = self._call('info')
         assert not r.get('announcement')
+
+    def test_checksyntax_unicode(self):
+        """
+        Run checkSyntax with an invalid variant description containing
+        non-ASCII unicode characters.
+        """
+        r = self._call('checkSyntax', 'La Pe\xf1a')
+        assert r['valid'] == False
+        assert len(r['messages']) == 1
+        assert r['messages'][0]['errorcode'] == 'EPARSE'
+        assert r['messages'][0]['message'] ==  'Expected W:(0123...) (at char 2), (line:1, col:3)'
+
+    @fix(database)
+    def test_batchjob_unicode(self):
+        """
+        Submit a batch job with non-ASCII unicode characters in the input
+        file.
+        """
+        variants = ['\u2026AB026906.1:c.274G>T',
+                    '\u2026AL449423.14(CDKN2A_v002):c.5_400del']
+        expected = [['\u2026AB026906.1:c.274G>T',
+                     '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)'],
+                    ['\u2026AL449423.14(CDKN2A_v002):c.5_400del',
+                     '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)']]
+
+        data = '\n'.join(variants) + '\n' #.encode('base64')
+
+        result = self._call('submitBatchJob', data.encode('utf-8'), 'SyntaxChecker')
+        job_id = unicode(result)
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == len(variants)
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        result = self._call('monitorBatchJob', job_id)
+        assert int(result) == 0
+
+        result = self._call('getBatchJob', job_id)
+        result = result.decode('base64').decode('utf-8').strip().split('\n')[1:]
+        assert expected == [line.split('\t') for line in result]
