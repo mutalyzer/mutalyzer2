@@ -4,10 +4,16 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.3
+Version 2.0.4
 -------------
 
 Release date to be decided.
+
+
+Version 2.0.3
+-------------
+
+Released on September 20th 2014.
 
 - Fix several error cases in LOVD2 view on the name checker.
 

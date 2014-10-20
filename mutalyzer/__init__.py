@@ -14,7 +14,7 @@ HGVS variant nomenclature checker.
 # [1] http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version
 # [2] http://semver.org/
 
-__version_info__ = ('2', '0', '3')
+__version_info__ = ('2', '0', '4', 'dev')
 __date__ = '20 Oct 2014'
 
 
