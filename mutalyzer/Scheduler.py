@@ -122,10 +122,30 @@ Mutalyzer batch scheduler""" % url)
         message["From"] = settings.EMAIL
         message["To"] = mailTo
 
-        smtpInstance = smtplib.SMTP()
-        smtpInstance.connect()
-        smtpInstance.sendmail(settings.EMAIL, mailTo, message.as_string())
-        smtpInstance.quit()
+        try:
+            smtpInstance = smtplib.SMTP('localhost')
+        except smtplib.SMTPConnectError as e:
+            print 'Could not send email to %s: (%s) %s' % (mailTo,
+                                                           unicode(e.smtp_code),
+                                                           unicode(e.smtp_error))
+            return
+        except IOError as e:
+            print 'Could not send email to %s: %s' % (mailTo, unicode(e))
+            return
+
+        try:
+            smtpInstance.sendmail(settings.EMAIL, mailTo, message.as_string())
+        except smtplib.SMTPRecipientsRefused as e:
+            for address, (code, error) in e.recipients.items():
+                print 'Could not send email to %s: (%s) %s' % (address,
+                                                               code,
+                                                               error)
+        except smtplib.SMTPResponseException as e:
+            print 'Could not send email to %s: (%s) %s' % (mailTo,
+                                                           unicode(e.smtp_code),
+                                                           unicode(e.smtp_error))
+        finally:
+            smtpInstance.quit()
     #__sendMail
 
     def __processFlags(self, O, flags) :
