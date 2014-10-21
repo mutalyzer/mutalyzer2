@@ -9,6 +9,15 @@ Version 2.0.4
 
 Release date to be decided.
 
+- Many string encoding related fixes. Summarizing, Mutalyzer should now be
+  completely aware of input and output string encodings, in all
+  interfaces. Internally, all strings are unicode strings. This comes with
+  minor changes in the webservice definitions, which most clients will
+  probably not notice (`GitLab!25
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/25>`_).
+- Don't crash on mail errors in the batch scheduler (`GitLab#30
+  <https://git.lumc.nl/mutalyzer/mutalyzer/issues/30>`_).
+
 
 Version 2.0.3
 -------------
