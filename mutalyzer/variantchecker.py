@@ -9,17 +9,22 @@ Notes about naming positions:
 * translation -> begin/end
 * any range of bases -> first/last
 * interbase position (if two numbers are used) -> before/after
+
+Notes about string representations:
+* All variant descriptions and their parts are unicode strings
+* All reference sequences (and their mutated version) are Bio.Seq.Seq objects
 """
 
 
-from operator import itemgetter, attrgetter
+from __future__ import unicode_literals
 
-import Bio
-import Bio.Seq
-from Bio.Seq import Seq
+from operator import attrgetter
+
+from Bio.Data import CodonTable
 from Bio.Alphabet import IUPAC
 from Bio.Alphabet import DNAAlphabet
 from Bio.Alphabet import ProteinAlphabet
+from Bio.Alphabet import _verify_alphabet
 
 from mutalyzer import util
 from mutalyzer.db.models import Assembly
@@ -126,14 +131,14 @@ def _check_argument(argument, reference, first, last, output):
     Do several checks for the optional argument of a variant. Raise a
     _RawVariantError exception if the checks fail.
 
+    @arg argument: The optional argument.
+    @type argument: unicode
     @arg reference: The reference sequence.
-    @type reference: string
+    @type reference: Bio.Seq.Seq
     @arg first: Start position of the variant.
     @type first: int
     @arg last: End position of the variant.
     @type last: int
-    @arg argument: The optional argument.
-    @type argument: string
     @arg output: The Output object.
     @type output: mutalyzer.Output.Output
 
@@ -164,8 +169,8 @@ def _check_argument(argument, reference, first, last, output):
                               'Invalid letters in argument.')
             raise _NotDNAError()
         # And the DNA must match the reference sequence.
-        reference_slice = str(reference[first - 1:last])
-        if reference_slice != str(argument):
+        reference_slice = unicode(reference[first - 1:last])
+        if reference_slice != argument:
             # Todo: Be more informative.
             output.addMessage(__file__, 3, 'EREF',
                               '%s not found at position %s, found %s ' \
@@ -286,9 +291,9 @@ def apply_substitution(position, original, substitute, mutator, record, O):
     @arg position: Genomic location of the substitution.
     @type position: int
     @arg original: Nucleotide in the reference sequence.
-    @type original: string
+    @type original: unicode
     @arg substitute: Nucleotide in the mutated sequence.
-    @type substitute: string
+    @type substitute: unicode
     @arg mutator: A Mutator instance.
     @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
@@ -310,7 +315,7 @@ def apply_substitution(position, original, substitute, mutator, record, O):
 
     mutator.substitution(position, substitute)
 
-    record.name(position, position, 'subst', mutator.orig[position - 1],
+    record.name(position, position, 'subst', unicode(mutator.orig[position - 1]),
                 substitute, None)
 #apply_substitution
 
@@ -326,7 +331,7 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
     @arg last: Genomic end position of the del/dup.
     @type last: int
     @arg type: The variant type (del or dup).
-    @type type: string
+    @type type: unicode
     @arg mutator: A Mutator instance.
     @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
@@ -376,9 +381,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that on the forward strand ' \
             'it should be "%s" at position %s.' % (
-            util.visualise_sequence(str(mutator.orig[first - 1:last])),
+            util.visualise_sequence(unicode(mutator.orig[first - 1:last])),
             util.format_range(first, last),
-            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop])),
+            util.visualise_sequence(unicode(mutator.orig[new_first - 1:new_stop])),
             util.format_range(new_first, new_stop)))
 
     if forward_roll != original_forward_roll and not reverse_strand:
@@ -388,9 +393,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
         O.addMessage(__file__, 1, 'IROLLBACK',
             'Sequence "%s" at position %s was not corrected to "%s" at ' \
             'position %s, since they reside in different exons.' % (
-            util.visualise_sequence(str(mutator.orig[first - 1:last])),
+            util.visualise_sequence(unicode(mutator.orig[first - 1:last])),
             util.format_range(first, last),
-            util.visualise_sequence(str(mutator.orig[incorrect_first - 1:incorrect_stop])),
+            util.visualise_sequence(unicode(mutator.orig[incorrect_first - 1:incorrect_stop])),
             util.format_range(incorrect_first, incorrect_stop)))
 
     if reverse_roll and reverse_strand:
@@ -400,9 +405,9 @@ def apply_deletion_duplication(first, last, type, mutator, record, O,
             'Sequence "%s" at position %s was given, however, ' \
             'the HGVS notation prescribes that on the reverse strand ' \
             'it should be "%s" at position %s.' % (
-            util.visualise_sequence(str(mutator.orig[first - 1:last])),
+            util.visualise_sequence(unicode(mutator.orig[first - 1:last])),
             util.format_range(first, last),
-            util.visualise_sequence(str(mutator.orig[new_first - 1:new_stop])),
+            util.visualise_sequence(unicode(mutator.orig[new_first - 1:new_stop])),
             util.format_range(new_first, new_stop)))
 
     # We don't go through the trouble of visualising the *corrected* variant
@@ -434,7 +439,7 @@ def apply_inversion(first, last, mutator, record, O):
     @arg O: The Output object.
     @type O: Modules.Output.Output
     """
-    snoop = util.palinsnoop(mutator.orig[first - 1:last])
+    snoop = util.palinsnoop(unicode(mutator.orig[first - 1:last]))
 
     if snoop:
         # We have a reverse-complement-palindromic prefix.
@@ -444,7 +449,7 @@ def apply_inversion(first, last, mutator, record, O):
             O.addMessage(__file__, 2, 'WNOCHANGE',
                 'Sequence "%s" at position %i_%i is a palindrome ' \
                 '(its own reverse complement).' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last])),
+                util.visualise_sequence(unicode(mutator.orig[first - 1:last])),
                 first, last))
             return
         else:
@@ -453,10 +458,10 @@ def apply_inversion(first, last, mutator, record, O):
                 'palindrome (the first %i nucleotide(s) are the reverse ' \
                 'complement of the last one(s)), the HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last])),
+                util.visualise_sequence(unicode(mutator.orig[first - 1:last])),
                 first, last, snoop,
                 util.visualise_sequence(
-                    str(mutator.orig[first + snoop - 1: last - snoop])),
+                    unicode(mutator.orig[first + snoop - 1: last - snoop])),
                 first + snoop, last - snoop))
             first += snoop
             last -= snoop
@@ -466,8 +471,8 @@ def apply_inversion(first, last, mutator, record, O):
     if first == last:
         O.addMessage(__file__, 2, 'WWRONGTYPE', 'Inversion at position ' \
             '%i is actually a substitution.' % first)
-        record.name(first, first, 'subst', mutator.orig[first - 1],
-            Bio.Seq.reverse_complement(mutator.orig[first - 1]), None)
+        record.name(first, first, 'subst', unicode(mutator.orig[first - 1]),
+                    util.reverse_complement(unicode(mutator.orig[first - 1])), None)
     else :
         record.name(first, last, 'inv', '', '', None)
 #apply_inversion
@@ -483,7 +488,7 @@ def apply_insertion(before, after, s, mutator, record, O):
     @arg after: Genomic position after the insertion.
     @type after: int
     @arg s: Nucleotides to be inserted.
-    @type s: string
+    @type s: nucleotide
     @arg mutator: A Mutator instance.
     @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
@@ -547,7 +552,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             'however, the HGVS notation prescribes that it should be a ' \
             'duplication of %s at position %i_%i.' % (
             s, before, before + 1,
-            mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
+            unicode(mutator.mutated[new_before + forward_roll:new_stop + forward_roll]),
             before + forward_roll,
             before + forward_roll + insertion_length - 1))
         after += forward_roll - 1
@@ -566,7 +571,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             'that on the forward strand it should be an insertion of %s ' \
             'at position %i_%i.' % (
             s, before, before + 1,
-            mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
+            unicode(mutator.mutated[new_before + forward_roll:new_stop + forward_roll]),
             new_before + forward_roll, new_before + forward_roll + 1))
 
     if forward_roll != original_forward_roll and not reverse_strand:
@@ -576,7 +581,7 @@ def apply_insertion(before, after, s, mutator, record, O):
             'insertion of %s at position %i_%i, since they reside in ' \
             'different exons.' % (
             s, before, before + 1,
-            mutator.mutated[new_before + original_forward_roll:new_stop + original_forward_roll],
+            unicode(mutator.mutated[new_before + original_forward_roll:new_stop + original_forward_roll]),
             new_before + original_forward_roll, new_before + original_forward_roll + 1))
 
     if reverse_roll and reverse_strand:
@@ -585,13 +590,13 @@ def apply_insertion(before, after, s, mutator, record, O):
             'that on the reverse strand it should be an insertion of %s ' \
             'at position %i_%i.' % (
             s, before, before + 1,
-            mutator.mutated[new_before - reverse_roll:new_stop - reverse_roll],
+            unicode(mutator.mutated[new_before - reverse_roll:new_stop - reverse_roll]),
             new_before - reverse_roll, (new_before - reverse_roll) + 1))
 
     record.name(before, before + 1, 'ins',
-                mutator.mutated[new_before + forward_roll:new_stop + forward_roll],
+                unicode(mutator.mutated[new_before + forward_roll:new_stop + forward_roll]),
                 '', (reverse_roll, forward_roll),
-                mutator.mutated[new_before - reverse_roll:new_stop - reverse_roll])
+                unicode(mutator.mutated[new_before - reverse_roll:new_stop - reverse_roll]))
 #apply_insertion
 
 
@@ -605,7 +610,7 @@ def apply_delins(first, last, insert, mutator, record, output):
     @arg last: Genomic end position of the delins.
     @type last: int
     @arg insert: Sequence to insert.
-    @type insert: string
+    @type insert: unicode
     @arg mutator: A Mutator instance.
     @type mutator: mutalyzer.mutator.Mutator
     @arg record: A GenRecord object.
@@ -613,14 +618,13 @@ def apply_delins(first, last, insert, mutator, record, output):
     @arg output: The Output object.
     @type output: Modules.Output.Output
     """
-    delete = mutator.orig[first - 1:last]
+    delete = unicode(mutator.orig[first - 1:last])
 
-    if str(delete) == str(insert):
+    if delete == insert:
         output.addMessage(__file__, 2, 'WNOCHANGE',
                           'Sequence "%s" at position %i_%i is identical to ' \
                           'the variant.' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last])),
-                first, last))
+                              util.visualise_sequence(delete), first, last))
         return
 
     delete_trimmed, insert_trimmed, lcp, lcs = util.trim_common(delete, insert)
@@ -646,7 +650,7 @@ def apply_delins(first, last, insert, mutator, record, output):
                                    mutator, record, output)
         return
 
-    if str(Bio.Seq.reverse_complement(delete_trimmed)) == insert_trimmed:
+    if util.reverse_complement(delete_trimmed) == insert_trimmed:
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                           'is actually an inversion.')
         apply_inversion(first + lcp, last - lcs, mutator,
@@ -658,7 +662,7 @@ def apply_delins(first, last, insert, mutator, record, output):
                 'Sequence "%s" at position %i_%i has the same prefix or ' \
                 'suffix as the inserted sequence "%s". The HGVS notation ' \
                 'prescribes that it should be "%s" at position %i_%i.' % (
-                util.visualise_sequence(str(mutator.orig[first - 1:last])),
+                util.visualise_sequence(unicode(mutator.orig[first - 1:last])),
                 first, last, insert, insert_trimmed, first + lcp, last - lcs))
 
     mutator.delins(first + lcp, last - lcs, insert_trimmed)
@@ -952,17 +956,19 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     """
     variant, original_description = variant.RawVar, variant[-1]
 
-    # {argument} may be a number, or a subsequence of the reference.
-    # {sequence} is the variant subsequence.
-    argument = variant.Arg1
-    sequence = variant.Arg2
+    # `argument` may be a number, or a subsequence of the reference.
+    # `sequence` is the variant subsequence.
+    # Note that pyparsing will return `str('')` if the attribute does not
+    # exist, so we explicitely convert the result to unicode.
+    argument = unicode(variant.Arg1)
+    sequence = unicode(variant.Arg2)
 
     # If we are on the reverse strand, subsequences must be in reverse
     # complement.
     if transcript and transcript.CM.orientation == -1:
-        sequence = Bio.Seq.reverse_complement(sequence)
+        sequence = util.reverse_complement(sequence)
         if util.is_dna(argument):
-            argument = Bio.Seq.reverse_complement(argument)
+            argument = util.reverse_complement(argument)
 
     # Get genomic first and last positions for this variant. Below we handle
     # the different ways of describing these positions.
@@ -1189,7 +1195,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     def parse_sequence(seq):
         if seq.Sequence:
             if transcript and transcript.CM.orientation == -1:
-                return Bio.Seq.reverse_complement(str(seq.Sequence))
+                return util.reverse_complement(seq.Sequence)
             return seq.Sequence
 
         if seq.StartLoc and seq.EndLoc:
@@ -1228,9 +1234,9 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                                   'Position %s is out of range.' % range_last)
                 raise _RawVariantError()
 
-            insertion = mutator.orig[range_first - 1:range_last]
+            insertion = unicode(mutator.orig[range_first - 1:range_last])
             if seq.Inv:
-                insertion = Bio.Seq.reverse_complement(str(insertion))
+                insertion = util.reverse_complement(insertion)
 
             return insertion
 
@@ -1245,7 +1251,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                 seqs = reversed(variant.SeqList)
             else:
                 seqs = variant.SeqList
-            insertion = ''.join(str(parse_sequence(seq))
+            insertion = ''.join(parse_sequence(seq)
                                 for seq in seqs)
         else:
             insertion = parse_sequence(variant.Seq)
@@ -1316,31 +1322,32 @@ def _add_transcript_info(mutator, transcript, output):
     if transcript.transcribe:
         output.addOutput('myTranscriptDescription', transcript.description or '=')
         output.addOutput('origMRNA',
-            str(util.splice(mutator.orig, transcript.mRNA.positionList)))
+            unicode(util.splice(mutator.orig, transcript.mRNA.positionList)))
         output.addOutput('mutatedMRNA',
-            str(util.splice(mutator.mutated,
+            unicode(util.splice(mutator.mutated,
                         mutator.shift_sites(transcript.mRNA.positionList))))
 
     # Add protein prediction to output.
     if transcript.translate:
-        cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
-                           IUPAC.unambiguous_dna)
-        cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                        mutator.shift_sites(transcript.mRNA.positionList),
-                                        mutator.shift_sites(transcript.CDS.location),
-                                        transcript.CM.orientation)),
-                          IUPAC.unambiguous_dna)
+        cds_original = util.splice(mutator.orig, transcript.CDS.positionList)
+        cds_original.alphabet = IUPAC.unambiguous_dna
+
+        if not _verify_alphabet(cds_original):
+            output.addMessage(__file__, 4, 'ENODNA',
+                              'Invalid letters in reference sequence.')
+            return
+
+        cds_variant = util.__nsplice(mutator.mutated,
+                                     mutator.shift_sites(transcript.mRNA.positionList),
+                                     mutator.shift_sites(transcript.CDS.location),
+                                     transcript.CM.orientation)
+        cds_variant.alphabet = IUPAC.unambiguous_dna
 
         #output.addOutput('origCDS', cds_original)
 
         if transcript.CM.orientation == -1:
-            cds_original = Bio.Seq.reverse_complement(cds_original)
-            cds_variant = Bio.Seq.reverse_complement(cds_variant)
-
-        if not util.is_dna(cds_original):
-            output.addMessage(__file__, 4, 'ENODNA',
-                              'Invalid letters in reference sequence.')
-            return
+            cds_original = cds_original.reverse_complement()
+            cds_variant = cds_variant.reverse_complement()
 
         if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
@@ -1354,36 +1361,35 @@ def _add_transcript_info(mutator, transcript, output):
 
         # Note: addOutput('origCDS', ...) was first before the possible
         #       reverse complement operation above.
-        output.addOutput('origCDS', cds_original)
-        output.addOutput("newCDS", cds_variant[:(len(str(protein_variant)) + 1) * 3])
+        output.addOutput('origCDS', unicode(cds_original))
+        output.addOutput("newCDS", unicode(cds_variant[:(len(protein_variant) + 1) * 3]))
 
-        output.addOutput('oldprotein', protein_original + '*')
+        output.addOutput('oldprotein', unicode(protein_original) + '*')
 
         # Todo: Don't generate the fancy HTML protein views here, do this in
         # website.py.
         # I think it would also be nice to include the mutated list of splice
         # sites.
-        if not protein_variant or protein_variant[0] != 'M':
+        if not protein_variant or unicode(protein_variant[0]) != 'M':
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
-            util.print_protein_html(protein_original + '*', 0, 0, output,
-                                    'oldProteinFancy')
-            util.print_protein_html(protein_original + '*', 0, 0, output,
-                                    'oldProteinFancyText', text=True)
-            if str(cds_variant[0:3]) in \
-                   Bio.Data.CodonTable.unambiguous_dna_by_id \
-                   [transcript.txTable].start_codons:
+            util.print_protein_html(unicode(protein_original) + '*', 0, 0,
+                                    output, 'oldProteinFancy')
+            util.print_protein_html(unicode(protein_original) + '*', 0, 0,
+                                    output, 'oldProteinFancyText', text=True)
+            if unicode(cds_variant[0:3]) in \
+                   CodonTable.unambiguous_dna_by_id[transcript.txTable].start_codons:
                 output.addOutput('newprotein', '?')
                 util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
                 util.print_protein_html('?', 0, 0, output,
                     'newProteinFancyText', text=True)
-                output.addOutput('altStart', str(cds_variant[0:3]))
-                if str(protein_original[1:]) != str(protein_variant[1:]):
+                output.addOutput('altStart', unicode(cds_variant[0:3]))
+                if unicode(protein_original[1:]) != unicode(protein_variant[1:]):
                     output.addOutput('altProtein',
-                                     'M' + protein_variant[1:] + '*')
-                    util.print_protein_html('M' + protein_variant[1:] + '*', 0,
+                                     'M' + unicode(protein_variant[1:]) + '*')
+                    util.print_protein_html('M' + unicode(protein_variant[1:]) + '*', 0,
                         0, output, 'altProteinFancy')
-                    util.print_protein_html('M' + protein_variant[1:] + '*', 0,
+                    util.print_protein_html('M' + unicode(protein_variant[1:]) + '*', 0,
                         0, output, 'altProteinFancyText', text=True)
             else :
                 output.addOutput('newprotein', '?')
@@ -1395,21 +1401,22 @@ def _add_transcript_info(mutator, transcript, output):
             cds_length = util.cds_length(
                 mutator.shift_sites(transcript.CDS.positionList))
             descr, first, last_original, last_variant = \
-                   util.protein_description(cds_length, protein_original,
-                                            protein_variant)
+                   util.protein_description(cds_length,
+                                            unicode(protein_original),
+                                            unicode(protein_variant))
 
             # This is never used.
             output.addOutput('myProteinDescription', descr)
 
-            util.print_protein_html(protein_original + '*', first,
+            util.print_protein_html(unicode(protein_original) + '*', first,
                 last_original, output, 'oldProteinFancy')
-            util.print_protein_html(protein_original + '*', first,
+            util.print_protein_html(unicode(protein_original) + '*', first,
                 last_original, output, 'oldProteinFancyText', text=True)
-            if str(protein_original) != str(protein_variant):
-                output.addOutput('newprotein', protein_variant + '*')
-                util.print_protein_html(protein_variant + '*', first,
+            if unicode(protein_original) != unicode(protein_variant):
+                output.addOutput('newprotein', unicode(protein_variant) + '*')
+                util.print_protein_html(unicode(protein_variant) + '*', first,
                     last_variant, output, 'newProteinFancy')
-                util.print_protein_html(protein_variant + '*', first,
+                util.print_protein_html(unicode(protein_variant) + '*', first,
                     last_variant, output, 'newProteinFancyText', text=True)
 #_add_transcript_info
 
@@ -1473,6 +1480,7 @@ def process_variant(mutator, description, record, output):
         if description.LrgAcc:
             # LRG case, pick the top gene.
             gene = record.record.geneList[0]
+
             if transcript_id:
                 transcript = gene.findLocus(transcript_id)
                 if not transcript:
@@ -1481,7 +1489,7 @@ def process_variant(mutator, description, record, output):
                     # NG_012772.1).
                     output.addMessage(__file__, 4, "ENOTRANSCRIPT",
                         "Multiple transcripts found for gene %s. Please " \
-                        "choose from: %s" %(gene.name,
+                        "choose from: %s" % (gene.name,
                             ", ".join(gene.listLoci())))
             else:
                 # No transcript id given.
@@ -1563,10 +1571,10 @@ def process_variant(mutator, description, record, output):
                                   'Protein level descriptions can only be done on a protein or transcript reference.')
                 raise _VariantError()
             else:
-                cds = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
-                          IUPAC.unambiguous_dna)
+                cds = util.splice(mutator.orig, transcript.CDS.positionList)
+                cds.alphabet = IUPAC.unambiguous_dna
                 if transcript.CM.orientation == -1:
-                    cds = Bio.Seq.reverse_complement(cds)
+                    cds = cds.reverse_complement()
                 protein = cds.translate(table=transcript.txTable, cds=True, to_stop=True)
                 mutator.orig = protein
                 mutator.mutated = protein
@@ -1644,12 +1652,12 @@ def check_variant(description, output):
 
     if parsed_description.LrgAcc:
         record_id = parsed_description.LrgAcc
-    elif parsed_description.Version:
-        record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
+    elif parsed_description.RefSeqAcc:
+        if parsed_description.Version:
+            record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
+        else:
+            record_id = parsed_description.RefSeqAcc
     else:
-        record_id = parsed_description.RefSeqAcc
-
-    if not record_id:
         output.addMessage(__file__, 4, 'ENOREF', 'No reference sequence given.')
         return
 
@@ -1657,7 +1665,7 @@ def check_variant(description, output):
 
     if parsed_description.LrgAcc:
         filetype = 'LRG'
-        transcript_id = parsed_description.LRGTranscriptID
+        transcript_id = parsed_description.LRGTranscriptID or ''
         retriever = Retriever.LRGRetriever(output)
     else:
         filetype = 'GB'
@@ -1732,8 +1740,8 @@ def check_variant(description, output):
     except _VariantError:
         return
 
-    output.addOutput('original', str(mutator.orig))
-    output.addOutput('mutated', str(mutator.mutated))
+    output.addOutput('original', unicode(mutator.orig))
+    output.addOutput('mutated', unicode(mutator.mutated))
 
     # Chromosomal region (only for GenBank human transcript references).
     # This is still quite ugly code, and should be cleaned up once we have
@@ -1775,17 +1783,18 @@ def check_variant(description, output):
                 transcript.proteinDescription = 'p.?'
                 continue
 
-            cds_original = Seq(str(util.splice(mutator.orig, transcript.CDS.positionList)),
-                               IUPAC.unambiguous_dna)
-            cds_variant = Seq(str(util.__nsplice(mutator.mutated,
-                                            mutator.shift_sites(transcript.mRNA.positionList),
-                                            mutator.shift_sites(transcript.CDS.location),
-                                            transcript.CM.orientation)),
-                              IUPAC.unambiguous_dna)
+            cds_original = util.splice(mutator.orig, transcript.CDS.positionList)
+            cds_original.alphabet = IUPAC.unambiguous_dna
+
+            cds_variant = util.__nsplice(mutator.mutated,
+                                         mutator.shift_sites(transcript.mRNA.positionList),
+                                         mutator.shift_sites(transcript.CDS.location),
+                                         transcript.CM.orientation)
+            cds_variant.alphabet = IUPAC.unambiguous_dna
 
             if transcript.CM.orientation == -1:
-                cds_original = Bio.Seq.reverse_complement(cds_original)
-                cds_variant = Bio.Seq.reverse_complement(cds_variant)
+                cds_original = cds_original.reverse_complement()
+                cds_variant = cds_variant.reverse_complement()
 
             #if '*' in cds_original.translate()[:-1]:
             #    output.addMessage(__file__, 3, "ESTOP",
@@ -1801,7 +1810,7 @@ def check_variant(description, output):
                     # FIXME this is a bit of a rancid fix.
                     protein_original = cds_original.translate(
                         table=transcript.txTable, cds=True, to_stop=True)
-                except Bio.Data.CodonTable.TranslationError:
+                except CodonTable.TranslationError:
                     if transcript.current:
                         output.addMessage(
                             __file__, 2, "WTRANS",
@@ -1822,7 +1831,7 @@ def check_variant(description, output):
                         cds_length = util.cds_length(
                             mutator.shift_sites(transcript.CDS.positionList))
                         transcript.proteinDescription = util.protein_description(
-                            cds_length, protein_original, protein_variant)[0]
+                            cds_length, unicode(protein_original), unicode(protein_variant))[0]
                     except IndexError:
                         # Todo: Probably CDS start was hit by removal of exon..
                         transcript.proteinDescription = 'p.?'

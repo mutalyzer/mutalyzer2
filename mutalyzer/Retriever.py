@@ -10,13 +10,15 @@ Public classes:
 """
 
 
+from __future__ import unicode_literals
+
+import io
 import os              # path.isfile(), link() path.isdir(), path.mkdir(),
                        # walk(), path.getsize(), path.join(), stat(), remove()
 import time
 import bz2             # BZ2Compressor(), BZ2File()
 import hashlib         # md5(), update(), hexdigest()
 import urllib2         # urlopen()
-import StringIO        # StringIO()
 from Bio import SeqIO  # read()
 from Bio import Entrez # efetch(), read(), esearch(), esummary()
 from Bio.Seq import UnknownSeq
@@ -25,6 +27,7 @@ from xml.dom import DOMException, minidom
 from xml.parsers import expat
 from httplib import HTTPException, IncompleteRead
 from sqlalchemy.orm.exc import NoResultFound
+import cchardet as chardet
 
 from mutalyzer import util
 from mutalyzer.config import settings
@@ -84,10 +87,10 @@ class Retriever(object) :
         Convert an accession number to a filename.
 
         @arg name: The accession number
-        @type name: string
+        @type name: unicode
 
         @return: A filename
-        @rtype: string
+        @rtype: unicode
         """
         return os.path.join(settings.CACHE_DIR, name + "." + self.fileType + ".bz2")
     #_nametofile
@@ -97,18 +100,27 @@ class Retriever(object) :
         Write raw data to a compressed file.
 
         @arg raw_data: The raw_data to be compressed and written
-        @type raw_data: string
+        @type raw_data: byte string
         @arg filename: The intended name of the outfile
-        @type filename: string
+        @type filename: unicode
 
         @return: outfile ; The full path and name of the file written
-        @rtype: string
+        @rtype: unicode
         """
+        result = chardet.detect(raw_data)
+        if result['confidence'] > 0.5:
+            encoding = result['encoding']
+        else:
+            encoding = 'utf-8'
+
+        if not util.is_utf8_alias(encoding):
+            raw_data = raw_data.decode(encoding).encode('utf-8')
+
         # Compress the data to save disk space.
         comp = bz2.BZ2Compressor()
         data = comp.compress(raw_data)
         data += comp.flush()
-        out_handle = open(self._nametofile(filename), "w")
+        out_handle = open(self._nametofile(filename), "wb")
         out_handle.write(data)
         out_handle.close()
 
@@ -120,10 +132,10 @@ class Retriever(object) :
         Calculate the md5sum of a piece of text.
 
         @arg content: Arbitrary text
-        @type content: string
+        @type content: byte string
 
         @return: The md5sum of 'content'
-        @rtype: string
+        @rtype: unicode
         """
 
         hashfunc = hashlib.md5()
@@ -131,7 +143,7 @@ class Retriever(object) :
         md5sum = hashfunc.hexdigest()
         del hashfunc
 
-        return md5sum
+        return unicode(md5sum)
     #_calcHash
 
     def _newUD(self) :
@@ -139,11 +151,11 @@ class Retriever(object) :
         Make a new UD number based on the current time (seconds since 1970).
 
         @return: A new UD number
-        @rtype: string
+        @rtype: unicode
         """
 
         UD = util.generate_id()
-        return "UD_" + str(UD)
+        return "UD_" + unicode(UD)
     #_newUD
 
     def _updateDBmd5(self, raw_data, name, GI):
@@ -159,7 +171,7 @@ class Retriever(object) :
         @type GI:
 
         @return: filename
-        @rtype: string
+        @rtype: unicode
         """
         try:
             reference = Reference.query.filter_by(accession=name).one()
@@ -191,10 +203,10 @@ class Retriever(object) :
         it.
 
         @arg rsId: The rsId of the SNP (example: 'rs9919552').
-        @type rsId: string
+        @type rsId: unicode
 
         @return: A list of HGVS notations.
-        @rtype: list(string)
+        @rtype: list(unicode)
         """
         # A simple input check.
         id = rs_id[2:]
@@ -223,7 +235,7 @@ class Retriever(object) :
                 self._output.addMessage(__file__, 4, 'EENTREZ',
                                         'Error connecting to dbSNP.')
                 self._output.addMessage(__file__, -1, 'INFO',
-                                        'IOError: %s' % str(e))
+                                        'IOError: %s' % unicode(e))
                 return []
 
         try:
@@ -232,10 +244,10 @@ class Retriever(object) :
             self._output.addMessage(__file__, 4, 'EENTREZ',
                                     'Error reading from dbSNP.')
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'IncompleteRead: %s' % str(e))
+                                    'IncompleteRead: %s' % unicode(e))
             return []
 
-        if response_text == '\n':
+        if response_text.strip() == b'\n':
             # This is apparently what dbSNP returns for non-existing dbSNP id
             self._output.addMessage(__file__, 4, 'EENTREZ',
                                     'ID rs%s could not be found in dbSNP.' \
@@ -251,21 +263,21 @@ class Retriever(object) :
             self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
                                     'error. Error parsing result XML.')
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'ExpatError: %s' % str(e))
+                                    'ExpatError: %s' % unicode(e))
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'Result from dbSNP: %s' % response_text)
+                                    'Result from dbSNP: %s' % unicode(response_text, 'utf-8'))
             return []
         except IndexError:
             # The expected root element is not present.
             self._output.addMessage(__file__, 4, 'EENTREZ', 'Unknown dbSNP ' \
                                     'error. Result XML was not as expected.')
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'Result from dbSNP: %s' % response_text)
+                                    'Result from dbSNP: %s' % unicode(response_text, 'utf-8'))
             return []
 
         snps = []
         for i in rs.getElementsByTagName('hgvs'):
-            snps.append(i.lastChild.data.encode('utf8'))
+            snps.append(i.lastChild.data)
 
         return snps
     #snpConvert
@@ -298,9 +310,9 @@ class GenBankRetriever(Retriever):
         database).
 
         @arg raw_data: The data
-        @type raw_data: string
+        @type raw_data: byte string
         @arg filename: The intended name of the file.
-        @type filename: string
+        @type filename: unicode
         @arg extract: Flag that indicates whether to extract the record ID and
         GI number:
             - 0 ; Do not extract, use 'filename'
@@ -310,29 +322,27 @@ class GenBankRetriever(Retriever):
         @return: tuple ; Depending on the value of 'extract':
             - 0 ; ('filename', None)
             - 1 ; (id, GI)
-        @rtype: tuple (string, string)
+        @rtype: tuple (unicode, unicode)
         """
 
-        if raw_data == "\nNothing has been found\n" :
+        if raw_data.strip() == b'Nothing has been found':
             self._output.addMessage(__file__, 4, "ENORECORD",
                 "The record could not be retrieved.")
             return None
         #if
 
-        fakehandle = StringIO.StringIO() # Unfortunately, BioPython needs a
-        fakehandle.write(raw_data)       # file handle.
+        fakehandle = io.BytesIO()     # Unfortunately, BioPython needs a
+        fakehandle.write(raw_data)    # file handle.
         fakehandle.seek(0)
         try :
             record = SeqIO.read(fakehandle, "genbank")
         except (ValueError, AttributeError):  # An error occured while parsing.
             self._output.addMessage(__file__, 4, "ENOPARSE",
                 "The file could not be parsed.")
-            fakehandle.close()
             return None
         #except
 
         if type(record.seq) == UnknownSeq :
-            fakehandle.close()
             self._output.addMessage(__file__, 4, "ENOSEQ",
                 "This record contains no sequence. Chromosomal or contig " \
                 "records should be uploaded with the GenBank uploader.")
@@ -342,12 +352,12 @@ class GenBankRetriever(Retriever):
         outfile = filename
         GI = None
         if extract :
-            outfile = record.id
-            GI = record.annotations["gi"]
+            outfile = unicode(record.id)
+            GI = unicode(record.annotations["gi"])
             if outfile != filename :
                 # Add the reference (incl version) to the reference output
                 # This differs if the original reference lacks a version
-                self._output.addOutput("reference", record.id)
+                self._output.addOutput("reference", unicode(record.id))
                 self._output.addOutput(
                         "BatchFlags", ("A1",(
                             filename,
@@ -355,9 +365,8 @@ class GenBankRetriever(Retriever):
                             filename+"." )))
                 self._output.addMessage(__file__, 2, "WNOVER",
                     "No version number is given, using %s. Please use this " \
-                    "number to reduce downloading overhead." % record.id)
+                    "number to reduce downloading overhead." % unicode(record.id))
         #if
-        fakehandle.close()
 
         self._write(raw_data, outfile)
 
@@ -378,12 +387,12 @@ class GenBankRetriever(Retriever):
             net_handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'Error connecting to Entrez nuccore database: %s' % str(e))
+                                    'Error connecting to Entrez nuccore database: %s' % unicode(e))
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not retrieve %s.' % name)
             return None
 
-        if raw_data == '\n' :       # Check if the file is empty or not.
+        if raw_data.strip() == b'':       # Check if the file is empty or not.
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not retrieve %s.' % name)
             return None
@@ -391,10 +400,10 @@ class GenBankRetriever(Retriever):
         # This is a hack to detect constructed references, the proper way to
         # do this would be to check the data_file_division attribute of the
         # parsed GenBank file (it would be 'CON').
-        if '\nCONTIG' in raw_data:
+        if b'\nCONTIG' in raw_data:
             try:
                 # Get the length in base pairs
-                length = int(raw_data[:raw_data.index(' bp', 0, 500)].split()[-1])
+                length = int(raw_data[:raw_data.index(b' bp', 0, 500)].split()[-1])
             except ValueError, IndexError:
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
@@ -409,7 +418,7 @@ class GenBankRetriever(Retriever):
                 net_handle.close()
             except (IOError, urllib2.HTTPError, HTTPException) as e:
                 self._output.addMessage(__file__, -1, 'INFO',
-                                        'Error connecting to Entrez nuccore database: %s' % str(e))
+                                        'Error connecting to Entrez nuccore database: %s' % unicode(e))
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not retrieve %s.' % name)
                 return None
@@ -438,7 +447,7 @@ class GenBankRetriever(Retriever):
         as filename.
 
         @arg accno: The accession number of the chromosome
-        @type accno: string
+        @type accno: unicode
         @arg start: Start position of the slice
         @type start: integer
         @arg stop: End position of the slice.
@@ -450,7 +459,7 @@ class GenBankRetriever(Retriever):
         @type orientation: integer
 
         @return: An UD number
-        @rtype: string
+        @rtype: unicode
         """
 
         # Not a valid slice.
@@ -483,7 +492,7 @@ class GenBankRetriever(Retriever):
             handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'Error connecting to Entrez nuccore database: %s' % str(e))
+                                    'Error connecting to Entrez nuccore database: %s' % unicode(e))
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not retrieve slice.')
             return None
@@ -512,7 +521,7 @@ class GenBankRetriever(Retriever):
         #else
 
         if self.write(raw_data, reference.accession, 0):
-            return str(reference.accession)
+            return reference.accession
     #retrieveslice
 
     def retrievegene(self, gene, organism, upstream, downstream) :
@@ -521,9 +530,9 @@ class GenBankRetriever(Retriever):
         slice if the gene can be found.
 
         @arg gene: Name of the gene
-        @type gene: string
+        @type gene: unicode
         @arg organism: The organism in which we search.
-        @type organism: string
+        @type organism: unicode
         @arg upstream: Number of upstream nucleotides for the slice.
         @type upstream: integer
         @arg downstream: Number of downstream nucleotides for the slice.
@@ -549,7 +558,7 @@ class GenBankRetriever(Retriever):
                 handle.close()
         except (IOError, urllib2.HTTPError, HTTPException) as e:
             self._output.addMessage(__file__, -1, 'INFO',
-                                    'Error connecting to Entrez esearch: %s' % str(e))
+                                    'Error connecting to Entrez esearch: %s' % unicode(e))
             self._output.addMessage(__file__, 4, 'ERETR',
                                     'Could not search for gene %s.' % gene)
             return None
@@ -571,29 +580,29 @@ class GenBankRetriever(Retriever):
                     handle.close()
             except (IOError, urllib2.HTTPError, HTTPException) as e:
                 self._output.addMessage(__file__, -1, 'INFO',
-                                        'Error connecting to Entrez esummary: %s' % str(e))
+                                        'Error connecting to Entrez esummary: %s' % unicode(e))
                 self._output.addMessage(__file__, 4, 'ERETR',
                                         'Could not get mapping information for gene %s.' % gene)
                 return None
 
-            if summary[0]["NomenclatureSymbol"].lower() == gene.lower() : # Found it.
+            if unicode(summary[0]["NomenclatureSymbol"]).lower() == gene.lower() : # Found it.
                 if not summary[0]["GenomicInfo"] :
                     self._output.addMessage(__file__, 4, "ENOMAPPING",
                         "No mapping information found for gene %s." % gene)
                     return None
                 #if
-                ChrAccVer = summary[0]["GenomicInfo"][0]["ChrAccVer"]
-                ChrLoc = summary[0]["GenomicInfo"][0]["ChrLoc"]
-                ChrStart = summary[0]["GenomicInfo"][0]["ChrStart"]
-                ChrStop = summary[0]["GenomicInfo"][0]["ChrStop"]
-                break;
+                ChrAccVer = unicode(summary[0]["GenomicInfo"][0]["ChrAccVer"])
+                ChrLoc = unicode(summary[0]["GenomicInfo"][0]["ChrLoc"])
+                ChrStart = unicode(summary[0]["GenomicInfo"][0]["ChrStart"])
+                ChrStop = unicode(summary[0]["GenomicInfo"][0]["ChrStop"])
+                break
             #if
 
             # Collect official symbols that has this gene as alias in case we
             # can not find anything.
-            if gene in summary[0]["OtherAliases"] and \
+            if gene in [unicode(a) for a in summary[0]["OtherAliases"]] and \
                 summary[0]["NomenclatureSymbol"] :
-                aliases.append(summary[0]["NomenclatureSymbol"]);
+                aliases.append(unicode(summary[0]["NomenclatureSymbol"]))
         #for
 
         if not ChrAccVer : # We did not find any genes.
@@ -631,11 +640,18 @@ class GenBankRetriever(Retriever):
         is used.
 
         @arg url: Location of a GenBank record
-        @type url: string
+        @type url: unicode
 
         @return: UD or None
-        @rtype: string
+        @rtype: unicode
         """
+        if not (url.startswith('http://') or
+                url.startswith('https://') or
+                url.startswith('ftp://')):
+            self._output.addMessage(__file__, 4, "ERECPARSE",
+                                    "Only HTTP(S) or FTP locations are allowed.")
+            return None
+
         handle = urllib2.urlopen(url)
         info = handle.info()
         if info["Content-Type"] == "text/plain" :
@@ -651,14 +667,14 @@ class GenBankRetriever(Retriever):
                 except NoResultFound:
                     UD = self._newUD()
                     if not os.path.isfile(self._nametofile(UD)):
-                        UD = self.write(raw_data, UD, 0) and str(UD)
+                        UD = self.write(raw_data, UD, 0) and UD
                     if UD:      #Parsing went OK, add to DB
                         reference = Reference(UD, md5sum, download_url=url)
                         session.add(reference)
                         session.commit()
                 else:
                     if not os.path.isfile(self._nametofile(reference.accession)):
-                        UD = self.write(raw_data, reference.accession, 0) and str(reference.accession)
+                        UD = self.write(raw_data, reference.accession, 0) and reference.accession
 
                 return UD #Returns the UD or None
             #if
@@ -681,11 +697,11 @@ class GenBankRetriever(Retriever):
         If the downloaded file is recognised by its hash, the old UD number
         is used.
 
-        @arg raw_data: A GenBank record
-        @type raw_data: string
+        @arg raw_data: A GenBank record.
+        @type raw_data: byte string
 
-        @return:
-        @rtype: string?????
+        @return: Accession number for the uploaded file.
+        @rtype: unicode
         """
         md5sum = self._calcHash(raw_data)
 
@@ -702,7 +718,7 @@ class GenBankRetriever(Retriever):
             if os.path.isfile(self._nametofile(reference.accession)):
                 return reference.accession
             else:
-                return self.write(raw_data, reference.accession, 0) and str(reference.accession)
+                return self.write(raw_data, reference.accession, 0) and reference.accession
     #uploadrecord
 
     def loadrecord(self, identifier):
@@ -718,7 +734,7 @@ class GenBankRetriever(Retriever):
         3. Fetched from the NCBI.
 
         :arg identifier: A RefSeq accession number or geninfo identifier (GI).
-        :type identifier: string
+        :type identifier: unicode
 
         :return: A parsed RefSeq record or `None` if no record could be found
             for the given identifier.
@@ -830,7 +846,7 @@ class LRGRetriever(Retriever):
         Load and parse a LRG file based on the identifier
 
         @arg identifier: The name of the LRG file to read
-        @type identifier: string
+        @type identifier: unicode
 
         @return: record ; GenRecord.Record of LRG file
                    None ; in case of failure
@@ -870,10 +886,10 @@ class LRGRetriever(Retriever):
         from the pending section.
 
         @arg name: The name of the LRG file to fetch
-        @type name: string
+        @type name: unicode
 
         @return: the full path to the file; None in case of an error
-        @rtype: string
+        @rtype: unicode
         """
 
         prefix = settings.LRG_PREFIX_URL
@@ -901,12 +917,12 @@ class LRGRetriever(Retriever):
         Download an LRG record from an URL.
 
         @arg url: Location of the LRG record
-        @type url: string
+        @type url: unicode
 
         @return:
             - filename    ; The full path to the file
             - None        ; in case of failure
-        @rtype: string
+        @rtype: unicode
         """
 
         lrgID = name or os.path.splitext(os.path.split(url)[1])[0]
@@ -914,6 +930,8 @@ class LRGRetriever(Retriever):
         #    return None
         filename = self._nametofile(lrgID)
 
+        # Todo: Properly read the file contents to a unicode string and write
+        #   it utf-8 encoded.
         handle = urllib2.urlopen(url)
         info = handle.info()
         if info["Content-Type"] == "application/xml" and info.has_key("Content-length"):
@@ -968,14 +986,14 @@ class LRGRetriever(Retriever):
         if a parse error occurs None is returned.
 
         @arg raw_data: The data
-        @type raw_data: string
+        @type raw_data: byte string
         @arg filename: The intended name of the file
-        @type filename: string
+        @type filename: unicode
 
         @return:
             - filename ; The full path and name of the file written
             - None     ; In case of an error
-        @rtype: string
+        @rtype: unicode
         """
         # Dirty way to test if a file is valid,
         # Parse the file to see if it's a real LRG file.

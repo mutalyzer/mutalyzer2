@@ -3,6 +3,8 @@ Tests for the mutalyzer.parsers.genbank module.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 
 from mutalyzer.parsers import genbank

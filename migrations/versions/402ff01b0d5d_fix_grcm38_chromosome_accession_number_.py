@@ -6,6 +6,8 @@ Create Date: 2014-10-08 15:10:21.522551
 
 """
 
+from __future__ import unicode_literals
+
 # revision identifiers, used by Alembic.
 revision = '402ff01b0d5d'
 down_revision = 'ea660b66f26'

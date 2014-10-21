@@ -3,6 +3,9 @@ HGVS variant nomenclature checker.
 """
 
 
+from __future__ import unicode_literals
+
+
 # We follow a versioning scheme compatible with setuptools [1] where the
 # package version is always that of the upcoming release (and not that of the
 # previous release), post-fixed with ``.dev``. Only in a release commit, the

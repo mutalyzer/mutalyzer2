@@ -46,6 +46,7 @@ Additional notes
    development
    issues
    new-organism
+   strings
    changelog
    copyright
 

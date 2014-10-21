@@ -19,6 +19,8 @@ The grammar is described in [3].
 """
 
 
+from __future__ import unicode_literals
+
 from pyparsing import *
 
 
@@ -48,7 +50,7 @@ class Grammar():
     ##########################################################################
 
     # BNF: Name -> ([a-z] | [a-Z] | [0-9])+
-    Name = Word(alphanums, min=1)
+    Name = Word(unicode(alphanums), min=1)
 
     # BNF: Nt -> `a' | `c' | `g' | `u' | `A' | `C' | `G' | `T' | `U'
     #Nt = Word('acgtuACGTU', exact=1)
@@ -66,7 +68,7 @@ class Grammar():
     NtString = Combine(OneOrMore(Nt))
 
     # BNF: Number -> [0-9]+
-    Number = Word(nums)
+    Number = Word(unicode(nums))
 
     ##########################################################################
     # Reference sequences
@@ -79,7 +81,7 @@ class Grammar():
     ProtIso = Suppress('_i') + Number('ProtIso')
 
     # BNF: GeneName -> ([a-Z] | [0-9] | `-')+
-    GeneName = Word(alphanums + '-', min=1)
+    GeneName = Word(unicode(alphanums) + '-', min=1)
 
     # BNF: GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
     GeneSymbol = Suppress('(') + Group(GeneName('GeneSymbol') + \
@@ -94,11 +96,11 @@ class Grammar():
 
     # BNF: AccNo -> ([a-Z] Number `_')+ Version?
     AccNo = NotAny('LRG_') + \
-            Combine(Word(alphas + '_') + Number)('RefSeqAcc') + \
+            Combine(Word(unicode(alphas) + '_') + Number)('RefSeqAcc') + \
             Optional(Version)
 
     # BNF: UD -> `UD_' [a-Z]+ (`_' Number)+
-    UD = Combine('UD_' + Word(alphas) + OneOrMore('_' + Number))('RefSeqAcc')
+    UD = Combine('UD_' + Word(unicode(alphas)) + OneOrMore('_' + Number))('RefSeqAcc')
 
     # BNF: LRGTranscriptID -> `t' [0-9]+
     LRGTranscriptID = Suppress('t') + Number('LRGTranscriptID')
@@ -467,7 +469,7 @@ class Grammar():
         the input where the error occurred (and return None).
 
         @arg variant: The input string that needs to be parsed.
-        @type variant: string
+        @type variant: unicode
 
         @return: The parse tree containing the parse results, or None in
                  case of a parsing error.
@@ -480,12 +482,12 @@ class Grammar():
             return self.Var.parseString(variant, parseAll=True)
             # Todo: check .dump()
         except ParseException as err:
-            print err.line
-            print " "*(err.column-1) + "^"
-            print err
+            #print err.line
+            #print " "*(err.column-1) + "^"
+            #print err
             # Log parse error and the position where it occurred.
-            self._output.addMessage(__file__, 4, 'EPARSE', str(err))
-            pos = int(str(err).split(':')[-1][:-1]) - 1
+            self._output.addMessage(__file__, 4, 'EPARSE', unicode(err))
+            pos = int(unicode(err).split(':')[-1][:-1]) - 1
             self._output.addOutput('parseError', variant)
             self._output.addOutput('parseError', pos * ' ' + '^')
             return None

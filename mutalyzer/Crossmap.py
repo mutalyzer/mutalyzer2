@@ -10,6 +10,8 @@ and stop and the orientation of a transcript.
 #Public classes:
 #    - Crossmap ; Convert from g. to c. or n. notation or vice versa.
 
+from __future__ import unicode_literals
+
 class Crossmap() :
     """
     Convert from I{g.} to I{c.} or I{n.} notation or vice versa.
@@ -406,13 +408,13 @@ class Crossmap() :
         @type a: integer
 
         @return: The converted notation (may be unaltered)
-        @rtype: string
+        @rtype: unicode
         """
 
         if a > self.__STOP :
-            return '*' + str(a - self.__STOP)
+            return '*' + unicode(a - self.__STOP)
 
-        return str(a)
+        return unicode(a)
     #int2main
 
     def main2int(self, s) :
@@ -423,7 +425,7 @@ class Crossmap() :
             - __STOP ; CDS stop in I{c.} notation.
 
         @arg s: A string in '*' notation
-        @type s: string
+        @type s: unicode
 
         @return: The converted notation (may be unaltered)
         @rtype: integer
@@ -447,20 +449,20 @@ class Crossmap() :
         @type fuzzy: bool
 
         @return: The offset in HGVS notation
-        @rtype: string
+        @rtype: unicode
         """
 
         if t[1] > 0 :                      # The exon boundary is downstream.
             if fuzzy: return '+?'
             if t[0] >= self.__trans_end :  # It is downstream of the last exon.
-                return "+d" + str(t[1])
-            return '+' + str(t[1])
+                return "+d" + unicode(t[1])
+            return '+' + unicode(t[1])
         #if
         if t[1] < 0 :                       # The exon boundary is uptream.
             if fuzzy: return '-?'
             if t[0] <= self.__trans_start : # It is upstream of the first exon.
-                return "-u" + str(-t[1])
-            return str(t[1])
+                return "-u" + unicode(-t[1])
+            return unicode(t[1])
         #if
         return ''                           # No offset was given.
     #int2offset
@@ -472,7 +474,7 @@ class Crossmap() :
         sensible.
 
         @arg s: An offset in HGVS notation
-        @type s: string
+        @type s: unicode
 
         @return: The offset as an integer
         @rtype: integer
@@ -505,12 +507,12 @@ class Crossmap() :
         @type fuzzy: bool
 
         @return: The position in HGVS notation
-        @rtype: string
+        @rtype: unicode
         """
 
         if t[0] >= self.__trans_end or t[0] <= self.__trans_start:
-            return str(self.int2main(self.__minus(t[0], -t[1])))
-        return str(self.int2main(t[0])) + str(self.int2offset(t, fuzzy))
+            return unicode(self.int2main(self.__minus(t[0], -t[1])))
+        return unicode(self.int2main(t[0])) + unicode(self.int2offset(t, fuzzy))
     #tuple2string
 
     def g2c(self, a, fuzzy=False) :
@@ -525,7 +527,7 @@ class Crossmap() :
         @type fuzzy: bool
 
         @return: The position in HGVS notation
-        @rtype: string
+        @rtype: unicode
         """
         return self.tuple2string(self.g2x(a), fuzzy)
     #g2c

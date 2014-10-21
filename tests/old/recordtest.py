@@ -2,6 +2,7 @@
 recordtest.py contains
     TestRecord - a BaseClass for testing GenRecord.Record instances
 """
+from __future__ import unicode_literals
 import unittest, types
 from Modules import GenRecord        #test class-types
 
@@ -56,7 +57,7 @@ class TestRecord(unittest.TestCase):
                     self.assertTrue(isinstance(plist,
                         (types.NoneType, GenRecord.PList)))
 
-                #self.assertTrue(any(map(isinstance, 
+                #self.assertTrue(any(map(isinstance,
 
 
     def _test_if_loc(self, loc):
@@ -76,7 +77,5 @@ class TestRecord(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # This file should be imported 
+    # This file should be imported
     pass
-
-

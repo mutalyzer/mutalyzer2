@@ -9,23 +9,24 @@ Mutalyzer RPC services.
 """
 
 
+from __future__ import unicode_literals
+
 from spyne.decorator import srpc
 from spyne.service import ServiceBase
-from spyne.model.primitive import String, Integer, Boolean, DateTime
+from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
 from spyne.model.complex import Array
 from spyne.model.fault import Fault
+import io
 import os
 import socket
-from cStringIO import StringIO
-import tempfile
-from operator import itemgetter, attrgetter
+from operator import attrgetter
 from sqlalchemy.orm.exc import NoResultFound
 
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import session
-from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
-                                 BatchQueueItem, TranscriptMapping)
+from mutalyzer.db.models import (Assembly, BatchJob, BatchQueueItem,
+                                 TranscriptMapping)
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -51,7 +52,7 @@ class MutalyzerService(ServiceBase):
         super(MutalyzerService, self).__init__(environ)
     #__init__
 
-    @srpc(Mandatory.ByteArray, String, String,  _returns=String)
+    @srpc(Mandatory.ByteArray, Unicode, Unicode, _returns=Unicode)
     def submitBatchJob(data, process='NameChecker', argument=''):
         """
         Submit a batch job.
@@ -90,6 +91,12 @@ class MutalyzerService(ServiceBase):
                         'The process argument must be one of %s.'
                         % ', '.join(batch_types))
 
+        # The Python type for `data` should be a sequence of `str` objects,
+        # but it seems we sometimes just get one `str` object. Perhaps only in
+        # the unit tests, but let's fix that anyway.
+        if isinstance(data, str):
+            data = [data]
+
         # Note that the max file size check below might be bogus, since Spyne
         # first checks the total request size, which by default has a maximum
         # of 2 megabytes.
@@ -103,7 +110,9 @@ class MutalyzerService(ServiceBase):
                         'Only files up to %d megabytes are accepted.'
                         % (settings.MAX_FILE_SIZE // 1048576))
 
-        batch_file = StringIO(''.join(data))
+        batch_file = io.BytesIO()
+        for d in data:
+            batch_file.write(d)
 
         job, columns = file_instance.parseBatchFile(batch_file)
         batch_file.close()
@@ -115,7 +124,7 @@ class MutalyzerService(ServiceBase):
                                      batch_types[process], argument)
         return result_id
 
-    @srpc(Mandatory.String, _returns=Integer)
+    @srpc(Mandatory.Unicode, _returns=Integer)
     def monitorBatchJob(job_id):
         """
         Get the number of entries left for a batch job.
@@ -129,7 +138,7 @@ class MutalyzerService(ServiceBase):
         """
         return BatchQueueItem.query.join(BatchJob).filter_by(result_id=job_id).count()
 
-    @srpc(Mandatory.String, _returns=ByteArray)
+    @srpc(Mandatory.Unicode, _returns=ByteArray)
     def getBatchJob(job_id):
         """
         Get the result of a batch job.
@@ -144,7 +153,7 @@ class MutalyzerService(ServiceBase):
 
         @arg job_id: Batch job identifier.
 
-        @return: Batch job result file.
+        @return: Batch job result file (UTF-8, base64 encoded).
         """
         left = BatchQueueItem.query.join(BatchJob).filter_by(result_id=job_id).count()
 
@@ -152,11 +161,11 @@ class MutalyzerService(ServiceBase):
             raise Fault('EBATCHNOTREADY', 'Batch job result is not yet ready.')
 
         filename = 'batch-job-%s.txt' % job_id
-        handle = open(os.path.join(settings.CACHE_DIR, filename))
+        handle = open(os.path.join(settings.CACHE_DIR, filename), 'rb')
         return handle
 
-    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer, Boolean,
-        _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer, Boolean,
+        _returns=Array(Mandatory.Unicode))
     def getTranscripts(build, chrom, pos, versions=False) :
         """
         Get all the transcripts that overlap with a chromosomal position.
@@ -215,7 +224,7 @@ class MutalyzerService(ServiceBase):
             return [m.accession for m in mappings]
     #getTranscripts
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
     def getTranscriptsByGeneName(build, name):
         """
         Todo: documentation.
@@ -243,8 +252,8 @@ class MutalyzerService(ServiceBase):
         return ['%s.%s' % (m.accession, m.version) for m in mappings]
     #getTranscriptsByGene
 
-    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
+        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.Unicode))
     def getTranscriptsRange(build, chrom, pos1, pos2, method) :
         """
         Get all the transcripts that overlap with a range on a chromosome.
@@ -302,7 +311,7 @@ class MutalyzerService(ServiceBase):
         return [m.accession for m in mappings]
     #getTranscriptsRange
 
-    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
         Mandatory.Integer, Mandatory.Integer,
         _returns=Array(TranscriptMappingInfo))
     def getTranscriptsMapping(build, chrom, pos1, pos2, method):
@@ -387,7 +396,7 @@ class MutalyzerService(ServiceBase):
         return transcripts
     #getTranscriptsMapping
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def getGeneName(build, accno) :
         """
         Find the gene name associated with a transcript.
@@ -424,8 +433,8 @@ class MutalyzerService(ServiceBase):
         return mapping.gene
     #getGeneName
 
-    @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
-        Mandatory.String, _returns=Mapping)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Unicode,
+        Mandatory.Unicode, _returns=Mapping)
     def mappingInfo(LOVD_ver, build, accNo, variant) :
         """
         Search for an NM number in the MySQL database, if the version
@@ -492,7 +501,7 @@ class MutalyzerService(ServiceBase):
         return result
     #mappingInfo
 
-    @srpc(Mandatory.String, Mandatory.String, Mandatory.String,
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Unicode,
         _returns=Transcript)
     def transcriptInfo(LOVD_ver, build, accNo) :
         """
@@ -536,7 +545,7 @@ class MutalyzerService(ServiceBase):
         return T
     #transcriptInfo
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def chromAccession(build, name) :
         """
         Get the accession number of a chromosome, given a name.
@@ -574,7 +583,7 @@ class MutalyzerService(ServiceBase):
         return chromosome.accession
     #chromAccession
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def chromosomeName(build, accNo) :
         """
         Get the name of a chromosome, given a chromosome accession number.
@@ -612,7 +621,7 @@ class MutalyzerService(ServiceBase):
         return chromosome.name
     #chromosomeName
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Mandatory.Unicode)
     def getchromName(build, acc) :
         """
         Get the chromosome name, given a transcript identifier (NM number).
@@ -649,8 +658,8 @@ class MutalyzerService(ServiceBase):
         return mapping.chromosome.name
     #chromosomeName
 
-    @srpc(Mandatory.String, Mandatory.String, String,
-          _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Unicode,
+          _returns=Array(Mandatory.Unicode))
     def numberConversion(build, variant, gene=None):
         """
         Converts I{c.} to I{g.} notation or vice versa
@@ -696,7 +705,7 @@ class MutalyzerService(ServiceBase):
         return result
     #numberConversion
 
-    @srpc(Mandatory.String, _returns=CheckSyntaxOutput)
+    @srpc(Mandatory.Unicode, _returns=CheckSyntaxOutput)
     def checkSyntax(variant):
         """
         Checks the syntax of a variant.
@@ -739,7 +748,7 @@ class MutalyzerService(ServiceBase):
         return result
     #checkSyntax
 
-    @srpc(Mandatory.String, _returns=MutalyzerOutput)
+    @srpc(Mandatory.Unicode, _returns=MutalyzerOutput)
     def runMutalyzer(variant) :
         """
         Run the Mutalyzer name checker.
@@ -804,23 +813,18 @@ class MutalyzerService(ServiceBase):
         result.sourceGi = O.getIndexedOutput('source_gi', 0)
         result.molecule = O.getIndexedOutput('molecule', 0)
 
-        # We force the results to strings here, because some results
-        # may be of type Bio.Seq.Seq which spyne doesn't like.
-        #
-        # todo: We might have to also do this elsewhere.
+        result.original = O.getIndexedOutput("original", 0)
+        result.mutated = O.getIndexedOutput("mutated", 0)
 
-        result.original = str(O.getIndexedOutput("original", 0))
-        result.mutated = str(O.getIndexedOutput("mutated", 0))
+        result.origMRNA = O.getIndexedOutput("origMRNA", 0)
+        result.mutatedMRNA = O.getIndexedOutput("mutatedMRNA", 0)
 
-        result.origMRNA = str(O.getIndexedOutput("origMRNA", 0))
-        result.mutatedMRNA = str(O.getIndexedOutput("mutatedMRNA", 0))
+        result.origCDS = O.getIndexedOutput("origCDS", 0)
+        result.newCDS = O.getIndexedOutput("newCDS", 0)
 
-        result.origCDS = str(O.getIndexedOutput("origCDS", 0))
-        result.newCDS = str(O.getIndexedOutput("newCDS", 0))
-
-        result.origProtein = str(O.getIndexedOutput("oldprotein", 0))
-        result.newProtein = str(O.getIndexedOutput("newprotein", 0))
-        result.altProtein = str(O.getIndexedOutput("altProtein", 0))
+        result.origProtein = O.getIndexedOutput("oldprotein", 0)
+        result.newProtein = O.getIndexedOutput("newprotein", 0)
+        result.altProtein = O.getIndexedOutput("altProtein", 0)
 
         result.chromDescription = \
             O.getIndexedOutput("genomicChromDescription", 0)
@@ -860,7 +864,7 @@ class MutalyzerService(ServiceBase):
         return result
     #runMutalyzer
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=TranscriptNameInfo)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=TranscriptNameInfo)
     def getGeneAndTranscript(genomicReference, transcriptReference) :
         """
         Todo: documentation.
@@ -892,7 +896,7 @@ class MutalyzerService(ServiceBase):
         return ret
     #getGeneAndTranscript
 
-    @srpc(Mandatory.String, String, _returns=Array(TranscriptInfo))
+    @srpc(Mandatory.Unicode, Unicode, _returns=Array(TranscriptInfo))
     def getTranscriptsAndInfo(genomicReference, geneName=None):
         """
         Given a genomic reference, return all its transcripts with their
@@ -995,7 +999,7 @@ class MutalyzerService(ServiceBase):
                     transcript.CM.info()
                 cds_start = 1
 
-                t.cTransEnd = str(t.exons[-1].cStop)
+                t.cTransEnd = unicode(t.exons[-1].cStop)
                 t.gTransEnd = t.exons[-1].gStop
                 t.chromTransEnd = GenRecordInstance.record.toChromPos(
                     t.gTransEnd)
@@ -1009,15 +1013,15 @@ class MutalyzerService(ServiceBase):
                 t.name = '%s_v%s' % (gene.name, transcript.name)
                 t.id = transcript.transcriptID
                 t.product = transcript.transcriptProduct
-                t.cTransStart = str(trans_start)
+                t.cTransStart = unicode(trans_start)
                 t.gTransStart = transcript.CM.x2g(trans_start, 0)
                 t.chromTransStart = GenRecordInstance.record.toChromPos(
                     t.gTransStart)
-                t.cCDSStart = str(cds_start)
+                t.cCDSStart = unicode(cds_start)
                 t.gCDSStart = transcript.CM.x2g(cds_start, 0)
                 t.chromCDSStart = GenRecordInstance.record.toChromPos(
                     t.gCDSStart)
-                t.cCDSStop = str(cds_stop)
+                t.cCDSStop = unicode(cds_stop)
                 t.gCDSStop = transcript.CM.x2g(cds_stop, 0)
                 t.chromCDSStop = GenRecordInstance.record.toChromPos(t.gCDSStop)
                 t.locusTag = transcript.locusTag
@@ -1040,12 +1044,12 @@ class MutalyzerService(ServiceBase):
         return transcripts
     #getTranscriptsAndInfo
 
-    @srpc(Mandatory.ByteArray, _returns=Mandatory.String)
+    @srpc(Mandatory.ByteArray, _returns=Mandatory.Unicode)
     def uploadGenBankLocalFile(data):
         """
         Upload a genbank file.
 
-        @arg data: Genbank file (base64 encoded).
+        @arg data: Genbank file (UTF-8, base64 encoded).
         @return: UD accession number for the uploaded genbank file.
         """
         output = Output(__file__)
@@ -1053,6 +1057,12 @@ class MutalyzerService(ServiceBase):
 
         output.addMessage(__file__, -1, 'INFO',
                           'Received request uploadGenBankLocalFile()')
+
+        # The Python type for `data` should be a sequence of `str` objects,
+        # but it seems we sometimes just get one `str` object. Perhaps only in
+        # the unit tests, but let's fix that anyway.
+        if isinstance(data, str):
+            data = [data]
 
         # Note that the max file size check below might be bogus, since Spyne
         # first checks the total request size, which by default has a maximum
@@ -1067,7 +1077,7 @@ class MutalyzerService(ServiceBase):
                         'Only files up to %d megabytes are accepted.'
                         % (settings.MAX_FILE_SIZE // 1048576))
 
-        ud = retriever.uploadrecord(''.join(data))
+        ud = retriever.uploadrecord(b''.join(data))
 
         output.addMessage(__file__, -1, 'INFO',
                           'Finished processing uploadGenBankLocalFile()')
@@ -1075,13 +1085,13 @@ class MutalyzerService(ServiceBase):
         # Todo: use SOAP Fault object here (see Trac issue #41).
         if not ud:
             error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: str(m), output.getMessages()))
+                    + '\n'.join(map(lambda m: unicode(m), output.getMessages()))
             raise Exception(error)
 
         return ud
     #upLoadGenBankLocalFile
 
-    @srpc(Mandatory.String, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, _returns=Mandatory.Unicode)
     def uploadGenBankRemoteFile(url) :
         """
         Not implemented yet.
@@ -1089,8 +1099,8 @@ class MutalyzerService(ServiceBase):
         raise Fault('ENOTIMPLEMENTED', 'Not implemented yet')
     #upLoadGenBankRemoteFile
 
-    @srpc(Mandatory.String, Mandatory.String, Mandatory.Integer,
-        Mandatory.Integer, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
+        Mandatory.Integer, _returns=Mandatory.Unicode)
     def sliceChromosomeByGene(geneSymbol, organism, upStream,
         downStream) :
         """
@@ -1112,14 +1122,14 @@ class MutalyzerService(ServiceBase):
         # Todo: use SOAP Fault object here (see Trac issue #41).
         if not UD:
             error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: str(m), O.getMessages()))
+                    + '\n'.join(map(lambda m: unicode(m), O.getMessages()))
             raise Exception(error)
 
         return UD
     #sliceChromosomeByGene
 
-    @srpc(Mandatory.String, Mandatory.Integer, Mandatory.Integer,
-        Mandatory.Integer, _returns=Mandatory.String)
+    @srpc(Mandatory.Unicode, Mandatory.Integer, Mandatory.Integer,
+        Mandatory.Integer, _returns=Mandatory.Unicode)
     def sliceChromosome(chromAccNo, start, end, orientation) :
         """
         Todo: documentation, error handling, argument checking, tests.
@@ -1190,7 +1200,7 @@ class MutalyzerService(ServiceBase):
         return result
     #info
 
-    @srpc(_returns=Mandatory.String)
+    @srpc(_returns=Mandatory.Unicode)
     def ping():
         """
         Simple function to test the interface.
@@ -1201,7 +1211,7 @@ class MutalyzerService(ServiceBase):
         return 'pong'
     #ping
 
-    @srpc(Mandatory.String, Mandatory.String, _returns=Allele)
+    @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Allele)
     def descriptionExtract(reference, observed):
         """
         Extract the HGVS variant description from a reference sequence and an
@@ -1253,7 +1263,7 @@ class MutalyzerService(ServiceBase):
         return map(cache_entry_to_soap, cache)
     #getCache
 
-    @srpc(Mandatory.String, _returns=Array(Mandatory.String))
+    @srpc(Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
     def getdbSNPDescriptions(rs_id):
         """
         Lookup HGVS descriptions for a dbSNP rs identifier.
@@ -1281,7 +1291,7 @@ class MutalyzerService(ServiceBase):
         messages = output.getMessages()
         if messages:
             error = 'The request could not be completed\n' + \
-                '\n'.join(map(lambda m: str(m), output.getMessages()))
+                '\n'.join(map(lambda m: unicode(m), output.getMessages()))
             raise Exception(error)
 
         return descriptions

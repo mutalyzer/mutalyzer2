@@ -3,6 +3,8 @@ Tests for the mutalyzer.mutator module.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 import re
 import os
@@ -666,7 +668,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
-        assert str(m.mutated) == str(Seq('ACGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ACGATCG'))
 
     def test_largedel(self):
         """
@@ -674,7 +676,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 7)
-        assert str(m.mutated) == str(Seq('AG'))
+        assert unicode(m.mutated) == unicode(Seq('AG'))
 
     def test_ins(self):
         """
@@ -682,7 +684,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
-        assert str(m.mutated) == str(Seq('ATACGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATACGATCG'))
 
     def test_largeins(self):
         """
@@ -690,7 +692,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
-        assert str(m.mutated) == str(Seq('ATATCGCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATATCGCGATCG'))
 
     def test_sub(self):
         """
@@ -698,7 +700,7 @@ class TestMutator(MutalyzerTest):
         """
         m = self._mutator(Seq('ATCGATCG'))
         m.substitution(3, 'G')
-        assert str(m.mutated) == str(Seq('ATGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGGATCG'))
 
     def test_adjecent_del_sub_1(self):
         """
@@ -709,7 +711,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.substitution(3, 'G')
-        assert str(m.mutated) == str(Seq('AGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGGATCG'))
 
     def test_adjecent_del_sub_2(self):
         """
@@ -718,7 +720,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGGATCG'))
 
     def test_near_adjecent_del_sub_1(self):
         """
@@ -727,7 +729,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.substitution(4, 'T')
-        assert str(m.mutated) == str(Seq('ACTATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ACTATCG'))
 
     def test_near_adjecent_del_sub_2(self):
         """
@@ -736,7 +738,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(4, 4)
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGCATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGCATCG'))
 
     def test_adjecent_largedel_sub_1(self):
         """
@@ -746,7 +748,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 6)
         m.substitution(7, 'T')
-        assert str(m.mutated) == str(Seq('ATG'))
+        assert unicode(m.mutated) == unicode(Seq('ATG'))
 
     def test_adjecent_largedel_sub_2(self):
         """
@@ -756,7 +758,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 7)
         m.substitution(2, 'C')
-        assert str(m.mutated) == str(Seq('ACG'))
+        assert unicode(m.mutated) == unicode(Seq('ACG'))
 
     def test_near_adjecent_largedel_sub_1(self):
         """
@@ -765,7 +767,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 5)
         m.substitution(7, 'T')
-        assert str(m.mutated) == str(Seq('ATTG'))
+        assert unicode(m.mutated) == unicode(Seq('ATTG'))
 
     def test_near_adjecent_largedel_sub_2(self):
         """
@@ -774,7 +776,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(4, 7)
         m.substitution(2, 'C')
-        assert str(m.mutated) == str(Seq('ACCG'))
+        assert unicode(m.mutated) == unicode(Seq('ACCG'))
 
     def test_adjectent_del_ins_1(self):
         """
@@ -783,7 +785,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('AGCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGCGATCG'))
 
     def test_adjectent_del_ins_2(self):
         """
@@ -792,7 +794,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.insertion(2, 'A')
-        assert str(m.mutated) == str(Seq('ATAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATAGATCG'))
 
     def test_near_adjectent_del_ins(self):
         """
@@ -801,7 +803,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.insertion(3, 'T')
-        assert str(m.mutated) == str(Seq('ACTGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ACTGATCG'))
 
     def test_adjecent_ins_sub_1(self):
         """
@@ -811,7 +813,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
         m.substitution(3, 'G')
-        assert str(m.mutated) == str(Seq('ATAGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATAGGATCG'))
 
     def test_adjecent_ins_sub_2(self):
         """
@@ -821,7 +823,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGACGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGACGATCG'))
 
     def test_near_adjecent_ins_sub(self):
         """
@@ -831,7 +833,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'A')
         m.substitution(4, 'T')
-        assert str(m.mutated) == str(Seq('ATACTATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATACTATCG'))
 
     def test_adjecent_largeins_sub_1(self):
         """
@@ -841,7 +843,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
         m.substitution(3, 'G')
-        assert str(m.mutated) == str(Seq('ATATCGGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATATCGGGATCG'))
 
     def test_adjecent_largeins_sub_2(self):
         """
@@ -851,7 +853,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGATCGCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGATCGCGATCG'))
 
     def test_near_adjecent_largeins_sub(self):
         """
@@ -861,7 +863,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'ATCG')
         m.substitution(4, 'T')
-        assert str(m.mutated) == str(Seq('ATATCGCTATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATATCGCTATCG'))
 
     def test_adjecent_del_del_1(self):
         """
@@ -870,7 +872,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.deletion(3, 3)
-        assert str(m.mutated) == str(Seq('AGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGATCG'))
 
     def test_adjecent_del_del_2(self):
         """
@@ -879,7 +881,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.deletion(2, 2)
-        assert str(m.mutated) == str(Seq('AGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGATCG'))
 
     def test_adjecent_delins_snp_1(self):
         """
@@ -888,7 +890,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 2, 'A')
         m.substitution(3, 'G')
-        assert str(m.mutated) == str(Seq('AAGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGGATCG'))
 
     def test_adjecent_delins_snp_2(self):
         """
@@ -897,7 +899,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 3, 'A')
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGAGATCG'))
 
     def test_adjecent_largedelins_eq_snp_1(self):
         """
@@ -907,7 +909,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAA')
         m.substitution(7, 'G')
-        assert str(m.mutated) == str(Seq('AAAAAAGG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAGG'))
 
     def test_adjecent_largedelins_min_snp_1(self):
         """
@@ -917,7 +919,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.substitution(7, 'G')
-        assert str(m.mutated) == str(Seq('AAAAGG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAGG'))
 
     def test_adjecent_largedelins_plus_snp_1(self):
         """
@@ -927,7 +929,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.substitution(7, 'G')
-        assert str(m.mutated) == str(Seq('AAAAAAAAGG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAAAGG'))
 
     def test_adjecent_largedelins_eq_snp_2(self):
         """
@@ -937,7 +939,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAA')
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AGAAAAAG'))
 
     def test_adjecent_largedelins_min_snp_2(self):
         """
@@ -947,7 +949,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AGAAAG'))
 
     def test_adjecent_largedelins_plus_snp_2(self):
         """
@@ -957,7 +959,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.substitution(2, 'G')
-        assert str(m.mutated) == str(Seq('AGAAAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AGAAAAAAAG'))
 
     def test_adjecent_delins_del_1(self):
         """
@@ -966,7 +968,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 2, 'A')
         m.deletion(3, 3)
-        assert str(m.mutated) == str(Seq('AAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGATCG'))
 
     def test_adjecent_delins_del_2(self):
         """
@@ -975,7 +977,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 3, 'A')
         m.deletion(2, 2)
-        assert str(m.mutated) == str(Seq('AAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGATCG'))
 
     def test_adjecent_largedelins_eq_del_1(self):
         """
@@ -985,7 +987,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAA')
         m.deletion(7, 7)
-        assert str(m.mutated) == str(Seq('AAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAG'))
 
     def test_adjecent_largedelins_min_del_1(self):
         """
@@ -995,7 +997,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.deletion(7, 7)
-        assert str(m.mutated) == str(Seq('AAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAG'))
 
     def test_adjecent_largedelins_plus_del_1(self):
         """
@@ -1005,7 +1007,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.deletion(7, 7)
-        assert str(m.mutated) == str(Seq('AAAAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAAAG'))
 
     def test_adjecent_largedelins_eq_del_2(self):
         """
@@ -1015,7 +1017,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAA')
         m.deletion(2, 2)
-        assert str(m.mutated) == str(Seq('AAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAG'))
 
     def test_adjecent_largedelins_min_del_2(self):
         """
@@ -1025,7 +1027,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.deletion(2, 2)
-        assert str(m.mutated) == str(Seq('AAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAG'))
 
     def test_adjecent_largedelins_plus_del_2(self):
         """
@@ -1035,7 +1037,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.deletion(2, 2)
-        assert str(m.mutated) == str(Seq('AAAAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAAAG'))
 
     def test_adjectent_delins_ins_1(self):
         """
@@ -1044,7 +1046,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 2, 'A')
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('AAGCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGCGATCG'))
 
     def test_adjectent_delins_ins_2(self):
         """
@@ -1053,7 +1055,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 3, 'A')
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('ATGAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGAGATCG'))
 
     def test_adjectent_largedelins_eq_ins_1(self):
         """
@@ -1062,7 +1064,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAA')
         m.insertion(6, 'G')
-        assert str(m.mutated) == str(Seq('AAAAAAGCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAGCG'))
 
     def test_adjectent_largedelins_min_ins_1(self):
         """
@@ -1071,7 +1073,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.insertion(6, 'G')
-        assert str(m.mutated) == str(Seq('AAAAGCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAGCG'))
 
     def test_adjectent_largedelins_plus_ins_1(self):
         """
@@ -1080,7 +1082,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.insertion(6, 'G')
-        assert str(m.mutated) == str(Seq('AAAAAAAAGCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAAAGCG'))
 
     def test_adjectent_largedelins_eq_ins_2(self):
         """
@@ -1089,7 +1091,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAA')
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('ATGAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGAAAAAG'))
 
     def test_adjectent_largedelins_min_ins_2(self):
         """
@@ -1098,7 +1100,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('ATGAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGAAAG'))
 
     def test_adjectent_largedelins_plus_ins_2(self):
         """
@@ -1107,7 +1109,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('ATGAAAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGAAAAAAAG'))
 
     def test_adjectent_delins_del_delins(self):
         """
@@ -1116,7 +1118,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 3, 'A')
         m.delins(4, 4, 'T')
-        assert str(m.mutated) == str(Seq('AATATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AATATCG'))
 
     def test_adjectent_largedelins_plus_delins_1(self):
         """
@@ -1125,7 +1127,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAAAAAA')
         m.delins(7, 7, 'T')
-        assert str(m.mutated) == str(Seq('AAAAAAAATG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAAAAAATG'))
 
     def test_adjectent_largedelins_plus_delins_2(self):
         """
@@ -1134,7 +1136,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAAAAAA')
         m.delins(2, 2, 'C')
-        assert str(m.mutated) == str(Seq('ACAAAAAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('ACAAAAAAAG'))
 
     def test_adjectent_largedelins_min_delins_1(self):
         """
@@ -1143,7 +1145,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(2, 6, 'AAA')
         m.delins(7, 7, 'T')
-        assert str(m.mutated) == str(Seq('AAAATG'))
+        assert unicode(m.mutated) == unicode(Seq('AAAATG'))
 
     def test_adjectent_largedelins_min_delins_2(self):
         """
@@ -1152,7 +1154,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.delins(3, 7, 'AAA')
         m.delins(2, 2, 'C')
-        assert str(m.mutated) == str(Seq('ACAAAG'))
+        assert unicode(m.mutated) == unicode(Seq('ACAAAG'))
 
     def test_adjectent_del_dup_1(self):
         """
@@ -1161,7 +1163,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.duplication(3, 3)
-        assert str(m.mutated) == str(Seq('ACCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ACCGATCG'))
 
     def test_adjectent_del_dup_2(self):
         """
@@ -1170,7 +1172,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.duplication(2, 2)
-        assert str(m.mutated) == str(Seq('ATTGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATTGATCG'))
 
     def test_adjectent_ins_dup_1(self):
         """
@@ -1179,7 +1181,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.duplication(3, 3)
-        assert str(m.mutated) == str(Seq('ATGCCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGCCGATCG'))
 
     def test_adjectent_ins_dup_2(self):
         """
@@ -1188,7 +1190,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.duplication(2, 2)
-        assert str(m.mutated) == str(Seq('ATTGCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATTGCGATCG'))
 
     def test_adjectent_ins_ins_1(self):
         """
@@ -1197,7 +1199,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.insertion(3, 'A')
-        assert str(m.mutated) == str(Seq('ATGCAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGCAGATCG'))
 
     def test_adjectent_ins_ins_2(self):
         """
@@ -1206,7 +1208,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(3, 'A')
         m.insertion(2, 'G')
-        assert str(m.mutated) == str(Seq('ATGCAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGCAGATCG'))
 
     def test_ins_ins(self):
         """
@@ -1215,7 +1217,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.insertion(2, 'A')
-        assert str(m.mutated) in (str(Seq('ATGACGATCG')), str(Seq('ATAGCGATCG')))
+        assert unicode(m.mutated) in (unicode(Seq('ATGACGATCG')), unicode(Seq('ATAGCGATCG')))
 
     def test_adjecent_inv_inv_1(self):
         """
@@ -1224,7 +1226,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.inversion(2, 2)
         m.inversion(3, 3)
-        assert str(m.mutated) == str(Seq('AAGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGGATCG'))
 
     def test_adjecent_inv_inv_2(self):
         """
@@ -1233,7 +1235,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.inversion(3, 3)
         m.inversion(2, 2)
-        assert str(m.mutated) == str(Seq('AAGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGGATCG'))
 
     def test_adjecent_dup_dup_1(self):
         """
@@ -1242,7 +1244,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.duplication(2, 2)
         m.duplication(3, 3)
-        assert str(m.mutated) == str(Seq('ATTCCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATTCCGATCG'))
 
     def test_adjecent_dup_dup_2(self):
         """
@@ -1251,7 +1253,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.duplication(3, 3)
         m.duplication(2, 2)
-        assert str(m.mutated) == str(Seq('ATTCCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATTCCGATCG'))
 
     def test_adjecent_del_inv_1(self):
         """
@@ -1260,7 +1262,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(2, 2)
         m.inversion(3, 3)
-        assert str(m.mutated) == str(Seq('AGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AGGATCG'))
 
     def test_adjecent_del_inv_2(self):
         """
@@ -1269,7 +1271,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.deletion(3, 3)
         m.inversion(2, 2)
-        assert str(m.mutated) == str(Seq('AAGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGATCG'))
 
     def test_adjecent_ins_inv_1(self):
         """
@@ -1278,7 +1280,7 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.inversion(3, 3)
-        assert str(m.mutated) == str(Seq('ATGGGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('ATGGGATCG'))
 
     def test_adjecent_ins_inv_2(self):
         """
@@ -1287,4 +1289,4 @@ class TestMutator(MutalyzerTest):
         m = self._mutator(Seq('ATCGATCG'))
         m.insertion(2, 'G')
         m.inversion(2, 2)
-        assert str(m.mutated) == str(Seq('AAGCGATCG'))
+        assert unicode(m.mutated) == unicode(Seq('AAGCGATCG'))

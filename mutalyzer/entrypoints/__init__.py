@@ -3,6 +3,12 @@ Entry points to Mutalyzer.
 """
 
 
+from __future__ import unicode_literals
+
+import locale
+import sys
+
+
 class _ReverseProxied(object):
     """
     Wrap the application in this middleware and configure the front-end server
@@ -36,3 +42,15 @@ class _ReverseProxied(object):
         if scheme:
             environ['wsgi.url_scheme'] = scheme
         return self.app(environ, *args, **kwargs)
+
+
+def _cli_string(argument):
+    """
+    Decode a command line argument byte string to unicode using our best
+    guess for the encoding (noop on unicode strings).
+    """
+    encoding = sys.stdin.encoding or locale.getpreferredencoding()
+
+    if isinstance(argument, unicode):
+        return argument
+    return unicode(argument, encoding=encoding)

@@ -7,6 +7,8 @@ fast, it can be done on every website pageview without problems.
 """
 
 
+from __future__ import unicode_literals
+
 from mutalyzer.redisclient import client
 
 

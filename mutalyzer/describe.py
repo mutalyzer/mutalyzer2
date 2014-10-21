@@ -7,13 +7,14 @@ leading from one sequence to an other.
 @requires: Bio.Seq
 """
 
+from __future__ import unicode_literals
+
 import collections
-from Bio import Seq
 from Bio.SeqUtils import seq3
 from Bio.Data import CodonTable
 
 from mutalyzer.util import longest_common_prefix, longest_common_suffix
-from mutalyzer.util import palinsnoop, roll
+from mutalyzer.util import palinsnoop, roll, reverse_complement
 from mutalyzer import models
 
 
@@ -34,9 +35,9 @@ class LCS(object):
         Initialise the class.
 
         @arg s1: A string.
-        @type s1: str
+        @type s1: unicode
         @arg s2: A string.
-        @type s2: str
+        @type s2: unicode
         @arg lcp: The length of the longest common prefix of {s1} and {s2}.
         @type lcp: int
         @arg s1_end: End of the substring in {s1}.
@@ -55,21 +56,21 @@ class LCS(object):
         self.__s2_rc = None
         self.__matrix_rc = None
         if DNA:
-            self.__s2_rc = Seq.reverse_complement(s2[self.__lcp:s2_end])
+            self.__s2_rc = reverse_complement(s2[self.__lcp:s2_end])
             self.__matrix_rc = self.LCSMatrix(self.__s1, self.__s2_rc)
         #if
     #__init__
 
-    def __str__(self):
+    def __unicode__(self):
         """
         Return a graphical representation of the LCS matrix, mainly for
         debugging.
 
         @returns: A graphical representation of the LCS matrix.
-        @rtype: str
+        @rtype: unicode
         """
         return self.visMatrix((0, len(self.__s1)), (0, len(self.__s2)))
-    #__str__
+    #__unicode__
 
     def visMatrix(self, r1, r2, rc=False):
         """
@@ -77,7 +78,7 @@ class LCS(object):
         debugging.
 
         @returns: A graphical representation of the LCS matrix.
-        @rtype: str
+        @rtype: unicode
         """
         nr1 = r1[0] - self.__lcp, r1[1] - self.__lcp
         nr2 = r2[0] - self.__lcp, r2[1] - self.__lcp
@@ -91,7 +92,7 @@ class LCS(object):
         out = self.__delim.join(self.__delim + '-' + s2[nr2[0]:nr2[1]]) + '\n'
         for i in range(nr1[0], nr1[1] + 1):
             out += (('-' + self.__s1)[i] + self.__delim +
-                self.__delim.join(map(lambda x: str(M[i][x]),
+                self.__delim.join(map(lambda x: unicode(M[i][x]),
                 range(nr2[0], nr2[1] + 1))) + '\n')
 
         return out
@@ -102,9 +103,9 @@ class LCS(object):
         Calculate the Longest Common Substring matrix.
 
         @arg s1: A string.
-        @type s1: str
+        @type s1: unicode
         @arg s2: A string.
-        @type s2: str
+        @type s2: unicode
 
         @returns: A matrix with the LCS of {s1}[i], {s2}[j] at position i, j.
         @rval: list[list[int]]
@@ -201,9 +202,9 @@ def __makeOverlaps(peptide):
     Make a list of overlapping 2-mers of {peptide} in order of appearance.
 
     @arg peptide: A peptide sequence.
-    @type peptide: str
+    @type peptide: unicode
     @returns: All 2-mers of {peptide} in order of appearance.
-    @rtype: list(str)
+    @rtype: list(unicode)
     """
     return map(lambda x: peptide[x:x+2], range(len(peptide) - 1))
 #__makeOverlaps
@@ -213,13 +214,13 @@ def __options(pList, peptidePrefix, FS, output):
     Enumerate all peptides that could result from a frame shift.
 
     @arg pList: List of overlapping 2-mers of a peptide.
-    @type pList: list(str)
+    @type pList: list(unicode)
     @arg peptidePrefix: Prefix of a peptide in the alternative reading frame.
-    @type peptidePrefix: str
+    @type peptidePrefix: unicode
     @arg FS: Frame shift table.
     @type FS: dict
     @arg output: List of peptides, should be empty initially.
-    @type output: list(str)
+    @type output: list(unicode)
     """
     if not pList:
         output.append(peptidePrefix)
@@ -234,7 +235,7 @@ def enumFS(peptide, FS):
     Enumerate all peptides that could result from a frame shift.
 
     @arg peptide: Original peptide sequence.
-    @type peptide: str
+    @type peptide: unicode
     @arg FS: Frame shift table.
     @type FS: dict
     """
@@ -250,9 +251,9 @@ def fitFS(peptide, altPeptide, FS):
     {peptide}.
 
     @arg peptide: Original peptide sequence.
-    @type peptide: str
+    @type peptide: unicode
     @arg altPeptide: Observed peptide sequence.
-    @type altPeptide: str
+    @type altPeptide: unicode
     @arg FS: Frame shift table.
     @type FS: dict
     """
@@ -302,11 +303,11 @@ class DescribeRawVar(models.RawVar):
         @arg end_offset:
         @type end_offset: int
         @arg type: Variant type.
-        @type type: str
+        @type type: unicode
         @arg deleted: Deleted part of the reference sequence.
-        @type deleted: str
+        @type deleted: unicode
         @arg inserted: Inserted part.
-        @type inserted: str
+        @type inserted: unicode
         @arg shift: Amount of freedom.
         @type shift: int
         """
@@ -336,7 +337,7 @@ class DescribeRawVar(models.RawVar):
         correct description. Also see the comment in the class definition.
 
         @returns: The HGVS description of the raw variant stored in this class.
-        @rtype: str
+        @rtype: unicode
         """
         if not self.start:
             return "="
@@ -365,7 +366,7 @@ class DescribeRawVar(models.RawVar):
         correct description. Also see the comment in the class definition.
 
         @returns: The HGVS description of the raw variant stored in this class.
-        @rtype: str
+        @rtype: unicode
         """
         if self.type == "unknown":
             return "?"
@@ -491,7 +492,7 @@ def alleleDescription(allele):
     @type allele: list(DescribeRawVar)
 
     @returns: The HGVS description of {allele}.
-    @rval: str
+    @rval: unicode
     """
     if len(allele) > 1:
         return "[%s]" % ';'.join(map(lambda x : x.hgvs, allele))
@@ -530,9 +531,9 @@ def DNA_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     {s1_start}..{s1_end} on {s1} and {s2_start}..{s2_end} on {s2}.
 
     arg s1: Sequence 1.
-    type s1: str
+    type s1: unicode
     arg s2: Sequence 2.
-    type s2: str
+    type s2: unicode
     arg s1_start: Start of the range on {s1}.
     type s1_start: int
     arg s1_end: End of the range on {s1}.
@@ -682,9 +683,9 @@ def protein_description(M, s1, s2, s1_start, s1_end, s2_start, s2_end):
     {s1_start}..{s1_end} on {s1} and {s2_start}..{s2_end} on {s2}.
 
     arg s1: Sequence 1.
-    type s1: str
+    type s1: unicode
     arg s2: Sequence 2.
-    type s2: str
+    type s2: unicode
     arg s1_start: Start of the range on {s1}.
     type s1_start: int
     arg s1_end: End of the range on {s1}.
@@ -810,15 +811,15 @@ def describe(original, mutated, DNA=True):
     Convenience function for DNA_description().
 
     @arg original:
-    @type original: str
+    @type original: unicode
     @arg mutated:
-    @type mutated: str
+    @type mutated: unicode
 
     @returns: A list of DescribeRawVar objects, representing the allele.
     @rval: list(DescribeRawVar)
     """
-    s1 = str(original)
-    s2 = str(mutated)
+    s1 = original
+    s2 = mutated
     lcp = len(longest_common_prefix(s1, s2))
     lcs = len(longest_common_suffix(s1[lcp:], s2[lcp:]))
     s1_end = len(s1) - lcs

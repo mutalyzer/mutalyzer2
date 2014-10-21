@@ -3,6 +3,8 @@ Synchronizing the reference file cache with other Mutalyzer instances.
 """
 
 
+from __future__ import unicode_literals
+
 from mutalyzer.util import monkey_patch_suds; monkey_patch_suds()
 
 from datetime import datetime, timedelta
@@ -86,7 +88,7 @@ class CacheSync(object):
         or later.
 
         :arg remote_wsdl: The url of the remote SOAP WSDL description.
-        :type remote_wsdl: str
+        :type remote_wsdl: unicode
         :arg created_since: Only entries with this creation date or later
           are returned.
         :type created_since: datatime.datetime
@@ -111,11 +113,11 @@ class CacheSync(object):
                                 1: 'forward',
                                 2: 'reverse'}
 
-            entry_dict =  {'name':    str(entry.name),
-                           'hash':    str(entry.hash),
+            entry_dict =  {'name':    entry.name,
+                           'hash':    entry.hash,
                            'created': entry.created}
             for attribute in ('gi', 'chromosomeName', 'url', 'cached'):
-                entry_dict[attribute] = str(entry[attribute]) \
+                entry_dict[attribute] = entry[attribute] \
                                         if attribute in entry else None
             for attribute in ('chromosomeStart', 'chromosomeStop'):
                 entry_dict[attribute] = int(entry[attribute]) \
@@ -131,9 +133,9 @@ class CacheSync(object):
         Download a remote file located at `url` and store it as `name`.
 
         :arg name: Name to store the file under.
-        :type name: str
+        :type name: unicode
         :arg url: Url to the remote file.
-        :type url: str
+        :type url: unicode
         """
         if not re.match('^[\da-zA-Z\._-]+$', name):
             return
@@ -160,10 +162,10 @@ class CacheSync(object):
             (14, 3)
 
         :arg remote_wsdl: The url of the remote SOAP WSDL description.
-        :type remote_wsdl: str
+        :type remote_wsdl: unicode
         :arg url_template: Formatting string containing a ``{file}``
           occurence, see example usage above.
-        :string url_template: str
+        :string url_template: unicode
         :arg days: Only remote entries added this number of days ago or
           later are considered.
         :type days: int

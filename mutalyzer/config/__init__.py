@@ -12,6 +12,8 @@ be used.
 """
 
 
+from __future__ import unicode_literals
+
 import collections
 import os
 

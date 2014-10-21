@@ -7,6 +7,8 @@ as :func:`hg19` must be called after the :func:`database` fixture).
 """
 
 
+from __future__ import unicode_literals
+
 import os
 import shutil
 

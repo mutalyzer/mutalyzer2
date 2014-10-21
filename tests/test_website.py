@@ -5,23 +5,19 @@ Tests for the WSGI interface to Mutalyzer.
 """
 
 
+from __future__ import unicode_literals
+
 #import logging; logging.basicConfig()
 import bz2
-import cgi
-import logging
 from mock import patch
 import os
-import re
-from StringIO import StringIO
-import time
-import urllib
-import urllib2
+from io import BytesIO
 
 from Bio import Entrez
 import lxml.html
 
-import mutalyzer
 from mutalyzer import announce, Scheduler
+from mutalyzer.db import models
 from mutalyzer.website import create_app
 
 from fixtures import cache, database, hg19, hg19_transcript_mappings
@@ -264,7 +260,7 @@ class TestWebsite(MutalyzerTest):
         """
         data = {'job_type': job_type,
                 'email': 'test@test.test',
-                'file': (StringIO(file), 'test.txt')}
+                'file': (BytesIO(file.encode('utf-8')), 'test.txt')}
         if assembly_name_or_alias is not None:
             data['assembly_name_or_alias'] = assembly_name_or_alias
 
@@ -510,7 +506,7 @@ class TestWebsite(MutalyzerTest):
         Download a C# example client for the web service.
         """
         r = self.app.get('/downloads/client-mono.cs')
-        assert r.headers['Content-Type'] == 'text/plain'
+        assert 'text/plain' in r.headers['Content-Type']
         assert 'public static void Main(String [] args) {' in r.data
 
     def test_download_php(self):
@@ -634,7 +630,7 @@ class TestWebsite(MutalyzerTest):
                                        'build': 'hg19',
                                        'acc': 'NM_203473.1'})
         assert 'text/plain' in r.headers['Content-Type']
-        assert r.content_type == 'text/plain'
+        assert 'text/plain' in r.content_type
         expected = '\n'.join(['-158', '1709', '1371'])
         assert r.data == expected
 
@@ -678,7 +674,7 @@ class TestWebsite(MutalyzerTest):
         """
         r = self.app.post('/reference-loader',
                           data={'method': 'upload',
-                                'file': (StringIO('this is not a genbank file'), 'AB026906.1.gb')})
+                                'file': (BytesIO('this is not a genbank file'.encode('utf-8')), 'AB026906.1.gb')})
         assert 'Your reference sequence was loaded successfully.' not in r.data
         assert 'The file could not be parsed.' in r.data
 
@@ -737,3 +733,89 @@ class TestWebsite(MutalyzerTest):
         assert 'text/plain' in r.headers['Content-Type']
         assert '\t'.join(['chrX', '154157690', '154157691', '4374A>T', '0', '-']) in r.data
         assert '\t'.join(['chrX', '154157683', '154157685', '4380_4381del', '0', '-']) in r.data
+
+    def test_checksyntax_unicode(self):
+        """
+        Run check syntax form with an invalid variant description containing
+        non-ASCII unicode characters.
+        """
+        r = self.app.get('/syntax-checker',
+                         query_string={'description': 'La Pe\xf1a'})
+        body = r.get_data(as_text=True)
+        assert 'Fatal' in body
+        assert 'Details of the parse error' in body
+        assert 'Expected W:(0123...) (at char 2), (line:1, col:3)' in body
+
+    @fix(database)
+    def test_batch_unicode(self):
+        """
+        Submit a batch form with non-ASCII unicode characters in the input
+        file.
+        """
+        file = '\n'.join(['\u2026AB026906.1:c.274G>T',
+                          '\u2026AL449423.14(CDKN2A_v002):c.5_400del'])
+        expected = [['\u2026AB026906.1:c.274G>T',
+                     '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)'],
+                    ['\u2026AL449423.14(CDKN2A_v002):c.5_400del',
+                     '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)']]
+
+        data = {'job_type': 'syntax-checker',
+                'email': 'test@test.test',
+                'file': (BytesIO(file.encode('utf-8')), 'test.txt')}
+
+        r = self.app.post('/batch-jobs',
+                          data=data)
+        progress_url = '/' + r.location.split('/')[-1]
+
+        assert models.BatchJob.query.first().email == 'test@test.test'
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        r = self.app.get(progress_url)
+
+        dom = lxml.html.fromstring(r.data)
+        result_url = dom.cssselect('#ifnot_items_left a')[0].attrib['href']
+
+        r = self.app.get(result_url)
+        assert 'text/plain' in r.headers['Content-Type']
+
+        result = r.get_data(as_text=True).strip().split('\n')[1:]
+        assert expected == [line.split('\t') for line in result]
+
+    @fix(database)
+    def test_batch_unicode_email(self):
+        """
+        Submit a batch form with non-ASCII unicode characters in the email
+        address.
+        """
+        file = '\n'.join(['AB026906.1:c.274G>T',
+                          'AL449423.14(CDKN2A_v002):c.5_400del'])
+        expected = [['AB026906.1:c.274G>T',
+                     'OK'],
+                    ['AL449423.14(CDKN2A_v002):c.5_400del',
+                     'OK']]
+
+        data = {'job_type': 'syntax-checker',
+                'email': 'pe\xf1a@test.test',
+                'file': (BytesIO(file.encode('utf-8')), 'test.txt')}
+
+        r = self.app.post('/batch-jobs',
+                          data=data)
+        progress_url = '/' + r.location.split('/')[-1]
+
+        assert models.BatchJob.query.first().email == 'pe\xf1a@test.test'
+
+        scheduler = Scheduler.Scheduler()
+        scheduler.process()
+
+        r = self.app.get(progress_url)
+
+        dom = lxml.html.fromstring(r.data)
+        result_url = dom.cssselect('#ifnot_items_left a')[0].attrib['href']
+
+        r = self.app.get(result_url)
+        assert 'text/plain' in r.headers['Content-Type']
+
+        result = r.get_data(as_text=True).strip().split('\n')[1:]
+        assert expected == [line.split('\t') for line in result]

@@ -6,7 +6,7 @@ pyparsing==2.0.1
 pytz==2013.9
 requests==2.2.1
 simplejson==3.3.3
--e git+https://github.com/LUMC/spyne.git@spyne-2.11.0-mutalyzer#egg=spyne
+spyne==2.11.0
 suds==0.4
 wsgiref==0.1.2
 xlrd==0.9.2
@@ -21,3 +21,5 @@ mock==1.0.1
 alembic==0.6.3
 Sphinx==1.2.1
 sphinx-rtd-theme==0.1.5
+cchardet==0.3.5
+Werkzeug==0.9.6

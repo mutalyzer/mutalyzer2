@@ -18,6 +18,8 @@ You can also use the built-in HTTP server by running this file directly.
 """
 
 
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import sys
@@ -25,7 +27,7 @@ import sys
 from wsgiref.simple_server import make_server
 from spyne.server.wsgi import WsgiApplication
 
-from . import _ReverseProxied
+from . import _cli_string, _ReverseProxied
 from ..config import settings
 from ..services import soap
 
@@ -58,9 +60,9 @@ def main():
     parser = argparse.ArgumentParser(
         description='Mutalyzer SOAP webservice.')
     parser.add_argument(
-        '-H', '--host', metavar='HOSTNAME', dest='host', default='127.0.0.1',
-        help='hostname to listen on (default: 127.0.0.1; specify 0.0.0.0 to '
-        'listen on all hostnames)')
+        '-H', '--host', metavar='HOSTNAME', type=_cli_string, dest='host',
+        default='127.0.0.1', help='hostname to listen on (default: '
+        '127.0.0.1; specify 0.0.0.0 to listen on all hostnames)')
     parser.add_argument(
         '-p', '--port', metavar='PORT', dest='port', type=int,
         default=8081, help='port to listen on (default: 8081)')

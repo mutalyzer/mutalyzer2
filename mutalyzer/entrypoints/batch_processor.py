@@ -6,12 +6,13 @@ Mutalyzer batch processor.
 """
 
 
+from __future__ import unicode_literals
+
 import argparse
 import signal
 import sys
 import time
 
-from .. import config
 from .. import db
 from .. import Scheduler
 
