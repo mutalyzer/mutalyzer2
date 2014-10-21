@@ -6,9 +6,10 @@ Command line interface to Mutalyzer administrative tools.
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import json
+import locale
 import os
-import sys
 
 import alembic.command
 import alembic.config
@@ -29,10 +30,12 @@ class UserError(Exception):
     pass
 
 
-def add_assembly(assembly_file):
+def add_assembly(assembly_file, encoding):
     """
     Add genome assembly definition from a JSON file.
     """
+    assembly_file = codecs.getreader(encoding)(assembly_file)
+
     try:
         definition = json.load(assembly_file)
     except ValueError:
@@ -87,10 +90,13 @@ def list_assemblies():
                                assembly.taxonomy_id)
 
 
-def import_mapview(assembly_name_or_alias, mapview_file, group_label):
+def import_mapview(assembly_name_or_alias, mapview_file, encoding,
+                   group_label):
     """
     Import transcript mappings from an NCBI mapview file.
     """
+    mapview_file = codecs.getreader(encoding)(mapview_file)
+
     try:
         assembly = Assembly.by_name_or_alias(assembly_name_or_alias)
     except NoResultFound:
@@ -185,6 +191,8 @@ def main():
     """
     Command-line interface to Mutalyzer administrative tools.
     """
+    default_encoding = locale.getpreferredencoding()
+
     assembly_parser = argparse.ArgumentParser(add_help=False)
     assembly_parser.add_argument(
         '-a', '--assembly', metavar='ASSEMBLY', type=_cli_string,
@@ -214,9 +222,13 @@ def main():
         description=add_assembly.__doc__.split('\n\n')[0])
     p.set_defaults(func=add_assembly)
     p.add_argument(
-        'assembly_file', metavar='FILE', type=argparse.FileType('r'),
+        'assembly_file', metavar='FILE', type=argparse.FileType('rb'),
         help='genome assembly definition JSON file (example: '
         'extras/assemblies/GRCh37.json)')
+    p.add_argument(
+        '--encoding', metavar='ENCODING', type=_cli_string,
+        default=default_encoding,
+        help='input file encoding (default: %s)' % default_encoding)
 
     # Subparser 'assemblies import-mapview'.
     p = s.add_parser(
@@ -228,8 +240,12 @@ def main():
         '`sort -t $\'\\t\' -k 11,11 -k 2,2` command.')
     p.set_defaults(func=import_mapview)
     p.add_argument(
-        'mapview_file', metavar='FILE', type=argparse.FileType('r'),
+        'mapview_file', metavar='FILE', type=argparse.FileType('rb'),
         help='file from NCBI mapview (example: seq_gene.md), see note below')
+    p.add_argument(
+        '--encoding', metavar='ENCODING', type=_cli_string,
+        default=default_encoding,
+        help='input file encoding (default: %s)' % default_encoding)
     p.add_argument(
         'group_label', metavar='GROUP_LABEL', type=_cli_string,
         help='use only entries with this group label (example: '

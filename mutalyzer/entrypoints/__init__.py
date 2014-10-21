@@ -5,6 +5,7 @@ Entry points to Mutalyzer.
 
 from __future__ import unicode_literals
 
+import locale
 import sys
 
 
@@ -48,6 +49,8 @@ def _cli_string(argument):
     Decode a command line argument byte string to unicode using our best
     guess for the encoding (noop on unicode strings).
     """
+    encoding = sys.stdin.encoding or locale.getpreferredencoding()
+
     if isinstance(argument, unicode):
         return argument
-    return unicode(argument, encoding=sys.stdin.encoding)
+    return unicode(argument, encoding=encoding)

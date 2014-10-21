@@ -883,7 +883,6 @@ def import_from_reference(assembly, reference):
     session.commit()
 
 
-# Todo: File must be opened with the correct encoding.
 def import_from_mapview_file(assembly, mapview_file, group_label):
     """
     Import transcript mappings from an NCBI mapview file.
