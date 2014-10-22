@@ -41,7 +41,7 @@ class LazyClient(util.LazyObject):
         else:
             self._wrapped = redis.StrictRedis.from_url(settings.REDIS_URI,
                                                        decode_responses=True,
-                                                       charset='utf-8')
+                                                       encoding='utf-8')
 
 
 #: Global :class:`LazyClient` instance. Use this for all communication with
