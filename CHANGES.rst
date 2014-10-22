@@ -19,6 +19,8 @@ Release date to be decided.
   <https://git.lumc.nl/mutalyzer/mutalyzer/issues/30>`_).
 - Fix importing transcript mappings from UCSC database (`GitLab#9
   <https://git.lumc.nl/mutalyzer/mutalyzer/issues/9>`_).
+- Rename GRCh36 to NCBI36 (`GitLab#8
+  <https://git.lumc.nl/mutalyzer/mutalyzer/issues/8>`_).
 
 
 Version 2.0.3

@@ -397,8 +397,7 @@ def position_converter():
                         code=301)
 
     assemblies = Assembly.query \
-        .order_by(Assembly.taxonomy_common_name.asc(),
-                  Assembly.name.asc()) \
+        .order_by(*Assembly.order_by_criteria) \
         .all()
 
     assembly_name_or_alias = request.args.get('assembly_name_or_alias',
@@ -518,8 +517,7 @@ def reference_loader():
     Reference sequence loader form.
     """
     assemblies = Assembly.query \
-        .order_by(Assembly.taxonomy_common_name.asc(),
-                  Assembly.name.asc()) \
+        .order_by(*Assembly.order_by_criteria) \
         .all()
 
     return render_template('reference-loader.html',
@@ -580,8 +578,7 @@ def reference_loader_submit():
                       % (method, unicode(request.form), request.remote_addr))
 
     assemblies = Assembly.query \
-        .order_by(Assembly.taxonomy_common_name.asc(),
-                  Assembly.name.asc()) \
+        .order_by(*Assembly.order_by_criteria) \
         .all()
 
     retriever = Retriever.GenBankRetriever(output)
@@ -749,8 +746,7 @@ def batch_jobs():
     job_type = request.args.get('job_type', 'name-checker')
 
     assemblies = Assembly.query \
-        .order_by(Assembly.taxonomy_common_name.asc(),
-                  Assembly.name.asc()) \
+        .order_by(*Assembly.order_by_criteria) \
         .all()
     assembly_name_or_alias = request.args.get('assembly_name_or_alias',
                                               settings.DEFAULT_ASSEMBLY)
@@ -776,8 +772,7 @@ def batch_jobs_submit():
     batch_file = request.files.get('file')
 
     assemblies = Assembly.query \
-        .order_by(Assembly.taxonomy_common_name.asc(),
-                  Assembly.name.asc()) \
+        .order_by(*Assembly.order_by_criteria) \
         .all()
     assembly_name_or_alias = request.form.get('assembly_name_or_alias',
                                               settings.DEFAULT_ASSEMBLY)

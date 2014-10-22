@@ -267,6 +267,9 @@ class Assembly(db.Base):
     #: NCBI taxonomy name (e.g., ``Homo sapiens``, ``Mus musculus``).
     taxonomy_common_name = Column(String(50), nullable=False)
 
+    #: Criteria to order assemblies by in user-visible lists.
+    order_by_criteria = taxonomy_common_name.asc(), alias.asc()
+
     def __init__(self, name, taxonomy_id, taxonomy_common_name, alias=None):
         self.name = name
         self.taxonomy_id = taxonomy_id

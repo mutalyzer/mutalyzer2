@@ -77,8 +77,7 @@ def list_assemblies():
     List genome assemblies.
     """
     assemblies = Assembly.query \
-        .order_by(Assembly.taxonomy_common_name.asc(),
-                  Assembly.name.asc()) \
+        .order_by(*Assembly.order_by_criteria) \
         .all()
 
     for assembly in assemblies:
