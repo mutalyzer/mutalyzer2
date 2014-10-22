@@ -789,17 +789,15 @@ class Converter(object) :
 #Converter
 
 
-# Todo: This seems broken at the moment.
-# Todo: Correct handling of string encodings.
 def import_from_ucsc_by_gene(assembly, gene):
     """
     Import transcript mappings for a gene from the UCSC.
-
-    .. todo: Also report how much was added/updated.
     """
     connection = MySQLdb.connect(user='genome',
                                  host='genome-mysql.cse.ucsc.edu',
-                                 db=assembly.alias)
+                                 db=assembly.alias,
+                                 charset='utf8',
+                                 use_unicode=True)
 
     query = """
         SELECT DISTINCT
@@ -811,7 +809,7 @@ def import_from_ucsc_by_gene(assembly, gene):
         AND acc = mrnaAcc
         AND name2 = %s
     """
-    parameters = gene
+    parameters = gene,
 
     cursor = connection.cursor()
     cursor.execute(query, parameters)

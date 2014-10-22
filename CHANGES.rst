@@ -17,6 +17,8 @@ Release date to be decided.
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/25>`_).
 - Don't crash on mail errors in the batch scheduler (`GitLab#30
   <https://git.lumc.nl/mutalyzer/mutalyzer/issues/30>`_).
+- Fix importing transcript mappings from UCSC database (`GitLab#9
+  <https://git.lumc.nl/mutalyzer/mutalyzer/issues/9>`_).
 
 
 Version 2.0.3
