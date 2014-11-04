@@ -21,6 +21,9 @@ Release date to be decided.
   <https://git.lumc.nl/mutalyzer/mutalyzer/issues/9>`_).
 - Rename GRCh36 to NCBI36 (`GitLab#8
   <https://git.lumc.nl/mutalyzer/mutalyzer/issues/8>`_).
+- Updated all Python dependencies to their latest versions.
+- Mutalyzer is now Open Source! Source code is available under the AGPL and
+  documentation under the CC-by-sa license.
 
 
 Version 2.0.3
