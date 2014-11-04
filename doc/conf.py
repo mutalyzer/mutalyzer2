@@ -53,7 +53,10 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Mutalyzer'
-copyright = u'%s, %s' % ('%d-%d' % mutalyzer.COPYRIGHT_YEARS, mutalyzer.__author__)
+copyright = u"""
+%s, %s. This work is licensed under a Creative Commons Attribution-ShareAlike
+4.0 International License
+""" % ('%d-%d' % mutalyzer.COPYRIGHT_YEARS, mutalyzer.__author__)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

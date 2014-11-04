@@ -1,5 +1,9 @@
 """
 HGVS variant nomenclature checker.
+
+Mutalyzer is licensed under the `GNU Affero General Public License
+<http://www.gnu.org/licenses/agpl-3.0.html>`_. Please contact the authors if
+you want to discuss custom licensing.
 """
 
 

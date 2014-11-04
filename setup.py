@@ -37,7 +37,7 @@ setup(
     author=distmeta['__author__'],
     author_email=distmeta['__contact__'],
     url=distmeta['__homepage__'],
-    license='Not distributable',
+    license='AGPL',
     platforms=['any'],
     install_requires=install_requires,
     packages=['mutalyzer',
@@ -48,12 +48,24 @@ setup(
               'mutalyzer.services',
               'mutalyzer.website'],
     include_package_data=True,
-    entry_points = {'console_scripts': [
+    entry_points={'console_scripts': [
         'mutalyzer = mutalyzer.entrypoints.mutalyzer:main',
         'mutalyzer-admin = mutalyzer.entrypoints.admin:main',
         'mutalyzer-batch-processor = mutalyzer.entrypoints.batch_processor:main',
         'mutalyzer-service-json = mutalyzer.entrypoints.service_json:main',
         'mutalyzer-service-soap = mutalyzer.entrypoints.service_soap:main',
         'mutalyzer-website = mutalyzer.entrypoints.website:main']},
-    zip_safe=False
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU Affero General Public License v3',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        ],
+    keywords='bioinformatics'
 )
