@@ -451,6 +451,6 @@ Released on June 27th 2011.
 Older versions
 --------------
 
-The first lines of code for Mutalyzer 2.0 where written July 28th 2009, and
+The first lines of code for Mutalyzer 2.0 were written July 28th 2009, and
 version 2.0.beta-8 was released on January 31st 2011. As far as Mutalyzer 1 is
 concerned, archaeology is not really our field of research.
