@@ -40,6 +40,11 @@ Dunnen.
 </p>
 
 <p>
+Some icons are copyright &copy;
+<a href="http://p.yusukekamiyamane.com/">Yusuke Kamiyamane</a>.
+</p>
+
+<p>
 Since references to WWW-sites are not yet acknowledged as citations,
 please mention
 <a href="http://www.ncbi.nlm.nih.gov/pubmed/18000842">
@@ -50,9 +55,7 @@ please mention
   link</a>) when referring to these pages.
 </p>
 
-<p>
-Sponsors:
-</p>
+<h2>Sponsors</h2>
 
 <p>
 We would like to thank the following organisations for their contribution to
@@ -136,9 +139,108 @@ the development of Mutalyzer.
   </tr>
 </table>
 
+<h2>Counters</h2>
+
 <p>
-Some icons are copyright &copy;
-<a href="http://p.yusukekamiyamane.com/">Yusuke Kamiyamane</a>.
+We keep simple counters for the use of the various Mutalyzer services, broken
+down by interface.
 </p>
+
+<p>
+Note that not all counters were started at the same time, so numbers can not
+always be compared directly.
+</p>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th rowspan="2" class="text-middle">Service</th>
+      <th colspan="3" class="text-center">Interface</th>
+      <th rowspan="2" class="text-middle text-right">Total (all interfaces)</th>
+    </tr>
+    <tr>
+      <th class="text-right">Website</th>
+      <th class="text-right">Webservice</th>
+      <th class="text-right">Batch job</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Syntax checker</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/webservice']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/batch']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/website']|d(0) +
+                                               counter_totals['syntax-checker/webservice']|d(0) +
+                                               counter_totals['syntax-checker/batch']|d(0)) }}</td>
+    </tr>
+    <tr>
+      <td>Name checker</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/webservice']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/batch']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/website']|d(0) +
+                                               counter_totals['name-checker/webservice']|d(0) +
+                                               counter_totals['name-checker/batch']|d(0)) }}</td>
+    </tr>
+    <tr>
+      <td>Position converter</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/webservice']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/batch']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/website']|d(0) +
+                                               counter_totals['position-converter/webservice']|d(0) +
+                                               counter_totals['position-converter/batch']|d(0)) }}</td>
+    </tr>
+    <tr>
+      <td>SNP converter</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/webservice']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/batch']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/website']|d(0) +
+                                               counter_totals['snp-converter/webservice']|d(0) +
+                                               counter_totals['snp-converter/batch']|d(0)) }}</td>
+    </tr>
+    <tr>
+      <td>Batch jobs</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['batch-job/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['batch-job/webservice']|d(0)) }}</td>
+      <td class="text-right">N/A</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['batch-job/website']|d(0) +
+                                               counter_totals['batch-job/webservice']|d(0)) }}</td>
+    </tr>
+    <tr>
+      <td>Total (excluding batch jobs)</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/website']|d(0) +
+                                               counter_totals['name-checker/website']|d(0) +
+                                               counter_totals['position-converter/website']|d(0) +
+                                               counter_totals['snp-converter/website']|d(0) +
+                                               counter_totals['batch-job/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/webservice']|d(0) +
+                                               counter_totals['name-checker/webservice']|d(0) +
+                                               counter_totals['position-converter/webservice']|d(0) +
+                                               counter_totals['snp-converter/webservice']|d(0) +
+                                               counter_totals['batch-job/webservice']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/batch']|d(0) +
+                                               counter_totals['name-checker/batch']|d(0) +
+                                               counter_totals['position-converter/batch']|d(0) +
+                                               counter_totals['snp-converter/batch']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/website']|d(0) +
+                                               counter_totals['syntax-checker/webservice']|d(0) +
+                                               counter_totals['syntax-checker/batch']|d(0) +
+                                               counter_totals['name-checker/website']|d(0) +
+                                               counter_totals['name-checker/webservice']|d(0) +
+                                               counter_totals['name-checker/batch']|d(0) +
+                                               counter_totals['position-converter/website']|d(0) +
+                                               counter_totals['position-converter/webservice']|d(0) +
+                                               counter_totals['position-converter/batch']|d(0) +
+                                               counter_totals['snp-converter/website']|d(0) +
+                                               counter_totals['snp-converter/webservice']|d(0) +
+                                               counter_totals['snp-converter/batch']|d(0) +
+                                               counter_totals['batch-job/website']|d(0) +
+                                               counter_totals['batch-job/webservice']|d(0)) }}</td>
+    </tr>
+  </tbody>
+</table>
 
 {% endblock content %}

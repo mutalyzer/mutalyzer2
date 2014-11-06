@@ -95,7 +95,7 @@ def about():
     """
     About page.
     """
-    return render_template('about.html')
+    return render_template('about.html', counter_totals=stats.get_totals())
 
 
 @website.route('/name-generator')

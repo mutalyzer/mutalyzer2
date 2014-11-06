@@ -467,3 +467,7 @@ header.main-header {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+.table thead > tr > th.text-middle {
+    vertical-align: middle;
+}
