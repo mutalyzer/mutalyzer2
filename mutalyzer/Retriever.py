@@ -593,8 +593,8 @@ class GenBankRetriever(Retriever):
                 #if
                 ChrAccVer = unicode(summary[0]["GenomicInfo"][0]["ChrAccVer"])
                 ChrLoc = unicode(summary[0]["GenomicInfo"][0]["ChrLoc"])
-                ChrStart = unicode(summary[0]["GenomicInfo"][0]["ChrStart"])
-                ChrStop = unicode(summary[0]["GenomicInfo"][0]["ChrStop"])
+                ChrStart = int(summary[0]["GenomicInfo"][0]["ChrStart"])
+                ChrStop = int(summary[0]["GenomicInfo"][0]["ChrStop"])
                 break
             #if
 
