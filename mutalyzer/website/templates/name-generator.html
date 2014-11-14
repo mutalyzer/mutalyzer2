@@ -1,156 +1,156 @@
-
 {% extends "base.html" %}
 
 {% set active_page = "name-generator" %}
 {% set page_title = "Name Generator" %}
 
 {% block content %}
-	<div class="form">
-		
-		<p>Construct the mutation from a reference by adding variants to it. The HGVS name is constructed instantly <a href="#constructed_name">below</a>.
-		
-		<hr/>
-	
-	<form id="mainform" onkeyup="update();" onchange="update();" style="padding: 0;" class="form-horizontal" role="form">
 
-		<h4>Reference</h4>
-		<div class="form-group">
-			<label for="refe" class="col-sm-2 control-label">Reference sequence</label>
-			<div class="col-sm-10">
-				<input type="text" name="refe" value=""class="form-control" placeholder="Reference" >
-			</div>
-		</div>
-			
-		<div class="form-group">
-			<label for="seqT" class="col-sm-2 control-label">Sequence Type</label>
-			<div class="col-sm-10">
-				<select name="seqT" class="form-control">
-					<option value="g">Genomic</option>
-					<option value="c" selected="1">Coding DNA</option>
-					<option value="n">NonCoding DNA</option>
-					<option value="r">RNAcss</option>
-					<option value="m">Mitochondrial DNA</option>
-					<option value="p" disabled="true">Protein</option>
-					<!-- Protein Naming not yet implemented-->
-					<option value="e">EST</option>
-				</select>
-			</div>
-		</div>
-			
+    <div class="form">
 
-		<div id="tlc" style="display: none; " class="form-group">
-			<label class="label-left">TLC</label>
-			<div class="radio">
-				<label class="label-left"><input type="radio" name="tlc" value="0"class="form-control" > One Letter Code</label>
-			</div>
-			<div class="radio">
-				<label class="label-left"><input type="radio" name="tlc" value="1" checked=""class="form-control" > Three Letter Code</label>
-			</div>
-		</div>
+        <p>Construct the mutation from a reference by adding variants to it. The HGVS name is constructed instantly <a href="#constructed_name">below</a>.
 
-			<div id="gSym" class="form-group">
-				<label for="gSym" class="col-sm-2 control-label">Gene symbol</label>
-				<div class="col-sm-10">
-					<input type="text" name="gSym" size="20" value=""class="form-control" placeholder="Gene symbol">
-				</div>
-			</div>
+        <hr/>
 
-			<div id="tVar" class="form-group">
-				<label for="tVar" class="col-sm-2 control-label">Transcript</label>
-				<div class="col-sm-10">
-					<input type="text" name="tVar" size="20" value=""class="form-control form-control-small" placeholder="Transcript">
-				</div>
-			</div>
-			
-		<div class="form-group small text-danger">
-			<div class="col-sm-offset-2 col-sm-10">
-				<div id="seqTerror" style="display: none;"></div>
-				<div id="refeerror"></div>
-				<div id="gSymerror"></div>
-				<div id="tVarerror"></div>
-			</div>
-		</div>
-	
-	<div id="variants">
-	<!-- This is where the mutations will be arriving -->
-	</div>
-		
-<!-- 	<div id="optional">
-		<sup>*</sup> This field is optional
-	</div> -->
-	
+    <form id="mainform" onkeyup="update();" onchange="update();" style="padding: 0;" class="form-horizontal" role="form">
+
+        <h4>Reference</h4>
+        <div class="form-group">
+            <label for="refe" class="col-sm-2 control-label">Reference sequence</label>
+            <div class="col-sm-10">
+                <input type="text" name="refe" value=""class="form-control" placeholder="Reference" >
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="seqT" class="col-sm-2 control-label">Sequence Type</label>
+            <div class="col-sm-10">
+                <select name="seqT" class="form-control">
+                    <option value="g">Genomic</option>
+                    <option value="c" selected="1">Coding DNA</option>
+                    <option value="n">NonCoding DNA</option>
+                    <option value="r">RNAcss</option>
+                    <option value="m">Mitochondrial DNA</option>
+                    <option value="p" disabled="true">Protein</option>
+                    <!-- Protein Naming not yet implemented-->
+                    <option value="e">EST</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div id="tlc" style="display: none; " class="form-group">
+            <label class="label-left">TLC</label>
+            <div class="radio">
+                <label class="label-left"><input type="radio" name="tlc" value="0"class="form-control" > One Letter Code</label>
+            </div>
+            <div class="radio">
+                <label class="label-left"><input type="radio" name="tlc" value="1" checked=""class="form-control" > Three Letter Code</label>
+            </div>
+        </div>
+
+            <div id="gSym" class="form-group">
+                <label for="gSym" class="col-sm-2 control-label">Gene symbol</label>
+                <div class="col-sm-10">
+                    <input type="text" name="gSym" size="20" value=""class="form-control" placeholder="Gene symbol">
+                </div>
+            </div>
+
+            <div id="tVar" class="form-group">
+                <label for="tVar" class="col-sm-2 control-label">Transcript</label>
+                <div class="col-sm-10">
+                    <input type="text" name="tVar" size="20" value="" class="form-control" placeholder="Transcript">
+                </div>
+            </div>
+
+        <div class="form-group small text-danger">
+            <div class="col-sm-offset-2 col-sm-10">
+                <div id="seqTerror" style="display: none;"></div>
+                <div id="refeerror"></div>
+                <div id="gSymerror"></div>
+                <div id="tVarerror"></div>
+            </div>
+        </div>
+
+    <div id="variants">
+    <!-- This is where the mutations will be arriving -->
+    </div>
+
+<!--    <div id="optional">
+        <sup>*</sup> This field is optional
+    </div> -->
+
 
 <!-- Variant Template -->
-	<div id="varianttemplate" style="display: none">
-		<div class="row form-horizontal-inline">
-			<div class="form-group col-md-6" id="V{NMBR}mutTrow">
-				<label for="V{NMBR}mutT"  id="V{NMBR}mutTname">Mutation Type</label>
-				<select name="V{NMBR}mutT" onchange="update();"class="form-control input-sm" >
-				<option value="1">Substitution</option>
-				<option value="2">Deletion</option>
-				<option value="3">Insertion</option>
-				<option value="4">Duplication</option>
-				<option value="5">Insertion/Deletion</option>
-				<option value="6">Inversion</option>
-			  </select>
-				<div class="text-danger small" id="{NMBR}mutTerror" class="errors"></div>
-			</div>
-		
-			<div class="form-group col-md-6" id="V{NMBR}P1row">
-				<label id="V{NMBR}P1name">Start Position</label>
-				<input type="text" name="V{NMBR}P1" value="" class="form-control input-sm">
-				<div class="text-danger small" id="V{NMBR}P1error"></div>
-			</div>
-	
-			<div class="form-group col-md-6" id="V{NMBR}P2row">
-				<label id="V{NMBR}P2name">End Position</label>
-				<input type="text" name="V{NMBR}P2" size="20" value="" class="form-control input-sm" >
-				<div class="text-danger small" id="V{NMBR}P2error"></div>
-			</div>
-		</div>
-		<div class="row form-horizontal-inline">
-			<div class="col-md-6" id="V{NMBR}S1row">
-			  <div class="form-group" name="S1">
-				  <label id="V{NMBR}S1name">Old Sequence</label>	
-				  <input type="text" name="V{NMBR}S1" size="20" value=""class="form-control input-sm">
-				  <div class="text-danger small" id="V{NMBR}S1error"></div>
-			  </div>
-			</div>
+    <div id="varianttemplate" style="display: none">
+        <div class="row form-horizontal-inline">
+            <div class="form-group col-md-6" id="V{NMBR}mutTrow">
+                <label for="V{NMBR}mutT"  id="V{NMBR}mutTname">Mutation Type</label>
+                <select name="V{NMBR}mutT" onchange="update();"class="form-control input-sm" >
+                <option value="1">Substitution</option>
+                <option value="2">Deletion</option>
+                <option value="3">Insertion</option>
+                <option value="4">Duplication</option>
+                <option value="5">Insertion/Deletion</option>
+                <option value="6">Inversion</option>
+              </select>
+                <div class="text-danger small" id="{NMBR}mutTerror" class="errors"></div>
+            </div>
 
-			<div class="col-md-6" id="V{NMBR}S2row">
-			  <div class="form-group" name="S2">
-				  <label id="V{NMBR}S2name">New Sequence</label>	
-				  <input type="text" name="V{NMBR}S2" size="20" value=""class="form-control input-sm">
-				<div class="text-danger small" id="V{NMBR}S2error"></div>
-			  </div>
-			</div>
-		</div>		
-		<hr/>
-	</div><!-- varianttemplate -->
-	
-	
-	
-	<div class="form-group">
-		<div class="col-sm-12">
-			<input type="button" onclick="addVariant();" class="btn btn-success" value="Add variant +">
-			<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameGenerator" target="new" class="btn btn-default pull-right">Help</a>
-			<input type="button" onclick="if(confirm('This action will clear all input fields'))javascript:location.reload(true);" value="Clear form" class="btn btn-default pull-right">
-		</div>
-	</div>
-	
-	
+            <div class="form-group col-md-6" id="V{NMBR}P1row">
+                <label id="V{NMBR}P1name">Start Position</label>
+                <input type="text" name="V{NMBR}P1" value="" class="form-control input-sm">
+                <div class="text-danger small" id="V{NMBR}P1error"></div>
+            </div>
 
-	</form>
-	
-	<hr/>	
-	
-	<a id="constructed_name"><h4>Constructed HGVS Name</h4></a>
-	<pre id="output" >
-		<!-- Empty PlaceHolder -->
-	</pre>
-	<p class="text-muted">Please click the link to check with the Name Checker</p>
+            <div class="form-group col-md-6" id="V{NMBR}P2row">
+                <label id="V{NMBR}P2name">End Position</label>
+                <input type="text" name="V{NMBR}P2" size="20" value="" class="form-control input-sm" >
+                <div class="text-danger small" id="V{NMBR}P2error"></div>
+            </div>
+        </div>
+        <div class="row form-horizontal-inline">
+            <div class="col-md-6" id="V{NMBR}S1row">
+              <div class="form-group" name="S1">
+                  <label id="V{NMBR}S1name">Old Sequence</label>
+                  <input type="text" name="V{NMBR}S1" size="20" value=""class="form-control input-sm">
+                  <div class="text-danger small" id="V{NMBR}S1error"></div>
+              </div>
+            </div>
 
-	</div><!-- form -->
+            <div class="col-md-6" id="V{NMBR}S2row">
+              <div class="form-group" name="S2">
+                  <label id="V{NMBR}S2name">New Sequence</label>
+                  <input type="text" name="V{NMBR}S2" size="20" value=""class="form-control input-sm">
+                <div class="text-danger small" id="V{NMBR}S2error"></div>
+              </div>
+            </div>
+        </div>
+        <hr/>
+    </div><!-- varianttemplate -->
+
+
+
+    <div class="form-group">
+        <div class="col-sm-12">
+            <input type="button" onclick="addVariant();" class="btn btn-success" value="Add variant +">
+            <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameGenerator" target="new" class="btn btn-default pull-right">Help</a>
+            <input type="button" onclick="if(confirm('This action will clear all input fields'))javascript:location.reload(true);" value="Clear form" class="btn btn-default pull-right">
+        </div>
+    </div>
+
+
+
+    </form>
+
+    <hr/>
+
+    <a id="constructed_name"></a><h4>Constructed HGVS Name</h4>
+    <p><code id="output" >
+        <!-- Empty PlaceHolder -->
+    </code></p>
+    <p class="text-muted">Please click the link to check with the Name Checker</p>
+
+    </div><!-- form -->
 
 
 <!-- Inline Javascript -->
@@ -164,7 +164,5 @@
     }
 
 </script>
-
-
 
 {% endblock content %}

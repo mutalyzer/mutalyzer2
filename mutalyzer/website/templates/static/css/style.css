@@ -3,7 +3,7 @@ body{
 /*	margin: 0 10px;*/
 	padding-top: 70px;
 /*	padding-top: 110px;*/
-	
+
 	font-family: Roboto;
 	-webkit-font-smoothing: antialiased;
 }
@@ -15,17 +15,17 @@ body{
 	margin-right: auto;
 	padding: 40px;
 	margin-bottom: 25px;
-	
+
 	border-radius: 2px;
-	
-	font-size: 14px; 
+
+	font-size: 14px;
 	font-weight: 400;
 
 }
 .block-shadow {
 /*	box-shadow: 0 -1px 2.5px rgba(0,0,0,0.12), 0 1px 2px rgba(0, 0,0,0.24);*/
 	box-shadow: 1px 2px 2px rgba(50,50,50,.16), -1px -1px 3px rgba(50, 50, 50,.23);
-	
+
 }
 
 
@@ -49,11 +49,11 @@ body{
 	.block {
 		padding: 15px;
 	}
-	
+
 	.block-shadow {
 		box-shadow: none;
 	}
-	
+
 	.block h1 {
 		font-size: 32px;
 		line-height: 1em;
@@ -75,7 +75,7 @@ footer.row {
 /*	padding-top:20px;
 	padding-bottom: 20px;*/
 }
-.navbar-header { 
+.navbar-header {
 	z-index: 3;
 	position: relative;
 }
@@ -120,7 +120,7 @@ h2,h3,h4,h5{
 }
 
 input[type="text"].form-pre{
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;	
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 code {
@@ -146,11 +146,11 @@ header.main-header {
 .table2 > td {
   padding: 3px;
  }
- 
+
 .table2{
 	margin-bottom: 0px;
 }
- 
+
 .pre {
   padding: 0 9.5px;
   margin: 0 30px 10px 30px;
@@ -165,15 +165,6 @@ header.main-header {
 .helper{
 	border-bottom: 1px dotted grey;
 	cursor: default;
-}
-
-.btn-right{
-	width: 177px;
-	margin-left: 375px;
-}
-
-.btn-submit{
-	margin-top: 15px;
 }
 
 .summary{
@@ -195,7 +186,7 @@ header.main-header {
 	font-size: 11px;
 	cursor: pointer;
 }
-	
+
 #variants{
 	/* border: 1px solid green; */
 }

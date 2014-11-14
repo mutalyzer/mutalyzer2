@@ -5,68 +5,53 @@
 
 {% block content %}
 
-			{% if messages %}
-				{% for m in messages %}
-					{% if m.class == "error" %}
-						<p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
-					{% elif m.class == "warning" %}
-						<p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
-					{% endif %}
-				{% endfor %}
-			{% endif %} <!-- messages -->
-			
-			{% if summary == "0 Errors, 0 Warnings."%}
-				<p class="alert alert-success summary">{{ summary }}</p>
-			{% else %}
-				<p>{{summary}}</p>
-				<hr />
-			{% endif %}
+<p>
+Please insert
+the <a href="http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs number
+below. Mutalyzer will retrieve the HGVS description of the SNP specified on
+the reference sequence(s) used by dbSNP.
+</p>
 
-	<p>
-	Please insert the
-	<a href="http://www.ncbi.nlm.nih.gov/projects/SNP/">dbSNP</a> rs
-	number below. Mutalyzer will retrieve the HGVS description of the SNP specified on the reference sequence(s) used by dbSNP.
-	</p>
+<form role="form" class="form" action="{{ url_for('.snp_converter') }}" method="get">
+  <div class="form-group">
+    <label for="description">dbSNP rs number</label>
+    <input type="text" class="form-control form-pre example-target" name="rs_id" placeholder="" value="{{ rs_id }}" ></input>
+    <p>Example: <code class="example-input">rs9919552</code></p>
+  </div>
 
-	<p>
-	Example: <code class="example-input">rs9919552</code>
-	</p>
-		
-	<form role="form" class="form" action="{{ url_for('.snp_converter') }}" method="get">
-	<div class="form-group">
-		<label for="description">dbSNP rs number</label>
-		<input type="text" class="form-control form-pre example-target" name="rs_id" placeholder="" value="{{ rs_id }}" ></input>
-	</div>		
-
-	<div class="form-group">
-		<input type="submit" class="btn btn-primary" value="Submit">
-		<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
-		<input type="reset" class="btn btn-default pull-right" value="Undo">
-	</div>
-	</form>
+  <div class="form-group">
+    <input type="submit" class="btn btn-primary" value="Submit">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
+  </div>
+</form>
 
 {% if rs_id %}
-  <h3>SNP converter results</h3>
+  <hr>
+  {% if messages %}
+    {% for m in messages %}
+      {% if m.class == "error" %}
+        <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% elif m.class == "warning" %}
+        <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 
-<!--   {% for m in messages %}
-	{% if m.class == "error" %}
-		<div class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
-	{% elif m.class == "warning" %}
-		<div class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
-	{% endif %}
-  {% endfor %}
-  
   {% if summary == "0 Errors, 0 Warnings."%}
-		<div class="alert success summary">{{ summary }}</div>
+    <p class="alert alert-success summary">{{ summary }}</p>
   {% else %}
-	<div>{{summary}}</div>
-  {% endif %} -->
-      
+    <p>{{summary}}</p>
+  {% endif %}
+
+  <hr>
 
   <h4>dbSNP rs ID</h4>
-  <pre>{{ rs_id }}</pre>
+  <p><code>{{ rs_id }}</code></p>
+
   <h4>HGVS descriptions</h4>
-  <pre>{% for d in descriptions %}{{ d }}</br>{% endfor %}</pre>
-{% endif %}
+  {% for d in descriptions %}
+    <p><code>{{ d }}</code></p>
+  {% endfor %}
+{% endif %}{# rs_id #}
 
 {% endblock content %}

@@ -829,14 +829,14 @@ def batch_jobs_submit():
     for error in errors:
         output.addMessage(__file__, 3, 'EBATCHJOB', error)
 
-    errors = map(util.message_info, output.getMessages())
+    messages = map(util.message_info, output.getMessages())
 
     return render_template('batch-jobs.html',
                            assemblies=assemblies,
                            assembly_name_or_alias=assembly_name_or_alias,
                            job_type=job_type,
                            max_file_size=settings.MAX_FILE_SIZE // 1048576,
-                           errors=errors)
+                           messages=messages)
 
 
 @website.route('/batch-job-progress')

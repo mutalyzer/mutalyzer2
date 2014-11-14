@@ -5,12 +5,12 @@
 
 {% block content %}
 
-<p>
-<b style="color: red">Note that this is an experimental service.</b>
-</p>
+<p class="alert alert-warning">Note that this is an experimental service.</p
 
 <p>
-Extract the HGVS variant description from a reference sequence and an observed sequence. For now, we require the user to fill in two sequences. After the testing phase, we plan to use the underlying algorithm for:
+Extract the HGVS variant description from a reference sequence and an observed
+sequence. For now, we require the user to fill in two sequences. After the
+testing phase, we plan to use the underlying algorithm for:
 </p>
 
 <ul>
@@ -26,84 +26,76 @@ Extract the HGVS variant description from a reference sequence and an observed s
 </ul>
 
 <p>
-	Please supply a reference sequence and an observed sequence.
+Please supply a reference sequence and an observed sequence.
 </p>
 
-	<form action="{{ url_for('.description_extractor') }}" method="get" class="form">
-		<div class="form-group">
-			<h3>Reference sequence</h3>
-			<p>Example: <code class="example-input">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
-			<input type="text" name="reference_sequence" value="{{ reference_sequence }}" class="form-control form-pre example-target" placeholder="Reference sequence">
-			<!-- <input type="button" value="Clear field" onclick="clearField(this.form, 'reference_sequence');" class="btn"> -->
-		</div>
-		<div class="form-group">
-			<h3>Observed sequence</h3>
-
-			<p>Example: <code class="example-input-2">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
-			<input type="text" name="variant_sequence" value="{{ variant_sequence }}" class="form-control form-pre example-target-2" placeholder="Observed sequence">
-			<!-- <input type="button" value="Clear field" onclick="clearField(this.form, 'variant_sequence');" class="btn"> -->
-		</div>
-		
-		<div class="form-group">
-			<input type="submit" class="btn btn-primary" value="Submit">
-			<input type="reset" class="btn btn-default pull-right" value="Undo">
-			<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/DescriptionExtractor" target="new" class="btn btn-default pull-right">Help</a>
-		</div>
-	</form>
+<form action="{{ url_for('.description_extractor') }}" method="get" class="form">
+  <div class="form-group">
+    <label for="reference_sequence">Reference sequence</label>
+    <input type="text" name="reference_sequence" value="{{ reference_sequence }}" class="form-control form-pre example-target" placeholder="Reference sequence">
+    <p>Example: <code class="example-input">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
+  </div>
+  <div class="form-group">
+    <label for="variant_sequence">Observed sequence</label>
+    <input type="text" name="variant_sequence" value="{{ variant_sequence }}" class="form-control form-pre example-target-2" placeholder="Observed sequence">
+    <p>Example: <code class="example-input-2">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
+  </div>
+  <div class="form-group">
+    <input type="submit" class="btn btn-primary" value="Submit">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/DescriptionExtractor" target="new" class="btn btn-default pull-right">Help</a>
+  </div>
+</form>
 
 {% if description %}
-  <h3>Variant Description Extractor results:</h3>
+  <hr>
+  {% for m in messages %}
+    {% if m.class == "error" %}
+      <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "warning" %}
+      <p class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% endif %}
+  {% endfor %}
 
-<table class="table">
-      {% for m in messages %}
-		{% if m.class == "error" %}
-			<tr><td class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</td></tr>
-		{% elif m.class == "warning" %}
-			<tr><td class="warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</td></tr>
-		{% endif %}
-      {% endfor %}
-	  
-	  {% if summary == "0 Errors, 0 Warnings."%}
-			<tr><td class="success summary">{{ summary }}</td>
-	  {% endif %}
-</table>
-
+  {% if summary == "0 Errors, 0 Warnings." %}
+    <p class="alert alert-success summary">{{ summary }}</p>
+  {% else %}
+    <p>{{summary}}</p>
+  {% endif %}
 
   {% if not errors %}
-    <p>
-    <b>Genomic description:</b>
-    </p>
-    <p>
-    <pre>g.{{ description }}</pre>
-    </p>
-    <p>
-    <b>Overview of the raw variants:</b>
-    </p>
+    <hr>
+
+    <h4>Genomic description</h4>
+    <p><code>g.{{ description }}</code></p>
+
+    <h4>Overview of the raw variants</h4>
     <table class="table">
-      <thead><tr>
-        <th>Start</th>
-        <th>End</th>
-        <th>Type</th>
-        <th>Deleted</th>
-        <th>Inserted</th>
-        <th>Shift</th>
-        <th>Description</th>
-      </tr></thead>
-      {% for raw_var in raw_vars %}
-       <tbody>
-		<tr>
-          <td>{{ raw_var.start }}</td>
-          <td>{{ raw_var.end }}</td>
-          <td>{{ raw_var.type }}</td>
-          <td>{{ raw_var.deleted }}</td>
-          <td>{{ raw_var.inserted }}</td>
-          <td>{{ raw_var.shift }}</td>
-          <td>{{ raw_var.hgvs }}</td>
+      <thead>
+        <tr>
+          <th>Start</th>
+          <th>End</th>
+          <th>Type</th>
+          <th>Deleted</th>
+          <th>Inserted</th>
+          <th>Shift</th>
+          <th>Description</th>
         </tr>
-	   </tbody>
-      {% endfor %}
+      </thead>
+      <tbody>
+        {% for raw_var in raw_vars %}
+          <tr>
+            <td>{{ raw_var.start }}</td>
+            <td>{{ raw_var.end }}</td>
+            <td>{{ raw_var.type }}</td>
+            <td>{{ raw_var.deleted }}</td>
+            <td>{{ raw_var.inserted }}</td>
+            <td>{{ raw_var.shift }}</td>
+            <td>{{ raw_var.hgvs }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
-  {% endif %}
-{% endif %}
+  {% endif %}{# not errors #}
+{% endif %}{# description #}
 
 {% endblock content %}

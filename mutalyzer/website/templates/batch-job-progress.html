@@ -16,6 +16,7 @@
     <a href="{{ url_for('.batch_job_result', result_id=result_id) }}">batch-job-{{ result_id }}.txt</a>
     </p>
   </div>
+
   {% if items_left %}
     <script type="text/javascript">
 function check_items_left() {
@@ -38,8 +39,8 @@ function check_items_left() {
 }
 check_items_left();
     </script>
-  {% endif %}
-{% else %}
+  {% endif %}{# items_left #}
+{% else %}{# result_id #}
   <p>Unknow batch job.</p>
 {% endif %}
 

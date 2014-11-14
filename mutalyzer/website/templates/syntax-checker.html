@@ -2,49 +2,51 @@
 
 {% set active_page = "syntax-checker" %}
 {% set page_title = "Syntax checker" %}
-<!-- {% set page_titles = "Syntax Checker" %} -->
 
 {% block content %}
-	{% if description %}
-	  <h3>Variant syntax checker results</h3>
-	  {% if parse_error %}
-	  	<div class="alert alert-danger">
-			<h4>There were errors</h4>
-			<ul>
-		      {% for m in messages %}
-				<li title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</li>
-		      {% endfor %}
-			</ul>
-		    <h5>Details of the parse error</h5>
-		    <pre>{{- parse_error[0] }}<br>{{- parse_error[1] }}</pre>
-		    <p>The &quot;^&quot; indicates the position where the error occurred.</p>
-	  	</div>
-	  {% else %}
-	  	<div class="alert alert-success">
-			The syntax of this variant is OK!
-		</div>
-	  {% endif %}
-	  <br>
-	{% endif %}
-  	<p>
-  		Please insert the mutation name using the <a href="http://www.hgvs.org/mutnomen" title="Human Genome Variation Society standard variant nomenclature" alt="Human Genome Variation Society standard variant nomenclature">HGVS</a> format:<br>
-		<code>&lt;accession number&gt;.&lt;version number&gt;(&lt;gene symbol&gt;):&lt;sequence type&gt;.&lt;variant description&gt;</code>
-  	</p>
-  		
-    <p>
-    	Example: <code class="example-input">AB026906.1:c.274G&gt;T</code>
-    </p>
 
-      <form class="form" action="{{ url_for('.syntax_checker') }}" method="get">
-		  <div class="form-group">
-			  <label for="description">HGVS Description</label>
-			  <input class="form-control form-pre example-target" type="text" name="description" value="{{ description }}" placeholder="Mutation name using HGVS format">	
-		  </div>
-		  <div class="form-group button-group">
-			  <input type="submit" class="btn btn-primary" value="Check syntax">
-			  <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SyntaxChecker" target="new" class="btn btn-default pull-right">Help</a>
-			  <input type="reset" class="btn btn-default pull-right" value="Undo">
-		  </div>
-    </form>
-	
+<p>
+Please insert the mutation name using
+the <a href="http://www.hgvs.org/mutnomen" title="Human Genome Variation
+Society standard variant nomenclature" alt="Human Genome Variation Society
+standard variant nomenclature">HGVS</a> format:
+</p>
+
+<pre>&lt;accession number&gt;.&lt;version number&gt;(&lt;gene symbol&gt;):&lt;sequence type&gt;.&lt;variant description&gt;</pre>
+
+<form class="form" action="{{ url_for('.syntax_checker') }}" method="get">
+  <div class="form-group">
+    <label for="description">HGVS Description</label>
+    <input class="form-control form-pre example-target" type="text" name="description" value="{{ description }}" placeholder="Mutation name using HGVS format">
+    <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
+  </div>
+  <div class="form-group button-group">
+    <input type="submit" class="btn btn-primary" value="Check syntax">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SyntaxChecker" target="new" class="btn btn-default pull-right">Help</a>
+  </div>
+</form>
+
+{% if description %}
+  <hr>
+  {% if parse_error %}
+    <div class="alert alert-danger">
+      <h4>Parse error</h4>
+      <pre>{{ parse_error[0] }}<br>{{ parse_error[1] }}</pre>
+      <p>The &quot;^&quot; indicates the position where the error occurred.</p>
+    </div>
+  {% else %}
+    <p class="alert alert-success">The syntax of this variant is OK!</p>
+  {% endif %}
+
+  {% if messages %}
+    {% for m in messages %}
+      {% if m.class == "error" %}
+        <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% elif m.class == "warning" %}
+        <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}{# description #}
+
 {% endblock content %}

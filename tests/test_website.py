@@ -124,7 +124,7 @@ class TestWebsite(MutalyzerTest):
         r = self.app.get('/syntax-checker',
                          query_string={'description': 'AB026906.1:c.27'})
         assert 'Fatal' in r.data
-        assert 'Details of the parse error' in r.data
+        assert 'The &quot;^&quot; indicates the position where the error occurred' in r.data
 
     @fix(database, cache('NM_002001.2'))
     def test_check_valid(self):
@@ -742,7 +742,7 @@ class TestWebsite(MutalyzerTest):
                          query_string={'description': 'La Pe\xf1a'})
         body = r.get_data(as_text=True)
         assert 'Fatal' in body
-        assert 'Details of the parse error' in body
+        assert 'The &quot;^&quot; indicates the position where the error occurred' in body
         assert 'Expected W:(0123...) (at char 2), (line:1, col:3)' in body
 
     @fix(database)

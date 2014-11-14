@@ -5,80 +5,64 @@
 
 {% block content %}
 
-  <p>
-  Please supply the genome assembly which you want to use to convert your
-  position.
-  </p>
-  <p>
-  <b>Note:</b> The Position Converter does NOT check the description or
-  normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Checker</a> for this.
-  </p>
-  <p>
-  Examples: <code class="example-input">NM_003002.2:c.274G&gt;T</code>, <code class="example-input">chr11:g.111959693G&gt;T</code> and <code class="example-input">NC_000011.9:g.111959693G&gt;T</code>
-  </p>
-	<form class="form-horizontal" role="form" action="{{ url_for('.position_converter') }}" method="get" enctype="multipart/form-data">
-	
-		<div class="form-group">
-			<label for="assembly_name_or_alias" class="col-md-2 control-label">Build</label>
-			<div class="col-md-10">
-				<select name="assembly_name_or_alias" class="form-control">
-			{% for assembly in assemblies %}
-					<option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
-			{% endfor %}
-				</select>
-			</div>
-		</div>
-			
-		<div class="form-group">
-			<label for="description" class="col-md-2 control-label">Variant</label>
-			<div class="col-md-10">
-				<input type="text" name="description" value="{{ description }}" class="form-control form-pre example-target" placeholder="Variant">
-			</div>
-		</div>
-		<div class="form-group">
-			<div class=" col-md-12">
-				<input type="submit" class="btn btn-primary" value="Submit">
-				<a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
-				<input type="reset" class="btn btn-default pull-right" value="Undo">
-			</div>
-		</div>
-	</form>
+<p>
+Please supply the genome assembly which you want to use to convert your
+position.
+</p>
+
+<p>
+<b>Note:</b> The Position Converter does NOT check the description or
+normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Checker</a> for this.
+</p>
+
+
+<form class="form" role="form" action="{{ url_for('.position_converter') }}" method="get" enctype="multipart/form-data">
+  <div class="form-group">
+    <label for="assembly_name_or_alias">Build</label>
+    <select name="assembly_name_or_alias" class="form-control">
+      {% for assembly in assemblies %}
+        <option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="description">Variant</label>
+    <input type="text" name="description" value="{{ description }}" class="form-control form-pre example-target" placeholder="Variant">
+    <p>Examples: <code class="example-input">NM_003002.2:c.274G&gt;T</code>, <code class="example-input">chr11:g.111959693G&gt;T</code> and <code class="example-input">NC_000011.9:g.111959693G&gt;T</code></p>
+  </div>
+  <div class="form-group button-group">
+    <input type="submit" class="btn btn-primary" value="Submit">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
+  </div>
+</form>
 
 {% if description %}
-  <h3>Results</h3>
-
+  <hr>
   {% for m in messages %}
-	{% if m.class == "error" %}
-		<div class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
-	{% elif m.class == "warning" %}
-		<div class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</div>
-	{% endif %}
+    {% if m.class == "error" %}
+      <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "warning" %}
+      <p class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% endif %}
   {% endfor %}
-  
-  {% if summary == "0 Errors, 0 Warnings."%}
-		<div class="alert success summary">{{ summary }}</div>
+
+  {% if summary == "0 Errors, 0 Warnings." %}
+    <p class="alert alert-success summary">{{ summary }}</p>
   {% else %}
-	<div>{{summary}}</div>
+    <p>{{summary}}</p>
   {% endif %}
 
   {% if chromosomal_description %}
-    <p>
-    <h4>Chromosomal Variant:</h4>
-    </p>
-    <pre>{{ chromosomal_description }}</pre>
-    {% if not transcript_descriptions %}
-      <p>
-      <b>No transcripts found in mutation region</b>
-      </p>
+    <h4>Chromosomal variant</h4>
+    <p><code>{{ chromosomal_description }}</code></p>
+
+    {% if transcript_descriptions %}
+      <h4>Found transcripts in mutation region</h4>
+      <pre>{% for d in transcript_descriptions %}{{ d }}<br>{% endfor %}</pre>
+    {% else %}
+      <h4>No transcripts found in mutation region</h4>
     {% endif %}
   {% endif %}
-
-  {% if transcript_descriptions %}
-    <p>
-    <b>Found transcripts in mutation region:</b>
-    </p>
-    <pre>{% for d in transcript_descriptions %}{{ d }}<br>{% endfor %}</pre>
-  {% endif %}
-{% endif %}
+{% endif %}{# description #}
 
 {% endblock content %}
