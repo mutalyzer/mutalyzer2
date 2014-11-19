@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.4
 -------------
 
-Release date to be decided.
+Released on November 19th 2014.
 
 - Many string encoding related fixes. Summarizing, Mutalyzer should now be
   completely aware of input and output string encodings, in all
