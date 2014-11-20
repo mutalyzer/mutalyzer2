@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% set active_page = "syntax-checker" %}
-{% set page_title = "Syntax checker" %}
+{% set page_title = "Syntax Checker" %}
 
 {% block content %}
 
 <p>
-Please insert the mutation name using
+Please insert the variant description using
 the <a href="http://www.hgvs.org/mutnomen" title="Human Genome Variation
 Society standard variant nomenclature" alt="Human Genome Variation Society
 standard variant nomenclature">HGVS</a> format:
@@ -16,8 +16,9 @@ standard variant nomenclature">HGVS</a> format:
 
 <form class="form" action="{{ url_for('.syntax_checker') }}" method="get">
   <div class="form-group">
-    <label for="description">HGVS Description</label>
-    <input class="form-control form-pre example-target" type="text" name="description" value="{{ description }}" placeholder="Mutation name using HGVS format">
+    <label for="description">Variant description</label>
+    <input class="form-control form-pre example-target" type="text"
+           name="description" value="{{ description }}" placeholder="Variant description using HGVS format">
     <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
   </div>
   <div class="form-group button-group">
@@ -35,7 +36,7 @@ standard variant nomenclature">HGVS</a> format:
       <p>The &quot;^&quot; indicates the position where the error occurred.</p>
     </div>
   {% else %}
-    <p class="alert alert-success">The syntax of this variant is OK!</p>
+    <p class="alert alert-success">The syntax of this variant description is OK!</p>
   {% endif %}
 
   {% if messages %}

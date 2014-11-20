@@ -101,18 +101,18 @@ var reference = {
 				 'ok'		: false,
 				 'check'    : isReference,
 				 'errStr'   : "should be of the format \"NM_002001.2\""},
-        'seqT': {'name'		: "Sequence Type",
+        'seqT': {'name'		: "Sequence type",
                  'len'   	: "1",
 				 'value' 	: "c",
 				 'ok'		: false,
 				 'check'    : isSequenceType,
-			     'errStr'   : "You managed to select an impossible Sequence Type. Muppet!"},
-        'gSym': {'name'		: "Gene Symbol",
+			     'errStr'   : "You managed to select an impossible sequence type. Muppet!"},
+        'gSym': {'name'		: "Gene symbol",
                  'len'   	: "*",
 				 'value' 	: "",
 				 'ok'		: false,
 				 'check'    : isGeneSymbol,
-			     'errStr'   : "should only contain Letters and Numbers"},
+			     'errStr'   : "should only contain letters and numbers"},
         'tVar': {'name'		: "Transcript",
                  'len'   	: "*",
 				 'value' 	: "",
@@ -193,11 +193,11 @@ var seqTypes = {
 
 		'pr1'	: {	'pCheck' 	: isPosition,
 					'sCheck'	: isProteinSequence1,
-					'errorStr'	: "must consist of the Single Letter AminoAcids Code"},
+					'errorStr'	: "must consist of the single letter amino acids code"},
 
 		'pr3'	: {	'pCheck' 	: isPosition,
 					'sCheck'	: isProteinSequence3,
-					'errorStr'	: "must consist of the Three Letter AminoAcids Code"}
+					'errorStr'	: "must consist of the three letter amino acids code"}
 }
 
 /* mutTypes Object
@@ -319,9 +319,9 @@ var VariantField = {
         var i = this[name].index;
         return mutTypes[this["mType"]]["flags"].substring(i,i+1);},
     getName : function(name){
-        var S1Name = mutTypes[this["mType"]]["S1"]+" Sequence";
-        var S2Name = mutTypes[this["mType"]]["S2"]+" Sequence";
-        var defaultnames = ["Start Position", "End Position", S1Name, S2Name];
+        var S1Name = mutTypes[this["mType"]]["S1"]+" sequence";
+        var S2Name = mutTypes[this["mType"]]["S2"]+" sequence";
+        var defaultnames = ["Start position", "End position", S1Name, S2Name];
         return defaultnames[this[name].index];},
     getErr  : function(name){
                 if(name.substring(1,0)=="P")

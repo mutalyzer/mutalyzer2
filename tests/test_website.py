@@ -115,7 +115,7 @@ class TestWebsite(MutalyzerTest):
         """
         r = self.app.get('/syntax-checker',
                          query_string={'description': 'AB026906.1:c.274G>T'})
-        assert 'The syntax of this variant is OK!' in r.data
+        assert 'The syntax of this variant description is OK!' in r.data
 
     def test_checksyntax_invalid(self):
         """
@@ -137,7 +137,7 @@ class TestWebsite(MutalyzerTest):
         assert '0 Errors' in r.data
         assert '0 Warnings' in r.data
         assert 'Raw variant 1: deletion of 1' in r.data
-        assert '<input class="form-control form-pre example-target" type="text" name="description" id="hgvs" value="NM_002001.2:g.1del" placeholder="Mutation name using HGVS format">' in r.data
+        assert 'value="NM_002001.2:g.1del"' in r.data
 
     def test_check_invalid(self):
         """

@@ -7,7 +7,8 @@
 
     <div class="form">
 
-        <p>Construct the mutation from a reference by adding variants to it. The HGVS name is constructed instantly <a href="#constructed_name">below</a>.
+        <p>Construct the variant from a reference by adding variants to
+        it. The HGVS variant description is constructed instantly <a href="#constructed_name">below</a>.
 
         <hr/>
 
@@ -22,7 +23,7 @@
         </div>
 
         <div class="form-group">
-            <label for="seqT" class="col-sm-2 control-label">Sequence Type</label>
+            <label for="seqT" class="col-sm-2 control-label">Sequence type</label>
             <div class="col-sm-10">
                 <select name="seqT" class="form-control">
                     <option value="g">Genomic</option>
@@ -84,7 +85,7 @@
     <div id="varianttemplate" style="display: none">
         <div class="row form-horizontal-inline">
             <div class="form-group col-md-6" id="V{NMBR}mutTrow">
-                <label for="V{NMBR}mutT"  id="V{NMBR}mutTname">Mutation Type</label>
+                <label for="V{NMBR}mutT"  id="V{NMBR}mutTname">Variant type</label>
                 <select name="V{NMBR}mutT" onchange="update();"class="form-control input-sm" >
                 <option value="1">Substitution</option>
                 <option value="2">Deletion</option>
@@ -97,13 +98,13 @@
             </div>
 
             <div class="form-group col-md-6" id="V{NMBR}P1row">
-                <label id="V{NMBR}P1name">Start Position</label>
+                <label id="V{NMBR}P1name">Start position</label>
                 <input type="text" name="V{NMBR}P1" value="" class="form-control input-sm">
                 <div class="text-danger small" id="V{NMBR}P1error"></div>
             </div>
 
             <div class="form-group col-md-6" id="V{NMBR}P2row">
-                <label id="V{NMBR}P2name">End Position</label>
+                <label id="V{NMBR}P2name">End position</label>
                 <input type="text" name="V{NMBR}P2" size="20" value="" class="form-control input-sm" >
                 <div class="text-danger small" id="V{NMBR}P2error"></div>
             </div>
@@ -111,7 +112,7 @@
         <div class="row form-horizontal-inline">
             <div class="col-md-6" id="V{NMBR}S1row">
               <div class="form-group" name="S1">
-                  <label id="V{NMBR}S1name">Old Sequence</label>
+                  <label id="V{NMBR}S1name">Old sequence</label>
                   <input type="text" name="V{NMBR}S1" size="20" value=""class="form-control input-sm">
                   <div class="text-danger small" id="V{NMBR}S1error"></div>
               </div>
@@ -119,7 +120,7 @@
 
             <div class="col-md-6" id="V{NMBR}S2row">
               <div class="form-group" name="S2">
-                  <label id="V{NMBR}S2name">New Sequence</label>
+                  <label id="V{NMBR}S2name">New sequence</label>
                   <input type="text" name="V{NMBR}S2" size="20" value=""class="form-control input-sm">
                 <div class="text-danger small" id="V{NMBR}S2error"></div>
               </div>
@@ -144,7 +145,7 @@
 
     <hr/>
 
-    <a id="constructed_name"></a><h4>Constructed HGVS Name</h4>
+    <a id="constructed_name"></a><h4>Constructed HGVS variant description</h4>
     <p><code id="output" >
         <!-- Empty PlaceHolder -->
     </code></p>
