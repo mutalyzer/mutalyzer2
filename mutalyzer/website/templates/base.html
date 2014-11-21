@@ -162,28 +162,24 @@
 
     <footer class="row">
         <div class="col-md-4">
-            <strong>Mutalyzer {{ mutalyzer_version }}</strong>
-            <br>
-            <span class="text-muted">
+            <p>
+              <strong>Mutalyzer {{ mutalyzer_version }}</strong>
+              <br>
+              <span class="text-muted">
                 {% if release %}
                   released on {{ release_date }}
                 {% else %}
                   development version
                 {% endif %}
-
-                <br>
-                HGVS nomenclature version {{ nomenclature_version }}
-            </span>
+              </span>
+            </p>
         </div>
         <div class="col-md-4">
-            <p>Interface by <a target="_blank" href="http://www.wearelandscape.nl/"><strong>Landscape</strong></a><br/><span class="text-muted"><i>Increasing data impact</i></span></p>
+            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}</p>
         </div>
         <div class="col-md-4">
             <img src="{{ url_for('static', filename='images/LUMC_24x24.png') }}" align="middle">
-            &copy; 2009-2014
-            <a href="http://www.lumc.nl" target="new">LUMC</a>
-
-
+            <p>&copy; 2009-2014 <a href="http://www.lumc.nl" target="new">LUMC</a></p>
         </div>
     </footer>
 
