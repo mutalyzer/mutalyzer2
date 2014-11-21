@@ -43,7 +43,11 @@ normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Chec
     {% if m.class == "error" %}
       <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
     {% elif m.class == "warning" %}
-      <p class="alert warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "information" %}
+      <p class="alert alert-info" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "debug" %}
+      <p class="alert alert-info" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
     {% endif %}
   {% endfor %}
 
