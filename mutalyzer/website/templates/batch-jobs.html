@@ -28,8 +28,8 @@
     </div>
 
     <div id="assembly_name_or_alias" style="display:none" class="form-group">
-      <label>Assembly</label>
-      <select name="assembly_name_or_alias" class="form-control">
+      <label for="assembly_name_or_alias">Assembly</label>
+      <select name="assembly_name_or_alias" id="assembly_name_or_alias" class="form-control">
         {% for assembly in assemblies %}
           <option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
         {% endfor %}
@@ -38,12 +38,12 @@
 
     <div class="form-group">
       <label for="email">Email address</label>
-      <input name="email" type="email" class="form-control" placeholder="Email address (notification will be sent here)" required value="{{ email }}">
+      <input name="email" id="email" type="email" class="form-control" placeholder="Email address (notification will be sent here)" required value="{{ email }}">
     </div>
 
     <div class="form-group">
       <label for="file">File</label>
-      <input type="file" name="file">
+      <input type="file" name="file" id="file">
     </div>
   </div>
 

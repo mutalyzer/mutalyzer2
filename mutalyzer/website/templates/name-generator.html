@@ -16,16 +16,16 @@
 
         <h4>Reference</h4>
         <div class="form-group">
-            <label for="refe" class="col-sm-2 control-label">Reference sequence</label>
+            <label for="control-refe" class="col-sm-2 control-label">Reference sequence</label>
             <div class="col-sm-10">
-                <input type="text" name="refe" value=""class="form-control" placeholder="Reference" >
+                <input type="text" name="refe" id="control-refe" value=""class="form-control" placeholder="Reference" >
             </div>
         </div>
 
         <div class="form-group">
-            <label for="seqT" class="col-sm-2 control-label">Sequence type</label>
+            <label for="control-seqT" class="col-sm-2 control-label">Sequence type</label>
             <div class="col-sm-10">
-                <select name="seqT" class="form-control">
+                <select name="seqT" id="control-seqT" class="form-control">
                     <option value="g">Genomic</option>
                     <option value="c" selected="1">Coding DNA</option>
                     <option value="n">NonCoding DNA</option>
@@ -50,16 +50,16 @@
         </div>
 
             <div id="gSym" class="form-group">
-                <label for="gSym" class="col-sm-2 control-label">Gene symbol</label>
+                <label for="control-gSym" class="col-sm-2 control-label">Gene symbol</label>
                 <div class="col-sm-10">
-                    <input type="text" name="gSym" size="20" value=""class="form-control" placeholder="Gene symbol">
+                    <input type="text" name="gSym" id="control-gSym" size="20" value=""class="form-control" placeholder="Gene symbol">
                 </div>
             </div>
 
             <div id="tVar" class="form-group">
-                <label for="tVar" class="col-sm-2 control-label">Transcript</label>
+                <label for="control-tVar" class="col-sm-2 control-label">Transcript</label>
                 <div class="col-sm-10">
-                    <input type="text" name="tVar" size="20" value="" class="form-control" placeholder="Transcript">
+                    <input type="text" name="tVar" id="control-tVar" size="20" value="" class="form-control" placeholder="Transcript">
                 </div>
             </div>
 
@@ -85,8 +85,8 @@
     <div id="varianttemplate" style="display: none">
         <div class="row form-horizontal-inline">
             <div class="form-group col-md-6" id="V{NMBR}mutTrow">
-                <label for="V{NMBR}mutT"  id="V{NMBR}mutTname">Variant type</label>
-                <select name="V{NMBR}mutT" onchange="update();"class="form-control input-sm" >
+                <label for="control-V{NMBR}mutT" id="V{NMBR}mutTname">Variant type</label>
+                <select name="V{NMBR}mutT" id="control-V{NMBR}mutT" onchange="update();"class="form-control input-sm" >
                 <option value="1">Substitution</option>
                 <option value="2">Deletion</option>
                 <option value="3">Insertion</option>
@@ -98,30 +98,30 @@
             </div>
 
             <div class="form-group col-md-6" id="V{NMBR}P1row">
-                <label id="V{NMBR}P1name">Start position</label>
-                <input type="text" name="V{NMBR}P1" value="" class="form-control input-sm">
+                <label for="control-V{NMBR}P1name" id="V{NMBR}P1name">Start position</label>
+                <input type="text" name="V{NMBR}P1" id="control-V{NMBR}P1name" value="" class="form-control input-sm">
                 <div class="text-danger small" id="V{NMBR}P1error"></div>
             </div>
 
             <div class="form-group col-md-6" id="V{NMBR}P2row">
-                <label id="V{NMBR}P2name">End position</label>
-                <input type="text" name="V{NMBR}P2" size="20" value="" class="form-control input-sm" >
+                <label for="control-V{NMBR}P2name" id="V{NMBR}P2name">End position</label>
+                <input type="text" name="V{NMBR}P2" id="control-V{NMBR}P2name" size="20" value="" class="form-control input-sm" >
                 <div class="text-danger small" id="V{NMBR}P2error"></div>
             </div>
         </div>
         <div class="row form-horizontal-inline">
             <div class="col-md-6" id="V{NMBR}S1row">
               <div class="form-group" name="S1">
-                  <label id="V{NMBR}S1name">Old sequence</label>
-                  <input type="text" name="V{NMBR}S1" size="20" value=""class="form-control input-sm">
+                  <label for="control-V{NMBR}S1name" id="V{NMBR}S1name">Old sequence</label>
+                  <input type="text" name="V{NMBR}S1" id="control-V{NMBR}S1name" size="20" value=""class="form-control input-sm">
                   <div class="text-danger small" id="V{NMBR}S1error"></div>
               </div>
             </div>
 
             <div class="col-md-6" id="V{NMBR}S2row">
               <div class="form-group" name="S2">
-                  <label id="V{NMBR}S2name">New sequence</label>
-                  <input type="text" name="V{NMBR}S2" size="20" value=""class="form-control input-sm">
+                  <label for="control-V{NMBR}S2name" id="V{NMBR}S2name">New sequence</label>
+                  <input type="text" name="V{NMBR}S2" id="control-V{NMBR}S2name" size="20" value=""class="form-control input-sm">
                 <div class="text-danger small" id="V{NMBR}S2error"></div>
               </div>
             </div>

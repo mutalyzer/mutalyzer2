@@ -66,13 +66,13 @@ sequence (maximum size is {{ max_file_size }} megabytes).
     <div class="col-md-6">
       <div class="form-group" id="upload_label">
         <label for="file">GenBank file</label>
-        <input type="file" name="file">
+        <input type="file" name="file" id="file">
         <p class="help-block">Please select the GenBank file in plain text format.</p>
       </div>
 
       <div class="form-group" id="url_label">
         <label for="url">GenBank file URL</label>
-        <input type="text" name="url" class="form-control">
+        <input type="text" name="url" id="url" class="form-control">
         <p class="help-block">Please enter the URL of the GenBank file in plain text (including http://).</p>
       </div>
 
@@ -85,35 +85,35 @@ sequence (maximum size is {{ max_file_size }} megabytes).
               Entrez</a> search engine and is therefore based on the current
             Entrez assembly for the given organism (GRCh38/hg38 for human).</p>
           <label for="genesymbol">Gene symbol</label>
-          <input type="text" name="genesymbol" class="form-control">
+          <input type="text" name="genesymbol" id="genesymbol" class="form-control">
         </div>
         <div class="form-group">
           <label for="organism">Organism name</label>
-          <input type="text" name="organism" class="form-control">
+          <input type="text" name="organism" id="organism" class="form-control">
         </div>
         <div class="form-group">
           <label for="upstream">Number of 5' flanking nucleotides</label>
-          <input type="text" name="upstream" value="5000" class="form-control">
+          <input type="text" name="upstream" id="upstream" value="5000" class="form-control">
         </div>
         <div class="form-group">
           <label for="downstream"><td>Number of 3' flanking nucleotides</label>
-          <input type="text" name="downstream" value="2000" class="form-control">
+          <input type="text" name="downstream" id="downstream" value="2000" class="form-control">
         </div>
       </div>
 
       <div id="slice_accession_label">
         <div class="form-group">
           <p class="help-block">Please enter the accession number of the chromosome or contig and specify the range.</p>
-          <label>Chromosome accession number</label>
-          <input type="text" name="accession" class="form-control">
+          <label for="accession">Chromosome accession number</label>
+          <input type="text" name="accession" id="accession" class="form-control">
         </div>
         <div class="form-group">
-          <label>Start position</label>
-          <input type="text" name="accession_start" class="form-control">
+          <label for="accession_start">Start position</label>
+          <input type="text" name="accession_start" id="accession_start" class="form-control">
         </div>
         <div class="form-group">
-          <label>Stop position</label>
-          <input type="text" name="accession_stop" class="form-control">
+          <label for="accession_stop">Stop position</label>
+          <input type="text" name="accession_stop" id="accession_stop" class="form-control">
         </div>
         <div class="form-group">
           <label>Orientation</label>
@@ -126,7 +126,7 @@ sequence (maximum size is {{ max_file_size }} megabytes).
         <div class="form-group">
           <p class="help-block">Please enter the name of the chromosome and specify the range.</p>
           <label for="assembly_name_or_alias">Assembly</label>
-          <select name="assembly_name_or_alias" class="form-control">
+          <select name="assembly_name_or_alias" id="assembly_name_or_alias" class="form-control">
             {% for assembly in assemblies %}
               <option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{assembly.alias }}){% endif %}</option>
             {% endfor %}
@@ -134,15 +134,15 @@ sequence (maximum size is {{ max_file_size }} megabytes).
         </div>
         <div class="form-group">
           <label for="chromosome">Chromosome name</label>
-          <input type="text" name="chromosome" class="form-control">
+          <input type="text" name="chromosome" id="chromosome" class="form-control">
         </div>
         <div class="form-group">
           <label for="chromosome_start">Start position</label>
-          <input type="text" name="chromosome_start" class="form-control">
+          <input type="text" name="chromosome_start" id="chromosome_start" class="form-control">
         </div>
         <div class="form-group">
           <label for="chromosome_stop">Stop position</label>
-          <input type="text" name="chromosome_stop" class="form-control">
+          <input type="text" name="chromosome_stop" id="chromosome_stop" class="form-control">
         </div>
         <div class="form-group">
           <label for="chromosome_orientation">Orientation</label>
