@@ -292,6 +292,7 @@ class File() :
             ret = []
             notthree = []
             emptyfield = []
+            toolong = []
             for line, job in jobl[1:]:
 
                 #Empty line
@@ -319,7 +320,10 @@ class File() :
                     inputl = "~!InputFields: " #start with the skip flag
                     inputl+= "|".join(job)
 
-                ret.append(inputl)
+                if len(inputl) > 200:
+                    toolong.append(line)
+                else:
+                    ret.append(inputl)
             #for
 
             #Create output Message for incompatible fields
@@ -335,7 +339,13 @@ class File() :
                         "The first and last column can't be left empty in "
                         "%i line(s): %s.\n" % (len(emptyfield), lines))
 
-            errlist = notthree + emptyfield
+            if any(toolong):
+                lines = makeList(toolong, 10)
+                self.__output.addMessage(__file__, 3, "EBPARSE",
+                        "Batch input field too long in %i line(s): %s.\n" %
+                        (len(toolong), lines))
+
+            errlist = notthree + emptyfield + toolong
         #if
 
         else:   #No Header, possibly a new BatchType
@@ -353,12 +363,23 @@ class File() :
                     "line(s): %s" %
                     (len(errlist), makeList(errlist)))
 
+            toolong = [line for line, row in jobl
+                       if any(len(col) > 200 for col in row)]
+            if any(toolong):
+                self.__output.addMessage(__file__, 3, "EBPARSE",
+                    "Batch input field too long in %i line(s): %s" %
+                    (len(toolong), makeList(toolong)))
+
             ret = []
             for line, job in jobl:
                 if not any(job):    #Empty line
                     ret.extend(['~!' for _ in range(columns)])
                     continue
-                if line in errlist:
+                if line in toolong:
+                    #Trim too long
+                    ret.append("~!InputFields: " + ('|'.join(job))[:180] + '...')
+                    ret.extend(['~!' for _ in range(columns - 1)])
+                elif line in errlist:
                     #Dirty Escape BatchEntries
                     ret.append("~!InputFields: " + '|'.join(job))
                     ret.extend(['~!' for _ in range(columns - 1)])
@@ -476,7 +497,7 @@ def makeList(l, maxlen=10):
     @return: a list converted to a string with comma's and spaces
     @rtype: unicode
     """
-    ret = ", ".join(i for i in l[:maxlen])
+    ret = ", ".join(str(i) for i in l[:maxlen])
     if len(l)>maxlen:
         return ret+", ..."
     else:

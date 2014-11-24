@@ -71,6 +71,23 @@ class TestScheduler(MutalyzerTest):
                      'OK']]
         self._batch_job_plain_text(variants, expected, 'syntax-checker')
 
+    def test_large_input(self):
+        """
+        Simple batch job with large input.
+        """
+        variants = ['chr13:g.114503915delCACCTGCGGGAGGTGAGGGGCGCTGGGGACCCCCG'
+                    'TATCTACACCTGCGGGAGGTGAGGGGCGCTGGGGACCCCTATATCTACACCTGAG'
+                    'GGAGGTGinsTGCCTGCGGGAGGTGAGGGGCGCTGGGGACCCCCGTATCTACACC'
+                    'TGCGGGAGGTGAGGGGCGCTGGGGACCCCTATATCTACACCTGAGGGAGGTG']
+
+        expected = [['InputFields: chr13:g.114503915delCACCTGCGGGAGGTGAGGGGC'
+                     'GCTGGGGACCCCCGTATCTACACCTGCGGGAGGTGAGGGGCGCTGGGGACCCCT'
+                     'ATATCTACACCTGAGGGAGGTGinsTGCCTGCGGGAGGTGAGGGGCGCTGGGGA'
+                     'CCCCCGTATCTACACCTGCGGGAGGTGAGGG...',
+                     '(Scheduler): Entry could not be formatted correctly, '
+                     'check batch input file help for details']]
+        self._batch_job_plain_text(variants, expected, 'syntax-checker')
+
     @fix(cache('AB026906.1', 'NM_000059.3'))
     def test_name_checker(self):
         """

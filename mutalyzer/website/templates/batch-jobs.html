@@ -15,13 +15,14 @@
 </p>
 
 <div id='help' style="display:none">
-  <p>The mutalyzer batch checker accepts the following file formats
+  <p>The mutalyzer batch checker accepts the following file formats:
     <ul>
         <li>Tab delimited text file / CSV file</li>
         <li>Microsoft Excel file</li>
         <li>OpenOffice ODS file</li>
     </ul>
-    and the maximum size is <span tal:content = "maxSize"></span> megabytes.
+    The maximum file size is {{ max_file_size }} megabytes, and the maximum
+    length per entry (variant description) is 200 characters.
     </p>
   <h5>We accept two types of input files, you can download examples below</h5>
   <h5>New Style <a href="{{ url_for('.downloads', filename='batchtestnew.txt') }}">Download Example File</a></h5>
