@@ -5,8 +5,8 @@
 Development
 ===========
 
-Development of Mutalyzer happens on GitLab:
-https://git.lumc.nl/mutalyzer/mutalyzer
+Development of Mutalyzer happens on GitHub:
+https://github.com/LUMC/mutalyzer
 
 
 Contributing
@@ -53,21 +53,23 @@ Working with feature branches
 
 New features are best implemented in their own branches, isolating the work
 from unrelated developments. In fact, it's good practice to *never work
-directly on the master branch* but always in a separate branch. For this
-reason, the master branch on the GitLab server is locked. Feature branches can
-be merged back into master via a *merge request* in GitLab.
+directly on the master branch* but always in a separate branch. When your work
+is ready, a feature branch can be merged back into master via a *pull request*
+in GitHub.
 
-Before starting work on your feature, create a branch for it::
+We assume you forked the Mutalyzer repository to your own namespace in GitHub
+and are working from this fork. Before starting work on your feature, create a
+branch for it::
 
     git checkout -b your-feature
 
-Commit changes on this branch. If you're happy with it, push to GitLab::
+Commit changes on this branch. If you're happy with it, push to GitHub::
 
     git push origin your-feature -u
 
-Now create a merge request to discuss the implementation with your
-colleagues. This might involve adding additional commits which are included in
-the merge request by pushing your branch again::
+Now create a pull request to discuss the implementation with the Mutalyzer
+maintainers. This might involve adding additional commits which are included
+in the pull request by pushing your branch again::
 
     git commit
     git push
@@ -79,7 +81,7 @@ changed since you started your work. This will require a forced push::
     git rebase origin/master
     git push -f
 
-If the work is done, a developer can merge your branch and close the merge
+If the work is done, a maintainer can merge your branch and close the pull
 request. After the branch was merged you can safely delete it::
 
     git branch -d your-feature
@@ -98,7 +100,7 @@ require X.Y.Z-dev instead of X.Y.Z.dev but `compatibility with setuptools
 is more important for us. Other than that, version semantics are as described
 by SemVer.
 
-Releases are available from the GitLab git repository as tags. Additionally,
+Releases are available from the GitHub git repository as tags. Additionally,
 the latest release is available from the `release` branch.
 
 .. note:: Older Mutalyzer version numbers took the form 2.0.beta-X where X was
@@ -127,11 +129,11 @@ Releasing a new version is done as follows:
        git commit -am 'Bump version to X.Y.Z'
        git tag -a 'vX.Y.Z'
 
-3. Push to the GitLab repository (assuming the remote name is `gitlab` and you
+3. Push to the GitHub repository (assuming the remote name is `github` and you
    are working on the `master` branch::
 
-       git push gitlab master
-       git push gitlab master:release --tags
+       git push github master
+       git push github master:release --tags
 
 4. Add a new entry at the top of the ``CHANGES`` file like this::
 
