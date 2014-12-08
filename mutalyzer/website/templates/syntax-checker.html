@@ -5,43 +5,53 @@
 
 {% block content %}
 
-<div style="border: 1px solid grey; background-color: aliceblue; padding: 20px;">
-  <div>
-  Please insert the mutation name using the
-  <span class = "helper" title =
-    "Human Genome Variation Society standard variant nomenclature">
-    <a href="http://www.hgvs.org/mutnomen">HGVS</a> format</span>:<br>
-    &lt;accession number&gt;.&lt;version
-    number&gt;(&lt;gene symbol&gt;):&lt;sequence
-    type&gt;.&lt;variant description&gt;
-  </div><br>
-  Example: AB026906.1:c.274G&gt;T<br>
-  <br>
-  <form action="{{ url_for('.syntax_checker') }}" method="get">
-    <input type="text" name="description" value="{{ description }}" style="width:100%"><br>
-    <input type="submit" value="Submit">
-    <input type="button" value="Clear field" onclick="clearField(this.form, 'description');">
-    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SyntaxChecker">Help</a>
-  </form>
-</div>
-<br>
+<p>
+Please insert the variant description using
+the <a href="http://www.hgvs.org/mutnomen" title="Human Genome Variation
+Society standard variant nomenclature" alt="Human Genome Variation Society
+standard variant nomenclature">HGVS</a> format:
+</p>
+
+<pre>&lt;accession number&gt;.&lt;version number&gt;(&lt;gene symbol&gt;):&lt;sequence type&gt;.&lt;variant description&gt;</pre>
+
+<form class="form" action="{{ url_for('.syntax_checker') }}" method="get">
+  <div class="form-group">
+    <label for="description">Variant description</label>
+    <input class="form-control form-pre example-target" type="text"
+           name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
+    <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
+  </div>
+  <div class="form-group button-group">
+    <input type="submit" class="btn btn-primary" value="Check syntax">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/SyntaxChecker" target="new" class="btn btn-default pull-right">Help</a>
+  </div>
+</form>
+
 {% if description %}
-  <h3>Variant syntax checker results:</h3>
+  <hr>
   {% if parse_error %}
-    <div class="messages">
-      {% for m in messages %}
-        <p class="{{ m.class }}" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
-      {% endfor %}
-      <p>{{ summary }}</p>
-      <br>
+    <div class="alert alert-danger">
+      <h4>Parse error</h4>
+      <pre>{{ parse_error[0] }}<br>{{ parse_error[1] }}</pre>
+      <p>The &quot;^&quot; indicates the position where the error occurred.</p>
     </div>
-    <h4>Details of the parse error:</h4>
-    <pre>{{- parse_error[0] }}<br>{{- parse_error[1] }}</pre>
-    <p>The &quot;^&quot; indicates the position where the error occurred.</p>
   {% else %}
-    <p>The syntax of this variant is OK!</p>
+    <p class="alert alert-success">The syntax of this variant description is OK!</p>
   {% endif %}
-  <br>
-{% endif %}
+
+  {% if messages %}
+    {% for m in messages %}
+      {% if m.class == "error" %}
+        <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% elif m.class == "warning" %}
+        <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% elif m.class == "information" %}
+        <p class="alert alert-info" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% elif m.class == "debug" %}
+        <p class="alert alert-info" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}{# description #}
 
 {% endblock content %}

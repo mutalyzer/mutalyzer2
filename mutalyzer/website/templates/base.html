@@ -1,382 +1,208 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <link rel="shortcut icon"
-      href="{{ url_for('static', filename='images/favicon.ico') }}"
-      type="image/x-icon">
-    <link rel="stylesheet"
-      type="text/css"
-      href="{{ url_for('static', filename='css/style.css') }}">
-    <script
-      type="text/javascript"
-      language="javascript"
-      src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}">
-    </script>
-    <script
-      type="text/javascript"
-      language="javascript"
-      src="{{ url_for('static', filename='js/interface.js') }}">
-    </script>
-    <script
-      type="text/javascript"
-      language="javascript"
-      src="{{ url_for('static', filename='js/generator.js') }}">
-    </script>
-    <meta http-equiv="Content-Type"
-      content="text/html; charset=utf-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/interface.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/generator.js') }}"></script>
+
+    <link href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic"
+          rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" >
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!--[if lt IE 9]>
+      <script src="{{ url_for('static', filename='js/html5shiv.min.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/respond.min.js') }}"></script>
+    <![endif]-->
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+
     <title>Mutalyzer {{ mutalyzer_version }} &mdash; {{ page_title }}</title>
   </head>
-  <body
-    style="background-image: url('{{ url_for('static', filename='images/background.gif') }}');
-           background-repeat: repeat-y;"
-    leftmargin="0"
-    topmargin="0"
-    marginwidth="0"
-    marginheight="0">
-    <!-- Header -->
-    <a id = "top" name = "top"></a>
 
-    <table width="98%"
-      border="0"
-      cellspacing="0"
-      cellpadding="0">
-      <tr>
-        <!-- Corner logo -->
-        <td rowspan="2"
-          valign="bottom"
-          width="180">
-          <a href="{{ url_for('website.homepage') }}"
-            target="_top"><img
-              src="{{ url_for('static', filename='images/mutalyzer_logo_bw.png') }}" width="180" height="112"
-              alt="Rauzy fractal" border="0" hspace="0" vspace="0"></a></td>
-        <td valign="top"
-          bgcolor="#FFFFFF"
-          width="20"><img
-            src="{{ url_for('static', filename='images/1x1b.gif') }}" height="1" width="20" border="0">
-        </td>
-        <td align="left"
-          valign="bottom"
-          bgcolor="White"
-          width="98%">
-          <!-- Banner -->
-          <center>
-            <a href="{{ url_for('website.homepage') }}"><img
-                src="{{ url_for('static', filename='images/mutalyzer_logo.png') }}"
-                width="90%"
-                height="90"
-                alt="Rauzy color fractal"
-                border="0"></a>
-          </center>
-        </td>
-      </tr>
+<body>
+{# Fields are: view, view_args, id, caption, beginsubnav, endsubnav #}
+    {% set navigation_menu = [
 
-      <tr>
-        <td>
-        </td>
-        <td>
-        <table width = "100%" style = "padding:0; border:0; margin:0">
-          <tr>
-            <td align="left">
-              <a href="javascript:history.back(-1);"
-                 class="hornav">previous page</a>&nbsp;&nbsp;&nbsp;
-            </td>
-            <td align="right">
-              <a href="{{ url_for('website.homepage') }}"
-                 class="hornav">home</a>&nbsp;&nbsp;&nbsp;
-              <a href="{{ url_for('website.about') }}"
-                 class="hornav">about</a>&nbsp;&nbsp;&nbsp;
-              <a href="mailto:{{ contact_email }}"
-                 class="hornav">contact</a>&nbsp;&nbsp;&nbsp;
-              <a href="#bottom" class="hornav">go to bottom</a>&nbsp;&nbsp;&nbsp;
-            </td>
-          </tr>
-        </table>
-        </td>
-      </tr>
+        ('website.name_checker', {}, 'dna-tools', 'DNA tools', True, False),
 
-      <tr>
-        <td colspan="3"
-          bgcolor="#000000"><img
-            src="{{ url_for('static', filename='images/1x1b.gif') }}"
-            height="1"
-            border="0"></td>
-      </tr>
-    </table>
+        ('website.name_checker', {}, 'name-checker', 'Name Checker', False, False),
+        ('website.syntax_checker', {}, 'syntax-checker', 'Syntax Checker', False, False),
+        ('website.position_converter', {}, 'position-converter', 'Position Converter', False, False),
+        ('website.snp_converter', {}, 'snp-converter', 'SNP Converter', False, False),
+        ('website.name_generator', {}, 'name-generator', 'Name Generator', False, False),
+        ('website.description_extractor', {}, 'description-extractor', 'Description Extractor', False, False),
+        ('website.reference_loader', {}, 'reference-loader', 'Reference File Loader', False, True),
 
-    <table width="98%"
-      border="0"
-      cellspacing="0"
-      cellpadding="0">
-    <tr>
-      <td width="180" valign="top">
+        ('website.batch_jobs', {}, 'batch-jobs', 'Batch Jobs', True, False),
+        ('website.batch_jobs', {'job_type': 'name-checker'}, 'batch-name-checker', 'Name Checker', False, False),
+        ('website.batch_jobs', {'job_type': 'syntax-checker'}, 'batch-syntax-checker', 'Syntax Checker', False, False),
+        ('website.batch_jobs', {'job_type': 'position-converter'}, 'batch-position-converter', 'Position Converter', False, False),
+        ('website.batch_jobs', {'job_type': 'snp-converter'}, 'batch-snp-converter', 'SNP Converter', False, True),
 
-      <table id="menu" width="180" border="0" cellspacing="0" cellpadding="0">
-      <tr>
-        <td valign="top" width="20">
-          <img src="{{ url_for('static', filename='images/1x1b.gif') }}" height="19" border="0">
-        </td>
-      </tr>
+        ('website.webservices', {}, 'webservices', 'Web Services', False, False),
 
-{# Fields are: view, view_args, id, caption, subnav #}
-{% set navigation_menu = [
-    ('website.homepage', {}, 'homepage', 'Home', False),
-    ('website.name_checker', {}, 'name-checker', 'Name Checker', False),
-    ('website.syntax_checker', {}, 'syntax-checker', 'Syntax Checker', False),
-    ('website.position_converter', {}, 'position-converter', 'Position Converter', False),
-    ('website.snp_converter', {}, 'snp-converter', 'SNP Converter', False),
-    ('website.name_generator', {}, 'name-generator', 'Name Generator', False),
-    ('website.description_extractor', {}, 'description-extractor', 'Description Extractor', False),
-    ('website.reference_loader', {}, 'reference-loader', 'Reference File Loader', False),
-    ('website.batch_jobs', {}, 'batch-jobs', 'Batch Jobs', False),
-    ('website.batch_jobs', {'job_type': 'name-checker'}, 'batch-name-checker', 'Name Checker', True),
-    ('website.batch_jobs', {'job_type': 'syntax-checker'}, 'batch-syntax-checker', 'Syntax Checker', True),
-    ('website.batch_jobs', {'job_type': 'position-converter'}, 'batch-position-converter', 'Position Converter', True),
-    ('website.batch_jobs', {'job_type': 'snp-converter'}, 'batch-snp-converter', 'SNP Converter', True),
-    ('website.webservices', {}, 'webservices', 'Web Services', False)
-] -%}
-{% set active_page = active_page|default('home') -%}
+    ] -%}
+    {% set active_page = active_page|default('home') -%}
 
-{% for view, view_args, id, caption, subnav in navigation_menu %}
-  <tr class="menu{% if id == active_page %} active{% endif %}">
-    {% if subnav %}
-      <td></td>
-      <td valign="baseline" width="10" class="bullet sub"></td>
-      <td colspan="2">
-        <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a>
-      </td>
-    {% else %}
-      <td valign="top" width="20" class="bullet"></td>
-      <td colspan="3">
-        <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a>
-      </td>
-    {% endif %}
-  </tr>
-{% endfor %}
 
-      <tr><td>&nbsp;</td></tr>
 
-      <tr class="menu">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation">Documentation</a>
-        </td>
-      </tr>
+        <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+          <div class="background"></div>
+        <div class="container-fluid">
 
-      <tr class="menu">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq">FAQ</a>
-        </td>
-      </tr>
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#mutalyzer-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">LUMC Mutalyzer</a>
+        </div>
 
-      <tr class="menu">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise">Exercise</a>
-        </td>
-      </tr>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="mutalyzer-navbar-collapse-1">
+          <ul class="nav navbar-nav">
 
-      <tr class="menu">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDisclaimer">Disclaimer</a>
-        </td>
-      </tr>
+            {% for view, view_args, id, caption, beginsubnav, endsubnav in navigation_menu %}
+                {% if beginsubnav %}
+                    <li class="dropdown">
+                        <a href="{{ url_for(view, **view_args) }}" class="dropdown-toggle{% if id == active_page %} active{% endif %}" data-toggle="dropdown">{{ caption }} <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                {% elif endsubnav %}
+                    <li {% if id == active_page %} class="active"{% endif %}>
+                    <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a></ul></li>
+                {% else %}
+                    <li {% if id == active_page %} class="active"{% endif %}>
+                        <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a>
+                    </li>
+                {% endif %}
 
-      <tr class="menu">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="https://humgenprojects.lumc.nl/trac/mutalyzer">Feedback</a>
-        </td>
-      </tr>
+            {% endfor %}
 
-      <tr class="menu">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          <a href="https://git.lumc.nl/mutalyzer/mutalyzer">Source code</a>
-        </td>
-      </tr>
+            <li class="dropdown {% if id == active_page %} active{% endif %}">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">External links <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.genenames.org/guidelines.html"
+                target="new">Human Gene Nomenclature</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.hgvs.org/mutnomen/"
+                target="new">HGVS Variation Nomenclature</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://dx.doi.org/10.1002/humu.21427"
+                target="new">HGVS Nomenclature Extension Proposal</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.lovd.nl/"target="new">LOVD</a></li>
+              </ul>
+            </li>
 
-      <tr><td>&nbsp;</td></tr>
+            <li class="{% if active_page == 'about' %} active{% endif %}">
+                <a href="/about" >About</a>
+            </li>
+            <li class="dropdown {% if id == active_page %} active{% endif %}">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <span class="caret"></span></a>
+                <ul class="dropdown-menu">
 
-      <tr class="menu inactive">
-        <td valign="top" width="20" class="bullet"></td>
-        <td colspan="3">
-          External Links
-        </td>
-      </tr>
+                    <li>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation" target="new">Documentation</a>
+                    </li>
+                    <li>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq" target="new">FAQ</a>
+                    </li>
+                    <li>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise" target="new">Exercise</a>
+                    </li>
+                    <li>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer" target="new">Feedback</a>
+                    </li>
+                    <li>
+                        <a href="https://git.lumc.nl/mutalyzer/mutalyzer" target="new">Source code</a>
+                    </li>
+                </ul>
+            </li>
 
-      <tr class="menu">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="http://www.genenames.org/guidelines.html"
-           >Human Gene Nomenclature</a>
-        </td>
-      </tr>
+            <li>
+                <a href="mailto:mutalyzer@humgen.nl" target="new">Contact</a>
+            </li>
 
-      <tr class="menu">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="http://www.hgvs.org/mutnomen/"
-           >HGVS Variation Nomenclature</a>
-        </td>
-      </tr>
+        </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
 
-      <tr class="menu">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="http://dx.doi.org/10.1002/humu.21427"
-           >HGVS Nomenclature Extension Proposal</a>
-        </td>
-      </tr>
 
-      <tr class="menu">
-        <td></td>
-        <td valign="baseline" width="10" class="bullet sub"></td>
-        <td colspan="2">
-          <a href="http://www.lovd.nl/">LOVD</a>
-        </td>
-      </tr>
 
-      <tr>
-        <td width="20"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          height="10"
-          width="20"
-          border="0">
-        </td>
-        <td width="12"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          height="10"
-          width="10"
-          border="0">
-        </td>
-        <td valign="top" width="12"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          height="10"
-          width="10"
-          border="0">
-        </td>
-        <td valign="top" width="136"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          height="10"
-          width="136"
-          border="0">
-        </td>
-      </tr>
-      </table>
 
-    </td>
-    <td width="20"><img
-      src="{{ url_for('static', filename='images/1x1b.gif') }}"
-      height="1"
-      width="20"
-      border="0">
-    </td>
-    <td width="98%" valign="top"><br>
 
-    <!-- Content -->
 
-    <table cellpadding="0" cellspacing="0" width="100%" border="0">
-    <tbody><tr>
-    <td width="0"></td>
-    <td width="0">
+<div class="container-fluid" >
 
-    {% if announcement %}
-      <p><b>Announcement:</b> {% if announcement.url %}<a href="{{ announcement.url }}">{% endif %}{{ announcement.body }}{% if announcement.url %}</a>{% endif %}</p>
-    {% endif %}
+        <div class="row">
+            <div class="col-md-12">
+                {% if announcement%}
+                <div id="announcement" class="alert alert-info">
+                    <p><strong>Announcement:</strong> {% if announcement.url %}<a href="{{ announcement.url }}">{% endif %}{{ announcement.body }}{% if announcement.url %}</a>{% endif %}</p>
+                </div>
+                {% endif %}
 
-    <center>
-      <h2>Mutalyzer {{ mutalyzer_version }}<br>
-        <small><small><small><small>
-        {% if release %}
-          released on {{ release_date }}
-        {% else %}
-          development version
-        {% endif %}
-        </small></small></small></small>
-      </h2>
-      HGVS nomenclature version
-      <span>{{ nomenclature_version }}</span>
-    </center>
-    <p>
+                <!-- Main content -->
+                <div class="block block-shadow">
+                {% if page_title %}<h1>{{ page_title }}</h1>{% endif %}
+                {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
 
-    <h3><center>{{ page_title }}</center></h3>
 
-    {% block content %}{% endblock %}
 
-      <!-- Navigation bar -->
-      <table border="0"
-        cellspacing="0"
-        cellpadding="0"
-          width="100%"
-        align="center">
-      <tr>
-        <td colspan="2"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          width="1"
-          height="20"
-          border="0">
-        </td>
-      </tr>
-      <tr>
-        <td bgcolor="#000000" colspan="3"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          width="100%"
-          height="1"
-          border="0"></td>
-      </tr>
-      <tr>
-        <td align="left">
-          &nbsp;<a href="javascript:history.back(-1);"
-             class="hornav">previous page</a>
-        </td>
-        <td align="middle">
-          <img src = "{{ url_for('static', filename='images/LUMC_24x24.png') }}" align = "middle">
-          &nbsp; &copy; {{ copyright_years[0] }}-{{ copyright_years[1] }}
-          <a href = "http://www.lumc.nl">LUMC</a>
-          &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-          &nbsp; &nbsp;
-        </td>
-        <td align="right">
-          <a href="#top" class="hornav">go to top</a>&nbsp;&nbsp;&nbsp;&nbsp;
-        </td>
-      </tr>
-      <tr>
-  <!--
-        <td colspan="2"
-          align="center">Last edited by:  with /usr/bin/vim
-        </td>
-  -->
-      </tr>
-      <tr>
-        <td colspan="2"><img
-          src="{{ url_for('static', filename='images/1x1b.gif') }}"
-          width="1"
-          height="10"
-          border="0">
-        </td>
-      </tr>
-      </table>
-    </td>
-  </tr>
-  </table>
-  <a id = "bottom" name = "bottom"></a>
+    <footer class="row">
+        <div class="col-md-4">
+            <p>
+              <strong>Mutalyzer {{ mutalyzer_version }}</strong>
+              <br>
+              <span class="text-muted">
+                {% if release %}
+                  released on {{ release_date }}
+                {% else %}
+                  development version
+                {% endif %}
+              </span>
+            </p>
+        </div>
+        <div class="col-md-4">
+            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}</p>
+        </div>
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename='images/LUMC_24x24.png') }}" align="middle">
+            <p>&copy; 2009-2014 <a href="http://www.lumc.nl" target="new">LUMC</a></p>
+        </div>
+    </footer>
+
+</div>
 {% if piwik %}
 <!-- Piwik -->
 <script type="text/javascript">
-var pkBaseURL = "{{ piwik_base_url }}/";
-document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
-</script><script type="text/javascript">
-try {
-var piwikTracker = Piwik.getTracker(pkBaseURL + "piwik.php", {{ piwik_site_id }});
-piwikTracker.trackPageView();
-piwikTracker.enableLinkTracking();
-} catch( err ) {}
-</script><noscript><p><img src="{{ piwik_base_url }}/piwik.php?idsite={{ piwik_site_id }}" style="border:0" alt="" /></p></noscript>
-<!-- End Piwik Tracking Code -->
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="{{ piwik_base_url }}/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', {{ piwik_site_id }}]);
+    var d=document, g=d.createElement('script'),
+  s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js';
+  s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img src="{{ piwik_base_url }}/piwik.php?idsite={{ piwik_site_id }}"
+                  style="border:0;" alt="" /></p></noscript>
+<!-- End Piwik Code -->
 {% endif %}
-  </body>
+</body>
 </html>

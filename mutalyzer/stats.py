@@ -48,3 +48,19 @@ def increment_counter(counter):
         pipe.expire(key, expire)
 
     pipe.execute()
+
+
+def get_totals():
+    """
+    Get the total for all known counters.
+
+    Known counters are just those that have been incremented at least once.
+    """
+    counters = client.keys('counter:*:total')
+
+    pipe = client.pipeline(transaction=False)
+    for counter in counters:
+        pipe.get(counter)
+
+    return {counter.split(':')[1]: int(value)
+            for counter, value in zip(counters, pipe.execute())}

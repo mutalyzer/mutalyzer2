@@ -28,7 +28,8 @@ function updateVisibility() {
 
 //Toggle the build option in the batch.html page
 function changeBatch(sel) {
-    var opt = sel.options[sel.selectedIndex].value;
+	var opt = $(sel).val();
+    // var opt = sel.options[sel.selectedIndex].value;
     if(opt=='position-converter') {
         document.getElementById('assembly_name_or_alias').style.display = "";
     } else {
@@ -46,7 +47,7 @@ function toggle_visibility(id) {
 }
 
 function onloadBatch() {
-    changeBatch(document.getElementById('job_type'));
+    changeBatch($('input[name="job_type"]:checked'));
 }
 
 function clearField(form, fieldName) {
@@ -56,3 +57,12 @@ function clearField(form, fieldName) {
         }
     }
 }
+
+$(document).ready(function() {
+    $('.example-input').on('click', function() {
+        $('.example-target').val($(this).text());
+    });
+    $('.example-input-2').on('click', function() {
+        $('.example-target-2').val($(this).text());
+    });
+})

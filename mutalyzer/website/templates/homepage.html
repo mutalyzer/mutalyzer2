@@ -12,65 +12,121 @@ nomenclature according to the
 <a href="http://www.hgvs.org">Human Genome Variation Society</a>.
 </p>
 
-<p>
-Different interfaces are provided to collect the information necessary
-for the checks:
-</p>
+<div class="row">
+    <div class="col-md-12">
+        <div class="thumbnail thumb-home thumb-large">
+            <div class="caption">
+                <h3>Name Checker</h3>
+                <p>The Name Checker takes the complete sequence variant description as input and checks whether it is correct.</p>
+                <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
+
+                <!-- <a href="{{ url_for('.name_checker') }}" class="btn btn-default btn-small btn-primary">Try
+                this</a> -->
+
+                <form class="form" action="{{ url_for('.name_checker') }}" method="get">
+                    <div class="input-group">
+                        <input class="form-control form-control-small form-pre example-target" type="text" name="description" value="{{ description }}" placeholder="Variant description using HGVS format">
+                        <span class="input-group-btn">
+                            <input type="submit" class="btn btn-primary pull-right" value="Check variant description">
+                        </span>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-1">
+            <div class="caption">
+                <h3><a href="{{ url_for('.syntax_checker') }}">Syntax Checker</a></h3>
+                <p>Takes the complete sequence variant description as input and checks whether the syntax is correct.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-2">
+            <div class="caption">
+                <h3><a href="{{ url_for('.position_converter') }}">Position Converter</a></h3>
+                <p>Converts chromosomal positions to transcript orientated positions and vice versa.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-3">
+            <div class="caption">
+                <h3><a href="{{ url_for('.snp_converter') }}">SNP Converter</a></h3>
+                <p>Allows you to convert a dbSNP rsId to HGVS notation.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-4">
+            <div class="caption">
+                <h3><a href="{{ url_for('.name_generator') }}">Name Generator</a></h3>
+                <p>A user friendly interface that helps to make a valid HGVS variant description.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-5">
+            <div class="caption">
+                <h3><a href="{{ url_for('.description_extractor') }}">Description Extractor</a></h3>
+                <p>Allows you to generate the HGVS variant description from a reference sequence and an observed sequence.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-6">
+            <div class="caption">
+                <h3><a href="{{ url_for('.reference_loader') }}">Reference File Loader</a></h3>
+                <p>Allows you to load and use your own reference sequence.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-7">
+            <div class="caption">
+                <h3><a href="{{ url_for('.batch_jobs') }}">Batch Checkers</a></h3>
+                <p>Interfaces accepting a list of inputs that can be used for large quantities of checks.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="thumbnail thumb-home clickbox color-8">
+            <div class="caption">
+                <h3><a href="{{ url_for('.webservices') }}">Web Services</a></h3>
+                <p>Provides instructions for the web services.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--
 <ul>
-  <li>
-    The <a href="{{ url_for('.name_checker') }}">Name Checker</a> takes the complete sequence
-    variant description as input and checks whether it is correct.
-  </li>
-  <li>
-    The <a href="{{ url_for('.syntax_checker') }}">Syntax Checker</a> takes the complete
-    sequence variant description as input and checks whether the syntax
-    is correct.
-  </li>
-  <li>
-    The <a href="{{ url_for('.position_converter') }}">Position Converter</a> can convert
-    chromosomal positions to transcript orientated positions and vice
-    versa.
-  </li>
-  <li>
-    The <a href="{{ url_for('.snp_converter') }}">SNP converter</a> allows you to convert a
-    dbSNP rsId to HGVS notation.
-  </li>
-  <li>
-    The <a href="{{ url_for('.name_generator') }}">Name Generator</a> is a user friendly
-    interface that helps to make a valid HGVS variant description.
-  </li>
-  <li>
-    The <a href="{{ url_for('.description_extractor') }}">Description Extractor</a> allows
-    you to generate the HGVS variant description from a reference
-    sequence and an observed sequence.
-  </li>
-  <li>
-    The <a href="{{ url_for('.reference_loader') }}">Reference File Loader</a> allows you to load and
-    use your own reference sequence.
-  </li>
-  <li>
-    The <a href="{{ url_for('.batch_jobs') }}">Batch Checkers</a> are interfaces that accept a
-    list of inputs. These interfaces can be used for large quantities of
-    checks.
-  </li>
-  <li>
-    The <a href="{{ url_for('.webservices') }}">Web services</a> page provides instructions
-    for the web services.
-  </li>
-</ul>
+
+
+</ul> -->
 
 <p>
-GenBank sequences are retrieved from the
-<a href="http://www.ncbi.nlm.nih.gov/">NCBI</a>
-(<a href="http://eutils.ncbi.nlm.nih.gov/About/disclaimer.html"
->Copyright and Disclaimers</a>).
+GenBank sequences are retrieved from the <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a> (<a href="http://eutils.ncbi.nlm.nih.gov/About/disclaimer.html" >Copyright and Disclaimers</a>).
 </p>
 
 <p>
-This project is sponsored by
-<a href = "http://www.sun.com">SUN Microsystems</a> with server
-hardware within the scope of the Academic Excellence Grant (AEG)
-program (award EDUD-7832-080223-CNE).
+This project is sponsored by <a href = "http://www.sun.com">SUN Microsystems</a> with server hardware within the scope of the Academic Excellence Grant (AEG) program (award EDUD-7832-080223-CNE).
 </p>
+
+<script>
+    $(".clickbox").click(function(){
+         window.location=$(this).find("a").attr("href");
+         return false;
+    });
+</script>
 
 {% endblock content %}
