@@ -8,6 +8,14 @@ body{
 	-webkit-font-smoothing: antialiased;
 }
 
+.container-fluid .row a {
+  text-decoration: underline;
+}
+
+.container-fluid .row a.btn {
+  text-decoration: none;
+}
+
 .block {
 	background: white;
 	max-width: 1024px;
@@ -124,8 +132,10 @@ input[type="text"].form-pre{
 }
 
 code {
-	color: #0B9B33;
-	background-color: #F2F9F3;
+/*	color: #0B9B33;
+	background-color: #F2F9F3;*/
+	color: #333;
+	background-color: inherit;
 	white-space: normal;
 }
 
@@ -353,6 +363,7 @@ header.main-header {
 
 .example-input, .example-input-2 {
 	cursor: pointer;
+	color: #0B9B33;
 }
 
 .example-input:hover, .example-input-2:hover {
