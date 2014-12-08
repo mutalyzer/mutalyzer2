@@ -16,6 +16,11 @@ body{
   text-decoration: none;
 }
 
+.container-fluid .clickbox h3 a {
+  text-decoration: none;
+  color: inherit;
+}
+
 .block {
 	background: white;
 	max-width: 1024px;
@@ -217,7 +222,7 @@ header.main-header {
 
 .thumb-home {
 	background-color: #ebebeb;
-	height: 240px;
+	height: 180px;
 }
 
 .thumb-home > .caption > h3 {
@@ -226,7 +231,7 @@ header.main-header {
 
 @media (min-height: 850px) and (min-width: 992px) {
 	.thumb-home {
-		height: 245px;
+		height: 185px;
 		margin-bottom: 30px;
 	}
 
