@@ -61,8 +61,10 @@ function clearField(form, fieldName) {
 $(document).ready(function() {
     $('.example-input').on('click', function() {
         $('.example-target').val($(this).text());
+        return false;
     });
     $('.example-input-2').on('click', function() {
         $('.example-target-2').val($(this).text());
+        return false;
     });
 })

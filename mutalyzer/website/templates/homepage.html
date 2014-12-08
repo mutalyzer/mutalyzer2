@@ -14,9 +14,9 @@ nomenclature according to the
 
 <div class="row">
     <div class="col-md-12">
-        <div class="thumbnail thumb-home thumb-large">
+        <div class="thumbnail clickbox thumb-home thumb-large">
             <div class="caption">
-                <h3>Name Checker</h3>
+                <h3><a href="{{ url_for('.name_checker') }}">Name Checker</a></h3>
                 <p>The Name Checker takes the complete sequence variant description as input and checks whether it is correct.</p>
                 <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
 
@@ -126,6 +126,9 @@ This project is sponsored by <a href = "http://www.sun.com">SUN Microsystems</a>
     $(".clickbox").click(function(){
          window.location=$(this).find("a").attr("href");
          return false;
+    });
+    $(".clickbox input").click(function(e){
+         e.stopPropagation();
     });
 </script>
 

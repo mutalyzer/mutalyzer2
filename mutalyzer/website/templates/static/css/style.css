@@ -225,6 +225,12 @@ header.main-header {
 	height: 180px;
 }
 
+.thumb-home:hover {
+	background-color: rgba(191, 191, 191, .6);
+	border-color: rgba(191, 191, 191, 1);
+}
+
+
 .thumb-home > .caption > h3 {
 	margin-top: auto;
 }
