@@ -12,9 +12,9 @@ User documentation can be found on the `wiki
 <https://humgenprojects.lumc.nl/trac/mutalyzer>`_. From there, you can also
 submit bug reports and feature requests.
 
-Developer documentation can be found in the ``doc/`` subdirectory and can be
-compiled to HTML by running ``make html`` from there. This requires `Sphinx`_
-to be installed.
+Developer documentation is `hosted at Read The Docs
+<http://mutalyzer.readthedocs.org>`_. Contributions to Mutalyzer are welcome
+as `GitHub pull requests <https://github.com/LUMC/mutalyzer/pulls>`_.
 
 
 Copyright

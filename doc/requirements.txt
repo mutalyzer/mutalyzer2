@@ -1,0 +1,12 @@
+Sphinx
+alembic
+biopython
+flask
+mock
+pyparsing
+redis
+sqlalchemy
+sphinx-rtd-theme
+spyne
+suds
+xlrd
