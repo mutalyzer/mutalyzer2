@@ -14,7 +14,7 @@ Managing Mutalyzer
 Information for getting Mutalyzer running on a system.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    download
    install
@@ -31,7 +31,7 @@ Development
 General information for Mutalyzer developers.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    issues
    contributing
@@ -45,7 +45,7 @@ Technical reference
 Application design notes and API reference.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    design
    strings
@@ -57,7 +57,7 @@ Additional notes
 ----------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    changelog
    copyright
