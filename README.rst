@@ -13,8 +13,18 @@ User documentation can be found on the `wiki
 submit bug reports and feature requests.
 
 Developer documentation is `hosted at Read The Docs
-<http://mutalyzer.readthedocs.org>`_. Contributions to Mutalyzer are welcome
-as `GitHub pull requests <https://github.com/LUMC/mutalyzer/pulls>`_.
+<http://mutalyzer.readthedocs.org>`_.
+
+
+Contributing
+------------
+
+Contributions to Mutalyzer are very welcome! They can be feature requests, bug
+reports, bug fixes, unit tests, documentation updates, or anything els you may
+come up with.
+
+Please refer to the documentation for `more information on contributions
+<http://mutalyzer.readthedocs.org/en/latest/contributing.html>`_.
 
 
 Copyright
