@@ -25,15 +25,31 @@ Information for getting Mutalyzer running on a system.
    deploy
 
 
+Development
+-----------
+
+General information for Mutalyzer developers.
+
+.. toctree::
+   :maxdepth: 2
+
+   issues
+   contributing
+   testing
+   release
+
+
 Technical reference
 -------------------
 
-Application design and complete API reference.
+Application design notes and API reference.
 
 .. toctree::
    :maxdepth: 2
 
    design
+   strings
+   new-organism
    api
 
 
@@ -43,10 +59,6 @@ Additional notes
 .. toctree::
    :maxdepth: 2
 
-   development
-   issues
-   new-organism
-   strings
    changelog
    copyright
 
