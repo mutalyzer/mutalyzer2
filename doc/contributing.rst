@@ -50,7 +50,8 @@ Before starting your work, fork the Mutalyzer repository to your own namespace
 in GitHub and work from this fork. Before starting work on your feature,
 create a branch for it::
 
-    git clone https://github.com/<you>/mutalyzer.git && cd mutalyzer
+    git clone https://github.com/<you>/mutalyzer.git
+    cd mutalyzer
     git checkout -b your-feature
 
 Commit changes on this branch. If you're happy with it, push to GitHub::
