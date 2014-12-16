@@ -4,10 +4,26 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.5
+Version 2.0.6
 -------------
 
 Release date to be decided.
+
+
+Version 2.0.5
+-------------
+
+Released on December 16th 2014.
+
+- New website layout by `Landscape <http://wearelandscape.nl/>`_ (`GitLab!26
+  <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/26>`_).
+- Source code moved from `GitLab <https://git.lumc.nl/mutalyzer/mutalyzer>`_
+  to `GitHub <https://github.com/LUMC/mutalyzer>`_.
+- Automated unit tests `on Travis CI <https://travis-ci.org/LUMC/mutalyzer>`_
+  (`GitHub#16 <https://github.com/LUMC/mutalyzer/pull/16>`_).
+- Developer documentation `hosted on Read the Docs
+  <http://mutalyzer.readthedocs.org/en/latest/>`_ (`GitHub#17
+  <https://github.com/LUMC/mutalyzer/pull/18>`_).
 
 
 Version 2.0.4
