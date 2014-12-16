@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.5
 -------------
 
-Release date to be decided.
+Released on December 16th 2014.
 
 - New website layout by `Landscape <http://wearelandscape.nl/>`_ (`GitLab!26
   <https://git.lumc.nl/mutalyzer/mutalyzer/merge_requests/26>`_).
