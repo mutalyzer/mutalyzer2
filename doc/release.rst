@@ -29,7 +29,7 @@ the latest release is available from the `release` branch.
 Release procedure
 -----------------
 
-Releasing a new version is done as follows. This assumes remote `origin` is
+Releasing a new version is done as follows. This assumes remote `github` is
 the upstream Mutalyzer repository and you have push rights there.
 
 1. Start a release branch and make sure the section in the ``CHANGES.rst``
@@ -51,7 +51,7 @@ the upstream Mutalyzer repository and you have push rights there.
    Commit and tag the version update::
 
        git commit -am 'Bump version to X.Y.Z'
-       git tag -a 'vX.Y.Z' release-X.Y.Z^
+       git tag -a 'vX.Y.Z'
 
 3. Add a new entry at the top of the ``CHANGES.rst`` file like this::
 
@@ -67,7 +67,7 @@ the upstream Mutalyzer repository and you have push rights there.
 
 4. Push these commits to GitHub::
 
-       git push origin release-X.Y.Z -u
+       git push github release-X.Y.Z -u
 
    And submit a pull request for this branch.
 
@@ -77,8 +77,12 @@ the upstream Mutalyzer repository and you have push rights there.
 
    ::
 
-       git push origin vX.Y.Z:release --tags
+       git push github +vX.Y.Z~0:refs/heads/release --tags
        git branch -d release-X.Y.Z
+
+   That last push command might seem a bit cryptic (`it is explained here
+   <http://stackoverflow.com/a/4061542>`_). It sets the remote branch
+   `release` to whatever the tag `vX.Y.Z` points to and also pushes all tags.
 
 
 .. _SemVer: http://semver.org/
