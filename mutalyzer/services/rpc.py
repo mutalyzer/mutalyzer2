@@ -949,6 +949,10 @@ class MutalyzerService(ServiceBase):
         retriever = Retriever.GenBankRetriever(O)
         record = retriever.loadrecord(genomicReference)
 
+        if record is None:
+            raise Fault("EARG",
+                        "Unknown reference file: %s" % genomicReference)
+
         # Todo: If loadRecord failed (e.g. DTD missing), we should abort here.
         GenRecordInstance = GenRecord.GenRecord(O)
         GenRecordInstance.record = record
