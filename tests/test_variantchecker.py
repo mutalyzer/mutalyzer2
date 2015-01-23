@@ -1062,7 +1062,7 @@ class TestVariantchecker(MutalyzerTest):
         check_variant(ud + ':g.5T>T', self.output)
         error_count, _, _ = self.output.Summary()
         assert error_count == 0
-        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000023.10:g.='
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000023.11:g.='
         assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.='
         assert ud + '(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
