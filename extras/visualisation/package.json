@@ -1,0 +1,31 @@
+{
+  "name": "Mutalyzer Visualisation",
+  "version": "1.0.0",
+  "homepage": "http://www.wearelandscape.nl",
+  "license": "Copyright 2015 Landscape",
+  "author": "Landscape",
+  "description": "A visualisation of the output of the Mutalyzer algorithm",
+  "contributors": [
+    {
+      "name": "Erwin Haas",
+      "email": "erwin@wearelandscape.nl"
+    },
+    {
+      "name": "Jacob Boon",
+      "email": "jacob@wearelandscape.nl"
+    }
+  ],
+  "private": true,
+  "dependencies": {
+    "express": "3.2.4",
+    "consolidate": "0.9.1",
+    "handlebars": "1.0.12"
+  },
+  "devDependencies": {
+    "mimosa-combine":"0.8.2",
+    "mimosa-requirebuild-textplugin-include":"0.5.0",
+    "mimosa-web-package":"0.12.1",
+    "mimosa-bower":"0.9.0",
+    "mimosa-requirebuild-include":"0.0.4"
+  }
+}

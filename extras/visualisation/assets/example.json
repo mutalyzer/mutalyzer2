@@ -1,0 +1,139 @@
+{
+    "allele_description": [
+        {
+            "DNA": true,
+            "deleted": "",
+            "end": 0,
+            "endAA": "",
+            "end_offset": 0,
+            "hgvs": "109del",
+            "hgvsLength": 4,
+            "inserted": null,
+            "sample_end": 108,
+            "sample_end_offset": 0,
+            "sample_start": 108,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 109,
+            "startAA": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "del"
+        },
+        {
+            "DNA": true,
+            "deleted": "",
+            "end": 0,
+            "endAA": "",
+            "end_offset": 0,
+            "hgvs": "159del",
+            "hgvsLength": 4,
+            "inserted": null,
+            "sample_end": 157,
+            "sample_end_offset": 0,
+            "sample_start": 157,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 159,
+            "startAA": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "del"
+        },
+        {
+            "DNA": true,
+            "deleted": "",
+            "end": 251,
+            "endAA": "",
+            "end_offset": 0,
+            "hgvs": "241_251dup",
+            "hgvsLength": 6,
+            "inserted": null,
+            "sample_end": 260,
+            "sample_end_offset": 0,
+            "sample_start": 249,
+            "sample_start_offset": 0,
+            "shift": 13,
+            "start": 241,
+            "startAA": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "dup"
+        },
+        {
+            "DNA": true,
+            "deleted": "",
+            "end": 319,
+            "endAA": "",
+            "end_offset": 0,
+            "hgvs": "299_319inv",
+            "hgvsLength": 6,
+            "inserted": null,
+            "sample_end": 328,
+            "sample_end_offset": 0,
+            "sample_start": 307,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 299,
+            "startAA": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "inv"
+        },
+        {
+            "DNA": true,
+            "deleted": "",
+            "end": 400,
+            "endAA": "",
+            "end_offset": 0,
+            "hgvs": "399_400insTGTATTATGG",
+            "hgvsLength": 16,
+            "inserted": {
+                "seq_list": [
+                    "TGTATTATGG"
+                ]
+            },
+            "sample_end": 418,
+            "sample_end_offset": 0,
+            "sample_start": 408,
+            "sample_start_offset": 0,
+            "shift": 1,
+            "start": 399,
+            "startAA": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "ins"
+        },
+        {
+            "DNA": true,
+            "deleted": "",
+            "end": 450,
+            "endAA": "",
+            "end_offset": 0,
+            "hgvs": "449_450ins11_33",
+            "hgvsLength": 11,
+            "inserted": {
+                "seq_list": [
+                    {
+                        "end": 33,
+                        "reverse": false,
+                        "sequence": "",
+                        "start": 11
+                    }
+                ]
+            },
+            "sample_end": 33,
+            "sample_end_offset": 0,
+            "sample_start": 10,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 449,
+            "startAA": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "ins"
+        }
+    ],
+    "reference_sequence": "AGTCTCCAGCATCCTCCACCTGTCTACCACCGAGCATGGGCCTATATTTGAAGCCTTAGATCTCTCCAGCACAGTAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTACTGTGTGTAGCCTTACTGTTCTTCGCTCCAGATGGCGTGTTAGCAGTCCCTCAGAAACCTAAGGTCTCCTTGAACCCTCCATGGAATAGAATATTTAAAGGAGAGAATGTGACTCTTACATGTAATGGGAACAATTTCTTTGAAGTCAGTTCCACCAAATGGTTCCACAATGGCAGCCTTTCAGAAGAGACAAATTCAAGTTTGAATATTGTGAATGCCAAATTTGAAGACAGTGGAGAATACAAATGTCAGCACCAACAAGTTAATGAGAGTGAACCTGTGTACCTGGAAGTCTTCAGTGACTGGCTGCTCCTTCAGGCCTCTGCTGAGGTGGTGATGGAGGGCCAGCCCCTCTTCCTCAGGTGCCATGGTTGGAGGAACTGGGATGTGTACAAGGTGATCTATTATAAGGATGGTGAAGCTCTCAAGTACTGGTATGAGAACCACAACATCTCCATTACAAATGCCACAGTTGAAGACAGTGGAACCTACTACTGTACGGGCAAAGTGTGGCAGCTGGACTATGAGTCTGAGCCCCTCAACATTACTGTAATAAAAGCTCCGCGTGAGAAGTACTGGCTACAATTTTTTATCCCATTGTTGGTGGTGATTCTGTTTGCTGTGGACACAGGATTATTTATCTCAACTCAGCAGCAGGTCACATTTCTCTTGAAGATTAAGAGAACCAGGAAAGGCTTCAGACTTCTGAACCCACATCCTAAGCCAAACCCCAAAAACAACTGATATAATTACTCAAGAAATATTTGCAACATTAGTTTTTTTCCAGCATCAGCAATTGCTACTCAATTGTCAAACACAGCTTGCAATATACATAGAAACGTCTGTGCTCAAGGATTTATAGAAATGCTTCATTAAACTGAGTGAAACTGGTTAAGTGGCATGTAATAGTAAGTGCTCAATTAACATTGGTTGAATAAATGAGAGAATGAATAGATTCATTTATTAGCATTTGTAAAAGAGATGTTCAATTTCAATAAAATAAATATAAAACCATGTAACAGAATGCTTCTGAGTAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "sample_sequence": "AGTCTCCAGCATCCTCCACCTGTCTACCACCGAGCATGGGCCTATATTTGAAGCCTTAGATCTCTCCAGCACAGTAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTCCATGGAATCCCCTACTCTACTGTGTGTAGCCTTACTGTTCTTCGCTCCGATGGCGTGTTAGCAGTCCCTCAGAAACCTAAGGTCTCCTTGAACCCTCCATGGAATAGAATATTTAAAGGAGAGAATGTGACTCTTACATGACTCTTACATGTAATGGGAACAATTTCTTTGAAGTCAGTTCCACCAAATGGTTCCACATCTCTTCTGAAAGGCTGCCATCAAATTCAAGTTTGAATATTGTGAATGCCAAATTTGAAGACAGTGGAGAATACAAATGTCAGCACCAACAAGTTAATGAGTGTATTATGGAGTGAACCTGTGTACCTGGAAGTCTTCAGTGACTGGCTGCTCCTTCAGGCATCCTCCACCTGTCTACCACCGACTCTGCTGAGGTGGTGATGGAGGGCCAGCCCCTCTTCCTCAGGTGCCATGGTTGGAGGAACTGGGATGTGTACAAGGTGATCTATTATAAGGATGGTGAAGCTCTCAAGTACTGGTATGAGAACCACAACATCTCCATTACAAATGCCACAGTTGAAGACAGTGGAACCTACTACTGTACGGGCAAAGTGTGGCAGCTGGACTATGAGTCTGAGCCCCTCAACATTACTGTAATAAAAGCTCCGCGTGAGAAGTACTGGCTACAATTTTTTATCCCATTGTTGGTGGTGATTCTGTTTGCTGTGGACACAGGATTATTTATCTCAACTCAGCAGCAGGTCACATTTCTCTTGAAGATTAAGAGAACCAGGAAAGGCTTCAGACTTCTGAACCCACATCCTAAGCCAAACCCCAAAAACAACTGATATAATTACTCAAGAAATATTTGCAACATTAGTTTTTTTCCAGCATCAGCAATTGCTACTCAATTGTCAAACACAGCTTGCAATATACATAGAAACGTCTGTGCTCAAGGATTTATAGAAATGCTTCATTAAACTGAGTGAAACTGGTTAAGTGGCATGTAATAGTAAGTGCTCAATTAACATTGGTTGAATAAATGAGAGAATGAATAGATTCATTTATTAGCATTTGTAAAAGAGATGTTCAATTTCAATAAAATAAATATAAAACCATGTAACAGAATGCTTCTGAGTAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "substitution",
+    "class": "operator-substitution"
+  },
+  {
+    "name": "invertion",
+    "class": "operator-invertion"
+  },
+  {
+    "name": "deletion",
+    "class": "operator-deletion"
+  },
+  {
+    "name": "insertion",
+    "class": "operator-insertion"
+  },
+  {
+    "name": "duplication",
+    "class": "operator-duplication"
+  },
+  {
+    "name": "deletion/insertion",
+    "class": "operator-deletion-insertion"
+  },
+  {
+    "name": "transposition",
+    "class": "operator-transposition"
+  }
+]

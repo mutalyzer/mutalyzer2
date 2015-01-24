@@ -1,0 +1,30 @@
+<div class="row">
+  <div class="col-md-9">
+    <div data-bind="compose: {model: 'viewmodels/graphs/overview', activationData: $data}"></div>
+    
+    <h5>Zoom <a data-bind="click: resetZoom" class="pull-right btn btn-xs btn-default">Zoom out</a></h5>
+    <div data-bind="compose: {model: 'viewmodels/graphs/zoom', activationData: $data}"></div>
+    
+    <h5>DNA string</h5>
+    <div data-bind="visible: !inAnimation(), compose: {model: 'viewmodels/string', activationData: $data}"></div>
+    <div data-bind="visible: inAnimation(), compose: {model: 'viewmodels/stringanimation', activationData: $data, cacheViews:true}"></div>
+  </div>
+  <div class="col-md-3">
+    <section class="section-play-description">
+      <a class="btn btn-primary btn-block btn-lg" data-bind="click: playAlleleDescription">Animate</a>
+    </section>
+    <section class="section-allele-description">
+      <h3>Allele description</h3>
+      <div data-bind="foreach: dataset().allele_description" class="list-group">
+        <a class="list-group-item" data-bind="click: function(op) { $root.selectOperation(op); $root.selectOperation.bind($root); }, attr: {'class' : type()+' list-group-item' }, css: {'active': $root.selectedOperation() == $data}">
+          <span class="badge" data-bind="text:$index"></span>
+          <span data-bind="text: hgvs, css: type()" class="text"></span>
+        </a>
+      </div>
+    </section>
+    <section class="section-dataset-description">
+      <h3 data-bind="text: dataset().name"></h3>
+      <p data-bind="html: dataset().description"></p>
+    </section>
+  </div>
+</div>

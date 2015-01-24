@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Landscape</title>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="format-detection" content="telephone=no"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-startup-image" href="/images/ios-startup-image-landscape.png" media="(orientation:landscape)" />
+    <link rel="apple-touch-startup-image" href="/images/ios-startup-image-portrait.png" media="(orientation:portrait)" />
+    <link rel="apple-touch-icon" href="/images/icon.png"/>
+
+    <link rel="stylesheet" href="/stylesheets/styles.css" />
+
+    <script type="text/javascript">
+        if (navigator.userAgent.match(/IEMobile\/10\.0/)) {
+            var msViewportStyle = document.createElement("style");
+            var mq = "@@-ms-viewport{width:auto!important}";
+            msViewportStyle.appendChild(document.createTextNode(mq));
+            document.getElementsByTagName("head")[0].appendChild(msViewportStyle);
+        }
+    </script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="applicationHost">
+          <div class="splash">
+            <div class="message">
+              <img src="http://wearelandscape.nl/logo.png"><br/>
+                DNA-Visualisation
+            </div>
+        </div>
+
+      </div>
+      <footer class="container-fluid copyright">
+        <p>Made by <a target="_blank" href="http://www.wearelandscape.nl/"><strong>Landscape</strong></a> &copy; 2014 <span class="slogan">Increasing data impact</span></p>
+      </footer>
+    </div>
+    {{#reload}}
+      <script src="socket.io/socket.io.js"></script>
+      <script src="/javascripts/app/reload-client.js"></script>
+    {{/reload}}
+
+    {{#optimize}}
+      <script src="/javascripts/app/main-built.js"></script>
+    {{/optimize}}
+
+    {{^optimize}}
+      <script src="/javascripts/vendor/requirejs/require.js" data-main="/javascripts/app/main.js"></script>
+    {{/optimize}}
+
+  </body>
+</html>

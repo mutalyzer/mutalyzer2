@@ -1,0 +1,86 @@
+.footer-transition ( @time: .1s ) {
+  -webkit-transition: all ease-out @time;
+  -moz-transition: all ease-out @time;
+  -ms-transition: all ease-out @time;
+  -o-transition: all ease-out @time;
+  transition: all ease-out @time;
+}
+.footer-transition-hover( @time: .3s ) {
+  -webkit-transition-duration: @time;
+  -moz-transition-duration: @time;
+  -ms-transition-duration: @time;
+  -o-transition-duration: @time;
+  transition-duration: @time;
+}
+
+/*
+Place this footer in a wrapper class that has the .wrapper-mixin included
+and make sure that all dom-elements above it are 'height: 100%;'
+*/
+
+.wrapper-mixin () {
+  min-height: 100%;
+  position: relative;
+  padding-bottom: 50px;
+}
+   
+
+.subtle-footer() {
+  position: absolute;
+  bottom: 0;
+  z-index: 10;
+  padding: 10px 20px;
+  background-color: #f3f3f3;
+  border-top: 1px solid #e8e8e8;
+  width: 100%;
+	padding-left: 86px;
+  p {
+    color: #cacaca;
+    margin: 0;
+    font-size: 12px;
+    line-height: 12px;
+    .footer-transition();
+    a {
+      color: #c8c8c8;
+      .footer-transition();
+    }
+    .slogan {
+      font-style: italic;
+    }
+  }
+  &::after {
+  	background-image: url('/images/logo-100px-transp.png');
+  	background-size: 32px;
+    left: 50px;
+    top: 4px;
+    width: 32px;
+    height: 22px;
+  	background-repeat: no-repeat;
+    opacity: 0.3;
+    position: absolute;
+    .footer-transition();
+  }
+  &:hover {
+    p {
+      color: #aaa;
+      .footer-transition-hover();
+      a {
+        color: lighten(#34495E, 50%);
+        .footer-transition-hover();
+        &:hover {
+          color: #34495e;
+          text-decoration: none;
+          -webkit-transition-duration: 0.1s;
+          -moz-transition-duration: 0.1s;
+          -ms-transition-duration: 0.1s;
+          -o-transition-duration: 0.1s;
+          transition-duration: 0.1s;
+        }
+      }
+    }
+    &::after {
+      opacity: 0.7;
+      .footer-transition-hover();
+    }
+  }
+}

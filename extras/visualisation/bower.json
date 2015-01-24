@@ -1,0 +1,19 @@
+{
+  "name": "Landscape DNA-visualizer",
+  "version": "0.1.0",
+  "dependencies": {
+    "jquery": "2.*",
+    "requirejs": "2.1.8",
+    "requirejs-text": "2.0.3",
+    "knockout.js": "2.3.0",
+    "knockout-mapping": "*",
+    "bootstrap": ">3.0",
+    "font-awesome": "3.2.1",
+    "durandal": "2.0.0",
+    "d3": ">=3.4",
+    "magic": "~1.0.0"
+  },
+  "resolutions": {
+    "jquery": "2.*"
+  }
+}
