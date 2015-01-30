@@ -43,7 +43,7 @@ may have to change the server location defined at the top of these scripts.
 .. note:: One of the scripts, ``run_batch_job.py``, provides an easy way to
           run a batch job from the command line. Some additional notes are
           available for `running this on a Windows machine
-          <https://gist.github.com/martijnvermaat/73271252775867f91821>`_.
+          <https://gist.github.com/jfjlaros/482fe9f0397e554ed29f>`_.
 
 
 .. _pytest: http://pytest.org/
