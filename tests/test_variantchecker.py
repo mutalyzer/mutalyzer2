@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 #import logging; logging.basicConfig()
 
 from mutalyzer.output import Output
-from mutalyzer.Retriever import GenBankRetriever
 from mutalyzer.variantchecker import check_variant
 
 from fixtures import REFERENCES
@@ -34,7 +33,6 @@ class TestVariantchecker(MutalyzerTest):
         """
         super(TestVariantchecker, self).setup()
         self.output = Output(__file__)
-        self.retriever = GenBankRetriever(self.output)
 
     @fix(cache('AL449423.14'))
     def test_deletion_in_frame(self):
@@ -1062,7 +1060,7 @@ class TestVariantchecker(MutalyzerTest):
         check_variant(ud + ':g.5T>T', self.output)
         error_count, _, _ = self.output.Summary()
         assert error_count == 0
-        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000023.10:g.='
+        assert self.output.getIndexedOutput('genomicChromDescription', 0) == 'NC_000023.11:g.='
         assert self.output.getIndexedOutput('genomicDescription', 0) == ud + ':g.='
         assert ud + '(DMD_v001):c.=' \
                in self.output.getOutput('descriptions')
@@ -1275,17 +1273,16 @@ class TestVariantchecker(MutalyzerTest):
         check_variant('NP_064445.1:p.=', self.output)
         assert len(self.output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
-    @fix(cache('A1BG'))
+    @fix(cache('AF230870.1'))
     def test_wnomrna_other(self):
         """
         Warning for no mRNA field on other than currently selected transcript
         should give WNOMRNA_OTHER warning.
         """
-        # Contains ZNF497 (v1 and v2) with no mRNA
-        ud = REFERENCES['A1BG']['accession']
-        check_variant(ud + '(A1BG_v001):c.13del', self.output)
+        # Contains mtmC2 and mtmB2, both without mRNA
+        check_variant('AF230870.1(mtmC2_v001):c.13del', self.output)
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
-        assert len(wnomrna_other) == 3
+        assert len(wnomrna_other) == 1
 
     @fix(cache('A1BG'))
     def test_wnomrna(self):
@@ -1293,13 +1290,12 @@ class TestVariantchecker(MutalyzerTest):
         Warning for no mRNA field on currently selected transcript should give
         WNOMRNA warning.
         """
-        # Contains ZNF497 (v1 and v2) with no mRNA
-        ud = REFERENCES['A1BG']['accession']
-        check_variant(ud + '(ZNF497_v001):c.13del', self.output)
+        # Contains mtmC2 and mtmB2, both without mRNA
+        check_variant('AF230870.1(mtmC2_v001):c.13del', self.output)
         wnomrna = self.output.getMessagesWithErrorCode('WNOMRNA')
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
         assert len(wnomrna) == 1
-        assert len(wnomrna_other) == 2
+        assert len(wnomrna_other) == 1
 
     @fix(cache('L41870.1'))
     def test_mrna_ref_adjacent_exons_warn(self):

@@ -10,7 +10,10 @@ Version 2.0.6
 Release date to be decided.
 
 - Added `getGeneLocation` webservice method. Given a gene symbol and optional
-  genome build, it returns the location of the gene.
+  genome build, it returns the location of the gene (`GitHub#28
+  <https://github.com/LUMC/mutalyzer/pull/28>`_).
+- Discard incomplete genes in genbank reference files (`GitHub#26
+  <https://github.com/LUMC/mutalyzer/pull/26>`_).
 
 
 Version 2.0.5

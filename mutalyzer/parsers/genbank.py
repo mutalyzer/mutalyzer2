@@ -546,6 +546,12 @@ class GBparser():
                 #if
 
                 if i.qualifiers.has_key("gene") :
+                    if not unicode(i.location.start).isdigit() or \
+                       not unicode(i.location.end).isdigit():
+                        # Feature is not completely in reference. Either start
+                        # or end is not a Bio.SeqFeature.ExactPosition.
+                        continue
+
                     geneName = i.qualifiers["gene"][0]
                     if i.type == "gene" :
                         if not geneDict.has_key(geneName) :
@@ -556,6 +562,14 @@ class GBparser():
                             myGene.location = self.__location2pos(i.location)
                             geneDict[geneName] = tempGene(geneName)
                         #if
+                    else:
+                        if geneName not in geneDict:
+                            # We should have seen a gene entry for this gene
+                            # by now. Could be that it was skipped because it
+                            # was not completely in reference (see check
+                            # above). In that case we just ignore any of its
+                            # features.
+                            continue
                     #if
 
                     if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
