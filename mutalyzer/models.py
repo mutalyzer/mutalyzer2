@@ -41,6 +41,23 @@ class SoapMessage(ComplexModel):
 #SoapMessage
 
 
+class GeneLocation(ComplexModel):
+    """
+    Return type of SOAP method getGeneLocation.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    gene = Mandatory.Unicode
+    start = Mandatory.Integer
+    stop = Mandatory.Integer
+    orientation = Mandatory.Unicode
+    chromosome_name = Mandatory.Unicode
+    chromosome_accession = Mandatory.Unicode
+    assembly_name = Mandatory.Unicode
+    assembly_alias = Mandatory.Unicode
+#GeneLocation
+
+
 class Mapping(ComplexModel):
     """
     Return type of SOAP method mappingInfo.

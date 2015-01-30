@@ -9,6 +9,9 @@ Version 2.0.6
 
 Release date to be decided.
 
+- Added `getGeneLocation` webservice method. Given a gene symbol and optional
+  genome build, it returns the location of the gene.
+
 
 Version 2.0.5
 -------------

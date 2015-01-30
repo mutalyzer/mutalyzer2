@@ -5,8 +5,11 @@ Tests for the JSON interface to Mutalyzer.
 
 from __future__ import unicode_literals
 
+import pytest
 import simplejson as json
+from spyne.model.fault import Fault
 from spyne.server.null import NullServer
+
 import mutalyzer
 from mutalyzer import announce
 from mutalyzer import Scheduler
@@ -142,3 +145,59 @@ class TestServicesJson(MutalyzerTest):
         result = self._call('getBatchJob', job_id)
         result = result.decode('base64').decode('utf-8').strip().split('\n')[1:]
         assert expected == [line.split('\t') for line in result]
+
+    @fix(database, hg19, hg19_transcript_mappings)
+    def test_gene_location(self):
+        """
+        Get outer coordinates for gene.
+        """
+        r = self._call('getGeneLocation', 'SDHD', 'hg19')
+
+        assert r == {'gene': 'SDHD',
+                     'start': 111957571,
+                     'stop': 111966518,
+                     'orientation': 'forward',
+                     'chromosome_name': 'chr11',
+                     'chromosome_accession': 'NC_000011.9',
+                     'assembly_name': 'GRCh37',
+                     'assembly_alias': 'hg19'}
+
+    @fix(database, hg19, hg19_transcript_mappings)
+    def test_gene_location_reverse(self):
+        """
+        Get outer coordinates for gene on the reverse strand.
+        """
+        r = self._call('getGeneLocation', 'DMD', 'hg19')
+
+        assert r == {'gene': 'DMD',
+                     'start': 31137345,
+                     'stop': 33038317,
+                     'orientation': 'reverse',
+                     'chromosome_name': 'chrX',
+                     'chromosome_accession': 'NC_000023.10',
+                     'assembly_name': 'GRCh37',
+                     'assembly_alias': 'hg19'}
+
+    @fix(database, hg19, hg19_transcript_mappings)
+    def test_gene_location_default_build(self):
+        """
+        Get outer coordinates for gene without specifying the build.
+        """
+        r = self._call('getGeneLocation', 'SDHD')
+
+        assert r == {'gene': 'SDHD',
+                     'start': 111957571,
+                     'stop': 111966518,
+                     'orientation': 'forward',
+                     'chromosome_name': 'chr11',
+                     'chromosome_accession': 'NC_000011.9',
+                     'assembly_name': 'GRCh37',
+                     'assembly_alias': 'hg19'}
+
+    @fix(database, hg19, hg19_transcript_mappings)
+    def test_gene_location_invalid_gene(self):
+        """
+        Get outer coordinates for gene that does not exist.
+        """
+        with pytest.raises(Fault):
+            r = self._call('getGeneLocation', 'THISISNOTAGENE', 'hg19')

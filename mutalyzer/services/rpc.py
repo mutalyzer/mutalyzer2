@@ -21,12 +21,13 @@ import os
 import socket
 from operator import attrgetter
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import func
 
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import session
-from mutalyzer.db.models import (Assembly, BatchJob, BatchQueueItem,
-                                 TranscriptMapping)
+from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
+                                 BatchQueueItem, TranscriptMapping)
 from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
@@ -1296,6 +1297,87 @@ class MutalyzerService(ServiceBase):
 
         return descriptions
     #getdbSNPDescriptions
+
+    @srpc(Mandatory.Unicode, Unicode, _returns=GeneLocation)
+    def getGeneLocation(gene, build=None):
+        """
+        Get the location of a gene on the given genome build (assembly), using
+        the system's transcript mapping database.
+
+        @arg gene: Gene symbol.
+        @type gene: string
+        @arg build: Genome build (assembly) by name or alias. If omited,
+          the system's default assembly is used.
+        @type build: string
+
+        @return: Object with the following fields:
+          - gene: Gene symbol.
+          - start: Gene start position. If multiple transcripts for the gene
+              are known, this contains the lowest start position.
+          - stop: Gene stop position. If multiple transcripts for the gene are
+              known, this contains the highest stop position.
+          - orientation: Gene orientation, either 'forward' or 'reverse'.
+          - chromosome_name: Gene chromosome by name (e.g., 'chrX').
+          - chromosome_accession: Gene chromosome by accession (e.g.,
+              'NC_000023.10').
+          - assembly_name: Selected genome build (assembly) by name (e.g.,
+              'GRCh37').
+          - assembly_alias: Selected genome build (assembly) by alias (e.g.,
+              'hg19').
+        """
+        output = Output(__file__)
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Received request getGeneLocation(%s, %s)'
+                          % (gene, build))
+
+        try:
+            assembly = Assembly.by_name_or_alias(build or
+                                                 settings.DEFAULT_ASSEMBLY)
+        except NoResultFound:
+            output.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            raise Fault("EARG",
+                        "The build argument (%s) was not a valid " \
+                        "build name." % build)
+
+        # From all the transcripts for this gene, get the lowest start
+        # position and highest stop position. For integrity, we group by
+        # chromosome and orientation.
+        mapping = \
+            session.query(func.min(TranscriptMapping.start),
+                          func.max(TranscriptMapping.stop),
+                          TranscriptMapping.orientation,
+                          Chromosome) \
+                   .filter(TranscriptMapping.chromosome.has(assembly=assembly),
+                           TranscriptMapping.gene == gene) \
+                   .join(TranscriptMapping.chromosome) \
+                   .group_by(TranscriptMapping.chromosome,
+                             TranscriptMapping.orientation) \
+                   .first()
+
+        if not mapping:
+            output.addMessage(__file__, 4, "EARG", "EARG %s" % gene)
+            raise Fault("EARG",
+                        "No location was found for gene %s." % gene)
+
+        start, stop, orientation, chromosome = mapping
+
+        result = GeneLocation()
+        result.gene = gene
+        result.start = start
+        result.stop = stop
+        result.orientation = orientation
+        result.chromosome_name = chromosome.name
+        result.chromosome_accession = chromosome.accession
+        result.assembly_name = assembly.name
+        result.assembly_alias = assembly.alias
+
+        output.addMessage(__file__, -1, 'INFO',
+                          'Finished processing getGeneLocation(%s %s)'
+                          % (gene, build))
+
+        return result
+    #getGeneLocation
 #MutalyzerService
 
 
