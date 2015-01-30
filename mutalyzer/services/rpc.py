@@ -1351,11 +1351,12 @@ class MutalyzerService(ServiceBase):
             session.query(func.min(TranscriptMapping.start),
                           func.max(TranscriptMapping.stop),
                           TranscriptMapping.orientation,
-                          Chromosome) \
+                          Chromosome.name,
+                          Chromosome.accession) \
                    .filter(TranscriptMapping.chromosome.has(assembly=assembly),
                            TranscriptMapping.gene == gene) \
                    .join(TranscriptMapping.chromosome) \
-                   .group_by(TranscriptMapping.chromosome,
+                   .group_by(Chromosome.id,
                              TranscriptMapping.orientation) \
                    .first()
 
@@ -1364,15 +1365,16 @@ class MutalyzerService(ServiceBase):
             raise Fault("EARG",
                         "No location was found for gene %s." % gene)
 
-        start, stop, orientation, chromosome = mapping
+        start, stop, orientation, chromosome_name, chromosome_accession \
+            = mapping
 
         result = GeneLocation()
         result.gene = gene
         result.start = start
         result.stop = stop
         result.orientation = orientation
-        result.chromosome_name = chromosome.name
-        result.chromosome_accession = chromosome.accession
+        result.chromosome_name = chromosome_name
+        result.chromosome_accession = chromosome_accession
         result.assembly_name = assembly.name
         result.assembly_alias = assembly.alias
 
