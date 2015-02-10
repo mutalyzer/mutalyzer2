@@ -156,7 +156,7 @@
             {%- endfor -%}
             </pre>
 
-            <h4>Protein codedicted from variant coding sequence</h4>
+            <h4>Protein predicted from variant coding sequence</h4>
             {% if newProtein %}
               <pre>
               {%- for i in newProtein -%}
@@ -164,7 +164,7 @@
               {%- endfor -%}
               </pre>
             {% else %}
-              <p>No change: codedicted protein (not shown) equals reference protein.</p>
+              <p>No change: predicted protein (not shown) equals reference protein.</p>
             {% endif %}
 
             {% if altStart %}
@@ -176,7 +176,7 @@
                 {%- endfor -%}
                 </pre>
               {% else %}
-                <p>No change: codedicted protein (not shown) equals reference protein.</p>
+                <p>No change: predicted protein (not shown) equals reference protein.</p>
               {% endif %}
             {% endif %}
           {% endif %}
