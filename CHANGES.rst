@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.6
 -------------
 
-Release date to be decided.
+Released on February 10th 2015.
 
 - Added `getGeneLocation` webservice method. Given a gene symbol and optional
   genome build, it returns the location of the gene (`GitHub#28
