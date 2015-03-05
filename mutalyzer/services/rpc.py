@@ -43,6 +43,22 @@ from mutalyzer.models import *
 from mutalyzer import describe
 
 
+def create_rpc_fault(output):
+    """
+    Create an RPC Fault exception from the error message in `output` with the
+    highest error level.
+
+    If there are no error messages, construct a generic Fault.
+    """
+    try:
+        message = sorted(output.getMessages(),
+                         key=attrgetter('level'),
+                         reverse=True)[0]
+        return Fault(unicode(message.code), unicode(message.description))
+    except IndexError:
+        return Fault('ESERVER', 'The request could not be completed')
+
+
 class MutalyzerService(ServiceBase):
     """
     Mutalyzer web services.
@@ -1087,11 +1103,8 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
                           'Finished processing uploadGenBankLocalFile()')
 
-        # Todo: use SOAP Fault object here (see Trac issue #41).
         if not ud:
-            error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: unicode(m), output.getMessages()))
-            raise Exception(error)
+            raise create_rpc_fault(output)
 
         return ud
     #upLoadGenBankLocalFile
@@ -1124,11 +1137,8 @@ class MutalyzerService(ServiceBase):
             "Finished processing sliceChromosomeByGene(%s, %s, %s, %s)" % (
             geneSymbol, organism, upStream, downStream))
 
-        # Todo: use SOAP Fault object here (see Trac issue #41).
         if not UD:
-            error = 'The request could not be completed\n' \
-                    + '\n'.join(map(lambda m: unicode(m), O.getMessages()))
-            raise Exception(error)
+            raise create_rpc_fault(O)
 
         return UD
     #sliceChromosomeByGene
@@ -1292,12 +1302,9 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
             'Finished processing getdbSNPDescription(%s)' % rs_id)
 
-        # Todo: use SOAP Fault object here (see Trac issue #41).
         messages = output.getMessages()
-        if messages:
-            error = 'The request could not be completed\n' + \
-                '\n'.join(map(lambda m: unicode(m), output.getMessages()))
-            raise Exception(error)
+        if output.getMessages():
+            raise create_rpc_fault(output)
 
         return descriptions
     #getdbSNPDescriptions
