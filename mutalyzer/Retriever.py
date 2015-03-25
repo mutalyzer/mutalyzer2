@@ -585,24 +585,33 @@ class GenBankRetriever(Retriever):
                                         'Could not get mapping information for gene %s.' % gene)
                 return None
 
-            if unicode(summary[0]["NomenclatureSymbol"]).lower() == gene.lower() : # Found it.
-                if not summary[0]["GenomicInfo"] :
+            try:
+                document = summary['DocumentSummarySet']['DocumentSummary'][0]
+            except (KeyError, IndexError):
+                self._output.addMessage(__file__, -1, 'INFO',
+                                        'Error parsing Entrez esummary result.')
+                self._output.addMessage(__file__, 4, 'ERETR',
+                                        'Could not get mapping information for gene %s.' % gene)
+                return None
+
+            if unicode(document["NomenclatureSymbol"]).lower() == gene.lower() : # Found it.
+                if not document["GenomicInfo"] :
                     self._output.addMessage(__file__, 4, "ENOMAPPING",
                         "No mapping information found for gene %s." % gene)
                     return None
                 #if
-                ChrAccVer = unicode(summary[0]["GenomicInfo"][0]["ChrAccVer"])
-                ChrLoc = unicode(summary[0]["GenomicInfo"][0]["ChrLoc"])
-                ChrStart = int(summary[0]["GenomicInfo"][0]["ChrStart"])
-                ChrStop = int(summary[0]["GenomicInfo"][0]["ChrStop"])
+                ChrAccVer = unicode(document["GenomicInfo"][0]["ChrAccVer"])
+                ChrLoc = unicode(document["GenomicInfo"][0]["ChrLoc"])
+                ChrStart = int(document["GenomicInfo"][0]["ChrStart"])
+                ChrStop = int(document["GenomicInfo"][0]["ChrStop"])
                 break
             #if
 
             # Collect official symbols that has this gene as alias in case we
             # can not find anything.
-            if gene in [unicode(a) for a in summary[0]["OtherAliases"]] and \
-                summary[0]["NomenclatureSymbol"] :
-                aliases.append(unicode(summary[0]["NomenclatureSymbol"]))
+            if gene in [unicode(a) for a in document["OtherAliases"]] and \
+                document["NomenclatureSymbol"] :
+                aliases.append(unicode(document["NomenclatureSymbol"]))
         #for
 
         if not ChrAccVer : # We did not find any genes.
