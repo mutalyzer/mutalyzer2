@@ -16,7 +16,7 @@ import time
 from suds.client import Client
 
 
-URL = "https://mutalyzer.nl/services/?wsdl"
+URL = 'http://127.0.0.1:8081/?wsdl'
 job_types = ["NameChecker", "SyntaxChecker", "PositionConverter",
              "SnpConverter"]
 RETRY_WAIT = 1

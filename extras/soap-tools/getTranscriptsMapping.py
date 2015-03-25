@@ -26,7 +26,7 @@ from suds.client import Client
 from mutalyzer.util import format_usage
 
 
-WSDL_LOCATION = 'http://localhost/mutalyzer/services/?wsdl'
+WSDL_LOCATION = 'http://127.0.0.1:8081/?wsdl'
 
 
 def main(build, chromosome, pos1, pos2, tolerant=0):
