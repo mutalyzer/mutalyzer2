@@ -4,10 +4,21 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.7
+Version 2.0.8
 -------------
 
 Release date to be decided.
+
+
+Version 2.0.7
+-------------
+
+Released on March 27th 2015.
+
+- Return fault code and description on RPC service errors (`GitHub#31
+  <https://github.com/LUMC/mutalyzer/pull/31>`_).
+- Use esummary 2.0 response format (`GitHub#31
+  <https://github.com/LUMC/mutalyzer/pull/32>`_).
 
 
 Version 2.0.6
