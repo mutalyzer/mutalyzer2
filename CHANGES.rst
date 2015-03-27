@@ -9,6 +9,11 @@ Version 2.0.7
 
 Release date to be decided.
 
+- Return fault code and description on RPC service errors (`GitHub#31
+  <https://github.com/LUMC/mutalyzer/pull/31>`_).
+- Use esummary 2.0 response format (`GitHub#31
+  <https://github.com/LUMC/mutalyzer/pull/32>`_).
+
 
 Version 2.0.6
 -------------
