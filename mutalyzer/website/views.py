@@ -269,14 +269,18 @@ def name_checker():
     # Experimental description extractor.
     if (output.getIndexedOutput('original', 0) and
         output.getIndexedOutput('mutated', 0)):
-        extracted = extractedProt = '(skipped)'
+        allele = describe.describe_dna(output.getIndexedOutput('original', 0),
+                                       output.getIndexedOutput('mutated', 0))
+        #prot_allele = describe.describe_protein(
+        #    output.getIndexedOutput('oldprotein', 0),
+        #    output.getIndexedOutput('newprotein', 0, default=''))
+        prot_allele = ''
 
-        allele = describe.describe(output.getIndexedOutput('original', 0),
-                                   output.getIndexedOutput('mutated', 0))
+        extracted = extractedProt = '(skipped)'
         if allele:
-            extracted = describe.allele_description(allele)
+            extracted = str(allele) #describe.allele_description(allele)
         if prot_allele:
-            extractedProt = describe.allele_description(prot_allele)
+            extractedProt = str(prot_allele) #describe.allele_description(prot_allele)
 
     else:
         extracted = extractedProt = ''
@@ -695,8 +699,8 @@ def description_extractor():
         output.addMessage(__file__, 3, 'ENODNA',
                           'Variant sequence is not DNA.')
 
-    raw_vars = describe.describe(reference_sequence, variant_sequence)
-    description = describe.allele_description(raw_vars)
+    raw_vars = describe.describe_dna(reference_sequence, variant_sequence)
+    description = str(raw_vars) #describe.allele_description(raw_vars)
 
     errors, warnings, summary = output.Summary()
     messages = map(util.message_info, output.getMessages())

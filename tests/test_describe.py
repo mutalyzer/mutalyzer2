@@ -16,7 +16,7 @@ from utils import MutalyzerTest
 
 class TestDescribe(MutalyzerTest):
     """
-    Test the mytalyzer.describe module.
+    Test the mutalyzer.describe module.
     """
 
     def _single_variant(self, sample, expected):

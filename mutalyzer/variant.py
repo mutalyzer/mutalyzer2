@@ -70,6 +70,9 @@ class ISeq(object):
         if self.type == "ins":
             return self.sequence
 
+        if not (self.start or self.end):
+            return ""
+
         inverted = "inv" if self.reverse else ""
         return "{}_{}{}".format(self.start, self.end, inverted)
     #__str__
