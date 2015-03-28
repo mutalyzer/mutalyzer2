@@ -434,7 +434,7 @@ def longest_common_suffix(s1, s2):
     @type s2: unicode
 
     @return: The longest common suffix of s1 and s2.
-    @rtype: string
+    @rtype: unicode
     """
     return longest_common_prefix(s1[::-1], s2[::-1])[::-1]
 #longest_common_suffix
@@ -680,7 +680,7 @@ def visualise_sequence(sequence, max_length=25, flank_size=6):
     @type flank_size: int
 
     @return: Either the original sequence, or an abbreviation of it.
-    @rtype: str
+    @rtype: unicode
     """
     if len(sequence) > max_length:
         return '%s [%ibp] %s' % (sequence[:flank_size],

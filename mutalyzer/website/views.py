@@ -278,9 +278,9 @@ def name_checker():
 
         extracted = extractedProt = '(skipped)'
         if allele:
-            extracted = str(allele) #describe.allele_description(allele)
+            extracted = unicode(allele) #describe.allele_description(allele)
         if prot_allele:
-            extractedProt = str(prot_allele) #describe.allele_description(prot_allele)
+            extractedProt = unicode(prot_allele) #describe.allele_description(prot_allele)
 
     else:
         extracted = extractedProt = ''
@@ -700,7 +700,7 @@ def description_extractor():
                           'Variant sequence is not DNA.')
 
     raw_vars = describe.describe_dna(reference_sequence, variant_sequence)
-    description = str(raw_vars) #describe.allele_description(raw_vars)
+    description = unicode(raw_vars) #describe.allele_description(raw_vars)
 
     errors, warnings, summary = output.Summary()
     messages = map(util.message_info, output.getMessages())

@@ -10,7 +10,6 @@ from __future__ import unicode_literals
 
 import collections
 
-from Bio.SeqUtils import seq3
 from Bio.Data import CodonTable
 
 from mutalyzer.util import palinsnoop, roll
@@ -302,7 +301,8 @@ def describe_dna(s1, s2):
     description = Allele()
     in_transposition = 0
 
-    extracted = extractor.extract(unicode(s1), len(s1), unicode(s2), len(s2), 0)
+    extracted = extractor.extract(s1.encode('utf-8'), len(s1),
+                                  s2.encode('utf-8'), len(s2), 0)
     for variant in extracted.variants:
        # print (variant.type, variant.reference_start,
        #     variant.reference_end, variant.sample_start,
@@ -354,9 +354,9 @@ def describe_protein(s1, s2):
     Give an allele description of the change from {s1} to {s2}.
 
     :arg s1: Sequence 1.
-    :type s1: str
+    :type s1: unicode
     :arg s2: Sequence 2.
-    :type s2: str
+    :type s2: unicode
 
     :returns: A list of RawVar objects, representing the allele.
     :rtype: list(RawVar)
@@ -384,8 +384,8 @@ def describe_protein(s1, s2):
 
     s1_part = s1
     s2_part = s2
-    for variant in extractor.extract(str(s1_part), len(s1_part),
-            str(s2_part), len(s2_part), 1):
+    for variant in extractor.extract(s1_part.encode('utf-8'), len(s1_part),
+                                     s2_part.encode('utf-8'), len(s2_part), 1):
         description.append(var_to_rawvar(s1, s2, variant,
             container=ProteinVar))
 

@@ -19,7 +19,7 @@ from .. import variantchecker
 class MyEncoder(json.JSONEncoder):
     def default(self, o):
         json_object = o.__dict__
-        json_object.update({"hgvs": str(o), "weight": o.weight()})
+        json_object.update({"hgvs": unicode(o), "weight": o.weight()})
 
         return json_object
     #default

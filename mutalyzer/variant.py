@@ -1,6 +1,10 @@
 """
 """
 
+from __future__ import unicode_literals
+
+from Bio.SeqUtils import seq3
+
 from extractor import extractor
 
 from mutalyzer import models
@@ -18,11 +22,11 @@ class HGVSList(list):
     """
     Container for a list of sequences or variants.
     """
-    def __str__(self):
+    def __unicode__(self):
         if len(self) > 1:
-            return "[{}]".format(';'.join(map(str, self)))
-        return str(self[0])
-    #__str__
+            return "[{}]".format(';'.join(map(unicode, self)))
+        return unicode(self[0])
+    #__unicode__
 
     def weight(self):
         weight = sum(map(lambda x: x.weight(), self))
@@ -47,7 +51,7 @@ class ISeq(object):
             weight_position=1):
         """
         :arg sequence: Literal inserted sequence.
-        :type sequence: str
+        :type sequence: unicode
         :arg start: Start position for a transposed sequence.
         :type start: int
         :arg end: End position for a transposed sequence.
@@ -66,7 +70,7 @@ class ISeq(object):
             self.type = "ins"
     #__init__
 
-    def __str__(self):
+    def __unicode__(self):
         if self.type == "ins":
             return self.sequence
 
@@ -75,7 +79,7 @@ class ISeq(object):
 
         inverted = "inv" if self.reverse else ""
         return "{}_{}{}".format(self.start, self.end, inverted)
-    #__str__
+    #__unicode__
 
     def __nonzero__(self):
          return bool(self.sequence)
@@ -118,9 +122,9 @@ class DNAVar(models.DNAVar):
         :arg sample_end_offset:
         :type sample_end_offset: int
         :arg type: Variant type.
-        :type type: str
+        :type type: unicode
         :arg deleted: Deleted part of the reference sequence.
-        :type deleted: str
+        :type deleted: unicode
         :arg inserted: Inserted part.
         :type inserted: object
         :arg shift: Amount of freedom.
@@ -143,12 +147,12 @@ class DNAVar(models.DNAVar):
         self.shift = shift
     #__init__
 
-    def __str__(self):
+    def __unicode__(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
         :returns: The HGVS description of the raw variant stored in this class.
-        :rtype: str
+        :rtype: unicode
         """
         if self.type == "unknown":
             return "?"
@@ -169,7 +173,7 @@ class DNAVar(models.DNAVar):
         #if
 
         return description + "{}>{}".format(self.deleted, self.inserted)
-    #__str__
+    #__unicode__
 
     def weight(self):
         if self.type == "unknown":
@@ -204,9 +208,9 @@ class ProteinVar(models.ProteinVar):
         :arg sample_end: End position.
         :type sample_end: int
         :arg type: Variant type.
-        :type type: str
+        :type type: unicode
         :arg deleted: Deleted part of the reference sequence.
-        :type deleted: str
+        :type deleted: unicode
         :arg inserted: Inserted part.
         :type inserted: object
         :arg shift: Amount of freedom.
@@ -225,7 +229,7 @@ class ProteinVar(models.ProteinVar):
         self.term = term
     #__init__
 
-    def __str__(self):
+    def __unicode__(self):
         """
         Give the HGVS description of the raw variant stored in this class.
 
@@ -233,7 +237,7 @@ class ProteinVar(models.ProteinVar):
         correct description. Also see the comment in the class definition.
 
         :returns: The HGVS description of the raw variant stored in this class.
-        :rtype: str
+        :rtype: unicode
         """
         if self.type == "unknown":
             return "?"
@@ -262,5 +266,5 @@ class ProteinVar(models.ProteinVar):
         if self.term:
             return description + "fs*{}".format(self.term)
         return description
-    #__str__
+    #__unicode__
 #ProteinVar
