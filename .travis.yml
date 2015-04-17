@@ -7,3 +7,6 @@ before_install:
 install:
   - pip install .
 script: py.test
+notifications:
+  slack:
+    secure: "VsB4CPZCfUPpnt7sL94mYrws2B9VthQhY1+u7NBm6QkAopel0m1rx1vWx3gQCTR0t9vWiP+pSybtQ81PQFNrOSWDsb1QlyEK1JF1QUw5Zui+5wS8fwFM/sgwGIECuo6Oj0zCwC9KMM4olYEMC2c7TNHv4HgwWiMqEK9ItEYSLQY="
