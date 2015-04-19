@@ -31,6 +31,7 @@ import time
 
 from Bio.SeqUtils import seq3
 
+# NOTE: This is a temporary fix.
 from extractor.describe import reverse_complement, palinsnoop, roll
 
 
