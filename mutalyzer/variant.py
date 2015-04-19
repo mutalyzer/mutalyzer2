@@ -1,4 +1,5 @@
 """
+Models for the description extractor.
 """
 
 from __future__ import unicode_literals
@@ -71,14 +72,12 @@ class ISeq(object):
     def __init__(self, sequence='', start=0, end=0, reverse=False,
             weight_position=1):
         """
-        :arg sequence: Literal inserted sequence.
-        :type sequence: unicode
-        :arg start: Start position for a transposed sequence.
-        :type start: int
-        :arg end: End position for a transposed sequence.
-        :type end: int
-        :arg reverse: Inverted transposed sequence.
-        :type reverse: bool
+        Initialise the class with the appropriate values.
+
+        :arg unicode sequence: Literal inserted sequence.
+        :arg int start: Start position for a transposed sequence.
+        :arg int end: End position for a transposed sequence.
+        :arg bool reverse: Inverted transposed sequence.
         """
         self.sequence = sequence
         self.start = start
@@ -130,30 +129,18 @@ class DNAVar(object):
         """
         Initialise the class with the appropriate values.
 
-        :arg start: Start position.
-        :type start: int
-        :arg start_offset:
-        :type start_offset: int
-        :arg end: End position.
-        :type end: int
-        :arg end_offset:
-        :type end_offset: int
-        :arg sample_start: Start position.
-        :type sample_start: int
-        :arg sample_start_offset:
-        :type sample_start_offset: int
-        :arg sample_end: End position.
-        :type sample_end: int
-        :arg sample_end_offset:
-        :type sample_end_offset: int
-        :arg type: Variant type.
-        :type type: unicode
-        :arg deleted: Deleted part of the reference sequence.
-        :type deleted: unicode
-        :arg inserted: Inserted part.
-        :type inserted: object
-        :arg shift: Amount of freedom.
-        :type shift: int
+        :arg int start: Start position.
+        :arg int start_offset:
+        :arg int end: End position.
+        :arg int end_offset:
+        :arg int sample_start: Start position.
+        :arg int sample_start_offset:
+        :arg int sample_end: End position.
+        :arg int sample_end_offset:
+        :arg unicode type: Variant type.
+        :arg unicode deleted: Deleted part of the reference sequence.
+        :arg ISeqList inserted: Inserted part.
+        :arg int shift: Amount of freedom.
         """
         # TODO: Will this container be used for all variants, or only genomic?
         #       start_offset and end_offset may be never used.
@@ -176,8 +163,8 @@ class DNAVar(object):
         """
         Give the HGVS description of the raw variant stored in this class.
 
-        :returns: The HGVS description of the raw variant stored in this class.
-        :rtype: unicode
+        :returns unicode: The HGVS description of the raw variant stored in
+            this class.
         """
         if self.type == 'unknown':
             return '?'
@@ -215,31 +202,24 @@ class DNAVar(object):
 class ProteinVar(object):
     """
     Container for a protein variant.
+
     """
+    #NOTE: This is experimental code. It is not used at the moment.
     def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
             type='none', deleted=ISeqList([ISeq()]),
             inserted=ISeqList([ISeq()]), shift=0, term=0):
         """
         Initialise the class with the appropriate values.
 
-        :arg start: Start position.
-        :type start: int
-        :arg end: End position.
-        :type end: int
-        :arg sample_start: Start position.
-        :type sample_start: int
-        :arg sample_end: End position.
-        :type sample_end: int
-        :arg type: Variant type.
-        :type type: unicode
-        :arg deleted: Deleted part of the reference sequence.
-        :type deleted: unicode
-        :arg inserted: Inserted part.
-        :type inserted: object
-        :arg shift: Amount of freedom.
-        :type shift: int
-        :arg term:
-        :type term:
+        :arg int start: Start position.
+        :arg int end: End position.
+        :arg int sample_start: Start position.
+        :arg int sample_end: End position.
+        :arg unicode type: Variant type.
+        :arg unicode deleted: Deleted part of the reference sequence.
+        :arg ISeqList inserted: Inserted part.
+        :arg int shift: Amount of freedom.
+        :arg int term: Number of positions until stop codon.
         """
         self.start = start
         self.end = end
@@ -257,10 +237,10 @@ class ProteinVar(object):
         Give the HGVS description of the raw variant stored in this class.
 
         Note that this function relies on the absence of values to make the
-        correct description. Also see the comment in the class definition.
+        correct description. The method used in the DNAVar is better.
 
-        :returns: The HGVS description of the raw variant stored in this class.
-        :rtype: unicode
+        :returns unicode: The HGVS description of the raw variant stored in
+            this class.
         """
         if self.type == 'unknown':
             return '?'
@@ -278,7 +258,7 @@ class ProteinVar(object):
         description += '{}'.format(self.start)
         if self.end:
             description += '_{}{}'.format(seq3(self.end_aa), self.end)
-        if self.type not in ['subst', 'stop', 'ext', 'fs']: # fs is not a type
+        if self.type not in ('subst', 'stop', 'ext', 'fs'): # fs is not a type
             description += self.type
         if self.inserted:
             description += '{}'.format(seq3(self.inserted))

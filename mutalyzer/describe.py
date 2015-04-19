@@ -31,6 +31,15 @@ def printpos(s, start, end, fill=0):
 def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         weight_position=1):
     """
+    Convert a variant from the extractor module to one of the RawVar
+    subclasses.
+
+    :arg unicode s1: Reference sequence.
+    :arg unicode s2: Sample sequence.
+    :arg str var: Variant from the extractor module.
+    :arg str seq_list: Container for an inserted sequence.
+    :arg str container: Destination container.
+    :arg str weight_position: Weight of a position.
     """
     # Unknown.
     if s1 == '?' or s2 == '?':
@@ -131,13 +140,10 @@ def describe_dna(s1, s2):
     """
     Give an allele description of the change from {s1} to {s2}.
 
-    :arg s1: Sequence 1.
-    :type s1: unicode
-    :arg s2: Sequence 2.
-    :type s2: unicode
+    :arg unicode s1: Sequence 1.
+    :arg unicode s2: Sequence 2.
 
-    :returns: A list of RawVar objects, representing the allele.
-    :rtype: list(RawVar)
+    :returns list(RawVar): A list of RawVar objects, representing the allele.
     """
     description = Allele()
     in_transposition = 0
@@ -190,13 +196,10 @@ def describe_protein(s1, s2):
     """
     Give an allele description of the change from {s1} to {s2}.
 
-    :arg s1: Sequence 1.
-    :type s1: unicode
-    :arg s2: Sequence 2.
-    :type s2: unicode
+    :arg unicode s1: Sequence 1.
+    :arg unicode s2: Sequence 2.
 
-    :returns: A list of RawVar objects, representing the allele.
-    :rtype: list(RawVar)
+    :returns list(RawVar): A list of RawVar objects, representing the allele.
     """
     description = Allele()
 
