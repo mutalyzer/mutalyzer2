@@ -23,6 +23,8 @@ from operator import attrgetter
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import func
 
+from extractor import describe
+
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import session
@@ -40,7 +42,6 @@ from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Scheduler
 from mutalyzer.models import *
-from mutalyzer import describe
 
 
 def create_rpc_fault(output):

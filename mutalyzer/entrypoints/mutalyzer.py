@@ -10,8 +10,9 @@ from __future__ import unicode_literals
 import argparse
 import json
 
+from extractor import describe
+
 from . import _cli_string
-from .. import describe
 from .. import output
 from .. import variantchecker
 

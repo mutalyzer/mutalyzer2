@@ -19,8 +19,10 @@ from lxml import etree
 from spyne.server.http import HttpBase
 from sqlalchemy.orm.exc import NoResultFound
 
+from extractor import describe
+
 import mutalyzer
-from mutalyzer import (announce, describe, File, Retriever, Scheduler, stats,
+from mutalyzer import (announce, File, Retriever, Scheduler, stats,
                        util, variantchecker)
 from mutalyzer.config import settings
 from mutalyzer.db.models import BATCH_JOB_TYPES
