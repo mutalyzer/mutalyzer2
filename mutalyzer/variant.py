@@ -18,21 +18,41 @@ WEIGHTS = {
 }
 
 
-class HGVSList(list):
+class HGVSList(object):
     """
     Container for a list of sequences or variants.
     """
+    def __init__(self, items=[]):
+        self.items = list(items)
+
+
+    def __getitem__(self, index):
+        return self.items[index]
+
+
+    def __bool__(self):
+        return bool(len(self.items) > 0)
+
+
+    def __nonzero__(self): # Python 2.x compatibility.
+        return self.__bool__()
+
+
     def __unicode__(self):
-        if len(self) > 1:
-            return '[{}]'.format(';'.join(map(unicode, self)))
-        return unicode(self[0])
+        if len(self.items) > 1:
+            return '[{}]'.format(';'.join(map(unicode, self.items)))
+        return unicode(self.items[0])
+
+
+    def append(self, item):
+        self.items.append(item)
 
 
     def weight(self):
-        weight = sum(map(lambda x: x.weight(), self))
+        weight = sum(map(lambda x: x.weight(), self.items))
 
-        if len(self) > 1:
-            return weight + (len(self) + 1) * extractor.WEIGHT_SEPARATOR
+        if len(self.items) > 1:
+            return weight + (len(self.items) + 1) * extractor.WEIGHT_SEPARATOR
         return weight
 
 
@@ -82,8 +102,12 @@ class ISeq(object):
         return '{}_{}{}'.format(self.start, self.end, inverted)
 
 
-    def __nonzero__(self):
+    def __bool__(self):
          return bool(self.sequence)
+
+
+    def __nonzero__(self): # Python 2.x compatibility.
+        return self.__bool__()
 
 
     def weight(self):
