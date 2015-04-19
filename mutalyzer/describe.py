@@ -1,8 +1,6 @@
 """
-Prototype of a module that can generate a HGVS description of the variant(s)
-leading from one sequence to an other.
-
-@requires: Bio.Seq
+Generate a HGVS description of the variant(s) leading from one sequence to an
+other.
 """
 
 
@@ -23,10 +21,10 @@ def printpos(s, start, end, fill=0):
     For debugging purposes.
     """
     # TODO: See if this can partially replace or be merged with the
-    #       visualisation in the __mutate() function of mutator.py
+    #       visualisation in the _visualise() function of mutator.py
     fs = 10 # Flank size.
 
-    return "{} {}{} {}".format(s[start - fs:start], s[start:end], '-' * fill,
+    return '{} {}{} {}'.format(s[start - fs:start], s[start:end], '-' * fill,
         s[end:end + fs])
 
 
@@ -61,9 +59,9 @@ def make_fs_tables(table_id):
                 for codon_j in reverse_table[aa_j]:
                     fs1[aa_i + aa_j].add(table[(codon_i + codon_j)[1:4]]) # +1.
                     fs2[aa_i + aa_j].add(table[(codon_i + codon_j)[2:5]]) # +2.
-                #for
+
     return fs1, fs2
-#make_fs_tables
+
 
 def _peptide_overlaps(peptide):
     """
@@ -75,8 +73,8 @@ def _peptide_overlaps(peptide):
     :returns: All 2-mers of {peptide} in order of appearance.
     :rtype: list(unicode)
     """
-    return map(lambda x: peptide[x:x+2], range(len(peptide) - 1))
-#_peptide_overlaps
+    return [a + b for (a, b) in zip(peptide, peptide[1:])]
+
 
 def _options(peptide_overlaps, peptide_prefix, fs, output):
     """
@@ -94,10 +92,10 @@ def _options(peptide_overlaps, peptide_prefix, fs, output):
     if not peptide_overlaps:
         output.append(peptide_prefix)
         return
-    #if
+
     for i in fs[peptide_overlaps[0]]:
         _options(peptide_overlaps[1:], peptide_prefix + i, fs, output)
-#_options
+
 
 def enum_fs(peptide, fs):
     """
@@ -113,9 +111,9 @@ def enum_fs(peptide, fs):
     """
     output = []
 
-    _options(_peptide_overlaps(peptide), "", fs, output)
+    _options(_peptide_overlaps(peptide), '', fs, output)
     return output
-#enum_fs
+
 
 def fit_fs(peptide, alternative_peptide, fs):
     """
@@ -145,7 +143,7 @@ def fit_fs(peptide, alternative_peptide, fs):
         if not alternative_peptide[i] in fs[peptide_overlaps[i]]:
             return False
     return True
-#fit_fs
+
 
 def find_fs(peptide, alternative_peptide, fs):
     """
@@ -173,11 +171,8 @@ def find_fs(peptide, alternative_peptide, fs):
         if j >= max_fs:
             max_fs = j
             fs_start = i - j + 2
-        #if
-    #for
 
     return max_fs - 1, fs_start
-#find_fs
 
 
 def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
@@ -186,7 +181,7 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
     """
     # Unknown.
     if s1 == '?' or s2 == '?':
-        return [container(type="unknown", weight_position=weight_position)]
+        return [container(type='unknown', weight_position=weight_position)]
 
     # Insertion / Duplication.
     if var.reference_start == var.reference_end:
@@ -200,27 +195,25 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         var.sample_end += shift3
 
         if (var.sample_start - ins_length >= 0 and
-            s1[var.reference_start - ins_length:var.reference_start] ==
-            s2[var.sample_start:var.sample_end]):
-
+                s1[var.reference_start - ins_length:var.reference_start] ==
+                s2[var.sample_start:var.sample_end]):
             # NOTE: We may want to omit the inserted / deleted sequence and
             # use the ranges instead.
             return container(start=var.reference_start - ins_length + 1,
-                end=var.reference_end, type="dup", shift=shift,
+                end=var.reference_end, type='dup', shift=shift,
                 sample_start=var.sample_start + 1, sample_end=var.sample_end,
                 inserted=ISeqList([ISeq(sequence=s2[
                 var.sample_start:var.sample_end],
                     weight_position=weight_position)]),
                 weight_position=weight_position)
-        #if
+
         return container(start=var.reference_start,
             end=var.reference_start + 1,
             inserted=seq_list or
             ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end],
                 weight_position=weight_position)]),
-            type="ins", shift=shift, sample_start=var.sample_start + 1,
+            type='ins', shift=shift, sample_start=var.sample_start + 1,
             sample_end=var.sample_end, weight_position=weight_position)
-    #if
 
     # Deletion.
     if var.sample_start == var.sample_end:
@@ -231,27 +224,24 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         var.reference_end += shift3
 
         return container(start=var.reference_start + 1,
-            end=var.reference_end, type="del", shift=shift,
+            end=var.reference_end, type='del', shift=shift,
             sample_start=var.sample_start, sample_end=var.sample_end + 1,
             deleted=ISeqList([ISeq(sequence=s1[
                 var.reference_start:var.reference_end],
                 weight_position=weight_position)]),
             weight_position=weight_position)
-    #if
 
     # Substitution.
     if (var.reference_start + 1 == var.reference_end and
-        var.sample_start + 1 == var.sample_end):
-
+            var.sample_start + 1 == var.sample_end):
         return container(start=var.reference_start + 1,
             end=var.reference_end, sample_start=var.sample_start + 1,
-            sample_end=var.sample_end, type="subst",
+            sample_end=var.sample_end, type='subst',
             deleted=ISeqList([ISeq(sequence=s1[var.reference_start],
                 weight_position=weight_position)]),
             inserted=ISeqList([ISeq(sequence=s2[var.sample_start],
                 weight_position=weight_position)]),
             weight_position=weight_position)
-    #if
 
     # Inversion.
     if var.type & extractor.REVERSE_COMPLEMENT:
@@ -260,10 +250,9 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         if trim > 0: # Partial palindrome.
             var.reference_end -= trim
             var.sample_end -= trim
-        #if
 
         return container(start=var.reference_start + 1,
-            end=var.reference_end, type="inv",
+            end=var.reference_end, type='inv',
             sample_start=var.sample_start + 1, sample_end=var.sample_end,
             deleted=ISeqList([ISeq(sequence=s1[
                 var.reference_start:var.reference_end],
@@ -272,7 +261,6 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
                 var.sample_start:var.reference_end],
                 weight_position=weight_position)]),
             weight_position=weight_position)
-    #if
 
     # InDel.
     return container(start=var.reference_start + 1,
@@ -282,9 +270,9 @@ def var_to_rawvar(s1, s2, var, seq_list=[], container=DNAVar,
         inserted=seq_list or
         ISeqList([ISeq(sequence=s2[var.sample_start:var.sample_end],
             weight_position=weight_position)]),
-        type="delins", sample_start=var.sample_start + 1,
+        type='delins', sample_start=var.sample_start + 1,
         sample_end=var.sample_end, weight_position=weight_position)
-#var_to_rawvar
+
 
 def describe_dna(s1, s2):
     """
@@ -302,7 +290,7 @@ def describe_dna(s1, s2):
     in_transposition = 0
 
     extracted = extractor.extract(s1.encode('utf-8'), len(s1),
-                                  s2.encode('utf-8'), len(s2), 0)
+        s2.encode('utf-8'), len(s2), 0)
     for variant in extracted.variants:
        # print (variant.type, variant.reference_start,
        #     variant.reference_end, variant.sample_start,
@@ -315,7 +303,6 @@ def describe_dna(s1, s2):
             if not in_transposition:
                 seq_list = ISeqList()
             in_transposition += 1
-        #if
 
         if in_transposition:
             if variant.type & extractor.IDENTITY:
@@ -330,7 +317,6 @@ def describe_dna(s1, s2):
                 seq_list.append(ISeq(
                     sequence=s2[variant.sample_start:variant.sample_end],
                     weight_position=extracted.weight_position))
-        #if
         elif not (variant.type & extractor.IDENTITY):
             description.append(var_to_rawvar(s1, s2, variant,
                 weight_position=extracted.weight_position))
@@ -341,13 +327,11 @@ def describe_dna(s1, s2):
             if not in_transposition:
                 description.append(var_to_rawvar(s1, s2, variant, seq_list,
                     weight_position=extracted.weight_position))
-        #if
-    #for
 
     if not description:
         return Allele([DNAVar()])
     return description
-#describe_dna
+
 
 def describe_protein(s1, s2):
     """
@@ -373,19 +357,17 @@ def describe_protein(s1, s2):
         s1_part = s1[:longest_fs_f[1]]
         s2_part = s2[:len(s2) - longest_fs_f[0]]
         term = longest_fs_f[0]
-    #if
     else:
         print s1[:len(s1) - longest_fs_r[0]], s1[len(s1) - longest_fs_r[0]:]
         print s2[:longest_fs_r[1]], s2[longest_fs_r[1]:]
         s1_part = s1[:len(s1) - longest_fs_r[0]]
         s2_part = s2[:longest_fs_r[1]]
         term = len(s2) - longest_fs_r[1]
-    #else
 
     s1_part = s1
     s2_part = s2
     for variant in extractor.extract(s1_part.encode('utf-8'), len(s1_part),
-                                     s2_part.encode('utf-8'), len(s2_part), 1):
+            s2_part.encode('utf-8'), len(s2_part), 1):
         description.append(var_to_rawvar(s1, s2, variant,
             container=ProteinVar))
 
@@ -393,4 +375,3 @@ def describe_protein(s1, s2):
         description[-1].term = term + 2
 
     return description
-#describe_protein

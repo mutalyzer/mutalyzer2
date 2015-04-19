@@ -7,16 +7,16 @@ from Bio.SeqUtils import seq3
 
 from extractor import extractor
 
-from mutalyzer import models
 
-weights = {
-    "subst": extractor.WEIGHT_SUBSTITUTION,
-    "del": extractor.WEIGHT_DELETION,
-    "ins": extractor.WEIGHT_INSERTION,
-    "dup": extractor.WEIGHT_INSERTION,
-    "inv": extractor.WEIGHT_INVERSION,
-    "delins": extractor.WEIGHT_DELETION_INSERTION
+WEIGHTS = {
+    'subst': extractor.WEIGHT_SUBSTITUTION,
+    'del': extractor.WEIGHT_DELETION,
+    'ins': extractor.WEIGHT_INSERTION,
+    'dup': extractor.WEIGHT_INSERTION,
+    'inv': extractor.WEIGHT_INVERSION,
+    'delins': extractor.WEIGHT_DELETION_INSERTION
 }
+
 
 class HGVSList(list):
     """
@@ -24,9 +24,9 @@ class HGVSList(list):
     """
     def __unicode__(self):
         if len(self) > 1:
-            return "[{}]".format(';'.join(map(unicode, self)))
+            return '[{}]'.format(';'.join(map(unicode, self)))
         return unicode(self[0])
-    #__unicode__
+
 
     def weight(self):
         weight = sum(map(lambda x: x.weight(), self))
@@ -34,20 +34,21 @@ class HGVSList(list):
         if len(self) > 1:
             return weight + (len(self) + 1) * extractor.WEIGHT_SEPARATOR
         return weight
-    #weight
-#HGVSList
+
 
 class Allele(HGVSList):
     pass
 
+
 class ISeqList(HGVSList):
     pass
+
 
 class ISeq(object):
     """
     Container for an inserted sequence.
     """
-    def __init__(self, sequence="", start=0, end=0, reverse=False,
+    def __init__(self, sequence='', start=0, end=0, reverse=False,
             weight_position=1):
         """
         :arg sequence: Literal inserted sequence.
@@ -65,42 +66,42 @@ class ISeq(object):
         self.reverse = reverse
         self.weight_position = weight_position
 
-        self.type = "trans"
+        self.type = 'trans'
         if self.sequence:
-            self.type = "ins"
-    #__init__
+            self.type = 'ins'
+
 
     def __unicode__(self):
-        if self.type == "ins":
+        if self.type == 'ins':
             return self.sequence
 
         if not (self.start or self.end):
-            return ""
+            return ''
 
-        inverted = "inv" if self.reverse else ""
-        return "{}_{}{}".format(self.start, self.end, inverted)
-    #__unicode__
+        inverted = 'inv' if self.reverse else ''
+        return '{}_{}{}'.format(self.start, self.end, inverted)
+
 
     def __nonzero__(self):
          return bool(self.sequence)
 
+
     def weight(self):
-        if self.type == "ins":
+        if self.type == 'ins':
             return len(self.sequence) * extractor.WEIGHT_BASE
 
-        inverse_weight = weights["inv"] if self.reverse else 0
+        inverse_weight = WEIGHTS['inv'] if self.reverse else 0
         return (self.weight_position * 2 + extractor.WEIGHT_SEPARATOR +
             inverse_weight)
-    #weight
-#ISeq
 
-class DNAVar(models.DNAVar):
+
+class DNAVar(object):
     """
     Container for a DNA variant.
     """
     def __init__(self, start=0, start_offset=0, end=0, end_offset=0,
             sample_start=0, sample_start_offset=0, sample_end=0,
-            sample_end_offset=0, type="none", deleted=ISeqList([ISeq()]),
+            sample_end_offset=0, type='none', deleted=ISeqList([ISeq()]),
             inserted=ISeqList([ISeq()]), shift=0, weight_position=1):
         """
         Initialise the class with the appropriate values.
@@ -145,7 +146,7 @@ class DNAVar(models.DNAVar):
         self.inserted = inserted
         self.weight_position = weight_position
         self.shift = shift
-    #__init__
+
 
     def __unicode__(self):
         """
@@ -154,47 +155,45 @@ class DNAVar(models.DNAVar):
         :returns: The HGVS description of the raw variant stored in this class.
         :rtype: unicode
         """
-        if self.type == "unknown":
-            return "?"
-        if self.type == "none":
-            return "="
+        if self.type == 'unknown':
+            return '?'
+        if self.type == 'none':
+            return '='
 
-        description = "{}".format(self.start)
+        description = '{}'.format(self.start)
 
         if self.start != self.end:
-            description += "_{}".format(self.end)
+            description += '_{}'.format(self.end)
 
-        if self.type != "subst":
-            description += "{}".format(self.type)
+        if self.type != 'subst':
+            description += '{}'.format(self.type)
 
-            if self.type in ("ins", "delins"):
-                return description + "{}".format(self.inserted)
+            if self.type in ('ins', 'delins'):
+                return description + '{}'.format(self.inserted)
             return description
-        #if
 
-        return description + "{}>{}".format(self.deleted, self.inserted)
-    #__unicode__
+        return description + '{}>{}'.format(self.deleted, self.inserted)
+
 
     def weight(self):
-        if self.type == "unknown":
+        if self.type == 'unknown':
             return -1
-        if self.type == "none":
+        if self.type == 'none':
             return 0
 
         weight = self.weight_position
         if self.start != self.end:
             weight += self.weight_position + extractor.WEIGHT_SEPARATOR
 
-        return weight + weights[self.type] + self.inserted.weight()
-    #weight
-#DNAVar
+        return weight + WEIGHTS[self.type] + self.inserted.weight()
 
-class ProteinVar(models.ProteinVar):
+
+class ProteinVar(object):
     """
     Container for a protein variant.
     """
     def __init__(self, start=0, end=0, sample_start=0, sample_end=0,
-            type="none", deleted=ISeqList([ISeq()]),
+            type='none', deleted=ISeqList([ISeq()]),
             inserted=ISeqList([ISeq()]), shift=0, term=0):
         """
         Initialise the class with the appropriate values.
@@ -227,7 +226,7 @@ class ProteinVar(models.ProteinVar):
         self.inserted = inserted
         self.shift = shift
         self.term = term
-    #__init__
+
 
     def __unicode__(self):
         """
@@ -239,32 +238,29 @@ class ProteinVar(models.ProteinVar):
         :returns: The HGVS description of the raw variant stored in this class.
         :rtype: unicode
         """
-        if self.type == "unknown":
-            return "?"
-        if self.type == "none":
-            return "="
+        if self.type == 'unknown':
+            return '?'
+        if self.type == 'none':
+            return '='
 
-        description = ""
+        description = ''
         if not self.deleted:
-            if self.type == "ext":
+            if self.type == 'ext':
                 description += '*'
             else:
-                description += "{}".format(seq3(self.start_aa))
-        #if
+                description += '{}'.format(seq3(self.start_aa))
         else:
-            description += "{}".format(seq3(self.deleted))
-        description += "{}".format(self.start)
+            description += '{}'.format(seq3(self.deleted))
+        description += '{}'.format(self.start)
         if self.end:
-            description += "_{}{}".format(seq3(self.end_aa), self.end)
-        if self.type not in ["subst", "stop", "ext", "fs"]: # fs is not a type
+            description += '_{}{}'.format(seq3(self.end_aa), self.end)
+        if self.type not in ['subst', 'stop', 'ext', 'fs']: # fs is not a type
             description += self.type
         if self.inserted:
-            description += "{}".format(seq3(self.inserted))
+            description += '{}'.format(seq3(self.inserted))
 
-        if self.type == "stop":
+        if self.type == 'stop':
             return description + '*'
         if self.term:
-            return description + "fs*{}".format(self.term)
+            return description + 'fs*{}'.format(self.term)
         return description
-    #__unicode__
-#ProteinVar
