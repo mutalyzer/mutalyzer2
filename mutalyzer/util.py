@@ -29,6 +29,7 @@ import operator
 import sys
 import time
 
+from Bio import SeqIO
 from Bio.SeqUtils import seq3
 
 # NOTE: This is a temporary fix.
@@ -350,6 +351,46 @@ def is_dna(s):
 
     return True
 #is_dna
+
+
+def guess_file_type(handle):
+    """
+    Guess the file type of an NGS data file.
+
+    We assume that the stream is rewinded before use, after use, the input
+    stream will be rewinded.
+
+    :arg stream handle: Open readable handle to an NGS data file.
+
+    :returns unicode: Either 'fasta', 'fastq' or 'text'.
+    """
+    token = handle.read(1)
+    handle.seek(0)
+
+    if token == '>':
+        return 'fasta'
+    elif token == '@':
+        return 'fastq'
+    return 'text'
+
+
+def read_dna(handle):
+    """
+    Read the first record in an NGS data file.
+
+    If the format is not recognised as FASTA or FASTQ, we assume that the input
+    is in plain text. In this case, all non-DNA characters are removed.
+
+    :arg stream handle: Open readable handle to an NGS data file.
+
+    :returns unicode: Content of the first record in the file.
+    """
+    file_format = guess_file_type(handle)
+
+    if file_format != 'text':
+        return unicode(SeqIO.parse(handle, file_format).next().seq)
+
+    return ''.join(x for x in unicode(handle.read()) if x in 'ATCG')
 
 
 def in_frame_description(s1, s2) :

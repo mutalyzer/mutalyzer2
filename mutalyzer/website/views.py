@@ -9,6 +9,7 @@ import bz2
 import os
 import pkg_resources
 import re
+import StringIO
 import urllib
 
 from flask import Blueprint
@@ -66,6 +67,13 @@ def request_terms():
     terms = request.path.lstrip('/').split('/')
     terms += [s for item in request.args.iteritems() for s in item]
     return terms
+
+
+@website.app_template_filter('short')
+def short_seq_filter(s, max_len=21):
+    if len(s) > max_len:
+        return s[:max_len / 2 - 1] + '...' + s[-max_len / 2 + 2:]
+    return s
 
 
 @website.context_processor
@@ -527,17 +535,17 @@ def reference_loader_submit():
     corresponding to values for the `method` field, each requiring some
     additional fields to be defined.:
 
-    `method=upload`
+    `method=upload_method`
       The reference sequence file is uploaded from a local file.
 
       - `file`: Reference sequence file to upload.
 
-    `method=url`
+    `method=url_method`
       The reference sequence file can be found at the specified URL.
 
       - `url`: URL of reference sequence file to load.
 
-    `method=slice_gene`
+    `method=slice_gene_method`
       Retrieve part of the reference genome for an HGNC gene symbol.
 
       - `genesymbol`: Gene symbol.
@@ -545,7 +553,7 @@ def reference_loader_submit():
       - `upstream`: Number of 5' flanking nucleotides.
       - `downstream`: Number of 3' flanking nucleotides.
 
-    `method=slice_accession`
+    `method=slice_accession_method`
       Retrieve a range of a chromosome by accession number.
 
       - `accession`: Chromosome Accession Number.
@@ -553,7 +561,7 @@ def reference_loader_submit():
       - `accession_stop`: Stop position.
       - `accession_orientation`: Orientation.
 
-    `method=slice_chromosome`
+    `method=slice_chromosome_method`
       Retrieve a range of a chromosome by name.
 
       - `assembly_name_or_alias`: Genome assembly by name or by alias.
@@ -587,7 +595,7 @@ def reference_loader_submit():
             raise InputException('Expected an integer in field: %s' % field)
 
     try:
-        if method == 'upload':
+        if method == 'upload_method':
             # Todo: Non-conforming clients (read: LOVD) might send the form
             #   request urlencoded (and not as the requested multipart/
             #   form-data).
@@ -597,10 +605,10 @@ def reference_loader_submit():
 
             ud = retriever.uploadrecord(file.read())
 
-        elif method == 'url':
+        elif method == 'url_method':
             ud = retriever.downloadrecord(request.form.get('url'))
 
-        elif method == 'slice_gene':
+        elif method == 'slice_gene_method':
             genesymbol = request.form.get('genesymbol')
             organism = request.form.get('organism')
             upstream = check_position(request.form.get('upstream', ''),
@@ -610,7 +618,7 @@ def reference_loader_submit():
             ud = retriever.retrievegene(genesymbol, organism, upstream,
                                         downstream)
 
-        elif method == 'slice_accession':
+        elif method == 'slice_accession_method':
             accession = request.form.get('accession')
             start = check_position(request.form.get('accession_start', ''),
                                    'Start position')
@@ -619,7 +627,7 @@ def reference_loader_submit():
             orientation = int(request.form.get('accession_orientation'))
             ud = retriever.retrieveslice(accession, start, stop, orientation)
 
-        elif method == 'slice_chromosome':
+        elif method == 'slice_chromosome_method':
             chromosome_name = request.form.get('chromosome')
             start = check_position(request.form.get('chromosome_start', ''),
                                    'Start position')
@@ -672,29 +680,110 @@ def reference_loader_submit():
 @website.route('/description-extractor')
 def description_extractor():
     """
-    The Variant Description Extractor (experimental service).
+    Description extractor loader form.
     """
-    reference_sequence = request.args.get('reference_sequence')
-    variant_sequence = request.args.get('variant_sequence')
+    return render_template('description-extractor.html')
 
-    if not (reference_sequence and variant_sequence):
-        return render_template('description-extractor.html')
 
+@website.route('/description-extractor', methods=['POST'])
+def description_extractor_submit():
+    """
+    The Variant Description Extractor (experimental service).
+
+    There multiple ways for the user to provide two sequences, corresponding to
+    the values for the `reference_method` and `sample_method` fields, each
+    requiring some additional fields to be defined:
+
+    `raw_method`
+      The reference and sample sequences are pasted into the form fields.
+
+      - `reference_sequence`: The reference sequence.
+      - `sample_sequence`: The sample sequence.
+
+    `file_method`
+      The reference and sample sequences are uploaded.
+
+      - `reference_file`: The reference file.
+      - `sample_file`: The sample file.
+
+    `refseq_method`
+      The reference and sample sequences are given by RefSeq accession numbers.
+
+      - `reference_accession_number`: RefSeq accession number for the reference
+        sequence.
+      - `sample_accession_number`: RefSeq accession number for the sample
+        sequence.
+    """
     output = Output(__file__)
     output.addMessage(__file__, -1, 'INFO',
                       'Received Description Extract request from %s'
                       % request.remote_addr)
 
+    r = s = ''
+    reference_method = request.form.get('reference_method')
+    sample_method = request.form.get('sample_method')
+    reference_sequence = request.form.get('reference_sequence')
+    sample_sequence = request.form.get('sample_sequence')
+    reference_file = request.files.get('reference_file')
+    sample_file = request.files.get('sample_file')
+    reference_accession_number = request.form.get('reference_accession_number')
+    sample_accession_number = request.form.get('sample_accession_number')
+
+    if reference_method == 'refseq_method':
+        if reference_accession_number:
+            retriever = Retriever.GenBankRetriever(output)
+            genbank_record = retriever.loadrecord(reference_accession_number)
+            if genbank_record:
+                r = unicode(genbank_record.seq)
+        else:
+            output.addMessage(__file__, 3, 'EEMPTYFIELD',
+                'Reference accession number input fields is empty.')
+    elif reference_method == 'file_method':
+        if reference_file:
+            r = util.read_dna(reference_file)
+        else:
+            output.addMessage(__file__, 3, 'EEMPTYFIELD',
+                'No reference file provided.')
+    else: # raw_method
+        if reference_sequence:
+            r = util.read_dna(StringIO.StringIO(reference_sequence))
+        else:
+            output.addMessage(__file__, 3, 'EEMPTYFIELD',
+                'Reference sequence number input fields is empty.')
+
+    if sample_method == 'refseq_method':
+        if sample_accession_number:
+            retriever = Retriever.GenBankRetriever(output)
+            genbank_record = retriever.loadrecord(sample_accession_number)
+            if genbank_record:
+                s = unicode(genbank_record.seq)
+        else:
+            output.addMessage(__file__, 3, 'EEMPTYFIELD',
+                'Sample accession number input fields is empty.')
+    elif sample_method == 'file_method':
+        if sample_file:
+            s = util.read_dna(sample_file)
+        else:
+            output.addMessage(__file__, 3, 'EEMPTYFIELD',
+                'No sample file provided.')
+    else: # raw_method
+        if sample_sequence:
+            s = util.read_dna(StringIO.StringIO(sample_sequence))
+        else:
+            output.addMessage(__file__, 3, 'EEMPTYFIELD',
+                'Sample sequence number input fields is empty.')
+
     # Todo: Move this to the describe module.
-    if not util.is_dna(reference_sequence):
+    if not util.is_dna(r):
         output.addMessage(__file__, 3, 'ENODNA',
                           'Reference sequence is not DNA.')
-    if not util.is_dna(variant_sequence):
+    if not util.is_dna(s):
         output.addMessage(__file__, 3, 'ENODNA',
-                          'Variant sequence is not DNA.')
+                          'Sample sequence is not DNA.')
 
-    raw_vars = extractor.describe_dna(reference_sequence, variant_sequence)
-    description = unicode(raw_vars) #describe.allele_description(raw_vars)
+    raw_vars = None
+    if r and s:
+        raw_vars = extractor.describe_dna(r, s)
 
     errors, warnings, summary = output.Summary()
     messages = map(util.message_info, output.getMessages())
@@ -703,13 +792,12 @@ def description_extractor():
                       'Finished Description Extract request')
 
     return render_template('description-extractor.html',
-                           reference_sequence=reference_sequence,
-                           variant_sequence=variant_sequence,
-                           raw_vars=raw_vars,
-                           description=description,
-                           errors=errors,
-                           summary=summary,
-                           messages=messages)
+        reference_sequence=reference_sequence or '',
+        sample_sequence=sample_sequence or '',
+        reference_accession_number=reference_accession_number or '',
+        sample_accession_number=sample_accession_number or '',
+        raw_vars=raw_vars, errors=errors, summary=summary, messages=messages,
+        reference_method=reference_method, sample_method=sample_method)
 
 
 @website.route('/reference/<string:filename>')

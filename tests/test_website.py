@@ -100,14 +100,83 @@ class TestWebsite(MutalyzerTest):
         assert r.status == '200 OK'
         assert 'nnouncement' not in r.data
 
-    def test_description_extractor(self):
+    def test_description_extractor_raw(self):
         """
-        Submit the variant description extractor.
+        Submit two sequences to the variant description extractor.
         """
-        r = self.app.get('/description-extractor', query_string={
-                'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
-                'variant_sequence': 'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA'})
-        assert 'g.[5_6insTT;17del;26A&gt;C;35dup]' in r.data
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'raw_method',
+            'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+            'sample_sequence': 'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA'})
+        assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
+
+    def test_description_extractor_raw_fastq(self):
+        """
+        Submit two sequences to the variant description extractor.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+            'data', 'extractor_input.fq')
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'raw_method',
+            'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+            'sample_sequence': open(path).read()})
+        assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
+
+    @fix(database, cache('NM_004006.1', 'NM_004006.2'))
+    def test_description_extractor_refseq(self):
+        """
+        Submit two accession numbers to the variant description extractor.
+        """
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'refseq_method',
+            'sample_method': 'refseq_method',
+            'reference_accession_number': 'NM_004006.1',
+            'sample_accession_number': 'NM_004006.2'})
+        assert '[12749G&gt;A;13729G&gt;A]' in r.data
+
+    def test_description_extractor_file_fasta(self):
+        """
+        Submit a sequence and a FASTA file to the variant description
+        extractor.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+            'data', 'extractor_input.fa')
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'file_method',
+            'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+            'sample_file': (open(path), 'extractor_input.fa')})
+        assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
+
+    def test_description_extractor_file_fastq(self):
+        """
+        Submit a sequence and a FASTQ file to the variant description
+        extractor.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+            'data', 'extractor_input.fq')
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'file_method',
+            'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+            'sample_file': (open(path), 'extractor_input.fq')})
+        assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
+
+    def test_description_extractor_file_text(self):
+        """
+        Submit a sequence and a text file to the variant description
+        extractor.
+        """
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+            'data', 'extractor_input.txt')
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'file_method',
+            'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+            'sample_file': (open(path), 'extractor_input.txt')})
+        assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
 
     def test_checksyntax_valid(self):
         """
@@ -656,7 +725,7 @@ class TestWebsite(MutalyzerTest):
                             'data',
                             'AB026906.1.gb.bz2')
         r = self.app.post('/reference-loader',
-                          data={'method': 'upload',
+                          data={'method': 'upload_method',
                                 'file': (bz2.BZ2File(path), 'AB026906.1.gb')})
         assert 'Your reference sequence was loaded successfully.' in r.data
 
@@ -672,7 +741,7 @@ class TestWebsite(MutalyzerTest):
         Test the genbank uploader with a non-genbank file.
         """
         r = self.app.post('/reference-loader',
-                          data={'method': 'upload',
+                          data={'method': 'upload_method',
                                 'file': (BytesIO('this is not a genbank file'.encode('utf-8')), 'AB026906.1.gb')})
         assert 'Your reference sequence was loaded successfully.' not in r.data
         assert 'The file could not be parsed.' in r.data

@@ -136,6 +136,10 @@ input[type="text"].form-pre{
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
+textarea.form-pre{
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
 code {
 /*	color: #0B9B33;
 	background-color: #F2F9F3;*/
@@ -144,9 +148,11 @@ code {
 	white-space: normal;
 }
 
-pre{
-/*  margin: 15px 30px;*/
+pre.description {
+    white-space: pre-wrap;
+    max-height: 300px;
 }
+
 header.main-header {
 	height: 80px;
 /*	width: 649px;*/
@@ -372,12 +378,12 @@ header.main-header {
 	float: right;
 }
 
-.example-input, .example-input-2 {
+.example-input {
 	cursor: pointer;
 	color: #0B9B33;
 }
 
-.example-input:hover, .example-input-2:hover {
+.example-input:hover {
 	color: #F2F9F3;
 	background-color: #5BC779;
 }

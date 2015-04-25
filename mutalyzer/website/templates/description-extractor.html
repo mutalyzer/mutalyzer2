@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<p class="alert alert-warning">Note that this is an experimental service.</p
+<p class="alert alert-warning">Note that this is an experimental service.</p>
 
 <p>
 Extract the HGVS variant description from a reference sequence and an observed
@@ -29,16 +29,115 @@ testing phase, we plan to use the underlying algorithm for:
 Please supply a reference sequence and an observed sequence.
 </p>
 
-<form action="{{ url_for('.description_extractor') }}" method="get" class="form">
-  <div class="form-group">
-    <label for="reference_sequence">Reference sequence</label>
-    <input type="text" name="reference_sequence" id="reference_sequence" value="{{ reference_sequence }}" class="form-control form-pre example-target" placeholder="Reference sequence">
-    <p>Example: <code class="example-input">ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</code></p>
+<form enctype="multipart/form-data" action="{{ url_for('.description_extractor') }}" method="post" class="form" id="invoer">
+  <div class="row">
+    <h4>Reference input</h4>
+    <div class="col-md-6">
+      <div class="form-group" id="input-methods">
+        <div class="radio">
+          <label>
+            <input type="radio" name="reference_method" value="raw_method" class="input-select" data-context="select-form1" data-for="reference_raw_method" {{ 'checked' if reference_method == 'raw_method' or not reference_method }}>
+            Raw sequence.
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="reference_method" value="file_method" class="input-select" data-context="select-form1" data-for="reference_file_method" {{ 'checked' if reference_method == 'file_method' }}>
+            FASTA/FASTQ/text file.
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="reference_method" value="refseq_method" class="input-select" data-context="select-form1" data-for="reference_refseq_method" {{ 'checked' if reference_method == 'refseq_method' }}>
+            RefSeq accession number.
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="select-form1">
+      <div class="col-md-6">
+        <div class="subform" id="reference_raw_method" style="display: {{ '' if reference_method == 'raw_method' or not reference_method else 'none' }}">
+          <div class="form-group">
+            <label for="reference_sequence">Reference sequence</label>
+            <textarea  name="reference_sequence" id="reference_sequence" class="form-control form-pre example-target" placeholder="Reference sequence">{{ reference_sequence }}</textarea>
+            <p>Example: <code class="example-input" data-for="reference_sequence">ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA</code></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="subform" id="reference_file_method" style="display: {{ 'none' if reference_method != 'file_method' }}">
+          <div class="form-group">
+            <label for="reference_file">Reference file</label>
+            <input type="file" name="reference_file" id="reference_file">
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="subform" id="reference_refseq_method" style="display: {{ 'none' if reference_method != 'refseq_method' }}">
+          <div class="form-group">
+            <label for="reference_accession_number">Reference accession number</label>
+            <input type="text" name="reference_accession_number" id="reference_accession_number" value="{{ reference_accession_number }}" class="form-control form-pre example-target" placeholder="Reference accession number">
+            <p>Example: <code class="example-input" data-for="reference_accession_number">NM_004006.1</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="variant_sequence">Observed sequence</label>
-    <input type="text" name="variant_sequence" id="variant_sequence" value="{{ variant_sequence }}" class="form-control form-pre example-target-2" placeholder="Observed sequence">
-    <p>Example: <code class="example-input-2">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
+
+  <div class="row">
+    <h4>Sample input</h4>
+    <div class="col-md-6">
+      <div class="form-group" id="input-methods">
+        <div class="radio">
+          <label>
+            <input type="radio" name="sample_method" value="raw_method" class="input-select" data-context="select-form2" data-for="sample_raw_method" {{ 'checked' if sample_method == 'raw_method' or not sample_method }}>
+            Raw sequence.
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="sample_method" value="file_method" class="input-select" data-context="select-form2" data-for="sample_file_method" {{ 'checked' if sample_method == 'file_method' }}>
+            FASTA/FASTQ/text file.
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="sample_method" value="refseq_method" class="input-select" data-context="select-form2" data-for="sample_refseq_method" {{ 'checked' if sample_method == 'refseq_method' }}>
+            RefSeq accession number.
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="select-form2">
+      <div class="col-md-6">
+        <div class="subform" id="sample_raw_method" style="display: {{ '' if sample_method == 'raw_method' or not sample_method else 'none' }}">
+          <div class="form-group">
+            <label for="sample_sequence">Sample sequence</label>
+            <textarea name="sample_sequence" id="sample_sequence" class="form-control form-pre example-target-2" placeholder="Sample sequence">{{ sample_sequence }}</textarea>
+            <p>Example: <code class="example-input" data-for="sample_sequence">ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA</code></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="subform" id="sample_file_method" style="display: {{ 'none' if sample_method != 'file_method' }}">
+          <div class="form-group">
+            <label for="sample_file">Reference file</label>
+            <input type="file" name="sample_file" id="sample_file">
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="subform" id="sample_refseq_method" style="display: {{ 'none' if sample_method != 'refseq_method' }}">
+          <div class="form-group">
+            <label for="sample_accession_number">Sample accession number</label>
+            <input type="text" name="sample_accession_number" id="sample_accession_number" value="{{ sample_accession_number }}" class="form-control form-pre example-target-2" placeholder="Sample accession number">
+            <p>Example: <code class="example-input" data-for="sample_accession_number">NM_004006.2</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="form-group">
     <input type="submit" class="btn btn-primary" value="Extract variant description">
@@ -46,7 +145,7 @@ Please supply a reference sequence and an observed sequence.
   </div>
 </form>
 
-{% if description %}
+{% if reference_method and sample_method %}
   <hr>
   {% for m in messages %}
     {% if m.class == "error" %}
@@ -69,8 +168,44 @@ Please supply a reference sequence and an observed sequence.
   {% if not errors %}
     <hr>
 
-    <h4>Genomic description</h4>
-    <p><code>g.{{ description }}</code></p>
+    <h4>Input</h4>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Reference input</td>
+          <td>
+            {% if reference_method == 'raw_method' %}
+              <code>{{ reference_sequence|short(40) }}</code>
+            {% elif reference_method == 'file_method' %}
+              File upload
+            {% elif reference_method == 'refseq_method' %}
+              {{ reference_accession_number }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Sample input</td>
+          <td>
+            {% if sample_method == 'raw_method' %}
+              <code>{{ sample_sequence|short(40) }}</code>
+            {% elif sample_method == 'file_method' %}
+              File upload
+            {% elif sample_method == 'refseq_method' %}
+              {{ sample_accession_number }}
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Description</h4>
+    <p><pre class="description">{{ raw_vars|string }}</pre></p>
 
     <h4>Overview of the raw variants</h4>
     <table class="table">
@@ -86,17 +221,17 @@ Please supply a reference sequence and an observed sequence.
         </tr>
       </thead>
       <tbody>
-        {% for raw_var in raw_vars %}
-          <tr>
-            <td>{{ raw_var.start }}</td>
-            <td>{{ raw_var.end }}</td>
-            <td>{{ raw_var.type }}</td>
-            <td>{{ raw_var.deleted }}</td>
-            <td>{{ raw_var.inserted }}</td>
-            <td>{{ raw_var.shift }}</td>
-            <td>{{ raw_var }}</td>
-          </tr>
-        {% endfor %}
+      {% for raw_var in raw_vars %}
+        <tr>
+          <td>{{ raw_var.start }}</td>
+          <td>{{ raw_var.end }}</td>
+          <td>{{ raw_var.type }}</td>
+          <td><code>{{ raw_var.deleted|string|short }}</code></td>
+          <td><code>{{ raw_var.inserted|string|short }}</code></td>
+          <td>{{ raw_var.shift }}</td>
+          <td>{% if raw_var|string|length > 20 %}Too long to show{% else %}<code>{{ raw_var|string }}</code>{% endif %}</td>
+        </tr>
+      {% endfor %}
       </tbody>
     </table>
   {% endif %}{# not errors #}
