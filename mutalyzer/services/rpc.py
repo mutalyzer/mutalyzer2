@@ -23,7 +23,7 @@ from operator import attrgetter
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import func
 
-from extractor import describe
+import extractor
 
 import mutalyzer
 from mutalyzer.config import settings
@@ -1240,9 +1240,28 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
             'Received request descriptionExtract')
 
+        allele = extractor.describe_dna(reference, observed)
+
         result = Allele()
-        result.allele = describe.describe(reference, observed)
-        result.description = describe.allele_description(result.allele)
+        result.allele = []
+        for variant in allele:
+            raw_var = RawVar()
+            raw_var.start = variant.start
+            raw_var.start_offset = variant.start_offset
+            raw_var.end = variant.end
+            raw_var.end_offset = variant.end_offset
+            raw_var.sample_start = variant.sample_start
+            raw_var.sample_start_offset = variant.sample_start_offset
+            raw_var.sample_end = variant.sample_end
+            raw_var.sample_end_offset = variant.sample_end_offset
+            raw_var.type = variant.type
+            raw_var.deleted = unicode(variant.deleted)
+            raw_var.inserted = unicode(variant.inserted)
+            raw_var.weight = variant.weight()
+            raw_var.shift = variant.shift
+            raw_var.description = unicode(variant)
+            result.allele.append(raw_var)
+        result.description = unicode(allele)
 
         output.addMessage(__file__, -1, 'INFO',
             'Finished processing descriptionExtract')

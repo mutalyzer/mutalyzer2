@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 import argparse
 import json
 
-from extractor import describe
+import extractor
 
 from . import _cli_string
 from .. import output
@@ -106,8 +106,8 @@ def check_name(description):
         reference_sequence = O.getIndexedOutput("original", 0)
         sample_sequence = O.getIndexedOutput("mutated", 0)
 
-        described_allele = describe.describe_dna(reference_sequence,
-            sample_sequence)
+        described_allele = extractor.describe_dna(reference_sequence,
+                                                  sample_sequence)
         #described_protein_allele = describe.describe(
         #    O.getIndexedOutput("oldprotein", 0),
         #    O.getIndexedOutput("newprotein", 0, default=""),

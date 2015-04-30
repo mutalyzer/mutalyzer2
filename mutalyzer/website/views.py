@@ -19,7 +19,7 @@ from lxml import etree
 from spyne.server.http import HttpBase
 from sqlalchemy.orm.exc import NoResultFound
 
-from extractor import describe
+import extractor
 
 import mutalyzer
 from mutalyzer import (announce, File, Retriever, Scheduler, stats,
@@ -271,8 +271,8 @@ def name_checker():
     # Experimental description extractor.
     if (output.getIndexedOutput('original', 0) and
         output.getIndexedOutput('mutated', 0)):
-        allele = describe.describe_dna(output.getIndexedOutput('original', 0),
-                                       output.getIndexedOutput('mutated', 0))
+        allele = extractor.describe_dna(output.getIndexedOutput('original', 0),
+                                        output.getIndexedOutput('mutated', 0))
         #prot_allele = describe.describe_protein(
         #    output.getIndexedOutput('oldprotein', 0),
         #    output.getIndexedOutput('newprotein', 0, default=''))
@@ -701,7 +701,7 @@ def description_extractor():
         output.addMessage(__file__, 3, 'ENODNA',
                           'Variant sequence is not DNA.')
 
-    raw_vars = describe.describe_dna(reference_sequence, variant_sequence)
+    raw_vars = extractor.describe_dna(reference_sequence, variant_sequence)
     description = unicode(raw_vars) #describe.allele_description(raw_vars)
 
     errors, warnings, summary = output.Summary()

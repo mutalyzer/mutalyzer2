@@ -105,7 +105,6 @@ class RawVar(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
-    dna = Mandatory.Boolean
     start = Mandatory.Integer
     start_offset = Mandatory.Integer
     end = Mandatory.Integer
@@ -114,19 +113,12 @@ class RawVar(ComplexModel):
     sample_start_offset = Mandatory.Integer
     sample_end = Mandatory.Integer
     sample_end_offset = Mandatory.Integer
-    transposition_start = Mandatory.Integer
-    transposition_start_offset = Mandatory.Integer
-    transposition_end = Mandatory.Integer
-    transposition_end_offset = Mandatory.Integer
     type = Mandatory.Unicode
     deleted = Mandatory.Unicode
     inserted = Mandatory.Unicode
+    weight = Mandatory.Integer
     shift = Mandatory.Integer
-    start_aa = Mandatory.Unicode
-    end_aa = Mandatory.Unicode
-    term = Mandatory.Integer
-    hgvs = Mandatory.Unicode
-    hgvs_length = Mandatory.Integer
+    description = Mandatory.Unicode
 #RawVar
 
 
