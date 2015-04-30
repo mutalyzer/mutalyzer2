@@ -711,3 +711,108 @@ facilisi."""
         result = self._call('getBatchJob', job_id)
         result = result.decode('base64').decode('utf-8').strip().split('\n')[1:]
         assert expected == [line.split('\t') for line in result]
+
+    @fix(database, hg19, hg19_transcript_mappings)
+    def test_get_transcripts_mapping(self):
+        """
+        Test output of getTranscriptsMapping.
+        """
+        r = self._call('getTranscriptsMapping', 'hg19', 'chr11',
+                       111955524, 111966518)
+        assert len(r.TranscriptMappingInfo) == 3
+        assert all(all(t_real[k] == t_expected[k] for k in t_expected)
+                   for t_real, t_expected in
+                   zip(r.TranscriptMappingInfo, [{'cds_start': 111957632,
+                                                  'cds_stop': 111965694,
+                                                  'name': 'NM_003002',
+                                                  'stop': 111966518,
+                                                  'start': 111957571,
+                                                  'version': 2,
+                                                  'gene': 'SDHD',
+                                                  'orientation': '+'},
+                                                 {'cds_start': 111957492,
+                                                  'cds_stop': 111956019,
+                                                  'name': 'NM_012459',
+                                                  'stop': 111955524,
+                                                  'start': 111957522,
+                                                  'version': 2,
+                                                  'gene': 'TIMM8B',
+                                                  'orientation': '-'},
+                                                 {'cds_start': None,
+                                                  'cds_stop': None,
+                                                  'name': 'NR_028383',
+                                                  'stop': 111955524,
+                                                  'start': 111957522,
+                                                  'version': 1,
+                                                  'gene': 'TIMM8B',
+                                                  'orientation': '-'}]))
+
+    def test_description_extract(self):
+        """
+        Test output of descriptionExtract.
+        """
+        r = self._call('descriptionExtract',
+                       'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
+                       'ATGATTTGATCAGATACATGTGATACCGGTAGTTAGGACAA')
+        assert r['description'] == '[5_6insTT;17del;26A>C;35dup]'
+        assert len(r['allele'].RawVar) == 4
+        # For some reason, we get the empty string as `None` in SOAP.
+        assert all(all((v_real[k] == v_expected[k]) or not(v_real[k] or v_expected[k])
+                       for k in v_expected)
+                   for v_real, v_expected in
+                   zip(r['allele'].RawVar, [{'term': 0,
+                                             'end': 6,
+                                             'startAA': '',
+                                             'deleted': '',
+                                             'hgvsLength': 8,
+                                             'inserted': 'TT',
+                                             'start_offset': 0,
+                                             'start': 5,
+                                             'hgvs': '5_6insTT',
+                                             'shift': 1,
+                                             'endAA': '',
+                                             'DNA': True,
+                                             'end_offset': 0,
+                                             'type': 'ins'},
+                                            {'term': 0,
+                                             'end': 0,
+                                             'startAA': '',
+                                             'deleted': '',
+                                             'hgvsLength': 4,
+                                             'inserted': '',
+                                             'start_offset': 0,
+                                             'start': 17,
+                                             'hgvs': '17del',
+                                             'shift': 0,
+                                             'endAA': '',
+                                             'DNA': True,
+                                             'end_offset': 0,
+                                             'type': 'del'},
+                                            {'term': 0,
+                                             'end': 0,
+                                             'startAA': '',
+                                             'deleted': 'A',
+                                             'hgvsLength': 4,
+                                             'inserted': 'C',
+                                             'start_offset': 0,
+                                             'start': 26,
+                                             'hgvs': '26A>C',
+                                             'shift': 0,
+                                             'endAA': '',
+                                             'DNA': True,
+                                             'end_offset': 0,
+                                             'type': 'subst'},
+                                            {'term': 0,
+                                             'end': 0,
+                                             'startAA': '',
+                                             'deleted': '',
+                                             'hgvsLength': 4,
+                                             'inserted': '',
+                                             'start_offset': 0,
+                                             'start': 35,
+                                             'hgvs': '35dup',
+                                             'shift': 1,
+                                             'endAA': '',
+                                             'DNA': True,
+                                             'end_offset': 0,
+                                             'type': 'dup'}]))
