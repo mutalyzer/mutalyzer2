@@ -8,13 +8,23 @@ Mutalyzer command-line name checker.
 from __future__ import unicode_literals
 
 import argparse
-import sys
+import json
+
+import extractor
 
 from . import _cli_string
-from .. import describe
 from .. import output
 from .. import variantchecker
 
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, o):
+        json_object = o.__dict__
+        json_object.update({"hgvs": unicode(o), "weight": o.weight()})
+
+        return json_object
+    #default
+#MyEncoder
 
 def check_name(description):
     """
@@ -93,22 +103,32 @@ def check_name(description):
         for i in O.getOutput("legends") :
             print i
 
-        allele = describe.describe(O.getIndexedOutput("original", 0),
-            O.getIndexedOutput("mutated", 0))
-        prot_allele = describe.describe(O.getIndexedOutput("oldprotein", 0),
-            O.getIndexedOutput("newprotein", 0, default=""), DNA=False)
+        reference_sequence = O.getIndexedOutput("original", 0)
+        sample_sequence = O.getIndexedOutput("mutated", 0)
 
-        extracted = extractedProt = '(skipped)'
+        described_allele = extractor.describe_dna(reference_sequence,
+                                                  sample_sequence)
+        #described_protein_allele = describe.describe(
+        #    O.getIndexedOutput("oldprotein", 0),
+        #    O.getIndexedOutput("newprotein", 0, default=""),
+        #    DNA=False)
+        described_protein_allele = ""
 
-        if allele:
-            extracted = describe.alleleDescription(allele)
-        if prot_allele:
-            extractedProt = describe.alleleDescription(prot_allele)
+        described = described_protein = '(skipped)'
+
+        if described_allele:
+            described = described_allele
+        if described_protein_allele:
+            described_protein = described_protein_allele
 
         print "\nExperimental services:"
-        print extracted
-        print extractedProt
+        print described
+        print described_protein
         #print "+++ %s" % O.getOutput("myTranscriptDescription")
+        print json.dumps({
+            #"reference_sequence": reference_sequence,
+            #"sample_sequence": sample_sequence,
+            "allele_description": described_allele}, cls=MyEncoder)
 
 
 def main():

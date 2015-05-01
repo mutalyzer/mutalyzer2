@@ -31,66 +31,8 @@ import time
 
 from Bio.SeqUtils import seq3
 
-
-# Taken from BioPython.
-AMBIGUOUS_DNA_COMPLEMENT = {
-    'A': 'T',
-    'C': 'G',
-    'G': 'C',
-    'T': 'A',
-    'M': 'K',
-    'R': 'Y',
-    'W': 'W',
-    'S': 'S',
-    'Y': 'R',
-    'K': 'M',
-    'V': 'B',
-    'H': 'D',
-    'D': 'H',
-    'B': 'V',
-    'X': 'X',
-    'N': 'N'}
-AMBIGUOUS_RNA_COMPLEMENT = {
-    'A': 'U',
-    'C': 'G',
-    'G': 'C',
-    'U': 'A',
-    'M': 'K',
-    'R': 'Y',
-    'W': 'W',
-    'S': 'S',
-    'Y': 'R',
-    'K': 'M',
-    'V': 'B',
-    'H': 'D',
-    'D': 'H',
-    'B': 'V',
-    'X': 'X',
-    'N': 'N'}
-
-
-def _make_translation_table(complement_mapping):
-    before = complement_mapping.keys()
-    before += [b.lower() for b in before]
-    after = complement_mapping.values()
-    after += [b.lower() for b in after]
-    return {ord(k): v for k, v in zip(before, after)}
-
-
-_dna_complement_table = _make_translation_table(AMBIGUOUS_DNA_COMPLEMENT)
-_rna_complement_table = _make_translation_table(AMBIGUOUS_RNA_COMPLEMENT)
-
-
-def reverse_complement(sequence):
-    """
-    Reverse complement of a sequence represented as unicode string.
-    """
-    if 'U' in sequence or 'u' in sequence:
-        table = _rna_complement_table
-    else:
-        table = _dna_complement_table
-
-    return ''.join(reversed(sequence.translate(table)))
+# NOTE: This is a temporary fix.
+from extractor.describe import reverse_complement, palinsnoop, roll
 
 
 def is_utf8_alias(encoding):
@@ -309,87 +251,6 @@ def roll_(s, start, end) :
 #roll
 
 
-def roll(s, first, last):
-    """
-    Determine the variability of a variant by looking at cyclic
-    permutations. Not all cyclic permutations are tested at each time, it
-    is sufficient to check ``aW'' if ``Wa'' matches (with ``a'' a letter,
-    ``W'' a word) when rolling to the left for example.
-
-        >>> roll('abbabbabbabb', 4, 6)
-        (3, 6)
-        >>> roll('abbabbabbabb', 5, 5)
-        (0, 1)
-        >>> roll('abcccccde', 4, 4)
-        (1, 3)
-
-    @arg s: A reference sequence.
-    @type s: any sequence type
-    @arg first: First position of the pattern in the reference sequence.
-    @type first: int
-    @arg last: Last position of the pattern in the reference sequence.
-    @type last: int
-
-    @return: tuple:
-        - left  ; Amount of positions that the pattern can be shifted to
-                  the left.
-        - right ; Amount of positions that the pattern can be shifted to
-                  the right.
-    @rtype: tuple(int, int)
-    """
-    pattern = s[first - 1:last]   # Extract the pattern
-    pattern_length = len(pattern)
-
-    # Keep rolling to the left as long as a cyclic permutation matches.
-    minimum = first - 2
-    j = pattern_length - 1
-    while minimum > -1 and s[minimum] == pattern[j % pattern_length]:
-        j -= 1
-        minimum -= 1
-
-    # Keep rolling to the right as long as a cyclic permutation matches.
-    maximum = last
-    j = 0
-    while maximum < len(s) and s[maximum] == pattern[j % pattern_length]:
-        j += 1
-        maximum += 1
-
-    return first - minimum - 2, maximum - last
-#roll
-
-
-def palinsnoop(s):
-    """
-    Check a sequence for a reverse-complement-palindromic prefix (and
-    suffix). If one is detected, return the length of this prefix. If the
-    string equals its reverse complement, return -1.
-
-        >>> palinsnoop('TACGCTA')
-        2
-        >>> palinsnoop('TACGTA')
-        -1
-        >>> palinsnoop('TACGCTT')
-        0
-
-    @arg s: A nucleotide sequence.
-    @type s: unicode
-
-    @return: The number of elements that are palindromic or -1 if the string
-             is a 'palindrome'.
-    @rtype: int
-    """
-    s_revcomp = reverse_complement(s)
-
-    for i in range(int(math.ceil(len(s) / 2.0))):
-        if s[i] != s_revcomp[i]:
-            # The first i elements are 'palindromic'.
-            return i
-
-    # Perfect 'palindrome'.
-    return -1
-#palinsnoop
-
-
 def longest_common_prefix(s1, s2):
     """
     Calculate the longest common prefix of two strings.
@@ -434,7 +295,7 @@ def longest_common_suffix(s1, s2):
     @type s2: unicode
 
     @return: The longest common suffix of s1 and s2.
-    @rtype: string
+    @rtype: unicode
     """
     return longest_common_prefix(s1[::-1], s2[::-1])[::-1]
 #longest_common_suffix
@@ -680,7 +541,7 @@ def visualise_sequence(sequence, max_length=25, flank_size=6):
     @type flank_size: int
 
     @return: Either the original sequence, or an abbreviation of it.
-    @rtype: str
+    @rtype: unicode
     """
     if len(sequence) > max_length:
         return '%s [%ibp] %s' % (sequence[:flank_size],

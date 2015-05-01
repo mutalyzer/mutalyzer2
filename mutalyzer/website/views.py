@@ -19,8 +19,10 @@ from lxml import etree
 from spyne.server.http import HttpBase
 from sqlalchemy.orm.exc import NoResultFound
 
+import extractor
+
 import mutalyzer
-from mutalyzer import (announce, describe, File, Retriever, Scheduler, stats,
+from mutalyzer import (announce, File, Retriever, Scheduler, stats,
                        util, variantchecker)
 from mutalyzer.config import settings
 from mutalyzer.db.models import BATCH_JOB_TYPES
@@ -269,20 +271,18 @@ def name_checker():
     # Experimental description extractor.
     if (output.getIndexedOutput('original', 0) and
         output.getIndexedOutput('mutated', 0)):
+        allele = extractor.describe_dna(output.getIndexedOutput('original', 0),
+                                        output.getIndexedOutput('mutated', 0))
+        #prot_allele = describe.describe_protein(
+        #    output.getIndexedOutput('oldprotein', 0),
+        #    output.getIndexedOutput('newprotein', 0, default=''))
+        prot_allele = ''
+
         extracted = extractedProt = '(skipped)'
-
-        allele = describe.describe(output.getIndexedOutput('original', 0),
-                                   output.getIndexedOutput('mutated', 0))
         if allele:
-            extracted = describe.alleleDescription(allele)
-
-        if output.getIndexedOutput('oldprotein', 0):
-            prot_allele = describe.describe(
-                output.getIndexedOutput('oldprotein', 0),
-                output.getIndexedOutput('newprotein', 0, default=''),
-                DNA=False)
-            if prot_allele:
-                extractedProt = describe.alleleDescription(prot_allele)
+            extracted = unicode(allele) #describe.allele_description(allele)
+        if prot_allele:
+            extractedProt = unicode(prot_allele) #describe.allele_description(prot_allele)
 
     else:
         extracted = extractedProt = ''
@@ -701,8 +701,8 @@ def description_extractor():
         output.addMessage(__file__, 3, 'ENODNA',
                           'Variant sequence is not DNA.')
 
-    raw_vars = describe.describe(reference_sequence, variant_sequence)
-    description = describe.alleleDescription(raw_vars)
+    raw_vars = extractor.describe_dna(reference_sequence, variant_sequence)
+    description = unicode(raw_vars) #describe.allele_description(raw_vars)
 
     errors, warnings, summary = output.Summary()
     messages = map(util.message_info, output.getMessages())
