@@ -17,7 +17,12 @@ from .. import output
 from .. import variantchecker
 
 
-class MyEncoder(json.JSONEncoder):
+# TODO: This seems like a bit of a weird trick. In any case, we should
+#   follow the pattern from the `json` documentation to call
+#   `JSONEncoder.default(self, o)` as a fallback.
+#
+# https://docs.python.org/2/library/json.html#json.JSONEncoder.default
+class AlleleEncoder(json.JSONEncoder):
     def default(self, o):
         json_object = o.__dict__
         json_object.update({"hgvs": unicode(o), "weight": o.weight()})
@@ -25,6 +30,7 @@ class MyEncoder(json.JSONEncoder):
         return json_object
     #default
 #MyEncoder
+
 
 def check_name(description):
     """
@@ -128,7 +134,7 @@ def check_name(description):
         print json.dumps({
             #"reference_sequence": reference_sequence,
             #"sample_sequence": sample_sequence,
-            "allele_description": described_allele}, cls=MyEncoder)
+            "allele_description": described_allele}, cls=AlleleEncoder)
 
 
 def main():
