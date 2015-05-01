@@ -6,7 +6,7 @@ For historical reasons, we currently have two issue trackers:
 1. `Mutalyzer Trac -- Active tickets
    <https://humgenprojects.lumc.nl/trac/mutalyzer/report/2>`_
 2. `Mutalyzer GitHub -- Issues
-   <https://github.com/LUMC/mutalyzer/issues>`_
+   <https://github.com/mutalyzer/mutalyzer/issues>`_
 
 The first, on the Mutalyzer Trac website, is the advertised location for end
 users to report issues. This is also where most feature requests are tracked.
