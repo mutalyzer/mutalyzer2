@@ -6,10 +6,10 @@ Downloading Mutalyzer
 =====================
 
 The Mutalyzer source code is `hosted on GitHub
-<https://github.com/LUMC/mutalyzer>`_. The recommended way to get the
+<https://github.com/mutalyzer/mutalyzer>`_. The recommended way to get the
 Mutalyzer source code is by cloning the `Git`_ repository::
 
-    git clone https://github.com/LUMC/mutalyzer.git
+    git clone https://github.com/mutalyzer/mutalyzer.git
 
 This will give you the current development version. See below for working with
 other versions.
@@ -34,9 +34,9 @@ Archive downloads
 If for whatever reason you don't want to use Git, you can download the source
 code directly as a zip archive or tarball. The current development version can
 be found from the `project homepage
-<https://github.com/LUMC/mutalyzer>`_. Archive downloads for release versions
+<https://github.com/mutalyzer/mutalyzer>`_. Archive downloads for release versions
 can be found on the `releases page
-<https://github.com/LUMC/mutalyzer/releases>`_.
+<https://github.com/mutalyzer/mutalyzer/releases>`_.
 
 
 .. _Git: http://git-scm.com/
