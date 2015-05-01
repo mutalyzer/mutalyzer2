@@ -273,19 +273,12 @@ def name_checker():
         output.getIndexedOutput('mutated', 0)):
         allele = extractor.describe_dna(output.getIndexedOutput('original', 0),
                                         output.getIndexedOutput('mutated', 0))
-        #prot_allele = describe.describe_protein(
-        #    output.getIndexedOutput('oldprotein', 0),
-        #    output.getIndexedOutput('newprotein', 0, default=''))
-        prot_allele = ''
-
-        extracted = extractedProt = '(skipped)'
+        extracted = '(skipped)'
         if allele:
-            extracted = unicode(allele) #describe.allele_description(allele)
-        if prot_allele:
-            extractedProt = unicode(prot_allele) #describe.allele_description(prot_allele)
+            extracted = unicode(allele)
 
     else:
-        extracted = extractedProt = ''
+        extracted = ''
 
     # Todo: Generate the fancy HTML views for the proteins here instead of in
     #   `mutalyzer.variantchecker`.
@@ -320,7 +313,6 @@ def name_checker():
         'reference_filename'  : reference_filename,  # Todo: Download link is not shown...
         'browserLink'         : browser_link,
         'extractedDescription': extracted,
-        'extractedProtein'    : extractedProt,
         'standalone'          : bool(request.args.get('standalone'))
     }
 

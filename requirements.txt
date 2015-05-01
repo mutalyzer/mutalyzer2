@@ -1,5 +1,5 @@
 -e git+https://github.com/LUMC/magic-python.git#egg=Magic_file_extensions
--e git+https://github.com/LUMC/extractor.git@f270ef101e909895d58e47420935f2bbfdb28a3b#egg=extractor
+description-extractor==2.2.1
 Flask==0.10.1
 Jinja2==2.7.3
 MySQL-python==1.2.5
