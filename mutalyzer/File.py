@@ -448,12 +448,14 @@ class File() :
         """
 
         mimeType = self.getMimeType(handle)
+
         if mimeType[0] == "text/plain":
             return self.__parseCsvFile(handle)
-        if mimeType[0] in ('application/vnd.ms-excel',
-                           'application/vnd.ms-office',
-                           'application/msword',
-                           'application/zip'):
+        if (mimeType[0] in ('application/vnd.ms-excel',
+                            'application/vnd.ms-office',
+                            'application/msword',
+                            'application/zip') or
+            mimeType[1] == 'Microsoft OOXML'):
             return self.__parseXlsFile(handle)
         if (mimeType[0] == 'application/vnd.oasis.opendocument.spreadsheet' or
             mimeType[1] in ('OpenDocument Spreadsheet',
