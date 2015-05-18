@@ -5,14 +5,6 @@
 
 {% block content %}
 
-<script>
-var oldLoad = window.onload;
-window.onload=function(){
-  if (oldLoad) oldLoad();
-    updateVisibility();
-}
-</script>
-
 <p>
 The Reference File Loader allows you to use your own reference
 sequence when no appropriate RefSeq, GenBank or LRG file is available.
@@ -22,138 +14,140 @@ Please select one of the options below to upload or retrieve your reference
 sequence (maximum size is {{ max_file_size }} megabytes).
 </p>
 
-<form name="invoer" enctype="multipart/form-data" action="{{ url_for('.reference_loader') }}" method="post">
+<form name="invoer" enctype="multipart/form-data" action="{{ url_for('.reference_loader') }}" method="post" id="invoer">
   <div class="row">
     <div class="col-md-6">
       <div class="form-group" id="input-methods">
         <div class="radio">
           <label>
-            <input type="radio" name="method" value="upload" checked >
+            <input class="input-select" type="radio" name="method" value="upload_method" data-context="select-form" data-for="upload_method" checked >
             The reference sequence file is a local file.
           </label>
         </div>
         <div class="radio">
           <label>
-            <input type="radio" name="method" value="url" >
+            <input class="input-select" type="radio" name="method" value="url_method" data-context="select-form" data-for="url_method" >
             The reference sequence file can be found at the following URL.
           </label>
         </div>
         <div class="radio">
           <label>
-            <input type="radio" name="method" value="slice_gene" >
+            <input class="input-select" type="radio" name="method" value="slice_gene_method" data-context="select-form" data-for="slice_gene_method" >
             Retrieve part of the reference genome for a (HGNC) gene symbol.
           </label>
         </div>
         <div class="radio">
           <label>
-            <input type="radio" name="method" value="slice_accession" >
+            <input class="input-select" type="radio" name="method" value="slice_accession_method" data-context="select-form" data-for="slice_accession_method" >
             Retrieve a range of a chromosome by accession number.
           </label>
         </div>
         <div class="radio">
           <label>
-            <input type="radio" name="method" value="slice_chromosome" >
+            <input class="input-select" type="radio" name="method" value="slice_chromosome_method" data-context="select-form" data-for="slice_chromosome_method" >
             Retrieve a range of a chromosome by name.
           </label>
         </div>
       </div>
     </div>
 
-    <script type="text/javascript">
-    $('#input-methods input').on('change', updateVisibility);
-    </script>
+    <div id="select-form">
+      <div class="col-md-6">
+        <div class="subform" id="upload_method">
+          <div class="form-group">
+            <label for="file">GenBank file</label>
+            <input type="file" name="file" id="file">
+            <p class="help-block">Please select the GenBank file in plain text format.</p>
+          </div>
+        </div>
 
-    <div class="col-md-6">
-      <div class="form-group" id="upload_label">
-        <label for="file">GenBank file</label>
-        <input type="file" name="file" id="file">
-        <p class="help-block">Please select the GenBank file in plain text format.</p>
-      </div>
+        <div class="subform" id="url_method" style="display: none">
+          <div class="form-group">
+            <label for="url">GenBank file URL</label>
+            <input type="text" name="url" id="url" class="form-control">
+            <p class="help-block">Please enter the URL of the GenBank file in plain text (including http://).</p>
+          </div>
+        </div>
 
-      <div class="form-group" id="url_label">
-        <label for="url">GenBank file URL</label>
-        <input type="text" name="url" id="url" class="form-control">
-        <p class="help-block">Please enter the URL of the GenBank file in plain text (including http://).</p>
-      </div>
+        <div class="subform" id="slice_gene_method" style="display: none">
+          <div class="form-group">
+            <p class="help-block">Please enter the Gene symbol and organism name without spaces
+              and specify the length of the flanking sequences.</p>
+            <p class="help-block"><b>Note:</b> This uses
+              the <a href="http://www.ncbi.nlm.nih.gov/sites/gquery">NCBI
+                Entrez</a> search engine and is therefore based on the current
+              Entrez assembly for the given organism (GRCh38/hg38 for human).</p>
+            <label for="genesymbol">Gene symbol</label>
+            <input type="text" name="genesymbol" id="genesymbol" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="organism">Organism name</label>
+            <input type="text" name="organism" id="organism" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="upstream">Number of 5' flanking nucleotides</label>
+            <input type="text" name="upstream" id="upstream" value="5000" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="downstream"><td>Number of 3' flanking nucleotides</label>
+            <input type="text" name="downstream" id="downstream" value="2000" class="form-control">
+          </div>
+        </div>
 
-      <div id="slice_gene_label">
-        <div class="form-group">
-          <p class="help-block">Please enter the Gene symbol and organism name without spaces
-            and specify the length of the flanking sequences.</p>
-          <p class="help-block"><b>Note:</b> This uses
-            the <a href="http://www.ncbi.nlm.nih.gov/sites/gquery">NCBI
-              Entrez</a> search engine and is therefore based on the current
-            Entrez assembly for the given organism (GRCh38/hg38 for human).</p>
-          <label for="genesymbol">Gene symbol</label>
-          <input type="text" name="genesymbol" id="genesymbol" class="form-control">
+        <div class="subform" id="slice_accession_method" style="display: none">
+          <div class="form-group">
+            <p class="help-block">Please enter the accession number of the chromosome or contig and specify the range.</p>
+            <label for="accession">Chromosome accession number</label>
+            <input type="text" name="accession" id="accession" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="accession_start">Start position</label>
+            <input type="text" name="accession_start" id="accession_start" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="accession_stop">Stop position</label>
+            <input type="text" name="accession_stop" id="accession_stop" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Orientation</label>
+            <div class="radio"><label><input type="radio" name="accession_orientation" value="1" checked> Forward</label></div>
+            <div class="radio"><label><input type="radio" name="accession_orientation" value="2"> Reverse</label></div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="organism">Organism name</label>
-          <input type="text" name="organism" id="organism" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="upstream">Number of 5' flanking nucleotides</label>
-          <input type="text" name="upstream" id="upstream" value="5000" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="downstream"><td>Number of 3' flanking nucleotides</label>
-          <input type="text" name="downstream" id="downstream" value="2000" class="form-control">
-        </div>
-      </div>
 
-      <div id="slice_accession_label">
-        <div class="form-group">
-          <p class="help-block">Please enter the accession number of the chromosome or contig and specify the range.</p>
-          <label for="accession">Chromosome accession number</label>
-          <input type="text" name="accession" id="accession" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="accession_start">Start position</label>
-          <input type="text" name="accession_start" id="accession_start" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="accession_stop">Stop position</label>
-          <input type="text" name="accession_stop" id="accession_stop" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Orientation</label>
-          <div class="radio"><label><input type="radio" name="accession_orientation" value="1" checked> Forward</label></div>
-          <div class="radio"><label><input type="radio" name="accession_orientation" value="2"> Reverse</label></div>
-        </div>
-      </div>
-
-      <div id="slice_chromosome_label">
-        <div class="form-group">
-          <p class="help-block">Please enter the name of the chromosome and specify the range.</p>
-          <label for="assembly_name_or_alias">Assembly</label>
-          <select name="assembly_name_or_alias" id="assembly_name_or_alias" class="form-control">
-            {% for assembly in assemblies %}
-              <option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{assembly.alias }}){% endif %}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="chromosome">Chromosome name</label>
-          <input type="text" name="chromosome" id="chromosome" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="chromosome_start">Start position</label>
-          <input type="text" name="chromosome_start" id="chromosome_start" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="chromosome_stop">Stop position</label>
-          <input type="text" name="chromosome_stop" id="chromosome_stop" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="chromosome_orientation">Orientation</label>
-          <div class="radio"><label><input type="radio" name="chromosome_orientation" value="1" checked> Forward</label></div>
-          <div class="radio"><label><input type="radio" name="chromosome_orientation" value="2"> Reverse</label></div>
+        <div class="subform" id="slice_chromosome_method" style="display: none">
+          <div class="form-group">
+            <p class="help-block">Please enter the name of the chromosome and specify the range.</p>
+            <label for="assembly_name_or_alias">Assembly</label>
+            <select name="assembly_name_or_alias" id="assembly_name_or_alias" class="form-control">
+              {% for assembly in assemblies %}
+                <option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{assembly.alias }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="chromosome">Chromosome name</label>
+            <input type="text" name="chromosome" id="chromosome" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="chromosome_start">Start position</label>
+            <input type="text" name="chromosome_start" id="chromosome_start" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="chromosome_stop">Stop position</label>
+            <input type="text" name="chromosome_stop" id="chromosome_stop" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="chromosome_orientation">Orientation</label>
+            <div class="radio"><label><input type="radio" name="chromosome_orientation" value="1" checked> Forward</label></div>
+            <div class="radio"><label><input type="radio" name="chromosome_orientation" value="2"> Reverse</label></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   <div class="form-group">
-    <input type="submit" value="Load reference file"class="btn btn-primary">
+    <input type="submit" value="Load reference file" class="btn btn-primary">
     <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/ReferenceLoader" target="_blank" class="btn btn-default pull-right">Help</a>
   </div>
 </form>
