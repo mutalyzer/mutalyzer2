@@ -1240,6 +1240,11 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
             'Received request descriptionExtract')
 
+        if not settings.TESTING and (len(reference) > 1000 or
+                                     len(observed) > 1000):
+            raise Fault('EMAXSIZE',
+                        'Input sequences are restricted to 1000bp.')
+
         allele = extractor.describe_dna(reference, observed)
 
         result = Allele()

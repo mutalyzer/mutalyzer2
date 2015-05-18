@@ -783,7 +783,11 @@ def description_extractor_submit():
 
     raw_vars = None
     if r and s:
-        raw_vars = extractor.describe_dna(r, s)
+        if not settings.TESTING and (len(r) > 1000 or len(s) > 1000):
+            output.addMessage(__file__, 3, 'EMAXSIZE',
+                              'Input sequences are restricted to 1000bp.')
+        else:
+            raw_vars = extractor.describe_dna(r, s)
 
     errors, warnings, summary = output.Summary()
     messages = map(util.message_info, output.getMessages())
