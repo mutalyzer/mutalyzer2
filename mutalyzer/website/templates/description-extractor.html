@@ -26,6 +26,13 @@ testing phase, we plan to use the underlying algorithm for:
 </ul>
 
 <p>
+The algorithm is implemented in
+the <a href="https://github.com/mutalyzer/description-extractor">HGVS variant
+description extractor</a>. To apply it on longer input sequences than accepted
+on this page, you can download that package and run it locally.
+</p>
+
+<p>
 Please supply a reference sequence and an observed sequence.
 </p>
 
@@ -37,19 +44,19 @@ Please supply a reference sequence and an observed sequence.
         <div class="radio">
           <label>
             <input type="radio" name="reference_method" value="raw_method" class="input-select" data-context="select-form1" data-for="reference_raw_method" {{ 'checked' if reference_method == 'raw_method' or not reference_method }}>
-            Raw sequence.
+            Enter a sequence (FASTA, FASTQ, or plain text).
           </label>
         </div>
         <div class="radio">
           <label>
             <input type="radio" name="reference_method" value="file_method" class="input-select" data-context="select-form1" data-for="reference_file_method" {{ 'checked' if reference_method == 'file_method' }}>
-            FASTA/FASTQ/text file.
+            Upload a file (FASTA, FASTQ, or plain text).
           </label>
         </div>
         <div class="radio">
           <label>
             <input type="radio" name="reference_method" value="refseq_method" class="input-select" data-context="select-form1" data-for="reference_refseq_method" {{ 'checked' if reference_method == 'refseq_method' }}>
-            RefSeq accession number.
+            Enter a RefSeq accession number.
           </label>
         </div>
       </div>
@@ -92,19 +99,19 @@ Please supply a reference sequence and an observed sequence.
         <div class="radio">
           <label>
             <input type="radio" name="sample_method" value="raw_method" class="input-select" data-context="select-form2" data-for="sample_raw_method" {{ 'checked' if sample_method == 'raw_method' or not sample_method }}>
-            Raw sequence.
+            Enter a sequence (FASTA, FASTQ, or plain text).
           </label>
         </div>
         <div class="radio">
           <label>
             <input type="radio" name="sample_method" value="file_method" class="input-select" data-context="select-form2" data-for="sample_file_method" {{ 'checked' if sample_method == 'file_method' }}>
-            FASTA/FASTQ/text file.
+            Upload a file (FASTA, FASTQ, or plain text).
           </label>
         </div>
         <div class="radio">
           <label>
             <input type="radio" name="sample_method" value="refseq_method" class="input-select" data-context="select-form2" data-for="sample_refseq_method" {{ 'checked' if sample_method == 'refseq_method' }}>
-            RefSeq accession number.
+            Enter a RefSeq accession number.
           </label>
         </div>
       </div>
