@@ -774,10 +774,10 @@ def description_extractor_submit():
                 'Sample sequence number input fields is empty.')
 
     # Todo: Move this to the describe module.
-    if not util.is_dna(r):
+    if not r or not util.is_dna(r):
         output.addMessage(__file__, 3, 'ENODNA',
                           'Reference sequence is not DNA.')
-    if not util.is_dna(s):
+    if not s or not util.is_dna(s):
         output.addMessage(__file__, 3, 'ENODNA',
                           'Sample sequence is not DNA.')
 
