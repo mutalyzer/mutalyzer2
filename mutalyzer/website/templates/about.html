@@ -175,13 +175,13 @@ always be compared directly.
     </tr>
     <tr>
       <th class="text-right">Website</th>
-      <th class="text-right">Webservice</th>
-      <th class="text-right">Batch job</th>
+      <th class="text-right"><a href="{{ url_for('.webservices') }}">Webservice</a></th>
+      <th class="text-right"><a href="{{ url_for('.batch_jobs') }}">Batch job</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>Syntax checker</td>
+      <td><a href="{{ url_for('.syntax_checker') }}">Syntax checker</a></td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/webservice']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/batch']|d(0)) }}</td>
@@ -190,7 +190,7 @@ always be compared directly.
                                                counter_totals['syntax-checker/batch']|d(0)) }}</td>
     </tr>
     <tr>
-      <td>Name checker</td>
+      <td><a href="{{ url_for('.name_checker') }}">Name checker</a></td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/webservice']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['name-checker/batch']|d(0)) }}</td>
@@ -199,7 +199,7 @@ always be compared directly.
                                                counter_totals['name-checker/batch']|d(0)) }}</td>
     </tr>
     <tr>
-      <td>Description extractor</td>
+      <td><a href="{{ url_for('.description_extractor') }}">Description extractor</a></td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['description-extractor/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['description-extractor/webservice']|d(0)) }}</td>
       <td class="text-right">N/A</td>
@@ -207,7 +207,7 @@ always be compared directly.
                                                counter_totals['description-extractor/webservice']|d(0)) }}</td>
     </tr>
     <tr>
-      <td>Position converter</td>
+      <td><a href="{{ url_for('.position_converter') }}">Position converter</a></td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/webservice']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/batch']|d(0)) }}</td>
@@ -216,7 +216,7 @@ always be compared directly.
                                                counter_totals['position-converter/batch']|d(0)) }}</td>
     </tr>
     <tr>
-      <td>SNP converter</td>
+      <td><a href="{{ url_for('.snp_converter') }}">SNP converter</a></td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/webservice']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['snp-converter/batch']|d(0)) }}</td>
@@ -225,7 +225,7 @@ always be compared directly.
                                                counter_totals['snp-converter/batch']|d(0)) }}</td>
     </tr>
     <tr>
-      <td>Batch jobs</td>
+      <td><a href="{{ url_for('.batch_jobs') }}">Batch jobs</a></td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['batch-job/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['batch-job/webservice']|d(0)) }}</td>
       <td class="text-right">N/A</td>
