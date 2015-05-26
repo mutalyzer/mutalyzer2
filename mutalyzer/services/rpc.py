@@ -1240,6 +1240,8 @@ class MutalyzerService(ServiceBase):
         output.addMessage(__file__, -1, 'INFO',
             'Received request descriptionExtract')
 
+        stats.increment_counter('description-extractor/webservice')
+
         if not settings.TESTING and (len(reference) > 1000 or
                                      len(observed) > 1000):
             raise Fault('EMAXSIZE',

@@ -718,6 +718,7 @@ def description_extractor_submit():
     output.addMessage(__file__, -1, 'INFO',
                       'Received Description Extract request from %s'
                       % request.remote_addr)
+    stats.increment_counter('description-extractor/website')
 
     r = s = ''
     reference_method = request.form.get('reference_method')

@@ -199,6 +199,14 @@ always be compared directly.
                                                counter_totals['name-checker/batch']|d(0)) }}</td>
     </tr>
     <tr>
+      <td>Description extractor</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['description-extractor/website']|d(0)) }}</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['description-extractor/webservice']|d(0)) }}</td>
+      <td class="text-right">N/A</td>
+      <td class="text-right">{{ '{0:,}'.format(counter_totals['description-extractor/website']|d(0) +
+                                               counter_totals['description-extractor/webservice']|d(0)) }}</td>
+    </tr>
+    <tr>
       <td>Position converter</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['position-converter/webservice']|d(0)) }}</td>
