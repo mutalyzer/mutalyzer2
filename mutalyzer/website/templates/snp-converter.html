@@ -14,10 +14,10 @@ the reference sequence(s) used by dbSNP.
 
 <form role="form" class="form" action="{{ url_for('.snp_converter') }}" method="get">
   <div class="form-group">
-    <label for="description">SNP</label>
-    <input type="text" class="form-control form-pre example-target"
-    name="rs_id" id="description" placeholder="dbSNP rs number (including rs)" value="{{ rs_id }}" ></input>
-    <p>Example: <code class="example-input">rs9919552</code></p>
+    <label for="rsid">SNP</label>
+    <input type="text" class="form-control form-pre"
+    name="rs_id" id="rsid" placeholder="dbSNP rs number (including rs)" value="{{ rs_id }}" ></input>
+    <p>Example: <code class="example-input" data-for="rsid">rs9919552</code></p>
   </div>
 
   <div class="form-group">
