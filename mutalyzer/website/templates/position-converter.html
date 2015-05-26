@@ -28,8 +28,9 @@ normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Chec
   <div class="form-group">
     <label for="description">Variant description</label>
     <input type="text" name="description" id="description" value="{{ description }}"
-           class="form-control form-pre example-target" placeholder="Variant description using HGVS format">
-    <p>Examples: <code class="example-input">NM_003002.3:c.274G&gt;T</code>, <code class="example-input">chr11:g.111959693G&gt;T</code> and <code class="example-input">NC_000011.9:g.111959693G&gt;T</code></p>
+           class="form-control form-pre" placeholder="Variant description using HGVS format">
+    <p>Examples: <code class="example-input"
+    data-for="description">NM_003002.3:c.274G&gt;T</code>, <code class="example-input" data-for="description">chr11:g.111959693G&gt;T</code> and <code class="example-input" data-for="description">NC_000011.9:g.111959693G&gt;T</code></p>
   </div>
   <div class="form-group button-group">
     <input type="submit" class="btn btn-primary" value="Convert variant description">

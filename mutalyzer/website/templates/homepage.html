@@ -18,14 +18,14 @@ nomenclature according to the
             <div class="caption">
                 <h3><a href="{{ url_for('.name_checker') }}">Name Checker</a></h3>
                 <p>The Name Checker takes the complete sequence variant description as input and checks whether it is correct.</p>
-                <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
+                <p>Example: <code class="example-input" data-for="description">AB026906.1:c.274G&gt;T</code></p>
 
                 <!-- <a href="{{ url_for('.name_checker') }}" class="btn btn-default btn-small btn-primary">Try
                 this</a> -->
 
                 <form class="form" action="{{ url_for('.name_checker') }}" method="get">
                     <div class="input-group">
-                        <input class="form-control form-control-small form-pre example-target" type="text" name="description" value="{{ description }}" placeholder="Variant description using HGVS format">
+                        <input class="form-control form-control-small form-pre" type="text" name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
                         <span class="input-group-btn">
                             <input type="submit" class="btn btn-primary pull-right" value="Check variant description">
                         </span>

@@ -51,10 +51,10 @@
   <form class="form" action="{{ url_for('.name_checker') }}" method="get">
     <div class="form-group">
       <label for="description">Variant description</label>
-      <input class="form-control form-pre example-target" type="text"
+      <input class="form-control form-pre" type="text"
              name="description" id="description" value="{{ description }}"
              placeholder="Variant description using HGVS format">
-      <p>Example: <code class="example-input">AB026906.1:c.274G&gt;T</code></p>
+      <p>Example: <code class="example-input" data-for="description">AB026906.1:c.274G&gt;T</code></p>
     </div>
 
     <div class="form-group button-group">
