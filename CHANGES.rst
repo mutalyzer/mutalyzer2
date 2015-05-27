@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.8
 -------------
 
-Release date to be decided.
+Released on May 27th 2015.
 
 - The `HGVS variant description extractor
   <https://github.com/mutalyzer/description-extractor>`_ package is available
