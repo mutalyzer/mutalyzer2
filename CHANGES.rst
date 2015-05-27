@@ -9,6 +9,14 @@ Version 2.0.8
 
 Release date to be decided.
 
+- The `HGVS variant description extractor
+  <https://github.com/mutalyzer/description-extractor>`_ package is available
+  through the Description Extractor interface (`GitHub#1
+  <https://github.com/LUMC/mutalyzer/pull/1>`_).
+- GitHub project moved from `LUMC/mutalyzer
+  <https://github.com/LUMC/mutalyzer>`_ to `mutalyzer/mutalyzer
+  <https://github.com/LUMC/mutalyzer>`_.
+
 
 Version 2.0.7
 -------------
