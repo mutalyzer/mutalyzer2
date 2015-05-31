@@ -727,6 +727,8 @@ def description_extractor_submit():
     sample_sequence = request.form.get('sample_sequence')
     reference_file = request.files.get('reference_file')
     sample_file = request.files.get('sample_file')
+    reference_filename = ''
+    sample_filename = ''
     reference_accession_number = request.form.get('reference_accession_number')
     sample_accession_number = request.form.get('sample_accession_number')
 
@@ -741,6 +743,7 @@ def description_extractor_submit():
                 'Reference accession number input fields is empty.')
     elif reference_method == 'file_method':
         if reference_file:
+            reference_filename = reference_file.filename
             r = util.read_dna(reference_file)
         else:
             output.addMessage(__file__, 3, 'EEMPTYFIELD',
@@ -763,6 +766,7 @@ def description_extractor_submit():
                 'Sample accession number input fields is empty.')
     elif sample_method == 'file_method':
         if sample_file:
+            sample_filename = sample_file.filename
             s = util.read_dna(sample_file)
         else:
             output.addMessage(__file__, 3, 'EEMPTYFIELD',
@@ -801,6 +805,8 @@ def description_extractor_submit():
         sample_sequence=sample_sequence or '',
         reference_accession_number=reference_accession_number or '',
         sample_accession_number=sample_accession_number or '',
+        reference_filename=reference_filename or '',
+        sample_filename=sample_filename or '',
         raw_vars=raw_vars, errors=errors, summary=summary, messages=messages,
         reference_method=reference_method, sample_method=sample_method)
 
