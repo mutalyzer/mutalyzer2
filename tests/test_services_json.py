@@ -12,6 +12,7 @@ from spyne.server.null import NullServer
 
 import mutalyzer
 from mutalyzer import announce
+from mutalyzer.config import settings
 from mutalyzer import Scheduler
 from mutalyzer.services.json import application
 
@@ -298,3 +299,21 @@ class TestServicesJson(MutalyzerTest):
                                  'sample_start_offset': 0,
                                  'sample_end_offset': 0}],
                      'description': '[5_6insTT;17del;26A>C;35dup]'}
+
+    def test_description_extract_ref_too_long(self):
+        """
+        Test output of descriptionExtract with too long reference sequence.
+        """
+        with pytest.raises(Fault):
+            self._call('descriptionExtract',
+                       'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH + 1),
+                       'A')
+
+    def test_description_extract_sample_too_long(self):
+        """
+        Test output of descriptionExtract with too long sample sequence.
+        """
+        with pytest.raises(Fault):
+            self._call('descriptionExtract',
+                       'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH),
+                       'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH + 1))

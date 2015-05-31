@@ -25,6 +25,9 @@ CACHE_DIR = '/tmp'
 # Maximum size for uploaded and downloaded files (in bytes).
 MAX_FILE_SIZE = 10 * 1048576 # 10 MB
 
+# Maximum sequence length for description extractor (in bases).
+EXTRACTOR_MAX_INPUT_LENGTH = 50 * 1000 # 50 Kbp
+
 # The WSGI application runs behind a reverse proxy (e.g., nginx using
 # proxy_pass). This needs to be set if the application is mapped to a URL
 # other than / or a different HTTP scheme is used by the reverse proxy.

@@ -1242,10 +1242,11 @@ class MutalyzerService(ServiceBase):
 
         stats.increment_counter('description-extractor/webservice')
 
-        if not settings.TESTING and (len(reference) > 1000 or
-                                     len(observed) > 1000):
+        if (len(reference) > settings.EXTRACTOR_MAX_INPUT_LENGTH or
+            len(observed) > settings.EXTRACTOR_MAX_INPUT_LENGTH):
             raise Fault('EMAXSIZE',
-                        'Input sequences are restricted to 1000bp.')
+                        'Input sequences are restricted to {} bp.'
+                        .format(settings.EXTRACTOR_MAX_INPUT_LENGTH))
 
         allele = extractor.describe_dna(reference, observed)
 
