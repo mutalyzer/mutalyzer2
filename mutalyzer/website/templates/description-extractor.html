@@ -7,7 +7,7 @@
 
 <p class="alert alert-warning">
 Please note that this is an experimental service and we are currently limiting
-input sequences to 1000bp.
+input sequences to {{ '{:,}'.format(extractor_max_input_length) }} bp.
 </p>
 
 <p>
@@ -88,7 +88,7 @@ Please supply a reference sequence and an observed sequence.
           <div class="form-group">
             <label for="reference_accession_number">Reference accession number</label>
             <input type="text" name="reference_accession_number" id="reference_accession_number" value="{{ reference_accession_number }}" class="form-control form-pre" placeholder="Reference accession number">
-            <p>Example: <code class="example-input" data-for="reference_accession_number">NM_198697.1</code></p>
+            <p>Example: <code class="example-input" data-for="reference_accession_number">NM_004006.1</code></p>
           </div>
         </div>
       </div>
@@ -143,7 +143,7 @@ Please supply a reference sequence and an observed sequence.
           <div class="form-group">
             <label for="sample_accession_number">Sample accession number</label>
             <input type="text" name="sample_accession_number" id="sample_accession_number" value="{{ sample_accession_number }}" class="form-control form-pre" placeholder="Sample accession number">
-            <p>Example: <code class="example-input" data-for="sample_accession_number">NM_198697.2</code></p>
+            <p>Example: <code class="example-input" data-for="sample_accession_number">NM_004006.2</code></p>
           </div>
         </div>
       </div>

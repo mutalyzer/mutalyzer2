@@ -17,6 +17,7 @@ from Bio import Entrez
 import lxml.html
 
 from mutalyzer import announce, Scheduler
+from mutalyzer.config import settings
 from mutalyzer.db import models
 from mutalyzer.website import create_app
 
@@ -177,6 +178,34 @@ class TestWebsite(MutalyzerTest):
             'reference_sequence': 'ATGATGATCAGATACAGTGTGATACAGGTAGTTAGACAA',
             'sample_file': (open(path), 'extractor_input.txt')})
         assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
+
+    def test_description_extractor_ref_too_long(self):
+        """
+        Submit a reference sequence exceeding the maximum length to the variant
+        description extractor.
+        """
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'raw_method',
+            'reference_sequence': 'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH + 1),
+            'sample_sequence': 'A'})
+        assert '2_{}del'.format(settings.EXTRACTOR_MAX_INPUT_LENGTH + 1) not in r.data
+        assert 'Input sequences are restricted to ' in r.data
+        assert '1 Error, 0 Warnings.' in r.data
+
+    def test_description_extractor_sample_too_long(self):
+        """
+        Submit a sample sequence exceeding the maximum length to the variant
+        description extractor.
+        """
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'raw_method',
+            'reference_sequence': 'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH),
+            'sample_sequence': 'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH + 1)})
+        assert '{}dup'.format(settings.EXTRACTOR_MAX_INPUT_LENGTH) not in r.data
+        assert 'Input sequences are restricted to ' in r.data
+        assert '1 Error, 0 Warnings.' in r.data
 
     def test_checksyntax_valid(self):
         """

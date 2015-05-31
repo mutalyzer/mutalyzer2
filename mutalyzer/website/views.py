@@ -682,7 +682,8 @@ def description_extractor():
     """
     Description extractor loader form.
     """
-    return render_template('description-extractor.html')
+    return render_template('description-extractor.html',
+                           extractor_max_input_length=settings.EXTRACTOR_MAX_INPUT_LENGTH)
 
 
 @website.route('/description-extractor', methods=['POST'])
@@ -788,9 +789,11 @@ def description_extractor_submit():
 
     raw_vars = None
     if r and s:
-        if not settings.TESTING and (len(r) > 1000 or len(s) > 1000):
+        if (len(r) > settings.EXTRACTOR_MAX_INPUT_LENGTH or
+            len(s) > settings.EXTRACTOR_MAX_INPUT_LENGTH):
             output.addMessage(__file__, 3, 'EMAXSIZE',
-                              'Input sequences are restricted to 1000bp.')
+                              'Input sequences are restricted to {:,} bp.'
+                              .format(settings.EXTRACTOR_MAX_INPUT_LENGTH))
         else:
             raw_vars = extractor.describe_dna(r, s)
 
@@ -801,6 +804,7 @@ def description_extractor_submit():
                       'Finished Description Extract request')
 
     return render_template('description-extractor.html',
+        extractor_max_input_length=settings.EXTRACTOR_MAX_INPUT_LENGTH,
         reference_sequence=reference_sequence or '',
         sample_sequence=sample_sequence or '',
         reference_accession_number=reference_accession_number or '',
