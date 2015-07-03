@@ -350,3 +350,21 @@ class TestScheduler(MutalyzerTest):
                     ['\u2026AL449423.14(CDKN2A_v002):c.5_400del',
                      '(grammar): Expected W:(0123...) (at char 0), (line:1, col:1)']]
         self._batch_job_plain_text(variants, expected, 'syntax-checker')
+
+    def test_windows_1252_input(self):
+        """
+        Simple input encoded as WINDOWS-1252.
+        """
+        variants = ['AB026906.1:c.274G>T',
+                    # Encoded as WINDOWS-1252, the following is not valid UTF8.
+                    'NM_000052.4:c.2407\u20132A>G',
+                    'AL449423.14(CDKN2A_v002):c.5_400del']
+        batch_file = io.BytesIO(('\n'.join(variants) + '\n').encode('WINDOWS-1252'))
+        expected = [['AB026906.1:c.274G>T',
+                     'OK'],
+                    ['NM_000052.4:c.2407\u20132A>G',
+                     '(grammar): Expected W:(acgt...) (at char 18), (line:1, col:19)'],
+                    ['AL449423.14(CDKN2A_v002):c.5_400del',
+                     'OK']]
+
+        self._batch_job(batch_file, expected, 'syntax-checker')

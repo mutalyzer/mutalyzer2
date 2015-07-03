@@ -27,7 +27,7 @@ from xml.dom import DOMException, minidom
 from xml.parsers import expat
 from httplib import HTTPException, IncompleteRead
 from sqlalchemy.orm.exc import NoResultFound
-import cchardet as chardet
+import chardet
 
 from mutalyzer import util
 from mutalyzer.config import settings
