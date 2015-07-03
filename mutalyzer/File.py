@@ -143,7 +143,7 @@ class File() :
         handle.seek(0)
 
         if result['confidence'] > 0.5:
-            encoding = result['encoding']
+            encoding = unicode(result['encoding'])
         else:
             encoding = 'utf-8'
 
@@ -170,7 +170,13 @@ class File() :
         handle = _UniversalNewlinesByteStreamIter(handle, encoding=encoding,
                                                   buffer_size=BUFFER_SIZE)
 
-        buf = handle.read(BUFFER_SIZE)
+        try:
+            buf = handle.read(BUFFER_SIZE)
+        except UnicodeDecodeError:
+            self.__output.addMessage(__file__, 3, 'EBPARSE',
+                                     'Could not decode file (using %s encoding).'
+                                     % encoding)
+            return None
 
         # Default dialect
         dialect = 'excel'
@@ -196,8 +202,14 @@ class File() :
         reader = csv.reader(handle, dialect)
 
         ret = []
-        for i in reader:
-            ret.append([c.decode('utf-8') for c in i])
+        try:
+            for i in reader:
+                ret.append([c.decode('utf-8') for c in i])
+        except UnicodeDecodeError:
+            self.__output.addMessage(__file__, 3, 'EBPARSE',
+                                     'Could not decode file (using %s encoding).'
+                                     % encoding)
+            return None
 
         return ret
     #__parseCsvFile
