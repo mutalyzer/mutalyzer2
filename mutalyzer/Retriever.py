@@ -109,7 +109,7 @@ class Retriever(object) :
         """
         result = chardet.detect(raw_data)
         if result['confidence'] > 0.5:
-            encoding = result['encoding']
+            encoding = unicode(result['encoding'])
         else:
             encoding = 'utf-8'
 

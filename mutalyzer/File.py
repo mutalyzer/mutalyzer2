@@ -143,7 +143,7 @@ class File() :
         handle.seek(0)
 
         if result['confidence'] > 0.5:
-            encoding = result['encoding']
+            encoding = unicode(result['encoding'])
         else:
             encoding = 'utf-8'
 
