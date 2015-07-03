@@ -114,7 +114,13 @@ class Retriever(object) :
             encoding = 'utf-8'
 
         if not util.is_utf8_alias(encoding):
-            raw_data = raw_data.decode(encoding).encode('utf-8')
+            try:
+                raw_data = raw_data.decode(encoding).encode('utf-8')
+            except UnicodeDecodeError:
+                self._output.addMessage(__file__, 4, 'ENOPARSE',
+                                        'Could not decode file (using %s encoding).'
+                                        % encoding)
+                return None
 
         # Compress the data to save disk space.
         comp = bz2.BZ2Compressor()
@@ -368,7 +374,8 @@ class GenBankRetriever(Retriever):
                     "number to reduce downloading overhead." % unicode(record.id))
         #if
 
-        self._write(raw_data, outfile)
+        if not self._write(raw_data, outfile):
+            return None
 
         return outfile, GI
     #write
