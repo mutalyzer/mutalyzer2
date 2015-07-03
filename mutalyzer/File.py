@@ -25,7 +25,7 @@ import csv             # Sniffer(), reader(), Error
 import xlrd            # open_workbook()
 import zipfile         # ZipFile()
 import xml.dom.minidom # parseString()
-import cchardet as chardet
+import chardet
 
 from mutalyzer.config import settings
 

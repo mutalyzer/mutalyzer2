@@ -23,8 +23,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return Mock()
 
-MOCK_MODULES = ['MySQLdb', 'cchardet', 'lxml', 'lxml.builder', 'lxml.etree',
-                'magic']
+MOCK_MODULES = ['MySQLdb', 'lxml', 'lxml.builder', 'lxml.etree', 'magic']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
