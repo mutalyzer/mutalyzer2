@@ -9,6 +9,12 @@ Version 2.0.9
 
 Release date to be decided.
 
+- Improvements in encoding detection of uploaded batch files (`#52
+  <https://github.com/LUMC/mutalyzer/pull/52>`_, `#53
+  <https://github.com/LUMC/mutalyzer/pull/53>`_).
+- Usability improvements in reading DNA for description extractor (`#54
+  <https://github.com/mutalyzer/mutalyzer/pull/54>`_).
+
 
 Version 2.0.8
 -------------
@@ -17,7 +23,7 @@ Released on May 27th 2015.
 
 - The `HGVS variant description extractor
   <https://github.com/mutalyzer/description-extractor>`_ package is available
-  through the Description Extractor interface (`GitHub#1
+  through the Description Extractor interface (`#1
   <https://github.com/LUMC/mutalyzer/pull/1>`_).
 - GitHub project moved from `LUMC/mutalyzer
   <https://github.com/LUMC/mutalyzer>`_ to `mutalyzer/mutalyzer
@@ -29,9 +35,9 @@ Version 2.0.7
 
 Released on March 27th 2015.
 
-- Return fault code and description on RPC service errors (`GitHub#31
+- Return fault code and description on RPC service errors (`#31
   <https://github.com/LUMC/mutalyzer/pull/31>`_).
-- Use esummary 2.0 response format (`GitHub#31
+- Use esummary 2.0 response format (`#31
   <https://github.com/LUMC/mutalyzer/pull/32>`_).
 
 
@@ -41,9 +47,9 @@ Version 2.0.6
 Released on February 10th 2015.
 
 - Added `getGeneLocation` webservice method. Given a gene symbol and optional
-  genome build, it returns the location of the gene (`GitHub#28
+  genome build, it returns the location of the gene (`#28
   <https://github.com/LUMC/mutalyzer/pull/28>`_).
-- Discard incomplete genes in genbank reference files (`GitHub#26
+- Discard incomplete genes in genbank reference files (`#26
   <https://github.com/LUMC/mutalyzer/pull/26>`_).
 
 
@@ -57,9 +63,9 @@ Released on December 16th 2014.
 - Source code moved from `GitLab <https://git.lumc.nl/mutalyzer/mutalyzer>`_
   to `GitHub <https://github.com/LUMC/mutalyzer>`_.
 - Automated unit tests `on Travis CI <https://travis-ci.org/LUMC/mutalyzer>`_
-  (`GitHub#16 <https://github.com/LUMC/mutalyzer/pull/16>`_).
+  (`#16 <https://github.com/LUMC/mutalyzer/pull/16>`_).
 - Developer documentation `hosted on Read the Docs
-  <http://mutalyzer.readthedocs.org/en/latest/>`_ (`GitHub#17
+  <http://mutalyzer.readthedocs.org/en/latest/>`_ (`#17
   <https://github.com/LUMC/mutalyzer/pull/18>`_).
 
 
