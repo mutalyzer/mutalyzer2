@@ -357,15 +357,28 @@ def guess_file_type(handle):
     """
     Guess the file type of an NGS data file.
 
-    We assume that the stream is rewinded before use, after use, the input
-    stream will be rewinded.
-
-    :arg stream handle: Open readable handle to an NGS data file.
+    :arg file handle: Open readable handle to an NGS data file.
 
     :returns unicode: Either 'fasta', 'fastq' or 'text'.
     """
+    try:
+        extension = getattr(handle, 'name').split('.')[-1]
+    except AttributeError:
+        pass
+    else:
+        if extension in ('fastq', 'fq'):
+            return 'fastq'
+        elif extension in ('fasta', 'fa'):
+            return 'fasta'
+
+    try:
+        position = handle.tell()
+        handle.seek(0)
+    except IOError:
+        return 'text'
+
     token = handle.read(1)
-    handle.seek(0)
+    handle.seek(position)
 
     if token == '>':
         return 'fasta'
@@ -379,7 +392,8 @@ def read_dna(handle):
     Read the first record in an NGS data file.
 
     If the format is not recognised as FASTA or FASTQ, we assume that the input
-    is in plain text. In this case, all non-DNA characters are removed.
+    is in plain text. In this case, DNA is converted to uppercase and all
+    non-DNA characters are removed.
 
     :arg stream handle: Open readable handle to an NGS data file.
 
@@ -390,7 +404,7 @@ def read_dna(handle):
     if file_format != 'text':
         return unicode(SeqIO.parse(handle, file_format).next().seq)
 
-    return ''.join(x for x in unicode(handle.read()) if x in 'ATCG')
+    return ''.join(x for x in unicode(handle.read()).upper() if x in 'ATCG')
 
 
 def in_frame_description(s1, s2) :

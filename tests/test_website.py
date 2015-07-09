@@ -207,6 +207,18 @@ class TestWebsite(MutalyzerTest):
         assert 'Input sequences are restricted to ' in r.data
         assert '1 Error, 0 Warnings.' in r.data
 
+    def test_description_extractor_lowercase(self):
+        """
+        Submit a sample sequence with a base in lowercase to the variant
+        description extractor.
+        """
+        r = self.app.post('/description-extractor', data={
+            'reference_method': 'raw_method',
+            'sample_method': 'raw_method',
+            'reference_sequence': 'TTT',
+            'sample_sequence': 'TaT'})
+        assert '<pre class="description">2T&gt;A</pre>' in r.data
+
     def test_checksyntax_valid(self):
         """
         Submit the check syntax form with a valid variant.

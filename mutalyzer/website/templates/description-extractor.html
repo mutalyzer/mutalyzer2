@@ -244,6 +244,13 @@ Please supply a reference sequence and an observed sequence.
       {% endfor %}
       </tbody>
     </table>
+    <p>
+      Please note that the generated descriptions use one-based coordinates
+      where we start counting at the start of the supplied sequence. This
+      means that for genomic reference sequences, the result will be
+      in <code>g.</code> coordinates, while for transcripts the result will be
+      in <code>n.</code> coordinates.
+    </p>
   {% endif %}{# not errors #}
 {% endif %}{# description #}
 
