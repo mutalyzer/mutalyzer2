@@ -404,6 +404,11 @@ class GenBankRetriever(Retriever):
                                     'Could not retrieve %s.' % name)
             return None
 
+        if b'Resource temporarily unavailable' in raw_data:
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Resource temporarily unavailable from NCBI servers: %s.' % name)
+            return None
+
         # This is a hack to detect constructed references, the proper way to
         # do this would be to check the data_file_division attribute of the
         # parsed GenBank file (it would be 'CON').

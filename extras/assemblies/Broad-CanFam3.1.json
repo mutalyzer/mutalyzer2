@@ -1,0 +1,208 @@
+{
+  "name": "Broad CanFam3.1",
+  "alias": "canFam3",
+  "taxonomy_id": 9615,
+  "taxonomy_common_name": "Canis lupus familiaris",
+  "chromosomes": [
+    {
+      "organelle": "nucleus",
+      "name": "chr1",
+      "accession": "NC_006583.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr2",
+      "accession": "NC_006584.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr3",
+      "accession": "NC_006585.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr4",
+      "accession": "NC_006586.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr5",
+      "accession": "NC_006587.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr6",
+      "accession": "NC_006588.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr7",
+      "accession": "NC_006589.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr8",
+      "accession": "NC_006590.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr9",
+      "accession": "NC_006591.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr10",
+      "accession": "NC_006592.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr11",
+      "accession": "NC_006593.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr12",
+      "accession": "NC_006594.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr13",
+      "accession": "NC_006595.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr14",
+      "accession": "NC_006596.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr15",
+      "accession": "NC_006597.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr16",
+      "accession": "NC_006598.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr17",
+      "accession": "NC_006599.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr18",
+      "accession": "NC_006600.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr19",
+      "accession": "NC_006601.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr20",
+      "accession": "NC_006602.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr21",
+      "accession": "NC_006603.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr22",
+      "accession": "NC_006604.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr23",
+      "accession": "NC_006605.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr24",
+      "accession": "NC_006606.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr25",
+      "accession": "NC_006607.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr26",
+      "accession": "NC_006608.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr27",
+      "accession": "NC_006609.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr28",
+      "accession": "NC_006610.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr29",
+      "accession": "NC_006611.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr30",
+      "accession": "NC_006612.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr31",
+      "accession": "NC_006613.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr32",
+      "accession": "NC_006614.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr33",
+      "accession": "NC_006615.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr34",
+      "accession": "NC_006616.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr35",
+      "accession": "NC_006617.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr36",
+      "accession": "NC_006618.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr37",
+      "accession": "NC_006619.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chr38",
+      "accession": "NC_006620.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrX",
+      "accession": "NC_006621.3"
+    },
+    {
+      "organelle": "mitochondrion",
+      "name": "chrM",
+      "accession": "NC_002008.4"
+    }
+  ]
+}
