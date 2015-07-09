@@ -1284,7 +1284,7 @@ class TestVariantchecker(MutalyzerTest):
         wnomrna_other = self.output.getMessagesWithErrorCode('WNOMRNA_OTHER')
         assert len(wnomrna_other) == 1
 
-    @fix(cache('A1BG'))
+    @fix(cache('AF230870.1'))
     def test_wnomrna(self):
         """
         Warning for no mRNA field on currently selected transcript should give
