@@ -392,7 +392,8 @@ def read_dna(handle):
     Read the first record in an NGS data file.
 
     If the format is not recognised as FASTA or FASTQ, we assume that the input
-    is in plain text. In this case, all non-DNA characters are removed.
+    is in plain text. In this case, DNA is converted to uppercase and all
+    non-DNA characters are removed.
 
     :arg stream handle: Open readable handle to an NGS data file.
 
@@ -403,7 +404,7 @@ def read_dna(handle):
     if file_format != 'text':
         return unicode(SeqIO.parse(handle, file_format).next().seq)
 
-    return ''.join(x for x in unicode(handle.read()) if x in 'ATCG')
+    return ''.join(x for x in unicode(handle.read()).upper() if x in 'ATCG')
 
 
 def in_frame_description(s1, s2) :
