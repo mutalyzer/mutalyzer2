@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.9
 -------------
 
-Release date to be decided.
+Released on July 9th 2015.
 
 - Improvements in encoding detection of uploaded batch files (`#52
   <https://github.com/LUMC/mutalyzer/pull/52>`_, `#53
