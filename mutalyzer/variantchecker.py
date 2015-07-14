@@ -1349,22 +1349,33 @@ def _add_transcript_info(mutator, transcript, output):
             cds_original = cds_original.reverse_complement()
             cds_variant = cds_variant.reverse_complement()
 
-        if '*' in cds_original.translate(table=transcript.txTable)[:-1]:
+        protein_original = cds_original.translate(table=transcript.txTable)
+
+        if not protein_original.endswith('*'):
+            output.addMessage(__file__, 3, 'ESTOP',
+                              'No stop codon found.')
+            return
+
+        if '*' in protein_original[:-1]:
             output.addMessage(__file__, 3, 'ESTOP',
                               'In frame stop codon found.')
             return
 
-        protein_original = cds_original.translate(table=transcript.txTable,
-                                                  to_stop=True)
-        protein_variant = cds_variant.translate(table=transcript.txTable,
-                                                to_stop=True)
+        protein_variant = cds_variant.translate(table=transcript.txTable)
+
+        # Up to and including the first '*', or the entire string.
+        try:
+            stop = unicode(protein_variant).index('*')
+            protein_variant = protein_variant[:stop + 1]
+        except ValueError:
+            pass
 
         # Note: addOutput('origCDS', ...) was first before the possible
         #       reverse complement operation above.
         output.addOutput('origCDS', unicode(cds_original))
-        output.addOutput("newCDS", unicode(cds_variant[:(len(protein_variant) + 1) * 3]))
+        output.addOutput("newCDS", unicode(cds_variant[:len(protein_variant) * 3]))
 
-        output.addOutput('oldprotein', unicode(protein_original) + '*')
+        output.addOutput('oldprotein', unicode(protein_original))
 
         # Todo: Don't generate the fancy HTML protein views here, do this in
         # website.py.
@@ -1373,9 +1384,9 @@ def _add_transcript_info(mutator, transcript, output):
         if not protein_variant or unicode(protein_variant[0]) != 'M':
             # Todo: Protein differences are not color-coded,
             # use something like below in protein_description().
-            util.print_protein_html(unicode(protein_original) + '*', 0, 0,
+            util.print_protein_html(unicode(protein_original), 0, 0,
                                     output, 'oldProteinFancy')
-            util.print_protein_html(unicode(protein_original) + '*', 0, 0,
+            util.print_protein_html(unicode(protein_original), 0, 0,
                                     output, 'oldProteinFancyText', text=True)
             if unicode(cds_variant[0:3]) in \
                    CodonTable.unambiguous_dna_by_id[transcript.txTable].start_codons:
@@ -1386,10 +1397,10 @@ def _add_transcript_info(mutator, transcript, output):
                 output.addOutput('altStart', unicode(cds_variant[0:3]))
                 if unicode(protein_original[1:]) != unicode(protein_variant[1:]):
                     output.addOutput('altProtein',
-                                     'M' + unicode(protein_variant[1:]) + '*')
-                    util.print_protein_html('M' + unicode(protein_variant[1:]) + '*', 0,
+                                     'M' + unicode(protein_variant[1:]))
+                    util.print_protein_html('M' + unicode(protein_variant[1:]), 0,
                         0, output, 'altProteinFancy')
-                    util.print_protein_html('M' + unicode(protein_variant[1:]) + '*', 0,
+                    util.print_protein_html('M' + unicode(protein_variant[1:]), 0,
                         0, output, 'altProteinFancyText', text=True)
             else :
                 output.addOutput('newprotein', '?')
@@ -1405,18 +1416,15 @@ def _add_transcript_info(mutator, transcript, output):
                                             unicode(protein_original),
                                             unicode(protein_variant))
 
-            # This is never used.
-            output.addOutput('myProteinDescription', descr)
-
-            util.print_protein_html(unicode(protein_original) + '*', first,
+            util.print_protein_html(unicode(protein_original), first,
                 last_original, output, 'oldProteinFancy')
-            util.print_protein_html(unicode(protein_original) + '*', first,
+            util.print_protein_html(unicode(protein_original), first,
                 last_original, output, 'oldProteinFancyText', text=True)
             if unicode(protein_original) != unicode(protein_variant):
-                output.addOutput('newprotein', unicode(protein_variant) + '*')
-                util.print_protein_html(unicode(protein_variant) + '*', first,
+                output.addOutput('newprotein', unicode(protein_variant))
+                util.print_protein_html(unicode(protein_variant), first,
                     last_variant, output, 'newProteinFancy')
-                util.print_protein_html(unicode(protein_variant) + '*', first,
+                util.print_protein_html(unicode(protein_variant), first,
                     last_variant, output, 'newProteinFancyText', text=True)
 #_add_transcript_info
 
@@ -1808,8 +1816,7 @@ def check_variant(description, output):
             if not len(cds_original) % 3:
                 try:
                     # FIXME this is a bit of a rancid fix.
-                    protein_original = cds_original.translate(
-                        table=transcript.txTable, cds=True, to_stop=True)
+                    protein_original = cds_original.translate(table=transcript.txTable, cds=True)
                 except CodonTable.TranslationError:
                     if transcript.current:
                         output.addMessage(
@@ -1825,8 +1832,13 @@ def check_variant(description, output):
                             % (gene.name, transcript.name))
                     transcript.proteinDescription = 'p.?'
                 else:
-                    protein_variant = cds_variant.translate(
-                        table=transcript.txTable, to_stop=True)
+                    protein_variant = cds_variant.translate(table=transcript.txTable)
+                    # Up to and including the first '*', or the entire string.
+                    try:
+                        stop = unicode(protein_variant).index('*')
+                        protein_variant = protein_variant[:stop + 1]
+                    except ValueError:
+                        pass
                     try:
                         cds_length = util.cds_length(
                             mutator.shift_sites(transcript.CDS.positionList))

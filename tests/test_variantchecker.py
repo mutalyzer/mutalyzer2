@@ -1316,3 +1316,36 @@ class TestVariantchecker(MutalyzerTest):
         check_variant('NM_003002.2:c.1del', self.output)
         w_exon_annotation = self.output.getMessagesWithErrorCode('WEXON_ANNOTATION')
         assert len(w_exon_annotation) == 0
+
+    @fix(cache('NM_001199.3'))
+    def test_fs_no_stop(self):
+        """
+        Frame shift yielding no stop codon should be described with
+        uncertainty of the stop codon.
+
+        http://www.hgvs.org/mutnomen/FAQ.html#nostop
+        """
+        check_variant('NM_001199.3(BMP1):c.2188dup', self.output)
+        assert 'NM_001199.3(BMP1_i001):p.(Gln730Profs*?)' in self.output.getOutput('protDescriptions')
+
+    @fix(cache('NM_000193.2'))
+    def test_ext_no_stop(self):
+        """
+        Extension yielding no stop codon should be described with
+        uncertainty of the stop codon.
+
+        http://www.hgvs.org/mutnomen/FAQ.html#nostop
+        """
+        check_variant('NM_000193.2:c.1388G>C', self.output)
+        assert 'NM_000193.2(SHH_i001):p.(*463Serext*?)' in self.output.getOutput('protDescriptions')
+
+    @fix(cache('NM_000193.2'))
+    def test_fs_ext_no_stop(self):
+        """
+        Extension yielding no stop codon should be described with
+        uncertainty of the stop codon.
+
+        http://www.hgvs.org/mutnomen/FAQ.html#nostop
+        """
+        check_variant('NM_000193.2:c.1388_1389insC', self.output)
+        assert 'NM_000193.2(SHH_i001):p.(*463Cysext*?)' in self.output.getOutput('protDescriptions')

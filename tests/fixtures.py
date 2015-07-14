@@ -51,6 +51,8 @@ REFERENCES = {
     'NM_002001.2':  {'filename':   'NM_002001.2.gb.bz2',
                      'checksum':   '7fd5aa4fe864fd5193f224fca8cea70d',
                      'geninfo_id': '31317229'},
+    'NM_001199.3':  {'filename':   'NM_001199.3.gb.bz2',
+                     'checksum':   'e750b6dcead66b8bb953ce445bcd3093'},
     'NG_008939.1':  {'filename':   'NG_008939.1.gb.bz2',
                      'checksum':   '114a03e16ad2f63531d796c2fb0d7039',
                      'geninfo_id': '211938431',

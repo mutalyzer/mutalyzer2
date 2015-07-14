@@ -407,18 +407,22 @@ def read_dna(handle):
     return ''.join(x for x in unicode(handle.read()).upper() if x in 'ATCG')
 
 
-def in_frame_description(s1, s2) :
+def in_frame_description(s1, s2):
     """
     Give a description of an inframe difference of two proteins. Also give
     the position at which the proteins start to differ and the positions at
     which they are the same again.
 
-        >>> in_frame_description('MTAPQQMT', 'MTAQQMT')
+        >>> in_frame_description('MTAPQQMT*', 'MTAQQMT*')
         ('p.(Pro4del)', 3, 4, 3)
-        >>> in_frame_description('MTAPQQMT', 'MTAQMT')
+        >>> in_frame_description('MTAPQQMT*', 'MTAQMT*')
         ('p.(Pro4_Gln5del)', 3, 5, 3)
-        >>> in_frame_description('MTAPQQT', 'MTAQQMT')
+        >>> in_frame_description('MTAPQQT*', 'MTAQQMT*')
         ('p.(Pro4_Gln6delinsGlnGlnMet)', 3, 6, 6)
+        >>> in_frame_description('MTAPQQMT*', 'MTAPQQMTMQ*')
+        ('p.(*9Metext*2)', 8, 9, 11)
+        >>> in_frame_description('MTAPQQMT*', 'MTAPQQMTMQ')
+        ('p.(*9Metext*?)', 8, 8, 10)
 
     @arg s1: The original protein.
     @type s1: unicode
@@ -439,6 +443,10 @@ def in_frame_description(s1, s2) :
         # Nothing happened.
         return ('p.(=)', 0, 0, 0)
 
+    s2_stop = '*' in s2
+    s1 = s1.rstrip('*')
+    s2 = s2.rstrip('*')
+
     lcp = len(longest_common_prefix(s1, s2))
     lcs = len(longest_common_suffix(s1[lcp:], s2[lcp:]))
     s1_end = len(s1) - lcs
@@ -447,9 +455,13 @@ def in_frame_description(s1, s2) :
     # Insertion / Duplication / Extention.
     if not s1_end - lcp:
         if len(s1) == lcp:
-            return ('p.(*%i%sext*%i)' % \
-                    (len(s1) + 1, seq3(s2[len(s1)]), abs(len(s1) - len(s2))),
-                    len(s1), len(s1), len(s2))
+            # http://www.hgvs.org/mutnomen/FAQ.html#nostop
+            stop = unicode(abs(len(s1) - len(s2))) if s2_stop else '?'
+
+            return ('p.(*%i%sext*%s)' % \
+                    (len(s1) + 1, seq3(s2[len(s1)]), stop),
+                    len(s1), len(s1) + 1, len(s2) + (1 if s2_stop else 0))
+
         ins_length = s2_end - lcp
 
         if lcp - ins_length >= 0 and s1[lcp - ins_length:lcp] == s2[lcp:s2_end]:
@@ -472,7 +484,7 @@ def in_frame_description(s1, s2) :
     if not s2_end - lcp:
         if len(s2) == lcp:
             return ('p.(%s%i*)' % (seq3(s1[len(s2)]), len(s2) + 1),
-                    0, 0, 0)
+                    lcp, len(s1) + 1, len(s2) + 1)
 
         if lcp + 1 == s1_end:
             return ('p.(%s%idel)' % (seq3(s1[lcp]), lcp + 1),
@@ -506,12 +518,14 @@ def out_of_frame_description(s1, s2):
     Also give the position at which the proteins start to differ and the
     end positions (to be compatible with the in_frame_description function).
 
-        >>> out_of_frame_description('MTAPQQMT', 'MTAQQMT')
-        ('p.(Pro4Glnfs*5)', 3, 8, 7)
-        >>> out_of_frame_description('MTAPQQMT', 'MTAQMT')
-        ('p.(Pro4Glnfs*4)', 3, 8, 6)
-        >>> out_of_frame_description('MTAPQQT', 'MTAQQMT')
-        ('p.(Pro4Glnfs*5)', 3, 7, 7)
+        >>> out_of_frame_description('MTAPQQMT*', 'MTAQQMT*')
+        ('p.(Pro4Glnfs*5)', 3, 9, 8)
+        >>> out_of_frame_description('MTAPQQMT*', 'MTAQMT*')
+        ('p.(Pro4Glnfs*4)', 3, 9, 7)
+        >>> out_of_frame_description('MTAPQQT*', 'MTAQQMT*')
+        ('p.(Pro4Glnfs*5)', 3, 8, 8)
+        >>> out_of_frame_description('MTAPQQT*', 'MTAQQMT')
+        ('p.(Pro4Glnfs*?)', 3, 8, 7)
 
     @arg s1: The original protein.
     @type s1: unicode
@@ -527,33 +541,44 @@ def out_of_frame_description(s1, s2):
 
     @todo: More intelligently handle longest_common_prefix().
     """
-    lcp = len(longest_common_prefix(s1, s2))
+    s1_seq = s1.rstrip('*')
+    s2_seq = s2.rstrip('*')
+    lcp = len(longest_common_prefix(s1_seq, s2_seq))
 
-    if lcp == len(s2): # NonSense mutation.
-        if lcp == len(s1): # Is this correct?
+    if lcp == len(s2_seq): # NonSense mutation.
+        if lcp == len(s1_seq): # Is this correct?
             return ('p.(=)', 0, 0, 0)
         return ('p.(%s%i*)' % (seq3(s1[lcp]), lcp + 1), lcp, len(s1), lcp)
-    if lcp == len(s1) :
-        return ('p.(*%i%sext*%i)' % \
-                (len(s1) + 1, seq3(s2[len(s1)]), abs(len(s1) - len(s2))),
-                len(s1), len(s1), len(s2))
-    return ('p.(%s%i%sfs*%i)' % \
-            (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp]), len(s2) - lcp + 1),
+    if lcp == len(s1_seq):
+        # http://www.hgvs.org/mutnomen/FAQ.html#nostop
+        stop = unicode(abs(len(s1_seq) - len(s2_seq))) if '*' in s2 else '?'
+
+        return ('p.(*%i%sext*%s)' % \
+                (len(s1_seq) + 1, seq3(s2[len(s1_seq)]), stop),
+                len(s1_seq), len(s1), len(s2))
+
+    # http://www.hgvs.org/mutnomen/FAQ.html#nostop
+    stop = unicode(len(s2_seq) - lcp + 1) if '*' in s2 else '?'
+
+    return ('p.(%s%i%sfs*%s)' % \
+            (seq3(s1[lcp]), lcp + 1, seq3(s2[lcp]), stop),
             lcp, len(s1), len(s2))
 #out_of_frame_description
 
 
-def protein_description(cds_stop, s1, s2) :
+def protein_description(cds_stop, s1, s2):
     """
     Wrapper function for the in_frame_description() and
     out_of_frame_description() functions. It uses the value cds_stop to
     decide which one to call.
 
-        >>> protein_description(34, 'MTAPQQMT', 'MTAQQMT')
-        ('p.(Pro4Glnfs*5)', 3, 8, 7)
-        >>> protein_description(33, 'MTAPQQMT', 'MTAQQMT')
+        >>> protein_description(34, 'MTAPQQMT*', 'MTAQQMT*')
+        ('p.(Pro4Glnfs*5)', 3, 9, 8)
+        >>> protein_description(34, 'MTAPQQMT*', 'MTAQQMT')
+        ('p.(Pro4Glnfs*?)', 3, 9, 7)
+        >>> protein_description(33, 'MTAPQQMT*', 'MTAQQMT*')
         ('p.(Pro4del)', 3, 4, 3)
-        >>> protein_description(33, 'MTAPQQMT', 'TTAQQMT')
+        >>> protein_description(33, 'MTAPQQMT*', 'TTAQQMT*')
         ('p.?', 0, 4, 3)
 
     @arg cds_stop: Position of the stop codon in c. notation (CDS length).
@@ -639,10 +664,14 @@ def _insert_tag(s, pos1, pos2, tag1, tag2):
         if 0 <= pos1 < block:
             # Insert tag1.
             output = output[:pos1] + tag1 + output[pos1:]
-        if 0 <= pos2 < block:
+        if 0 < pos2 < block:
             # Insert tag2.
             output = output[:-(block - pos2)] + tag2 \
                      + output[-(block - pos2):]
+        if pos2 == block:
+            # Insert tag2. Special case, since s[:-0] would yield the empty
+            # string.
+            output = output + tag2
 
     return output
 #_insert_tag
