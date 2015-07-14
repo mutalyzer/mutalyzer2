@@ -734,7 +734,7 @@ def print_protein_html(s, first, last, O, where, text=False):
                     output = '%s ' % unicode(o).rjust(m)
             else:
                 output = \
-                    '<tt style="color:000000;font-weight:normal">%s</tt> ' % \
+                    '<tt style="color:#333;font-weight:normal">%s</tt> ' % \
                     unicode(o).rjust(m)
 
     # Add last line.
