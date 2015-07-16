@@ -80,7 +80,7 @@ certain gene or transcript.
 
 For example, to import all TTN transcript mappings::
 
-    $ mutalyzer-admin assemblies import-gene
+    $ mutalyzer-admin assemblies import-gene TTN
 
 .. note:: This subcommand chooses the UCSC genome assembly by using the alias
           of the specified Mutalyzer genome assembly (`hg19` by default).
