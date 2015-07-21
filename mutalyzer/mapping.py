@@ -920,6 +920,9 @@ def import_from_mapview_file(assembly, mapview_file, group_label):
 
     Our strategy is too sort by gene and chromosome and process the file
     grouped by these two fields.
+
+    For transcripts without any UTR and CDS entries (seems to happen for
+    predicted genes), we generate one exon spanning the entire transcript.
     """
     columns = ['taxonomy', 'chromosome', 'start', 'stop', 'orientation',
                'contig', 'ctg_start', 'ctg_stop', 'ctg_orientation',
@@ -998,6 +1001,12 @@ def import_from_mapview_file(assembly, mapview_file, group_label):
                 cds = min(cds_positions), max(cds_positions)
             else:
                 cds = None
+
+            # If no exons are annotated, we create one spanning the entire
+            # transcript.
+            if not exon_starts:
+                exon_starts = [start]
+                exon_stops = [stop]
 
             yield TranscriptMapping.create_or_update(
                 chromosome, 'refseq', accession, gene, orientation, start,
