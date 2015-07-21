@@ -4,10 +4,26 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.10
+Version 2.0.11
 --------------
 
 Release date to be decided.
+
+
+Version 2.0.10
+--------------
+
+Released on July 21st 2015.
+
+- Don't crash the position converter on transcript mappings containing no
+  exons (`#63
+  <https://github.com/mutalyzer/mutalyzer/pull/63>`_).
+- Use the notation for an uncertain stop codon, e.g., `p.(Gln730Profs*?)`
+  instead of `p.(Gln730Profs*96)` when a variant results in a frame shift or
+  extension and we don't see a new stop codon in the RNA (`#57
+  <https://github.com/mutalyzer/mutalyzer/pull/57>`_).
+- Added Dog (Broad CanFam3.1/canFam3) assembly for position converter (`#56
+  <https://github.com/mutalyzer/mutalyzer/pull/56>`_).
 
 
 Version 2.0.9
