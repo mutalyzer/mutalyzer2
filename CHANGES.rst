@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.10
 --------------
 
-Release date to be decided.
+Released on July 21st 2015.
 
 - Don't crash the position converter on transcript mappings containing no
   exons (`#63
