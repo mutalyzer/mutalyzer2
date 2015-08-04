@@ -1349,3 +1349,11 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('NM_000193.2:c.1388_1389insC', self.output)
         assert 'NM_000193.2(SHH_i001):p.(*463Cysext*?)' in self.output.getOutput('protDescriptions')
+
+    @fix(cache('AB026906.1'))
+    def test_synonymous_p_is(self):
+        """
+        Synonymous mutation should yield a p.(=) description.
+        """
+        check_variant('AB026906.1:c.276C>T', self.output)
+        assert 'AB026906.1(SDHD_i001):p.(=)' in self.output.getOutput('protDescriptions')
