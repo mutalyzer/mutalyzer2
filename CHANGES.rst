@@ -4,10 +4,19 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.11
+Version 2.0.12
 --------------
 
 Release date to be decided.
+
+
+Version 2.0.11
+--------------
+
+Released on August 6th 2015.
+
+- Fix bug in recognizing `p.(=)` (was reported as `p.?`) (`#65
+  <https://github.com/mutalyzer/mutalyzer/pull/65>`_).
 
 
 Version 2.0.10
