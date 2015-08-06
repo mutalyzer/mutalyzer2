@@ -9,6 +9,9 @@ Version 2.0.11
 
 Release date to be decided.
 
+- Fix bug in recognizing `p.(=)` (was reported as `p.?`) (`#65
+  <https://github.com/mutalyzer/mutalyzer/pull/65>`_).
+
 
 Version 2.0.10
 --------------
