@@ -15,7 +15,7 @@ Version 2.0.11
 
 Released on August 6th 2015.
 
-- Fix bug in recognizing `p.(=)` (was reported as `p.?`) (`#65
+- Fix bug in recognizing ``p.(=)`` (was reported as ``p.?``) (`#65
   <https://github.com/mutalyzer/mutalyzer/pull/65>`_).
 
 
@@ -27,8 +27,8 @@ Released on July 21st 2015.
 - Don't crash the position converter on transcript mappings containing no
   exons (`#63
   <https://github.com/mutalyzer/mutalyzer/pull/63>`_).
-- Use the notation for an uncertain stop codon, e.g., `p.(Gln730Profs*?)`
-  instead of `p.(Gln730Profs*96)` when a variant results in a frame shift or
+- Use the notation for an uncertain stop codon, e.g., ``p.(Gln730Profs*?)``
+  instead of ``p.(Gln730Profs*96)`` when a variant results in a frame shift or
   extension and we don't see a new stop codon in the RNA (`#57
   <https://github.com/mutalyzer/mutalyzer/pull/57>`_).
 - Added Dog (Broad CanFam3.1/canFam3) assembly for position converter (`#56
