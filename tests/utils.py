@@ -11,6 +11,7 @@ import shutil
 import tempfile
 
 from mutalyzer.config import settings
+from mutalyzer import db
 
 
 class TestEnvironment(object):
@@ -25,12 +26,20 @@ class TestEnvironment(object):
         log_handle, self.log_file = tempfile.mkstemp()
         os.close(log_handle)
 
+        database_uri = os.getenv('MUTALYZER_TEST_DATABASE_URI', 'sqlite://')
+
         settings.configure({'DEBUG':        False,
                             'TESTING':      True,
                             'CACHE_DIR':    self.cache_dir,
                             'REDIS_URI':    None,
-                            'DATABASE_URI': 'sqlite://',
+                            'DATABASE_URI': database_uri,
                             'LOG_FILE':     self.log_file})
+
+        # Mutalyzer create tables automatically if we're using an SQLite
+        # in-memory database.
+        if database_uri != 'sqlite://':
+            db.Base.metadata.drop_all(db.session.get_bind())
+            db.Base.metadata.create_all(db.session.get_bind())
 
         for fixture in fixtures:
             fixture()
