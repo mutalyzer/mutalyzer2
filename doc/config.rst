@@ -65,13 +65,13 @@ DATABASE_URI
   SQLAlchemy database connection URI specifying the database used to store
   users, samples, variants, etcetera.
 
-  ================   =====================================================
+  ================   =============================================================
   Database system    Example URI
-  ================   =====================================================
+  ================   =============================================================
   PostgreSQL         ``postgresql://mutalyzer:*****@localhost/mutalyzer``
-  MySQL              ``mysql://mutalyzer:*****@localhost/mutalyzer``
+  MySQL              ``mysql://mutalyzer:*****@localhost/mutalyzer?charset=utf8``
   SQLite             ``sqlite:////tmp/mutalyzer.db``
-  ================   =====================================================
+  ================   =============================================================
 
   See the SQLAlchemy documentation on
   `Engine Configuration

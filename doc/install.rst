@@ -188,7 +188,7 @@ the Mutalyzer settings file, e.g.:
 
 .. code-block:: python
 
-    DATABASE_URI = 'mysql://mutalyzer:*****@localhost/mutalyzer'
+    DATABASE_URI = 'mysql://mutalyzer:*****@localhost/mutalyzer?charset=utf8'
 
 .. seealso::
 
