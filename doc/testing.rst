@@ -32,8 +32,8 @@ PostgreSQL::
     $ pg_virtualenv bash -c 'MUTALYZER_TEST_DATABASE_URI=postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE} py.test'
 
 Tests are `run automatically on Travis CI
-<https://travis-ci.org/LUMC/mutalyzer>`_ for each pull request and push on
-GitHub.
+<https://travis-ci.org/LUMC/mutalyzer>`_ with SQLite, PostgreSQL, and MySQL,
+for each pull request and push on GitHub.
 
 
 Testing the web services
