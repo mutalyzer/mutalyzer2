@@ -47,7 +47,7 @@ def create_engine():
         engine = sqlalchemy.create_engine(url, **options)
 
         # For convenience, we also create tables if we're using an SQLite
-        # in-memory database. By definition they won't yet exist
+        # in-memory database. By definition they won't yet exist.
         Base.metadata.create_all(engine)
         return engine
 

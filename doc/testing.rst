@@ -15,6 +15,22 @@ the Mutalyzer source directory.
 .. note:: The Mutalyzer package must be installed before running the unit
           tests.
 
+By default, the tests use an in-memory SQLite database. This can be customized
+by setting the `MUTALYZER_TEST_DATABASE_URI` to a valid `SQLAlchemy connection
+URI
+<http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#database-urls>`_
+(obviously, the contents of this database will be lost). For example, to use
+an SQLite database on the filesystem::
+
+    $ MUTALYZER_TEST_DATABASE_URI=sqlite:////tmp/mutalyzer.sql py.test
+
+Or, using `pg_virtualenv
+<https://alioth.debian.org/scm/loggerhead/pkg-postgresql/postgresql-common/trunk/view/head:/pg_virtualenv>`_
+(included with the Debian PostgreSQL packages), to run the tests with
+PostgreSQL::
+
+    $ pg_virtualenv bash -c 'MUTALYZER_TEST_DATABASE_URI=postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE} py.test'
+
 Tests are `run automatically on Travis CI
 <https://travis-ci.org/LUMC/mutalyzer>`_ for each pull request and push on
 GitHub.
