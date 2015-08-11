@@ -47,8 +47,6 @@ The next section describes all available configuration settings.
 Configuration settings
 ----------------------
 
-.. note:: Todo: This section is incomplete.
-
 Note that the configuration file is interpreted as a Python module, so you can
 use arbitrary Python expressions as configuration values, or even import other
 modules in it.
@@ -56,6 +54,50 @@ modules in it.
 Unsetting a configuration setting is done by using the value `None`. If no
 default value is mentioned for any configuration setting below it means it is
 not set by default.
+
+.. _config-email:
+
+EMAIL
+  The email address used in contact information on the website, as sender in
+  batch job notifications, and in communication with the NCBI webservices
+  using Entrez.
+
+  `Default value:` ``mutalyzer@humgen.nl``
+
+.. _config-debug:
+
+DEBUG
+  If set to `True`, Mutalyzer runs in debug mode and will show more
+  information with errors.
+
+  `Default value:` `False`
+
+.. _config-cache-dir:
+
+CACHE_DIR
+  The cache directory which is used to store uploaded and downloaded files
+  such as reference files from the NCBI and batch job results.
+
+  `Default value:` ``/tmp``
+
+
+User input settings
+^^^^^^^^^^^^^^^^^^^
+
+MAX_FILE_SIZE
+  Maximum size for uploaded and downloaded files (in bytes).
+
+  `Default value:` `10 * 1048576` (10 MB)
+
+EXTRACTOR_MAX_INPUT_LENGTH
+  Maximum sequence length for description extractor (in bases).
+
+  `Default value:` `50 * 1000` (50 Kbp)
+
+BATCH_JOBS_ERROR_THRESHOLD
+  Allow for this fraction of errors in batch jobs.
+
+  `Default value:` `0.05`
 
 
 Database settings
@@ -80,13 +122,127 @@ DATABASE_URI
 
   `Default value:` ``sqlite://`` (in-memory SQLite database)
 
+REDIS_URI
+  Redis connection URI (can be any `redis-py
+  <https://github.com/andymccurdy/redis-py>`_ connection URI). Set to `None`
+  to silently use a mock Redis. Redis is only used for non-essential
+  features.
+
+  `Default value:` `None`
+
+
+Settings for output and logging
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+All Mutalyzer messages come with a level which can be one of:
+
+======  ========  ======================================================
+Level   Alias     Meaning
+======  ========  ======================================================
+-1      Log       Specifically log a message.
+0       Debug     Debug information.
+1       Info      Info.
+2       Warning   Regular warnings.
+3       Error     Serious errors that can be compensated for.
+4       Fatal     Errors that are not recoverable.
+5       Off       Can be used as a log/output level to turn off output.
+======  ========  ======================================================
+
+LOG_FILE
+  Name and location of the log file.
+
+  `Default value:` ``/tmp/mutalyzer.log``
+
+LOG_LEVEL
+  Level of logged messages.
+
+  `Default value:` `3`
+
+OUTPUT_LEVEL
+  Level of output messages.
+
+  `Default value:` `1`
+
+LOG_TIME_FORMAT
+  Format of time prefix for log messages. Can be anything that is accepted as
+  the format argument of `time.strftime
+  <http://docs.python.org/2/library/time.html#time.strftime>`_.
+
+  `Default value:` ``%Y-%m-%d %H:%M:%S``
+
+
+Website settings
+^^^^^^^^^^^^^^^^
+
+REVERSE_PROXIED
+  If set to `True`, the WSGI application runs behind a reverse proxy (e.g.,
+  nginx using ``proxy_pass``). This needs to be set if the application is
+  mapped to a URL other than / or a different HTTP scheme is used by the
+  reverse proxy.
+
+  `Default value:` `False`
+
+.. _config-soap-wsdl-url:
+
+SOAP_WSDL_URL
+  URL to the SOAP webservice WSDL document. Used for linking to it from the
+  documentation page on the website.
+
+  `Default value:` ``https://mutalyzer.nl/services/?wsdl``
+
+.. _config-json-root-url:
+
+JSON_ROOT_URL
+  URL to the HTTP/RPC+JSON webservice root (without trailing slash). Used for
+  linking to it from the documentation page on the website.
+
+  `Default value:` ``https://mutalyzer.nl/json``
+
+
+Piwik settings
+^^^^^^^^^^^^^^
+
+`Piwik <http://piwik.org/>`_ is an Open Source analytics platform. Mutalyzer
+has built-in support for visitor tracking with Piwik.
+
+PIWIK
+  If set to `True`, Piwik is enabled and some Javascript tracking code is
+  included in every Mutalyzer website page.
+
+  `Default value:` `False`
+
+PIWIK_BASE_URL
+  Base URL for the Piwik server.
+
+  `Default value:` ``https://piwik.example.com``
+
+PIWIK_SITE_ID
+  Piwik site ID for Mutalyzer.
+
+  `Default value:` `1`
+
 
 Miscellaneous settings
 ^^^^^^^^^^^^^^^^^^^^^^
 
-TESTING
-  If set to `True`, Mutalyzer assumes to be running its unit tests. This is
-  done automatically in the provided test suite, so you should never have to
-  change this setting.
+LRG_PREFIX_URL
+  Prefix URL from where LRG files are fetched.
 
-  `Default value:` `False`
+  `Default value:` ``ftp://ftp.ebi.ac.uk/pub/databases/lrgex/SCHEMA_1_7_ARCHIVE/``
+
+DEFAULT_ASSEMBLY
+  Default genome assembly (by name or alias).
+
+  `Default value:` ``hg19``
+
+PROTEIN_LINK_EXPIRATION
+  Expiration time for cached transcript->protein links from the NCBI (in
+  seconds).
+
+  `Default value:` `60 * 60 * 24 * 30` (30 days)
+
+NEGATIVE_PROTEIN_LINK_EXPIRATION
+  Expiration time for cached negative transcript->protein links from the NCBI
+  (in seconds).
+
+  `Default value:` `60 * 60 * 24 * 5` (5 days)
