@@ -160,10 +160,10 @@ repetitive. Therefore, manual deployments are inefficient and
 error-prone. Several systems exist to automate this, such as `Puppet`_,
 `Chef`_, and `Ansible`_.
 
-An automated deployment of Mutalyzer with Ansible is `available from the LUMC
-GitLab <https://git.lumc.nl/mutalyzer/mutalyzer-deployment>`_. This includes
-installation of the website, SOAP and HTTP/RPC+JSON webservices, and the batch
-processor, similar to the setup described above.
+An automated `deployment of Mutalyzer with Ansible
+<https://github.com/mutalyzer/ansible-role-mutalyzer>`_ is available on
+GitHub. This includes installation of the website, SOAP and HTTP/RPC+JSON
+webservices, and the batch processor, similar to the setup described above.
 
 
 .. _Ansible: http://www.ansible.com/
