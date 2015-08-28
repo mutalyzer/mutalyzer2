@@ -173,9 +173,15 @@ def setup_database(alembic_config_path=None, destructive=False):
         raise UserError('Cannot find Alembic configuration: %s'
                         % alembic_config_path)
 
+    bind = db.session.get_bind()
+
     if destructive:
-        db.Base.metadata.drop_all(db.session.get_bind())
-    db.Base.metadata.create_all(db.session.get_bind())
+        db.Base.metadata.drop_all(bind)
+
+    if destructive or not bind.has_table(Assembly.__tablename__):
+        # We assume our migrations will take care of everything if at least
+        # the Assembly table exists.
+        db.Base.metadata.create_all(bind)
 
     if alembic_config_path:
         context = MigrationContext.configure(db.session.connection())
