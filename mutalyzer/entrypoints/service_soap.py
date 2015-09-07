@@ -40,6 +40,22 @@ logging.getLogger('spyne.protocol.xml').setLevel(log_level)
 
 #: WSGI application instance.
 application = WsgiApplication(soap.application)
+
+# By default, the first request will trigger a build of the WSDL document,
+# using the context (service location) from that request. For example, if the
+# first request is on `http://localhost/` and subsequent requests are on
+# `https://mutalyzer.nl/services/`, they will not have a valid WSDL document.
+#
+# This is actually what we do on our production infrastructure, where the
+# service is tested (on localhost) after it has been started.
+#
+# The fix is to force a build of the WSDL document and specifying the location
+# to use.
+#
+# http://spyne.io/docs/2.10/reference/server.html#spyne.server.wsgi.WsgiApplication
+if settings.SOAP_WSDL_URL:
+    application.doc.wsdl11.build_interface_document(settings.SOAP_WSDL_URL)
+
 if settings.REVERSE_PROXIED:
     application = _ReverseProxied(application)
 
