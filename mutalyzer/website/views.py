@@ -50,8 +50,8 @@ def global_context():
         'release'             : mutalyzer.__version_info__[-1] != 'dev',
         'copyright_years'     : mutalyzer.COPYRIGHT_YEARS,
         'contact_email'       : settings.EMAIL,
-        'soap_wsdl_url'       : settings.SOAP_WSDL_URL,
-        'json_root_url'       : settings.JSON_ROOT_URL,
+        'soap_wsdl_url'       : settings.SOAP_WSDL_URL or 'https://mutalyzer.nl/services/?wsdl',
+        'json_root_url'       : settings.JSON_ROOT_URL or 'https://mutalyzer.nl/json',
         'piwik'               : settings.PIWIK,
         'piwik_base_url'      : settings.PIWIK_BASE_URL,
         'piwik_site_id'       : settings.PIWIK_SITE_ID,
@@ -144,7 +144,8 @@ def soap_api():
            .documentation { white-space: pre-line; }
     """
     soap_server = HttpBase(soap.application)
-    soap_server.doc.wsdl11.build_interface_document(settings.SOAP_WSDL_URL)
+    soap_server.doc.wsdl11.build_interface_document(
+        settings.SOAP_WSDL_URL or 'https://mutalyzer.nl/services/?wsdl')
     wsdl_string = soap_server.doc.wsdl11.get_interface_document()
 
     xsl_file = os.path.join(

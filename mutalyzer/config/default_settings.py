@@ -72,8 +72,8 @@ PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 30
 # seconds).
 NEGATIVE_PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 5
 
-# URL to the SOAP webservice WSDL document. Used for linking to it from the
-# documentation page on the website.
+# URL to the SOAP webservice WSDL document. Used to build the WSDL document
+# and for linking to it from the documentation page on the website.
 SOAP_WSDL_URL = 'https://mutalyzer.nl/services/?wsdl'
 
 # URL to the HTTP/RPC+JSON webservice root (without trailing slash). Used for

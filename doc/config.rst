@@ -185,10 +185,10 @@ REVERSE_PROXIED
 .. _config-soap-wsdl-url:
 
 SOAP_WSDL_URL
-  URL to the SOAP webservice WSDL document. Used for linking to it from the
-  documentation page on the website.
+  URL to the SOAP webservice WSDL document. Used to build the WSDL document
+  and for linking to it from the documentation page on the website.
 
-  `Default value:` ``https://mutalyzer.nl/services/?wsdl``
+  `Default value:` `None`
 
 .. _config-json-root-url:
 
@@ -196,7 +196,7 @@ JSON_ROOT_URL
   URL to the HTTP/RPC+JSON webservice root (without trailing slash). Used for
   linking to it from the documentation page on the website.
 
-  `Default value:` ``https://mutalyzer.nl/json``
+  `Default value:` `None`
 
 
 Piwik settings
