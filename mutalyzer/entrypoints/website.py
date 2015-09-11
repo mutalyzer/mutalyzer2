@@ -59,7 +59,8 @@ def debugserver(host, port):
     """
     Run the website with the Python built-in HTTP server.
     """
-    application.run(host=host, port=port, debug=True, use_reloader=True)
+    application.run(host=host, port=port, debug=True,
+                    use_reloader=settings.USE_RELOADER)
 
 
 def main():

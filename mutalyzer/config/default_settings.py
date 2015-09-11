@@ -88,3 +88,9 @@ PIWIK_BASE_URL = 'https://piwik.example.com'
 
 # Piwik site ID for Mutalyzer.
 PIWIK_SITE_ID = 1
+
+# Enable the Werkzeug reloader for the website.
+# This is disabled by default due to a bug with using the reloader in
+# combination with `python -m mutalyzer.entrypoints.website`.
+# https://github.com/mitsuhiko/werkzeug/issues/461#issuecomment-139369694
+USE_RELOADER = False
