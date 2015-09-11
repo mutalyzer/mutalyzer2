@@ -246,3 +246,13 @@ NEGATIVE_PROTEIN_LINK_EXPIRATION
   (in seconds).
 
   `Default value:` `60 * 60 * 24 * 5` (5 days)
+
+USE_RELOADER
+  Enable the `Werkzeug reloader
+  <http://werkzeug.pocoo.org/docs/0.10/serving/#reloader>`_ for the website.
+
+  This is disabled by default due to `a bug with using the reloader
+  <https://github.com/mitsuhiko/werkzeug/issues/461#issuecomment-139369694>`_
+  in combination with ``python -m mutalyzer.entrypoints.website``.
+
+  `Default value:` `False`
