@@ -1357,3 +1357,34 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AB026906.1:c.276C>T', self.output)
         assert 'AB026906.1(SDHD_i001):p.(=)' in self.output.getOutput('protDescriptions')
+
+    @fix(cache('NM_024426.4'))
+    def test_synonymous_p_is_alt_start(self):
+        """
+        Synonymous mutation should yield a p.(=) description, also with an
+        alternative start codon.
+        """
+        check_variant('NM_024426.4:c.1107A>G', self.output)
+        assert 'NM_024426.4(WT1_i001):p.(=)' in self.output.getOutput('protDescriptions')
+        assert 'CTG' in self.output.getOutput('altStart')
+
+    @fix(cache('AB026906.1'))
+    def test_start_codon(self):
+        """
+        Mutation of start codon should yield a p.? description.
+        """
+        check_variant('AB026906.1:c.1A>T', self.output)
+        assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
+        west = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(west) == 1
+
+    @fix(cache('NM_024426.4'))
+    def test_start_codon_alt_start(self):
+        """
+        Mutation of start codon should yield a p.? description, also with an
+        alternative start codon.
+        """
+        check_variant('NM_024426.4:c.1C>G', self.output)
+        assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
+        west = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(west) == 1

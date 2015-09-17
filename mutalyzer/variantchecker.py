@@ -1832,13 +1832,24 @@ def check_variant(description, output):
                             % (gene.name, transcript.name))
                     transcript.proteinDescription = 'p.?'
                 else:
+                    # Because `cds_variant` might contain additional sequence
+                    # after the actual CDS, we cannot use `cds=True` here.
+                    # However, we do know that the first codon is a start codon
+                    # and hence should translate to M. Which is what happens
+                    # with `cds=True`, but not otherwise.
+                    # So we manually translate the first codon to M. But only
+                    # if it was not affected by the variant.
                     protein_variant = cds_variant.translate(table=transcript.txTable)
+                    if unicode(cds_variant[:3]) == unicode(cds_original[:3]):
+                        protein_variant = protein_original[0] + protein_variant[1:]
+
                     # Up to and including the first '*', or the entire string.
                     try:
                         stop = unicode(protein_variant).index('*')
                         protein_variant = protein_variant[:stop + 1]
                     except ValueError:
                         pass
+
                     try:
                         cds_length = util.cds_length(
                             mutator.shift_sites(transcript.CDS.positionList))
