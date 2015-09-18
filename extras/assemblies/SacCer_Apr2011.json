@@ -1,0 +1,93 @@
+{
+  "name": "SacCer_Apr2011",
+  "alias": "sacCer3",
+  "taxonomy_id": 4932,
+  "taxonomy_common_name": "Saccharomyces cerevisiae",
+  "chromosomes": [
+    {
+      "organelle": "nucleus",
+      "name": "chrI",
+      "accession": "BK006935.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrII",
+      "accession": "BK006936.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrIII",
+      "accession": "BK006937.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrIV",
+      "accession": "BK006938.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrV",
+      "accession": "BK006939.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrVI",
+      "accession": "BK006940.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrVII",
+      "accession": "BK006941.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrVIII",
+      "accession": "BK006934.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrIX",
+      "accession": "BK006942.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrX",
+      "accession": "BK006943.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrXI",
+      "accession": "BK006944.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrXII",
+      "accession": "BK006945.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrXIII",
+      "accession": "BK006946.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrXIV",
+      "accession": "BK006947.3"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrXV",
+      "accession": "BK006948.2"
+    },
+    {
+      "organelle": "nucleus",
+      "name": "chrXVI",
+      "accession": "BK006949.2"
+    },
+    {
+      "organelle": "mitochondrion",
+      "name": "chrM",
+      "accession": "AJ011856.1"
+    }
+  ]
+}
