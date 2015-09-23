@@ -115,8 +115,8 @@ def check_name(description):
         described_allele = extractor.describe_dna(reference_sequence,
                                                   sample_sequence)
         #described_protein_allele = describe.describe(
-        #    O.getIndexedOutput("oldprotein", 0),
-        #    O.getIndexedOutput("newprotein", 0, default=""),
+        #    O.getIndexedOutput("oldProtein", 0),
+        #    O.getIndexedOutput("newProtein", 0, default=""),
         #    DNA=False)
         described_protein_allele = ""
 

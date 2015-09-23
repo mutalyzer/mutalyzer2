@@ -840,8 +840,8 @@ class MutalyzerService(ServiceBase):
         result.origCDS = O.getIndexedOutput("origCDS", 0)
         result.newCDS = O.getIndexedOutput("newCDS", 0)
 
-        result.origProtein = O.getIndexedOutput("oldprotein", 0)
-        result.newProtein = O.getIndexedOutput("newprotein", 0)
+        result.origProtein = O.getIndexedOutput("oldProtein", 0)
+        result.newProtein = O.getIndexedOutput("newProtein", 0)
         result.altProtein = O.getIndexedOutput("altProtein", 0)
 
         result.chromDescription = \

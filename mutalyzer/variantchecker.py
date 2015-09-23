@@ -1332,8 +1332,8 @@ def _add_transcript_info(mutator, transcript, output):
         # Data added to the output object:
         # - origCDS: Original CDS.
         # - newCDS: Variant CDS.
-        # - oldprotein: Original protein sequence, ending with '*'.
-        # - newprotein:
+        # - oldProtein: Original protein sequence, ending with '*'.
+        # - newProtein:
         #     - If variant CDS could not be translated, this is '?'.
         #     - If start codon was affected, this is '?'.
         #     - If variant protein equals original protein, this is unset.
@@ -1404,26 +1404,17 @@ def _add_transcript_info(mutator, transcript, output):
         output.addOutput('origCDS', unicode(cds_original))
         output.addOutput("newCDS", unicode(cds_variant[:len(protein_variant) * 3]))
 
-        output.addOutput('oldprotein', unicode(protein_original))
+        # Under which name to store the variant protein sequence. Can be:
+        # - 'new': Normal case.
+        # - 'alt': New start codon was created.
+        # - None: Don't show variant protein sequence.
+        protein_variant_output = None
 
-        # Todo: Don't generate the fancy HTML protein views here, do this in
-        # website.py.
-        # I think it would also be nice to include the mutated list of splice
-        # sites.
-
-        if not protein_variant or unicode(cds_variant[:3]) != unicode(cds_original[:3]):
+        if (not protein_variant or
+            unicode(cds_variant[:3]) != unicode(cds_original[:3])):
             # Could not translate variant CDS or variant hits start codon. In
             # that case we predict p.? and see if a non-reference start codon
             # was created.
-            util.print_protein_html(unicode(protein_original), 0, 0,
-                                    output, 'oldProteinFancy')
-            util.print_protein_html(unicode(protein_original), 0, 0,
-                                    output, 'oldProteinFancyText', text=True)
-            output.addOutput('newprotein', '?')
-            util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-            util.print_protein_html('?', 0, 0, output,
-                'newProteinFancyText', text=True)
-
             if protein_variant:
                 # Variant CDS could be translated, but start codon was
                 # affected.
@@ -1433,37 +1424,63 @@ def _add_transcript_info(mutator, transcript, output):
                 if unicode(cds_variant[0:3]) in start_codons:
                     # A non-reference start codon was created.
                     output.addOutput('altStart', unicode(cds_variant[0:3]))
-
-                    if unicode(protein_original) != unicode(protein_variant):
-                        # The resulting protein is actually different, so
-                        # visualise the difference.
-                        # Todo: Protein differences are not color-coded,
-                        # use something like below in protein_description().
-                        output.addOutput('altProtein', unicode(protein_variant))
-                        util.print_protein_html(unicode(protein_variant), 0,
-                            0, output, 'altProteinFancy')
-                        util.print_protein_html(unicode(protein_variant), 0,
-                            0, output, 'altProteinFancyText', text=True)
+                    protein_variant_output = 'alt'
 
         else:
             # Variant CDS was translated and start codon is unchanged.
+            protein_variant_output = 'new'
+
+        # Todo: Don't generate the fancy HTML protein views here, do this in
+        # website.py.
+        # I think it would also be nice to include the mutated list of splice
+        # sites.
+
+        if protein_variant_output:
+            # Show protein sequence. We start by calculating offsets for diff
+            # coloring.
             cds_length = util.cds_length(
                 mutator.shift_sites(transcript.CDS.positionList))
-            descr, first, last_original, last_variant = \
-                   util.protein_description(cds_length,
-                                            unicode(protein_original),
-                                            unicode(protein_variant))
+            descr, first, last_original, last_variant = util.protein_description(
+                cds_length, unicode(protein_original), unicode(protein_variant))
 
-            util.print_protein_html(unicode(protein_original), first,
-                last_original, output, 'oldProteinFancy')
-            util.print_protein_html(unicode(protein_original), first,
-                last_original, output, 'oldProteinFancyText', text=True)
+            # Show original protein sequence.
+            output.addOutput('oldProtein', unicode(protein_original))
+            util.print_protein_html(
+                unicode(protein_original), first, last_original, output,
+                'oldProteinFancy')
+            util.print_protein_html(
+                unicode(protein_original), first, last_original, output,
+                'oldProteinFancyText', text=True)
+
             if unicode(protein_original) != unicode(protein_variant):
-                output.addOutput('newprotein', unicode(protein_variant))
-                util.print_protein_html(unicode(protein_variant), first,
-                    last_variant, output, 'newProteinFancy')
-                util.print_protein_html(unicode(protein_variant), first,
-                    last_variant, output, 'newProteinFancyText', text=True)
+                # The resulting protein is actually different, so
+                # visualise the difference.
+                output.addOutput(
+                    protein_variant_output + 'Protein',
+                    unicode(protein_variant))
+                util.print_protein_html(
+                    unicode(protein_variant), first, last_variant, output,
+                    protein_variant_output + 'ProteinFancy')
+                util.print_protein_html(
+                    unicode(protein_variant), first, last_variant, output,
+                    protein_variant_output + 'ProteinFancyText', text=True)
+
+        else:
+            # Show original protein sequence, no diff.
+            output.addOutput('oldProtein', unicode(protein_original))
+            util.print_protein_html(unicode(protein_original), 0, 0,
+                                    output, 'oldProteinFancy')
+            util.print_protein_html(unicode(protein_original), 0, 0,
+                                    output, 'oldProteinFancyText', text=True)
+
+        if not protein_variant_output or protein_variant_output == 'alt':
+            # If we don't show a diff, or it is stored in
+            # altProtein/altProteinFancy, we should still populate the normal
+            # newProtein/newProteinFancy fields with a ?.
+            output.addOutput('newProtein', '?')
+            util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
+            util.print_protein_html('?', 0, 0, output, 'newProteinFancyText',
+                                    text=True)
 #_add_transcript_info
 
 
