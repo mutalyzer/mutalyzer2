@@ -13,6 +13,10 @@ sequence when no appropriate RefSeq, GenBank or LRG file is available.
 Please select one of the options below to upload or retrieve your reference
 sequence (maximum size is {{ max_file_size }} megabytes).
 </p>
+<p>
+<strong>Note:</strong> All ranges are assumed to be one-based, inclusive,
+and in reference orientation.
+</p>
 
 <form name="invoer" enctype="multipart/form-data" action="{{ url_for('.reference_loader') }}" method="post" id="invoer">
   <div class="row">

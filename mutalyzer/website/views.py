@@ -558,8 +558,10 @@ def reference_loader_submit():
       Retrieve a range of a chromosome by accession number.
 
       - `accession`: Chromosome Accession Number.
-      - `accession_start`: Start position.
-      - `accession_stop`: Stop position.
+      - `accession_start`: Start position (one-based, inclusive, in reference
+          orientation).
+      - `accession_stop`: Stop position (one-based, inclusive, in reference
+          orientation).
       - `accession_orientation`: Orientation.
 
     `method=slice_chromosome_method`
@@ -567,8 +569,10 @@ def reference_loader_submit():
 
       - `assembly_name_or_alias`: Genome assembly by name or by alias.
       - `chromosome`: Chromosome name.
-      - `chromosome_start`: Start position.
-      - `chromosome_stop`: Stop position.
+      - `chromosome_start`: Start position (one-based, inclusive, in reference
+          orientation).
+      - `chromosome_stop`: Stop position (one-based, inclusive, in reference
+          orientation).
       - `chromosome_orientation`: Orientation.
     """
     method = request.form.get('method')

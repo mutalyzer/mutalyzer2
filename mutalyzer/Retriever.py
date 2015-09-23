@@ -420,8 +420,10 @@ class GenBankRetriever(Retriever):
         as filename.
 
         :arg unicode accno: The accession number of the chromosome.
-        :arg int start: Start position of the slice.
-        :arg int stop: End position of the slice.
+        :arg int start: Start position of the slice (one-based, inclusive, in
+          reference orientation).
+        :arg int stop: End position of the slice (one-based, inclusive, in
+          reference orientation).
         :arg int orientation: Orientation of the slice:
             - 1 ; Forward.
             - 2 ; Reverse complement.
@@ -429,11 +431,18 @@ class GenBankRetriever(Retriever):
         :returns unicode: An UD number.
         """
         # Not a valid slice.
-        if start >= stop:
+        if start > stop:
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve slice for start '
+                                    'position greater than stop position.')
             return None
 
         # The slice can not be too big.
-        if stop - start > settings.MAX_FILE_SIZE:
+        if stop - start + 1 > settings.MAX_FILE_SIZE:
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve slice (request '
+                                    'exceeds maximum of %d bases)' %
+                                    settings.MAX_FILE_SIZE)
             return None
 
         slice_orientation = ['forward', 'reverse'][orientation - 1]
@@ -452,6 +461,8 @@ class GenBankRetriever(Retriever):
 
         # It's not present, so download it.
         try:
+            # EFetch `seq_start` and `seq_stop` are one-based, inclusive, and
+            # in reference orientation.
             handle = Entrez.efetch(
                 db='nuccore', rettype='gb', retmode='text', id=accno,
                 seq_start=start, seq_stop=stop, strand=orientation)
@@ -583,6 +594,7 @@ class GenBankRetriever(Retriever):
                             gene))
                     return None
 
+                # Positions are zero-based, inclusive and in gene orientation.
                 chr_acc_ver = unicode(document['GenomicInfo'][0]['ChrAccVer'])
                 chr_start = int(document['GenomicInfo'][0]['ChrStart'])
                 chr_stop = int(document['GenomicInfo'][0]['ChrStop'])
@@ -605,6 +617,26 @@ class GenBankRetriever(Retriever):
             self._output.addMessage(
                 __file__, 4, 'ENOGENE', 'Gene {} not found.'.format(gene))
             return None
+
+        # If we take `start` and `stop` to be the one-based, inclusive, in
+        # reference orientation coordinates of the gene, the code below yields
+        # the following call to retrieveslice:
+        #
+        # Forward:
+        #   slice_start = start - upstream
+        #   slice_stop = stop + downstream + 1
+        #
+        # Reverse:
+        #   slice_start = start - downstream - 1
+        #   slice_stop = stop + upstream
+        #
+        # Since retrieveslice expects one-based, inclusive, in reference
+        # orientation coordinates, this code effectively slices one downstream
+        # base extra. Yes, that's a bug.
+        #
+        # If we correct this, we should be careful not to invalidate the
+        # entire existing cache of sliced reference files by generating new
+        # slices with a one base difference.
 
         # Figure out the orientation of the gene.
         orientation = 1
