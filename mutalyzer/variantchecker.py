@@ -1329,6 +1329,30 @@ def _add_transcript_info(mutator, transcript, output):
 
     # Add protein prediction to output.
     if transcript.translate:
+        # Data added to the output object:
+        # - origCDS: Original CDS.
+        # - newCDS: Variant CDS.
+        # - oldprotein: Original protein sequence, ending with '*'.
+        # - newprotein:
+        #     - If variant CDS could not be translated, this is '?'.
+        #     - If start codon was affected, this is '?'.
+        #     - If variant protein equals original protein, this is unset.
+        #     - Otherwise, this is the variant protein sequence, ending with
+        #       '*' if a stop codon was found.
+        # - altStart:
+        #     - If variant CDS could be translated and variant created a new
+        #       start codon, this is the new start codon.
+        #     - Unset otherwise.
+        # - altProtein:
+        #     - If variant CDS could be translated and variant created a new
+        #       start codon, and variant protein does not equal original
+        #       protein, this is the variant protein sequence, ending with '*'
+        #       if a stop codon was found.
+        # - oldProteinFancy, newProteinFancy, altProteinFancy: Versions of the
+        #     protein sequences formatted for HTML.
+        # - oldProteinFancyText, newProteinFancyText, altProteinFancyText:
+        #     Versions of the protein sequences formatted for plaintext.
+
         cds_original = util.splice(mutator.orig, transcript.CDS.positionList)
         cds_original.alphabet = IUPAC.unambiguous_dna
 
@@ -1342,8 +1366,6 @@ def _add_transcript_info(mutator, transcript, output):
                                      mutator.shift_sites(transcript.CDS.location),
                                      transcript.CM.orientation)
         cds_variant.alphabet = IUPAC.unambiguous_dna
-
-        #output.addOutput('origCDS', cds_original)
 
         if transcript.CM.orientation == -1:
             cds_original = cds_original.reverse_complement()
@@ -1361,7 +1383,16 @@ def _add_transcript_info(mutator, transcript, output):
                               'In frame stop codon found.')
             return
 
+        if not protein_original.startswith('M'):
+            protein_original = 'M' + protein_original[1:]
+            output.addMessage(__file__, 2, 'WALTSTART',
+                              'Reference protein translated from alternative '
+                              'start codon %s.' % (unicode(cds_original[:3])))
+
         protein_variant = cds_variant.translate(table=transcript.txTable)
+
+        if protein_variant:
+            protein_variant = 'M' + protein_variant[1:]
 
         # Up to and including the first '*', or the entire string.
         try:
@@ -1370,8 +1401,6 @@ def _add_transcript_info(mutator, transcript, output):
         except ValueError:
             pass
 
-        # Note: addOutput('origCDS', ...) was first before the possible
-        #       reverse complement operation above.
         output.addOutput('origCDS', unicode(cds_original))
         output.addOutput("newCDS", unicode(cds_variant[:len(protein_variant) * 3]))
 
@@ -1381,34 +1410,43 @@ def _add_transcript_info(mutator, transcript, output):
         # website.py.
         # I think it would also be nice to include the mutated list of splice
         # sites.
-        if not protein_variant or unicode(protein_variant[0]) != 'M':
-            # Todo: Protein differences are not color-coded,
-            # use something like below in protein_description().
+
+        if not protein_variant or unicode(cds_variant[:3]) != unicode(cds_original[:3]):
+            # Could not translate variant CDS or variant hits start codon. In
+            # that case we predict p.? and see if a non-reference start codon
+            # was created.
             util.print_protein_html(unicode(protein_original), 0, 0,
                                     output, 'oldProteinFancy')
             util.print_protein_html(unicode(protein_original), 0, 0,
                                     output, 'oldProteinFancyText', text=True)
-            if unicode(cds_variant[0:3]) in \
-                   CodonTable.unambiguous_dna_by_id[transcript.txTable].start_codons:
-                output.addOutput('newprotein', '?')
-                util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-                util.print_protein_html('?', 0, 0, output,
-                    'newProteinFancyText', text=True)
-                output.addOutput('altStart', unicode(cds_variant[0:3]))
-                if unicode(protein_original[1:]) != unicode(protein_variant[1:]):
-                    output.addOutput('altProtein',
-                                     'M' + unicode(protein_variant[1:]))
-                    util.print_protein_html('M' + unicode(protein_variant[1:]), 0,
-                        0, output, 'altProteinFancy')
-                    util.print_protein_html('M' + unicode(protein_variant[1:]), 0,
-                        0, output, 'altProteinFancyText', text=True)
-            else :
-                output.addOutput('newprotein', '?')
-                util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
-                util.print_protein_html('?', 0, 0, output,
-                    'newProteinFancyText', text=True)
+            output.addOutput('newprotein', '?')
+            util.print_protein_html('?', 0, 0, output, 'newProteinFancy')
+            util.print_protein_html('?', 0, 0, output,
+                'newProteinFancyText', text=True)
+
+            if protein_variant:
+                # Variant CDS could be translated, but start codon was
+                # affected.
+                start_codons = CodonTable.unambiguous_dna_by_id[
+                    transcript.txTable].start_codons
+
+                if unicode(cds_variant[0:3]) in start_codons:
+                    # A non-reference start codon was created.
+                    output.addOutput('altStart', unicode(cds_variant[0:3]))
+
+                    if unicode(protein_original) != unicode(protein_variant):
+                        # The resulting protein is actually different, so
+                        # visualise the difference.
+                        # Todo: Protein differences are not color-coded,
+                        # use something like below in protein_description().
+                        output.addOutput('altProtein', unicode(protein_variant))
+                        util.print_protein_html(unicode(protein_variant), 0,
+                            0, output, 'altProteinFancy')
+                        util.print_protein_html(unicode(protein_variant), 0,
+                            0, output, 'altProteinFancyText', text=True)
 
         else:
+            # Variant CDS was translated and start codon is unchanged.
             cds_length = util.cds_length(
                 mutator.shift_sites(transcript.CDS.positionList))
             descr, first, last_original, last_variant = \
@@ -1832,20 +1870,35 @@ def check_variant(description, output):
                             % (gene.name, transcript.name))
                     transcript.proteinDescription = 'p.?'
                 else:
+                    # Because `cds_variant` might contain additional sequence
+                    # after the actual CDS, we cannot use `cds=True` here.
+                    # However, we do know that the first codon is a start codon
+                    # and hence should translate to M. Which is what happens
+                    # with `cds=True`, but not otherwise.
+                    # So we manually translate the first codon to M. But only
+                    # if it was not affected by the variant.
                     protein_variant = cds_variant.translate(table=transcript.txTable)
-                    # Up to and including the first '*', or the entire string.
-                    try:
-                        stop = unicode(protein_variant).index('*')
-                        protein_variant = protein_variant[:stop + 1]
-                    except ValueError:
-                        pass
-                    try:
-                        cds_length = util.cds_length(
-                            mutator.shift_sites(transcript.CDS.positionList))
-                        transcript.proteinDescription = util.protein_description(
-                            cds_length, unicode(protein_original), unicode(protein_variant))[0]
-                    except IndexError:
-                        # Todo: Probably CDS start was hit by removal of exon..
+                    if protein_variant and unicode(cds_variant[:3]) == unicode(cds_original[:3]):
+                        protein_variant = protein_original[0] + protein_variant[1:]
+
+                        # Up to and including the first '*', or the entire string.
+                        try:
+                            stop = unicode(protein_variant).index('*')
+                            protein_variant = protein_variant[:stop + 1]
+                        except ValueError:
+                            pass
+
+                        try:
+                            cds_length = util.cds_length(
+                                mutator.shift_sites(transcript.CDS.positionList))
+                            transcript.proteinDescription = util.protein_description(
+                                cds_length, unicode(protein_original), unicode(protein_variant))[0]
+                        except IndexError:
+                            # Todo: Probably CDS start was hit by removal of exon..
+                            transcript.proteinDescription = 'p.?'
+
+                    else:
+                        # Mutation in start codon.
                         transcript.proteinDescription = 'p.?'
 
             else:

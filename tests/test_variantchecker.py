@@ -1357,3 +1357,119 @@ class TestVariantchecker(MutalyzerTest):
         """
         check_variant('AB026906.1:c.276C>T', self.output)
         assert 'AB026906.1(SDHD_i001):p.(=)' in self.output.getOutput('protDescriptions')
+        assert not self.output.getOutput('newProteinFancy')
+
+    @fix(cache('NM_024426.4'))
+    def test_synonymous_p_is_alt_start(self):
+        """
+        Synonymous mutation should yield a p.(=) description, also with an
+        alternative start codon.
+        """
+        check_variant('NM_024426.4:c.1107A>G', self.output)
+        assert 'NM_024426.4(WT1_i001):p.(=)' in self.output.getOutput('protDescriptions')
+        assert not self.output.getOutput('newProteinFancy')
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 1
+        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert not self.output.getOutput('newProtein')
+        assert not self.output.getOutput('altStart')
+        assert not self.output.getOutput('altProteinFancy')
+
+    @fix(cache('AB026906.1'))
+    def test_start_codon(self):
+        """
+        Mutation of start codon should yield a p.? description.
+        """
+        check_variant('AB026906.1:c.1A>G', self.output)
+        assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
+        wstart = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(wstart) == 1
+        assert self.output.getOutput('newprotein')[0] == '?'
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 0
+        assert not self.output.getOutput('altStart')
+
+    @fix(cache('NM_024426.4'))
+    def test_start_codon_alt_start(self):
+        """
+        Mutation of start codon should yield a p.? description, also with an
+        alternative start codon.
+        """
+        check_variant('NM_024426.4:c.1C>G', self.output)
+        assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
+        west = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(west) == 1
+        assert self.output.getOutput('newprotein')[0] == '?'
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 1
+        assert not self.output.getOutput('altStart')
+
+    @fix(cache('AB026906.1'))
+    def test_start_codon_yield_start_p_is(self):
+        """
+        Silent mutation creating new start codon should yield a p.?
+        description. The visualisation should also render the case for the new
+        start codon.
+        """
+        check_variant('AB026906.1:c.1A>T', self.output)  # yields TTG start codon
+        assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
+        wstart = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(wstart) == 1
+        assert self.output.getOutput('newprotein')[0] == '?'
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 0
+        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert 'TTG' in self.output.getOutput('altStart')
+        assert not self.output.getOutput('altProteinFancy')
+
+    @fix(cache('NM_024426.4'))
+    def test_start_codon_alt_start_yield_start_p_is(self):
+        """
+        Silent mutation creating new start codon should yield a p.?
+        description, also with an alternative start codon. The visualisation
+        should also render the case for the new start codon.
+        """
+        check_variant('NM_024426.4:c.1C>A', self.output)  # yields ATG start codon
+        assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
+        west = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(west) == 1
+        assert self.output.getOutput('newprotein')[0] == '?'
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 1
+        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert 'ATG' in self.output.getOutput('altStart')
+        assert not self.output.getOutput('altProteinFancy')
+
+    @fix(cache('AB026906.1'))
+    def test_start_codon_yield_start(self):
+        """
+        Mutation creating new start codon should yield a p.? description. The
+        visualisation should also render the case for the new start codon.
+        """
+        check_variant('AB026906.1:c.1_4delinsTTGA', self.output)  # yields TTG start codon
+        assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
+        wstart = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(wstart) == 1
+        assert self.output.getOutput('newprotein')[0] == '?'
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 0
+        assert 'TTG' in self.output.getOutput('altStart')
+        assert self.output.getOutput('altProtein')[0].startswith('M')
+
+    @fix(cache('NM_024426.4'))
+    def test_start_codon_alt_start_yield_start(self):
+        """
+        Mutation creating new start codon should yield a p.? description, also
+        with an alternative start codon. The visualisation should also render
+        the new start codon.
+        """
+        check_variant('NM_024426.4:c.1_4delinsATGA', self.output)  # yields ATG start codon
+        assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
+        west = self.output.getMessagesWithErrorCode('WSTART')
+        assert len(west) == 1
+        assert self.output.getOutput('newprotein')[0] == '?'
+        waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
+        assert len(waltstart) == 1
+        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert 'ATG' in self.output.getOutput('altStart')
+        assert self.output.getOutput('altProtein')[0].startswith('M')

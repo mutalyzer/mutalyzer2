@@ -600,10 +600,6 @@ def protein_description(cds_stop, s1, s2):
     else:
         description = in_frame_description(s1, s2)
 
-    if not s2 or s1[0] != s2[0]:
-        # Mutation in start codon.
-        return 'p.?', description[1], description[2], description[3]
-
     return description
 #protein_description
 
