@@ -47,7 +47,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54_Gly55delinsSer)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('AL449423.14'))
     def test_insertion_in_frame(self):
@@ -62,7 +62,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsIleSer)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('AL449423.14'))
     def test_insertion_list_in_frame(self):
@@ -77,7 +77,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsIleSer)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('AL449423.14'))
     def test_deletion_insertion_in_frame(self):
@@ -92,7 +92,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('AL449423.14'))
     def test_deletion_insertion_list_in_frame(self):
@@ -107,7 +107,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('AL449423.14'))
     def test_deletion_insertion_in_frame_complete(self):
@@ -122,7 +122,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('AL449423.14'))
     def test_deletion_insertion_list_in_frame_complete(self):
@@ -138,7 +138,7 @@ class TestVariantchecker(MutalyzerTest):
                in self.output.getOutput('descriptions')
         assert 'AL449423.14(CDKN2A_i001):p.(Met54delinsAsnPro)' \
                in self.output.getOutput('protDescriptions')
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('NM_003002.2'))
     def test_est_warning_nm_est(self):
@@ -315,7 +315,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion on CDS start boundary should not be included in CDS.
         """
         check_variant('NM_000143.3:c.-1_1insCAT', self.output)
-        assert self.output.getIndexedOutput("newprotein", 0) == None
+        assert self.output.getIndexedOutput("newProtein", 0) == None
         # Todo: Is this a good test?
 
     @fix(cache('NM_000143.3'))
@@ -324,7 +324,7 @@ class TestVariantchecker(MutalyzerTest):
         Insertion after CDS start boundary should be included in CDS.
         """
         check_variant('NM_000143.3:c.1_2insCAT', self.output)
-        assert self.output.getIndexedOutput("newprotein", 0) == '?'
+        assert self.output.getIndexedOutput("newProtein", 0) == '?'
         # Todo: Is this a good test?
 
     @fix(cache('NG_012772.1'))
@@ -337,7 +337,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == []
         # Todo: For now, the following is how to check if no protein
         # prediction is done.
-        assert not self.output.getOutput('newprotein')
+        assert not self.output.getOutput('newProtein')
 
     @fix(cache('NG_012772.1'))
     def test_del_exon(self):
@@ -349,7 +349,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('NG_012772.1'))
     def test_del_exon_exact(self):
@@ -361,7 +361,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('NG_012772.1'))
     def test_del_exon_in_frame(self):
@@ -378,7 +378,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
         # Todo: assert that protein products indeed have only this difference.
 
     @fix(cache('NG_012772.1'))
@@ -391,7 +391,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [4]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('NG_012772.1'))
     def test_del_intron(self):
@@ -404,7 +404,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('NG_012772.1'))
     def test_del_intron_exact(self):
@@ -415,12 +415,12 @@ class TestVariantchecker(MutalyzerTest):
         check_variant('NG_012772.1(BRCA2_v001):c.681+1_682-1del', self.output)
         assert self.output.getMessagesWithErrorCode('WOVERSPLICE') == []
         assert self.output.getOutput('removedSpliceSites') == [2]
-        # Note: The protein prediction is done, but 'newprotein' is not set
+        # Note: The protein prediction is done, but 'newProtein' is not set
         # because we have no change. So to check if the prediction is done, we
-        # check if 'oldprotein' is set and to check if the prediction is
-        # correct, we check if 'newprotein' is not set.
-        assert self.output.getOutput('oldprotein')
-        assert not self.output.getOutput('newprotein')
+        # check if 'oldProtein' is set and to check if the prediction is
+        # correct, we check if 'newProtein' is not set.
+        assert self.output.getOutput('oldProtein')
+        assert not self.output.getOutput('newProtein')
 
     @fix(cache('NG_012772.1'))
     def test_del_intron_in_frame(self):
@@ -433,7 +433,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
         # Todo: assert that protein products indeed have only this difference.
 
     @fix(cache('NG_012772.1'))
@@ -446,7 +446,7 @@ class TestVariantchecker(MutalyzerTest):
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
         # Genomic positions should be centered in flanking introns and unsure.
         assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012772.1:g.(17550_19725)del'
         assert 'NG_012772.1(BRCA2_v001):c.632-?_681+?del' \
@@ -471,7 +471,7 @@ class TestVariantchecker(MutalyzerTest):
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
         # Genomic positions should be centered in flanking introns and unsure.
         assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012772.1:g.(7324_11720)del'
         assert 'NG_012772.1(BRCA2_v001):c.68-?_316+?del' \
@@ -491,7 +491,7 @@ class TestVariantchecker(MutalyzerTest):
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
         # Genomic positions should be centered in flanking introns and unsure.
         assert self.output.getIndexedOutput('genomicDescription', 0) == 'NG_012772.1:g.[(17550_19725)del;19017del]'
         assert 'NG_012772.1(BRCA2_v001):c.[632-?_681+?del;681+4del]' \
@@ -511,7 +511,7 @@ class TestVariantchecker(MutalyzerTest):
         assert len(self.output.getMessagesWithErrorCode('IDELSPLICE')) > 0
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
         # Genomic positions should be centered in flanking introns and unsure.
         assert self.output.getIndexedOutput('genomicDescription', 0) == 'AL449423.14:g.(60314_63683)del'
         assert 'AL449423.14(CDKN2A_v001):c.151-?_457+?del' \
@@ -533,7 +533,7 @@ class TestVariantchecker(MutalyzerTest):
         assert self.output.getOutput('removedSpliceSites') == [2]
         # Todo: For now, the following is how to check if protein
         # prediction is done.
-        assert self.output.getOutput('newprotein')
+        assert self.output.getOutput('newProtein')
 
     @fix(cache('NG_008939.1'))
     def test_ins_seq(self):
@@ -1370,7 +1370,7 @@ class TestVariantchecker(MutalyzerTest):
         assert not self.output.getOutput('newProteinFancy')
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 1
-        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert self.output.getOutput('oldProtein')[0].startswith('M')
         assert not self.output.getOutput('newProtein')
         assert not self.output.getOutput('altStart')
         assert not self.output.getOutput('altProteinFancy')
@@ -1384,7 +1384,7 @@ class TestVariantchecker(MutalyzerTest):
         assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
         wstart = self.output.getMessagesWithErrorCode('WSTART')
         assert len(wstart) == 1
-        assert self.output.getOutput('newprotein')[0] == '?'
+        assert self.output.getOutput('newProtein')[0] == '?'
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 0
         assert not self.output.getOutput('altStart')
@@ -1399,7 +1399,7 @@ class TestVariantchecker(MutalyzerTest):
         assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
         west = self.output.getMessagesWithErrorCode('WSTART')
         assert len(west) == 1
-        assert self.output.getOutput('newprotein')[0] == '?'
+        assert self.output.getOutput('newProtein')[0] == '?'
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 1
         assert not self.output.getOutput('altStart')
@@ -1415,10 +1415,10 @@ class TestVariantchecker(MutalyzerTest):
         assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
         wstart = self.output.getMessagesWithErrorCode('WSTART')
         assert len(wstart) == 1
-        assert self.output.getOutput('newprotein')[0] == '?'
+        assert self.output.getOutput('newProtein')[0] == '?'
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 0
-        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert self.output.getOutput('oldProtein')[0].startswith('M')
         assert 'TTG' in self.output.getOutput('altStart')
         assert not self.output.getOutput('altProteinFancy')
 
@@ -1433,10 +1433,10 @@ class TestVariantchecker(MutalyzerTest):
         assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
         west = self.output.getMessagesWithErrorCode('WSTART')
         assert len(west) == 1
-        assert self.output.getOutput('newprotein')[0] == '?'
+        assert self.output.getOutput('newProtein')[0] == '?'
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 1
-        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert self.output.getOutput('oldProtein')[0].startswith('M')
         assert 'ATG' in self.output.getOutput('altStart')
         assert not self.output.getOutput('altProteinFancy')
 
@@ -1450,7 +1450,7 @@ class TestVariantchecker(MutalyzerTest):
         assert 'AB026906.1(SDHD_i001):p.?' in self.output.getOutput('protDescriptions')
         wstart = self.output.getMessagesWithErrorCode('WSTART')
         assert len(wstart) == 1
-        assert self.output.getOutput('newprotein')[0] == '?'
+        assert self.output.getOutput('newProtein')[0] == '?'
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 0
         assert 'TTG' in self.output.getOutput('altStart')
@@ -1467,9 +1467,9 @@ class TestVariantchecker(MutalyzerTest):
         assert 'NM_024426.4(WT1_i001):p.?' in self.output.getOutput('protDescriptions')
         west = self.output.getMessagesWithErrorCode('WSTART')
         assert len(west) == 1
-        assert self.output.getOutput('newprotein')[0] == '?'
+        assert self.output.getOutput('newProtein')[0] == '?'
         waltstart = self.output.getMessagesWithErrorCode('WALTSTART')
         assert len(waltstart) == 1
-        assert self.output.getOutput('oldprotein')[0].startswith('M')
+        assert self.output.getOutput('oldProtein')[0].startswith('M')
         assert 'ATG' in self.output.getOutput('altStart')
         assert self.output.getOutput('altProtein')[0].startswith('M')
