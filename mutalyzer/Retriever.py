@@ -505,7 +505,7 @@ class GenBankRetriever(Retriever):
         if self.write(raw_data, reference.accession, 0):
             return reference.accession
 
-    def retrievegene(self, gene, organism, upstream, downstream):
+    def retrievegene(self, gene, organism, upstream=0, downstream=0):
         """
         Query the NCBI for the chromosomal location of a gene and make a
         slice if the gene can be found.
@@ -598,6 +598,23 @@ class GenBankRetriever(Retriever):
                 chr_acc_ver = unicode(document['GenomicInfo'][0]['ChrAccVer'])
                 chr_start = int(document['GenomicInfo'][0]['ChrStart'])
                 chr_stop = int(document['GenomicInfo'][0]['ChrStop'])
+
+                # Convert to one-based, inclusive, reference orientation. We
+                # also add the flanking regions.
+                chr_start += 1
+                chr_stop += 1
+                if chr_start <= chr_stop:
+                    # Gene on forward strand.
+                    orientation = 1
+                    chr_start -= upstream
+                    chr_stop += downstream
+                else:
+                    # Gene on reverse strand.
+                    orientation = 2
+                    chr_start, chr_stop = chr_stop, chr_start
+                    chr_start -= downstream
+                    chr_stop += upstream
+
                 break
 
             # Collect official symbols that has this gene as alias in case we
@@ -617,37 +634,6 @@ class GenBankRetriever(Retriever):
             self._output.addMessage(
                 __file__, 4, 'ENOGENE', 'Gene {} not found.'.format(gene))
             return None
-
-        # If we take `start` and `stop` to be the one-based, inclusive, in
-        # reference orientation coordinates of the gene, the code below yields
-        # the following call to retrieveslice:
-        #
-        # Forward:
-        #   slice_start = start - upstream
-        #   slice_stop = stop + downstream + 1
-        #
-        # Reverse:
-        #   slice_start = start - downstream - 1
-        #   slice_stop = stop + upstream
-        #
-        # Since retrieveslice expects one-based, inclusive, in reference
-        # orientation coordinates, this code effectively slices one downstream
-        # base extra. Yes, that's a bug.
-        #
-        # If we correct this, we should be careful not to invalidate the
-        # entire existing cache of sliced reference files by generating new
-        # slices with a one base difference.
-
-        # Figure out the orientation of the gene.
-        orientation = 1
-        if chr_start > chr_stop:  # Swap start and stop.
-            orientation = 2
-            temp = chr_start
-            chr_start = chr_stop - downstream  # Also take care of the flanking
-            chr_stop = temp + upstream + 1   # sequences.
-        else:
-            chr_start -= upstream - 1
-            chr_stop += downstream + 2
 
         # And retrieve the slice.
         return self.retrieveslice(
