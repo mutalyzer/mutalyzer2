@@ -172,11 +172,11 @@ class Reference(db.Base):
     slice_accession = Column(String(20))
 
     #: The start position on the accession number from which we took a slice,
-    #: if available.
+    #: if available (one-based, inclusive, in reference orientation).
     slice_start = Column(Integer)
 
     #: The stop position on the accession number from which we took a slice,
-    #: if available.
+    #: if available (one-based, inclusive, in reference orientation).
     slice_stop = Column(Integer)
 
     #: The orientation on the accession number from which we took a slice, if
@@ -381,22 +381,28 @@ class TranscriptMapping(db.Base):
     orientation = Column(Enum('forward', 'reverse', name='orientation'),
                          nullable=False)
 
-    #: The start position of the transcript on the chromosome.
+    #: The start position of the transcript on the chromosome (one-based,
+    #: inclusive, in chromosomal orientation).
     start = Column(Integer, nullable=False)
 
-    #: The stop position of the transcript on the chromosome.
+    #: The stop position of the transcript on the chromosome (one-based,
+    #: inclusive, in chromosomal orientation).
     stop = Column(Integer, nullable=False)
 
-    #: The CDS start position of the transcript on the chromosome.
+    #: The CDS start position of the transcript on the chromosome (one-based,
+    #: inclusive, in chromosomal orientation).
     cds_start = Column(Integer)
 
-    #: The CDS stop position of the transcript on the chromosome.
+    #: The CDS stop position of the transcript on the chromosome (one-based,
+    #: inclusive).
     cds_stop = Column(Integer)
 
-    #: The exon start positions of the transcript on the chromosome.
+    #: The exon start positions of the transcript on the chromosome
+    #: (one-based, inclusive, in chromosomal orientation).
     exon_starts = Column(Positions, nullable=False)
 
-    #: The exon start positions of the transcript on the chromosome.
+    #: The exon start positions of the transcript on the chromosome
+    #: (one-based, inclusive, in chromosomal orientation).
     exon_stops = Column(Positions, nullable=False)
 
     #: If `False`, variant descriptions can use just the accession number

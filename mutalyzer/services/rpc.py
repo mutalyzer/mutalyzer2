@@ -198,7 +198,7 @@ class MutalyzerService(ServiceBase):
         @type build: string
         @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
         @type chrom: string
-        @arg pos: A position on the chromosome.
+        @arg pos: A position on the chromosome (one-based).
         @type pos: int
         @kwarg versions: If set to True, also include transcript versions.
         @type versions: bool
@@ -276,6 +276,8 @@ class MutalyzerService(ServiceBase):
         """
         Get all the transcripts that overlap with a range on a chromosome.
 
+        The range should be provided as one-based, inclusive positions.
+
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
@@ -297,6 +299,13 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsRange(%s %s %s %s %s)" % (build,
             chrom, pos1, pos2, method))
+
+        if pos1 > pos2:
+            L.addMessage(__file__, 4, 'EARG',
+                         'Invalid range: %d-%d' % (pos1, pos2))
+            raise Fault('EARG',
+                        'Invalid range (%d-%d) with start position greater '
+                        'than stop position.' % (pos1, pos2))
 
         try:
             assembly = Assembly.by_name_or_alias(build)
@@ -337,6 +346,8 @@ class MutalyzerService(ServiceBase):
         Get all the transcripts and their info that overlap with a range on a
         chromosome.
 
+        The range should be provided as one-based, inclusive positions.
+
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg chrom: A chromosome encoded as "chr1", ..., "chrY".
@@ -359,16 +370,25 @@ class MutalyzerService(ServiceBase):
                  - stop
                  - cds_start
                  - cds_stop
+        All returned ranges are one-based, inclusive, and in gene
+        orientation.
         """
         output = Output(__file__)
         output.addMessage(__file__, -1, 'INFO', 'Received request ' \
             'getTranscriptsMapping(%s %s %s %s %s)' % (build, chrom, pos1, pos2,
             method))
 
+        if pos1 > pos2:
+            output.addMessage(__file__, 4, 'EARG',
+                         'Invalid range: %d-%d' % (pos1, pos2))
+            raise Fault('EARG',
+                        'Invalid range (%d-%d) with start position greater '
+                        'than stop position.' % (pos1, pos2))
+
         try:
             assembly = Assembly.by_name_or_alias(build)
         except NoResultFound:
-            L.addMessage(__file__, 4, "EARG", "EARG %s" % build)
+            output.addMessage(__file__, 4, "EARG", "EARG %s" % build)
             raise Fault("EARG",
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
@@ -376,7 +396,7 @@ class MutalyzerService(ServiceBase):
         try:
             chromosome = assembly.chromosomes.filter_by(name=chrom).one()
         except NoResultFound:
-            L.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
+            output.addMessage(__file__, 4, "EARG", "EARG %s" % chrom)
             raise Fault("EARG", "The chrom argument (%s) was not a valid " \
                             "chromosome name." % chrom)
 
@@ -1123,8 +1143,23 @@ class MutalyzerService(ServiceBase):
     def sliceChromosomeByGene(geneSymbol, organism, upStream,
         downStream) :
         """
-        Todo: documentation, error handling, argument checking, tests.
+        Retrieve part of the reference genome for a (HGNC) gene symbol.
+
+        @arg geneSymbol: Gene symbol.
+        @type geneSymbol: string
+        @arg organism: Organism name without spaces.
+        @type organism: string
+        @arg upStream: Number of 5' flanking bases to include.
+        @type upStream: integer
+        @arg downStream: Number of 3' flanking bases to include.
+        @type upStream: integer
+
+        This uses the NCBI Entrez search engine and is therefore based on the
+        current Entrez assembly for the given organism.
+
+        @return: UD accession number for created slice.
         """
+        # Todo: error handling, argument checking, tests.
         O = Output(__file__)
         retriever = Retriever.GenBankRetriever(O)
 
@@ -1148,12 +1183,21 @@ class MutalyzerService(ServiceBase):
         Mandatory.Integer, _returns=Mandatory.Unicode)
     def sliceChromosome(chromAccNo, start, end, orientation) :
         """
-        Todo: documentation, error handling, argument checking, tests.
+        Retrieve a range of a chromosome by accession number.
 
+        @arg chromAccNo: Chromosome or contig by accession number.
+        @type chromAccNo: string
+        @arg start: Start position (one-based, inclusive, in reference
+          orientation).
+        @type start: integer
+        @arg stop: Stop position (one-based, inclusive, in reference
+          orientation).
+        @type start: integer
         @arg orientation: Orientation of the slice. 1 for forward, 2 for
-            reverse complement.
+          reverse complement.
         @type orientation: integer
         """
+        # Todo: error handling, argument checking, tests.
         O = Output(__file__)
         retriever = Retriever.GenBankRetriever(O)
 
@@ -1351,10 +1395,12 @@ class MutalyzerService(ServiceBase):
 
         @return: Object with the following fields:
           - gene: Gene symbol.
-          - start: Gene start position. If multiple transcripts for the gene
-              are known, this contains the lowest start position.
-          - stop: Gene stop position. If multiple transcripts for the gene are
-              known, this contains the highest stop position.
+          - start: Gene start position (one-based, inclusive, in chromosomal
+              orientation). If multiple transcripts for the gene are known,
+              this contains the lowest start position.
+          - stop: Gene stop position (one-based, inclusive, in chromosomal
+              orientation). If multiple transcripts for the gene are known,
+              this contains the highest stop position.
           - orientation: Gene orientation, either 'forward' or 'reverse'.
           - chromosome_name: Gene chromosome by name (e.g., 'chrX').
           - chromosome_accession: Gene chromosome by accession (e.g.,

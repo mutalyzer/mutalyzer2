@@ -816,6 +816,9 @@ def import_from_ucsc_by_gene(assembly, gene):
     result = cursor.fetchall()
     cursor.close()
 
+    # All ranges in the UCSC tables are zero-based and open-ended. We convert
+    # this to one-based, inclusive for our database.
+
     for (acc, version, txStart, txEnd, cdsStart, cdsEnd, exonStarts, exonEnds,
          geneName, chrom, strand, protAcc) in result:
         chromosome = assembly.chromosomes.filter_by(name=chrom).one()
@@ -923,6 +926,9 @@ def import_from_mapview_file(assembly, mapview_file, group_label):
 
     For transcripts without any UTR and CDS entries (seems to happen for
     predicted genes), we generate one exon spanning the entire transcript.
+
+    All positions are one-based, inclusive, and that is what we also use in
+    our database.
     """
     columns = ['taxonomy', 'chromosome', 'start', 'stop', 'orientation',
                'contig', 'ctg_start', 'ctg_stop', 'ctg_orientation',

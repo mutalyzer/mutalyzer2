@@ -420,8 +420,10 @@ class GenBankRetriever(Retriever):
         as filename.
 
         :arg unicode accno: The accession number of the chromosome.
-        :arg int start: Start position of the slice.
-        :arg int stop: End position of the slice.
+        :arg int start: Start position of the slice (one-based, inclusive, in
+          reference orientation).
+        :arg int stop: End position of the slice (one-based, inclusive, in
+          reference orientation).
         :arg int orientation: Orientation of the slice:
             - 1 ; Forward.
             - 2 ; Reverse complement.
@@ -429,11 +431,18 @@ class GenBankRetriever(Retriever):
         :returns unicode: An UD number.
         """
         # Not a valid slice.
-        if start >= stop:
+        if start > stop:
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve slice for start '
+                                    'position greater than stop position.')
             return None
 
         # The slice can not be too big.
-        if stop - start > settings.MAX_FILE_SIZE:
+        if stop - start + 1 > settings.MAX_FILE_SIZE:
+            self._output.addMessage(__file__, 4, 'ERETR',
+                                    'Could not retrieve slice (request '
+                                    'exceeds maximum of %d bases)' %
+                                    settings.MAX_FILE_SIZE)
             return None
 
         slice_orientation = ['forward', 'reverse'][orientation - 1]
@@ -452,6 +461,8 @@ class GenBankRetriever(Retriever):
 
         # It's not present, so download it.
         try:
+            # EFetch `seq_start` and `seq_stop` are one-based, inclusive, and
+            # in reference orientation.
             handle = Entrez.efetch(
                 db='nuccore', rettype='gb', retmode='text', id=accno,
                 seq_start=start, seq_stop=stop, strand=orientation)
@@ -494,7 +505,7 @@ class GenBankRetriever(Retriever):
         if self.write(raw_data, reference.accession, 0):
             return reference.accession
 
-    def retrievegene(self, gene, organism, upstream, downstream):
+    def retrievegene(self, gene, organism, upstream=0, downstream=0):
         """
         Query the NCBI for the chromosomal location of a gene and make a
         slice if the gene can be found.
@@ -583,9 +594,27 @@ class GenBankRetriever(Retriever):
                             gene))
                     return None
 
+                # Positions are zero-based, inclusive and in gene orientation.
                 chr_acc_ver = unicode(document['GenomicInfo'][0]['ChrAccVer'])
                 chr_start = int(document['GenomicInfo'][0]['ChrStart'])
                 chr_stop = int(document['GenomicInfo'][0]['ChrStop'])
+
+                # Convert to one-based, inclusive, reference orientation. We
+                # also add the flanking regions.
+                chr_start += 1
+                chr_stop += 1
+                if chr_start <= chr_stop:
+                    # Gene on forward strand.
+                    orientation = 1
+                    chr_start -= upstream
+                    chr_stop += downstream
+                else:
+                    # Gene on reverse strand.
+                    orientation = 2
+                    chr_start, chr_stop = chr_stop, chr_start
+                    chr_start -= downstream
+                    chr_stop += upstream
+
                 break
 
             # Collect official symbols that has this gene as alias in case we
@@ -605,17 +634,6 @@ class GenBankRetriever(Retriever):
             self._output.addMessage(
                 __file__, 4, 'ENOGENE', 'Gene {} not found.'.format(gene))
             return None
-
-        # Figure out the orientation of the gene.
-        orientation = 1
-        if chr_start > chr_stop:  # Swap start and stop.
-            orientation = 2
-            temp = chr_start
-            chr_start = chr_stop - downstream  # Also take care of the flanking
-            chr_stop = temp + upstream + 1   # sequences.
-        else:
-            chr_start -= upstream - 1
-            chr_stop += downstream + 2
 
         # And retrieve the slice.
         return self.retrieveslice(
