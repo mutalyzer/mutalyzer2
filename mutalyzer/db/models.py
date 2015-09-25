@@ -224,19 +224,23 @@ class TranscriptProteinLink(db.Base):
     id = Column(Integer, primary_key=True)
 
     #: Accession number for the transcript, not including the version number
-    #: (e.g., ``NM_018195`, ``XM_005270562``, ``NR_015380``).
-    transcript_accession = Column(String(20), nullable=False, index=True,
+    #: (e.g., ``NM_018195`, ``XM_005270562``, ``NR_015380``). If `NULL`, the
+    #: record states that no transcript is linked to the protein.
+    transcript_accession = Column(String(20), nullable=True, index=True,
                                   unique=True)
 
     #: Accession number for the protein, not including the version number
     #: (e.g., ``NP_060665``, ``XP_005258635``). If `NULL`, the record states
-    #: that no protein is linked to the transcript by the NCBI.
-    protein_accession = Column(String(20), index=True)
+    #: that no protein is linked to the transcript.
+    protein_accession = Column(String(20), nullable=True, index=True,
+                               unique=True)
 
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, transcript_accession, protein_accession=None):
+    def __init__(self, transcript_accession=None, protein_accession=None):
+        if transcript_accession is None and protein_accession is None:
+            raise ValueError('Link must have a transcript or protein')
         self.transcript_accession = transcript_accession
         self.protein_accession = protein_accession
         self.added = datetime.now()

@@ -65,10 +65,10 @@ LRG_PREFIX_URL = 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/SCHEMA_1_7_ARCHIVE/'
 # Allow for this fraction of errors in batch jobs.
 BATCH_JOBS_ERROR_THRESHOLD = 0.05
 
-# Expiration time for transcript->protein links from the NCBI (in seconds).
+# Expiration time for transcript<->protein links from the NCBI (in seconds).
 PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 30
 
-# Expiration time for negative transcript->protein links from the NCBI (in
+# Expiration time for negative transcript<->protein links from the NCBI (in
 # seconds).
 NEGATIVE_PROTEIN_LINK_EXPIRATION = 60 * 60 * 24 * 5
 
