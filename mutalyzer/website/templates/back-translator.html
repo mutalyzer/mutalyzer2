@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% set active_page = "back-translator" %}
+{% set page_title = "Back Translator" %}
+
+{% block content %}
+
+<p class="alert alert-warning">
+Please note that this is an experimental service.
+</p>
+
+<p>
+Back translation from amino acid substitutions to nucleotide substitutions.
+</p>
+
+<p>
+The underlying algorithm is also available as a command line utility and
+programming library
+(<a href="https://github.com/mutalyzer/backtranslate">source</a>,
+<a href="https://pypi.python.org/pypi/backtranslate">package</a>).
+</p>
+
+<p>
+Please supply an amino acid substitution.
+</p>
+
+<form class="form" action="{{ url_for('.back_translator') }}" method="get">
+  <div class="form-group">
+    <label for="description">Variant description</label>
+    <input class="form-control form-pre" type="text"
+           name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
+    <p>Examples:
+      <code class="example-input" data-for="description">NM_003002.3:p.Asp92Tyr</code>,
+      <code class="example-input" data-for="description">NP_002993.1:p.Asp92Glu</code>,
+      <code class="example-input" data-for="description">NP_000000.0:p.Asp92Tyr</code>,
+      <code class="example-input" data-for="description">NP_000000.0:p.Leu92Phe</code>
+    </p>
+  </div>
+  <div class="form-group button-group">
+    <input type="submit" class="btn btn-primary" value="Back translate">
+    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/BackTranslator" target="new" class="btn btn-default pull-right">Help</a>
+  </div>
+</form>
+
+{% if description %}
+  <hr>
+  {% for m in messages %}
+    {% if m.class == "error" %}
+      <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "warning" %}
+      <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "information" %}
+      <p class="alert alert-info" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% elif m.class == "debug" %}
+      <p class="alert alert-info" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
+    {% endif %}
+  {% endfor %}
+
+  {% if summary == "0 Errors, 0 Warnings." %}
+    <p class="alert alert-success summary">{{ summary }}</p>
+  {% else %}
+    <p>{{summary}}</p>
+  {% endif %}
+
+  {% if not errors %}
+    <hr>
+    <h4>Input</h4>
+    <p><code>{{ description }}</code></p>
+
+    <h4>Possible variants</h4>
+    {% for variant in variants %}
+      {% if variant.startswith('UNKNOWN:') %}
+        <p><code>{{ variant }}</code></p>
+      {% else %}
+        <p><code><a href="{{ url_for('.name_checker', description=variant) }}">{{ variant }}</a></code></p>
+      {% endif %}
+    {% endfor %}
+
+  {% endif %}
+{% endif %}{# variants #}
+
+{% endblock content %}

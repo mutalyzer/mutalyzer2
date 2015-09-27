@@ -23,8 +23,8 @@ from sqlalchemy.orm.exc import NoResultFound
 import extractor
 
 import mutalyzer
-from mutalyzer import (announce, File, Retriever, Scheduler, stats,
-                       util, variantchecker)
+from mutalyzer import (announce, backtranslator, File, Retriever, Scheduler,
+                       stats, util, variantchecker)
 from mutalyzer.config import settings
 from mutalyzer.db.models import BATCH_JOB_TYPES
 from mutalyzer.db.models import Assembly, BatchJob
@@ -680,6 +680,33 @@ def reference_loader_submit():
                            max_file_size=settings.MAX_FILE_SIZE // 1048576,
                            ud=ud,
                            errors=errors)
+
+
+@website.route('/back-translator')
+def back_translator():
+    """
+    Back translator.
+    """
+    output = Output(__file__)
+    output.addMessage(
+        __file__, -1, 'INFO',
+        'Received Back Translate request from {}'.format(request.remote_addr))
+    stats.increment_counter('back-translator/website')
+
+    description = request.args.get('description')
+
+    variants = []
+    if description:
+        variants = backtranslator.backtranslate(output, description)
+
+    errors, warnings, summary = output.Summary()
+    messages = map(util.message_info, output.getMessages())
+
+    output.addMessage(__file__, -1, 'INFO', 'Finished Back Translate request')
+
+    return render_template(
+        'back-translator.html', errors=errors, summary=summary,
+        description=description or '', messages=messages, variants=variants)
 
 
 @website.route('/description-extractor')
