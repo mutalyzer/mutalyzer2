@@ -342,12 +342,13 @@ class Grammar():
 
     # BNF: AA3 -> `Ala' | `Arg' | `Asn' | `Asp' | `Cys' | `Gln' | `Glu' |
     #             `Gly' | `His' | `Ile' | `Leu' | `Lys' | `Met' | `Phe' |
-    #             `Pro' | `Ser' | `Thr' | `Trp' | `Tyr' | `Val'
+    #             `Pro' | `Ser' | `Thr' | `Trp' | `Tyr' | `Val' | `Ter'
     AA3 = Literal('Ala') ^ Literal('Arg') ^ Literal('Asn') ^ Literal('Asp') ^ \
           Literal('Cys') ^ Literal('Gln') ^ Literal('Glu') ^ Literal('Gly') ^ \
           Literal('His') ^ Literal('Ile') ^ Literal('Leu') ^ Literal('Lys') ^ \
           Literal('Met') ^ Literal('Phe') ^ Literal('Pro') ^ Literal('Ser') ^ \
-          Literal('Thr') ^ Literal('Trp') ^ Literal('Tyr') ^ Literal('Val')
+          Literal('Thr') ^ Literal('Trp') ^ Literal('Tyr') ^ Literal('Val') ^ \
+          Literal('Ter')
 
     # BNF: AA1 -> `A' | `R' | `N' | `D' | `C' | `Q' | `E' | `G' | `H' | `I' |
     #             `L' | `K' | `M' | `F' | `P' | `S' | `T' | `W' | `Y' | `V'
