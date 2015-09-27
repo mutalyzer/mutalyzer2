@@ -61,7 +61,8 @@ class Retriever(object):
 
         :arg unicode name: The accession number.
 
-        :returns unicode: A filename.
+        :returns: A filename.
+        :rtype: unicode
         """
         return os.path.join(
             settings.CACHE_DIR, '{}.{}.bz2'.format(name, self.file_type))
@@ -73,7 +74,8 @@ class Retriever(object):
         :arg str raw_data: The raw_data to be compressed and written.
         :arg unicode filename: The intended name of the output filename.
 
-        :returns unicode: The full path and name of the file written.
+        :returns: The full path and name of the file written.
+        :rtype: unicode
         """
         result = chardet.detect(raw_data)
         if result['confidence'] > 0.5:
@@ -108,7 +110,8 @@ class Retriever(object):
 
         :arg unicode content: Arbitrary text.
 
-        :returns unicode: The md5sum of 'content'.
+        :returns: The md5sum of 'content'.
+        :rtype: unicode
         """
         hash_func = hashlib.md5()
         hash_func.update(content)
@@ -120,7 +123,8 @@ class Retriever(object):
         """
         Make a new UD number based on the current time (seconds since 1970).
 
-        :returns unicode: A new UD number.
+        :returns: A new UD number.
+        :rtype: unicode
         """
         ud = util.generate_id()
         return 'UD_' + unicode(ud)
@@ -131,7 +135,8 @@ class Retriever(object):
         :arg unicode name:
         :arg unicode gi:
 
-        :returns unicode : filename
+        :returns: filename
+        :rtype: unicode
         """
         # TODO: Documentation.
         try:
@@ -164,7 +169,8 @@ class Retriever(object):
 
         :arg unicode rsId: The rsId of the SNP (example: 'rs9919552').
 
-        :returns list(unicode): A list of HGVS notations.
+        :returns: A list of HGVS notations.
+        :rtype: list(unicode)
         """
         # A simple input check.
         id = rs_id[2:]
@@ -275,9 +281,10 @@ class GenBankRetriever(Retriever):
             - 0 ; Do not extract, use 'filename'
             - 1 ; Extract
 
-        :returns tuple(unicode, unicode): Depending on the value of 'extract':
+        :returns: Depending on the value of 'extract':
             - 0 ; ('filename', None)
             - 1 ; (id, gi)
+        :rtype: tuple(unicode, unicode)
         """
         if raw_data.strip() == b'Nothing has been found':
             self._output.addMessage(
@@ -428,7 +435,8 @@ class GenBankRetriever(Retriever):
             - 1 ; Forward.
             - 2 ; Reverse complement.
 
-        :returns unicode: An UD number.
+        :returns: An UD number.
+        :rtype: unicode
         """
         # Not a valid slice.
         if start > stop:
@@ -515,7 +523,8 @@ class GenBankRetriever(Retriever):
         :arg int upstream: Number of upstream nucleotides for the slice.
         :arg int downstream: Number of downstream nucleotides for the slice.
 
-        :returns object: GenBank record.
+        :returns: GenBank record.
+        :rtype: object
         """
         # Search the NCBI for a specific gene in an organism.
         query = '{}[Gene] AND {}[Orgn]'.format(gene, organism)
@@ -647,7 +656,8 @@ class GenBankRetriever(Retriever):
 
         :arg unicode url: Location of a GenBank record.
 
-        :returns unicode: UD or None.
+        :returns: UD or None.
+        :rtype: unicode
         """
         if not (url.startswith('http://') or url.startswith('https://') or
                 url.startswith('ftp://')):
@@ -703,7 +713,8 @@ class GenBankRetriever(Retriever):
 
         :arg str raw_data: A GenBank record.
 
-        :returns unicode: Accession number for the uploaded file.
+        :returns: Accession number for the uploaded file.
+        :rtype: unicode
         """
         md5sum = self._calculate_hash(raw_data)
 
@@ -738,8 +749,9 @@ class GenBankRetriever(Retriever):
         :arg unicode identifier: A RefSeq accession number or geninfo
             identifier (GI).
 
-        :returns object: A parsed RefSeq record or `None` if no record could be
-            found for the given identifier.
+        :returns: A parsed RefSeq record or `None` if no record could be found
+          for the given identifier.
+        :rtype: object
         """
         if identifier[0].isdigit():
             # This is a GI number (geninfo identifier).
@@ -833,8 +845,8 @@ class LRGRetriever(Retriever):
 
         :arg unicode identifier: The name of the LRG file to read.
 
-        :returns object: GenRecord.Record of LRG file or None in case of
-            failure.
+        :returns: GenRecord.Record of LRG file or None in case of failure.
+        :rtype: object
         """
         # Make a filename based upon the identifier.
         filename = self._name_to_file(identifier)
@@ -871,7 +883,8 @@ class LRGRetriever(Retriever):
 
         :arg unicode name: The name of the LRG file to fetch.
 
-        :returns unicode: the full path to the file; None in case of an error.
+        :returns: the full path to the file; None in case of an error.
+        :rtype: unicode
         """
         prefix = settings.LRG_PREFIX_URL
         url = prefix + '{}.xml'.format(name)
@@ -902,7 +915,8 @@ class LRGRetriever(Retriever):
 
         :arg unicode url: Location of the LRG record.
 
-        :returns unicode: The full path to the file or Nonein case of failure.
+        :returns: The full path to the file or Nonein case of failure.
+        :rtype: unicode
         """
         lrg_id = name or os.path.splitext(os.path.split(url)[1])[0]
         # if not lrg_id.startswith('LRG'):
@@ -973,8 +987,9 @@ class LRGRetriever(Retriever):
         :arg str raw_data: The data.
         :arg unicode filename: The intended name of the file.
 
-        :returns unicode: The full path and name of the file written, None in
-            case of an error.
+        :returns: The full path and name of the file written, None in case of
+          an error.
+        :rtype: unicode
         """
         # Dirty way to test if a file is valid,
         # Parse the file to see if it's a real LRG file.

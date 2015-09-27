@@ -359,7 +359,8 @@ def guess_file_type(handle):
 
     :arg file handle: Open readable handle to an NGS data file.
 
-    :returns unicode: Either 'fasta', 'fastq' or 'text'.
+    :returns: Either 'fasta', 'fastq' or 'text'.
+    :rtype: unicode
     """
     try:
         extension = getattr(handle, 'name').split('.')[-1]
@@ -397,7 +398,8 @@ def read_dna(handle):
 
     :arg stream handle: Open readable handle to an NGS data file.
 
-    :returns unicode: Content of the first record in the file.
+    :returns: Content of the first record in the file.
+    :rtype: unicode
     """
     file_format = guess_file_type(handle)
 
