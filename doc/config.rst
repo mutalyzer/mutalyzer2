@@ -236,13 +236,13 @@ DEFAULT_ASSEMBLY
   `Default value:` ``hg19``
 
 PROTEIN_LINK_EXPIRATION
-  Expiration time for cached transcript->protein links from the NCBI (in
+  Expiration time for cached transcript<->protein links from the NCBI (in
   seconds).
 
   `Default value:` `60 * 60 * 24 * 30` (30 days)
 
 NEGATIVE_PROTEIN_LINK_EXPIRATION
-  Expiration time for cached negative transcript->protein links from the NCBI
+  Expiration time for cached negative transcript<->protein links from the NCBI
   (in seconds).
 
   `Default value:` `60 * 60 * 24 * 5` (5 days)
