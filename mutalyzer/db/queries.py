@@ -87,17 +87,13 @@ def get_transcript_protein_link(accession, reverse=False):
         # Lookup by protein accession instead of transcript accession.
         query_column, other_column = other_column, query_column
 
-    return TranscriptProteinLink.query \
-        .filter_by(transcript_accession=accession) \
-        .filter(
-            query_column == accession,
-            or_(
-                and_(other_column.isnot(None),
-                     TranscriptProteinLink.added >= link_datetime),
-                and_(other_column.is_(None),
-                     TranscriptProteinLink.added >= negative_link_datetime))
-        ) \
-        .first()
+    return TranscriptProteinLink.query.filter(
+        query_column == accession,
+        or_(and_(other_column.isnot(None),
+                 TranscriptProteinLink.added >= link_datetime),
+            and_(other_column.is_(None),
+                 TranscriptProteinLink.added >= negative_link_datetime))
+    ).first()
 
 
 def update_transcript_protein_link(transcript_accession=None,
