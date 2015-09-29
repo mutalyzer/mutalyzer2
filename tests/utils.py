@@ -48,6 +48,8 @@ class TestEnvironment(object):
         """
         Destroy all storage defined in the current environment.
         """
+        db.session.remove()
+
         shutil.rmtree(self.cache_dir)
         os.unlink(self.log_file)
 
