@@ -9,6 +9,19 @@ Version 2.0.12
 
 Release date to be decided.
 
+- Fix off-by-one in slicing chromosome by gene name (`#79
+  <https://github.com/mutalyzer/mutalyzer/pull/79>`_).
+- Document scheme used for all positions and ranges (`#79
+  <https://github.com/mutalyzer/mutalyzer/pull/79>`_).
+- Show diff for variant protein from non-reference start codon (`#78
+  <https://github.com/mutalyzer/mutalyzer/pull/78>`_).
+- Visualise protein change, also with alternative start (`#72
+  <https://github.com/mutalyzer/mutalyzer/pull/72>`_).
+- Translate alternative start to M, also in variant (`#72
+  <https://github.com/mutalyzer/mutalyzer/pull/72>`_).
+- Added Baker's yeast (SacCer_Apr2011/sacCer3) assembly (`#73
+  <https://github.com/mutalyzer/mutalyzer/pull/73>`_).
+
 
 Version 2.0.11
 --------------
