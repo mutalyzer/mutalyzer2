@@ -84,5 +84,10 @@ the upstream Mutalyzer repository and you have push rights there.
    <http://stackoverflow.com/a/4061542>`_). It sets the remote branch
    `release` to whatever the tag `vX.Y.Z` points to and also pushes all tags.
 
+   If the `release` branch is `protected
+   <https://help.github.com/articles/about-protected-branches/>`_, updating it
+   will be rejected until the required status checks pass (e.g., `Travis CI
+   <http://travis-ci.org/>`_).
+
 
 .. _SemVer: http://semver.org/
