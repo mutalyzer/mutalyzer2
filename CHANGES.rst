@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.12
 --------------
 
-Release date to be decided.
+Released on September 30th 2015.
 
 - Fix off-by-one in slicing chromosome by gene name (`#79
   <https://github.com/mutalyzer/mutalyzer/pull/79>`_).
