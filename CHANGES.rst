@@ -9,6 +9,9 @@ Version 2.0.13
 
 Release date to be decided.
 
+- Fix query bug in update transcript-protein links (`#85
+  <https://github.com/mutalyzer/mutalyzer/pull/85>`_).
+
 
 Version 2.0.12
 --------------
