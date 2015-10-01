@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.13
 --------------
 
-Release date to be decided.
+Released on October 1st 2015.
 
 - Fix query bug in update transcript-protein links (`#85
   <https://github.com/mutalyzer/mutalyzer/pull/85>`_).
