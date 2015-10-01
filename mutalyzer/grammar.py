@@ -378,8 +378,9 @@ class Grammar():
     # BNF: Subst -> AAPtLoc AA (`extX' `*'? Number)? | (`Met1' | `M1') (`?' | `ext' `-' Number)
     # Todo: 'extX' -> 'ext*' (and loose the optional '*'?)
     # Todo: Optional AA before 'ext' and 'fMet' after 'ext'?
-    PSubst = (AAPtLoc + AA.setResultsName('Args') + Optional(Literal('extX') + Optional('*') + Number)) ^ \
-             ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))
+    PSubst = ((AAPtLoc + AA.setResultsName('Args') + Optional(Literal('extX') + Optional('*') + Number)) ^
+              ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))) \
+             + Empty().setParseAction(replaceWith('subst'))('MutationType')
 
     # BNF: Del -> AALoc `del'
     PDel = AALoc + Literal('del')('MutationType')
