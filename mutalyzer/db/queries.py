@@ -115,8 +115,7 @@ def update_transcript_protein_link(transcript_accession=None,
                        protein_accession)
 
     # Delete any related existing links.
-    links = TranscriptProteinLink.query.filter(or_(*clauses))
-    session.delete(links)
+    TranscriptProteinLink.query.filter(or_(*clauses)).delete()
     session.commit()
 
     # There is a race condition here between deleting old links and adding the
