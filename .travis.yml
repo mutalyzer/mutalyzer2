@@ -2,6 +2,10 @@
 language: python
 python:
   - "2.7"
+env:
+  - MUTALYZER_TEST_DATABASE_URI=sqlite://
+  - MUTALYZER_TEST_DATABASE_URI=postgres://postgres@127.0.0.1/mutalyzer_test
+  - MUTALYZER_TEST_DATABASE_URI=mysql://travis@127.0.0.1/mutalyzer_test?charset=utf8
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y swig
@@ -14,5 +18,3 @@ before_script:
   - mysql -e 'create database mutalyzer_test;'
 script:
   - py.test
-  - MUTALYZER_TEST_DATABASE_URI=postgres://postgres@127.0.0.1/mutalyzer_test py.test
-  - MUTALYZER_TEST_DATABASE_URI=mysql://travis@127.0.0.1/mutalyzer_test?charset=utf8 py.test
