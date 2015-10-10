@@ -17,12 +17,12 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y swig
   - pip install -r requirements.txt
-  - pip install psycopg2
+  - bash -c "if [[ '$MUTALYZER_TEST_DATABASE_URI' =~ 'postgres' ]]; then pip install psycopg2; fi"
 install:
   - pip install .
 before_script:
-  - psql -c 'DROP DATABASE IF EXISTS mutalyzer_test;' -U postgres
-  - psql -c 'CREATE DATABASE mutalyzer_test;' -U postgres
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS mutalyzer_test;'
+  - bash -c "if [[ '$MUTALYZER_TEST_DATABASE_URI' =~ 'postgres' ]]; then psql -c 'DROP DATABASE IF EXISTS mutalyzer_test;' -U postgres; fi"
+  - bash -c "if [[ '$MUTALYZER_TEST_DATABASE_URI' =~ 'postgres' ]]; then psql -c 'CREATE DATABASE mutalyzer_test;' -U postgres; fi"
+  - bash -c "if [[ '$MUTALYZER_TEST_DATABASE_URI' =~ 'mysql' ]]; then mysql -e 'CREATE DATABASE IF NOT EXISTS mutalyzer_test;'; fi"
 script:
   - py.test
