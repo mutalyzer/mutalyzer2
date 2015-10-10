@@ -14,7 +14,8 @@ before_install:
 install:
   - pip install .
 before_script:
-  - psql -c 'create database mutalyzer_test;' -U postgres
-  - mysql -e 'create database mutalyzer_test;'
+  - psql -c 'DROP DATABASE IF EXISTS mutalyzer_test;' -U postgres
+  - psql -c 'CREATE DATABASE mutalyzer_test;' -U postgres
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS mutalyzer_test;'
 script:
   - py.test
