@@ -1,0 +1,268 @@
+A1BG:
+  accession: UD_139015218717
+  checksum: e179de8b248806815394c4f7496ba872
+  filename: UD_139015218717.gb.bz2
+  links:
+  - - NM_001207009
+    - NP_001193938
+  - - NM_198458
+    - NP_940860
+  - - XM_005258578
+    - XP_005258635
+  - - XM_005258577
+    - XP_005258634
+  - - NR_015380
+    - null
+  - - NM_130786
+    - NP_570602
+  - - XM_005258393
+    - XP_005258450
+AA010203.1:
+  checksum: 57cee03becb77ce68a225b9c844afb24
+  filename: AA010203.1.gb.bz2
+  geninfo_id: '1471230'
+AB026906.1:
+  checksum: 29b003d5a71af74dc61a92d2ef5cd5d9
+  filename: AB026906.1.gb.bz2
+  geninfo_id: '5295993'
+AF230870.1:
+  checksum: 9fefa34f40d94910edb5de34a3f98910
+  filename: AF230870.1.gb.bz2
+  geninfo_id: '7739657'
+AL449423.14:
+  checksum: 00a014242818a3b003b4c077af9e10e0
+  filename: AL449423.14.gb.bz2
+  geninfo_id: '16944057'
+COL1A1:
+  accession: UD_139022298843
+  checksum: 815517e36fb380b52842ace6a6e78637
+  filename: UD_139022298843.gb.bz2
+  links:
+  - - XM_005257059
+    - XP_005257116
+  - - XM_005257058
+    - XP_005257115
+  - - NM_000088
+    - NP_000079
+DMD:
+  accession: UD_139262478721
+  checksum: d41d8cd98f00b204e9800998ecf8427e
+  filename: UD_139262478721.gb.bz2
+  links:
+  - - XM_006724469
+    - XP_006724532
+  - - XM_006724472
+    - XP_006724535
+  - - XM_006724473
+    - XP_006724536
+  - - XM_006724474
+    - XP_006724537
+  - - XM_006724475
+    - XP_006724538
+  - - XM_006724471
+    - XP_006724534
+  - - XM_006724470
+    - XP_006724533
+  - - XR_430491
+    - null
+  - - XM_006724468
+    - XP_006724531
+  - - XM_006724476
+    - XP_006724539
+  - - NM_000109
+    - NP_000100
+  - - NM_004006
+    - NP_003997
+  - - NM_004009
+    - NP_004000
+  - - NM_004010
+    - NP_004001
+  - - NM_004011
+    - NP_004002
+  - - NM_004012
+    - NP_004003
+  - - NM_004023
+    - NP_004014
+  - - NM_004020
+    - NP_004011
+  - - NM_004022
+    - NP_004013
+  - - NM_004021
+    - NP_004012
+  - - NM_004013
+    - NP_004004
+  - - NM_004014
+    - NP_004005
+  - - NM_004018
+    - NP_004009
+  - - NM_004017
+    - NP_004008
+  - - NM_004016
+    - NP_004007
+  - - NM_004015
+    - NP_004006
+  - - NM_004019
+    - NP_004010
+DPYD:
+  accession: UD_139015208095
+  checksum: b2b9d402a6e43f80ce1e9bbb72a3c0c6
+  filename: UD_139015208095.gb.bz2
+  links:
+  - - NR_046590
+    - null
+  - - XM_005270562
+    - XP_005270619
+  - - NM_000110
+    - NP_000101
+  - - XM_005270561
+    - XP_005270618
+  - - XM_005270563
+    - XP_005270620
+  - - XM_005270564
+    - XP_005270621
+  - - NM_001160301
+    - NP_001153773
+L41870.1:
+  checksum: 91b1e539a053f731f95d230a06710897
+  filename: L41870.1.gb.bz2
+  geninfo_id: '793994'
+LRG_1:
+  checksum: 5b8f5a39fcd9e3005688eddffd482746
+  filename: LRG_1.xml.bz2
+MARK1:
+  accession: UD_139015213982
+  checksum: 0d63a8fe5beddeb793940f6ae194b985
+  filename: UD_139015213982.gb.bz2
+  links:
+  - - NM_018650
+    - NP_061120
+  - - XM_005273133
+    - null
+  - - XM_005273134
+    - XP_005273191
+  - - XM_005273135
+    - null
+  - - XM_005273136
+    - null
+NG_008939.1:
+  checksum: 114a03e16ad2f63531d796c2fb0d7039
+  filename: NG_008939.1.gb.bz2
+  geninfo_id: '211938431'
+  links:
+  - - NM_000532
+    - NP_000523
+NG_009105.1:
+  checksum: f2579e6c4a8ead4566e485aad493ef7e
+  filename: NG_009105.1.gb.bz2
+  geninfo_id: '216548283'
+  links:
+  - - NM_020061
+    - NP_064445
+NG_012337.1:
+  checksum: ad712f4f225398d2b11b4f08110c70e6
+  filename: NG_012337.1.gb.bz2
+  geninfo_id: '254039638'
+  links:
+  - - NM_018195
+    - NP_060665
+  - - NM_001082969
+    - NP_001076438
+  - - NM_001082970
+    - NP_001076439
+  - - NM_003002
+    - NP_002993
+  - - NM_012459
+    - NP_036591
+NG_012772.1:
+  checksum: 163881f00c9c26516d52a4ddb34f941f
+  filename: NG_012772.1.gb.bz2
+  geninfo_id: '256574794'
+  links:
+  - - NM_052818
+    - NP_438169
+  - - NM_001079691
+    - NP_001073159
+  - - NM_000059
+    - NP_000050
+  - - NM_001136571
+    - NP_001130043
+NM_000059.3:
+  checksum: f93216b3a596adab279ebd7903258548
+  filename: NM_000059.3.gb.bz2
+  geninfo_id: '119395733'
+NM_000088.3:
+  checksum: 5d1f23e3c1799bdb5586c6786b5d5744
+  filename: NM_000088.3.gb.bz2
+  geninfo_id: '110349771'
+NM_000132.3:
+  checksum: 94569bee76d7c8b1168e17df4fe1dcb4
+  filename: NM_000132.3.gb.bz2
+  geninfo_id: '192448441'
+NM_000143.3:
+  checksum: c91799f40fdc0466bf7702af14cf070a
+  filename: NM_000143.3.gb.bz2
+  geninfo_id: '299758401'
+NM_000193.2:
+  checksum: 86d03e1cf38c1387d90116539ea0678f
+  filename: NM_000193.2.gb.bz2
+  geninfo_id: '21071042'
+NM_001199.3:
+  checksum: e750b6dcead66b8bb953ce445bcd3093
+  filename: NM_001199.3.gb.bz2
+NM_002001.2:
+  checksum: 7fd5aa4fe864fd5193f224fca8cea70d
+  filename: NM_002001.2.gb.bz2
+  geninfo_id: '31317229'
+NM_003002.2:
+  checksum: 990aa672364937335365609617df3050
+  filename: NM_003002.2.gb.bz2
+  geninfo_id: '222352156'
+NM_004006.1:
+  checksum: be8fea2905e146bfe096e25fbfda2eef
+  filename: NM_004006.1.gb.bz2
+  geninfo_id: '5032282'
+NM_004006.2:
+  checksum: ee2090536af19a13ac1d6faa46d0b12e
+  filename: NM_004006.2.gb.bz2
+  geninfo_id: '238018044'
+NM_024426.4:
+  checksum: 830a3beb9b7af3c6ba3e8a15b1bd0f54
+  filename: NM_024426.4.gb.bz2
+  geninfo_id: '309951095'
+NM_203473.1:
+  checksum: ec8fbdeda11ef8ec953e4ed39e9a84e5
+  filename: NM_203473.1
+  geninfo_id: '45439330'
+NP_064445.1:
+  checksum: 33ea9315882b4a9d8c33018a201be2fa
+  filename: NP_064445.1.gb.bz2
+  geninfo_id: '9910526'
+chr9_reverse:
+  accession: UD_139015349377
+  checksum: d21f92d09116c4831ce8d3ef832aa281
+  filename: UD_139015349377.gb.bz2
+  links:
+  - - NM_001195250
+    - NP_001182179
+  - - NR_036576
+    - null
+  - - NR_036577
+    - null
+  - - NM_001195252
+    - NP_001182181
+  - - NM_001195248
+    - NP_001182177
+  - - NM_175069
+    - NP_778239
+  - - NM_175073
+    - NP_778243
+  - - NM_001195251
+    - NP_001182180
+  - - NM_001195254
+    - NP_001182183
+  - - NR_036578
+    - null
+  - - NR_036579
+    - null
+  - - NM_001195249
+    - NP_001182178

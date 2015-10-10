@@ -5,148 +5,160 @@ Tests for the mutalyzer.grammar module.
 
 from __future__ import unicode_literals
 
-#import logging; logging.basicConfig()
-import os
+import pytest
 
-import mutalyzer
 from mutalyzer.grammar import Grammar
-from mutalyzer.output import Output
-
-from utils import MutalyzerTest
 
 
-class TestGrammar(MutalyzerTest):
+@pytest.fixture
+def grammar(output):
+    return Grammar(output)
+
+
+@pytest.fixture
+def parser(output, grammar):
+    def parse(description):
+        __tracebackhide__ = True
+        grammar.parse(description)
+        errors = output.getMessagesWithErrorCode('EPARSE')
+        if len(errors) > 0:
+            pytest.fail('failed to parse `%s`: %s' % (
+                description, errors[0].description))
+    return parse
+
+
+@pytest.mark.parametrize('description', [
+    'NM_002001.2:c.[12del]',
+    'NM_002001.2:c.[(12del)]',
+    'NM_002001.2:c.[(12del)?]',
+    'NM_002001.2:c.[(12del);(12del)]',
+    'NM_002001.2:c.[(12del;12del)]',
+    'NM_002001.2:c.[((12del)?;12del)?]'
+])
+def test_parse_variants(parser, description):
     """
-    Test the mytalyzer.grammar module.
+    Parse some example variants.
     """
-    def setup(self):
-        super(TestGrammar, self).setup()
-        self.output = Output(__file__)
-        self.grammar = Grammar(self.output)
+    parser(description)
 
-    def _parse(self, description):
-        """
-        Parse a variant description.
-        """
-        self.grammar.parse(description)
-        assert self.output.getOutput('parseError') == []
 
-    def test_some_variants(self):
-        """
-        Some example variants.
-        """
-        self._parse('NM_002001.2:c.[12del]')
-        self._parse('NM_002001.2:c.[(12del)]')
-        self._parse('NM_002001.2:c.[(12del)?]')
-        self._parse('NM_002001.2:c.[(12del);(12del)]')
-        self._parse('NM_002001.2:c.[(12del;12del)]')
-        self._parse('NM_002001.2:c.[((12del)?;12del)?]')
+@pytest.mark.parametrize('description', [
+    'NM_002001.2:c.15_16insA',
+    'NM_002001.2:c.15_16insATC',
+    'NM_002001.2:c.15_16ins[A]',
+    'NM_002001.2:c.15_16ins[ATC]',
+    'NM_002001.2:c.15_16ins28_39',
+    'NM_002001.2:c.15_16ins[28_39]',
+    'NM_002001.2:c.15_16ins[28_39;A]',
+    'NM_002001.2:c.15_16ins[28_39;ATC]',
+    'NM_002001.2:c.15_16ins[28_39;A;ATC]',
+    'NM_002001.2:c.15_16ins28_39inv',
+    'NM_002001.2:c.15_16ins[28_39inv]',
+    'NM_002001.2:c.15_16ins[28_39inv;A]',
+    'NM_002001.2:c.15_16ins[28_39inv;ATC]',
+    'NM_002001.2:c.15_16ins[28_39inv;A;ATC]'
+])
+def test_parse_compound_insertion(parser, description):
+    """
+    Parse compound insertions.
+    """
+    parser(description)
 
-    def test_compound_insertion(self):
-        """
-        Some some compound insertions.
-        """
-        self._parse('NM_002001.2:c.15_16insA')
-        self._parse('NM_002001.2:c.15_16insATC')
-        self._parse('NM_002001.2:c.15_16ins[A]')
-        self._parse('NM_002001.2:c.15_16ins[ATC]')
-        self._parse('NM_002001.2:c.15_16ins28_39')
-        self._parse('NM_002001.2:c.15_16ins[28_39]')
-        self._parse('NM_002001.2:c.15_16ins[28_39;A]')
-        self._parse('NM_002001.2:c.15_16ins[28_39;ATC]')
-        self._parse('NM_002001.2:c.15_16ins[28_39;A;ATC]')
-        self._parse('NM_002001.2:c.15_16ins28_39inv')
-        self._parse('NM_002001.2:c.15_16ins[28_39inv]')
-        self._parse('NM_002001.2:c.15_16ins[28_39inv;A]')
-        self._parse('NM_002001.2:c.15_16ins[28_39inv;ATC]')
-        self._parse('NM_002001.2:c.15_16ins[28_39inv;A;ATC]')
 
-    def test_compound_delins(self):
-        """
-        Some some compound deletion-insertions.
-        """
-        self._parse('NM_002001.2:c.12_17delinsA')
-        self._parse('NM_002001.2:c.12_17delinsATC')
-        self._parse('NM_002001.2:c.12_17delins[A]')
-        self._parse('NM_002001.2:c.12_17delins[ATC]')
-        self._parse('NM_002001.2:c.12_17delins28_39')
-        self._parse('NM_002001.2:c.12_17delins[28_39]')
-        self._parse('NM_002001.2:c.12_17delins[28_39;A]')
-        self._parse('NM_002001.2:c.12_17delins[28_39;ATC]')
-        self._parse('NM_002001.2:c.12_17delins[28_39;A;ATC]')
-        self._parse('NM_002001.2:c.12_17delins28_39inv')
-        self._parse('NM_002001.2:c.12_17delins[28_39inv]')
-        self._parse('NM_002001.2:c.12_17delins[28_39inv;A]')
-        self._parse('NM_002001.2:c.12_17delins[28_39inv;ATC]')
-        self._parse('NM_002001.2:c.12_17delins[28_39inv;A;ATC]')
+@pytest.mark.parametrize('description', [
+    'NM_002001.2:c.12_17delinsA',
+    'NM_002001.2:c.12_17delinsATC',
+    'NM_002001.2:c.12_17delins[A]',
+    'NM_002001.2:c.12_17delins[ATC]',
+    'NM_002001.2:c.12_17delins28_39',
+    'NM_002001.2:c.12_17delins[28_39]',
+    'NM_002001.2:c.12_17delins[28_39;A]',
+    'NM_002001.2:c.12_17delins[28_39;ATC]',
+    'NM_002001.2:c.12_17delins[28_39;A;ATC]',
+    'NM_002001.2:c.12_17delins28_39inv',
+    'NM_002001.2:c.12_17delins[28_39inv]',
+    'NM_002001.2:c.12_17delins[28_39inv;A]',
+    'NM_002001.2:c.12_17delins[28_39inv;ATC]',
+    'NM_002001.2:c.12_17delins[28_39inv;A;ATC]'
+])
+def test_parse_compound_delins(parser, description):
+    """
+    Parse compound deletion-insertions.
+    """
+    parser(description)
 
-    def test_protein_variants(self):
-        """
-        Some protein variants.
-        """
-        self._parse('NG_009105.1(OPN1LW):p.=')
-        self._parse('NG_009105.1(OPN1LW):p.?')
-        self._parse('NM_000076.2(CDKN1C):p.0')
-        self._parse('NM_000076.2(CDKN1C):p.0?')
-        self._parse('NG_009105.1(OPN1LW):p.(=)')
-        self._parse('NM_000076.2(CDKN1C):p.(Ala123del)')
-        self._parse('NM_000076.2(CDKN1C):p.(Ala123_Leu126del)')
-        self._parse('NM_000076.2(CDKN1C):p.(Ala123_Leu126delinsVal)')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123del')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123_Leu126del')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123_Leu126delinsVal')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123_*317delinsVal')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123_X317delinsVal')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123delinsVal')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123delinsValPro')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123delinsVP')
-        self._parse('NM_000076.2(CDKN1C):p.Ala123fs')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(Glu124Serfs*148)')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(Glu124SerfsX148)')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(E124Sfs*148)')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(E124SfsX148)')
-        self._parse('NG_009105.1(OPN1LW):p.Met1Leu')
-        self._parse('NP_064445.1(OPN1LW):p.Met1?')
-        self._parse('NP_064445.1(OPN1LW):p.M1?')
-        self._parse('NP_064445.1:p.Gln16del')
-        self._parse('NP_064445.1:p.Gln16dup')
-        self._parse('NP_064445.1:p.Gln3del')
-        self._parse('NP_064445.1:p.Q16del')
-        self._parse('NP_064445.1:p.Q16dup')
-        self._parse('NP_064445.1:p.Q16*')
-        self._parse('NP_064445.1:p.Q16X')
-        self._parse('NG_009105.1:p.Gln3Leu')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3Leu')
-        self._parse('NG_009105.1(OPN1LW_i1):p.Gln3Leu')
-        self._parse('NG_009105.1(OPN1LW_v1):p.Gln3Leu')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Gln4insLeu')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Gln4insGln')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Gln4dup')
-        self._parse('NG_009105.1(OPN1LW):p.Q3_Q4insQ')
-        self._parse('NG_009105.1(OPN1LW):p.Q3_Q4insQQ')
-        self._parse('NG_009105.1(OPN1LW):p.Q3_Q4dup')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7del')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7delinsValLeu')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7delinsValPro')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7delinsGlnGlnTrpSerLeu')
-        self._parse('NG_009105.1(OPN1LW):p.Q3_L7delinsGlnGlnTrpSerLeu')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7delinsQQWSL')
-        #self._parse('NG_009105.1(OPN1LW):p.Met1AlaextMet-1')
-        #self._parse('NG_009105.1(OPN1LW):p.M1AextM-1')
-        #self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7[3]')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3_Leu7(1_6)')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3Leu')
-        self._parse('NG_009105.1(OPN1LW):p.Gln3Leu')
-        #self._parse('NM_000076.2(CDKN1C_i001):p.(*317Trpext*3)')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(*317TrpextX3)')
-        #self._parse('NM_000076.2(CDKN1C_i001):p.(*317Cysext*1)')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(*317CysextX1)')
-        #self._parse('NM_000076.2(CDKN1C_i001):p.(*317Cext*1)')
-        self._parse('NM_000076.2(CDKN1C_i001):p.(*317CextX1)')
-        #self._parse('t(X;17)(DMD:p.Met1_Val1506; SGCA:p.Val250_*387)')
 
-    def test_minus_in_gene_symbol(self):
-        """
-        Gene symbol is allowed to contain a minus character.
-        """
-        self._parse('UD_132464528477(KRTAP2-4_v001):c.100del')
+@pytest.mark.parametrize('description', [
+    'NG_009105.1(OPN1LW):p.=',
+    'NG_009105.1(OPN1LW):p.?',
+    'NM_000076.2(CDKN1C):p.0',
+    'NM_000076.2(CDKN1C):p.0?',
+    'NG_009105.1(OPN1LW):p.(=)',
+    'NM_000076.2(CDKN1C):p.(Ala123del)',
+    'NM_000076.2(CDKN1C):p.(Ala123_Leu126del)',
+    'NM_000076.2(CDKN1C):p.(Ala123_Leu126delinsVal)',
+    'NM_000076.2(CDKN1C):p.Ala123del',
+    'NM_000076.2(CDKN1C):p.Ala123_Leu126del',
+    'NM_000076.2(CDKN1C):p.Ala123_Leu126delinsVal',
+    'NM_000076.2(CDKN1C):p.Ala123_*317delinsVal',
+    'NM_000076.2(CDKN1C):p.Ala123_X317delinsVal',
+    'NM_000076.2(CDKN1C):p.Ala123delinsVal',
+    'NM_000076.2(CDKN1C):p.Ala123delinsValPro',
+    'NM_000076.2(CDKN1C):p.Ala123delinsVP',
+    'NM_000076.2(CDKN1C):p.Ala123fs',
+    'NM_000076.2(CDKN1C_i001):p.(Glu124Serfs*148)',
+    'NM_000076.2(CDKN1C_i001):p.(Glu124SerfsX148)',
+    'NM_000076.2(CDKN1C_i001):p.(E124Sfs*148)',
+    'NM_000076.2(CDKN1C_i001):p.(E124SfsX148)',
+    'NG_009105.1(OPN1LW):p.Met1Leu',
+    'NP_064445.1(OPN1LW):p.Met1?',
+    'NP_064445.1(OPN1LW):p.M1?',
+    'NP_064445.1:p.Gln16del',
+    'NP_064445.1:p.Gln16dup',
+    'NP_064445.1:p.Gln3del',
+    'NP_064445.1:p.Q16del',
+    'NP_064445.1:p.Q16dup',
+    'NP_064445.1:p.Q16*',
+    'NP_064445.1:p.Q16X',
+    'NG_009105.1:p.Gln3Leu',
+    'NG_009105.1(OPN1LW):p.Gln3Leu',
+    'NG_009105.1(OPN1LW_i1):p.Gln3Leu',
+    'NG_009105.1(OPN1LW_v1):p.Gln3Leu',
+    'NG_009105.1(OPN1LW):p.Gln3_Gln4insLeu',
+    'NG_009105.1(OPN1LW):p.Gln3_Gln4insGln',
+    'NG_009105.1(OPN1LW):p.Gln3_Gln4dup',
+    'NG_009105.1(OPN1LW):p.Q3_Q4insQ',
+    'NG_009105.1(OPN1LW):p.Q3_Q4insQQ',
+    'NG_009105.1(OPN1LW):p.Q3_Q4dup',
+    'NG_009105.1(OPN1LW):p.Gln3_Leu7del',
+    'NG_009105.1(OPN1LW):p.Gln3_Leu7delinsValLeu',
+    'NG_009105.1(OPN1LW):p.Gln3_Leu7delinsValPro',
+    'NG_009105.1(OPN1LW):p.Gln3_Leu7delinsGlnGlnTrpSerLeu',
+    'NG_009105.1(OPN1LW):p.Q3_L7delinsGlnGlnTrpSerLeu',
+    'NG_009105.1(OPN1LW):p.Gln3_Leu7delinsQQWSL',
+    # 'NG_009105.1(OPN1LW):p.Met1AlaextMet-1',
+    # 'NG_009105.1(OPN1LW):p.M1AextM-1',
+    # 'NG_009105.1(OPN1LW):p.Gln3_Leu7[3]',
+    'NG_009105.1(OPN1LW):p.Gln3_Leu7(1_6)',
+    'NG_009105.1(OPN1LW):p.Gln3Leu',
+    'NG_009105.1(OPN1LW):p.Gln3Leu',
+    # 'NM_000076.2(CDKN1C_i001):p.(*317Trpext*3)',
+    'NM_000076.2(CDKN1C_i001):p.(*317TrpextX3)',
+    # 'NM_000076.2(CDKN1C_i001):p.(*317Cysext*1)',
+    'NM_000076.2(CDKN1C_i001):p.(*317CysextX1)',
+    # 'NM_000076.2(CDKN1C_i001):p.(*317Cext*1)',
+    'NM_000076.2(CDKN1C_i001):p.(*317CextX1)',
+    # 't(X;17)(DMD:p.Met1_Val1506; SGCA:p.Val250_*387)'
+])
+def test_parse_protein_variants(parser, description):
+    """
+    Parse protein variants.
+    """
+    parser(description)
+
+
+def test_parse_minus_in_gene_symbol(parser):
+    """
+    Gene symbol is allowed to contain a minus character.
+    """
+    parser('UD_132464528477(KRTAP2-4_v001):c.100del')
