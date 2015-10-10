@@ -11,6 +11,7 @@ import shutil
 import tempfile
 
 from mutalyzer.config import settings
+from mutalyzer.redisclient import client as redis
 from mutalyzer import db
 
 
@@ -27,11 +28,12 @@ class TestEnvironment(object):
         os.close(log_handle)
 
         database_uri = os.getenv('MUTALYZER_TEST_DATABASE_URI', 'sqlite://')
+        redis_uri = os.getenv('MUTALYZER_TEST_REDIS_URI', None)
 
         settings.configure({'DEBUG':        False,
                             'TESTING':      True,
                             'CACHE_DIR':    self.cache_dir,
-                            'REDIS_URI':    None,
+                            'REDIS_URI':    redis_uri,
                             'DATABASE_URI': database_uri,
                             'LOG_FILE':     self.log_file})
 
@@ -40,6 +42,9 @@ class TestEnvironment(object):
         if database_uri != 'sqlite://':
             db.Base.metadata.drop_all(db.session.get_bind())
             db.Base.metadata.create_all(db.session.get_bind())
+
+        if redis_uri is not None:
+            redis.flushdb()
 
         for fixture in fixtures:
             fixture()
