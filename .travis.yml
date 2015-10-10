@@ -2,12 +2,17 @@
 language: python
 addons:
   postgresql: "9.4"
+services:
+  - redis-server
 python:
   - "2.7"
 env:
-  - MUTALYZER_TEST_DATABASE_URI=sqlite://
-  - MUTALYZER_TEST_DATABASE_URI=postgres://postgres@127.0.0.1/mutalyzer_test
-  - MUTALYZER_TEST_DATABASE_URI=mysql://travis@127.0.0.1/mutalyzer_test?charset=utf8
+  global:
+    - MUTALYZER_TEST_REDIS_URI=redis://localhost
+  matrix:
+    - MUTALYZER_TEST_DATABASE_URI=sqlite://
+    - MUTALYZER_TEST_DATABASE_URI=postgres://postgres@127.0.0.1/mutalyzer_test
+    - MUTALYZER_TEST_DATABASE_URI=mysql://travis@127.0.0.1/mutalyzer_test?charset=utf8
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y swig
