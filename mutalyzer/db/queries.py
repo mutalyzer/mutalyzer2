@@ -62,7 +62,8 @@ def get_transcript_protein_link(accession, reverse=False):
     according to the configuration settings `PROTEIN_LINK_EXPIRATION` and
     `NEGATIVE_PROTEIN_LINK_EXPIRATION`.
 
-    :arg str accession: Accession number to lookup link for.
+    :arg str accession: Accession number (without version number) to lookup
+      link for.
     :arg bool reverse: If `True`, `accession` is assumed to be a protein
       accession number, otherwise `accession` is assumed to be a transcript
       accession number.
@@ -101,6 +102,14 @@ def update_transcript_protein_link(transcript_accession=None,
     """
     Update cached link between a transcript and a protein, or create it if it
     doesn't exist yet.
+
+    :arg str transcript_accession: Transcript accession number (without
+      version number).
+    :arg str protein_accession: Protein accession number (without version
+      number).
+
+    At least one of `transcript_accession` or `protein_accession` must be not
+    `None`.
     """
     if transcript_accession is None and protein_accession is None:
         raise ValueError('Link must have a transcript or protein')

@@ -342,12 +342,13 @@ class Grammar():
 
     # BNF: AA3 -> `Ala' | `Arg' | `Asn' | `Asp' | `Cys' | `Gln' | `Glu' |
     #             `Gly' | `His' | `Ile' | `Leu' | `Lys' | `Met' | `Phe' |
-    #             `Pro' | `Ser' | `Thr' | `Trp' | `Tyr' | `Val'
+    #             `Pro' | `Ser' | `Thr' | `Trp' | `Tyr' | `Val' | `Ter'
     AA3 = Literal('Ala') ^ Literal('Arg') ^ Literal('Asn') ^ Literal('Asp') ^ \
           Literal('Cys') ^ Literal('Gln') ^ Literal('Glu') ^ Literal('Gly') ^ \
           Literal('His') ^ Literal('Ile') ^ Literal('Leu') ^ Literal('Lys') ^ \
           Literal('Met') ^ Literal('Phe') ^ Literal('Pro') ^ Literal('Ser') ^ \
-          Literal('Thr') ^ Literal('Trp') ^ Literal('Tyr') ^ Literal('Val')
+          Literal('Thr') ^ Literal('Trp') ^ Literal('Tyr') ^ Literal('Val') ^ \
+          Literal('Ter')
 
     # BNF: AA1 -> `A' | `R' | `N' | `D' | `C' | `Q' | `E' | `G' | `H' | `I' |
     #             `L' | `K' | `M' | `F' | `P' | `S' | `T' | `W' | `Y' | `V'
@@ -377,8 +378,9 @@ class Grammar():
     # BNF: Subst -> AAPtLoc AA (`extX' `*'? Number)? | (`Met1' | `M1') (`?' | `ext' `-' Number)
     # Todo: 'extX' -> 'ext*' (and loose the optional '*'?)
     # Todo: Optional AA before 'ext' and 'fMet' after 'ext'?
-    PSubst = (AAPtLoc + AA.setResultsName('Args') + Optional(Literal('extX') + Optional('*') + Number)) ^ \
-             ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))
+    PSubst = ((AAPtLoc + AA.setResultsName('Args') + Optional(Literal('extX') + Optional('*') + Number)) ^
+              ((Literal('Met1') ^ Literal('M1')) + (Literal('?') ^ (Literal('ext') + Literal('-') + Number)))) \
+             + Empty().setParseAction(replaceWith('subst'))('MutationType')
 
     # BNF: Del -> AALoc `del'
     PDel = AALoc + Literal('del')('MutationType')
