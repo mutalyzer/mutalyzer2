@@ -5,8 +5,6 @@ Test database migrations.
 
 from __future__ import unicode_literals
 
-import os
-
 import alembic.autogenerate
 import alembic.command
 import alembic.config
@@ -17,16 +15,11 @@ from sqlalchemy import create_engine, sql
 from mutalyzer import db
 
 
-def test_migrations():
+def test_migrations(database_uri):
     """
     Run all migrations and assert the result is up to date with the model
     definitions.
-
-    We don't use `utils.MutalyzerTest` here, or `mutalyzer.db.session` in any
-    way for that matter, since it will bootstrap the database schema.
     """
-    database_uri = os.getenv('MUTALYZER_TEST_DATABASE_URI', 'sqlite://')
-
     alembic_config = alembic.config.Config('migrations/alembic.ini')
     engine = create_engine(database_uri)
 

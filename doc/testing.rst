@@ -16,23 +16,26 @@ the Mutalyzer source directory.
           tests.
 
 By default, the tests use an in-memory SQLite database. This can be customized
-by setting the `MUTALYZER_TEST_DATABASE_URI` to a valid `SQLAlchemy connection
-URI
+with the ``--database-uri` command line argument and a valid `SQLAlchemy
+connection URI
 <http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#database-urls>`_
 (obviously, the contents of this database will be lost). For example, to use
 an SQLite database on the filesystem::
 
-    $ MUTALYZER_TEST_DATABASE_URI=sqlite:////tmp/mutalyzer.sql py.test
+    $ py.test --database-uri sqlite:////tmp/mutalyzer.sql
 
 Or, using `pg_virtualenv
 <https://alioth.debian.org/scm/loggerhead/pkg-postgresql/postgresql-common/trunk/view/head:/pg_virtualenv>`_
 (included with the Debian PostgreSQL packages), to run the tests with
 PostgreSQL::
 
-    $ pg_virtualenv bash -c 'MUTALYZER_TEST_DATABASE_URI=postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE} py.test'
+    $ pg_virtualenv bash -c 'py.test --database-uri postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}'
 
-Similarly, the `MUTALYZER_TEST_REDIS_URI` specifies a Redis server to use for
-testing. If unspecified, a mock Redis server is used.
+Multiple ``--database-uri`` arguments are allowed. Tests using the database
+will be run once for every database specified.
+
+Similarly, ``--redis-uri`` (only one allowed) specifies a Redis server to use
+for testing. If unspecified, a mock Redis server is used.
 
 Tests are `run automatically on Travis CI
 <https://travis-ci.org/mutalyzer/mutalyzer>`_ with SQLite, PostgreSQL, and
