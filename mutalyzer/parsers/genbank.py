@@ -11,12 +11,11 @@ import re
 import bz2
 from itertools import izip_longest
 
-from Bio import SeqIO, Entrez
+from Bio import SeqIO
 from Bio.Alphabet import ProteinAlphabet
 
-from mutalyzer.config import settings
-from mutalyzer.db import queries
-from mutalyzer.GenRecord import PList, Locus, Gene, Record
+from .. import ncbi
+from ..GenRecord import PList, Locus, Gene, Record
 
 
 # Regular expression used to find version number in locus tag
@@ -58,13 +57,6 @@ class GBparser():
     """
     @todo: documentation
     """
-    def __init__(self):
-        """
-        Initialise the class
-        """
-        Entrez.email = settings.EMAIL
-    #__init__
-
     def __location2pos(self, location):
         """
         Convert a location object to a tuple of integers.
@@ -121,60 +113,6 @@ class GBparser():
 
         return ret
     #__locationList2posList
-
-    def __transcriptToProtein(self, transcriptAcc):
-        """
-        Try to find the protein linked to a transcript id.
-
-        First look in our database, if a link can not be found, try to
-        retrieve it via the NCBI. Store the result in our database.
-
-        @arg transcriptAcc: Accession number of the transcript for which we
-                            want to find the protein
-        @type transcriptAcc: unicode
-
-        @return: Accession number of a protein or None if nothing can be found
-        @rtype: unicode
-        """
-        link = queries.get_transcript_protein_link(transcriptAcc)
-        if link is not None:
-            return link.protein_accession
-
-        handle = Entrez.esearch(db = "nucleotide", term = transcriptAcc)
-        try:
-            result = Entrez.read(handle)
-        except Entrez.Parser.ValidationError:
-            # Todo: Log this error.
-            return None
-        finally:
-            handle.close()
-
-        transcriptGI = unicode(result["IdList"][0])
-
-        handle = Entrez.elink(dbfrom = "nucleotide", db = "protein",
-                              id = transcriptGI)
-        try:
-            result = Entrez.read(handle)
-        except Entrez.Parser.ValidationError:
-            # Todo: Log this error.
-            return None
-        finally:
-            handle.close()
-
-        if not result[0]["LinkSetDb"] :
-            queries.update_transcript_protein_link(transcriptAcc)
-            return None
-
-        proteinGI = unicode(result[0]["LinkSetDb"][0]["Link"][0]["Id"])
-
-        handle = Entrez.efetch(db='protein', id=proteinGI, rettype='acc', retmode='text')
-
-        proteinAcc = unicode(handle.read()).split('.')[0]
-        handle.close()
-
-        queries.update_transcript_protein_link(transcriptAcc, proteinAcc)
-        return proteinAcc
-    #__transcriptToProtein
 
     def _find_mismatch(self, sentences):
         """
@@ -283,7 +221,7 @@ class GBparser():
             #if
             else :                # Tag an mRNA with the protein id too.
                 i.proteinLink = \
-                    self.__transcriptToProtein(i.transcript_id.split('.')[0])
+                    ncbi.transcript_to_protein(i.transcript_id.split('.')[0])
             i.positionList = self.__locationList2posList(i)
             i.location = self.__location2pos(i.location) #FIXME
             #if not i.positionList : # FIXME ???
