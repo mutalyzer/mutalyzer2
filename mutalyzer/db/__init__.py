@@ -36,14 +36,6 @@ def create_engine():
         # actually using the database will fail.
         return
 
-    # TODO: Remove when refactoring tests is complete. We should check that
-    # this is never reached with 'sqlite://' from the default_settings or with
-    # a value from MUTALYZER_SETTINGS during tests. The uri(s) configured in
-    # the tests should be used instead.
-    # This also makes sure that tests can never accidentally use the database
-    # without having it declared as a needed fixture.
-    print '!!!!!!!!!!!!! Creating session for', settings.DATABASE_URI
-
     url = make_url(settings.DATABASE_URI)
     options = {}
 
