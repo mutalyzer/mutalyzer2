@@ -32,16 +32,34 @@ class LazyClient(util.LazyObject):
     """
     def _setup(self):
         """
-        Instantiate the Redis interface. This called the first time Redis is
-        used.
+        Instantiate the Redis interface. This is called the first time Redis
+        is used.
         """
-        if settings.REDIS_URI is None:
+        self.configure(settings.REDIS_URI)
+
+    def configure(self, uri):
+        """
+        Configure the client with a new connectionpool for the given URI.
+        """
+        if uri is None:
             import mockredis
             self._wrapped = mockredis.MockRedis(strict=True)
         else:
-            self._wrapped = redis.StrictRedis.from_url(settings.REDIS_URI,
+            self._wrapped = redis.StrictRedis.from_url(uri,
                                                        decode_responses=True,
                                                        encoding='utf-8')
+
+
+def configure_client(uri):
+    """
+    (Re)configure the client with the given URI.
+    """
+    global client
+    client.configure(uri)
+
+
+# Reconfigure the client if configuration is updated.
+settings.on_update(configure_client, 'REDIS_URI')
 
 
 #: Global :class:`LazyClient` instance. Use this for all communication with
