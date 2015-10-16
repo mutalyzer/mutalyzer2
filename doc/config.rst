@@ -126,7 +126,7 @@ REDIS_URI
   Redis connection URI (can be any `redis-py
   <https://github.com/andymccurdy/redis-py>`_ connection URI). Set to `None`
   to silently use a mock Redis. Redis is only used for non-essential
-  features.
+  features such as caching of external resources.
 
   `Default value:` `None`
 
@@ -235,17 +235,11 @@ DEFAULT_ASSEMBLY
 
   `Default value:` ``hg19``
 
-PROTEIN_LINK_EXPIRATION
-  Expiration time for cached transcript<->protein links from the NCBI (in
-  seconds).
-
-  `Default value:` `60 * 60 * 24 * 30` (30 days)
-
-NEGATIVE_PROTEIN_LINK_EXPIRATION
-  Expiration time for cached negative transcript<->protein links from the NCBI
+NEGATIVE_LINK_CACHE_EXPIRATION
+  Cache expiration time for negative transcript<->protein links from the NCBI
   (in seconds).
 
-  `Default value:` `60 * 60 * 24 * 5` (5 days)
+  `Default value:` `60 * 60 * 24 * 30` (30 days)
 
 USE_RELOADER
   Enable the `Werkzeug reloader
