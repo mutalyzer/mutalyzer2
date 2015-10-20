@@ -5,6 +5,8 @@ Test database migrations.
 
 from __future__ import unicode_literals
 
+from datetime import datetime
+
 import alembic.autogenerate
 import alembic.command
 import alembic.config
@@ -91,7 +93,8 @@ def add_database_content(connection):
     transcript_protein_links = sql.table(
         'transcript_protein_links',
         sql.column('transcript_accession', sa.String(30)),
-        sql.column('protein_accession', sa.String(30)))
+        sql.column('protein_accession', sa.String(30)),
+        sql.column('added', sa.DateTime))
 
     # Add some common data.
     connection.execute(
@@ -170,8 +173,10 @@ def add_database_content(connection):
     connection.execute(
         transcript_protein_links.insert(),
         transcript_accession='NM_052818',
-        protein_accession='NP_438169')
+        protein_accession='NP_438169',
+        added=datetime.now())
     connection.execute(
         transcript_protein_links.insert(),
         transcript_accession='NM_001079691',
-        protein_accession=None)
+        protein_accession=None,
+        added=datetime.now())

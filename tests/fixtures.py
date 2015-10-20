@@ -15,7 +15,7 @@ from mutalyzer.config import settings as _settings
 from mutalyzer.output import Output
 from mutalyzer.redisclient import client as redis
 from mutalyzer.db.models import (Assembly, Chromosome, Reference,
-                                 TranscriptMapping, TranscriptProteinLink)
+                                 TranscriptMapping)
 from mutalyzer import db as _db
 
 
@@ -96,15 +96,28 @@ def references(request, settings, db, available_references):
                             entry['filename'])
         shutil.copy(path, settings.CACHE_DIR)
 
-        reference = Reference(
-            accession, entry['checksum'], geninfo_identifier=geninfo_id)
-        db.session.add(reference)
+        references.append(Reference(
+            accession, entry['checksum'], geninfo_identifier=geninfo_id))
 
-        for transcript, protein in entry.get('links', []):
-            db.session.add(TranscriptProteinLink(transcript, protein))
+        for transcript_accession, protein_accession in entry.get('links', []):
+            if transcript_accession is not None:
+                key = 'ncbi:transcript-to-protein:%s' % transcript_accession
+                if protein_accession is not None:
+                    redis.set(key, protein_accession)
+                else:
+                    redis.setex(key,
+                                settings.NEGATIVE_LINK_CACHE_EXPIRATION,
+                                '')
+            if protein_accession is not None:
+                key = 'ncbi:protein-to-transcript:%s' % protein_accession
+                if transcript_accession is not None:
+                    redis.set(key, transcript_accession)
+                else:
+                    redis.setex(key,
+                                settings.NEGATIVE_LINK_CACHE_EXPIRATION,
+                                '')
 
-        references.append(reference)
-
+    db.session.add_all(references)
     db.session.commit()
 
     return references

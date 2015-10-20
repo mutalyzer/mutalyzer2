@@ -21,7 +21,7 @@ from __future__ import unicode_literals
 
 import time
 
-from mutalyzer.redisclient import client
+from .redisclient import client as redis
 
 
 # Label, bucket definition, expiration time in seconds.
@@ -34,7 +34,7 @@ def increment_counter(counter):
     """
     Increment the specified counter.
     """
-    pipe = client.pipeline(transaction=False)
+    pipe = redis.pipeline(transaction=False)
     pipe.incr('counter:%s:total' % counter)
 
     for label, bucket, expire in INTERVALS:
@@ -56,9 +56,9 @@ def get_totals():
 
     Known counters are just those that have been incremented at least once.
     """
-    counters = client.keys('counter:*:total')
+    counters = redis.keys('counter:*:total')
 
-    pipe = client.pipeline(transaction=False)
+    pipe = redis.pipeline(transaction=False)
     for counter in counters:
         pipe.get(counter)
 

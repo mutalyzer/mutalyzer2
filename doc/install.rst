@@ -85,7 +85,8 @@ Mutalyzer uses Redis for non-critical fast storage such as statistics::
     $ sudo apt-get install redis-server
 
 .. note:: Redis is a soft dependency, meaning that Mutalyzer will run without
-    it (but may lack some non-essential features).
+    it (but may lack some non-essential features such as caching of external
+    resources).
 
 
 .. _install-virtualenv:
