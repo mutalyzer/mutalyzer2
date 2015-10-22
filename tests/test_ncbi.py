@@ -5,17 +5,12 @@ Tests for the mutalyzer.ncbi module.
 
 from __future__ import unicode_literals
 
-import pytest
-
 from mutalyzer import ncbi
 
-
-pytestmark = [
-    pytest.mark.usefixtures('references'),
-    pytest.mark.parametrize('references', [['MARK1']], indirect=True)
-]
+from fixtures import with_links
 
 
+@with_links(('NM_018650', 'NP_061120'))
 def test_transcript_to_protein():
     """
     Get protein for transcript.
@@ -23,6 +18,7 @@ def test_transcript_to_protein():
     assert ncbi.transcript_to_protein('NM_018650') == 'NP_061120'
 
 
+@with_links(('XM_005273133', None))
 def test_transcript_to_protein_negative():
     """
     Get no protein for transcript.
@@ -30,6 +26,7 @@ def test_transcript_to_protein_negative():
     assert ncbi.transcript_to_protein('XM_005273133') is None
 
 
+@with_links(('NM_018650', 'NP_061120'))
 def test_protein_to_transcript():
     """
     Get transcript for protein.

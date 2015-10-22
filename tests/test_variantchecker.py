@@ -9,13 +9,12 @@ import pytest
 
 from mutalyzer.variantchecker import check_variant
 
+from fixtures import with_references
+
 
 # Todo: We had a test for checking a variant on a CONTIG RefSeq reference
 #   (NG_005990.1), but instead we should have separate tests for the retriever
 #   module, including a test for fetching a CONTIG RefSeq reference.
-
-
-pytestmark = pytest.mark.usefixtures('references')
 
 
 @pytest.fixture
@@ -25,7 +24,7 @@ def checker(output):
     return check
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_in_frame(output, checker):
     """
     Simple in-frame deletion should give a simple description on protein
@@ -41,7 +40,7 @@ def test_deletion_in_frame(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_insertion_in_frame(output, checker):
     """
     Simple in-frame insertion should give a simple description on protein
@@ -57,7 +56,7 @@ def test_insertion_in_frame(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_insertion_list_in_frame(output, checker):
     """
     Simple in-frame insertion of a list should give a simple description
@@ -73,7 +72,7 @@ def test_insertion_list_in_frame(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_insertion_in_frame(output, checker):
     """
     Simple in-frame deletion/insertion should give a simple description on
@@ -89,7 +88,7 @@ def test_deletion_insertion_in_frame(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_insertion_list_in_frame(output, checker):
     """
     Simple in-frame deletion-insertion of a list should give a simple
@@ -105,7 +104,7 @@ def test_deletion_insertion_list_in_frame(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_insertion_in_frame_complete(output, checker):
     """
     Simple in-frame deletion/insertion should give a simple description on
@@ -121,7 +120,7 @@ def test_deletion_insertion_in_frame_complete(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_insertion_list_in_frame_complete(output, checker):
     """
     Simple in-frame deletion-insertion of a list should give a simple
@@ -138,7 +137,7 @@ def test_deletion_insertion_list_in_frame_complete(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_est_warning_nm_est(output, checker):
     """
     Warning for EST positioning on NM reference.
@@ -148,7 +147,7 @@ def test_est_warning_nm_est(output, checker):
     assert len(west) == 1
 
 
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_no_est_warning_nm_c(output, checker):
     """
     No EST warning for c. positioning on NM reference.
@@ -158,7 +157,7 @@ def test_no_est_warning_nm_c(output, checker):
     assert len(west) == 0
 
 
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_no_est_warning_nm_n(output, checker):
     """
     No EST warning for n. positioning on NM reference.
@@ -168,7 +167,7 @@ def test_no_est_warning_nm_n(output, checker):
     assert len(west) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_est_warning_ng_est(output, checker):
     """
     Warning for EST positioning on NG reference.
@@ -178,7 +177,7 @@ def test_est_warning_ng_est(output, checker):
     assert len(west) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_no_est_warning_ng_g(output, checker):
     """
     No EST warning for g. positioning on NG reference.
@@ -188,7 +187,7 @@ def test_no_est_warning_ng_g(output, checker):
     assert len(west) == 0
 
 
-@pytest.mark.parametrize('references', [['AA010203.1']], indirect=True)
+@with_references('AA010203.1')
 def test_no_est_warning_est_est(output, checker):
     """
     No warning for EST positioning on EST reference.
@@ -198,7 +197,7 @@ def test_no_est_warning_est_est(output, checker):
     assert len(west) == 0
 
 
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_roll(output, checker):
     """
     Just a variant where we should roll.
@@ -208,7 +207,7 @@ def test_roll(output, checker):
     assert len(wroll) > 0
 
 
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_no_roll(output, checker):
     """
     Just a variant where we cannot roll.
@@ -218,7 +217,7 @@ def test_no_roll(output, checker):
     assert len(wroll) == 0
 
 
-@pytest.mark.parametrize('references', [['NM_000088.3']], indirect=True)
+@with_references('NM_000088.3')
 def test_no_roll_splice(output, checker):
     """
     Here we can roll but should not, because it is over a splice site.
@@ -230,7 +229,7 @@ def test_no_roll_splice(output, checker):
     assert len(wroll) == 0
 
 
-@pytest.mark.parametrize('references', [['NM_000088.3']], indirect=True)
+@with_references('NM_000088.3')
 def test_partial_roll_splice(output, checker):
     """
     Here we can roll two positions, but should roll only one because
@@ -243,7 +242,7 @@ def test_partial_roll_splice(output, checker):
     assert len(wroll) > 0
 
 
-@pytest.mark.parametrize('references', [['NM_000088.3']], indirect=True)
+@with_references('NM_000088.3')
 def test_roll_after_splice(output, checker):
     """
     Here we can roll and should, we stay in the same exon.
@@ -253,7 +252,7 @@ def test_roll_after_splice(output, checker):
     assert len(wroll) > 0
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_roll_both_ins(output, checker):
     """
     Insertion that rolls should not use the same inserted sequence in
@@ -288,7 +287,7 @@ def test_roll_both_ins(output, checker):
     assert len(output.getMessagesWithErrorCode('WROLLFORWARD')) == 1
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_roll_reverse_ins(output, checker):
     """
     Insertion that rolls on the reverse strand should not use the same
@@ -300,7 +299,7 @@ def test_roll_reverse_ins(output, checker):
     assert len(output.getMessagesWithErrorCode('WROLLFORWARD')) == 0
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_roll_message_forward(output, checker):
     """
     Roll warning message should only be shown for currently selected
@@ -311,7 +310,7 @@ def test_roll_message_forward(output, checker):
     assert len(output.getMessagesWithErrorCode('WROLLREVERSE')) == 0
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_roll_message_reverse(output, checker):
     """
     Roll warning message should only be shown for currently selected
@@ -322,7 +321,7 @@ def test_roll_message_reverse(output, checker):
     assert len(output.getMessagesWithErrorCode('WROLLREVERSE')) == 1
 
 
-@pytest.mark.parametrize('references', [['NM_000143.3']], indirect=True)
+@with_references('NM_000143.3')
 def test_ins_cds_start(output, checker):
     """
     Insertion on CDS start boundary should not be included in CDS.
@@ -332,7 +331,7 @@ def test_ins_cds_start(output, checker):
     # Todo: Is this a good test?
 
 
-@pytest.mark.parametrize('references', [['NM_000143.3']], indirect=True)
+@with_references('NM_000143.3')
 def test_ins_cds_start_after(output, checker):
     """
     Insertion after CDS start boundary should be included in CDS.
@@ -342,7 +341,7 @@ def test_ins_cds_start_after(output, checker):
     # Todo: Is this a good test?
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_splice_site(output, checker):
     """
     Deletion hitting one splice site should not do a protein prediction.
@@ -355,7 +354,7 @@ def test_del_splice_site(output, checker):
     assert not output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exon(output, checker):
     """
     Deletion of an entire exon should be possible.
@@ -368,7 +367,7 @@ def test_del_exon(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exon_exact(output, checker):
     """
     Deletion of exactly an exon should be possible.
@@ -381,7 +380,7 @@ def test_del_exon_exact(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exon_in_frame(output, checker):
     """
     Deletion of an entire exon with length a triplicate should give a
@@ -400,7 +399,7 @@ def test_del_exon_in_frame(output, checker):
     # Todo: assert that protein products indeed have only this difference.
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exons(output, checker):
     """
     Deletion of two entire exons should be possible.
@@ -413,7 +412,7 @@ def test_del_exons(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_intron(output, checker):
     """
     Deletion of an entire intron should be possible (fusion of remaining
@@ -427,7 +426,7 @@ def test_del_intron(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_intron_exact(output, checker):
     """
     Deletion of exactly an intron should be possible (fusion of flanking
@@ -444,7 +443,7 @@ def test_del_intron_exact(output, checker):
     assert not output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_intron_in_frame(output, checker):
     """
     Deletion of an entire intron should be possible (fusion of remaining
@@ -459,7 +458,7 @@ def test_del_intron_in_frame(output, checker):
     # Todo: assert that protein products indeed have only this difference.
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exon_unknown_offsets(output, checker):
     """
     Deletion of an entire exon with unknown offsets should be possible.
@@ -480,7 +479,7 @@ def test_del_exon_unknown_offsets(output, checker):
     # other transcripts?
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exon_unknown_offsets_in_frame(output, checker):
     """
     Deletion of an entire exon with unknown offsets and length a
@@ -504,7 +503,7 @@ def test_del_exon_unknown_offsets_in_frame(output, checker):
     # other transcripts?
 
 
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_del_exon_unknown_offsets_composed(output, checker):
     """
     Deletion of an entire exon with unknown offsets and another composed
@@ -525,7 +524,7 @@ def test_del_exon_unknown_offsets_composed(output, checker):
     # other transcripts?
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_del_exon_unknown_offsets_reverse(output, checker):
     """
     Deletion of an entire exon with unknown offsets should be possible,
@@ -546,7 +545,7 @@ def test_del_exon_unknown_offsets_reverse(output, checker):
     # other transcripts?
 
 
-@pytest.mark.parametrize('references', [['NM_000143.3']], indirect=True)
+@with_references('NM_000143.3')
 def test_del_exon_transcript_reference(output, checker):
     """
     Deletion of entire exon on a transcript reference should remove the
@@ -563,7 +562,7 @@ def test_del_exon_transcript_reference(output, checker):
     assert output.getOutput('newProtein')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq(output, checker):
     """
     Insertion of a sequence.
@@ -574,7 +573,7 @@ def test_ins_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_012337.1']], indirect=True)
+@with_references('NG_012337.1')
 def test_ins_seq_reverse(output, checker):
     """
     Insertion of a sequence on reverse strand.
@@ -585,7 +584,7 @@ def test_ins_seq_reverse(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range(output, checker):
     """
     Insertion of a range.
@@ -597,7 +596,7 @@ def test_ins_range(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_inv(output, checker):
     """
     Insertion of an inverse range.
@@ -609,7 +608,7 @@ def test_ins_range_inv(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_list(output, checker):
     """
     Insertion of a sequence as a list.
@@ -620,7 +619,7 @@ def test_ins_seq_list(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_012337.1']], indirect=True)
+@with_references('NG_012337.1')
 def test_ins_seq_list_reverse(output, checker):
     """
     Insertion of a sequence as a list on reverse strand.
@@ -631,7 +630,7 @@ def test_ins_seq_list_reverse(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_list(output, checker):
     """
     Insertion of a range as a list.
@@ -643,7 +642,7 @@ def test_ins_range_list(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_inv_list(output, checker):
     """
     Insertion of an inverse range as a list.
@@ -655,7 +654,7 @@ def test_ins_range_inv_list(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_seq(output, checker):
     """
     Insertion of two sequences.
@@ -666,7 +665,7 @@ def test_ins_seq_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_012337.1']], indirect=True)
+@with_references('NG_012337.1')
 def test_ins_seq_seq_reverse(output, checker):
     """
     Insertion of two sequences on reverse strand.
@@ -677,7 +676,7 @@ def test_ins_seq_seq_reverse(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_range(output, checker):
     """
     Insertion of two ranges.
@@ -689,7 +688,7 @@ def test_ins_range_range(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_range_inv(output, checker):
     """
     Insertion of a range and an inverse range.
@@ -701,7 +700,7 @@ def test_ins_range_range_inv(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_range(output, checker):
     """
     Insertion of a sequence and a range.
@@ -712,7 +711,7 @@ def test_ins_seq_range(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_range_inv(output, checker):
     """
     Insertion of a sequence and an inverse range.
@@ -723,7 +722,7 @@ def test_ins_seq_range_inv(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_seq(output, checker):
     """
     Insertion of a range and a sequence.
@@ -734,7 +733,7 @@ def test_ins_range_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_inv_seq(output, checker):
     """
     Insertion of an inverse range and a sequence.
@@ -745,7 +744,7 @@ def test_ins_range_inv_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_coding(output, checker):
     """
     Insertion of a sequence (coding).
@@ -756,7 +755,7 @@ def test_ins_seq_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_list_coding(output, checker):
     """
     Insertion of a sequence as a list (coding).
@@ -767,7 +766,7 @@ def test_ins_seq_list_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_seq_seq_coding(output, checker):
     """
     Insertion of two sequences (coding).
@@ -778,7 +777,7 @@ def test_ins_seq_seq_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_coding(output, checker):
     """
     Insertion of a range (coding).
@@ -787,7 +786,7 @@ def test_ins_range_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_inv_coding(output, checker):
     """
     Insertion of an inverse range (coding).
@@ -796,7 +795,7 @@ def test_ins_range_inv_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_list_coding(output, checker):
     """
     Insertion of a range as a list (coding).
@@ -805,7 +804,7 @@ def test_ins_range_list_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_ins_range_inv_list_coding(output, checker):
     """
     Insertion of an inverse range as a list (coding).
@@ -814,7 +813,7 @@ def test_ins_range_inv_list_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq(output, checker):
     """
     Insertion-deletion of a sequence.
@@ -825,7 +824,7 @@ def test_delins_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range(output, checker):
     """
     Insertion-deletion of a range.
@@ -837,7 +836,7 @@ def test_delins_range(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_inv(output, checker):
     """
     Insertion-deletion of an inverse range.
@@ -849,7 +848,7 @@ def test_delins_range_inv(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_list(output, checker):
     """
     Insertion-deletion of a sequence as a list.
@@ -860,7 +859,7 @@ def test_delins_seq_list(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_list(output, checker):
     """
     Insertion-deletion of a range as a list.
@@ -872,7 +871,7 @@ def test_delins_range_list(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_inv_list(output, checker):
     """
     Insertion-deletion of an inverse range as a list.
@@ -884,7 +883,7 @@ def test_delins_range_inv_list(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_seq(output, checker):
     """
     Insertion-deletion of two sequences.
@@ -895,7 +894,7 @@ def test_delins_seq_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_range(output, checker):
     """
     Insertion-deletion of two ranges.
@@ -907,7 +906,7 @@ def test_delins_range_range(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_inv_range(output, checker):
     """
     Insertion-deletion of an inverse range and a range.
@@ -921,7 +920,7 @@ def test_delins_range_inv_range(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 0
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_range(output, checker):
     """
     Insertion-deletion of a sequence and a range.
@@ -932,7 +931,7 @@ def test_delins_seq_range(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_range_inv(output, checker):
     """
     Insertion-deletion of a sequence and an inverse range.
@@ -945,7 +944,7 @@ def test_delins_seq_range_inv(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_seq(output, checker):
     """
     Insertion-deletion of a range and a sequence.
@@ -956,7 +955,7 @@ def test_delins_range_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_inv_seq(output, checker):
     """
     Insertion-deletion of an inverse range and a sequence.
@@ -969,7 +968,7 @@ def test_delins_range_inv_seq(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_coding(output, checker):
     """
     Insertion-deletion of a sequence (coding).
@@ -980,7 +979,7 @@ def test_delins_seq_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_list_coding(output, checker):
     """
     Insertion-deletion of a sequence as a list (coding).
@@ -991,7 +990,7 @@ def test_delins_seq_list_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_seq_seq_coding(output, checker):
     """
     Insertion-deletion of two sequences (coding).
@@ -1002,7 +1001,7 @@ def test_delins_seq_seq_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_coding(output, checker):
     """
     Insertion-deletion of a range (coding).
@@ -1011,7 +1010,7 @@ def test_delins_range_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_inv_coding(output, checker):
     """
     Insertion-deletion of an inverse range (coding).
@@ -1020,7 +1019,7 @@ def test_delins_range_inv_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_list_coding(output, checker):
     """
     Insertion-deletion of a range as a list (coding).
@@ -1029,7 +1028,7 @@ def test_delins_range_list_coding(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_delins_range_inv_list_coding(output, checker):
     """
     Insertion-deletion of an inverse range as a list (coding).
@@ -1047,7 +1046,7 @@ def test_no_reference(output, checker):
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_chromosomal_positions(output, checker):
     """
     Variants on transcripts in c. notation should have chromosomal positions
@@ -1057,7 +1056,7 @@ def test_chromosomal_positions(output, checker):
     assert output.getIndexedOutput('rawVariantsChromosomal', 0) == ('chr11', '+', [('274G>T', (111959695, 111959695))])
 
 
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_ex_notation(output, checker):
     """
     Variant description using EX notation should not crash but deletion of
@@ -1067,7 +1066,7 @@ def test_ex_notation(output, checker):
     assert len(output.getMessagesWithErrorCode('IDELSPLICE')) == 1
 
 
-@pytest.mark.parametrize('references', [['LRG_1']], indirect=True)
+@with_references('LRG_1')
 def test_lrg_reference(output, checker):
     """
     We should be able to use LRG reference sequence without error.
@@ -1078,7 +1077,7 @@ def test_lrg_reference(output, checker):
     assert output.getIndexedOutput('genomicDescription', 0) == 'LRG_1:g.6855G>T'
 
 
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_gi_reference_plain(output, checker):
     """
     Test reference sequence notation with GI number.
@@ -1091,7 +1090,7 @@ def test_gi_reference_plain(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_gi_reference_prefix(output, checker):
     """
     Test reference sequence notation with GI number and prefix.
@@ -1104,7 +1103,7 @@ def test_gi_reference_prefix(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_gi_reference_prefix_colon(output, checker):
     """
     Test reference sequence notation with GI number and prefix with colon.
@@ -1117,7 +1116,7 @@ def test_gi_reference_prefix_colon(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_nop_nm(output, checker):
     """
     Variant on NM without effect should be described as '='.
@@ -1130,7 +1129,7 @@ def test_nop_nm(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['DMD']], indirect=True)
+@with_references('DMD')
 def test_nop_ud(output, references, checker):
     """
     Variant on UD without effect should be described as '='.
@@ -1144,7 +1143,7 @@ def test_nop_ud(output, references, checker):
     assert ud + '(DMD_v001):c.=' in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['DPYD']], indirect=True)
+@with_references('DPYD')
 def test_ud_reverse_sequence(output, references, checker):
     """
     Variant on UD from reverse strand should have reverse complement
@@ -1159,7 +1158,7 @@ def test_ud_reverse_sequence(output, references, checker):
     assert ud + '(DPYD_v001):c.85C>T' in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['MARK1']], indirect=True)
+@with_references('MARK1')
 def test_ud_forward_sequence(output, references, checker):
     """
     Variant on UD from forward strand should have forward sequence.
@@ -1173,7 +1172,7 @@ def test_ud_forward_sequence(output, references, checker):
     assert ud + '(MARK1_v001):c.400T>C' in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['chr9_reverse']], indirect=True)
+@with_references('chr9_reverse')
 def test_ud_reverse_range(output, references, checker):
     """
     Variant on UD from reverse strand should have reversed range
@@ -1188,7 +1187,7 @@ def test_ud_reverse_range(output, references, checker):
     assert output.getIndexedOutput('genomicDescription', 0) == ud + ':g.10624_78132del'
 
 
-@pytest.mark.parametrize('references', [['MARK1']], indirect=True)
+@with_references('MARK1')
 def test_ud_forward_range(output, references, checker):
     """
     Variant on UD from forward strand should have forward range positions.
@@ -1201,7 +1200,7 @@ def test_ud_forward_range(output, references, checker):
     assert output.getIndexedOutput('genomicDescription', 0) == ud + ':g.76614_76629del'
 
 
-@pytest.mark.parametrize('references', [['chr9_reverse']], indirect=True)
+@with_references('chr9_reverse')
 def test_ud_reverse_del_length(output, references, checker):
     """
     Variant on UD from reverse strand should have reversed range
@@ -1217,7 +1216,7 @@ def test_ud_reverse_del_length(output, references, checker):
     assert output.getIndexedOutput('genomicDescription', 0) == ud + ':g.10624_78132del'
 
 
-@pytest.mark.parametrize('references', [['DPYD']], indirect=True)
+@with_references('DPYD')
 def test_ud_reverse_roll(output, references, checker):
     """
     Variant on UD from reverse strand should roll the oposite direction.
@@ -1238,7 +1237,7 @@ def test_ud_reverse_roll(output, references, checker):
     assert ud + '(DPYD_v001):c.105del' in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['MARK1']], indirect=True)
+@with_references('MARK1')
 def test_ud_forward_roll(output, references, checker):
     """
     Variant on UD from forward strand should roll the same.
@@ -1259,7 +1258,7 @@ def test_ud_forward_roll(output, references, checker):
     assert ud + '(MARK1_v001):c.401del' in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_with_sequence_forward_genomic(output, checker):
     """
     Specify the deleted sequence in a deletion.
@@ -1270,7 +1269,7 @@ def test_deletion_with_sequence_forward_genomic(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_with_length_forward_genomic(output, checker):
     """
     Specify the deleted sequence length in a deletion.
@@ -1281,7 +1280,7 @@ def test_deletion_with_length_forward_genomic(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_with_sequence_reverse_coding(output, checker):
     """
     Specify the deleted sequence in a deletion on the reverse strand.
@@ -1292,7 +1291,7 @@ def test_deletion_with_sequence_reverse_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_deletion_with_length_reverse_coding(output, checker):
     """
     Specify the deleted sequence length in a deletion on the reverse strand.
@@ -1303,7 +1302,7 @@ def test_deletion_with_length_reverse_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_deletion_with_sequence_reverse_ng_coding(output, checker):
     """
     Specify the deleted sequence in a deletion on the reverse strand
@@ -1315,7 +1314,7 @@ def test_deletion_with_sequence_reverse_ng_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_deletion_with_length_reverse_ng_coding(output, checker):
     """
     Specify the deleted sequence length in a deletion on the reverse strand
@@ -1327,7 +1326,7 @@ def test_deletion_with_length_reverse_ng_coding(output, checker):
            in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['AB026906.1']], indirect=True)
+@with_references('AB026906.1')
 def test_inversion(output, checker):
     """
     Inversion variant.
@@ -1338,7 +1337,7 @@ def test_inversion(output, checker):
         in output.getOutput('descriptions')
 
 
-@pytest.mark.parametrize('references', [['NM_000193.2']], indirect=True)
+@with_references('NM_000193.2')
 def test_delins_with_length(output, checker):
     """
     Delins with explicit length of deleted sequence (bug #108).
@@ -1347,7 +1346,7 @@ def test_delins_with_length(output, checker):
     assert 'NM_000193.2(SHH_i001):p.(Lys38Serfs*2)' in output.getOutput('protDescriptions')
 
 
-@pytest.mark.parametrize('references', [['NG_009105.1']], indirect=True)
+@with_references('NG_009105.1')
 def test_protein_level_description(output, checker):
     """
     Currently protein level descriptions are not implemented.
@@ -1356,7 +1355,7 @@ def test_protein_level_description(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['NP_064445.1']], indirect=True)
+@with_references('NP_064445.1')
 def test_protein_reference(output, checker):
     """
     Currently protein references are not implemented.
@@ -1365,7 +1364,7 @@ def test_protein_reference(output, checker):
     assert len(output.getMessagesWithErrorCode('ENOTIMPLEMENTED')) == 1
 
 
-@pytest.mark.parametrize('references', [['AF230870.1']], indirect=True)
+@with_references('AF230870.1')
 def test_wnomrna_other(output, checker):
     """
     Warning for no mRNA field on other than currently selected transcript
@@ -1377,7 +1376,7 @@ def test_wnomrna_other(output, checker):
     assert len(wnomrna_other) == 1
 
 
-@pytest.mark.parametrize('references', [['AF230870.1']], indirect=True)
+@with_references('AF230870.1')
 def test_wnomrna(output, checker):
     """
     Warning for no mRNA field on currently selected transcript should give
@@ -1391,7 +1390,7 @@ def test_wnomrna(output, checker):
     assert len(wnomrna_other) == 1
 
 
-@pytest.mark.parametrize('references', [['L41870.1']], indirect=True)
+@with_references('L41870.1')
 def test_mrna_ref_adjacent_exons_warn(output, checker):
     """
     Warning for mRNA reference where exons are not adjacent.
@@ -1403,7 +1402,7 @@ def test_mrna_ref_adjacent_exons_warn(output, checker):
     assert len(w_exon_annotation) == 1
 
 
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_mrna_ref_adjacent_exons_no_warn(output, checker):
     """
     No warning for mRNA reference where exons are adjacent.
@@ -1413,7 +1412,7 @@ def test_mrna_ref_adjacent_exons_no_warn(output, checker):
     assert len(w_exon_annotation) == 0
 
 
-@pytest.mark.parametrize('references', [['NM_001199.3']], indirect=True)
+@with_references('NM_001199.3')
 def test_fs_no_stop(output, checker):
     """
     Frame shift yielding no stop codon should be described with
@@ -1425,7 +1424,7 @@ def test_fs_no_stop(output, checker):
     assert 'NM_001199.3(BMP1_i001):p.(Gln730Profs*?)' in output.getOutput('protDescriptions')
 
 
-@pytest.mark.parametrize('references', [['NM_000193.2']], indirect=True)
+@with_references('NM_000193.2')
 def test_ext_no_stop(output, checker):
     """
     Extension yielding no stop codon should be described with
@@ -1437,7 +1436,7 @@ def test_ext_no_stop(output, checker):
     assert 'NM_000193.2(SHH_i001):p.(*463Serext*?)' in output.getOutput('protDescriptions')
 
 
-@pytest.mark.parametrize('references', [['NM_000193.2']], indirect=True)
+@with_references('NM_000193.2')
 def test_fs_ext_no_stop(output, checker):
     """
     Extension yielding no stop codon should be described with
@@ -1449,7 +1448,7 @@ def test_fs_ext_no_stop(output, checker):
     assert 'NM_000193.2(SHH_i001):p.(*463Cysext*?)' in output.getOutput('protDescriptions')
 
 
-@pytest.mark.parametrize('references', [['AB026906.1']], indirect=True)
+@with_references('AB026906.1')
 def test_synonymous_p_is(output, checker):
     """
     Synonymous mutation should yield a p.(=) description.
@@ -1459,7 +1458,7 @@ def test_synonymous_p_is(output, checker):
     assert not output.getOutput('newProteinFancy')
 
 
-@pytest.mark.parametrize('references', [['NM_024426.4']], indirect=True)
+@with_references('NM_024426.4')
 def test_synonymous_p_is_alt_start(output, checker):
     """
     Synonymous mutation should yield a p.(=) description, also with an
@@ -1476,7 +1475,7 @@ def test_synonymous_p_is_alt_start(output, checker):
     assert not output.getOutput('altProteinFancy')
 
 
-@pytest.mark.parametrize('references', [['AB026906.1']], indirect=True)
+@with_references('AB026906.1')
 def test_start_codon(output, checker):
     """
     Mutation of start codon should yield a p.? description.
@@ -1491,7 +1490,7 @@ def test_start_codon(output, checker):
     assert not output.getOutput('altStart')
 
 
-@pytest.mark.parametrize('references', [['NM_024426.4']], indirect=True)
+@with_references('NM_024426.4')
 def test_start_codon_alt_start(output, checker):
     """
     Mutation of start codon should yield a p.? description, also with an
@@ -1507,7 +1506,7 @@ def test_start_codon_alt_start(output, checker):
     assert not output.getOutput('altStart')
 
 
-@pytest.mark.parametrize('references', [['AB026906.1']], indirect=True)
+@with_references('AB026906.1')
 def test_start_codon_yield_start_p_is(output, checker):
     """
     Silent mutation creating new start codon should yield a p.?
@@ -1526,7 +1525,7 @@ def test_start_codon_yield_start_p_is(output, checker):
     assert not output.getOutput('altProteinFancy')
 
 
-@pytest.mark.parametrize('references', [['NM_024426.4']], indirect=True)
+@with_references('NM_024426.4')
 def test_start_codon_alt_start_yield_start_p_is(output, checker):
     """
     Silent mutation creating new start codon should yield a p.?
@@ -1545,7 +1544,7 @@ def test_start_codon_alt_start_yield_start_p_is(output, checker):
     assert not output.getOutput('altProteinFancy')
 
 
-@pytest.mark.parametrize('references', [['AB026906.1']], indirect=True)
+@with_references('AB026906.1')
 def test_start_codon_yield_start(output, checker):
     """
     Mutation creating new start codon should yield a p.? description. The
@@ -1562,7 +1561,7 @@ def test_start_codon_yield_start(output, checker):
     assert output.getOutput('altProtein')[0].startswith('M')
 
 
-@pytest.mark.parametrize('references', [['NM_024426.4']], indirect=True)
+@with_references('NM_024426.4')
 def test_start_codon_alt_start_yield_start(output, checker):
     """
     Mutation creating new start codon should yield a p.? description, also

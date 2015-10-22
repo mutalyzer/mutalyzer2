@@ -19,6 +19,8 @@ from mutalyzer import File
 from mutalyzer import output
 from mutalyzer import Scheduler
 
+from fixtures import with_references
+
 
 pytestmark = pytest.mark.usefixtures('db')
 
@@ -85,9 +87,7 @@ def test_large_input():
     _batch_job_plain_text(variants, expected, 'syntax-checker')
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['AB026906.1', 'NM_000059.3']],
-                         indirect=True)
+@with_references('AB026906.1', 'NM_000059.3')
 def test_name_checker():
     """
     Simple name checker batch job.
@@ -212,8 +212,7 @@ def test_name_checker_altered():
         _batch_job_plain_text(variants, expected, 'name-checker')
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_000059.3']], indirect=True)
+@with_references('NM_000059.3')
 def test_name_checker_skipped():
     """
     Name checker job with skipped entries.

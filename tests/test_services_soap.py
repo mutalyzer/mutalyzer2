@@ -20,6 +20,8 @@ import mutalyzer
 from mutalyzer.services.soap import application
 from mutalyzer import Scheduler
 
+from fixtures import with_references
+
 
 @pytest.fixture
 def server():
@@ -188,8 +190,7 @@ def test_gettranscriptsbygenename_invalid(api):
     assert not r
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['AF230870.1']], indirect=True)
+@with_references('AF230870.1')
 def test_gettranscriptsandinfo_valid(api):
     """
     Running getTranscriptsAndInfo with a valid genomic reference should
@@ -203,8 +204,7 @@ def test_gettranscriptsandinfo_valid(api):
         assert t in names
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['AL449423.14']], indirect=True)
+@with_references('AL449423.14')
 def test_gettranscriptsandinfo_restricted_valid(api):
     """
     Running getTranscriptsAndInfo with a valid genomic reference and a
@@ -332,9 +332,7 @@ def test_info(api):
     assert r.version == mutalyzer.__version__
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize(
-    'references', [['AB026906.1', 'AL449423.14', 'NM_003002.2']], indirect=True)
+@with_references('AB026906.1', 'AL449423.14', 'NM_003002.2')
 def test_getcache(output, api):
     """
     Running the getCache method should give us the expected number of
@@ -393,8 +391,7 @@ def test_gettranscripts_with_versions(api):
         assert t in r.string
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_runmutalyzer(api):
     """
     Just a runMutalyzer test.
@@ -432,8 +429,7 @@ def test_runmutalyzer_reference_info_nm(api):
     assert r.molecule == 'n'
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@with_references('NM_003002.2')
 def test_runmutalyzer_reference_info_nm_version(api):
     """
     Get reference info for an NM variant with version.
@@ -448,8 +444,7 @@ def test_runmutalyzer_reference_info_nm_version(api):
     assert r.molecule == 'n'
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['LRG_1']], indirect=True)
+@with_references('LRG_1')
 def test_runmutalyzer_reference_info_lrg(api):
     """
     Get reference info for an LRG variant.
@@ -461,8 +456,7 @@ def test_runmutalyzer_reference_info_lrg(api):
     assert r.molecule == 'g'
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_runmutalyzer_reference_info_ng(api):
     """
     Get reference info for an NG variant without version.
@@ -489,8 +483,7 @@ def test_runmutalyzer_reference_info_ng(api):
     assert r.molecule == 'g'
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_009105.1']], indirect=True)
+@with_references('NG_009105.1')
 def test_runmutalyzer_reference_info_ng_version(api):
     """
     Get reference info for an NG variant with version.
@@ -505,8 +498,7 @@ def test_runmutalyzer_reference_info_ng_version(api):
     assert r.molecule == 'g'
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_runmutalyzer_reference_info_gi(api):
     """
     Get reference info for a GI variant.
@@ -521,8 +513,7 @@ def test_runmutalyzer_reference_info_gi(api):
     assert r.molecule == 'g'
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_000143.3']], indirect=True)
+@with_references('NM_000143.3')
 def test_runmutalyzer_exons(api):
     """
     Exon table in runMutalyzer output.
@@ -544,10 +535,7 @@ def test_runmutalyzer_exons(api):
         assert (exon.gStart, exon.gStop, exon.cStart, exon.cStop) == expected_exon
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize(
-    'references', [['AB026906.1', 'NM_003002.2', 'AL449423.14']],
-    indirect=True)
+@with_references('AB026906.1', 'NM_003002.2', 'AL449423.14')
 def test_batchjob(api):
     """
     Submit a batch job.

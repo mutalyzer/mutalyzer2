@@ -597,3 +597,63 @@ def hg19_transcript_mappings(db, hg19):
         version=3))
 
     db.session.commit()
+
+
+def with_references(*references):
+    """
+    Convenience decorator for parameterizing tests with reference fixtures.
+
+    Allows us to write:
+
+        @with_references('NM_004006.1', 'NM_004006.2')
+        def test_references():
+            pass
+
+    Instead of:
+
+        @pytest.mark.usefixtures('references')
+        @pytest.mark.parametrize('references',
+                                 [['NM_004006.1', 'NM_004006.2']],
+                                 ids=['NM_004006.1,NM_004006.2'],
+                                 indirect=True)
+        def test_references():
+            pass
+
+    """
+    def test_with_references(test):
+        return pytest.mark.usefixtures('references')(
+            pytest.mark.parametrize('references', [references], indirect=True,
+                                    ids=[','.join(references)])(test))
+    return test_with_references
+
+
+def with_links(*links):
+    """
+    Convenience decorator for parameterizing tests with transcript-protein
+    link fixtures.
+
+    Allows us to write:
+
+        @with_links(('NM_018650', 'NP_061120'), ('NM_027221', None))
+        def test_links():
+            pass
+
+    Instead of:
+
+        @pytest.mark.usefixtures('links')
+        @pytest.mark.parametrize('links',
+                                 [('NM_018650', 'NP_061120'),
+                                  ('NM_027221', None)],
+                                 ids=['NM_018650/NP_061120,NM_027221/*'],
+                                 indirect=True)
+        def test_links():
+            pass
+
+    """
+    def test_with_links(test):
+        return pytest.mark.usefixtures('links')(
+            pytest.mark.parametrize(
+                'links', [links], indirect=True,
+                ids=[','.join('/'.join(a or '*' for a in l)
+                              for l in links)])(test))
+    return test_with_links
