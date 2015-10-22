@@ -73,6 +73,35 @@ def available_references():
         return yaml.safe_load(f)
 
 
+def _add_links(settings, links):
+    """
+    Add transcript-protein links to the cache.
+    """
+    for transcript, protein in links:
+        if transcript is not None:
+            key = 'ncbi:transcript-to-protein:%s' % transcript
+            if protein is not None:
+                redis.set(key, protein)
+                if '.' in transcript:
+                    key = key.rsplit('.', 1)[0]
+                    redis.set(key, protein.rsplit('.', 1)[0])
+            else:
+                redis.setex(key,
+                            settings.NEGATIVE_LINK_CACHE_EXPIRATION,
+                            '')
+        if protein is not None:
+            key = 'ncbi:protein-to-transcript:%s' % protein
+            if transcript is not None:
+                redis.set(key, transcript)
+                if '.' in protein:
+                    key = key.rsplit('.', 1)[0]
+                    redis.set(key, transcript.rsplit('.', 1)[0])
+            else:
+                redis.setex(key,
+                            settings.NEGATIVE_LINK_CACHE_EXPIRATION,
+                            '')
+
+
 @pytest.fixture
 def references(request, settings, db, available_references):
     try:
@@ -99,28 +128,23 @@ def references(request, settings, db, available_references):
         references.append(Reference(
             accession, entry['checksum'], geninfo_identifier=geninfo_id))
 
-        for transcript_accession, protein_accession in entry.get('links', []):
-            if transcript_accession is not None:
-                key = 'ncbi:transcript-to-protein:%s' % transcript_accession
-                if protein_accession is not None:
-                    redis.set(key, protein_accession)
-                else:
-                    redis.setex(key,
-                                settings.NEGATIVE_LINK_CACHE_EXPIRATION,
-                                '')
-            if protein_accession is not None:
-                key = 'ncbi:protein-to-transcript:%s' % protein_accession
-                if transcript_accession is not None:
-                    redis.set(key, transcript_accession)
-                else:
-                    redis.setex(key,
-                                settings.NEGATIVE_LINK_CACHE_EXPIRATION,
-                                '')
+        _add_links(settings, entry.get('links', []))
 
     db.session.add_all(references)
     db.session.commit()
 
     return references
+
+
+@pytest.fixture
+def links(request, settings, db, available_references):
+    try:
+        links = request.param
+    except AttributeError:
+        return []
+
+    _add_links(settings, links)
+    return links
 
 
 @pytest.fixture
