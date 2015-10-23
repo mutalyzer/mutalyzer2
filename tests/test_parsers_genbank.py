@@ -11,6 +11,8 @@ import pytest
 
 from mutalyzer.parsers.genbank import GBparser
 
+from fixtures import with_references
+
 
 @pytest.fixture
 def parser():
@@ -35,7 +37,7 @@ def test_product_lists_mismatch(parser, products, expected):
     assert parser._find_mismatch(products) == expected
 
 
-@pytest.mark.parametrize('references', [['A1BG']], indirect=True)
+@with_references('A1BG')
 def test_only_complete_genes_included(settings, references, parser):
     """
     Incomplete genes from the reference file should be ignored.

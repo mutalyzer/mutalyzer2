@@ -18,6 +18,8 @@ from mutalyzer import announce, Scheduler
 from mutalyzer.db.models import BatchJob
 from mutalyzer.website import create_app
 
+from fixtures import with_references
+
 
 # TODO: Tests for /upload.
 
@@ -125,9 +127,7 @@ def test_description_extractor_raw_fastq(website):
     assert '[5_6insTT;17del;26A&gt;C;35dup]' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize(
-    'references', [['NM_004006.1', 'NM_004006.2']], indirect=True)
+@with_references('NM_004006.1', 'NM_004006.2')
 def test_description_extractor_refseq(website):
     """
     Submit two accession numbers to the variant description extractor.
@@ -247,8 +247,7 @@ def test_checksyntax_invalid(website):
     assert 'The &quot;^&quot; indicates the position where the error occurred' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_check_valid(website):
     """
     Submit the name checker form with a valid variant.
@@ -273,8 +272,7 @@ def test_check_invalid(website):
     assert 'The &quot;^&quot; indicates the position where the error occurred' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NP_064445.1']], indirect=True)
+@with_references('NP_064445.1')
 def test_check_protein_reference(website):
     """
     Submit the name checker form with a protein reference sequence (not
@@ -287,8 +285,7 @@ def test_check_protein_reference(website):
     assert 'Protein reference sequences are not supported' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_check_noninteractive(website):
     """
     Submit the name checker form non-interactively.
@@ -304,8 +301,7 @@ def test_check_noninteractive(website):
     assert 'Raw variant 1: deletion of 1' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_012772.1']], indirect=True)
+@with_references('NG_012772.1')
 def test_check_interactive_links(website):
     """
     Submitting interactively should have links to transcripts also
@@ -427,10 +423,7 @@ def _batch(website, job_type='name-checker', assembly_name_or_alias=None,
     return r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize(
-    'references', [['AB026906.1', 'NM_003002.2', 'AL449423.14']],
-    indirect=True)
+@with_references('AB026906.1', 'NM_003002.2', 'AL449423.14')
 def test_batch_namechecker(website):
     """
     Submit the batch name checker form.
@@ -610,8 +603,7 @@ def test_batch_syntaxchecker_oldstyle(website):
            header='Input\tStatus')
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['AB026906.1']], indirect=True)
+@with_references('AB026906.1')
 def test_batch_namechecker_restriction_sites(website):
     """
     Submit the batch name checker form and see if restriction site effects
@@ -703,8 +695,7 @@ def test_annotated_soap_api(website):
     assert 'Web Service: Mutalyzer' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_012337.1']], indirect=True)
+@with_references('NG_012337.1')
 def test_getgs(website):
     """
     Test the /getGS interface used by LOVD2.
@@ -721,8 +712,7 @@ def test_getgs(website):
     assert '<input' not in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_012337.1']], indirect=True)
+@with_references('NG_012337.1')
 def test_getgs_coding_multiple_transcripts(website):
     """
     Test the /getGS interface on a coding description and genomic
@@ -737,8 +727,7 @@ def test_getgs_coding_multiple_transcripts(website):
     assert 'description=NG_012337.1' in r.location
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NG_008939.1']], indirect=True)
+@with_references('NG_008939.1')
 def test_getgs_variant_error(website):
     """
     Test the /getGS interface on a variant description with an error.
@@ -861,8 +850,7 @@ def test_upload_local_file_invalid(website):
     assert 'The file could not be parsed.' in r.data
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_reference(website):
     """
     Test if reference files are cached.
@@ -878,8 +866,7 @@ def test_reference(website):
     assert r.data == bz2.BZ2File(path).read()
 
 
-@pytest.mark.usefixtures('references')
-@pytest.mark.parametrize('references', [['NM_002001.2']], indirect=True)
+@with_references('NM_002001.2')
 def test_reference_head(website):
     """
     Test if reference files are cached, by issuing a HEAD request.
@@ -901,8 +888,8 @@ def test_reference_head_none(website):
     assert r.status_code == 404
 
 
-@pytest.mark.usefixtures('references', 'hg19_transcript_mappings')
-@pytest.mark.parametrize('references', [['NM_003002.2']], indirect=True)
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+@with_references('NM_003002.2')
 def test_bed(website):
     """
     BED track for variant.
@@ -913,8 +900,8 @@ def test_bed(website):
     assert '\t'.join(['chr11', '111959694', '111959695', '274G>T', '0', '+']) in r.data
 
 
-@pytest.mark.usefixtures('references', 'hg19_transcript_mappings')
-@pytest.mark.parametrize('references', [['NM_000132.3']], indirect=True)
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+@with_references('NM_000132.3')
 def test_bed_reverse(website):
     """
     BED track for variant on reverse strand.

@@ -3,15 +3,14 @@ Communication with the NCBI.
 """
 
 
-import functools
-
 from Bio import Entrez
 
 from .config import settings
 from .redisclient import client as redis
 
 
-def _get_link(source_accession, source_db, target_db, match_link_name):
+def _get_link(source_accession, source_db, target_db, match_link_name,
+              source_version=None, match_version=True):
     """
     Retrieve a linked accession number from the NCBI.
 
@@ -22,88 +21,142 @@ def _get_link(source_accession, source_db, target_db, match_link_name):
     :arg function match_link_name: For each link found, this function is
       called with the link name (`str`) and it should return `True` iff the
       link is to be used.
+    :arg int source_version: Optional version number for `source_accession`.
+    :arg bool match_version: If `False`, the link does not have to match
+      `source_version`.
 
-    :returns: Linked accession number (without version number) or `None` if no
-      link can be found.
-    :rtype: str
+    :returns: Tuple of `(target_accession, target_version)` representing the
+      link target, or `None` if no link can be found. If `source_version` is
+      not specified or `match_version` is `False`, `target_version` can be
+      `None`.
+    :rtype: tuple(str, int)
     """
     Entrez.email = settings.EMAIL
-    handle = Entrez.esearch(db=source_db, term=source_accession)
+
+    # If we are currently strictly matching on version, we can try again if
+    # no result is found. Otherwise, we just report failure.
+    def fail_or_retry():
+        if source_version is None or match_version:
+            return None
+        return _get_link(source_accession, source_db, target_db,
+                         match_link_name, source_version=None,
+                         match_version=False)
+
+    if source_version is None:
+        source = source_accession
+    else:
+        source = '%s.%d' % (source_accession, source_version)
+
+    # Find source record.
+    handle = Entrez.esearch(db=source_db, term=source)
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
-        return None
+        return fail_or_retry()
     finally:
         handle.close()
 
     try:
         source_gi = unicode(result['IdList'][0])
     except IndexError:
-        return None
+        return fail_or_retry()
 
+    # Find link from source record to target record.
     handle = Entrez.elink(dbfrom=source_db, db=target_db, id=source_gi)
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
-        return None
+        return fail_or_retry()
     finally:
         handle.close()
 
     if not result[0]['LinkSetDb']:
-        return None
+        return fail_or_retry()
 
     for link in result[0]['LinkSetDb']:
         if match_link_name(unicode(link['LinkName'])):
             target_gi = unicode(link['Link'][0]['Id'])
             break
     else:
-        return None
+        return fail_or_retry()
 
+    # Get target record.
     handle = Entrez.efetch(
         db=target_db, id=target_gi, rettype='acc', retmode='text')
-    target_accession = unicode(handle.read()).split('.')[0]
+    target = unicode(handle.read()).strip().split('.')
     handle.close()
-    return target_accession
+
+    target_accession = target[0]
+    target_version = int(target[1]) if source_version is not None else None
+    return target_accession, target_version
 
 
-def cache_link(source, target):
+def _get_link_cached(forward_key, reverse_key, source_accession, source_db,
+                     target_db, match_link_name, source_version=None,
+                     match_version=True):
     """
-    Decorator to add caching to link retrieval.
+    Version of :func:`_get_link` with caching.
 
-    :arg str source: Source database (used to construct cache key).
-    :arg str target: Target database (used to construct cache key).
+    :arg str forward_key: Cache key format string for the forward direction.
+      The source term will be substituted in this template.
+    :arg str reverse_key: Cache key format string for the reverse direction.
+      The target term will be substituted in this template.
+
+    The cache value for a negative result (no link found) is the empty string
+    and expires in `NEGATIVE_LINK_CACHE_EXPIRATION` seconds.
     """
-    forward_key = 'ncbi:%s-to-%s:%%s' % (source, target)
-    reverse_key = 'ncbi:%s-to-%s:%%s' % (target, source)
+    if source_version is not None:
+        # Query cache for link with version.
+        target = redis.get(forward_key %
+                           ('%s.%d' % (source_accession, source_version)))
+        if target == '':
+            return None
+        if target:
+            target_accession, target_version = target.split('.')
+            return target_accession, int(target_version)
 
-    def cache_source_to_target(f):
-        @functools.wraps(f)
-        def cached_f(accession):
-            result = redis.get(forward_key % accession)
-            if result is not None:
-                # The empty string is a cached negative result, which we return as
-                # `None`.
-                return result or None
+    if source_version is None or not match_version:
+        # Query cache for link without version.
+        target = redis.get(forward_key % source_accession)
+        if target == '':
+            return None
+        if target is not None:
+            return target, None
 
-            result = f(accession)
+    # Query NCBI service.
+    try:
+        target_accession, target_version = _get_link(
+            source_accession, source_db, target_db, match_link_name,
+            source_version=source_version, match_version=match_version)
+    except TypeError:
+        # No link was found.
+        if source_version is not None:
+            # Store a negative forward link with version.
+            redis.setex(forward_key %
+                        ('%s.%d' % (source_accession, source_version)),
+                        settings.NEGATIVE_LINK_CACHE_EXPIRATION, '')
+        if source_version is None or not match_version:
+            # Store a negative forward link without version.
+            redis.setex(forward_key % source_accession,
+                        settings.NEGATIVE_LINK_CACHE_EXPIRATION, '')
+        return None
 
-            if result is None:
-                redis.setex(forward_key % accession,
-                            settings.NEGATIVE_LINK_CACHE_EXPIRATION, '')
-                return None
+    # Store the link without version in both directions.
+    redis.set(forward_key % source_accession, target_accession)
+    redis.set(reverse_key % target_accession, source_accession)
 
-            # We store the resulting link in both directions.
-            redis.set(forward_key % accession, result)
-            redis.set(reverse_key % result, accession)
-            return result
+    if source_version is not None and target_version is not None:
+        # Store the link with version in both directions.
+        redis.set(forward_key % ('%s.%d' % (source_accession, source_version)),
+                  '%s.%d' % (target_accession, target_version))
+        redis.set(reverse_key % ('%s.%d' % (target_accession, target_version)),
+                  '%s.%d' % (source_accession, source_version))
 
-        return cached_f
-
-    return cache_source_to_target
+    return target_accession, target_version
 
 
-@cache_link('transcript', 'protein')
-def transcript_to_protein(transcript_accession):
+def transcript_to_protein(transcript_accession, transcript_version=None,
+                          match_version=True):
     """
     Try to find the protein linked to a transcript.
 
@@ -113,18 +166,26 @@ def transcript_to_protein(transcript_accession):
 
     :arg str transcript_accession: Accession number of the transcript for
       which we want to find the protein (without version number).
+    :arg int transcript_version: Transcript version number. Please provide
+      this if available, also if it does not need to match. This will enrich
+      the cache.
+    :arg bool match_version: If `False`, the link does not have to match
+      `transcript_version`.
 
-    :returns: Accession number of a protein (without version number) or `None`
-      if no link can be found.
-    :rtype: str
+    :returns: Tuple of `(protein_accession, protein_version)` representing the
+      linked protein, or `None` if no link can be found. If `match_version` is
+      `False`, `protein_version` can be `None`.  TODO: can or will?
+    :rtype: tuple(str, int)
     """
-    return _get_link(
+    return _get_link_cached(
+        'ncbi:transcript-to-protein:%s', 'ncbi:protein-to-transcript:%s',
         transcript_accession, 'nucleotide', 'protein',
-        lambda link: link in ('nuccore_protein', 'nuccore_protein_cds'))
+        lambda link: link in ('nuccore_protein', 'nuccore_protein_cds'),
+        source_version=transcript_version, match_version=match_version)
 
 
-@cache_link('protein', 'transcript')
-def protein_to_transcript(protein_accession):
+def protein_to_transcript(protein_accession, protein_version=None,
+                          match_version=True):
     """
     Try to find the transcript linked to a protein.
 
@@ -134,11 +195,14 @@ def protein_to_transcript(protein_accession):
 
     :arg str protein_accession: Accession number of the protein for which we
       want to find the transcript (without version number).
+    TODO
 
     :returns: Accession number of a transcript (without version number) or
       `None` if no link can be found.
     :rtype: str
     """
-    return _get_link(
+    return _get_link_cached(
+        'ncbi:protein-to-transcript:%s', 'ncbi:transcript-to-protein:%s',
         protein_accession, 'protein', 'nucleotide',
-        lambda link: link == 'protein_nuccore_mrna')
+        lambda link: link == 'protein_nuccore_mrna',
+        source_version=protein_version, match_version=match_version)
