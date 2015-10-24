@@ -230,10 +230,15 @@ def test_transcript_to_protein(accession, version, match_version, expected):
     Both the Entrez API and our cache are fixed with a set of
     transcript-protein links. This test is parametrized with a list of
     arguments for the :func:`ncbi.transcript_to_protein` function and the
-    corresponding expected result.
+    corresponding expected result (`None` if `NoLinkError` is expected to be
+    raised).
     """
-    assert ncbi.transcript_to_protein(
-        accession, version, match_version) == expected
+    if expected is None:
+        with pytest.raises(ncbi.NoLinkError):
+            ncbi.transcript_to_protein(accession, version, match_version)
+    else:
+        assert ncbi.transcript_to_protein(
+            accession, version, match_version) == expected
 
 
 @with_entrez((None, 'NP_11111.1'),
@@ -322,8 +327,12 @@ def test_protein_to_transcript(accession, version, match_version, expected):
     Fixtures and parameters of this test mirror those of the
     `test_transcript_to_protein` test.
     """
-    assert ncbi.protein_to_transcript(
-        accession, version, match_version) == expected
+    if expected is None:
+        with pytest.raises(ncbi.NoLinkError):
+            ncbi.protein_to_transcript(accession, version, match_version)
+    else:
+        assert ncbi.protein_to_transcript(
+            accession, version, match_version) == expected
 
 
 @with_entrez(('NM_11111', None),
@@ -351,7 +360,10 @@ def test_transcript_to_protein_cache(accession, version, match_version,
     """
     Get protein for transcript and check the resulting cache state.
     """
-    ncbi.transcript_to_protein(accession, version, match_version)
+    try:
+        ncbi.transcript_to_protein(accession, version, match_version)
+    except ncbi.NoLinkError:
+        pass
 
     forward = [(key.split(':')[-1], redis.get(key) or None)
                for key in redis.keys('ncbi:transcript-to-protein:*')]
@@ -387,7 +399,10 @@ def test_protein_to_transcript_cache(accession, version, match_version,
     """
     Get transcript for protein and check the resulting cache state.
     """
-    ncbi.protein_to_transcript(accession, version, match_version)
+    try:
+        ncbi.protein_to_transcript(accession, version, match_version)
+    except ncbi.NoLinkError:
+        pass
 
     forward = [(key.split(':')[-1], redis.get(key) or None)
                for key in redis.keys('ncbi:transcript-to-protein:*')]
