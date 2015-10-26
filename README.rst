@@ -15,6 +15,11 @@ submit bug reports and feature requests.
 Developer documentation is `hosted at Read The Docs
 <http://mutalyzer.readthedocs.org>`_.
 
+If you're interested in running your own Mutalyzer installation, please have a
+look at our `Mutalyzer Ansible role
+<https://github.com/mutalyzer/ansible-role-mutalyzer>`_ for a completely
+automated deployment.
+
 
 Contributing
 ------------

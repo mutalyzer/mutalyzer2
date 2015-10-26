@@ -18,6 +18,8 @@ containers such as `Gunicorn`_.
 Below we briefly describe our recommended setup for a production environment
 using Gunicorn, nginx and Supervisor.
 
+See :ref:`deploy_ansible` for a solution to completely automate this.
+
 
 Configuration settings
 ----------------------
@@ -151,6 +153,8 @@ website:
     autorestart=true
     environment=MUTALYZER_SETTINGS="/opt/mutalyzer/conf/settings.py"
 
+
+.. _deploy_ansible:
 
 Automated deployment with Ansible
 ---------------------------------
