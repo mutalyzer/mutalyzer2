@@ -5,6 +5,10 @@
 Installation
 ============
 
+.. note:: If you're looking into deploying Mutayzer in a production
+   environment (as opposed to a local development installation), please see
+   :ref:`deploy`.
+
 Mutalyzer depends on a database server, `Python`_ 2.7, and several Python
 packages. `Redis`_ is a soft dependency. This section walks you through
 installing Mutalyzer with Redis and using `PostgreSQL`_ as database server,

@@ -16,7 +16,7 @@ the Mutalyzer source directory.
           tests.
 
 By default, the tests use an in-memory SQLite database. This can be customized
-with the ``--database-uri` command line argument and a valid `SQLAlchemy
+with the ``--database-uri`` command line argument and a valid `SQLAlchemy
 connection URI
 <http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#database-urls>`_
 (obviously, the contents of this database will be lost). For example, to use

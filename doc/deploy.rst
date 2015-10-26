@@ -18,17 +18,21 @@ containers such as `Gunicorn`_.
 Below we briefly describe our recommended setup for a production environment
 using Gunicorn, nginx and Supervisor.
 
+See :ref:`deploy_ansible` for a solution to completely automate this.
+
 
 Configuration settings
 ----------------------
 
-It is recommended to at least set the following configuration settings:
+At a minimum, it is recommended to have a look at the following configuration
+settings:
 
 - :ref:`EMAIL <config-email>`
 - :ref:`DEBUG <config-debug>`
 - :ref:`CACHE_DIR <config-cache-dir>`
 - :ref:`SOAP_WSDL_URL <config-soap-wsdl-url>`
 - :ref:`JSON_ROOT_URL <config-json-root-url>`
+- :ref:`REVERSE_PROXIED <config-reverse-proxied>`
 
 
 WSGI application server: Gunicorn
@@ -149,6 +153,8 @@ website:
     autorestart=true
     environment=MUTALYZER_SETTINGS="/opt/mutalyzer/conf/settings.py"
 
+
+.. _deploy_ansible:
 
 Automated deployment with Ansible
 ---------------------------------

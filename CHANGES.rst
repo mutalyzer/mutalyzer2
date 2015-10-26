@@ -96,7 +96,7 @@ Released on March 27th 2015.
 
 - Return fault code and description on RPC service errors (`#31
   <https://github.com/LUMC/mutalyzer/pull/31>`_).
-- Use esummary 2.0 response format (`#31
+- Use esummary 2.0 response format (`#32
   <https://github.com/LUMC/mutalyzer/pull/32>`_).
 
 
