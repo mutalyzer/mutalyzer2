@@ -21,8 +21,6 @@ from mutalyzer import db as _db
 
 @pytest.fixture(autouse=True)
 def settings(request, tmpdir):
-    # This fixture should always be loaded, otherwise we have the risk that
-    # `MUTALYZER_SETTINGS` will be used.
     cache_dir = unicode(tmpdir.mkdir('cache'))
     log_file = unicode(tmpdir.join('log').ensure())
 

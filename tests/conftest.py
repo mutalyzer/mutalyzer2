@@ -5,6 +5,8 @@ Test configuration.
 
 from __future__ import unicode_literals
 
+import mutalyzer.config
+
 from disable_network import turn_off_network, turn_on_network
 from fixtures import *  # noqa
 
@@ -36,6 +38,10 @@ def pytest_generate_tests(metafunc):
 
 
 def pytest_configure(config):
+    # Make sure we cannot accidentally load configuration from the
+    # `MUTALYZER_SETTINGS` environment variable.
+    mutalyzer.config.ENVIRONMENT_VARIABLE = None
+
     if not config.getoption('allow_network'):
         turn_off_network(verbose=config.option.verbose)
 
