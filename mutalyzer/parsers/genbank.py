@@ -221,13 +221,12 @@ class GBparser():
             #if
             else :                # Tag an mRNA with the protein id too.
                 accession, version = i.transcript_id.split('.')
-                protein = ncbi.transcript_to_protein(
-                    accession, int(version), match_version=False)
-                if protein is None:
-                    i.proteinLink = None
-                else:
+                try:
                     # We ignore the version.
-                    i.proteinLink = protein[0]
+                    i.proteinLink = ncbi.transcript_to_protein(
+                        accession, int(version), match_version=False)[0]
+                except ncbi.NoLinkError:
+                    pass
             i.positionList = self.__locationList2posList(i)
             i.location = self.__location2pos(i.location) #FIXME
             #if not i.positionList : # FIXME ???
