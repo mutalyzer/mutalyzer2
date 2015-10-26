@@ -174,6 +174,8 @@ LOG_TIME_FORMAT
 Website settings
 ^^^^^^^^^^^^^^^^
 
+.. _config-reverse-proxied:
+
 REVERSE_PROXIED
   If set to `True`, the WSGI application runs behind a reverse proxy (e.g.,
   nginx using ``proxy_pass``). This needs to be set if the application is

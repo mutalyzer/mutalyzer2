@@ -22,13 +22,15 @@ using Gunicorn, nginx and Supervisor.
 Configuration settings
 ----------------------
 
-It is recommended to at least set the following configuration settings:
+At a minimum, it is recommended to have a look at the following configuration
+settings:
 
 - :ref:`EMAIL <config-email>`
 - :ref:`DEBUG <config-debug>`
 - :ref:`CACHE_DIR <config-cache-dir>`
 - :ref:`SOAP_WSDL_URL <config-soap-wsdl-url>`
 - :ref:`JSON_ROOT_URL <config-json-root-url>`
+- :ref:`REVERSE_PROXIED <config-reverse-proxied>`
 
 
 WSGI application server: Gunicorn
