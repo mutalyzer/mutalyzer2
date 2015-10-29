@@ -16,6 +16,7 @@ from collections import defaultdict
 from itertools import groupby
 from operator import attrgetter, itemgetter
 
+import binning
 import MySQLdb
 
 from mutalyzer.db import session
@@ -707,9 +708,20 @@ class Converter(object) :
         if gene:
             mappings = chromosome.transcript_mappings.filter_by(gene=gene)
         else:
+            start = max(min_loc - 5000, 1)
+            stop = min(max_loc + 5000, binning.MAX_POSITION + 1)
+            bins = binning.overlapping_bins(start - 1, stop)
             mappings = chromosome.transcript_mappings.filter(
-                TranscriptMapping.start <= max_loc + 5000,
-                TranscriptMapping.stop >= min_loc - 5000)
+                TranscriptMapping.bin.in_(bins),
+                TranscriptMapping.start <= stop,
+                TranscriptMapping.stop >= start
+            ).order_by(
+                TranscriptMapping.start,
+                TranscriptMapping.stop,
+                TranscriptMapping.gene,
+                TranscriptMapping.accession,
+                TranscriptMapping.version,
+                TranscriptMapping.transcript)
 
         HGVS_notatations = defaultdict(list)
         NM_list = []

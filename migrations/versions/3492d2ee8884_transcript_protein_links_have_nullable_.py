@@ -31,6 +31,9 @@ import sqlalchemy as sa
 # and create statements for the indices.
 #
 # http://alembic.readthedocs.org/en/latest/batch.html
+#
+# Update: This has since been fixed with Alembic release 0.8.3
+# http://alembic.readthedocs.org/en/latest/changelog.html#change-9ef6be6709e71f3800b6e451ae75c5f8
 
 
 def upgrade():

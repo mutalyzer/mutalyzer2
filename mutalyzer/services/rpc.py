@@ -11,6 +11,7 @@ Mutalyzer RPC services.
 
 from __future__ import unicode_literals
 
+import binning
 from spyne.decorator import srpc
 from spyne.service import ServiceBase
 from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
@@ -227,9 +228,19 @@ class MutalyzerService(ServiceBase):
             raise Fault("EARG", "The chrom argument (%s) was not a valid " \
                             "chromosome name." % chrom)
 
+        pos = max(min(pos, binning.MAX_POSITION + 1), 1)
+        bins = binning.overlapping_bins(pos - 1, pos)
         mappings = chromosome.transcript_mappings.filter(
+            TranscriptMapping.bin.in_(bins),
             TranscriptMapping.start <= pos,
-            TranscriptMapping.stop >= pos)
+            TranscriptMapping.stop >= pos
+        ).order_by(
+            TranscriptMapping.start,
+            TranscriptMapping.stop,
+            TranscriptMapping.gene,
+            TranscriptMapping.accession,
+            TranscriptMapping.version,
+            TranscriptMapping.transcript)
 
         L.addMessage(__file__, -1, "INFO",
                      "Finished processing getTranscripts(%s %s %s %s)"
@@ -307,6 +318,13 @@ class MutalyzerService(ServiceBase):
                         'Invalid range (%d-%d) with start position greater '
                         'than stop position.' % (pos1, pos2))
 
+        if pos1 < 1 or pos2 > binning.MAX_POSITION + 1:
+            L.addMessage(__file__, 4, 'EARG',
+                         'Invalid range: %d-%d' % (pos1, pos2))
+            raise Fault('EARG',
+                        'Invalid range (%d-%d) exceeding chromosome bounds.'
+                        % (pos1, pos2))
+
         try:
             assembly = Assembly.by_name_or_alias(build)
         except NoResultFound:
@@ -323,13 +341,23 @@ class MutalyzerService(ServiceBase):
                             "chromosome name." % chrom)
 
         if method:
-            range_filter = (TranscriptMapping.start <= pos2,
+            bins = binning.overlapping_bins(pos1 - 1, pos2)
+            range_filter = (TranscriptMapping.bin.in_(bins),
+                            TranscriptMapping.start <= pos2,
                             TranscriptMapping.stop >= pos1)
         else:
-            range_filter = (TranscriptMapping.start >= pos1,
+            bins = binning.contained_bins(pos1 - 1, pos2)
+            range_filter = (TranscriptMapping.bin.in_(bins),
+                            TranscriptMapping.start >= pos1,
                             TranscriptMapping.stop <= pos2)
 
-        mappings = chromosome.transcript_mappings.filter(*range_filter)
+        mappings = chromosome.transcript_mappings.filter(*range_filter).order_by(
+            TranscriptMapping.start,
+            TranscriptMapping.stop,
+            TranscriptMapping.gene,
+            TranscriptMapping.accession,
+            TranscriptMapping.version,
+            TranscriptMapping.transcript)
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
@@ -385,6 +413,13 @@ class MutalyzerService(ServiceBase):
                         'Invalid range (%d-%d) with start position greater '
                         'than stop position.' % (pos1, pos2))
 
+        if pos1 < 1 or pos2 > binning.MAX_POSITION + 1:
+            L.addMessage(__file__, 4, 'EARG',
+                         'Invalid range: %d-%d' % (pos1, pos2))
+            raise Fault('EARG',
+                        'Invalid range (%d-%d) exceeding chromosome bounds.'
+                        % (pos1, pos2))
+
         try:
             assembly = Assembly.by_name_or_alias(build)
         except NoResultFound:
@@ -401,13 +436,23 @@ class MutalyzerService(ServiceBase):
                             "chromosome name." % chrom)
 
         if method:
-            range_filter = (TranscriptMapping.start <= pos2,
+            bins = binning.overlapping_bins(pos1 - 1, pos2)
+            range_filter = (TranscriptMapping.bin.in_(bins),
+                            TranscriptMapping.start <= pos2,
                             TranscriptMapping.stop >= pos1)
         else:
-            range_filter = (TranscriptMapping.start >= pos1,
+            bins = binning.contained_bins(pos1 - 1, pos2)
+            range_filter = (TranscriptMapping.bin.in_(bins),
+                            TranscriptMapping.start >= pos1,
                             TranscriptMapping.stop <= pos2)
 
-        mappings = chromosome.transcript_mappings.filter(*range_filter)
+        mappings = chromosome.transcript_mappings.filter(*range_filter).order_by(
+            TranscriptMapping.start,
+            TranscriptMapping.stop,
+            TranscriptMapping.gene,
+            TranscriptMapping.accession,
+            TranscriptMapping.version,
+            TranscriptMapping.transcript)
 
         transcripts = []
 
