@@ -734,15 +734,7 @@ def test_get_transcripts_mapping(api):
     assert len(r.TranscriptMappingInfo) == 3
     assert all(all(t_real[k] == t_expected[k] for k in t_expected)
                for t_real, t_expected in
-               zip(r.TranscriptMappingInfo, [{'cds_start': 111957632,
-                                              'cds_stop': 111965694,
-                                              'name': 'NM_003002',
-                                              'stop': 111966518,
-                                              'start': 111957571,
-                                              'version': 2,
-                                              'gene': 'SDHD',
-                                              'orientation': '+'},
-                                             {'cds_start': 111957492,
+               zip(r.TranscriptMappingInfo, [{'cds_start': 111957492,
                                               'cds_stop': 111956019,
                                               'name': 'NM_012459',
                                               'stop': 111955524,
@@ -757,7 +749,15 @@ def test_get_transcripts_mapping(api):
                                               'start': 111957522,
                                               'version': 1,
                                               'gene': 'TIMM8B',
-                                              'orientation': '-'}]))
+                                              'orientation': '-'},
+                                             {'cds_start': 111957632,
+                                              'cds_stop': 111965694,
+                                              'name': 'NM_003002',
+                                              'stop': 111966518,
+                                              'start': 111957571,
+                                              'version': 2,
+                                              'gene': 'SDHD',
+                                              'orientation': '+'}]))
 
 
 def test_description_extract(api):

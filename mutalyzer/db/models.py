@@ -9,6 +9,7 @@ from datetime import datetime
 import sqlite3
 import uuid
 
+import binning
 from sqlalchemy import event, or_
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Index,
                         Integer, String, Text, TypeDecorator)
@@ -393,6 +394,11 @@ class TranscriptMapping(db.Base):
     #: inclusive, in chromosomal orientation).
     stop = Column(Integer, nullable=False)
 
+    #: Bin index that can be used for faster range-based queries. See the
+    #: `interval binning documentation <http://interval-binning.readthedocs.org/>`_
+    #: for more information.
+    bin = Column(Integer, nullable=False, index=True)
+
     #: The CDS start position of the transcript on the chromosome (one-based,
     #: inclusive, in chromosomal orientation).
     cds_start = Column(Integer)
@@ -446,6 +452,7 @@ class TranscriptMapping(db.Base):
         self.cds = cds
         self.select_transcript = select_transcript
         self.version = version
+        self.bin = binning.assign_bin(self.start - 1, self.stop)
 
     def __repr__(self):
         return ('<TranscriptMapping accession=%r version=%r gene=%r '
@@ -482,6 +489,7 @@ class TranscriptMapping(db.Base):
             instance.orientation = orientation
             instance.start = start
             instance.stop = stop
+            instance.bin = binning.assign_bin(start - 1, stop)
             instance.exon_starts = exon_starts
             instance.exon_stops = exon_stops
             instance.source = source

@@ -6,12 +6,13 @@ PyYAML==3.11
 SQLAlchemy==0.9.8
 Sphinx==1.2.3
 Werkzeug==0.9.6
-alembic==0.8.2
+alembic==0.8.3
 backtranslate==0.0.5
 biopython==1.64
 chardet==2.3.0
 cssselect==0.9.1
 description-extractor==2.2.1
+interval-binning==1.0.0
 lxml==3.4.0
 mock==1.0.1
 mockredispy==2.9.0.9
