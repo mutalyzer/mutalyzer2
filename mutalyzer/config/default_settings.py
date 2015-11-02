@@ -71,11 +71,11 @@ NEGATIVE_LINK_CACHE_EXPIRATION = 60 * 60 * 24 * 30
 
 # URL to the SOAP webservice WSDL document. Used to build the WSDL document
 # and for linking to it from the documentation page on the website.
-SOAP_WSDL_URL = 'https://mutalyzer.nl/services/?wsdl'
+SOAP_WSDL_URL = None
 
 # URL to the HTTP/RPC+JSON webservice root (without trailing slash). Used for
 # linking to it from the documentation page on the website.
-JSON_ROOT_URL = 'https://mutalyzer.nl/json'
+JSON_ROOT_URL = None
 
 # Is Piwik enabled?
 PIWIK = False
