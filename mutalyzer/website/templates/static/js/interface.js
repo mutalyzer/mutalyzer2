@@ -51,4 +51,28 @@ $(document).ready(function() {
     event.preventDefault();
     event.stopPropagation();
   });
+
+  // Remove mailcheck suggestion for form element.
+  var clearSuggestion = function(element) {
+    $(element).siblings('.suggestion').remove();
+  };
+
+  // Attach mailcheck functionality to all .with-mailcheck form elements.
+  $(document).on('blur', '.with-mailcheck', function() {
+    $(this).mailcheck({
+      suggested: function(element, suggestion) {
+        clearSuggestion(element);
+        $(element).after(
+          // Sorry, DOM construction by string concatenation is ugly.
+          $('<p class="suggestion">Did you mean <a class="example-input" ' +
+            'data-for="email">' + suggestion.full + '</a>?</p>').on('click', function() {
+            clearSuggestion(element);
+          })
+        );
+      },
+      empty: function(element) {
+        clearSuggestion(element);
+      }
+    });
+  });
 });
