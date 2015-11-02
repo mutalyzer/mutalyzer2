@@ -176,6 +176,9 @@ def list_batch_jobs():
         ).label('count')
     ).order_by(BatchJob.added.asc()).all()
 
+    if len(batch_jobs_with_counts) < 1:
+        return
+
     lengths = {
         'id_len': max(len(str(j.id)) for j, _ in batch_jobs_with_counts),
         'type_len': max(len(j.job_type) for j, _ in batch_jobs_with_counts),
