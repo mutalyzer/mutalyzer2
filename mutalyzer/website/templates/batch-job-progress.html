@@ -10,6 +10,9 @@
   <div id="if_items_left"{% if not items_left %} style="display:none"{% endif %}>
     <p>Your job is in progress with <span id="items_left">{{ items_left }}</span> items remaining.</p>
     <p>You will receive an email when the job is finished.</p>
+    <p>Please note that your jobs are processed in order of submission,
+    meaning you will not see any progress on this job until all your earlier
+    jobs have finished.</p>
   </div>
   <div id="ifnot_items_left"{% if items_left %} style="display:none"{% endif %}>
     <p>Your job is finished, please download the results:
