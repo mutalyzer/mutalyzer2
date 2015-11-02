@@ -126,11 +126,12 @@ This project is sponsored by <a href = "http://www.sun.com">SUN Microsystems</a>
 </p>
 
 <script>
-    $(".clickbox").click(function(){
+    $(document).on('click', ".clickbox", function(e){
          window.location=$(this).find("a").attr("href");
-         return false;
+         e.preventDefault();
+         e.stopPropagation();
     });
-    $(".clickbox input").click(function(e){
+    $(document).on('click', ".clickbox input", function(e){
          e.stopPropagation();
     });
 </script>

@@ -29,14 +29,15 @@ function clearField(form, fieldName) {
 }
 
 $(document).ready(function() {
-  $('.example-input').on('click', function() {
+  $(document).on('click', '.example-input', function(event) {
     var target = document.getElementById($(this).data('for'));
 
     $(target).val($(this).text());
-    return false;
+    event.preventDefault();
+    event.stopPropagation();
   });
 
-  $('.input-select').on('change', function() {
+  $(document).on('change', '.input-select', function(event) {
     var context = document.getElementById(
           $(this).data('context')).getElementsByClassName('subform'),
         target = document.getElementById($(this).data('for')),
@@ -47,6 +48,7 @@ $(document).ready(function() {
     }
     target.style.display = '';
 
-    return false;
+    event.preventDefault();
+    event.stopPropagation();
   });
 });
