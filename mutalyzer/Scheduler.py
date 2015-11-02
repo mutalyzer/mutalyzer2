@@ -364,9 +364,18 @@ Mutalyzer batch scheduler""" % url)
         refers to the reason of alteration / skip.
         """
         while not self.stopped():
-            batch_jobs = BatchJob.query
+            # Group batch jobs by email address and retrieve the oldest for
+            # each address. This improves fairness when certain users have
+            # many jobs.
+            # Note that batch jobs submitted via the webservices all have the
+            # same email address, so they are effectively throttled as if all
+            # from the same user. Adapting the webservices to also allow
+            # setting an email address is future work.
+            batch_jobs = BatchJob.query.filter(BatchJob.id.in_(
+                session.query(func.min(BatchJob.id)).group_by(BatchJob.email))
+            ).all()
 
-            if batch_jobs.count() == 0:
+            if len(batch_jobs) == 0:
                 break
 
             for batch_job in batch_jobs:
