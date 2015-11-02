@@ -14,13 +14,14 @@ import os
 import alembic.command
 import alembic.config
 from alembic.migration import MigrationContext
+import sqlalchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 from . import _cli_string
 from .. import announce
 from .. import db
 from ..db import session
-from ..db.models import Assembly, Chromosome
+from ..db.models import Assembly, BatchJob, BatchQueueItem, Chromosome
 from .. import mapping
 from .. import output
 from .. import sync
@@ -149,6 +150,50 @@ def sync_cache(wsdl_url, url_template, history=7):
 
     print ('Added %d entries to the local cache and downloaded %d cache files.'
            % (inserted, downloaded))
+
+
+def list_batch_jobs():
+    """
+    List batch jobs.
+    """
+    # For getting all batch jobs and their item counts, the following query
+    # might be more obvious at first thought. However, our current query below
+    # turns out to be more than twice as fast (and shorter).
+    #
+    #     sq = session.query(
+    #         BatchQueueItem.batch_job_id,
+    #         sqlalchemy.func.count(BatchQueueItem.id).label('count')
+    #     ).group_by(BatchQueueItem.batch_job_id).subquery()
+    #     session.query(
+    #         BatchJob,
+    #         sq.c.count
+    #     ).join(sq, BatchJob.id == sq.c.batch_job_id)
+    #
+    batch_jobs_with_counts = session.query(
+        BatchJob,
+        session.query(sqlalchemy.func.count('*')).filter(
+            BatchQueueItem.batch_job_id == BatchJob.id
+        ).label('count')
+    ).order_by(BatchJob.added.asc()).all()
+
+    lengths = {
+        'id_len': max(len(str(j.id)) for j, _ in batch_jobs_with_counts),
+        'type_len': max(len(j.job_type) for j, _ in batch_jobs_with_counts),
+        'count_len': max(len(str(c)) for _, c in batch_jobs_with_counts),
+        'email_len': max(len(j.email) for j, _ in batch_jobs_with_counts)
+    }
+
+    template = ('{id:{id_len}}  {type:<{type_len}}  {added:%Y-%m-%d %H:%M:%S}'
+                '  {count:<{count_len}}  {email:{email_len}}')
+
+    for batch_job, count in batch_jobs_with_counts:
+        print template.format(
+            id=batch_job.id,
+            type=batch_job.job_type,
+            added=batch_job.added,
+            count=count,
+            email=batch_job.email,
+            **lengths)
 
 
 def set_announcement(body, url=None):
@@ -308,6 +353,12 @@ def main():
         'unset', help='unset user announcement',
         description=unset_announcement.__doc__.split('\n\n')[0])
     p.set_defaults(func=unset_announcement)
+
+    # Subparser 'batch-jobs'.
+    p = subparsers.add_parser(
+        'batch-jobs', help='list batch jobs',
+        description=list_batch_jobs.__doc__.split('\n\n')[0])
+    p.set_defaults(func=list_batch_jobs)
 
     # Subparser 'sync-cache'.
     p = subparsers.add_parser(
