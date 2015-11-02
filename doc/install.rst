@@ -15,8 +15,11 @@ installing Mutalyzer with Redis and using `PostgreSQL`_ as database server,
 which is the recommended setup.
 
 .. note:: All operating system specific instructions assume installation on a
-   `Debian`_ 7 *wheezy* system. You'll have to figure out the necessary
-   adjustements yourself if you're on another system.
+   `Debian`_ 8 *jessie* system. You'll have to figure out the necessary
+   adjustments yourself if you're on another system.
+
+   For example, RHEL6/CentOS6 is known to come with a version of libmagic
+   which is incompatible with Mutalyzer.
 
 The following steps will get Mutalyzer running on your system with the
 recommended setup:
