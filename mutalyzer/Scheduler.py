@@ -97,9 +97,9 @@ class Scheduler() :
         if settings.TESTING:
             return
 
-        # Mail is set to 'job@webservice' if the batch job was submitted using
-        # the webservice.
-        if mailTo == 'job@webservice':
+        # Mail is set to '<IP ADDRESS>@webservice' if the batch job was
+        # submitted using the webservice without specifying an email address.
+        if mailTo.endswith('@webservice'):
             return
 
         #TODO: Handle Connection errors in a try, except clause

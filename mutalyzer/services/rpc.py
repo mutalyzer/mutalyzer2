@@ -12,7 +12,7 @@ Mutalyzer RPC services.
 from __future__ import unicode_literals
 
 import binning
-from spyne.decorator import srpc
+from spyne.decorator import rpc, srpc
 from spyne.service import ServiceBase
 from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
 from spyne.model.complex import Array
@@ -71,8 +71,8 @@ class MutalyzerService(ServiceBase):
         super(MutalyzerService, self).__init__(environ)
     #__init__
 
-    @srpc(Mandatory.ByteArray, Unicode, Unicode, Unicode, _returns=Unicode)
-    def submitBatchJob(data, process='NameChecker', argument='', email=None):
+    @rpc(Mandatory.ByteArray, Unicode, Unicode, Unicode, _returns=Unicode)
+    def submitBatchJob(ctx, data, process='NameChecker', argument='', email=None):
         """
         Submit a batch job.
 
@@ -80,10 +80,10 @@ class MutalyzerService(ServiceBase):
         website <https://mutalyzer.nl/batch>.
 
         Batch jobs are processed using round-robin scheduling grouped by email
-        address. Per email address, jobs are processed sequentially in order
-        of submission. Jobs with no email address specified end up in a shared
-        group. This means your job is likely to be processed sooner if you
-        provide an email address.
+        address (or client IP address if no email address is specified). Per
+        email address, jobs are processed sequentially in order of submission.
+        This means you will not see any progress on this job until all your
+        earlier jobs have finished.
 
         On error an exception is raised:
           - detail: Human readable description of the error.
@@ -147,7 +147,17 @@ class MutalyzerService(ServiceBase):
         if job is None:
             raise Fault('EPARSE', 'Could not parse input file, please check your file format.')
 
-        result_id = scheduler.addJob(email or 'job@webservice', job, columns,
+        if not email:
+            # If no email address is specified, we create a fake one based on
+            # the caller's IP address. This makes sure the scheduler processes
+            # jobs grouped by user.
+            try:
+                address = unicode(ctx.transport.req_env['REMOTE_ADDR'])
+            except (AttributeError, KeyError):
+                address = 'localhost'
+            email = '%s@webservice' % address
+
+        result_id = scheduler.addJob(email, job, columns,
                                      batch_types[process], argument)
         return result_id
 
