@@ -186,8 +186,8 @@ def list_batch_jobs():
         'email_len': max(len(j.email) for j, _ in batch_jobs_with_counts)
     }
 
-    template = ('{id:{id_len}}  {type:<{type_len}}  {added:%Y-%m-%d %H:%M:%S}'
-                '  {count:<{count_len}}  {email:{email_len}}')
+    template = ('{id:>{id_len}}  {type:{type_len}}  {added:%Y-%m-%d %H:%M:%S}'
+                '  {count:>{count_len}}  {email:{email_len}}')
 
     for batch_job, count in batch_jobs_with_counts:
         print template.format(
