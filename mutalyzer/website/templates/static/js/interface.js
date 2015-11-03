@@ -52,6 +52,11 @@ $(document).ready(function() {
     event.stopPropagation();
   });
 
+  // Configure mailcheck.
+  //Mailcheck.defaultDomains.push('customdomain.com', 'anotherdomain.net');
+  //Mailcheck.defaultSecondLevelDomains.push('domain', 'yetanotherdomain');
+  Mailcheck.defaultTopLevelDomains.push('name', 'ac.uk', 'govt.nz', 'org.au');
+
   // Remove mailcheck suggestion for form element.
   var clearSuggestion = function(element) {
     $(element).siblings('.suggestion').remove();
