@@ -371,10 +371,6 @@ Mutalyzer batch scheduler""" % download_url)
             # Group batch jobs by email address and retrieve the oldest for
             # each address. This improves fairness when certain users have
             # many jobs.
-            # Note that batch jobs submitted via the webservices all have the
-            # same email address, so they are effectively throttled as if all
-            # from the same user. Adapting the webservices to also allow
-            # setting an email address is future work.
             batch_jobs = BatchJob.query.filter(BatchJob.id.in_(
                 session.query(func.min(BatchJob.id)).group_by(BatchJob.email))
             ).all()
