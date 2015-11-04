@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import logging
 import os
 import pkg_resources
+import urlparse
 
 from flask import Flask
 
@@ -46,3 +47,22 @@ def create_app():
         session.remove()
 
     return app
+
+
+def url_for(endpoint, **values):
+    """
+    Generates a URL to the given website endpoint.
+
+    Like :func:`Flask.url_for`, but for when you don't have an application or
+    request context.
+
+    Note that the generated URL will be based on the `WEBSITE_ROOT_URL`
+    configuration setting or `http://localhost` if not set.
+
+    :arg str endpoint: The endpoint of the URL (name of the function).
+    :arg str values: The variable arguments of the URL rule.
+    """
+    root = urlparse.urlsplit(settings.WEBSITE_ROOT_URL or 'http://localhost')
+    url_map = create_app().url_map.bind(root.netloc, root.path or '/',
+                                        url_scheme=root.scheme)
+    return url_map.build('website.%s' % endpoint, values, force_external=True)
