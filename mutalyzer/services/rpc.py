@@ -77,7 +77,7 @@ class MutalyzerService(ServiceBase):
         Submit a batch job.
 
         Input and output file formats for batch jobs are explained on the
-        website <https://mutalyzer.nl/batch>.
+        website <https://mutalyzer.nl/batch-jobs>.
 
         Batch jobs are processed using round-robin scheduling grouped by email
         address (or client IP address if no email address is specified). Per
@@ -167,7 +167,7 @@ class MutalyzerService(ServiceBase):
         Get the number of entries left for a batch job.
 
         Input and output file formats for batch jobs are explained on the
-        website <https://mutalyzer.nl/batch>.
+        website <https://mutalyzer.nl/batch-jobs>.
 
         @arg job_id: Batch job identifier.
 
@@ -181,7 +181,7 @@ class MutalyzerService(ServiceBase):
         Get the result of a batch job.
 
         Input and output file formats for batch jobs are explained on the
-        website <https://mutalyzer.nl/batch>.
+        website <https://mutalyzer.nl/batch-jobs>.
 
         On error an exception is raised:
           - detail: Human readable description of the error.

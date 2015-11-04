@@ -156,8 +156,8 @@ class CacheSync(object):
 
         ::
 
-            >>> wsdl = 'http://mutalyzer.nl/mutalyzer/services/?wsdl'
-            >>> template = 'http://mutalyzer.nl/mutalyzer/Reference/{file}'
+            >>> wsdl = 'https://mutalyzer.nl/mutalyzer/services/?wsdl'
+            >>> template = 'https://mutalyzer.nl/mutalyzer/Reference/{file}'
             >>> self.sync_with_remote(wsdl, template)
             (14, 3)
 

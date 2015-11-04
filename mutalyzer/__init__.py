@@ -28,7 +28,7 @@ __date__ = '1 Oct 2015'
 __version__ = '.'.join(__version_info__)
 __author__ = 'Leiden University Medical Center'
 __contact__ = 'humgen@lumc.nl'
-__homepage__ = 'http://mutalyzer.nl'
+__homepage__ = 'https://mutalyzer.nl'
 
 
 NOMENCLATURE_VERSION_INFO = ('2', '0')
