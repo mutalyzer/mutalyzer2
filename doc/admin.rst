@@ -69,6 +69,9 @@ following::
 .. note:: The last argument, ``GRCh37.p13-Primary Assembly``, defines the group
           label to filter the file on. You would usually want to include it.
 
+Examples for other assemblies can be found in `this Gist
+<https://gist.github.com/martijnvermaat/ce84945d05b4e42d3584>`_.
+
 
 Import mappings from the UCSC Genome Browser MySQL database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
