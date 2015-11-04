@@ -33,6 +33,7 @@ from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
 from mutalyzer import Retriever           # Retriever.Retriever
+from mutalyzer import website
 
 
 __all__ = ["Scheduler"]
@@ -83,7 +84,7 @@ class Scheduler() :
         return not self.__run
     #stopped
 
-    def __sendMail(self, mailTo, url) :
+    def __sendMail(self, mailTo, result_id):
         """
         Send an e-mail containing an url to a batch job submitter.
 
@@ -91,8 +92,8 @@ class Scheduler() :
 
         @arg mailTo: The batch job submitter
         @type mailTo: unicode
-        @arg url: The url containing the results
-        @type url: unicode
+        @arg result_id: Identifier for the job result.
+        @type result_id: unicode
         """
         if settings.TESTING:
             return
@@ -105,6 +106,9 @@ class Scheduler() :
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 
+        download_url = website.url_for('batch_job_result',
+                                       result_id=result_id)
+
         message = MIMEText("""Dear submitter,
 
 The batch operation you have submitted, has been processed successfully.
@@ -116,7 +120,7 @@ Thanks for using Mutalyzer.
 
 
 With kind regards,
-Mutalyzer batch scheduler""" % url)
+Mutalyzer batch scheduler""" % download_url)
 
         message["Subject"] = "Result of your Mutalyzer batch job"
         message["From"] = settings.EMAIL
@@ -367,10 +371,6 @@ Mutalyzer batch scheduler""" % url)
             # Group batch jobs by email address and retrieve the oldest for
             # each address. This improves fairness when certain users have
             # many jobs.
-            # Note that batch jobs submitted via the webservices all have the
-            # same email address, so they are effectively throttled as if all
-            # from the same user. Adapting the webservices to also allow
-            # setting an email address is future work.
             batch_jobs = BatchJob.query.filter(BatchJob.id.in_(
                 session.query(func.min(BatchJob.id)).group_by(BatchJob.email))
             ).all()
@@ -403,7 +403,7 @@ Mutalyzer batch scheduler""" % url)
                 else:
                     print ('Job %s finished, email %s file %s'
                            % (batch_job.id, batch_job.email, batch_job.id))
-                    self.__sendMail(batch_job.email, batch_job.download_url)
+                    self.__sendMail(batch_job.email, batch_job.result_id)
                     session.delete(batch_job)
                     session.commit()
     #process
@@ -729,8 +729,7 @@ Mutalyzer batch scheduler""" % url)
                      "Finished SNP converter batch rs%s" % cmd)
     #_processSNP
 
-    def addJob(self, email, queue, columns, job_type, argument=None,
-               create_download_url=None):
+    def addJob(self, email, queue, columns, job_type, argument=None):
         """
         Add a job to the Database and start the BatchChecker.
 
@@ -744,18 +743,12 @@ Mutalyzer batch scheduler""" % url)
         @type job_type:
         @arg argument:          Batch Arguments, for now only build info
         @type argument:
-        @arg create_download_url: Function accepting a result_id and returning
-                                  the URL for downloading the batch job
-                                  result. Can be None.
-        @type create_download_url: function
 
         @return: result_id
         @rtype:
         """
         # Add jobs to the database
         batch_job = BatchJob(job_type, email=email, argument=argument)
-        if create_download_url:
-            batch_job.download_url = create_download_url(batch_job.result_id)
         session.add(batch_job)
 
         for i, inputl in enumerate(queue):

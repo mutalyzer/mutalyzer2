@@ -30,6 +30,7 @@ settings:
 - :ref:`EMAIL <config-email>`
 - :ref:`DEBUG <config-debug>`
 - :ref:`CACHE_DIR <config-cache-dir>`
+- :ref:`WEBSITE_ROOT_URL <config-website-root-url>`
 - :ref:`SOAP_WSDL_URL <config-soap-wsdl-url>`
 - :ref:`JSON_ROOT_URL <config-json-root-url>`
 - :ref:`REVERSE_PROXIED <config-reverse-proxied>`

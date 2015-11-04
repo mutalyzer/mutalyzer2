@@ -1,6 +1,6 @@
 /*
  * Mutalyzer Name Generator v0.1
- * http://www.mutalyzer.nl/
+ * https://www.mutalyzer.nl/
  * © 2010 LUMC
  */
 

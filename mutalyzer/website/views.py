@@ -937,15 +937,8 @@ def batch_jobs_submit():
             errors.append('Could not parse input file, please check your '
                           'file format.')
         else:
-            # Creates the result download URL from a job result_id.
-            def create_download_url(result_id):
-                return url_for('.batch_job_result',
-                               result_id=result_id,
-                               _external=True)
-
-            result_id = scheduler.addJob(
-                email, job, columns, job_type, argument=argument,
-                create_download_url=create_download_url)
+            result_id = scheduler.addJob(email, job, columns, job_type,
+                                         argument=argument)
 
             # Todo: We now assume that the job was not scheduled if there are
             #   messages, which is probably not correct.

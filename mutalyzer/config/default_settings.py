@@ -69,6 +69,10 @@ BATCH_JOBS_ERROR_THRESHOLD = 0.05
 # (in seconds).
 NEGATIVE_LINK_CACHE_EXPIRATION = 60 * 60 * 24 * 30
 
+# URL to the website root (without trailing slash). Used for generating
+# download links in the batch scheduler.
+WEBSITE_ROOT_URL = None
+
 # URL to the SOAP webservice WSDL document. Used to build the WSDL document
 # and for linking to it from the documentation page on the website.
 SOAP_WSDL_URL = None

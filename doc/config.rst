@@ -184,6 +184,14 @@ REVERSE_PROXIED
 
   `Default value:` `False`
 
+.. _config-website-root-url:
+
+WEBSITE_ROOT_URL
+  URL to the website root (without trailing slash). Used for generating
+  download links in the batch scheduler.
+
+  `Default value:` `None`
+
 .. _config-soap-wsdl-url:
 
 SOAP_WSDL_URL
