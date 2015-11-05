@@ -240,14 +240,16 @@ always be compared directly.
                                                counter_totals['batch-job/webservice']|d(0)) }}</td>
     </tr>
     <tr>
-      <td>Total (excluding batch jobs)</td>
+      <td>Total (all services)</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/website']|d(0) +
                                                counter_totals['name-checker/website']|d(0) +
+                                               counter_totals['description-extractor/website']|d(0) +
                                                counter_totals['position-converter/website']|d(0) +
                                                counter_totals['snp-converter/website']|d(0) +
                                                counter_totals['batch-job/website']|d(0)) }}</td>
       <td class="text-right">{{ '{0:,}'.format(counter_totals['syntax-checker/webservice']|d(0) +
                                                counter_totals['name-checker/webservice']|d(0) +
+                                               counter_totals['description-extractor/webservice']|d(0) +
                                                counter_totals['position-converter/webservice']|d(0) +
                                                counter_totals['snp-converter/webservice']|d(0) +
                                                counter_totals['batch-job/webservice']|d(0)) }}</td>
@@ -261,6 +263,8 @@ always be compared directly.
                                                counter_totals['name-checker/website']|d(0) +
                                                counter_totals['name-checker/webservice']|d(0) +
                                                counter_totals['name-checker/batch']|d(0) +
+                                               counter_totals['description-extractor/website']|d(0) +
+                                               counter_totals['description-extractor/webservice']|d(0) +
                                                counter_totals['position-converter/website']|d(0) +
                                                counter_totals['position-converter/webservice']|d(0) +
                                                counter_totals['position-converter/batch']|d(0) +
