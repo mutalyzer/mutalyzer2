@@ -401,8 +401,8 @@ Mutalyzer batch scheduler""" % download_url)
                         pass
 
                 else:
-                    print ('Job %s finished, email %s file %s'
-                           % (batch_job.id, batch_job.email, batch_job.id))
+                    print ('Job %s finished, email %s file %s' %
+                           (batch_job.id, batch_job.email, batch_job.result_id))
                     self.__sendMail(batch_job.email, batch_job.result_id)
                     session.delete(batch_job)
                     session.commit()
