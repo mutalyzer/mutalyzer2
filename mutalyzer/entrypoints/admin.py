@@ -421,7 +421,7 @@ def main():
 
     # Subparsers for 'email_blackist'.
     s = subparsers.add_parser(
-        'email_blackist', help='manage e-mail blacklist',
+        'email-blackist', help='manage e-mail blacklist',
         description='Manage blacklisted e-mails.',
         epilog='Blacklisting will notify the user that an e-mail address is '
             'invalid. Using an invalid e-mail address causes mail delivery '
