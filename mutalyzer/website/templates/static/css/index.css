@@ -1,0 +1,159 @@
+/* Public domain 2015. All rights waived. */
+
+.info-box {
+    padding: 10px;
+    position: relative;
+    text-align: center;
+}
+
+.info-box h2 {
+    font-size: 2.1em;
+}
+
+.info-box p {
+    color: #4d4d4d;
+    font-size: 1.3em;
+}
+
+.info-box input {
+    font-size: 1.3em;
+}
+
+.info-box input.text {
+    width: 400px;
+}
+
+.button-box {
+    padding-top: 30px;
+}
+
+.free-flow-box {
+    min-height: 500px;
+    padding: 20px;
+    text-align: center;
+}
+
+.free-flow-box > h2 {
+    font-size: 2.5em;
+}
+
+.free-flow-box > p {
+    font-size: 1.3em;
+    padding: 0px 0px 20px 0px;
+}
+
+.gears-bg {
+    background-color: #F2F2F2;
+    background-image: url("../images/gears-down.png"),
+                      url("../images/gears-up.png"),
+                      url("../images/noise-bg.png");
+    background-position: top, bottom, top;
+    background-repeat: repeat-x, repeat-x, repeat;
+    padding: 150px 20px;
+}
+
+.tool {
+    max-width: 400px;
+    display: block;
+    margin: 20px auto;
+    overflow: hidden;
+}
+
+.tool pre {
+    box-shadow: 0 0 5px gray;
+    -moz-box-shadow: 0 0 5px gray;
+    -webkit-box-shadow: 0 0 5px gray;
+    min-height: 230px;
+    overflow: auto;
+    text-align: left;
+}
+
+.tool:link, .tool:visited {
+    color: #333;
+    position: relative;
+    text-decoration: none;
+    width: 400px;
+}
+
+.tool h3 {
+    font-size: 1.8em;
+    margin-bottom: 0px;
+}
+
+.tool img {
+    background-color: transparent;
+    border-color: #ABABAB;
+    border-style: dashed;
+    border-width: thin;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    display: block;
+    height: auto;
+    padding: 18px;
+    max-width: 100%;
+}
+
+.tool:active img, .tool:focus img, .tool:hover img {
+    background-color: white;
+    border-style: solid;
+    box-shadow: 0 0 5px gray;
+    -moz-box-shadow: 0 0 5px gray;
+    -webkit-box-shadow: 0 0 5px gray;
+}
+
+
+@media screen and (min-width: 500px) {
+    .tool {
+	display: inline-block;
+	margin: 20px;
+	vertical-align: top;
+    }
+}
+
+
+@media screen and (min-width: 1000px) {
+    #featured-box {
+	padding-bottom: 20px;
+    }
+
+    .info-box {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+	margin: auto;
+	padding: 50px 0px;
+	width: 960px;
+    }
+
+    .info-box > div {
+	display: inline-block;
+	max-width: 470px;
+	text-align: left;
+    }
+
+    .info-box img {
+	position: absolute;
+	top: 80px;
+    }
+
+    .text-left {
+	text-align: left;
+    }
+
+    .text-right {
+	text-align: right;
+    }
+
+    .text-left img {
+	right: 0px;
+    }
+
+    .text-right img {
+	left: 0px;
+    }
+
+    #featured-tools > p {
+	padding: 0px 50px;
+    }
+}

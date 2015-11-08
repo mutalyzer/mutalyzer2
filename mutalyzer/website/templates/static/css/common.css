@@ -1,0 +1,42 @@
+/* Public domain 2015. All rights waived */
+
+/* BACKGROUNDS */
+.noise-bg {
+    background-color: #F2F2F2;
+    background-image: url("../images/noise-bg.png");
+    background-repeat: repeat;
+}
+/* END BACKGROUNDS  */
+
+
+/* MISC CLASSES */
+.centered {
+    text-align: center;
+}
+
+.centered-block {
+    margin: auto;
+}
+
+.justify-left {
+    text-align: left;
+}
+
+.justify-right {
+    text-align: right;
+}
+
+.padded50 {
+    padding: 50px;
+}
+
+.relative {
+    position: relative;
+}
+
+.responsive-image {
+    display: block;
+    height: auto;
+    max-width: 100%;
+}
+/* END MISC CLASSES */

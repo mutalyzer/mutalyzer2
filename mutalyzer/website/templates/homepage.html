@@ -1,139 +1,57 @@
 {% extends "base.html" %}
 
-{% set active_page = "homepage" %}
-{% set page_title = "Welcome to the Mutalyzer website" %}
-
 {% block content %}
 
-<p>
-The aim of this program suite is to support checks of sequence variant
-nomenclature according to the
-<a href="http://www.hgvs.org/mutnomen/">guidelines</a> of the
-<a href="http://www.hgvs.org">Human Genome Variation Society</a>.
-</p>
+<section id="featured-box" class="info-box text-left">
+  <div>
+    <h2>Mutalyzer is an HGVS variant nomenclature checker</h2>
+    <img src="{{ url_for('static', filename='images/kid-programming-a-robot.png') }}" alt="" />
+    <p>The aim of this program suite is to support checks of sequence variant nomenclature according to the <a href="http://www.hgvs.org/mutnomen/">guidelines</a> of the <a href="http://www.hgvs.org">Human Genome Variation Society</a>.</p>
+    <form action="{{ url_for('.name_checker') }}" method="get">
+      <input type="text" class="text" name="description" id="description" value="{{ description }}" placeholder="Variant in HGVS format">
+      <p class="examples">Examples: <a class="example-input" data-for="description">AB026906.1:c.274G&gt;T</a>, <a class="example-input" data-for="description">NM_012337.1:c.274Gdel</a>, <a class="example-input" data-for="description">NG_012337.1(SDHD_v001):c.274G&gt;T</a></p>
+      <input type="submit" class="btn btn-primary" value="Check variant">
+    </form>
+  </div>
+</section>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="thumbnail clickbox thumb-home thumb-large">
-            <div class="caption">
-                <h3><a href="{{ url_for('.name_checker') }}">Name Checker</a></h3>
-                <p>The Name Checker takes the complete sequence variant description as input and checks whether it is correct.</p>
-                <p>Examples:
-                  <code class="example-input" data-for="description">AB026906.1:c.274G&gt;T</code>,
-                  <code class="example-input" data-for="description">NG_012337.1(SDHD_v001):c.274G&gt;T</code>
-                </p>
+<section id="featured-tools" class="free-flow-box gears-bg">
+  <a id="tools"></a>
+  <h2>Mutalyzer tools</h2>
+  <p>The Mutalyzer suite consists of several tools designed to assist you bladiebla.</p>
+  <a class="tool" href="{{ url_for('website.position_converter') }}">
+    <pre class="code">some picture</pre>
+    <h3>Variant liftover</h3>
+    <p>Converts chromosomal positions to transcript orientated positions and vice versa.</p>
+  </a>
+  <a class="tool" href="{{ url_for('website.snp_converter') }}">
+    <pre class="code">another picture</pre>
+    <h3>dbSNP to HGVS</h3>
+    <p>Allows you to convert a dbSNP rsId to HGVS notation.</p>
+  </a>
+  <a class="tool" href="{{ url_for('website.description_extractor') }}">
+    <pre class="code">an image</pre>
+    <h3>Generate HGVS</h3>
+    <p>Allows you to generate the HGVS variant description from a reference sequence and an observed sequence.</p>
+  </a>
+</section>
 
-                <!-- <a href="{{ url_for('.name_checker') }}" class="btn btn-default btn-small btn-primary">Try
-                this</a> -->
+<section class="info-box text-right">
+  <div>
+    <h2>Webservices</h2>
+    <img src="{{ url_for('static', filename='images/kid-robot-and-extension-legs.png') }}" alt="" />
+    <p>Most Mutalyzer functionality is programmatically available through two interfaces: a SOAP webservice and an HTTP/RPC+JSON webservice.</p>
+    <p>And then a little bit more text. We should really have some more text in this box, or choose a smaller picture next to it. Otherwise the next box will move over the picture. I think we are ok with just one more sentence here. But this is a bit fragile, we should check this over different resolutions.</p>
+  </div>
+</section>
 
-                <form class="form" action="{{ url_for('.name_checker') }}" method="get">
-                    <div class="input-group">
-                        <input class="form-control form-control-small form-pre" type="text" name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
-                        <span class="input-group-btn">
-                            <input type="submit" class="btn btn-primary pull-right" value="Check variant description">
-                        </span>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-1">
-            <div class="caption">
-                <h3><a href="{{ url_for('.syntax_checker') }}">Syntax Checker</a></h3>
-                <p>Takes the complete sequence variant description as input and checks whether the syntax is correct.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-2">
-            <div class="caption">
-                <h3><a href="{{ url_for('.position_converter') }}">Position Converter</a></h3>
-                <p>Converts chromosomal positions to transcript orientated positions and vice versa.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-3">
-            <div class="caption">
-                <h3><a href="{{ url_for('.snp_converter') }}">SNP Converter</a></h3>
-                <p>Allows you to convert a dbSNP rsId to HGVS notation.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-4">
-            <div class="caption">
-                <h3><a href="{{ url_for('.name_generator') }}">Name Generator</a></h3>
-                <p>A user friendly interface that helps to make a valid HGVS variant description.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-5">
-            <div class="caption">
-                <h3><a href="{{ url_for('.description_extractor') }}">Description Extractor</a></h3>
-                <p>Allows you to generate the HGVS variant description from a reference sequence and an observed sequence.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-6">
-            <div class="caption">
-                <h3><a href="{{ url_for('.reference_loader') }}">Reference File Loader</a></h3>
-                <p>Allows you to load and use your own reference sequence.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-7">
-            <div class="caption">
-                <h3><a href="{{ url_for('.batch_jobs') }}">Batch Checkers</a></h3>
-                <p>Interfaces accepting a list of inputs that can be used for large quantities of checks.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="thumbnail thumb-home clickbox color-8">
-            <div class="caption">
-                <h3><a href="{{ url_for('.webservices') }}">Web Services</a></h3>
-                <p>Provides instructions for the web services.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<!--
-<ul>
-
-
-</ul> -->
-
-<p>
-GenBank sequences are retrieved from the <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a> (<a href="http://eutils.ncbi.nlm.nih.gov/About/disclaimer.html" >Copyright and Disclaimers</a>).
-</p>
-
-<p>
-This project is sponsored by <a href = "http://www.sun.com">SUN Microsystems</a> with server hardware within the scope of the Academic Excellence Grant (AEG) program (award EDUD-7832-080223-CNE).
-</p>
-
-<script>
-    $(document).on('click', ".clickbox", function(e){
-         window.location=$(this).find("a").attr("href");
-         e.preventDefault();
-         e.stopPropagation();
-    });
-    $(document).on('click', ".clickbox input", function(e){
-         e.stopPropagation();
-    });
-</script>
+<section class="info-box text-left">
+  <div>
+    <h2>Batch jobs</h2>
+    <img src="{{ url_for('static', filename='images/robots-and-extension-legs-1.png') }}" alt="" />
+    <p>If you want to run a tool on a large set of inputs, you can use the batch interfaces. Bladiebla some more text here and it should be at least two or three sentences. This makes it three.</p>
+    <p>And then a little bit more text. We should really have some more text in this box, or choose a smaller picture next to it. Otherwise the next box will move over the picture. I think we are ok with just one more sentence here. But this is a bit fragile, we should check this over different resolutions.</p>
+  </div>
+</section>
 
 {% endblock content %}

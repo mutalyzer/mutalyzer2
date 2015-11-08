@@ -1,0 +1,66 @@
+/* Public domain 2015. All rights waived */
+
+a:link, a:visited {
+    color: #D0343F;
+    text-decoration: none;
+}
+
+a:active, a:focus, a:hover {
+    text-decoration: underline;
+}
+
+a img {
+    border-style: none;
+}
+
+abbr {
+    cursor: help;
+}
+
+blockquote {
+    color: #666;
+    font-style: italic;
+}
+
+body {
+    color: #333;
+    /* FIXME: find a font that supports many languages */
+    font-family: 'Cantarell', sans-serif;
+    font-size: 16px;
+    margin: 0px;
+}
+
+code {
+    color: purple;
+}
+
+pre.code {
+    background-color: #2D3743;
+    border-color: #000;
+    border-style: solid;
+    border-width: thin;
+    color: #E1E1E1;
+    font-size: 14px;
+    padding: 10px;
+}
+
+h1, h2, h3 {
+    font-weight: normal;
+}
+
+html {
+    background-color: white;
+}
+
+sup {
+    font-size: 0.6em;
+}
+
+th, td {
+    padding: 4px;
+}
+
+.example-input {
+    color: #D0343F;
+    cursor: pointer;
+}

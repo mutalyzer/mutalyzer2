@@ -5,41 +5,40 @@
 
 {% block content %}
 
-<p>
-Please supply the genome assembly which you want to use to convert your
-position.
-</p>
-
-<p>
-<b>Note:</b> The Position Converter does NOT check the description or
-normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Checker</a> for this.
-</p>
-
-
-<form class="form" role="form" action="{{ url_for('.position_converter') }}" method="get" enctype="multipart/form-data">
-  <div class="form-group">
-    <label for="assembly_name_or_alias">Build</label>
-    <select name="assembly_name_or_alias" id="assembly_name_or_alias" class="form-control">
+<section class="page-summary centered noise-bg">
+  <h1>Variant liftover</h1>
+  <form class="wide" action="{{ url_for('.position_converter') }}" method="get">
+    <label for="description">Variant description</label>
+    <input class="text" type="text" name="description" id="description" value="{{ description }}" placeholder="Variant description in HGVS format">
+    <p class="examples">Examples: <a class="example-input" data-for="description">NM_003002.3:c.274G&gt;T</a>, <a class="example-input" data-for="description">chr11:g.111959693G&gt;T</a> and <a class="example-input" data-for="description">NC_000011.9:g.111959693G&gt;T</a></p>
+    <label for="assembly_name_or_alias">Genome assembly</label>
+    <select name="assembly_name_or_alias" id="assembly_name_or_alias">
       {% for assembly in assemblies %}
         <option value="{{ assembly.name }}"{% if assembly_name_or_alias in (assembly.name, assembly.alias) %} selected="selected"{% endif %}>{{ assembly.taxonomy_common_name }} &mdash; {{ assembly.name }}{% if assembly.alias %} ({{ assembly.alias }}){% endif %}</option>
       {% endfor %}
     </select>
-  </div>
-  <div class="form-group">
-    <label for="description">Variant description</label>
-    <input type="text" name="description" id="description" value="{{ description }}"
-           class="form-control form-pre" placeholder="Variant description using HGVS format">
-    <p>Examples: <code class="example-input"
-    data-for="description">NM_003002.3:c.274G&gt;T</code>, <code class="example-input" data-for="description">chr11:g.111959693G&gt;T</code> and <code class="example-input" data-for="description">NC_000011.9:g.111959693G&gt;T</code></p>
-  </div>
-  <div class="form-group button-group">
-    <input type="submit" class="btn btn-primary" value="Convert variant description">
-    <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new" class="btn btn-default pull-right">Help</a>
-  </div>
-</form>
+    <input type="submit" class="btn btn-primary" value="Liftover variant description">
+    <a class="btn right" href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/PositionConverter" target="new">Help</a>
+    <p><strong>Note:</strong> Liftover does <em>not</em> check the variant description according to HGVS nomenclature. Use <a href="{{ url_for('.name_checker') }}">Check HGVS</a> for that.</p>
+  </form>
+</section>
+
+<div class="relative">
+  <nav class="toc">
+    <h2>Tools</h2>
+    <ul>
+      <li><a href="{{ url_for('website.position_converter') }}">Variant liftover</a></li>
+      <li><a href="{{ url_for('website.snp_converter') }}">dbSNP to HGVS</a></li>
+      <li><a href="{{ url_for('website.description_extractor') }}">Generate HGVS</a></li>
+      <li><a href="{{ url_for('website.syntax_checker') }}">Syntax check</a></li>
+      <li><a href="{{ url_for('website.reference_loader') }}">Custom references</a></li>
+      <li><a href="{{ url_for('website.back_translator') }}">Back-translation</a></li>
+    </ul>
+  </nav>
+  <section class="sheet">
+    <h2>Results</h2>
 
 {% if description %}
-  <hr>
   {% for m in messages %}
     {% if m.class == "error" %}
       <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
@@ -59,16 +58,27 @@ normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Chec
   {% endif %}
 
   {% if chromosomal_description %}
-    <h4>Chromosomal variant</h4>
-    <p><code>{{ chromosomal_description }}</code></p>
+    <h3>Chromosomal variant</h3>
+    <p>{{ chromosomal_description }}</p>
 
     {% if transcript_descriptions %}
-      <h4>Found transcripts in variant region</h4>
-      <pre>{% for d in transcript_descriptions %}{{ d }}<br>{% endfor %}</pre>
+      {% for gene, descriptions in transcript_descriptions|dictsort %}
+        <h3>Transcript variants for gene <em>{{ gene }}</em></h3>
+        <ul>
+          {% for description in descriptions %}
+            <li>{{ description }}</li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
     {% else %}
-      <h4>No transcripts found in variant region</h4>
+      <h2>No transcripts found in variant region</h2>
     {% endif %}
   {% endif %}
+{% else %}
+  <p>Liftover results will appear here.</p>
 {% endif %}{# description #}
+
+  </section>
+</div>
 
 {% endblock content %}

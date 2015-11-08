@@ -1,213 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <title>Mutalyzer {{ mutalyzer_version }} &mdash; {{ page_title }}</title>
+
+    <meta charset="utf-8" />
+    <meta name="author" content="Mutalyzer contributors" />
+    <meta name="keywords" content="LUMC, Mutalyzer, HGVS, DNA, RNA, Proteins, Variants, Checker, Bioinformatics, Human Genetics, Genomics" />
+    <meta name="description" content="Mutalyzer is an HGVS variant nomenclature checker." />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/mailcheck.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/interface.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generator.js') }}"></script>
-
-    <link href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic"
-          rel="stylesheet" type="text/css">
-
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" >
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 
     <!--[if lt IE 9]>
       <script src="{{ url_for('static', filename='js/html5shiv.min.js') }}"></script>
       <script src="{{ url_for('static', filename='js/respond.min.js') }}"></script>
     <![endif]-->
 
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
+
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-
-    <title>Mutalyzer {{ mutalyzer_version }} &mdash; {{ page_title }}</title>
   </head>
-
-<body>
-{# Fields are: view, view_args, id, caption, beginsubnav, endsubnav #}
-    {% set navigation_menu = [
-
-        ('website.name_checker', {}, 'dna-tools', 'DNA tools', True, False),
-
-        ('website.name_checker', {}, 'name-checker', 'Name Checker', False, False),
-        ('website.syntax_checker', {}, 'syntax-checker', 'Syntax Checker', False, False),
-        ('website.position_converter', {}, 'position-converter', 'Position Converter', False, False),
-        ('website.snp_converter', {}, 'snp-converter', 'SNP Converter', False, False),
-        ('website.name_generator', {}, 'name-generator', 'Name Generator', False, False),
-        ('website.description_extractor', {}, 'description-extractor', 'Description Extractor', False, False),
-        ('website.back_translator', {}, 'back-translator', 'Back Translator', False, False),
-        ('website.reference_loader', {}, 'reference-loader', 'Reference File Loader', False, True),
-
-        ('website.batch_jobs', {}, 'batch-jobs', 'Batch Jobs', True, False),
-        ('website.batch_jobs', {'job_type': 'name-checker'}, 'batch-name-checker', 'Name Checker', False, False),
-        ('website.batch_jobs', {'job_type': 'syntax-checker'}, 'batch-syntax-checker', 'Syntax Checker', False, False),
-        ('website.batch_jobs', {'job_type': 'position-converter'}, 'batch-position-converter', 'Position Converter', False, False),
-        ('website.batch_jobs', {'job_type': 'snp-converter'}, 'batch-snp-converter', 'SNP Converter', False, True),
-
-        ('website.webservices', {}, 'webservices', 'Web Services', False, False),
-
-    ] -%}
-    {% set active_page = active_page|default('home') -%}
-
-
-
-        <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-          <div class="background"></div>
-        <div class="container-fluid">
-
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#mutalyzer-navbar-collapse-1">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">LUMC Mutalyzer</a>
-        </div>
-
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="mutalyzer-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-
-            {% for view, view_args, id, caption, beginsubnav, endsubnav in navigation_menu %}
-                {% if beginsubnav %}
-                    <li class="dropdown">
-                        <a href="{{ url_for(view, **view_args) }}" class="dropdown-toggle{% if id == active_page %} active{% endif %}" data-toggle="dropdown">{{ caption }} <span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                {% elif endsubnav %}
-                    <li {% if id == active_page %} class="active"{% endif %}>
-                    <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a></ul></li>
-                {% else %}
-                    <li {% if id == active_page %} class="active"{% endif %}>
-                        <a href="{{ url_for(view, **view_args) }}">{{ caption }}</a>
-                    </li>
-                {% endif %}
-
-            {% endfor %}
-
-            <li class="dropdown {% if id == active_page %} active{% endif %}">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">External links <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.genenames.org/guidelines.html"
-                target="new">Human Gene Nomenclature</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.hgvs.org/mutnomen/"
-                target="new">HGVS Variation Nomenclature</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://dx.doi.org/10.1002/humu.21427"
-                target="new">HGVS Nomenclature Extension Proposal</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.lovd.nl/"target="new">LOVD</a></li>
-              </ul>
-            </li>
-
-            <li class="{% if active_page == 'about' %} active{% endif %}">
-                <a href="/about" >About</a>
-            </li>
-            <li class="dropdown {% if id == active_page %} active{% endif %}">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-
-                    <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation" target="new">Documentation</a>
-                    </li>
-                    <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq" target="new">FAQ</a>
-                    </li>
-                    <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise" target="new">Exercise</a>
-                    </li>
-                    <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer" target="new">Feedback</a>
-                    </li>
-                    <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation#Mailinglist:mutalyzer-announce" target="new">Mailing list</a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/mutalyzer/mutalyzer" target="new">Source code</a>
-                    </li>
-                </ul>
-            </li>
-
-            <li>
-                <a href="mailto:mutalyzer@humgen.nl" target="new">Contact</a>
-            </li>
-
+  <body>
+    <header id="site-menu">
+      <h1><a id="branding" href="{{ url_for('website.homepage') }}"><span>Mutalyzer</span></a></h1>
+      <nav id="pages-box">
+        <h2>Menu: </h2>
+        <a class="page-link" href="{{ url_for('website.name_checker') }}">HGVS check</a>
+        <a class="page-link" href="{{ url_for('website.homepage') }}#tools">Tools</a>
+        <a class="page-link" href="/software/guile/learn/">Documentation</a>
+        <a class="page-link  page-link-active" href="{{ url_for('website.about') }}">About</a>
+      </nav>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer noise-bg">
+      <div>
+        <h2>About this website</h2>
+        <p>This website is powered by GNU Guile and the <a href="http://git.savannah.gnu.org/cgit/guile/guile-web.git">source code</a> is under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU AGPL</a>.</p>
+        <p>Please use the <a href="https://lists.gnu.org/mailman/listinfo/guile-user/">mailing list</a> or the <a href="http://webchat.freenode.net/?nick=guile-guest.&amp;channels=%23guile">#guile</a> channel on Freenode for more information about GNU Guile and this website.</p>
+      </div>
+      <section>
+        <h3>Guile</h3>
+        <ul>
+          <li><a href="/software/guile/">Home</a></li>
+          <li><a href="/software/guile/download/">Download</a></li>
+          <li><a href="/software/guile/learn/">Learn</a></li>
+          <li><a href="/software/guile/libraries/">Libraries</a></li>
+          <li><a href="https://savannah.gnu.org/news/?group=guile">News</a></li>
+          <li><a href="/software/guile/community/">Community</a></li>
+          <li><a href="/software/guile/contribute/">Contribute</a></li>
         </ul>
-        </div><!-- /.navbar-collapse -->
-      </div><!-- /.container-fluid -->
-    </nav>
-
-
-
-
-
-
-<div class="container-fluid" >
-
-        <div class="row">
-            <div class="col-md-12">
-                {% if announcement%}
-                <div id="announcement" class="alert alert-info">
-                    <p><strong>Announcement:</strong> {% if announcement.url %}<a href="{{ announcement.url }}">{% endif %}{{ announcement.body }}{% if announcement.url %}</a>{% endif %}</p>
-                </div>
-                {% endif %}
-
-                <!-- Main content -->
-                <div class="block block-shadow">
-                {% if page_title %}<h1>{{ page_title }}</h1>{% endif %}
-                {% block content %}{% endblock %}
-                </div>
-            </div>
-        </div>
-
-
-
-    <footer class="row">
-        <div class="col-md-4">
-            <p>
-              <strong>Mutalyzer {{ mutalyzer_version }}</strong>
-              <br>
-              <span class="text-muted">
-                {% if release %}
-                  released on {{ release_date }}
-                {% else %}
-                  development version
-                {% endif %}
-              </span>
-            </p>
-        </div>
-        <div class="col-md-4">
-            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}</p>
-        </div>
-        <div class="col-md-4">
-            <img src="{{ url_for('static', filename='images/LUMC_24x24.png') }}" align="middle">
-            <p>&copy; {{ copyright_years[0] }}-{{ copyright_years[1] }} <a href="http://www.lumc.nl" target="new">LUMC</a></p>
-        </div>
+      </section>
+      <section>
+        <h3>Learn</h3>
+        <ul>
+          <li><a href="/software/guile/learn/#tutorials">Tutorials</a></li>
+          <li><a href="/software/guile/learn/#manuals">Reference manuals</a></li>
+          <li><a href="/software/guile/learn/#scheme-resources">Scheme resources</a></li>
+          <li><a href="/software/guile/learn/#bibliography">Suggested bibliography</a></li>
+          <li><a href="/software/guile/docs/faq/guile-faq.html">FAQ</a></li>
+        </ul>
+      </section>
+      <section>
+        <h3>Libraries</h3>
+        <ul>
+          <li><a href="/software/guile/libraries/#core">Core</a></li>
+          <li><a href="/software/guile/libraries/#gui">GUI</a></li>
+          <li><a href="/software/guile/libraries/#file-formats">File formats</a></li>
+          <li><a href="/software/guile/libraries/#networking">Networking</a></li>
+          <li><a href="/software/guile/libraries/#tools">Tools</a></li>
+          <li><a href="/software/guile/libraries/#apps">Applications</a></li>
+        </ul>
+      </section>
+      <section>
+        <h3>Contribute</h3>
+        <ul>
+          <li><a href="/software/guile/contribute/">Project summary</a></li>
+          <li><a href="/software/guile/contribute/#bugs">Report bugs</a></li>
+          <li><a href="https://savannah.gnu.org/git/?group=guile">Source code</a></li>
+        </ul>
+      </section>
     </footer>
-
-</div>
-{% if piwik %}
-<!-- Piwik -->
-<script type="text/javascript">
-  var _paq = _paq || [];
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
-  (function() {
-    var u="{{ piwik_base_url }}/";
-    _paq.push(['setTrackerUrl', u+'piwik.php']);
-    _paq.push(['setSiteId', {{ piwik_site_id }}]);
-    var d=document, g=d.createElement('script'),
-  s=d.getElementsByTagName('script')[0];
-    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js';
-  s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<noscript><p><img src="{{ piwik_base_url }}/piwik.php?idsite={{ piwik_site_id }}"
-                  style="border:0;" alt="" /></p></noscript>
-<!-- End Piwik Code -->
-{% endif %}
-</body>
+    {% if piwik %}
+    <!-- Piwik -->
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u="{{ piwik_base_url }}/";
+        _paq.push(['setTrackerUrl', u+'piwik.php']);
+        _paq.push(['setSiteId', {{ piwik_site_id }}]);
+        var d=document, g=d.createElement('script'),
+      s=d.getElementsByTagName('script')[0];
+        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js';
+      s.parentNode.insertBefore(g,s);
+      })();
+    </script>
+    <noscript>
+      <p><img src="{{ piwik_base_url }}/piwik.php?idsite={{ piwik_site_id }}" style="border:0;" alt="" /></p>
+    </noscript>
+    <!-- End Piwik Code -->
+    {% endif %}
+  </body>
 </html>

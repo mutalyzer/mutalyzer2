@@ -453,9 +453,7 @@ def position_converter():
                 if descriptions is None:
                     chromosomal_description = None
                 elif descriptions:
-                    transcript_descriptions = [
-                        '%-10s:\t%s' % (key[:10], '\n\t\t'.join(value))
-                        for key, value in descriptions.items()]
+                    transcript_descriptions = descriptions
 
     messages = map(util.message_info, output.getMessages())
 

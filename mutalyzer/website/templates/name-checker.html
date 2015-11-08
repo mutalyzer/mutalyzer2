@@ -38,6 +38,43 @@
 
 {% block content %}
 
+<section class="page-summary centered noise-bg">
+  <h1>HGVS check</h1>
+  <form class="wide" action="{{ url_for('.name_checker') }}" method="get">
+    <label for="description">Variant description</label>
+    <input class="text" type="text" name="description" id="description" value="{{ description }}" placeholder="Variant description in HGVS format">
+    <p class="examples">Examples: <a class="example-input" data-for="description">AB026906.1:c.274G&gt;T</a>, <a class="example-input" data-for="description">NM_012337.1:c.274Gdel</a>, <a class="example-input" data-for="description">NG_012337.1(SDHD_v001):c.274G&gt;T</a></p>
+    <input type="submit" class="btn btn-primary" value="Check variant description">
+    <a class="btn right" href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/NameChecker" target="new">Help</a>
+  </form>
+</section>
+
+<div class="relative">
+  <nav class="toc">
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="">Genomic description</a></li>
+      <li><a href="">Transcript descriptions</a></li>
+      <li><a href="">Reference info</a></li>
+      <li><a href="">Legend</a></li>
+      <li><a href="">Download</a></li>
+    </ul>
+  </nav>
+  <section class="sheet">
+    <h2>Name Checker results</h2>
+    <section class="resource">
+      <h3>Genomic description</h3>
+      <p>NG_24232.1:g.34del</p>
+      <h3>Transcript descriptions</h3>
+      <p>NG_24232.1:g.34del</p>
+      <p>NG_24232.1:g.34del</p>
+      <p>NG_24232.1:g.34del</p>
+      <p>NG_24232.1:g.34del</p>
+    </section>
+  </section>
+</div>
+
+
 {% if not standalone %}
   <p>
   Please insert the variant description using

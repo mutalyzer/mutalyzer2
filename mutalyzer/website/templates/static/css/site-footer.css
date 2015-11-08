@@ -1,0 +1,48 @@
+/* Public domain 2015. All rights waived */
+
+.site-footer {
+    border-color: silver;
+    border-style: solid none none none;
+    border-width: thin;
+    padding: 20px;
+    text-align: center;
+}
+
+.site-footer section {
+    display: inline-block;
+    margin: 20px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.site-footer section {
+    width: 150px;
+}
+
+.site-footer section a:link, .site-footer section a:visited  {
+    color: #4D4D4D;
+}
+
+.site-footer h2, .site-footer h3 {
+    font-size: 1.5em;
+}
+
+.site-footer ul {
+    list-style: none;
+    padding: 0px;
+}
+
+
+
+@media screen and (min-width: 1100px) {
+    .site-footer > div {
+	text-align: left;
+	width: 300px;
+    }
+    
+    .site-footer > div, .site-footer section {
+	display: inline-block;
+	margin: 15px;
+	vertical-align: top;
+    }
+}

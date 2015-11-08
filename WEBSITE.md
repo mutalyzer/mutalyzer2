@@ -1,0 +1,31 @@
+- [ ] Page: HGVS checker
+- [ ] Page: Variant liftover
+- [ ] Page: dbSNP to HGVS
+- [ ] Page: Generate HGVS
+- [ ] Page: Syntax Checker
+- [ ] Page: Reference File Loader
+- [ ] Page: Back Translator
+- [ ] Page: Name Generator
+- [ ] Page: Webservices
+- [ ] Page: Batch Jobs
+- [ ] Page: About
+- [ ] Image: HGVS checker (main image landing page)
+- [ ] Image: Variant liftover
+- [ ] Image: dbSNP to HGVS
+- [ ] Image: Generate HGVS
+- [ ] Image: Webservices
+- [ ] Image: Batch jobs
+- [ ] Logo (and favicon)
+- [ ] Change gears pattern?
+- [ ] Footer content
+- [ ] Texts on many pages
+- [ ] Better example inputs
+- [ ] Move trac wiki content to documentation pages
+- [ ] Announcements
+- [ ] Links to other tools: Syntax Checker, Reference File Loader, Back
+  Translator, Name Generator
+- [ ] Is the Name Generator obsolete?
+- [ ] Styling: non-primary buttons as on Guile website?
+- [ ] Styling: buttons font weight normal?
+- [ ] Styling: responsiveness of forms (960px width is now hardcoded)
+- [ ] Page titles

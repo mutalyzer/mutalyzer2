@@ -1,0 +1,107 @@
+/* Public domain 2015. All rights waived */
+
+#site-menu {
+    background-color: white;
+    box-shadow: 0 0 5px #888;
+    -moz-box-shadow: 0 0 5px gray;
+    -webkit-box-shadow: 0 0 5px gray;
+}
+
+#site-menu > h1 {
+    display: inline-block;
+    margin: 0px;
+}
+
+/* Branding: offset alternative text */
+/* In regular Web browsers, show image-based branding. */
+/* In text-based browsers, show text-based branding. */
+#branding {
+    position: relative;
+    overflow: hidden;
+}
+
+#branding > span {
+    right: -500px;
+    position: absolute;
+}
+/* END Branding: offset alternative text */
+
+#branding:link, #branding:visited {
+    background-image: url("../images/branding.png");
+    background-position: bottom;
+    background-repeat: no-repeat;
+    display: inline-block;
+    height: 80px;
+    width: 162px;
+}
+
+#branding:active, #branding:focus, #branding:hover {
+    background-position: top;
+}
+
+/* Pages menu: offset section heading */
+/* Hide the heading in regular browsers, but show it in text-based ones. */
+#pages-box {
+    position: relative;
+    overflow: hidden;
+}
+
+#pages-box > h2 {
+    display: inline-block;
+    font-size: 1.2em;
+    margin: 0px;
+    padding: 0px 10px;
+    position: absolute;
+    top: -500px;
+}
+/* END Pages menu: offset section heading */
+
+.page-link:link, .page-link:visited {
+    background-color: transparent;
+    background-image: url("../images/link-arrow.png");
+    background-position: 97% 50%;
+    background-repeat: no-repeat;
+    border-color: silver;
+    border-style: solid none none none;
+    border-width: thin;
+    color: #555;
+    display: block;
+    font-size: 1.3em;
+    line-height: 80px;
+    padding: 0px 18px;
+    text-align: left;
+}
+
+.page-link:active, .page-link:focus, .page-link:hover,
+.page-link-active:link, .page-link-active:visited {
+    color: #D0343F;
+    text-decoration: none;
+}
+
+
+
+@media screen and (min-width: 800px) {
+    #site-menu {
+        height: 80px;
+        overflow: hidden;
+    }
+
+    #pages-box {
+        float: right;
+        margin-right: 10px;
+    }
+
+    .page-link:link, .page-link:visited {
+        background-image: none;
+        border-style: none;
+        display: inline-block;
+        text-align: center;
+     }
+
+    .page-link:active, .page-link:focus, .page-link:hover,
+    .page-link-active:link, .page-link-active:visited {
+        background-image: url("../images/page-link-triangle.png");
+	background-position: bottom center;
+	background-repeat: no-repeat;
+     }
+}

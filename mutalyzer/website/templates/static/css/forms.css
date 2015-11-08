@@ -1,0 +1,63 @@
+/* Public domain 2015. All rights waived */
+
+input, select {
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px 25px;
+    color: #333;
+    background-color: white;
+    border-color: #dcdcdc;
+    border-style: solid;
+}
+
+input:active, input:focus, select:active, select:focus {
+    border-color: #333;
+}
+
+.wide input.text, .wide select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn {
+    border-radius: 5px;
+    display: inline-block;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 10px 25px;
+    text-align: center;
+    color: #333;
+    background-color: #dcdcdc;
+    border: none;
+    cursor: pointer;
+}
+
+a.btn {
+    color: #333;
+}
+
+.btn.right {
+    float: right;
+}
+
+.btn:active, .btn:focus, .btn:hover {
+    text-decoration: none;
+}
+
+.btn.btn-primary {
+    color: white;
+    background-color: #d03445;
+}
+
+.btn.btn-primary:active, .btn.btn-primary:focus, .btn.btn-primary:hover {
+    text-decoration: none;
+}
+
+.examples {
+    font-size: 0.8em !important;
+    margin-top: 0;
+}
