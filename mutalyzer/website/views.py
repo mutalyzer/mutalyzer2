@@ -31,6 +31,7 @@ from mutalyzer.db.models import Assembly, BatchJob
 from mutalyzer.grammar import Grammar
 from mutalyzer.mapping import Converter
 from mutalyzer.output import Output
+from mutalyzer.redisclient import client
 from mutalyzer.services import soap
 
 
@@ -908,6 +909,11 @@ def batch_jobs_submit():
 
     if not email:
         errors.append('Please provide an email address.')
+
+    if client.sismember('set:batch-job/website:email_blacklist', email):
+        errors.append(
+            'This e-mail address is blacklisted, please provide a valid '
+            'e-mail address.')
 
     if job_type not in BATCH_JOB_TYPES:
         errors.append('Invalid batch job type.')
