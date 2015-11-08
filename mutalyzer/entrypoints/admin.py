@@ -243,21 +243,21 @@ def setup_database(alembic_config_path=None, destructive=False):
 
 def add_email_to_blacklist(email):
     """
-    Add an email address to the blacklist.
+    Add an e-mail address to the blacklist.
     """
     client.sadd('set:batch-job/website:email_blacklist', email)
 
 
 def remove_email_from_blacklist(email):
     """
-    Remove an email address from the blacklist.
+    Remove an e-mail address from the blacklist.
     """
     client.srem('set:batch-job/website:email_blacklist', email)
 
 
 def list_emails_in_blacklist():
     """
-    List all email addresses in the blacklist.
+    List all e-mail addresses in the blacklist.
     """
     for email in client.smembers('set:batch-job/website:email_blacklist'):
         print email
@@ -421,32 +421,32 @@ def main():
 
     # Subparsers for 'email_blackist'.
     s = subparsers.add_parser(
-        'email_blackist', help='manage email blacklist',
-        description='Manage blacklisted emails.',
-        epilog='Blacklisting will notify the user that an email address is '
-            'invalid. Using an invalid email address causes mail delivery '
+        'email_blackist', help='manage e-mail blacklist',
+        description='Manage blacklisted e-mails.',
+        epilog='Blacklisting will notify the user that an e-mail address is '
+            'invalid. Using an invalid e-mail address causes mail delivery '
             'problems (of which mutalyzer@humgen.nl gets notifications).'
         ).add_subparsers()
 
     # Subparser 'email_blackist add'.
     p = s.add_parser(
-        'add', help='add an email address to the blacklist',
+        'add', help='add an e-mail address to the blacklist',
         description=add_email_to_blacklist.__doc__.split('\n\n')[0])
     p.add_argument(
-        'email', metavar='EMAIL', type=_cli_string, help='email address')
+        'email', metavar='EMAIL', type=_cli_string, help='e-mail address')
     p.set_defaults(func=add_email_to_blacklist)
 
     # Subparser 'email_blackist del'.
     p = s.add_parser(
-        'del', help='remove an email address from the blacklist',
+        'del', help='remove an e-mail address from the blacklist',
         description=remove_email_from_blacklist.__doc__.split('\n\n')[0])
     p.add_argument(
-        'email', metavar='EMAIL', type=_cli_string, help='email address')
+        'email', metavar='EMAIL', type=_cli_string, help='e-mail address')
     p.set_defaults(func=remove_email_from_blacklist)
 
     # Subparser 'email_blackist list'.
     p = s.add_parser(
-        'list', help='list email addresses in the blacklist',
+        'list', help='list e-mail addresses in the blacklist',
         description=list_emails_in_blacklist.__doc__.split('\n\n')[0])
     p.set_defaults(func=list_emails_in_blacklist)
 
