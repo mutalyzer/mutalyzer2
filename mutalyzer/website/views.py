@@ -907,7 +907,7 @@ def batch_jobs_submit():
     errors = []
 
     if not email:
-        email = '{}@webservice'.format(request.remote_addr)
+        email = '{}@website.mutalyzer'.format(request.remote_addr)
 
     if job_type not in BATCH_JOB_TYPES:
         errors.append('Invalid batch job type.')

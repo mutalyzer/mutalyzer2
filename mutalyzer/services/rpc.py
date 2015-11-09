@@ -155,7 +155,7 @@ class MutalyzerService(ServiceBase):
                 address = unicode(ctx.transport.req_env['REMOTE_ADDR'])
             except (AttributeError, KeyError):
                 address = 'localhost'
-            email = '%s@webservice' % address
+            email = '%s@webservice.mutalyzer' % address
 
         result_id = scheduler.addJob(email, job, columns,
                                      batch_types[process], argument)
