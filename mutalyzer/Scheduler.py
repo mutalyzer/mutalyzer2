@@ -106,7 +106,8 @@ class Scheduler() :
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 
-        from_address = settings.BATCH_NOTIFICATION_EMAIL or settings.EMAIL
+        from_address = 'Mutalyzer batch job <%s>' % (
+            settings.BATCH_NOTIFICATION_EMAIL or settings.EMAIL)
         download_url = website.url_for('batch_job_result',
                                        result_id=result_id)
 
