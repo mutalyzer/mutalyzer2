@@ -76,10 +76,6 @@ class BatchJob(db.Base):
     #: Email address of user who submitted the job.
     email = Column(String(200))
 
-    #: URL for downloading the job result file. This would usually be a view
-    #: on the Mutalyzer website.
-    download_url = Column(String(200))
-
     #: Type of batch job.
     job_type = Column(Enum(*BATCH_JOB_TYPES, name='job_type'), nullable=False)
 
@@ -95,11 +91,9 @@ class BatchJob(db.Base):
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, job_type, email=None, download_url=None,
-                 argument=None):
+    def __init__(self, job_type, email=None, argument=None):
         self.job_type = job_type
         self.email = email
-        self.download_url = download_url
         self.argument = argument
         self.result_id = unicode(uuid.uuid4())
         self.added = datetime.now()
