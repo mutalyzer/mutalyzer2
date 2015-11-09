@@ -214,43 +214,6 @@ Index('reference_slice',
       unique=True)
 
 
-# Todo: Perhaps it is a better fit to implement this with Redis.
-class TranscriptProteinLink(db.Base):
-    """
-    Cached link between a transcript and protein reference.
-    """
-    __tablename__ = 'transcript_protein_links'
-    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
-
-    id = Column(Integer, primary_key=True)
-
-    #: Accession number for the transcript, not including the version number
-    #: (e.g., ``NM_018195`, ``XM_005270562``, ``NR_015380``). If `NULL`, the
-    #: record states that no transcript is linked to the protein.
-    transcript_accession = Column(String(20), nullable=True, index=True,
-                                  unique=True)
-
-    #: Accession number for the protein, not including the version number
-    #: (e.g., ``NP_060665``, ``XP_005258635``). If `NULL`, the record states
-    #: that no protein is linked to the transcript.
-    protein_accession = Column(String(20), nullable=True, index=True,
-                               unique=True)
-
-    #: Date and time of creation.
-    added = Column(DateTime)
-
-    def __init__(self, transcript_accession=None, protein_accession=None):
-        if transcript_accession is None and protein_accession is None:
-            raise ValueError('Link must have a transcript or protein')
-        self.transcript_accession = transcript_accession
-        self.protein_accession = protein_accession
-        self.added = datetime.now()
-
-    def __repr__(self):
-        return '<TranscriptProteinLink transcript=%r protein=%r>' \
-            % (self.transcript_accession, self.protein_accession)
-
-
 class Assembly(db.Base):
     """
     Genome assembly.
