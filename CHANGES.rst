@@ -9,6 +9,26 @@ Version 2.0.14
 
 Release date to be decided.
 
+- E-mail address is now optional in batch job website interface (`#119
+  <https://github.com/mutalyzer/mutalyzer/pull/119>`_).
+- Use Mailcheck in the batch jobs form (`#107
+  <https://github.com/mutalyzer/mutalyzer/pull/107>`_).
+- Optional email for batch jobs from webservices (`#104
+  <https://github.com/mutalyzer/mutalyzer/pull/104>`_).
+- Process batch jobs grouped by email address (`#101
+  <https://github.com/mutalyzer/mutalyzer/pull/101>`_).
+- Use interval binning scheme on transcript mappings (`#100
+  <https://github.com/mutalyzer/mutalyzer/pull/100>`_).
+- Back translator interface (`#74
+  <https://github.com/mutalyzer/mutalyzer/pull/74>`_).
+- Transcript-protein links are now cached in Redis (`#94
+  <https://github.com/mutalyzer/mutalyzer/pull/94>`_).
+- Added `Ter` as a valid amino acid in the HGVS grammar (`#90
+  <https://github.com/mutalyzer/mutalyzer/pull/90>`_).
+- Refactoring of unit tests (`#88
+  <https://github.com/mutalyzer/mutalyzer/pull/88>`_, `#89
+  <https://github.com/mutalyzer/mutalyzer/pull/89>`_).
+
 
 Version 2.0.13
 --------------
