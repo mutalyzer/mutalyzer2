@@ -58,11 +58,16 @@ not set by default.
 .. _config-email:
 
 EMAIL
-  The email address used in contact information on the website, as sender in
-  batch job notifications, and in communication with the NCBI webservices
-  using Entrez.
+  The email address used in contact information on the website and sent with
+  NCBI Entrez calls.
 
   `Default value:` ``mutalyzer@humgen.nl``
+
+BATCH_NOTIFICATION_EMAIL
+  The email address used as sender in batch job notifications. If set to
+  `None`, the value of :ref:`EMAIL <config-email>` will be used.
+
+  `Default value:` `None`
 
 .. _config-debug:
 

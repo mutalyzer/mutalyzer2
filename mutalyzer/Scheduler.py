@@ -98,14 +98,15 @@ class Scheduler() :
         if settings.TESTING:
             return
 
-        # Mail is set to '<IP ADDRESS>@webservice' if the batch job was
-        # submitted using the webservice without specifying an email address.
-        if mailTo.endswith('@webservice'):
+        # Mail is set to '<IP ADDRESS>@<INTERFACE>.mutalyzer' if the batch job
+        # was submitted without specifying an email address.
+        if mailTo.endswith('.mutalyzer'):
             return
 
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 
+        from_address = settings.BATCH_NOTIFICATION_EMAIL or settings.EMAIL
         download_url = website.url_for('batch_job_result',
                                        result_id=result_id)
 
@@ -123,7 +124,7 @@ With kind regards,
 Mutalyzer batch scheduler""" % download_url)
 
         message["Subject"] = "Result of your Mutalyzer batch job"
-        message["From"] = settings.EMAIL
+        message["From"] = from_address
         message["To"] = mailTo
 
         try:
@@ -138,7 +139,7 @@ Mutalyzer batch scheduler""" % download_url)
             return
 
         try:
-            smtpInstance.sendmail(settings.EMAIL, mailTo, message.as_string())
+            smtpInstance.sendmail(from_address, mailTo, message.as_string())
         except smtplib.SMTPRecipientsRefused as e:
             for address, (code, error) in e.recipients.items():
                 print 'Could not send email to %s: (%s) %s' % (address,

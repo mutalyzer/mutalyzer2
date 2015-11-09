@@ -13,10 +13,13 @@ DEBUG = False
 # We are running unit tests.
 TESTING = False
 
-# This address is used in contact information on the website, as sender in
-# batch job notifications, and with retrieval of records at the NCBI using
-# Entrez.
+# This email address is used in contact information on the website and sent
+# with NCBI Entrez calls.
 EMAIL = 'mutalyzer@humgen.nl'
+
+# This email address is used as sender in batch job notifications. If `None`,
+# the value of `EMAIL` will be used.
+BATCH_NOTIFICATION_EMAIL = None
 
 # The cache directory. Used to store uploaded and downloaded files (e.g.,
 # reference files from NCBI or user) and batch job results.
