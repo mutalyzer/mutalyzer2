@@ -422,37 +422,30 @@ class TranscriptMapping(db.Base):
                          source, transcript=1, cds=None,
                          select_transcript=False, version=None):
         """
-        Returns an existing :class:`TranscriptMapping` instance with the given
-        values for `chromosome`, `accession`, `version`, `gene`, and
-        `transcript` if it exists, or a new instance otherwise.
+        Returns an :class:`TranscriptMapping` instance with the given values.
+        If a row with a duplicate key already exists, it is deleted first.
 
         .. note:: Unfortunately, SQLAlchemy does not have `ON DUPLICATE KEY
             UPDATE` functionality, which would performance-wise be the best
-            way to update transcript mappings. This class method implements an
-            alternative albeit at the cost of querying the table for an
-            existing entry on each update.
+            way to update transcript mappings. Even if it had, PostgreSQL does
+            not. This class method implements an alternative albeit at the
+            cost of querying the table for an existing entry on each update.
+
+            From PostgreSQL 9.5 we do have ``INSERT ... ON CONFLICT DO UPDATE``
+            which we might want to use in the future.
+
+            http://stackoverflow.com/questions/17267417/how-do-i-do-an-upsert-merge-insert-on-duplicate-update-in-postgresql
         """
-        instance = cls.query.filter_by(
+        # Actually we should do a `lock transcript_mappings in exclusive mode;`
+        # to prevent concurrent reads to miss this entry.
+        cls.query.filter_by(
             chromosome=chromosome, accession=accession, version=version,
-            gene=gene, transcript=transcript).first()
-        if instance is None:
-            instance = cls(chromosome, reference_type, accession, gene,
-                           orientation, start, stop, exon_starts, exon_stops,
-                           source, transcript=transcript, cds=cds,
-                           select_transcript=select_transcript,
-                           version=version)
-        else:
-            instance.reference_type = reference_type
-            instance.orientation = orientation
-            instance.start = start
-            instance.stop = stop
-            instance.bin = binning.assign_bin(start - 1, stop)
-            instance.exon_starts = exon_starts
-            instance.exon_stops = exon_stops
-            instance.source = source
-            instance.cds = cds
-            instance.select_transcript = select_transcript
-        return instance
+            gene=gene, transcript=transcript
+        ).delete()
+        return cls(chromosome, reference_type, accession, gene, orientation,
+                   start, stop, exon_starts, exon_stops, source,
+                   transcript=transcript, cds=cds,
+                   select_transcript=select_transcript, version=version)
 
     @property
     def coding(self):

@@ -5,9 +5,13 @@ Tests for the mutalyzer.mapping module.
 
 from __future__ import unicode_literals
 
+import codecs
+import os
+
 import pytest
 
-from mutalyzer.mapping import Converter
+from mutalyzer.db.models import TranscriptMapping
+from mutalyzer import mapping
 
 
 pytestmark = pytest.mark.usefixtures('hg19_transcript_mappings')
@@ -15,7 +19,7 @@ pytestmark = pytest.mark.usefixtures('hg19_transcript_mappings')
 
 @pytest.fixture
 def converter(output, hg19):
-    return Converter(hg19, output)
+    return mapping.Converter(hg19, output)
 
 
 def test_converter(converter):
@@ -322,3 +326,54 @@ def test_ins_seq_seq_c2chrom_reverse(converter):
     """
     genomic = converter.c2chrom('NM_012459.2:c.10_11ins[TTT;ATC]')
     assert genomic == 'NC_000011.9:g.111957482_111957483ins[GAT;AAA]'
+
+
+def test_import_mapview(hg19):
+    original_count = TranscriptMapping.query.count()
+
+    group_label = 'GRCh37.p13-Primary Assembly'
+
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data',
+                        'hg19.chr11.111771755-112247252.seq_gene.sorted.md')
+    mapview = codecs.open(path, encoding='utf-8')
+    mapview_count = sum(1 for line in mapview
+                        if line.split('\t')[12] == group_label
+                        and line.split('\t')[11] == 'RNA')
+    mapview.seek(0)
+
+    mapping.import_from_mapview_file(hg19, mapview, group_label)
+
+    # Two transcripts were already in, the rest is new:
+    # - NR_028383.1
+    # - NM_012459.2
+    assert TranscriptMapping.query.count() == original_count + mapview_count - 2
+
+    # No changes here.
+    unchanged = TranscriptMapping.query.filter_by(accession='NM_012459').one()
+    assert unchanged.start == 111955524
+    assert unchanged.stop == 111957522
+    assert unchanged.exon_starts == [111955524, 111957364]
+    assert unchanged.exon_stops == [111956186, 111957522]
+    assert unchanged.cds == (111956019, 111957492)
+
+    # We made some artificial changes to the mapview file here.
+    updated = TranscriptMapping.query.filter_by(accession='NR_028383').one()
+    assert updated.start == 111955524
+    assert updated.stop == 111957525
+    assert updated.exon_starts == [111955524, 111956700, 111957364]
+    assert updated.exon_stops == [111956180, 111957034, 111957525]
+
+    # This is a new entry.
+    new = TranscriptMapping.query.filter_by(accession='NM_000317').one()
+    assert new.version == 2
+    assert new.start == 112097088
+    assert new.stop == 112104696
+    assert new.exon_starts == [112097088, 112099317, 112100931, 112101349,
+                               112103886, 112104155]
+    assert new.exon_stops == [112097249, 112099396, 112100953, 112101405,
+                              112103956, 112104696]
+    assert new.cds == (112097167, 112104278)
+    assert new.gene == 'PTS'
+    assert new.orientation == 'forward'
+    assert new.reference_type == 'refseq'
+    assert new.source == 'ncbi'
