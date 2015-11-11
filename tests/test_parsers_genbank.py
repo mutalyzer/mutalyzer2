@@ -48,3 +48,17 @@ def test_only_complete_genes_included(settings, references, parser):
     filename = os.path.join(settings.CACHE_DIR, '%s.gb.bz2' % accession)
     record = parser.create_record(filename)
     assert [g.name for g in record.geneList] == ['A1BG']
+
+@with_references('ADAC')
+def test_no_version(settings, references, parser):
+    """
+    Genbank file without 'version' field, so BioPython record.id is the
+    accession number without version. Our parser used to crash on that.
+
+    This genbank file was contributed by Gerard Schaafsma (original
+    source unknown).
+    """
+    accession = references[0].accession
+    genbank_filename = os.path.join(settings.CACHE_DIR,
+                                    '%s.gb.bz2' % accession)
+    parser.create_record(genbank_filename)

@@ -441,8 +441,12 @@ class GBparser():
         #     the genbank file) are from the original NC reference. We try to
         #     set the .id field to the working value in the caller.
         record.source_id = biorecord.id
-        record.source_accession, record.source_version = biorecord.id.split('.')[:2]
-        record.source_gi = biorecord.annotations['gi']
+        try:
+            record.source_accession, record.source_version = biorecord.id.split('.')[:2]
+        except ValueError:
+            record.source_accession = biorecord.id
+            record.source_version = '1'
+        record.source_gi = biorecord.annotations.get('gi')
         record.organism = biorecord.annotations['organism']
 
         # Todo: This will change once we support protein references

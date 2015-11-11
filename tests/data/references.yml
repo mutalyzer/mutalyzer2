@@ -144,6 +144,10 @@ MARK1:
     - null
   - - XM_005273136
     - null
+ADAC:
+  accession: UD_143772172095
+  checksum: 0b7f7991c1fb50bdfd04d3b0e405ecf3
+  filename: UD_143772172095.gb.bz2
 NG_008939.1:
   checksum: 114a03e16ad2f63531d796c2fb0d7039
   filename: NG_008939.1.gb.bz2
