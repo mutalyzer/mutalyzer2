@@ -42,7 +42,7 @@ The impatient can run Mutalyzer without a database server and more such
 nonsense with the following steps::
 
     $ pip install -r requirements.txt
-    $ MUTALYZER_SETTINGS=/dev/null python -m mutalyzer.entrypoints.website
+    $ python -m mutalyzer.entrypoints.website
 
 This starts the website frontend on the reported port using an in-memory
 SQLite database.

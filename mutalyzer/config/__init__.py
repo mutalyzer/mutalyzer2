@@ -65,10 +65,9 @@ class LazySettings(util.LazyObject):
         self._wrapped = Settings()
         self._wrapped.from_object('mutalyzer.config.default_settings')
         if from_environment:
-            # Todo: We crash if the environment variable is not set. Perhaps
-            #   it is more user-friendly if we fall back on ./settings.py or
-            #   ~/mutalyzer_settings.py or something if it exists.
-            self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
+            global ENVIRONMENT_VARIABLE
+            if ENVIRONMENT_VARIABLE in os.environ:
+                self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
 
     def configure(self, settings):
         """
