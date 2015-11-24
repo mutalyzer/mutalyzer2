@@ -67,8 +67,9 @@ class LazySettings(util.LazyObject):
         if from_environment:
             if ENVIRONMENT_VARIABLE not in os.environ:
                 # TODO: Issue warning.
-                pass
-            self._wrapped.from_envvar(ENVIRONMENT_VARIABLE, silent=True)
+                self._wrapped.from_envvar(ENVIRONMENT_VARIABLE, silent=True)
+            else:
+                self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
 
     def configure(self, settings):
         """
