@@ -16,6 +16,8 @@ from __future__ import unicode_literals
 
 import collections
 import os
+import warnings
+
 
 import flask.config
 
@@ -65,10 +67,15 @@ class LazySettings(util.LazyObject):
         self._wrapped = Settings()
         self._wrapped.from_object('mutalyzer.config.default_settings')
         if from_environment:
-            # Todo: We crash if the environment variable is not set. Perhaps
-            #   it is more user-friendly if we fall back on ./settings.py or
-            #   ~/mutalyzer_settings.py or something if it exists.
-            self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
+            if ENVIRONMENT_VARIABLE in os.environ:
+                self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
+            else:
+                warnings.warn('The environment variable \'%s\' is not set '
+                              'and as such default configuration settings '
+                              'are used. Set this variable and make it point '
+                              'to a configuration file to customize '
+                              'configuration.' % ENVIRONMENT_VARIABLE,
+                              RuntimeWarning)
 
     def configure(self, settings):
         """
