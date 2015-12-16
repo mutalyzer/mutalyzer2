@@ -1253,9 +1253,9 @@ class MutalyzerService(ServiceBase):
         @arg start: Start position (one-based, inclusive, in reference
           orientation).
         @type start: integer
-        @arg stop: Stop position (one-based, inclusive, in reference
+        @arg end: End position (one-based, inclusive, in reference
           orientation).
-        @type start: integer
+        @type end: integer
         @arg orientation: Orientation of the slice. 1 for forward, 2 for
           reverse complement.
         @type orientation: integer
