@@ -1578,3 +1578,15 @@ def test_start_codon_alt_start_yield_start(output, checker):
     assert output.getOutput('oldProtein')[0].startswith('M')
     assert 'ATG' in output.getOutput('altStart')
     assert output.getOutput('altProtein')[0].startswith('M')
+
+
+@with_references('AB026906.1')
+def test_legend_mrna_by_construction(output, checker):
+    """
+    Transcript created from CDS by construction should be in the legend.
+    """
+    checker('AB026906.1:g.7872G>T')
+    assert output.getOutput('legends') == [
+        ['SDHD_v001', None, None, None, 'construction'],
+        ['SDHD_i001', 'BAA81889.1', None, 'small subunit of cytochrome b of succinate dehydrogenase', 'construction']
+    ]

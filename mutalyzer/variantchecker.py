@@ -1773,23 +1773,6 @@ def check_variant(description, output):
     record = GenRecord.GenRecord(output)
     record.record = retrieved_record
 
-    # Create the legend.
-    for gene in record.record.geneList:
-        for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
-            if not transcript.name:
-                continue
-            output.addOutput('legends',
-                             ['%s_v%s' % (gene.name, transcript.name),
-                              transcript.transcriptID, transcript.locusTag,
-                              transcript.transcriptProduct,
-                              transcript.linkMethod])
-            if transcript.translate:
-                output.addOutput('legends',
-                                 ['%s_i%s' % (gene.name, transcript.name),
-                                  transcript.proteinID, transcript.locusTag,
-                                  transcript.proteinProduct,
-                                  transcript.linkMethod])
-
     # Note: The GenRecord instance is carrying the sequence in .record.seq.
     #       So is the Mutator instance in .mutator.orig.
 
@@ -1802,6 +1785,25 @@ def check_variant(description, output):
         process_variant(mutator, parsed_description, record, output)
     except _VariantError:
         return
+    finally:
+        # The legend needs to be created after processing the variant (which
+        # enriches the gene model by calling record.checkRecord), but we can
+        # create it regardless of success or failure.
+        for gene in record.record.geneList:
+            for transcript in sorted(gene.transcriptList, key=attrgetter('name')):
+                if not transcript.name:
+                    continue
+                output.addOutput('legends',
+                                 ['%s_v%s' % (gene.name, transcript.name),
+                                  transcript.transcriptID, transcript.locusTag,
+                                  transcript.transcriptProduct,
+                                  transcript.linkMethod])
+                if transcript.translate:
+                    output.addOutput('legends',
+                                     ['%s_i%s' % (gene.name, transcript.name),
+                                      transcript.proteinID, transcript.locusTag,
+                                      transcript.proteinProduct,
+                                      transcript.linkMethod])
 
     output.addOutput('original', unicode(mutator.orig))
     output.addOutput('mutated', unicode(mutator.mutated))
