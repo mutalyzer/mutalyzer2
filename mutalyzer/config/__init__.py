@@ -66,7 +66,7 @@ class LazySettings(util.LazyObject):
         """
         self._wrapped = Settings()
         self._wrapped.from_object('mutalyzer.config.default_settings')
-        if from_environment:
+        if from_environment and ENVIRONMENT_VARIABLE is not None:
             if ENVIRONMENT_VARIABLE in os.environ:
                 self._wrapped.from_envvar(ENVIRONMENT_VARIABLE)
             else:
