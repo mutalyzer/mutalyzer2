@@ -57,12 +57,14 @@ class GBparser():
     """
     @todo: documentation
     """
-    def __location2pos(self, location):
+    def __location2pos(self, location, require_exact=True):
         """
         Convert a location object to a tuple of integers.
 
         @arg location: A location object (see the BioPython documentation)
         @type location: location object
+        @arg require_exact: Require exact positions.
+        @type require_exact: bool
 
         @return: A tuple of integers
         @rtype: list
@@ -70,10 +72,10 @@ class GBparser():
 
         ret = []
 
-        if not unicode(location.start).isdigit() or \
-           not unicode(location.end).isdigit() :
-            return None
-        #if
+        if require_exact:
+            if not unicode(location.start).isdigit() or \
+               not unicode(location.end).isdigit() :
+                return None
 
         ret.append(location.start.position + 1)
         ret.append(location.end.position)
@@ -81,12 +83,14 @@ class GBparser():
         return ret
     #__location2pos
 
-    def __locationList2posList(self, locationList):
+    def __location2posList(self, location, require_exact=True):
         """
-        Convert a list of locations to a list of integers.
+        Convert a location object to a list of integers.
 
-        @arg locationList: A list of locations (see the BioPython documentation)
-        @type locationList: list (location objects)
+        @arg location: A location object (see the BioPython documentation)
+        @type location: location object
+        @arg require_exact: Require exact positions.
+        @type require_exact: bool
 
         @return: A list (of even length) of integers
         @rtype: list (integers)
@@ -94,25 +98,29 @@ class GBparser():
 
         ret = []
 
-        if not unicode(locationList.location.start).isdigit() or \
-           not unicode(locationList.location.end).isdigit() :
-            return None
+        if require_exact:
+            if not unicode(location.start).isdigit() or \
+               not unicode(location.end).isdigit() :
+                return None
         #if
 
-        for i in locationList.sub_features :
-            if i.ref : # This is a workaround for a bug in BioPython.
-                ret = None
-                break
-            #if
-            temp = self.__location2pos(i.location)
-            if temp :
-                ret.append(temp[0])
-                ret.append(temp[1])
+        for part in location.parts[::location.strand]:
+            pos = self.__location2pos(part, require_exact=require_exact)
+            if not pos:
+                return None
+
+            ret.append(pos[0])
+            ret.append(pos[1])
             #if
         #for
 
+        if not ret:
+            # No subfeatures found, in that case just use the feature itself
+            # as if it were its only subfeature.
+            ret = self.__location2pos(location, require_exact=require_exact)
+
         return ret
-    #__locationList2posList
+    #__location2posList
 
     def _find_mismatch(self, sentences):
         """
@@ -227,11 +235,20 @@ class GBparser():
                         accession, int(version), match_version=False)[0]
                 except ncbi.NoLinkError:
                     pass
-            i.positionList = self.__locationList2posList(i)
+            i.original_location = i.location
+            if i.ref:
+                # This is a workaround for a bug in BioPython.
+                # But seriously I have no idea for which bug and couldn't find
+                # any hints in the commit history. So I just copied it over
+                # with the last changes to this code, but it can probably be
+                # removed.
+                i.positionList = None
+            else:
+                i.positionList = self.__location2posList(i.location)
             i.location = self.__location2pos(i.location) #FIXME
             #if not i.positionList : # FIXME ???
             #    i.positionList = i.location
-            if i.positionList or i.location :
+            if i.positionList :
                 i.usable = True
             else :
                 i.usable = False
@@ -305,6 +322,13 @@ class GBparser():
         mrnaList = mrna.positionList
         if not mrnaList :
             mrnaList = mrna.location
+        if not mrnaList :
+            # If the mRNA doesn't have exact positions (e.g., it's annotated
+            # at `join(<1..11,214..548,851..4143)`), we still want to use the
+            # part that is in this reference for matching.
+            mrnaList = self.__location2posList(mrna.original_location,
+                                               require_exact=False)
+
         cdsList = cds.positionList
         if not cdsList :
             cdsList = cds.location
@@ -493,12 +517,6 @@ class GBparser():
                 #if
 
                 if i.qualifiers.has_key("gene") :
-                    if not unicode(i.location.start).isdigit() or \
-                       not unicode(i.location.end).isdigit():
-                        # Feature is not completely in reference. Either start
-                        # or end is not a Bio.SeqFeature.ExactPosition.
-                        continue
-
                     geneName = i.qualifiers["gene"][0]
                     if i.type == "gene" :
                         if not geneDict.has_key(geneName) :
@@ -509,14 +527,6 @@ class GBparser():
                             myGene.location = self.__location2pos(i.location)
                             geneDict[geneName] = tempGene(geneName)
                         #if
-                    else:
-                        if geneName not in geneDict:
-                            # We should have seen a gene entry for this gene
-                            # by now. Could be that it was skipped because it
-                            # was not completely in reference (see check
-                            # above). In that case we just ignore any of its
-                            # features.
-                            continue
                     #if
 
                     if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
@@ -537,8 +547,15 @@ class GBparser():
                 myGene = geneDict[j]
                 self.link(myGene.rnaList, myGene.cdsList)
                 for i in myGene.rnaList :
+                    myRealGene = record.findGene(i.gene)
+                    version = myRealGene.newLocusTag()
+                    # TODO: Here we discard transcripts that are not complete
+                    # in this reference, but it might be nicer to still keep
+                    # them so that we can (for example) show them in the
+                    # legend. Of course they should still not be allowed to be
+                    # selected in the variant description.
+                    # (Same for leftover CDS features below.)
                     if i.usable :
-                        myRealGene = record.findGene(i.gene)
                         if i.locus_tag :
                             # Note: We use the last three characters of the
                             # locus_tag as a unique transcript version id.
@@ -550,14 +567,13 @@ class GBparser():
                             # underscore. Or prepended with a letter. We
                             # really want a number, so 'fix' this by only
                             # looking for a numeric part.
+                            # (Same for leftover CDS features below.)
                             try:
                                 version = LOCUS_TAG_VERSION.findall(
                                     i.locus_tag)[0].zfill(3)
                             except IndexError:
-                                version = '000'
-                            myTranscript = Locus(version)
-                        else :
-                            myTranscript = Locus(myRealGene.newLocusTag())
+                                pass
+                        myTranscript = Locus(version)
                         myTranscript.mRNA = PList()
                         myTranscript.mRNA.positionList = i.positionList
                         myTranscript.mRNA.location = i.location
@@ -580,38 +596,33 @@ class GBparser():
                         myRealGene.transcriptList.append(myTranscript)
                     #if
                 #for
+
+                # We now look for leftover CDS entries that were not linked to
+                # any transcript. We add them and the RNA will be constructed
+                # for them later.
+                # This does mean that these transcripts always come last (and
+                # are shown last in for example the legend).
                 for i in myGene.cdsList :
-                    if not i.linked and \
-                       (i.usable or not geneDict[myGene.name].rnaList) :
+                    if not i.linked:
                         myRealGene = record.findGene(i.gene)
-                        if i.locus_tag :
-                            # Note: We use the last three characters of the
-                            # locus_tag as a unique transcript version id.
-                            # This is also used to for the protein-transcript
-                            # link table.
-                            # Normally, locus_tag ends with three digits, but
-                            # for some (e.g. mobA on NC_011228, a plasmid) it
-                            # ends with two digits prepended with an
-                            # underscore. Or prepended with a letter. We
-                            # really want a number, so 'fix' this by only
-                            # looking for a numeric part.
-                            try:
-                                version = LOCUS_TAG_VERSION.findall(
-                                    i.locus_tag)[0].zfill(3)
-                            except IndexError:
-                                version = '000'
+                        version = myRealGene.newLocusTag()
+                        if i.usable:
+                            if i.locus_tag :
+                                try:
+                                    version = LOCUS_TAG_VERSION.findall(
+                                        i.locus_tag)[0].zfill(3)
+                                except IndexError:
+                                    pass
                             myTranscript = Locus(version)
-                        else :
-                            myTranscript = Locus(myRealGene.newLocusTag())
-                        myTranscript.CDS = PList()
-                        myTranscript.CDS.positionList = i.positionList
-                        myTranscript.CDS.location = i.location
-                        myTranscript.proteinID = i.protein_id
-                        myTranscript.proteinProduct = i.product
-                        if i.qualifiers.has_key("transl_table") :
-                            myTranscript.txTable = \
-                                int(i.qualifiers["transl_table"][0])
-                        myRealGene.transcriptList.append(myTranscript)
+                            myTranscript.CDS = PList()
+                            myTranscript.CDS.positionList = i.positionList
+                            myTranscript.CDS.location = i.location
+                            myTranscript.proteinID = i.protein_id
+                            myTranscript.proteinProduct = i.product
+                            if i.qualifiers.has_key("transl_table") :
+                                myTranscript.txTable = \
+                                    int(i.qualifiers["transl_table"][0])
+                            myRealGene.transcriptList.append(myTranscript)
                         #if
                     #if
                 #for
@@ -655,9 +666,10 @@ class GBparser():
                 #if
             #if
         #else
-        for i in record.geneList :
-            if not i.transcriptList :
-                record.geneList.remove(i)
+
+        # Discard genes for which we haven't constructed any transcripts.
+        record.geneList = [gene for gene in record.geneList
+                           if gene.transcriptList]
 
         return record
     #create_record
