@@ -3,6 +3,8 @@ Communication with the NCBI.
 """
 
 
+from urllib2 import HTTPError
+
 from Bio import Entrez
 
 from .config import settings
@@ -65,7 +67,11 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
         source = '%s.%d' % (source_accession, source_version)
 
     # Find source record.
-    handle = Entrez.esearch(db=source_db, term=source)
+    try:
+        handle = Entrez.esearch(db=source_db, term=source)
+    except HTTPError:
+        return fail_or_retry()
+
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
@@ -79,7 +85,11 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
         return fail_or_retry()
 
     # Find link from source record to target record.
-    handle = Entrez.elink(dbfrom=source_db, db=target_db, id=source_gi)
+    try:
+        handle = Entrez.elink(dbfrom=source_db, db=target_db, id=source_gi)
+    except HTTPError:
+        return fail_or_retry()
+
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
@@ -98,8 +108,12 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
         return fail_or_retry()
 
     # Get target record.
-    handle = Entrez.efetch(
-        db=target_db, id=target_gi, rettype='acc', retmode='text')
+    try:
+        handle = Entrez.efetch(
+            db=target_db, id=target_gi, rettype='acc', retmode='text')
+    except HTTPError:
+        return fail_or_retry()
+
     target = unicode(handle.read()).strip().split('.')
     handle.close()
 
