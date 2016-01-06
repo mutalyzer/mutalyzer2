@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.15
 --------------
 
-Release date to be decided.
+Released on January 6th 2016.
 
 - Speedup NCBI mapview file import (`#124
   <https://github.com/mutalyzer/mutalyzer/pull/124>`_).
