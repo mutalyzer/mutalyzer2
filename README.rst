@@ -35,7 +35,7 @@ Please refer to the documentation for `more information on contributions
 Copyright
 ---------
 
-Mutalyzer is copyright (c) 2009-2015 by Leiden University Medical Center and
+Mutalyzer is copyright (c) 2009-2016 by Leiden University Medical Center and
 contributors (see the AUTHORS.rst file for details).
 
 Mutalyzer is licensed under the `GNU Affero General Public License

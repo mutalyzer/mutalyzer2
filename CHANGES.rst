@@ -4,10 +4,26 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.15
+Version 2.0.16
 --------------
 
 Release date to be decided.
+
+
+Version 2.0.15
+--------------
+
+Released on January 6th 2016.
+
+- Speedup NCBI mapview file import (`#124
+  <https://github.com/mutalyzer/mutalyzer/pull/124>`_).
+- Parse genbank file without VERSION field (`#126
+  <https://github.com/mutalyzer/mutalyzer/pull/126>`_).
+- Fix issue where some transcripts would not show in the legend (`#136
+  <https://github.com/mutalyzer/mutalyzer/pull/136>`_).
+- Don't discard complete gene from GenBank file when it has incomplete but
+  also complete features annotated (`#138
+  <https://github.com/mutalyzer/mutalyzer/pull/138>`_)
 
 
 Version 2.0.14
