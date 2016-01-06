@@ -1,4 +1,4 @@
-Copyright (c) 2009-2015 by Leiden University Medical Center and contributors
+Copyright (c) 2009-2016 by Leiden University Medical Center and contributors
 (see the AUTHORS.rst file for details).
 
 The Mutalyzer source code is licensed under the `GNU Affero General Public
