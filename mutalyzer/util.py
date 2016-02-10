@@ -424,7 +424,7 @@ def in_frame_description(s1, s2):
         >>> in_frame_description('MTAPQQMT*', 'MTAPQQMTMQ*')
         ('p.(*9Metext*2)', 8, 9, 11)
         >>> in_frame_description('MTAPQQMT*', 'MTAPQQMTMQ')
-        ('p.(*9Metext*?)', 8, 8, 10)
+        ('p.(*9Metext*?)', 8, 9, 10)
 
     @arg s1: The original protein.
     @type s1: unicode
@@ -441,6 +441,7 @@ def in_frame_description(s1, s2):
     @todo: More intelligently handle longest_common_prefix().
     @todo: Refactor this code (too many return statements).
     """
+    s2_stop = '*' in s2
     s1 = s1.rstrip('*')
     s2 = s2.rstrip('*')
 
@@ -448,7 +449,6 @@ def in_frame_description(s1, s2):
         # Nothing happened.
         return ('p.(=)', 0, 0, 0)
 
-    s2_stop = '*' in s2
     lcp = len(longest_common_prefix(s1, s2))
     lcs = len(longest_common_suffix(s1[lcp:], s2[lcp:]))
     s1_end = len(s1) - lcs

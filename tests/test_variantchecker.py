@@ -1590,3 +1590,12 @@ def test_legend_mrna_by_construction(output, checker):
         ['SDHD_v001', None, None, None, 'construction'],
         ['SDHD_i001', 'BAA81889.1', None, 'small subunit of cytochrome b of succinate dehydrogenase', 'construction']
     ]
+
+@with_references('NM_000143.3')
+def test_protein_ext_stop(output, checker):
+    """
+    Variant in stop codon where an alternative stop codon is found downstream
+    in the RNA should yield `ext*P` where P is a position.
+    """
+    checker('NM_000143.3:c.1531T>G')
+    assert 'NM_000143.3(FH_i001):p.(*511Glyext*3)' in output.getOutput('protDescriptions')
