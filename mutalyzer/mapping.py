@@ -1053,3 +1053,74 @@ def import_from_mapview_file(assembly, mapview_file, group_label):
             session.add(mapping)
 
     session.commit()
+
+
+def import_from_lrgmap_file(assembly, lrgmap_file):
+    """
+    Import transcript mappings from an EBI LRG transcripts map file.
+
+    All positions are one-based, inclusive, and that is what we also use in
+    our database.
+    """
+    columns = ['transcript', 'gene', 'chromosome', 'strand', 'start', 'stop',
+               'exons', 'protein', 'cds_start', 'cds_stop']
+
+    chromosomes = assembly.chromosomes.all()
+
+    def read_mappings(lrgmap_file):
+        for line in lrgmap_file:
+            if line.startswith('#'):
+                continue
+            record = dict(zip(columns, line.rstrip('\r\n').split('\t')))
+
+            record['start'] = int(record['start'])
+            record['stop'] = int(record['stop'])
+            try:
+                record['cds_start'] = int(record['cds_start'])
+            except ValueError:
+                record['cds_start'] = None
+            try:
+                record['cds_stop'] = int(record['cds_stop'])
+            except ValueError:
+                record['cds_stop'] = None
+            record['exons'] = [[int(pos) for pos in exon.split('-')]
+                               for exon in record['exons'].split(',')]
+
+            try:
+                yield build_mapping(record)
+            except ValueError:
+                pass
+
+    def build_mapping(record):
+        # Only use records on chromosomes we know.
+        try:
+            chromosome = next(c for c in chromosomes if
+                              c.name == 'chr' + record['chromosome'])
+        except StopIteration:
+            raise ValueError()
+
+        accession, transcript = record['transcript'].split('t')
+        transcript = int(transcript)
+
+        orientation = 'reverse' if record['strand'] == '-1' else 'forward'
+
+        if record['cds_start']:
+            cds = record['cds_start'], record['cds_stop']
+        else:
+            cds = None
+
+        # TODO: Also take protein into account. For example, in LRG_32 (TP53)
+        # some transcripts occur twice (with different CDSs and different
+        # protein numbers).
+        # https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/150
+        return TranscriptMapping.create_or_update(
+            chromosome, 'lrg', accession, record['gene'], orientation,
+            record['start'], record['stop'],
+            [start for start, _ in record['exons']],
+            [stop for _, stop in record['exons']],
+            'ebi', transcript=transcript, cds=cds, select_transcript=True)
+
+    for mapping in read_mappings(lrgmap_file):
+        session.add(mapping)
+
+    session.commit()
