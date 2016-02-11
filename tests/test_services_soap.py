@@ -167,6 +167,52 @@ def test_numberconversion_gtoc_required_gene(api):
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscripts_lrg(api):
+    """
+    Running getTranscripts should give us overlapping transcripts.
+    list of transcripts including LRG transcripts.
+    """
+    r = api('getTranscripts', build='hg19', chrom='chr1',
+            pos=207646118)
+    assert type(r.string) == list
+    assert 'LRG_348t1' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscripts_mtdna(api):
+    """
+    Running getTranscripts should give us overlapping transcripts.
+    list of transcripts, also on chrM.
+    """
+    r = api('getTranscripts', build='hg19', chrom='chrM',
+            pos=10765)
+    assert type(r.string) == list
+    assert 'NC_012920(ND4_v001)' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsrange_lrg(api):
+    """
+    Running getTranscriptsRange should give us overlapping transcripts.
+    list of transcripts including LRG transcripts.
+    """
+    r = api('getTranscriptsRange', 'hg19', 'chr1', 207646118, 207646118, 1)
+    assert type(r.string) == list
+    assert 'LRG_348t1' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsrange_mtdna(api):
+    """
+    Running getTranscripts should give us overlapping transcripts.
+    list of transcripts, also on chrM.
+    """
+    r = api('getTranscriptsRange', 'hg19', 'chrM', 10765, 10765, 1)
+    assert type(r.string) == list
+    assert 'NC_012920(ND4_v001)' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
 def test_gettranscriptsbygenename_valid(api):
     """
     Running getTranscriptsByGeneName with valid gene name should give a
@@ -178,6 +224,28 @@ def test_gettranscriptsbygenename_valid(api):
               'NM_004019.2',
               'NM_004007.2']:
         assert t in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsbygenename_valid_lrg(api):
+    """
+    Running getTranscriptsByGeneName with valid gene name should give a
+    list of transcripts including LRG transcripts.
+    """
+    r = api('getTranscriptsByGeneName', build='hg19', name='CR2')
+    assert type(r.string) == list
+    assert 'LRG_348t1' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsbygenename_valid_mtdna(api):
+    """
+    Running getTranscriptsByGeneName with valid gene name should give a
+    list of transcripts also on chrM.
+    """
+    r = api('getTranscriptsByGeneName', build='hg19', name='ND4')
+    assert type(r.string) == list
+    assert 'NC_012920.1(ND4_v001)' in r.string
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')

@@ -264,11 +264,24 @@ class MutalyzerService(ServiceBase):
                      "Finished processing getTranscripts(%s %s %s %s)"
                      % (build, chrom, pos, versions))
 
-        #filter out the accNo
-        if versions:
-            return ['%s.%s' % (m.accession, m.version) for m in mappings]
-        else:
-            return [m.accession for m in mappings]
+        transcripts = []
+        for mapping in mappings:
+            if versions and mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            transcripts.append('%s%s' % (accession, selector))
+
+        return transcripts
     #getTranscripts
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
@@ -296,12 +309,30 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsByGene(%s %s)" % (build, name))
 
-        return ['%s.%s' % (m.accession, m.version) for m in mappings]
-    #getTranscriptsByGene
+        transcripts = []
+        for mapping in mappings:
+            if mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            transcripts.append('%s%s' % (accession, selector))
+
+        return transcripts
+    #getTranscriptsByGeneName
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.Unicode))
-    def getTranscriptsRange(build, chrom, pos1, pos2, method) :
+          Mandatory.Integer, Mandatory.Integer, Boolean,
+          _returns=Array(Mandatory.Unicode))
+    def getTranscriptsRange(build, chrom, pos1, pos2, method, versions=False):
         """
         Get all the transcripts that overlap with a range on a chromosome.
 
@@ -319,6 +350,8 @@ class MutalyzerService(ServiceBase):
             - 0 ; Return only the transcripts that completely fall in the range
                   [pos1, pos2].
             - 1 ; Return all hit transcripts.
+        @kwarg versions: If set to True, also include transcript versions.
+        @type versions: bool
 
         @return: A list of transcripts.
         @rtype: list
@@ -381,7 +414,24 @@ class MutalyzerService(ServiceBase):
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
 
-        return [m.accession for m in mappings]
+        transcripts = []
+        for mapping in mappings:
+            if versions and mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            transcripts.append('%s%s' % (accession, selector))
+
+        return transcripts
     #getTranscriptsRange
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
@@ -476,6 +526,9 @@ class MutalyzerService(ServiceBase):
 
         for mapping in mappings:
             t = TranscriptMappingInfo()
+            # TODO: This doesn't work so well for mappings with select_transcript
+            # set, for example LRG and mtDNA mappings, but it's not so easy to
+            # fix in a backwards compatible way.
             t.name = mapping.accession
             t.version = mapping.version
             t.gene = mapping.gene
