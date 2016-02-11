@@ -558,7 +558,7 @@ class MutalyzerService(ServiceBase):
         @type LOVD_ver: string
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg accNo: The NM accession number and version.
+        @arg accNo: The NM accession number and version or LRG.
         @type accNo: string
         @arg variant: The variant.
         @type variant: string
@@ -614,7 +614,7 @@ class MutalyzerService(ServiceBase):
         @type LOVD_ver: string
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg accNo: The NM accession number and version.
+        @arg accNo: The NM accession number and version or LRG.
         @type accNo: string
 
         @return: Complex object:
@@ -729,7 +729,7 @@ class MutalyzerService(ServiceBase):
 
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg acc: The NM accession number (version NOT included).
+        @arg acc: The NM accession number (version NOT included) or LRG.
         @type acc: string
 
         @return: The name of a chromosome.
@@ -768,7 +768,7 @@ class MutalyzerService(ServiceBase):
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
-            notation, including NM_ or NC_ accession number.
+            notation, including NM_, NC_, or LRG_ accession number.
         @type variant: string
         @kwarg gene: Optional gene name. If given, return variant descriptions
             on all transcripts for this gene.

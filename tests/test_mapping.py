@@ -14,6 +14,39 @@ from mutalyzer.db.models import TranscriptMapping
 from mutalyzer import mapping
 
 
+# Some example positional coding/chromosomal mappings we use in the tests.
+LRG_1_T1_POSITIONS = [
+    ('-150', 48279024),
+    ('-126', 48279000),
+    ('-1', 48278875),
+    ('1', 48278874),
+    ('103', 48278772),
+    ('103+5', 48278767),
+    ('104-5', 48277313),
+    ('104', 48277308),
+    ('870', 48273878),
+    ('4248', 48263139),
+    ('4249', 48263009),
+    ('4395', 48262863),
+    ('*1', 48262862),
+    ('*1406', 48261457),
+    ('*1407', 48261456),
+    ('*1417', 48261446)]
+LRG_348_T1_POSITIONS = [
+    ('-150', 207627614),
+    ('-119', 207627645),
+    ('-1', 207627763),
+    ('1', 207627764),
+    ('58', 207627821),
+    ('58+5', 207627826),
+    ('59-5', 207639866),
+    ('59', 207639871),
+    ('3279', 207658899),
+    ('*1', 207658900),
+    ('*772', 207663240),
+    ('*780', 207663248)]
+
+
 pytestmark = pytest.mark.usefixtures('hg19_transcript_mappings')
 
 
@@ -326,6 +359,44 @@ def test_ins_seq_seq_c2chrom_reverse(converter):
     """
     genomic = converter.c2chrom('NM_012459.2:c.10_11ins[TTT;ATC]')
     assert genomic == 'NC_000011.9:g.111957482_111957483ins[GAT;AAA]'
+
+
+@pytest.mark.parametrize('coding,chromosomal', LRG_1_T1_POSITIONS)
+def test_lrg_1t1_c2chrom(converter, coding, chromosomal):
+    """
+    Conversion from LRG reference on reverse strand.
+    """
+    chromosomal_descr = converter.c2chrom('LRG_1t1:c.%sdel' % coding)
+    assert chromosomal_descr == 'NC_000017.10:g.%ddel' % chromosomal
+
+
+@pytest.mark.parametrize('coding,chromosomal', LRG_1_T1_POSITIONS)
+def test_lrg_1t1_chrom2c(converter, coding, chromosomal):
+    """
+    Conversion to LRG reference on reverse strand.
+    """
+    coding_descr = converter.chrom2c(
+        'NC_000017.10:g.%ddel' % chromosomal, 'list')
+    assert 'LRG_1t1:c.%sdel' % coding in coding_descr
+
+
+@pytest.mark.parametrize('coding,chromosomal', LRG_348_T1_POSITIONS)
+def test_lrg_348t1_c2chrom(converter, coding, chromosomal):
+    """
+    Conversion from LRG reference on forward strand.
+    """
+    chromosomal_descr = converter.c2chrom('LRG_348t1:c.%sdel' % coding)
+    assert chromosomal_descr == 'NC_000001.10:g.%ddel' % chromosomal
+
+
+@pytest.mark.parametrize('coding,chromosomal', LRG_348_T1_POSITIONS)
+def test_lrg_348t1_chrom2c(converter, coding, chromosomal):
+    """
+    Conversion to LRG reference on forward strand.
+    """
+    coding_descr = converter.chrom2c(
+        'NC_000001.10:g.%ddel' % chromosomal, 'list')
+    assert 'LRG_348t1:c.%sdel' % coding in coding_descr
 
 
 def test_import_mapview(hg19):

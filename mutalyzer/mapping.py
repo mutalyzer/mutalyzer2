@@ -151,9 +151,9 @@ class Converter(object) :
                     "Could not parse the given variant")
             return None
         #if
-        if not parseTree.RefSeqAcc: #In case of LRG for example
+        if not (parseTree.RefSeqAcc or parseTree.LrgAcc):
             self.__output.addMessage(__file__, 4, "EONLYGB",
-                "Currently we only support GenBank Records")
+                "Currently we only support GenBank and LRG records")
             return None
         #if
         self.parseTree = parseTree
@@ -175,7 +175,6 @@ class Converter(object) :
         """
         versions = [m.version for m in TranscriptMapping.query.filter(
                       TranscriptMapping.accession == acc,
-                      TranscriptMapping.version != None,
                       TranscriptMapping.chromosome.has(assembly=self.assembly))]
 
         if not versions:
@@ -207,10 +206,10 @@ class Converter(object) :
 
             if not self.mapping:
                 self.__output.addMessage(__file__, 4, "EACCNOTINDB",
-                                         "The accession number %s version %s "
+                                         "The accession number %s %s"
                                          "with transcript %s version %s could not be found "
                                          "in our database." %
-                                         (acc, version, selector, selector_version))
+                                         (acc, 'version %s ' % version if version else '', selector, selector_version))
             return
 
         if not version:
@@ -417,7 +416,7 @@ class Converter(object) :
         """
         variant = "%s:%s" % (accNo, mutation)
         if self._parseInput(variant) :
-            acc = self.parseTree.RefSeqAcc
+            acc = self.parseTree.LrgAcc or self.parseTree.RefSeqAcc
             try:
                 version = int(self.parseTree.Version)
             except ValueError:
@@ -503,7 +502,7 @@ class Converter(object) :
         @rtype: unicode
         """
         if self._parseInput(variant):
-            acc = self.parseTree.RefSeqAcc
+            acc = self.parseTree.LrgAcc or self.parseTree.RefSeqAcc
             try:
                 version = int(self.parseTree.Version)
             except ValueError:
@@ -511,6 +510,10 @@ class Converter(object) :
             if self.parseTree.Gene:
                 selector = self.parseTree.Gene.GeneSymbol
                 selector_version = int(self.parseTree.Gene.TransVar or 1)
+            elif self.parseTree.LRGTranscriptID:
+                selector = None
+                selector_version = int(self.parseTree.LRGTranscriptID)
+                pass
             else:
                 selector = selector_version = None
             self._get_mapping(acc, version, selector, selector_version)
@@ -669,7 +672,7 @@ class Converter(object) :
         if not self._parseInput(variant) :
             return None
 
-        acc = self.parseTree.RefSeqAcc
+        acc = self.parseTree.LrgAcc or self.parseTree.RefSeqAcc
         version = self.parseTree.Version
 
         chromosome = Chromosome.query \
@@ -733,9 +736,14 @@ class Converter(object) :
                 #balen
                 continue
             # construct the variant description
-            accNo = "%s.%s" % (self.mapping.accession, self.mapping.version)
+            if self.mapping.reference_type == 'lrg':
+                accNo = self.mapping.accession
+            else:
+                accNo = "%s.%s" % (self.mapping.accession, self.mapping.version)
             if self.mapping.select_transcript:
-                if self.mapping.transcript:
+                if self.mapping.reference_type == 'lrg':
+                    selector = 't%d' % self.mapping.transcript
+                elif self.mapping.transcript:
                     selector = '(%s_v%.3i)' % (self.mapping.gene, self.mapping.transcript)
                 else:
                     selector = '(%s)' % self.mapping.gene
