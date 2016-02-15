@@ -15,12 +15,17 @@ import time
 
 from .. import db
 from .. import Scheduler
+from .. import util
 
 
 def process():
     """
     Run forever in a loop processing scheduled batch jobs.
     """
+    # For long-running processes it can be convenient to have a short and
+    # human-readable process name.
+    util.set_process_name('mutalyzer: batch-processor')
+
     scheduler = Scheduler.Scheduler()
 
     def handle_exit(signum, stack_frame):

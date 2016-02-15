@@ -25,6 +25,7 @@ from ..db.models import Assembly, BatchJob, BatchQueueItem, Chromosome
 from .. import mapping
 from .. import output
 from .. import sync
+from .. import util
 
 
 class UserError(Exception):
@@ -95,6 +96,10 @@ def import_mapview(assembly_name_or_alias, mapview_file, encoding,
     """
     Import transcript mappings from an NCBI mapview file.
     """
+    # For long-running processes it can be convenient to have a short and
+    # human-readable process name.
+    util.set_process_name('mutalyzer: mapview-import')
+
     mapview_file = codecs.getreader(encoding)(mapview_file)
 
     try:
@@ -144,6 +149,10 @@ def sync_cache(wsdl_url, url_template, history=7):
         25 5 * * *  mutalyzer-cache-sync 'http://dom1/?wsdl' 'http://dom1/{file}' -H 7
         55 5 * * *  mutalyzer-cache-sync 'http://dom2/?wsdl' 'http://dom2/{file}' -H 7
     """
+    # For long-running processes it can be convenient to have a short and
+    # human-readable process name.
+    util.set_process_name('mutalyzer: cache-sync')
+
     cache_sync = sync.CacheSync(output.Output(__file__))
     inserted, downloaded = cache_sync.sync_with_remote(wsdl_url, url_template,
                                                        history)

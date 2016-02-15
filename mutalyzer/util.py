@@ -955,3 +955,16 @@ class LazyObject(object):
 
     __len__ = _new_method_proxy(len)
     __contains__ = _new_method_proxy(operator.contains)
+
+
+# We try to minimize non-trivial dependencies for non-critical features. The
+# setproctitle package is implemented as a C extension and hence requires a C
+# compiler and the Python development headers. Here we use it as an optional
+# dependency.
+try:
+    import setproctitle as _setproctitle
+    def set_process_name(name):
+        _setproctitle.setproctitle(name)
+except ImportError:
+    def set_process_name(name):
+        pass
