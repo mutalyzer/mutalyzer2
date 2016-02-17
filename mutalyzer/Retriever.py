@@ -382,8 +382,10 @@ class GenBankRetriever(Retriever):
                 return None
             if length > settings.MAX_FILE_SIZE:
                 self._output.addMessage(
-                    __file__, 4, 'ERETR', 'Could not retrieve {}.'.format(
-                        name))
+                    __file__, 4, 'ERETR',
+                    'Could not retrieve {} (exceeds maximum file size of {} '
+                    'megabytes).'.format(
+                        name, settings.MAX_FILE_SIZE // 1048576))
                 return None
             try:
                 net_handle = Entrez.efetch(
