@@ -167,6 +167,52 @@ def test_numberconversion_gtoc_required_gene(api):
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscripts_lrg(api):
+    """
+    Running getTranscripts should give us overlapping transcripts.
+    list of transcripts including LRG transcripts.
+    """
+    r = api('getTranscripts', build='hg19', chrom='chr1',
+            pos=207646118)
+    assert type(r.string) == list
+    assert 'LRG_348t1' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscripts_mtdna(api):
+    """
+    Running getTranscripts should give us overlapping transcripts.
+    list of transcripts, also on chrM.
+    """
+    r = api('getTranscripts', build='hg19', chrom='chrM',
+            pos=10765)
+    assert type(r.string) == list
+    assert 'NC_012920(ND4_v001)' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsrange_lrg(api):
+    """
+    Running getTranscriptsRange should give us overlapping transcripts.
+    list of transcripts including LRG transcripts.
+    """
+    r = api('getTranscriptsRange', 'hg19', 'chr1', 207646118, 207646118, 1)
+    assert type(r.string) == list
+    assert 'LRG_348t1' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsrange_mtdna(api):
+    """
+    Running getTranscripts should give us overlapping transcripts.
+    list of transcripts, also on chrM.
+    """
+    r = api('getTranscriptsRange', 'hg19', 'chrM', 10765, 10765, 1)
+    assert type(r.string) == list
+    assert 'NC_012920(ND4_v001)' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
 def test_gettranscriptsbygenename_valid(api):
     """
     Running getTranscriptsByGeneName with valid gene name should give a
@@ -181,6 +227,28 @@ def test_gettranscriptsbygenename_valid(api):
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsbygenename_valid_lrg(api):
+    """
+    Running getTranscriptsByGeneName with valid gene name should give a
+    list of transcripts including LRG transcripts.
+    """
+    r = api('getTranscriptsByGeneName', build='hg19', name='CR2')
+    assert type(r.string) == list
+    assert 'LRG_348t1' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsbygenename_valid_mtdna(api):
+    """
+    Running getTranscriptsByGeneName with valid gene name should give a
+    list of transcripts also on chrM.
+    """
+    r = api('getTranscriptsByGeneName', build='hg19', name='ND4')
+    assert type(r.string) == list
+    assert 'NC_012920.1(ND4_v001)' in r.string
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
 def test_gettranscriptsbygenename_invalid(api):
     """
     Running getTranscriptsByGeneName with invalid gene name should not
@@ -188,6 +256,22 @@ def test_gettranscriptsbygenename_invalid(api):
     """
     r = api('getTranscriptsByGeneName', build='hg19', name='BOGUSGENE')
     assert not r
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsmapping_mtdna(api):
+    """
+    Running getTranscriptsMapping on mtDNA should give a list of transcripts
+    including their complete identification in the transcript attribute.
+    """
+    r = api('getTranscriptsMapping', 'hg19', 'chrM', 10765, 10765, 1)
+    assert type(r.TranscriptMappingInfo) == list
+    assert len(r.TranscriptMappingInfo) == 1
+    info = r.TranscriptMappingInfo[0]
+    assert 'NC_012920' == info.name
+    assert 1 == info.version
+    assert 'ND4' == info.gene
+    assert 'NC_012920.1(ND4_v001)' == info.transcript
 
 
 @with_references('AF230870.1')
@@ -736,6 +820,7 @@ def test_get_transcripts_mapping(api):
                for t_real, t_expected in
                zip(r.TranscriptMappingInfo, [{'cds_start': 111957492,
                                               'cds_stop': 111956019,
+                                              'transcript': 'NM_012459.2',
                                               'name': 'NM_012459',
                                               'stop': 111955524,
                                               'start': 111957522,
@@ -744,6 +829,7 @@ def test_get_transcripts_mapping(api):
                                               'orientation': '-'},
                                              {'cds_start': None,
                                               'cds_stop': None,
+                                              'transcript': 'NR_028383.1',
                                               'name': 'NR_028383',
                                               'stop': 111955524,
                                               'start': 111957522,
@@ -752,6 +838,7 @@ def test_get_transcripts_mapping(api):
                                               'orientation': '-'},
                                              {'cds_start': 111957632,
                                               'cds_stop': 111965694,
+                                              'transcript': 'NM_003002.2',
                                               'name': 'NM_003002',
                                               'stop': 111966518,
                                               'start': 111957571,

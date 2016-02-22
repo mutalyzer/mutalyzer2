@@ -375,11 +375,11 @@ class TranscriptMapping(db.Base):
     #: If `False`, variant descriptions can use just the accession number
     #: without gene and transcript selector (e.g., ``NM_000020:c.1del``,
     #: ``LRG_1:c.1del``). If `True`, gene and transcript selection is
-    #: necessary (e.g., ``NC_012920(TRNI_v001):c.1del``, ``LRG_1_t1:c.1del``).
+    #: necessary (e.g., ``NC_012920(TRNI_v001):c.1del``, ``LRG_1t1:c.1del``).
     select_transcript = Column(Boolean, nullable=False)
 
     #: Source of the mapping.
-    source = Column(Enum('ucsc', 'ncbi', 'reference', name='source'),
+    source = Column(Enum('ucsc', 'ncbi', 'ebi', 'reference', name='source'),
                     nullable=False)
 
     #: The :class:`Assembly` this chromosome is in.

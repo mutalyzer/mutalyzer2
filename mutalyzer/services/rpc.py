@@ -264,11 +264,24 @@ class MutalyzerService(ServiceBase):
                      "Finished processing getTranscripts(%s %s %s %s)"
                      % (build, chrom, pos, versions))
 
-        #filter out the accNo
-        if versions:
-            return ['%s.%s' % (m.accession, m.version) for m in mappings]
-        else:
-            return [m.accession for m in mappings]
+        transcripts = []
+        for mapping in mappings:
+            if versions and mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            transcripts.append('%s%s' % (accession, selector))
+
+        return transcripts
     #getTranscripts
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
@@ -296,12 +309,30 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsByGene(%s %s)" % (build, name))
 
-        return ['%s.%s' % (m.accession, m.version) for m in mappings]
-    #getTranscriptsByGene
+        transcripts = []
+        for mapping in mappings:
+            if mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            transcripts.append('%s%s' % (accession, selector))
+
+        return transcripts
+    #getTranscriptsByGeneName
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
-        Mandatory.Integer, Mandatory.Integer, _returns=Array(Mandatory.Unicode))
-    def getTranscriptsRange(build, chrom, pos1, pos2, method) :
+          Mandatory.Integer, Mandatory.Integer, Boolean,
+          _returns=Array(Mandatory.Unicode))
+    def getTranscriptsRange(build, chrom, pos1, pos2, method, versions=False):
         """
         Get all the transcripts that overlap with a range on a chromosome.
 
@@ -319,6 +350,8 @@ class MutalyzerService(ServiceBase):
             - 0 ; Return only the transcripts that completely fall in the range
                   [pos1, pos2].
             - 1 ; Return all hit transcripts.
+        @kwarg versions: If set to True, also include transcript versions.
+        @type versions: bool
 
         @return: A list of transcripts.
         @rtype: list
@@ -381,7 +414,24 @@ class MutalyzerService(ServiceBase):
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
 
-        return [m.accession for m in mappings]
+        transcripts = []
+        for mapping in mappings:
+            if versions and mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            transcripts.append('%s%s' % (accession, selector))
+
+        return transcripts
     #getTranscriptsRange
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
@@ -408,6 +458,7 @@ class MutalyzerService(ServiceBase):
             - 1 ; Return all hit transcripts.
 
         @return: Array of TranscriptMappingInfo objects with fields:
+                 - transcript
                  - name
                  - version
                  - gene
@@ -476,6 +527,22 @@ class MutalyzerService(ServiceBase):
 
         for mapping in mappings:
             t = TranscriptMappingInfo()
+
+            if mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            t.transcript = '%s%s' % (accession, selector)
+
             t.name = mapping.accession
             t.version = mapping.version
             t.gene = mapping.gene
@@ -558,7 +625,7 @@ class MutalyzerService(ServiceBase):
         @type LOVD_ver: string
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg accNo: The NM accession number and version.
+        @arg accNo: The NM accession number and version or LRG.
         @type accNo: string
         @arg variant: The variant.
         @type variant: string
@@ -614,7 +681,7 @@ class MutalyzerService(ServiceBase):
         @type LOVD_ver: string
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg accNo: The NM accession number and version.
+        @arg accNo: The NM accession number and version or LRG.
         @type accNo: string
 
         @return: Complex object:
@@ -729,7 +796,7 @@ class MutalyzerService(ServiceBase):
 
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg acc: The NM accession number (version NOT included).
+        @arg acc: The NM accession number (version NOT included) or LRG.
         @type acc: string
 
         @return: The name of a chromosome.
@@ -768,7 +835,7 @@ class MutalyzerService(ServiceBase):
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
         @arg variant: The variant in either I{c.} or I{g.} notation, full HGVS
-            notation, including NM_ or NC_ accession number.
+            notation, including NM_, NC_, or LRG_ accession number.
         @type variant: string
         @kwarg gene: Optional gene name. If given, return variant descriptions
             on all transcripts for this gene.

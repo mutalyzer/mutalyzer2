@@ -113,6 +113,20 @@ def import_mapview(assembly_name_or_alias, mapview_file, encoding,
         raise UserError(unicode(e))
 
 
+def import_lrgmap(assembly_name_or_alias, lrgmap_file, encoding):
+    """
+    Import transcript mappings from an EBI LRG transcripts map file.
+    """
+    lrgmap_file = codecs.getreader(encoding)(lrgmap_file)
+
+    try:
+        assembly = Assembly.by_name_or_alias(assembly_name_or_alias)
+    except NoResultFound:
+        raise UserError('Not a valid assembly: %s' % assembly_name_or_alias)
+
+    mapping.import_from_lrgmap_file(assembly, lrgmap_file)
+
+
 def import_gene(assembly_name_or_alias, gene):
     """
     Import transcript mappings for a gene from the UCSC database.
@@ -312,6 +326,22 @@ def main():
         'group_label', metavar='GROUP_LABEL', type=_cli_string,
         help='use only entries with this group label (example: '
         'GRCh37.p2-Primary Assembly)')
+
+    # Subparser 'assemblies import-lrgmap'.
+    p = s.add_parser(
+        'import-lrgmap',
+        help='import mappings from EBI LRG transcripts map file',
+        parents=[assembly_parser],
+        description=import_lrgmap.__doc__.split('\n\n')[0])
+    p.set_defaults(func=import_lrgmap)
+    p.add_argument(
+        'lrgmap_file', metavar='FILE', type=argparse.FileType('rb'),
+        help='EBI LRG transcript map file (example: '
+        'list_LRGs_transcripts_GRCh37.txt)')
+    p.add_argument(
+        '--encoding', metavar='ENCODING', type=_cli_string,
+        default=default_encoding,
+        help='input file encoding (default: %s)' % default_encoding)
 
     # Subparser 'assemblies import-gene'.
     p = s.add_parser(

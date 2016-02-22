@@ -310,6 +310,7 @@ class TranscriptMappingInfo(ComplexModel):
     """
     __namespace__ = SOAP_NAMESPACE
 
+    transcript = Mandatory.Unicode
     name = Mandatory.Unicode
     version = Mandatory.Integer
     gene = Mandatory.Unicode
