@@ -458,6 +458,7 @@ class MutalyzerService(ServiceBase):
             - 1 ; Return all hit transcripts.
 
         @return: Array of TranscriptMappingInfo objects with fields:
+                 - transcript
                  - name
                  - version
                  - gene
@@ -526,9 +527,22 @@ class MutalyzerService(ServiceBase):
 
         for mapping in mappings:
             t = TranscriptMappingInfo()
-            # TODO: This doesn't work so well for mappings with select_transcript
-            # set, for example LRG and mtDNA mappings, but it's not so easy to
-            # fix in a backwards compatible way.
+
+            if mapping.version:
+                accession = '%s.%i' % (mapping.accession, mapping.version)
+            else:
+                accession = mapping.accession
+            if mapping.select_transcript:
+                if mapping.reference_type == 'lrg':
+                    selector = 't%d' % mapping.transcript
+                elif mapping.transcript:
+                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
+                else:
+                    selector = '(%s)' % mapping.gene
+            else:
+                selector = ''
+            t.transcript = '%s%s' % (accession, selector)
+
             t.name = mapping.accession
             t.version = mapping.version
             t.gene = mapping.gene

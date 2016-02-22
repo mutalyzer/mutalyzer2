@@ -258,6 +258,22 @@ def test_gettranscriptsbygenename_invalid(api):
     assert not r
 
 
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_gettranscriptsmapping_mtdna(api):
+    """
+    Running getTranscriptsMapping on mtDNA should give a list of transcripts
+    including their complete identification in the transcript attribute.
+    """
+    r = api('getTranscriptsMapping', 'hg19', 'chrM', 10765, 10765, 1)
+    assert type(r.TranscriptMappingInfo) == list
+    assert len(r.TranscriptMappingInfo) == 1
+    info = r.TranscriptMappingInfo[0]
+    assert 'NC_012920' == info.name
+    assert 1 == info.version
+    assert 'ND4' == info.gene
+    assert 'NC_012920.1(ND4_v001)' == info.transcript
+
+
 @with_references('AF230870.1')
 def test_gettranscriptsandinfo_valid(api):
     """
@@ -804,6 +820,7 @@ def test_get_transcripts_mapping(api):
                for t_real, t_expected in
                zip(r.TranscriptMappingInfo, [{'cds_start': 111957492,
                                               'cds_stop': 111956019,
+                                              'transcript': 'NM_012459.2',
                                               'name': 'NM_012459',
                                               'stop': 111955524,
                                               'start': 111957522,
@@ -812,6 +829,7 @@ def test_get_transcripts_mapping(api):
                                               'orientation': '-'},
                                              {'cds_start': None,
                                               'cds_stop': None,
+                                              'transcript': 'NR_028383.1',
                                               'name': 'NR_028383',
                                               'stop': 111955524,
                                               'start': 111957522,
@@ -820,6 +838,7 @@ def test_get_transcripts_mapping(api):
                                               'orientation': '-'},
                                              {'cds_start': 111957632,
                                               'cds_stop': 111965694,
+                                              'transcript': 'NM_003002.2',
                                               'name': 'NM_003002',
                                               'stop': 111966518,
                                               'start': 111957571,

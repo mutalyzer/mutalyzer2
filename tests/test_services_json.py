@@ -220,6 +220,7 @@ def test_get_transcripts_mapping(api):
     r = api('getTranscriptsMapping', 'hg19', 'chr11', 111955524, 111966518)
     assert r == [{'cds_start': 111957492,
                   'cds_stop': 111956019,
+                  'transcript': 'NM_012459.2',
                   'name': 'NM_012459',
                   'stop': 111955524,
                   'start': 111957522,
@@ -228,6 +229,7 @@ def test_get_transcripts_mapping(api):
                   'orientation': '-'},
                  {'cds_start': None,
                   'cds_stop': None,
+                  'transcript': 'NR_028383.1',
                   'name': 'NR_028383',
                   'stop': 111955524,
                   'start': 111957522,
@@ -236,6 +238,7 @@ def test_get_transcripts_mapping(api):
                   'orientation': '-'},
                  {'cds_start': 111957632,
                   'cds_stop': 111965694,
+                  'transcript': 'NM_003002.2',
                   'name': 'NM_003002',
                   'stop': 111966518,
                   'start': 111957571,
