@@ -735,20 +735,7 @@ class Converter(object) :
             if not core_mapping:
                 #balen
                 continue
-            # construct the variant description
-            if self.mapping.reference_type == 'lrg':
-                accNo = self.mapping.accession
-            else:
-                accNo = "%s.%s" % (self.mapping.accession, self.mapping.version)
-            if self.mapping.select_transcript:
-                if self.mapping.reference_type == 'lrg':
-                    selector = 't%d' % self.mapping.transcript
-                elif self.mapping.transcript:
-                    selector = '(%s_v%.3i)' % (self.mapping.gene, self.mapping.transcript)
-                else:
-                    selector = '(%s)' % self.mapping.gene
-            else:
-                selector = ''
+            reference = self.mapping.reference
             geneName = self.mapping.gene
             strand = self.mapping.orientation == 'forward'
 
@@ -798,7 +785,7 @@ class Converter(object) :
             else:
                 mutation = '[' + ';'.join(mutations) + ']'
 
-            description = "%s%s:%c.%s" % (accNo, selector, mtype, mutation)
+            description = "%s:%c.%s" % (reference, mtype, mutation)
             HGVS_notatations[geneName].append(description)
             NM_list.append(description)
         #for
