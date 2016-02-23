@@ -468,6 +468,38 @@ class TranscriptMapping(db.Base):
     def cds(self, cds):
         self.cds_start, self.cds_stop = cds or (None, None)
 
+    def get_reference(self, include_version=True):
+        """
+        Get fully qualified reference for this transcript.
+
+        You would usually want to use the simpler :attr:`reference` property
+        instead, except if the accession number may not include version number
+        (which we consider bad practice).
+        """
+        if include_version and self.version:
+            accession = '%s.%i' % (self.accession, self.version)
+        else:
+            accession = self.accession
+
+        if self.select_transcript:
+            if self.reference_type == 'lrg':
+                selector = 't%d' % self.transcript
+            elif self.transcript:
+                selector = '(%s_v%.3i)' % (self.gene, self.transcript)
+            else:
+                selector = '(%s)' % self.gene
+        else:
+            selector = ''
+
+        return '%s%s' % (accession, selector)
+
+    @property
+    def reference(self):
+        """
+        Fully qualified reference for this transcript.
+        """
+        return self.get_reference()
+
 
 Index('transcript_mapping_transcript',
       TranscriptMapping.accession, TranscriptMapping.version,

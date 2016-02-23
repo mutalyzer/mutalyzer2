@@ -264,24 +264,8 @@ class MutalyzerService(ServiceBase):
                      "Finished processing getTranscripts(%s %s %s %s)"
                      % (build, chrom, pos, versions))
 
-        transcripts = []
-        for mapping in mappings:
-            if versions and mapping.version:
-                accession = '%s.%i' % (mapping.accession, mapping.version)
-            else:
-                accession = mapping.accession
-            if mapping.select_transcript:
-                if mapping.reference_type == 'lrg':
-                    selector = 't%d' % mapping.transcript
-                elif mapping.transcript:
-                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
-                else:
-                    selector = '(%s)' % mapping.gene
-            else:
-                selector = ''
-            transcripts.append('%s%s' % (accession, selector))
-
-        return transcripts
+        return [mapping.get_reference(include_version=versions)
+                for mapping in mappings]
     #getTranscripts
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=Array(Mandatory.Unicode))
@@ -309,24 +293,7 @@ class MutalyzerService(ServiceBase):
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getTranscriptsByGene(%s %s)" % (build, name))
 
-        transcripts = []
-        for mapping in mappings:
-            if mapping.version:
-                accession = '%s.%i' % (mapping.accession, mapping.version)
-            else:
-                accession = mapping.accession
-            if mapping.select_transcript:
-                if mapping.reference_type == 'lrg':
-                    selector = 't%d' % mapping.transcript
-                elif mapping.transcript:
-                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
-                else:
-                    selector = '(%s)' % mapping.gene
-            else:
-                selector = ''
-            transcripts.append('%s%s' % (accession, selector))
-
-        return transcripts
+        return [mapping.reference for mapping in mappings]
     #getTranscriptsByGeneName
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
@@ -414,24 +381,8 @@ class MutalyzerService(ServiceBase):
             "Finished processing getTranscriptsRange(%s %s %s %s %s)" % (
             build, chrom, pos1, pos2, method))
 
-        transcripts = []
-        for mapping in mappings:
-            if versions and mapping.version:
-                accession = '%s.%i' % (mapping.accession, mapping.version)
-            else:
-                accession = mapping.accession
-            if mapping.select_transcript:
-                if mapping.reference_type == 'lrg':
-                    selector = 't%d' % mapping.transcript
-                elif mapping.transcript:
-                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
-                else:
-                    selector = '(%s)' % mapping.gene
-            else:
-                selector = ''
-            transcripts.append('%s%s' % (accession, selector))
-
-        return transcripts
+        return [mapping.get_reference(include_version=versions)
+                for mapping in mappings]
     #getTranscriptsRange
 
     @srpc(Mandatory.Unicode, Mandatory.Unicode, Mandatory.Integer,
@@ -527,22 +478,7 @@ class MutalyzerService(ServiceBase):
 
         for mapping in mappings:
             t = TranscriptMappingInfo()
-
-            if mapping.version:
-                accession = '%s.%i' % (mapping.accession, mapping.version)
-            else:
-                accession = mapping.accession
-            if mapping.select_transcript:
-                if mapping.reference_type == 'lrg':
-                    selector = 't%d' % mapping.transcript
-                elif mapping.transcript:
-                    selector = '(%s_v%.3i)' % (mapping.gene, mapping.transcript)
-                else:
-                    selector = '(%s)' % mapping.gene
-            else:
-                selector = ''
-            t.transcript = '%s%s' % (accession, selector)
-
+            t.transcript = mapping.reference
             t.name = mapping.accession
             t.version = mapping.version
             t.gene = mapping.gene
