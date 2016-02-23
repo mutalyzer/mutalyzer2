@@ -860,6 +860,9 @@ def import_from_reference(assembly, reference):
     retriever = Retriever.GenBankRetriever(output)
     record = retriever.loadrecord(reference)
 
+    if record.molType != 'm':
+        raise ValueError('Only mitochondial references are supported')
+
     select_transcript = len(record.geneList) > 1
 
     for gene in record.geneList:
