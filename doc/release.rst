@@ -72,8 +72,8 @@ the upstream Mutalyzer repository and you have push rights there.
    And submit a pull request for this branch.
 
 5. If everything looks ok and the pull request has been accepted you can push
-   the tag and update the `release` branch. Beware to re-tag if the pull
-   request was updated meanwhile. The working branch can be deleted.
+   the tag and update the `release` branch. Make sure to re-tag if the pull
+   request was updated meanwhile. The release branch can be deleted.
 
    ::
 
