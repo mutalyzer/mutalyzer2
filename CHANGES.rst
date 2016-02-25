@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.16
 --------------
 
-Release date to be decided.
+Released on February 25th 2016.
 
 - Fixed transcript naming in mapping webservices (`#147
   <https://github.com/mutalyzer/mutalyzer/pull/147>`_). See below for
