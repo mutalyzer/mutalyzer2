@@ -4,10 +4,44 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.16
+Version 2.0.17
 --------------
 
 Release date to be decided.
+
+
+Version 2.0.16
+--------------
+
+Released on February 25th 2016.
+
+- Fixed transcript naming in mapping webservices (`#147
+  <https://github.com/mutalyzer/mutalyzer/pull/147>`_). See below for
+  :ref:`details <changelog_2016_details>`.
+- Support LRG transcripts in the position converter (`#147
+  <https://github.com/mutalyzer/mutalyzer/pull/147>`_).
+- Don't report ``ext*?`` when variant RNA has stop codon (`#146
+  <https://github.com/mutalyzer/mutalyzer/pull/146>`_).
+
+.. _changelog_2016_details:
+
+The following three webservice methods return a list of transcript identifiers
+for some query:
+
+- `getTranscriptsRange`
+- `getTranscripts`
+- `getTranscriptsByGeneName`
+
+Previously they didn't work correctly for LRG transcripts (a bogus version was
+included and no transcript was selected) and RefSeq transcripts on mtDNA (no
+transcript was selected).
+
+Additionally, the `getTranscriptsMapping` webservice method didn't return
+enough information to construct a complete transcript name. This is now
+reported in a new `transcript` field.
+
+Finally, the `getTranscriptsRange` method now optionally includes version
+numbers with the boolean `versions` argument (default `false`).
 
 
 Version 2.0.15
