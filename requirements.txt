@@ -11,7 +11,7 @@ backtranslate==0.0.5
 biopython==1.66
 chardet==2.3.0
 cssselect==0.9.1
-description-extractor==2.2.1
+description-extractor==2.3.2
 interval-binning==1.0.0
 lxml==3.4.4
 mock==1.3.0
