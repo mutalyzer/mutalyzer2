@@ -1591,6 +1591,7 @@ def test_legend_mrna_by_construction(output, checker):
         ['SDHD_i001', 'BAA81889.1', None, 'small subunit of cytochrome b of succinate dehydrogenase', 'construction']
     ]
 
+
 @with_references('NM_000143.3')
 def test_protein_ext_stop(output, checker):
     """
@@ -1599,3 +1600,119 @@ def test_protein_ext_stop(output, checker):
     """
     checker('NM_000143.3:c.1531T>G')
     assert 'NM_000143.3(FH_i001):p.(*511Glyext*3)' in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_subst(output, checker):
+    """
+    Simple substitution.
+    """
+    check_variant('NM_003002.2:c.109G>T', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Asp37Tyr)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_del(output, checker):
+    """
+    Simple in-frame deletion.
+    """
+    check_variant('NM_003002.2:c.109_111del', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Asp37del)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_del_large(output, checker):
+    """
+    Large simple in-frame deletion.
+    """
+    check_variant('NM_003002.2:c.189_296del', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Leu64_Leu99del)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_del_end(output, checker):
+    """
+    Simple in-frame deletion before the stop codon.
+    """
+    check_variant('NM_003002.2:c.466_477del', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Leu156*)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_del_near_end(output, checker):
+    """
+    Simple in-frame deletion near the stop codon.
+    """
+    check_variant('NM_003002.2:c.463_474del', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Met155_Lys158del)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_create_stop(output, checker):
+    """
+    Simple substitution creating an in-frame stop codon.
+    """
+    check_variant('NM_003002.2:c.112C>T', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Arg38*)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_create_stop_delins(output, checker):
+    """
+    Larger delins creating an in-frame stop codon.
+    """
+    check_variant('NM_003002.2:c.111_112delinsAT', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Asp37_Arg38delinsGlu*)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_create_stop_delins_match_end(output, checker):
+    """
+    Larger delins creating an in-frame stop codon where the inserted sequence
+    matches the original protein end.
+    """
+    check_variant('NM_003002.2:c.109_112delinsTTGT', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Asp37_Arg38delinsLeu*)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_subst_create_stop_versus_del(output, checker):
+    """
+    Simple substitution creating an in-frame stop codon yielding protein X and
+    large deletion up to the stop codon yielding the same protein X should
+    have different p. descriptions.
+    """
+    check_variant('NM_003002.2:c.322G>T', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Gly108*)' \
+        in output.getOutput('protDescriptions')
+
+    check_variant('NM_003002.2:c.322_477del', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Gly108_Leu159del)' \
+        in output.getOutput('protDescriptions')
+
+
+@with_references('NM_003002.2')
+def test_protein_delins_create_stop_versus_del(output, checker):
+    """
+    Simple delins creating one new AA and an in-frame stop codon yielding
+    protein X and large delins up to the stop codon yielding the same protein
+    X should have different p. descriptions.
+    """
+    check_variant('NM_003002.2:c.320_322delinsCCT', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Leu107_Gly108delinsPro*)' \
+        in output.getOutput('protDescriptions')
+
+    check_variant('NM_003002.2(SDHD_v001):c.320_476delinsC', output)
+    assert 'NM_003002.2(SDHD_i001):p.(Leu107_Leu159delinsPro)' \
+        in output.getOutput('protDescriptions')
+
+
+# TODO: delins creating stop and one AA matching end of original, versus del

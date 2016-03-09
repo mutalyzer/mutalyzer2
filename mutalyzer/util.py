@@ -494,6 +494,13 @@ def in_frame_description(s1, s2):
                 lcp, lcp, s2_end)
     #if
 
+    # todo: condition may be improved (can we detect if a stop codon was created?)
+    # Inframe stop due to something more than a single substitution.
+    if lcp < len(s2) <= lcp + 6:
+        return ('p.(%s%i_%s%idelins%s*)' % \
+                (seq3(s1[lcp]), lcp + 1, seq3(s1[len(s2)]), len(s2) + 1, seq3(s2[lcp:])),
+                lcp, len(s2) + 1, len(s2) + 1)
+
     # Deletion / Inframe stop.
     if not s2_end - lcp:
         if len(s2) == lcp:
