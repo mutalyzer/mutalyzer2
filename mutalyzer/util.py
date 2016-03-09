@@ -29,11 +29,23 @@ import operator
 import sys
 import time
 
+from Bio import Seq
 from Bio import SeqIO
 from Bio.SeqUtils import seq3
 
 # NOTE: This is a temporary fix.
-from extractor.describe import reverse_complement, palinsnoop, roll
+from extractor.describe import palinsnoop, roll
+
+
+def reverse_complement(sequence):
+    """
+    Reverse complement of a sequence represented as unicode string.
+
+    Unfortunately, BioPython's reverse_complement doesn't work on unicode
+    strings. We work almost exclusively with unicode strings, so this is a
+    convenience wrapper.
+    """
+    return unicode(Seq.reverse_complement(str(sequence)))
 
 
 def is_utf8_alias(encoding):
