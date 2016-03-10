@@ -124,7 +124,7 @@
             <h4>Description relative to transcription start</h4>
             <p>(Not for use in LSDBs in case of protein-coding transcripts).</p>
           {% endif %}
-          <p><code><a href="{{ url_for('.name_checker', description=genomicDescription) }}">{{ genomicDescription }}</a></code></p>
+          <p><code><a href="{{ url_for('.name_checker', description=genomicDescription, standalone=standalone|int or None) }}">{{ genomicDescription }}</a></code></p>
         {% endif %}
 
         {% if chromDescription %}
@@ -138,7 +138,7 @@
             {% if i.endswith('?') %}
               <p><code>{{ i }}</code></p>
             {% else %}
-              <p><code><a href="{{ url_for('.name_checker', description=i) }}">{{ i }}</a></code></p>
+              <p><code><a href="{{ url_for('.name_checker', description=i, standalone=standalone|int or None) }}">{{ i }}</a></code></p>
             {% endif %}
           {% endfor %}
         {% endif %}

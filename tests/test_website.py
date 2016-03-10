@@ -9,6 +9,8 @@ import bz2
 from mock import patch
 import os
 from io import BytesIO
+import re
+import urlparse
 
 from Bio import Entrez
 import lxml.html
@@ -22,6 +24,19 @@ from fixtures import with_references
 
 
 # TODO: Tests for /upload.
+
+
+def get_links(data, path=None):
+    """
+    Extract all link targets, or only those targeting the specified path, from
+    the page and parse them.
+    """
+    def parse_link(link):
+        splitted = urlparse.urlsplit(link)
+        return splitted.path, urlparse.parse_qs(splitted.query)
+
+    links = [parse_link(link) for link in re.findall('href="([^"]+)"', data)]
+    return [(p, q) for p, q in links if path is None or p == path]
 
 
 @pytest.fixture
@@ -302,6 +317,22 @@ def test_check_noninteractive(website):
 
 
 @with_references('NG_012772.1')
+def test_check_noninteractive_links(website):
+    """
+    Submitting non-interactively should have links to transcripts also
+    non-interactive.
+    """
+    r = website.get('/name-checker',
+                    query_string={'description': 'NG_012772.1:g.128del',
+                                  'standalone': '1'})
+    assert '0 Errors' in r.data
+
+    links = get_links(r.data, path='/name-checker')
+    assert len(links) >= 2
+    assert all(q['standalone'] == ['1'] for _, q in links)
+
+
+@with_references('NG_012772.1')
 def test_check_interactive_links(website):
     """
     Submitting interactively should have links to transcripts also
@@ -310,8 +341,10 @@ def test_check_interactive_links(website):
     r = website.get('/name-checker',
                     query_string={'description': 'NG_012772.1:g.128del'})
     assert '0 Errors' in r.data
-    assert 'href="/name-checker?description=NG_012772.1%3Ag.128del"' in r.data
-    assert 'href="/name-checker?description=NG_012772.1%28BRCA2_v001%29%3Ac.-5100del"' in r.data
+
+    links = get_links(r.data, path='/name-checker')
+    assert len(links) >= 2
+    assert all('standalone' not in q for _, q in links)
 
 
 def test_snp_converter_valid(website):
