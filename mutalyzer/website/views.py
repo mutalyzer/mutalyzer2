@@ -83,12 +83,12 @@ def add_globals():
 
 @website.errorhandler(404)
 def error_not_found(error):
-    return render_template('not-found.html', terms=request_terms()), 404
+    return render_template('not-found.jinja2', terms=request_terms()), 404
 
 
 @website.app_errorhandler(404)
 def app_error_not_found(error):
-    return render_template('not-found.html', terms=request_terms(),
+    return render_template('not-found.jinja2', terms=request_terms(),
                            **global_context()), 404
 
 
@@ -97,7 +97,7 @@ def homepage():
     """
     Website homepage.
     """
-    return render_template('homepage.html')
+    return render_template('homepage.jinja2')
 
 
 @website.route('/about')
@@ -105,7 +105,7 @@ def about():
     """
     About page.
     """
-    return render_template('about.html', counter_totals=stats.get_totals())
+    return render_template('about.jinja2', counter_totals=stats.get_totals())
 
 
 @website.route('/name-generator')
@@ -113,7 +113,7 @@ def name_generator():
     """
     Name generator page.
     """
-    return render_template('name-generator.html')
+    return render_template('name-generator.jinja2')
 
 
 @website.route('/webservices')
@@ -121,7 +121,7 @@ def webservices():
     """
     Webservices documentation page.
     """
-    return render_template('webservices.html')
+    return render_template('webservices.jinja2')
 
 
 @website.route('/soap-api')
@@ -190,7 +190,7 @@ def syntax_checker():
     description = request.args.get('description')
 
     if not description:
-        return render_template('syntax-checker.html')
+        return render_template('syntax-checker.jinja2')
 
     output = Output(__file__)
     output.addMessage(__file__, -1, 'INFO',
@@ -207,7 +207,7 @@ def syntax_checker():
     output.addMessage(__file__, -1, 'INFO',
                       'Finished request syntaxCheck(%s)' % description)
 
-    return render_template('syntax-checker.html',
+    return render_template('syntax-checker.jinja2',
                            description=description,
                            messages=messages,
                            parse_error=parse_error)
@@ -237,7 +237,7 @@ def name_checker():
     description = request.args.get('description')
 
     if not description:
-        return render_template('name-checker.html')
+        return render_template('name-checker.jinja2')
 
     output = Output(__file__)
     output.addMessage(__file__, -1, 'INFO', 'Received variant %s from %s'
@@ -328,7 +328,7 @@ def name_checker():
     output.addMessage(__file__, -1, 'INFO',
                       'Finished variant %s' % description)
 
-    return render_template('name-checker.html', **arguments)
+    return render_template('name-checker.jinja2', **arguments)
 
 
 @website.route('/bed')
@@ -406,7 +406,7 @@ def position_converter():
     description = request.args.get('description')
 
     if not description:
-        return render_template('position-converter.html',
+        return render_template('position-converter.jinja2',
                                assemblies=assemblies,
                                assembly_name_or_alias=assembly_name_or_alias)
 
@@ -463,7 +463,7 @@ def position_converter():
                       'Finished request positionConverter(%s, %s)'
                       % (assembly_name_or_alias, description))
 
-    return render_template('position-converter.html',
+    return render_template('position-converter.jinja2',
                            assemblies=assemblies,
                            assembly_name_or_alias=assembly_name_or_alias,
                            description=description,
@@ -489,7 +489,7 @@ def snp_converter():
     rs_id = request.args.get('rs_id')
 
     if not rs_id:
-        return render_template('snp-converter.html')
+        return render_template('snp-converter.jinja2')
 
     output = Output(__file__)
     output.addMessage(__file__, -1, 'INFO',
@@ -505,7 +505,7 @@ def snp_converter():
     output.addMessage(__file__, -1, 'INFO',
                       'Finished request snpConvert(%s)' % rs_id)
 
-    return render_template('snp-converter.html',
+    return render_template('snp-converter.jinja2',
                            rs_id=rs_id,
                            descriptions=descriptions,
                            messages=messages,
@@ -521,7 +521,7 @@ def reference_loader():
         .order_by(*Assembly.order_by_criteria) \
         .all()
 
-    return render_template('reference-loader.html',
+    return render_template('reference-loader.jinja2',
                            assemblies=assemblies,
                            assembly_name_or_alias=settings.DEFAULT_ASSEMBLY,
                            max_file_size=settings.MAX_FILE_SIZE // 1048576)
@@ -674,7 +674,7 @@ def reference_loader_submit():
                       'Finished request upload(%s) with arguments %s from %s'
                       % (method, unicode(request.form), request.remote_addr))
 
-    return render_template('reference-loader.html',
+    return render_template('reference-loader.jinja2',
                            assemblies=assemblies,
                            assembly_name_or_alias=settings.DEFAULT_ASSEMBLY,
                            max_file_size=settings.MAX_FILE_SIZE // 1048576,
@@ -705,7 +705,7 @@ def back_translator():
     output.addMessage(__file__, -1, 'INFO', 'Finished Back Translate request')
 
     return render_template(
-        'back-translator.html', errors=errors, summary=summary,
+        'back-translator.jinja2', errors=errors, summary=summary,
         description=description or '', messages=messages, variants=variants)
 
 
@@ -714,7 +714,7 @@ def description_extractor():
     """
     Description extractor loader form.
     """
-    return render_template('description-extractor.html',
+    return render_template('description-extractor.jinja2',
                            extractor_max_input_length=settings.EXTRACTOR_MAX_INPUT_LENGTH)
 
 
@@ -835,7 +835,7 @@ def description_extractor_submit():
     output.addMessage(__file__, -1, 'INFO',
                       'Finished Description Extract request')
 
-    return render_template('description-extractor.html',
+    return render_template('description-extractor.jinja2',
         extractor_max_input_length=settings.EXTRACTOR_MAX_INPUT_LENGTH,
         reference_sequence=reference_sequence or '',
         sample_sequence=sample_sequence or '',
@@ -878,7 +878,7 @@ def batch_jobs():
     assembly_name_or_alias = request.args.get('assembly_name_or_alias',
                                               settings.DEFAULT_ASSEMBLY)
 
-    return render_template('batch-jobs.html',
+    return render_template('batch-jobs.jinja2',
                            assemblies=assemblies,
                            assembly_name_or_alias=assembly_name_or_alias,
                            job_type=job_type,
@@ -951,7 +951,7 @@ def batch_jobs_submit():
 
     messages = map(util.message_info, output.getMessages())
 
-    return render_template('batch-jobs.html',
+    return render_template('batch-jobs.jinja2',
                            assemblies=assemblies,
                            assembly_name_or_alias=assembly_name_or_alias,
                            job_type=job_type,
@@ -968,7 +968,7 @@ def batch_job_progress():
     json = bool(request.args.get('json'))
 
     if not result_id:
-        return render_template('batch-job-progress.html')
+        return render_template('batch-job-progress.jinja2')
 
     batch_job = BatchJob.query.filter_by(result_id=result_id).first()
 
@@ -980,16 +980,16 @@ def batch_job_progress():
         if os.path.isfile(path):
             if json:
                 return jsonify(items_left=1, complete=True)
-            return render_template('batch-job-progress.html',
+            return render_template('batch-job-progress.jinja2',
                                    result_id=result_id)
         else:
-            return render_template('batch-job-progress.html')
+            return render_template('batch-job-progress.jinja2')
 
     items_left = batch_job.batch_queue_items.count()
 
     if json:
         return jsonify(items_left=items_left, complete=False)
-    return render_template('batch-job-progress.html',
+    return render_template('batch-job-progress.jinja2',
                            result_id=result_id,
                            items_left=items_left)
 
