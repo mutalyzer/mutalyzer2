@@ -1,6 +1,7 @@
 # Validate this file using http://lint.travis-ci.org/
 language: python
 sudo: false
+cache: pip
 python: "2.7"
 addons:
   apt_packages: swig
