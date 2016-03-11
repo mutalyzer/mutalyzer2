@@ -201,15 +201,30 @@ class Converter(object) :
             #   A better fix is to return the entire list of mappings, and/or
             #   remove all secondary mappings for the HLA cluster.
             #   See also test_converter.test_hla_cluster and bug #58.
-            self.mapping = mappings.order_by(TranscriptMapping.version.desc(),
+            mapping = mappings.order_by(TranscriptMapping.version.desc(),
                                              Chromosome.name.asc()).first()
 
-            if not self.mapping:
-                self.__output.addMessage(__file__, 4, "EACCNOTINDB",
-                                         "The accession number %s %s"
-                                         "with transcript %s version %s could not be found "
-                                         "in our database." %
-                                         (acc, 'version %s ' % version if version else '', selector, selector_version))
+            if not mapping:
+                self.__output.addMessage(
+                    __file__, 4, 'EACCNOTINDB',
+                    'The accession number %s %swith %s%scould not be '
+                    'found in our database.' %
+                    (acc, 'version %s ' % version if version else '',
+                     'gene %s ' % selector if selector else '',
+                     'transcript %s ' % selector_version if selector_version else ''))
+                return
+
+            if mapping.select_transcript:
+                if mapping.reference_type == 'refseq' and selector is None:
+                    self.__output.addMessage(__file__, 4, 'EINVALIDGENE',
+                                             'No gene specified.')
+                    return
+                if mapping.reference_type in ('refseq', 'lrg') and selector_version is None:
+                    self.__output.addMessage(__file__, 4, 'ENOTRANSCRIPT',
+                                             'No transcript specified.')
+                    return
+
+            self.mapping = mapping
             return
 
         if not version:
@@ -507,15 +522,13 @@ class Converter(object) :
                 version = int(self.parseTree.Version)
             except ValueError:
                 version = None
+            selector = selector_version = None
             if self.parseTree.Gene:
                 selector = self.parseTree.Gene.GeneSymbol
-                selector_version = int(self.parseTree.Gene.TransVar or 1)
+                if self.parseTree.Gene.TransVar:
+                    selector_version = int(self.parseTree.Gene.TransVar)
             elif self.parseTree.LRGTranscriptID:
-                selector = None
                 selector_version = int(self.parseTree.LRGTranscriptID)
-                pass
-            else:
-                selector = selector_version = None
             self._get_mapping(acc, version, selector, selector_version)
 
         mappings = self._coreMapping()
