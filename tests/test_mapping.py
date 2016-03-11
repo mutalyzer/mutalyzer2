@@ -265,6 +265,30 @@ def test_chrm_c2chrom(converter):
     assert genomic == 'NC_012920.1:m.12030del'
 
 
+def test_chrm_c2chrom_no_gene(output, converter):
+    """
+    Mitochondrial c. to m. without selecting gene.
+    """
+    genomic = converter.c2chrom('NC_012920.1:c.1271del')
+    assert genomic is None
+    einvalidgene = output.getMessagesWithErrorCode('EINVALIDGENE')
+    assert len(einvalidgene) == 1
+    enotranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    assert len(enotranscript) == 0
+
+
+def test_chrm_c2chrom_no_transcript(output, converter):
+    """
+    Mitochondrial c. to m. without selecting transcript.
+    """
+    genomic = converter.c2chrom('NC_012920.1(ND4):c.1271del')
+    assert genomic is None
+    einvalidgene = output.getMessagesWithErrorCode('EINVALIDGENE')
+    assert len(einvalidgene) == 0
+    enotranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    assert len(enotranscript) == 1
+
+
 def test_nm_without_selector_chrom2c(converter):
     """
     NM reference without transcript selection c. to g.
@@ -359,6 +383,18 @@ def test_ins_seq_seq_c2chrom_reverse(converter):
     """
     genomic = converter.c2chrom('NM_012459.2:c.10_11ins[TTT;ATC]')
     assert genomic == 'NC_000011.9:g.111957482_111957483ins[GAT;AAA]'
+
+
+def test_lrg_c2chrom_no_transcript(output, converter):
+    """
+    LRG c. to g. without selecting transcript.
+    """
+    genomic = converter.c2chrom('LRG_348:c.44del')
+    assert genomic is None
+    einvalidgene = output.getMessagesWithErrorCode('EINVALIDGENE')
+    assert len(einvalidgene) == 0
+    enotranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    assert len(enotranscript) == 1
 
 
 @pytest.mark.parametrize('coding,chromosomal', LRG_1_T1_POSITIONS)
