@@ -20,6 +20,7 @@ from __future__ import unicode_literals
 
 from operator import attrgetter
 
+import Bio.Seq
 from Bio.Data import CodonTable
 from Bio.Alphabet import IUPAC
 from Bio.Alphabet import DNAAlphabet
@@ -27,7 +28,7 @@ from Bio.Alphabet import ProteinAlphabet
 from Bio.Alphabet import _verify_alphabet
 
 from mutalyzer import util
-from mutalyzer.db.models import Assembly
+from mutalyzer.db.models import Assembly, Reference
 from mutalyzer.grammar import Grammar
 from mutalyzer.mutator import Mutator
 from mutalyzer.mapping import Converter
@@ -1740,7 +1741,9 @@ def check_variant(description, output):
                     'Indexing by protein isoform is not supported.')
         retriever = Retriever.GenBankRetriever(output)
 
-    retrieved_record = retriever.loadrecord(record_id)
+    retrieved_record = record_from_database(record_id)
+    if not retrieved_record:
+        retrieved_record = retriever.loadrecord(record_id)
 
     if not retrieved_record:
         return
@@ -2014,3 +2017,28 @@ def check_variant(description, output):
 
     _add_batch_output(output)
 #check_variant
+
+
+def record_from_database(accession):
+    reference = Reference.query.filter_by(accession=accession).first()
+    if reference is None:
+        return
+
+    record = GenRecord.Record()
+
+    # TODO: shouldn't have to be a seq record
+    record.seq = Bio.Seq.Seq(reference.sequence, DNAAlphabet())
+
+    record.id = accession
+    record.source_id = accession
+    try:
+        record.source_accession, record.source_version = accession.rsplit(',', 1)
+    except ValueError:
+        record.source_accession = accession
+        record.source_version = '1'
+    record.source_gi = reference.geninfo_identifier
+    record.organism = 'todo' # biorecord.annotations['organism']
+    #record.organelle = 'mitochondrion'
+    record.molType = 'n' if accession.startswith('NM') else 'g'  # TODO: m.
+
+    return record

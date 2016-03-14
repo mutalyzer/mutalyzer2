@@ -510,6 +510,7 @@ class GBparser():
                             record.molType = 'm'
                     #if
 
+                    # TODO: record.source seems to be unused.
                     fakeGene = Locus("001")
                     record.source.transcriptList.append(fakeGene)
                     fakeGene.CDS = PList()

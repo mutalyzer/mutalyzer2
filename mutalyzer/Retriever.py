@@ -332,7 +332,7 @@ class GenBankRetriever(Retriever):
 
         return out_filename, gi
 
-    def fetch(self, name):
+    def fetch(self, accession):
         """
         Todo: Documentation.
 
@@ -739,72 +739,62 @@ class GenBankRetriever(Retriever):
                 return (self.write(raw_data, reference.accession, 0) and
                         reference.accession)
 
-    def loadrecord(self, identifier):
+    def loadrecord(self, accession, version):
         """
         Load a RefSeq record and return it.
 
         The record is found by trying the following options in order:
 
-        1. Returned from the cache if it is there.
+        1. Returned from the database if it is there.
         2. Re-created (if it was created by slicing) or re-downloaded (if it
            was created by URL) if we have information on its source in the
            database.
         3. Fetched from the NCBI.
 
-        :arg unicode identifier: A RefSeq accession number or geninfo
-            identifier (GI).
+        :arg unicode accession: A RefSeq accession number.
+        :arg int version: Version of the accession number.
 
         :returns: A parsed RefSeq record or `None` if no record could be found
           for the given identifier.
         :rtype: object
         """
-        if identifier[0].isdigit():
-            # This is a GI number (geninfo identifier).
-            reference = Reference.query \
-                .filter_by(geninfo_identifier=identifier) \
-                .first()
-        else:
-            # This is a RefSeq accession number.
-            reference = Reference.query \
-                .filter_by(accession=identifier) \
-                .first()
+        reference = Reference.query.filter_by(
+            accession=accession, version=version
+        ).first()
 
         if reference is None:
             # We don't know it, fetch it from NCBI.
-            filename = self.fetch(identifier)
+            reference = self.fetch(accession, version)
 
-        else:
-            # We have seen it before.
-            filename = self._name_to_file(reference.accession)
+        # TODO: Also fetch if the sequence is not in the cach.
+        #if need_sequence and not sequence_in_cache(accession, version):
+        #    reference = self.fetch(accession, version)
 
-            if os.path.isfile(filename):
-                # It is still in the cache, so filename is valid.
-                pass
+        # TODO: should be handled in self.fetch
+            # elif reference.slice_accession:
+            #     # It was previously created by slicing.
+            #     cast_orientation = {
+            #         None: None, 'forward': 1, 'reverse': 2}
+            #     if not self.retrieveslice(
+            #             reference.slice_accession, reference.slice_start,
+            #             reference.slice_stop,
+            #             cast_orientation[reference.slice_orientation]):
+            #         filename = None
 
-            elif reference.slice_accession:
-                # It was previously created by slicing.
-                cast_orientation = {
-                    None: None, 'forward': 1, 'reverse': 2}
-                if not self.retrieveslice(
-                        reference.slice_accession, reference.slice_start,
-                        reference.slice_stop,
-                        cast_orientation[reference.slice_orientation]):
-                    filename = None
+            # elif reference.download_url:
+            #     # It was previously created by URL.
+            #     if not self.downloadrecord(reference.download_url):
+            #         filename = None
 
-            elif reference.download_url:
-                # It was previously created by URL.
-                if not self.downloadrecord(reference.download_url):
-                    filename = None
+            # elif reference.geninfo_identifier:
+            #     # It was previously fetched from NCBI.
+            #     filename = self.fetch(reference.accession)
 
-            elif reference.geninfo_identifier:
-                # It was previously fetched from NCBI.
-                filename = self.fetch(reference.accession)
-
-            else:
-                # It was previously created by uploading.
-                self._output.addMessage(
-                    __file__, 4, 'ERETR', 'Please upload this sequence again.')
-                filename = None
+            # else:
+            #     # It was previously created by uploading.
+            #     self._output.addMessage(
+            #         __file__, 4, 'ERETR', 'Please upload this sequence again.')
+            #     filename = None
 
         # If filename is None, we could not retrieve the record.
         if filename is None:

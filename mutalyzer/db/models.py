@@ -152,16 +152,31 @@ class Reference(db.Base):
 
     id = Column(Integer, primary_key=True)
 
-    #: Accession number for this reference, including the version number if
-    #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
-    #: ``UD_138781341344``).
-    accession = Column(String(20), nullable=False, index=True, unique=True)
+    #: Accession number for this reference, not including the version number
+    #: (e.g., ``AL449423``, ``NM_000059``, ``LRG_23``, ``UD_138781341344``).
+    accession = Column(String(20), nullable=False)
+
+    #: Accession version (e.g., 3, 2). Not applicaple when `reference_type` is
+    #: ``lrg``.
+    version = Column(Integer)
+
+    #: Type of reference.
+    reference_type = Column(Enum('refseq', 'lrg', name='reference_type'),
+                            nullable=False)
+
+    #: Enclosing organelle. Used to differentiate between references requiring
+    #: ``m.`` and ``g.`` descriptions.
+    organelle = Column(Enum('nucleus', 'mitochondrion', name='organelle'),
+                       nullable=False)
+
+    #: Type of sequence.
+    sequence_type = Column(Enum('dna', 'rna', 'protein', name='sequence_type'),
+                           nullable=False)
 
     #: MD5 checksum of the reference file.
+    # TODO: keeping the checksum might be useful (e.g., to determine if we
+    # should update the database), but do we need the index and unique?
     checksum = Column(String(32), nullable=False, index=True, unique=True)
-
-    #: The corresponding GI number, if available.
-    geninfo_identifier = Column(String(13), index=True, unique=True)
 
     #: The accession number from which we took a slice, if available.
     slice_accession = Column(String(20))
@@ -185,12 +200,14 @@ class Reference(db.Base):
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, accession, checksum, geninfo_identifier=None,
-                 slice_accession=None, slice_start=None, slice_stop=None,
-                 slice_orientation=None, download_url=None):
+    def __init__(self, accession, reference_type, organelle, sequence_type,
+                 checksum, slice_accession=None, slice_start=None,
+                 slice_stop=None, slice_orientation=None, download_url=None):
         self.accession = accession
+        self.reference_type = reference_type
+        self.organelle = organelle
+        self.sequence_type = sequence_type
         self.checksum = checksum
-        self.geninfo_identifier = geninfo_identifier
         self.slice_accession = slice_accession
         self.slice_start = slice_start
         self.slice_stop = slice_stop
@@ -202,10 +219,111 @@ class Reference(db.Base):
         return '<Reference %r>' % self.accession
 
 
+Index('reference_accession_version',
+      Reference.accession, Reference.version,
+      unique=True)
 Index('reference_slice',
       Reference.slice_accession, Reference.slice_start, Reference.slice_stop,
       Reference.slice_orientation,
       unique=True)
+
+
+class Transcript(db.Base):
+    """
+    Mapping of a gene transcript on a reference.
+
+    .. note:: All positions are ordered according to the chromosome,
+       irrespective of transcript orientation. For example, `start` is always
+       smaller than `stop`.
+    """
+    __tablename__ = 'transcripts'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
+
+    id = Column(Integer, primary_key=True)
+    reference_id = Column(Integer,
+                          ForeignKey('references.id', ondelete='CASCADE'),
+                          nullable=False)
+
+    #: Gene symbol (e.g., ``DMD``, ``PSEN1``, ``TRNS1``).
+    gene = Column(String(30), nullable=False)
+
+    #: Transcript number in reference (e.g., 1, 2).
+    transcript = Column(Integer, nullable=False)
+
+    # Todo: Use constants and some utilities for conversion.
+    #: The orientation of the transcript on the chromosome.
+    orientation = Column(Enum('forward', 'reverse', name='orientation'),
+                         nullable=False)
+
+    #: The start position of the transcript on the chromosome (one-based,
+    #: inclusive, in chromosomal orientation).
+    start = Column(Integer, nullable=False)
+
+    #: The stop position of the transcript on the chromosome (one-based,
+    #: inclusive, in chromosomal orientation).
+    stop = Column(Integer, nullable=False)
+
+    #: The CDS start position of the transcript on the chromosome (one-based,
+    #: inclusive, in chromosomal orientation).
+    cds_start = Column(Integer)
+
+    #: The CDS stop position of the transcript on the chromosome (one-based,
+    #: inclusive).
+    cds_stop = Column(Integer)
+
+    #: The exon start positions of the transcript on the chromosome
+    #: (one-based, inclusive, in chromosomal orientation).
+    exon_starts = Column(Positions, nullable=False)
+
+    #: The exon start positions of the transcript on the chromosome
+    #: (one-based, inclusive, in chromosomal orientation).
+    exon_stops = Column(Positions, nullable=False)
+
+    #: The :class:`Assembly` this chromosome is in.
+    reference = relationship(
+        Reference,
+        lazy='joined',
+        innerjoin=True,
+        backref=backref('transcripts', lazy='dynamic',
+                        cascade='all, delete-orphan',
+                        passive_deletes=True))
+
+    def __init__(self, reference, gene, orientation, start, stop, exon_starts,
+                 exon_stops, transcript=1, cds=None):
+        self.reference = reference
+        self.gene = gene
+        self.orientation = orientation
+        self.start = start
+        self.stop = stop
+        self.exon_starts = exon_starts
+        self.exon_stops = exon_stops
+        self.transcript = transcript
+        self.cds = cds
+
+    def __repr__(self):
+        return ('<Transcript gene=%r transcript=%r>'
+                % (self.gene, self.transcript))
+
+    @property
+    def coding(self):
+        """
+        Set to `True` iff the transcript is coding.
+        """
+        return self.cds_start is not None and self.cds_stop is not None
+
+    @property
+    def cds(self):
+        """
+        Tuple of CDS start and stop positions on the chromosome, or `None` if
+        the transcript is non-coding.
+        """
+        if self.coding:
+            return self.cds_start, self.cds_stop
+        return None
+
+    @cds.setter
+    def cds(self, cds):
+        self.cds_start, self.cds_stop = cds or (None, None)
 
 
 class Assembly(db.Base):

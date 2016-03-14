@@ -285,7 +285,7 @@ class Record(object) :
         self.seq = ""
         self.mapping = []
         self.organelle = None
-        self.source = Gene(None)
+        self.source = Gene(None)          # TODO: seems to be unused
         self.description = ""
         self._sourcetype = None           #LRG or GB
         self.version = None
