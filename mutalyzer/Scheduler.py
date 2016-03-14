@@ -106,6 +106,25 @@ class Scheduler() :
         #TODO: Handle Connection errors in a try, except clause
         #Expected errors: socket.error
 
+        def encode_address(address):
+            """
+            Unfortunately, smtplib can only handle ASCII email addresses.
+
+            The domain name part should be punycode-encoded. The part before
+            the '@' should be encoded as ASCII if possible or as UTF8 if the
+            first-hop mail server supports this.
+
+            This is way to complicated, so we just encode the entire address
+            as ASCII or punycode if that fails.
+
+            https://bugs.python.org/issue20084
+            https://bugs.python.org/issue20083
+            """
+            try:
+                return address.encode('ascii')
+            except UnicodeEncodeError:
+                return address.encode('idna')
+
         from_address = 'Mutalyzer batch job <%s>' % (
             settings.BATCH_NOTIFICATION_EMAIL or settings.EMAIL)
         download_url = website.url_for('batch_job_result',
@@ -126,7 +145,7 @@ Mutalyzer batch scheduler""" % download_url)
 
         message["Subject"] = "Result of your Mutalyzer batch job"
         message["From"] = from_address
-        message["To"] = mailTo
+        message["To"] = encode_address(mailTo)
 
         try:
             smtpInstance = smtplib.SMTP('localhost')
@@ -140,7 +159,8 @@ Mutalyzer batch scheduler""" % download_url)
             return
 
         try:
-            smtpInstance.sendmail(from_address, mailTo, message.as_string())
+            smtpInstance.sendmail(from_address, encode_address(mailTo),
+                                  message.as_string())
         except smtplib.SMTPRecipientsRefused as e:
             for address, (code, error) in e.recipients.items():
                 print 'Could not send email to %s: (%s) %s' % (address,
