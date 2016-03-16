@@ -93,48 +93,42 @@
             <li class="dropdown {% if id == active_page %} active{% endif %}">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">External links <span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.genenames.org/guidelines.html"
-                target="new">Human Gene Nomenclature</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.hgvs.org/mutnomen/"
-                target="new">HGVS Variation Nomenclature</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://dx.doi.org/10.1002/humu.21427"
-                target="new">HGVS Nomenclature Extension Proposal</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.lovd.nl/"target="new">LOVD</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.genenames.org/guidelines.html">Human Gene Nomenclature</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.hgvs.org/mutnomen/">HGVS Variation Nomenclature</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://dx.doi.org/10.1002/humu.21427">HGVS Nomenclature Extension Proposal</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.lovd.nl/">LOVD</a></li>
               </ul>
             </li>
 
-            <li class="{% if active_page == 'about' %} active{% endif %}">
-                <a href="/about" >About</a>
-            </li>
             <li class="dropdown {% if id == active_page %} active{% endif %}">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Help <span class="caret"></span></a>
                 <ul class="dropdown-menu">
 
                     <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation" target="new">Documentation</a>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation">Documentation</a>
                     </li>
                     <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq" target="new">FAQ</a>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerFaq">FAQ</a>
                     </li>
                     <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise" target="new">Exercise</a>
+                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerExercise">Exercise</a>
                     </li>
                     <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer" target="new">Feedback</a>
-                    </li>
-                    <li>
-                        <a href="https://humgenprojects.lumc.nl/trac/mutalyzer/wiki/MutalyzerDocumentation#Mailinglist:mutalyzer-announce" target="new">Mailing list</a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/mutalyzer/mutalyzer" target="new">Source code</a>
+                        <a href="https://groups.google.com/forum/#!forum/mutalyzer">Mailing list</a>
                     </li>
                 </ul>
             </li>
 
-            <li>
-                <a href="mailto:mutalyzer@humgen.nl" target="new">Contact</a>
+            <li class="{% if active_page == 'about' %} active{% endif %}">
+                <a href="{{ url_for('website.about') }}" >About</a>
             </li>
 
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a class="navbar-brand" href="https://github.com/mutalyzer/mutalyzer"><img
+                  src="{{ url_for('static', filename='images/github_logo.png') }}" title="Mutalyzer on GitHub"></a>
+            </li>
         </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
@@ -184,7 +178,7 @@
         </div>
         <div class="col-md-4">
             <img src="{{ url_for('static', filename='images/LUMC_24x24.png') }}" align="middle">
-            <p>&copy; {{ copyright_years[0] }}-{{ copyright_years[1] }} <a href="http://www.lumc.nl" target="new">LUMC</a></p>
+            <p>&copy; {{ copyright_years[0] }}-{{ copyright_years[1] }} <a href="http://www.lumc.nl">LUMC</a></p>
         </div>
     </footer>
 

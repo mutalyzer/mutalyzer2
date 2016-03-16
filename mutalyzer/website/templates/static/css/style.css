@@ -104,6 +104,10 @@ footer.row {
 	border-color: #888;
 }
 
+.navbar-nav .navbar-brand img {
+    height: 100%;
+}
+
 .background {
 	background: url('../images/mutalyzer_logo.png');
 	background-size: 100%;
@@ -426,6 +430,12 @@ header.main-header {
 
 .label-left{
 	width: 160px;
+}
+
+/* Logos for thank you links on about page */
+.thanks a {
+    display: inline-block;
+    margin: 20px
 }
 
 /* NAME CHECKER SPECIFIC */

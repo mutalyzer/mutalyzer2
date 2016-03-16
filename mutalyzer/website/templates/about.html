@@ -5,6 +5,64 @@
 
 {% block content %}
 
+<h2>Contact</h2>
+
+<p>
+The <a href="https://groups.google.com/forum/#!forum/mutalyzer">Mutalyzer
+mailing list</a> is a general discussion list for Mutalyzer. Messages can be
+posted to this list via the Google Groups interface or by sending an email
+to <a href="mutalyzer@googlegroups.com">mutalyzer@googlegroups.com</a>.
+</p>
+
+<p>
+Bugs and concrete feature requests may also be filed directly in
+the <a href="https://github.com/mutalyzer/mutalyzer/issues">GitHub issue
+tracker</a>.
+</p>
+
+<p>
+If you are a regular user of the Mutalyzer webservices or are maintaining your
+own Mutalyzer installation, consider subscribing to
+the <a href="https://groups.google.com/forum/#!forum/mutalyzer-announce">Mutalyzer
+Announcements mailing list</a>. This is a low-volume mailing list for
+announcing updates to Mutalyzer and its infrastructure.
+</p>
+
+<p>
+If you have a private question or a security related issue to discuss, please
+use the private
+address <a href="mutalyzer@humgen.nl">mutalyzer@humgen.nl</a>.
+</p>
+
+<h2>Open Source</h2>
+
+<p>
+Mutalyzer is Open Source and available under
+the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General
+Public License</a>. Please <a href="mailto:mutalyzer@humgen.nl">contact the
+authors</a> if you want to discuss custom licensing.
+</p>
+
+<p>
+Contributions to Mutalyzer are very welcome! They can be feature requests, bug
+reports, bug fixes, unit tests, documentation updates, or anything els you may
+come up with.
+</p>
+
+<p>
+Development of Mutalyzer happens on
+GitHub: <a href="https://github.com/mutalyzer/mutalyzer">github.com/mutalyzer/mutalyzer</a>
+</p>
+
+<p>
+If you're interested in running your own Mutalyzer installation, please have a
+look at
+our <a href="https://github.com/mutalyzer/ansible-role-mutalyzer">Mutalyzer
+Ansible role</a> for a completely automated deployment.
+</p>
+
+<h2>Development</h2>
+
 <p>
 Mutalyzer {{ mutalyzer_version }} is designed and developed by Jeroen
 F.J. Laros, with the following exceptions:
@@ -50,127 +108,65 @@ please mention
   link</a>) when referring to these pages.
 </p>
 
-<h2>Open Source</h2>
-
 <p>
-Mutalyzer is Open Source and available under
-the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General
-Public License</a>. Please <a href="mailto:mutalyzer@humgen.nl">contact the
-authors</a> if you want to discuss custom licensing.
+We thank the following organisations for their contribution to the development
+of Mutalyzer.
 </p>
 
-<p>
-Contributions to Mutalyzer are very welcome! They can be feature requests, bug
-reports, bug fixes, unit tests, documentation updates, or anything els you may
-come up with.
-</p>
-
-<p>
-Development of Mutalyzer happens on
-GitHub: <a href="https://github.com/mutalyzer/mutalyzer">github.com/mutalyzer/mutalyzer</a>
-</p>
-
-<p>
-If you're interested in running your own Mutalyzer installation, please have a
-look at
-our <a href="https://github.com/mutalyzer/ansible-role-mutalyzer">Mutalyzer
-Ansible role</a> for a completely automated deployment.
-</p>
-
-<h2>Sponsors</h2>
-
-<p>
-We would like to thank the following organisations for their contribution to
-the development of Mutalyzer.
-</p>
-
-<table cellspacing="10" class="table">
-  <tr>
-    <td>
-      <a href="http://www.gen2phen.org" target="_blank">
-        <img src="{{ url_for('static', filename='images/gen_2_phen_logo_print.png') }}"
-             width="110"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Gen2Phen"
-             title="Gen2Phen"></a>
-    </td>
-    <td>
-      <a href="http://www.gen2phen.org">Gen2Phen project</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="http://www.nbic.nl" target="_blank">
-        <img src="{{ url_for('static', filename='images/nbic_logo.png') }}"
-             width="229"
-             height="50"
-             align="middle"
-             border="0"
-             alt="NBIC"
-             title="NBIC"></a>
-    </td>
-    <td>
-      <a href="http://www.nbic.nl">Netherlands Bioinformatics Centre</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="http://www.eurogentest.org" target="_blank">
-        <img src="{{ url_for('static', filename='images/Eurogentest.png') }}"
-             width="110"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Eurogentest"
-             title="Eurogentest"></a>
-    </td>
-    <td>
-      <a href="http://www.eurogentest.org">EuroGentest</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="http://www.commit-nl.nl" target="_blank">
-        <img src="{{ url_for('static', filename='images/commit_logo.png') }}"
-             width="122"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Dutch national program COMMIT"
-             title="Dutch national program COMMIT"></a>
-    </td>
-    <td>
-      <a href="http://www.commit-nl.nl">Dutch national program COMMIT</a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="http://wearelandscape.nl" target="_blank">
-        <img src="{{ url_for('static', filename='images/landscape_logo.png') }}"
-             height="50"
-             align="middle"
-             border="0"
-             alt="Landscape - Increasing Data Impact"
-             title="Landscape - Increasing Data Impact"></a>
-    </td>
-    <td>
-      <a href="http://wearelandscape.nl">Landscape - Increasing Data Impact</a>
-    </td>
-  </tr>
-</table>
+<div class="thanks">
+  <a href="http://www.gen2phen.org"><img src="{{ url_for('static',
+                                              filename='images/gen_2_phen_logo_print.png')
+                                              }}"
+                                         width="110"
+                                         height="50"
+                                         alt="Gen2Phen"
+                                         title="Gen2Phen"></a>
+  <a href="http://www.nbic.nl"><img src="{{ url_for('static',
+                                         filename='images/nbic_logo.png') }}"
+                                    width="229"
+                                    height="50"
+                                    border="0"
+                                    alt="Netherlands Bioinformatics Centre"
+                                    title="Netherlands Bioinformatics Centre"></a>
+    <a href="http://www.eurogentest.org"><img src="{{ url_for('static',
+                                                 filename='images/Eurogentest.png')
+                                                 }}"
+                                              width="110"
+                                              height="50"
+                                              border="0"
+                                              alt="EuroGentest"
+                                              title="EuroGentest"></a>
+    <a href="http://www.commit-nl.nl"><img src="{{ url_for('static',
+                                                filename='images/commit_logo.png')
+                                                }}"
+                                           width="122"
+                                           height="50"
+                                           border="0"
+                                           alt="Dutch national program COMMIT"
+                                           title="Dutch national program COMMIT"></a>
+    <a href="http://wearelandscape.nl"><img src="{{ url_for('static',
+                                                 filename='images/landscape_logo.png')
+                                                 }}"
+                                            width="187"
+                                            height="50"
+                                            border="0"
+                                            alt="Landscape - Increasing Data Impact"
+                                            title="Landscape - Increasing Data
+                                                   Impact"></a>
+  <a href="http://www.sun.com"><img src="{{ url_for('static',
+                                              filename='images/sun_logo.png')
+                                              }}"
+                                         width="116"
+                                         height="50"
+                                         alt="SUN Microsystems"
+                                         title="SUN Microsystems"></a>
+</div>
 
 <h2>Counters</h2>
 
 <p>
 We keep simple counters for the use of the various Mutalyzer services, broken
 down by interface.
-</p>
-
-<p>
-Note that not all counters were started at the same time, so numbers can not
-always be compared directly.
 </p>
 
 <table class="table table-striped">
