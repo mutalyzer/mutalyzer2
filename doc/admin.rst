@@ -73,6 +73,20 @@ Examples for other assemblies can be found in `this Gist
 <https://gist.github.com/martijnvermaat/ce84945d05b4e42d3584>`_.
 
 
+Import mappings from an EBI LRG transcripts map file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The EBI provides `FTP downloads <ftp://ftp.ebi.ac.uk/pub/databases/lrgex/>`_
+of transcript mappings for all of the LRG sequences on the latest human genome
+assembly. These can be imported with ``mutalyzer-admin``.
+
+For example, to import LRG transcript mappings for the GRCh37 assembly, run
+the following::
+
+    $ wget ftp://ftp.ebi.ac.uk/pub/databases/lrgex/list_LRGs_transcripts_GRCh37.txt -O /tmp/hg19.lrgmap.txt
+    $ mutalyzer-admin assemblies import-lrgmap -a hg19 /tmp/hg19.lrgmap.txt
+
+
 Import mappings from the UCSC Genome Browser MySQL database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
