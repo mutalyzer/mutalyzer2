@@ -550,7 +550,7 @@ class GenBankRetriever(Retriever):
                 'Error connecting to Entrez esearch: {}'.format(unicode(e)))
             self._output.addMessage(
                 __file__, 4, 'ERETR',
-                'Could not search for gene {}.'.format(gene))
+                'Could not search for gene {}: {}'.format(gene, unicode(e)))
             return None
 
         chr_acc_ver = None  # We did not find anything yet.
@@ -580,8 +580,8 @@ class GenBankRetriever(Retriever):
                         unicode(e)))
                 self._output.addMessage(
                     __file__, 4, 'ERETR',
-                    'Could not get mapping information for gene {}.'.format(
-                        gene))
+                    'Could not get mapping information for gene {}: {}'.format(
+                        gene, unicode(e)))
                 return None
 
             try:
