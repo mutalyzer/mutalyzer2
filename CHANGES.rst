@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.17
 --------------
 
-Release date to be decided.
+Released on March 24th 2016.
 
 - Position converter now checks for selection of gene/transcript (`#346
   <https://github.com/mutalyzer/mutalyzer/pull/346>`_).
