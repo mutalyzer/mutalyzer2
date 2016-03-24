@@ -9,6 +9,14 @@ Version 2.0.17
 
 Release date to be decided.
 
+- Position converter now checks for selection of gene/transcript (`#346
+  <https://github.com/mutalyzer/mutalyzer/pull/346>`_).
+- Update about page and link to `new mailing list
+  <https://groups.google.com/forum/#!forum/mutalyzer>`_ (`#353
+  <https://github.com/mutalyzer/mutalyzer/pull/353>`_).
+- Batch jobs processor is more robust on errors (`#356
+  <https://github.com/mutalyzer/mutalyzer/pull/356>`_).
+
 
 Version 2.0.16
 --------------
