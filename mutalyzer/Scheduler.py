@@ -464,6 +464,15 @@ Mutalyzer batch scheduler""" % download_url)
                         "Unexpected error occurred, dev-team notified")
                 import traceback
                 O.addMessage(__file__, 4, "DEBUG", unicode(repr(traceback.format_exc())))
+                # We don't know what caused the exception, but it might be
+                # necessary to do a rollback on the session transaction in
+                # order to continue using the session (which is important in
+                # a batch setup).
+                # TODO: It makes sense to do this not only for name checker
+                # jobs, but on a higher level in the batch processing stack.
+                # The reason for doing it here is (I think) so there's still
+                # a batch result entry written.
+                session.rollback()
             #except
             finally :
                 #check if we need to update the database
