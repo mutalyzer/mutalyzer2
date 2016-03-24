@@ -463,7 +463,7 @@ Mutalyzer batch scheduler""" % download_url)
                 O.addMessage(__file__, 4, "EBATCHU",
                         "Unexpected error occurred, dev-team notified")
                 import traceback
-                O.addMessage(__file__, 4, "DEBUG", unicode(repr(traceback.format_exc())))
+                O.addMessage(__file__, -1, "DEBUG", unicode(repr(traceback.format_exc())))
                 # We don't know what caused the exception, but it might be
                 # necessary to do a rollback on the session transaction in
                 # order to continue using the session (which is important in
