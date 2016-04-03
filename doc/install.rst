@@ -18,9 +18,6 @@ which is the recommended setup.
    `Debian`_ 8 *jessie* system. You'll have to figure out the necessary
    adjustments yourself if you're on another system.
 
-   For example, RHEL6/CentOS6 is known to come with a version of libmagic
-   which is incompatible with Mutalyzer.
-
 The following steps will get Mutalyzer running on your system with the
 recommended setup:
 
