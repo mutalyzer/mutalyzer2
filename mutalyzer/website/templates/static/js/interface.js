@@ -29,6 +29,7 @@ function clearField(form, fieldName) {
 }
 
 $(document).ready(function() {
+  // Populate form element with example input on click.
   $(document).on('click', '.example-input', function(event) {
     var target = document.getElementById($(this).data('for'));
 
@@ -37,6 +38,7 @@ $(document).ready(function() {
     event.stopPropagation();
   });
 
+  // Toggle visibility of form sections on click.
   $(document).on('change', '.input-select', function(event) {
     var context = document.getElementById(
           $(this).data('context')).getElementsByClassName('subform'),
