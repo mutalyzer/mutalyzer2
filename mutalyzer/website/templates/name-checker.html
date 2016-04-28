@@ -51,7 +51,7 @@
   <form class="form" action="{{ url_for('.name_checker') }}" method="get">
     <div class="form-group">
       <label for="description">Variant description</label>
-      <input class="form-control form-pre" type="text"
+      <input class="form-control form-pre" type="text" autofocus
              name="description" id="description" value="{{ description }}"
              placeholder="Variant description using HGVS format">
       <p>Examples:

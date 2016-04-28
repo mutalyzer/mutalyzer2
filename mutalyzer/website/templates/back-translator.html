@@ -27,7 +27,7 @@ Please supply an amino acid substitution.
 <form class="form" action="{{ url_for('.back_translator') }}" method="get">
   <div class="form-group">
     <label for="description">Variant description</label>
-    <input class="form-control form-pre" type="text"
+    <input class="form-control form-pre" type="text" autofocus
            name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
     <p>Examples:
       <code class="example-input" data-for="description">NM_003002.3:p.Asp92Tyr</code>,

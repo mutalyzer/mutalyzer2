@@ -28,7 +28,7 @@ nomenclature according to the
 
                 <form class="form" action="{{ url_for('.name_checker') }}" method="get">
                     <div class="input-group">
-                        <input class="form-control form-control-small form-pre" type="text" name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
+                        <input class="form-control form-control-small form-pre" type="text" name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format" autofocus>
                         <span class="input-group-btn">
                             <input type="submit" class="btn btn-primary pull-right" value="Check variant description">
                         </span>
