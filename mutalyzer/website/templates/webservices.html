@@ -67,4 +67,13 @@ For now, you can work from this example using the above mentioned
 HTTP/RPC+JSON web service mirrors the functionality of the SOAP web service.
 </p>
 
+<p>
+<strong>Note:</strong> Since method parameters are passed as HTTP query string
+parameters,
+they <a href="https://en.wikipedia.org/wiki/Query_string#URL_encoding">need to
+be properly encoded</a> as such. Depending on the programming language used,
+there most likely is a library available to do
+this. <a href="http://meyerweb.com/eric/tools/dencoder/">Here's an
+interface</a> to do it directly from the browser for testing purposes.
+
 {% endblock content %}
