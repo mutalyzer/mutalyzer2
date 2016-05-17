@@ -199,7 +199,7 @@ class Grammar():
 
     # BNF: Dup -> Loc `dup' (Nt+ | Number)? Nest?
     Dup = Loc + Literal('dup')('MutationType') + \
-          Optional(NtString ^ Number) + Optional(Nest)
+          Optional(NtString ^ Number)('Arg1') + Optional(Nest)
 
     # BNF: AbrSSR -> PtLoc Nt+ `(' Number `_' Number `)'
     AbrSSR = PtLoc + NtString + Suppress('(') + Number + \

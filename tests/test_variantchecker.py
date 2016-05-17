@@ -1591,6 +1591,7 @@ def test_legend_mrna_by_construction(output, checker):
         ['SDHD_i001', 'BAA81889.1', None, 'small subunit of cytochrome b of succinate dehydrogenase', 'construction']
     ]
 
+
 @with_references('NM_000143.3')
 def test_protein_ext_stop(output, checker):
     """
@@ -1599,3 +1600,629 @@ def test_protein_ext_stop(output, checker):
     """
     checker('NM_000143.3:c.1531T>G')
     assert 'NM_000143.3(FH_i001):p.(*511Glyext*3)' in output.getOutput('protDescriptions')
+
+
+@with_references('NM_000143.3')
+def test_del_no_arg(output, checker):
+    """
+    Deletion without argument.
+    """
+    checker('NM_000143.3:c.45del')
+    assert 'NM_000143.3(FH_v001):c.45del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_arg_seq(output, checker):
+    """
+    Deletion with sequence argument.
+    """
+    checker('NM_000143.3:c.45delG')
+    assert 'NM_000143.3(FH_v001):c.45del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_arg_seq_enodna(output, checker):
+    """
+    Deletion with non-DNA sequence argument.
+    """
+    checker('NM_000143.3:c.45delR')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 1
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_arg_seq_eref(output, checker):
+    """
+    Deletion with non-reference sequence argument.
+    """
+    checker('NM_000143.3:c.45delT')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 1
+
+
+@with_references('NM_000143.3')
+def test_del_arg_len(output, checker):
+    """
+    Deletion with length argument.
+    """
+    checker('NM_000143.3:c.45del1')
+    assert 'NM_000143.3(FH_v001):c.45del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_arg_len_earglen(output, checker):
+    """
+    Deletion with incorrect length argument.
+    """
+    checker('NM_000143.3:c.45del4')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 1
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+@with_references('NM_000143.3')
+def test_del_range_no_arg(output, checker):
+    """
+    Range deletion without argument.
+    """
+    checker('NM_000143.3:c.44_47del')
+    assert 'NM_000143.3(FH_v001):c.44_47del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_range_arg_seq(output, checker):
+    """
+    Range deletion with sequence argument.
+    """
+    checker('NM_000143.3:c.44_47delTGCG')
+    assert 'NM_000143.3(FH_v001):c.44_47del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_range_arg_seq_enodna(output, checker):
+    """
+    Range deletion with non-DNA sequence argument.
+    """
+    checker('NM_000143.3:c.44_47delTCRG')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 1
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_range_arg_seq_eref(output, checker):
+    """
+    Range deletion with non-reference sequence argument.
+    """
+    checker('NM_000143.3:c.44_47delTGGG')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 1
+
+
+@with_references('NM_000143.3')
+def test_del_range_arg_len(output, checker):
+    """
+    Range deletion with length argument.
+    """
+    checker('NM_000143.3:c.44_47del4')
+    assert 'NM_000143.3(FH_v001):c.44_47del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_del_range_arg_len_earglen(output, checker):
+    """
+    Range deletion with incorrect length argument.
+    """
+    checker('NM_000143.3:c.44_47del3')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 1
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_no_arg(output, checker):
+    """
+    Delins without argument.
+    """
+    checker('NM_000143.3:c.45delinsATC')
+    assert 'NM_000143.3(FH_v001):c.45delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_arg_seq(output, checker):
+    """
+    Delins with sequence argument.
+    """
+    checker('NM_000143.3:c.45delGinsATC')
+    assert 'NM_000143.3(FH_v001):c.45delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_arg_seq_enodna(output, checker):
+    """
+    Delins with non-DNA sequence argument.
+    """
+    checker('NM_000143.3:c.45delRinsATC')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 1
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_arg_seq_eref(output, checker):
+    """
+    Delins with non-reference sequence argument.
+    """
+    checker('NM_000143.3:c.45delTinsATC')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 1
+
+
+@with_references('NM_000143.3')
+def test_delins_arg_len(output, checker):
+    """
+    Delins with length argument.
+    """
+    checker('NM_000143.3:c.45del1insATC')
+    assert 'NM_000143.3(FH_v001):c.45delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_arg_len_earglen(output, checker):
+    """
+    Delins with incorrect length argument.
+    """
+    checker('NM_000143.3:c.45del4insATC')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 1
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+@with_references('NM_000143.3')
+def test_delins_range_no_arg(output, checker):
+    """
+    Range delins without argument.
+    """
+    checker('NM_000143.3:c.44_47delinsATC')
+    assert 'NM_000143.3(FH_v001):c.44_47delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_range_arg_seq(output, checker):
+    """
+    Range delins with sequence argument.
+    """
+    checker('NM_000143.3:c.44_47delTGCGinsATC')
+    assert 'NM_000143.3(FH_v001):c.44_47delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_range_arg_seq_enodna(output, checker):
+    """
+    Range delins with non-DNA sequence argument.
+    """
+    checker('NM_000143.3:c.44_47delTCRGinsATC')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 1
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_range_arg_seq_eref(output, checker):
+    """
+    Range delins with non-reference sequence argument.
+    """
+    checker('NM_000143.3:c.44_47delTGGGinsATC')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 1
+
+
+@with_references('NM_000143.3')
+def test_delins_range_arg_len(output, checker):
+    """
+    Range delins with length argument.
+    """
+    checker('NM_000143.3:c.44_47del4insATC')
+    assert 'NM_000143.3(FH_v001):c.44_47delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_delins_range_arg_len_earglen(output, checker):
+    """
+    Range delins with incorrect length argument.
+    """
+    checker('NM_000143.3:c.44_47del3insATC')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 1
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_no_arg(output, checker):
+    """
+    Duplication without argument.
+    """
+    checker('NM_000143.3:c.45dup')
+    assert 'NM_000143.3(FH_v001):c.45dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_arg_seq(output, checker):
+    """
+    Duplication with sequence argument.
+    """
+    checker('NM_000143.3:c.45dupG')
+    assert 'NM_000143.3(FH_v001):c.45dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_arg_seq_enodna(output, checker):
+    """
+    Duplication with non-DNA sequence argument.
+    """
+    checker('NM_000143.3:c.45dupR')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 1
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_arg_seq_eref(output, checker):
+    """
+    Duplication with non-reference sequence argument.
+    """
+    checker('NM_000143.3:c.45dupT')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 1
+
+
+@with_references('NM_000143.3')
+def test_dup_arg_len(output, checker):
+    """
+    Duplication with length argument.
+    """
+    checker('NM_000143.3:c.45dup1')
+    assert 'NM_000143.3(FH_v001):c.45dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_arg_len_earglen(output, checker):
+    """
+    Duplication with incorrect length argument.
+    """
+    checker('NM_000143.3:c.45dup4')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 1
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+@with_references('NM_000143.3')
+def test_dup_range_no_arg(output, checker):
+    """
+    Range duplication without argument.
+    """
+    checker('NM_000143.3:c.44_47dup')
+    assert 'NM_000143.3(FH_v001):c.44_47dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_range_arg_seq(output, checker):
+    """
+    Range duplication with sequence argument.
+    """
+    checker('NM_000143.3:c.44_47dupTGCG')
+    assert 'NM_000143.3(FH_v001):c.44_47dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_range_arg_seq_enodna(output, checker):
+    """
+    Range duplication with non-DNA sequence argument.
+    """
+    checker('NM_000143.3:c.44_47dupTCRG')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 1
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_range_arg_seq_eref(output, checker):
+    """
+    Range duplication with non-reference sequence argument.
+    """
+    checker('NM_000143.3:c.44_47dupTGGG')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 1
+
+
+@with_references('NM_000143.3')
+def test_dup_range_arg_len(output, checker):
+    """
+    Range duplication with length argument.
+    """
+    checker('NM_000143.3:c.44_47dup4')
+    assert 'NM_000143.3(FH_v001):c.44_47dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('NM_000143.3')
+def test_dup_range_arg_len_earglen(output, checker):
+    """
+    Range duplication with incorrect length argument.
+    """
+    checker('NM_000143.3:c.44_47dup3')
+    assert not output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 1
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('AL449423.14')
+def test_del_arg_seq_reverse(output, checker):
+    """
+    Deletion with sequence argument (reverse strand).
+    """
+    checker('AL449423.14(CDKN2A_v001):c.45delG')
+    assert 'AL449423.14(CDKN2A_v001):c.45del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+
+
+@with_references('AL449423.14')
+def test_del_range_arg_seq_reverse(output, checker):
+    """
+    Range deletion with sequence argument (reverse strand).
+    """
+    checker('AL449423.14(CDKN2A_v001):c.41_44delACTG')
+    assert 'AL449423.14(CDKN2A_v001):c.41_44del' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('AL449423.14')
+def test_delins_arg_seq_reverse(output, checker):
+    """
+    Delins with sequence argument (reverse strand).
+    """
+    checker('AL449423.14(CDKN2A_v001):c.45delGinsATC')
+    assert 'AL449423.14(CDKN2A_v001):c.45delinsATC' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('AL449423.14')
+def test_delins_range_arg_seq_reverse(output, checker):
+    """
+    Range delins with sequence argument (reverse strand).
+    """
+    checker('AL449423.14(CDKN2A_v001):c.41_44delACTGinsTTT')
+    assert 'AL449423.14(CDKN2A_v001):c.41_44delinsTTT' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('AL449423.14')
+def test_dup_arg_seq_reverse(output, checker):
+    """
+    Duplication with sequence argument (reverse strand).
+    """
+    checker('AL449423.14(CDKN2A_v001):c.45dupG')
+    assert 'AL449423.14(CDKN2A_v001):c.45dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
+
+
+@with_references('AL449423.14')
+def test_dup_range_arg_seq_reverse(output, checker):
+    """
+    Range duplication with sequence argument (reverse strand).
+    """
+    checker('AL449423.14(CDKN2A_v001):c.41_44dupACTG')
+    assert 'AL449423.14(CDKN2A_v001):c.41_44dup' in output.getOutput('descriptions')
+    e_arglen = output.getMessagesWithErrorCode('EARGLEN')
+    assert len(e_arglen) == 0
+    e_nodna = output.getMessagesWithErrorCode('ENODNA')
+    assert len(e_nodna) == 0
+    e_ref = output.getMessagesWithErrorCode('EREF')
+    assert len(e_ref) == 0
