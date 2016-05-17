@@ -6,20 +6,22 @@
 {% block content %}
 
 <p>
-Please insert the variant description using
-the <a href="http://www.hgvs.org/mutnomen" title="Human Genome Variation
-Society standard variant nomenclature" alt="Human Genome Variation Society
-standard variant nomenclature">HGVS</a> format:
+Please insert a variant description using
+the <a href="http://varnomen.hgvs.org/" title="Human Genome Variation
+Society Sequence Variant Nomenclature" alt="Human Genome Variation Society
+Sequence Variant Nomenclature">HGVS</a> format.
 </p>
-
-<pre>&lt;accession number&gt;.&lt;version number&gt;(&lt;gene symbol&gt;):&lt;sequence type&gt;.&lt;variant description&gt;</pre>
 
 <form class="form" action="{{ url_for('.syntax_checker') }}" method="get">
   <div class="form-group">
     <label for="description">Variant description</label>
     <input class="form-control form-pre" type="text" autofocus
            name="description" id="description" value="{{ description }}" placeholder="Variant description using HGVS format">
-    <p>Example: <code class="example-input" data-for="description">AB026906.1:c.274G&gt;T</code></p>
+    <p>Examples:
+      <code class="example-input" data-for="description">AB026906.1:c.40_42del</code>,
+      <code class="example-input" data-for="description">NG_012337.1(SDHD_v001):c.274G&gt;T</code>,
+      <code class="example-input" data-for="description">LRG_9t1:c.159dup</code>
+    </p>
   </div>
   <div class="form-group button-group">
     <input type="submit" class="btn btn-primary" value="Check syntax">

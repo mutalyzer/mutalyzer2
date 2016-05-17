@@ -6,10 +6,10 @@
 {% block content %}
 
 <p>
-The aim of this program suite is to support checks of sequence variant
-nomenclature according to the
-<a href="http://www.hgvs.org/mutnomen/">guidelines</a> of the
-<a href="http://www.hgvs.org">Human Genome Variation Society</a>.
+The aim of this program suite is to support checks
+of <a href="http://varnomen.hgvs.org/">Sequence Variant Nomenclature</a>
+according to the guidelines of the <a href="http://www.hgvs.org">Human Genome
+Variation Society</a>.
 </p>
 
 <div class="row">
@@ -19,8 +19,9 @@ nomenclature according to the
                 <h3><a href="{{ url_for('.name_checker') }}">Name Checker</a></h3>
                 <p>The Name Checker takes the complete sequence variant description as input and checks whether it is correct.</p>
                 <p>Examples:
-                  <code class="example-input" data-for="description">AB026906.1:c.274G&gt;T</code>,
-                  <code class="example-input" data-for="description">NG_012337.1(SDHD_v001):c.274G&gt;T</code>
+                  <code class="example-input" data-for="description">AB026906.1:c.40_42del</code>,
+                  <code class="example-input" data-for="description">NG_012337.1(SDHD_v001):c.274G&gt;T</code>,
+                  <code class="example-input" data-for="description">LRG_9t1:c.159dup</code>
                 </p>
 
                 <!-- <a href="{{ url_for('.name_checker') }}" class="btn btn-default btn-small btn-primary">Try
