@@ -596,7 +596,10 @@ class GenBankRetriever(Retriever):
                         gene))
                 return None
 
-            if unicode(document['NomenclatureSymbol']).lower() == gene.lower():
+            # For the available fields and their meaning, see Table 9 in:
+            # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.359.4838&rep=rep1&type=pdf
+            if gene.lower() in [unicode(document[key]).lower()
+                                for key in ('NomenclatureSymbol', 'Name')]:
                 # Found it.
                 if not document['GenomicInfo']:
                     self._output.addMessage(
@@ -631,8 +634,8 @@ class GenBankRetriever(Retriever):
             # Collect official symbols that has this gene as alias in case we
             # can not find anything.
             if (gene in unicode(document['OtherAliases']).split(',') and
-                    document['NomenclatureSymbol']):
-                aliases.append(unicode(document['NomenclatureSymbol']))
+                (document['NomenclatureSymbol'] or document['Name'])):
+                aliases.append(unicode(document['NomenclatureSymbol'] or document['Name']))
 
         if not chr_acc_ver:
             # We did not find any genes.
