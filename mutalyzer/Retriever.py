@@ -630,7 +630,7 @@ class GenBankRetriever(Retriever):
 
             # Collect official symbols that has this gene as alias in case we
             # can not find anything.
-            if (gene in [unicode(a) for a in document['OtherAliases']] and
+            if (gene in unicode(document['OtherAliases']).split(',') and
                     document['NomenclatureSymbol']):
                 aliases.append(unicode(document['NomenclatureSymbol']))
 
