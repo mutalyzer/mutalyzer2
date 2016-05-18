@@ -643,7 +643,7 @@ class GenBankRetriever(Retriever):
                 self._output.addMessage(
                     __file__, 4, 'ENOGENE',
                     'Gene {} not found, found aliases: {}'.format(
-                        (gene, aliases)))
+                        gene, ', '.join(aliases)))
                 return None
             self._output.addMessage(
                 __file__, 4, 'ENOGENE', 'Gene {} not found.'.format(gene))
