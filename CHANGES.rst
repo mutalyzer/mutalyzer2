@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.18
 --------------
 
-Release date to be decided.
+Released on May 23rd 2016.
 
 - Fixed installation on CentOS 6 (`#358
   <https://github.com/mutalyzer/mutalyzer/pull/358>`_).
