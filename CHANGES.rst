@@ -9,6 +9,15 @@ Version 2.0.18
 
 Release date to be decided.
 
+- Fixed installation on CentOS 6 (`#358
+  <https://github.com/mutalyzer/mutalyzer/pull/358>`_).
+- Auto focus primary form input on page load (`#363
+  <https://github.com/mutalyzer/mutalyzer/pull/363>`_).
+- Check optional argument for ``dup`` (`#369
+  <https://github.com/mutalyzer/mutalyzer/pull/369>`_).
+- Fixes for chromosome slicing by gene symbol (`#371
+  <https://github.com/mutalyzer/mutalyzer/pull/371>`_).
+
 
 Version 2.0.17
 --------------
