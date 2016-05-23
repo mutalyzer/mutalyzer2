@@ -1112,10 +1112,10 @@ def import_from_lrgmap_file(assembly, lrgmap_file):
         else:
             cds = None
 
-        # TODO: Also take protein into account. For example, in LRG_32 (TP53)
+        # TODO: Also take protein into account. For example, in LRG_321 (TP53)
         # some transcripts occur twice (with different CDSs and different
         # protein numbers).
-        # https://humgenprojects.lumc.nl/trac/mutalyzer/ticket/150
+        # https://github.com/mutalyzer/mutalyzer/issues/372
         return TranscriptMapping.create_or_update(
             chromosome, 'lrg', accession, record['gene'], orientation,
             record['start'], record['stop'],
