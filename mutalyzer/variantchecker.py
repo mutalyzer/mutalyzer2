@@ -989,7 +989,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
         # All non-EX positioning ways need a start location.
         # Todo: Better message.
         output.addMessage(__file__, 4, 'EUNKNOWN',
-                          'An unknown error occurred.')
+                          'Variant type not supported.')
         raise _RawVariantError()
 
     elif variant.StartLoc.IVSLoc:

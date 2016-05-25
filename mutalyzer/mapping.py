@@ -341,6 +341,8 @@ class Converter(object) :
         for mutation in mutations:
 
             if not mutation.StartLoc :
+                self.__output.addMessage(__file__, 4, 'EUNKNOWN',
+                                         'Variant type not supported.')
                 return None
 
             # Get the coordinates of the start position
