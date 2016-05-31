@@ -295,6 +295,7 @@ class File() :
         @rtype: tuple(list, int)
         """
         columns = 1
+        max_column_length = 200
 
         #store original line numbers line 1 = job[0]
         jobl = [(l+1, row) for l, row in enumerate(job)]
@@ -332,7 +333,7 @@ class File() :
                     inputl = "~!InputFields: " #start with the skip flag
                     inputl+= "|".join(job)
 
-                if len(inputl) > 200:
+                if len(inputl) > max_column_length:
                     toolong.append(line)
                 else:
                     ret.append(inputl)
@@ -354,8 +355,8 @@ class File() :
             if any(toolong):
                 lines = makeList(toolong, 10)
                 self.__output.addMessage(__file__, 3, "EBPARSE",
-                        "Batch input field too long in %i line(s): %s.\n" %
-                        (len(toolong), lines))
+                        "Batch input field exceeds %d characters in %i line(s): %s.\n" %
+                        (max_column_length, len(toolong), lines))
 
             errlist = notthree + emptyfield + toolong
         #if
@@ -376,11 +377,11 @@ class File() :
                     (len(errlist), makeList(errlist)))
 
             toolong = [line for line, row in jobl
-                       if any(len(col) > 200 for col in row)]
+                       if any(len(col) > max_column_length for col in row)]
             if any(toolong):
                 self.__output.addMessage(__file__, 3, "EBPARSE",
-                    "Batch input field too long in %i line(s): %s" %
-                    (len(toolong), makeList(toolong)))
+                    "Batch input field exceeds %d characters in %i line(s): %s" %
+                    (max_column_length, len(toolong), makeList(toolong)))
 
             ret = []
             for line, job in jobl:
