@@ -129,11 +129,12 @@ class Retriever(object):
         ud = util.generate_id()
         return 'UD_' + unicode(ud)
 
-    def _update_db_md5(self, raw_data, name, gi):
+    def _update_db_md5(self, raw_data, name, gi, source):
         """
         :arg str raw_data:
         :arg unicode name:
         :arg unicode gi:
+        :arg unicode source:
 
         :returns: filename
         :rtype: unicode
@@ -157,7 +158,8 @@ class Retriever(object):
                 session.commit()
         else:
             reference = Reference(
-                name, self._calculate_hash(raw_data), geninfo_identifier=gi)
+                name, self._calculate_hash(raw_data), source,
+                geninfo_identifier=gi)
             session.add(reference)
             session.commit()
         return self._name_to_file(name)
@@ -410,7 +412,7 @@ class GenBankRetriever(Retriever):
 
         if name:
             # Processing went okay.
-            return self._update_db_md5(raw_data, name, gi)
+            return self._update_db_md5(raw_data, name, gi, 'ncbi')
         else:
             # Parse error in the GenBank file.
             return None
@@ -455,19 +457,18 @@ class GenBankRetriever(Retriever):
                                     settings.MAX_FILE_SIZE)
             return None
 
-        slice_orientation = ['forward', 'reverse'][orientation - 1]
+        # Value of the Reference.source_data field for this slice.
+        source_data = '{}:{}:{}:{}'.format(
+            accno, start, stop, ['forward', 'reverse'][orientation - 1])
 
         # Check whether we have seen this slice before.
-        try:
-            reference = Reference.query.filter_by(
-                slice_accession=accno, slice_start=start, slice_stop=stop,
-                slice_orientation=slice_orientation).one()
-        except NoResultFound:
-            reference = None
-        else:
-            if os.path.isfile(self._name_to_file(reference.accession)):
-                # It's still present.
-                return reference.accession
+        reference = Reference.query.filter_by(
+            source='ncbi_slice',
+            source_data=source_data
+        ).first()
+        if reference and os.path.isfile(self._name_to_file(reference.accession)):
+            # It's still present.
+            return reference.accession
 
         # It's not present, so download it.
         try:
@@ -505,10 +506,8 @@ class GenBankRetriever(Retriever):
         else:
             # We haven't seen it before, so give it a name.
             ud = self._new_ud()
-            slice_orientation = ['forward', 'reverse'][orientation - 1]
-            reference = Reference(
-                ud, md5sum, slice_accession=accno, slice_start=start,
-                slice_stop=stop, slice_orientation=slice_orientation)
+            reference = Reference(ud, md5sum, source='ncbi_slice',
+                                  source_data=source_data)
             session.add(reference)
             session.commit()
 
@@ -689,7 +688,8 @@ class GenBankRetriever(Retriever):
                         ud = self.write(raw_data, ud, 0) and ud
                     if ud:
                         # Parsing went OK, add to DB.
-                        reference = Reference(ud, md5sum, download_url=url)
+                        reference = Reference(ud, md5sum, source='url',
+                                              source_data=url)
                         session.add(reference)
                         session.commit()
                 else:
@@ -727,7 +727,7 @@ class GenBankRetriever(Retriever):
         except NoResultFound:
             ud = self._new_ud()
             if self.write(raw_data, ud, 0):
-                reference = Reference(ud, md5sum)
+                reference = Reference(ud, md5sum, 'upload')
                 session.add(reference)
                 session.commit()
                 return ud
@@ -780,22 +780,27 @@ class GenBankRetriever(Retriever):
                 # It is still in the cache, so filename is valid.
                 pass
 
-            elif reference.slice_accession:
+            elif reference.source == 'ncbi_slice':
                 # It was previously created by slicing.
                 cast_orientation = {
                     None: None, 'forward': 1, 'reverse': 2}
-                if not self.retrieveslice(
-                        reference.slice_accession, reference.slice_start,
-                        reference.slice_stop,
-                        cast_orientation[reference.slice_orientation]):
+                (slice_accession,
+                 slice_start,
+                 slice_stop,
+                 slice_orientation) = reference.source_data.split(':')
+                slice_start = int(slice_start)
+                slice_stop = int(slice_stop)
+                slice_orientation = cast_orientation[slice_orientation]
+                if not self.retrieveslice(slice_accession, slice_start,
+                                          slice_stop, slice_orientation):
                     filename = None
 
-            elif reference.download_url:
+            elif reference.source == 'url':
                 # It was previously created by URL.
-                if not self.downloadrecord(reference.download_url):
+                if not self.downloadrecord(reference.source_data):
                     filename = None
 
-            elif reference.geninfo_identifier:
+            elif reference.source == 'ncbi':
                 # It was previously fetched from NCBI.
                 filename = self.fetch(reference.accession)
 
@@ -951,7 +956,10 @@ class LRGRetriever(Retriever):
                     md5_db = None
 
                 if md5_db is None:
-                    reference = Reference(lrg_id, md5sum, download_url=url)
+                    # Note: The abstraction seems a bit off here, but we
+                    # prefer to set `Reference.source` to `lrg` and not to
+                    # `url`, since the former is more specific.
+                    reference = Reference(lrg_id, md5sum, 'lrg')
                     session.add(reference)
                     session.commit()
                 elif md5sum != md5_db:

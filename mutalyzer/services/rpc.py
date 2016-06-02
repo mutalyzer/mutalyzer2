@@ -1405,9 +1405,8 @@ class MutalyzerService(ServiceBase):
 
         def cache_entry_to_soap(entry):
             e = CacheEntry()
-            for attr in ('name', 'gi', 'hash', 'chromosomeName',
-                'chromosomeStart', 'chromosomeStop', 'chromosomeOrientation',
-                'url', 'created', 'cached'):
+            for attr in ('name', 'source', 'source_data', 'gi', 'hash',
+                         'created', 'cached'):
                 setattr(e, attr, entry[attr])
             return e
 

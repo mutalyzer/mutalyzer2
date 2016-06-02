@@ -57,26 +57,21 @@ class CacheSync(object):
         references = Reference.query.filter(Reference.added >= created_since)
         cache = []
 
-        cast_orientation = {None: None,
-                            'forward': 1,
-                            'reverse': 2}
-
         # Translate each entry to a dictionary and check if it is cached on
         # our filesystem.
         for reference in references:
             # Note that this way we only include Genbank files, not LRG files.
+            # But we are only really interested in manually uploaded files
+            # anyway, which can currently only be Genbank files.
             cached = None
             if os.path.isfile(os.path.join(settings.CACHE_DIR,
                                            '%s.gb.bz2' % reference.accession)):
                 cached = '%s.gb' % reference.accession
             cache.append({'name':                  reference.accession,
+                          'source':                reference.source,
+                          'source_data':           reference.source_data,
                           'gi':                    reference.geninfo_identifier,
                           'hash':                  reference.checksum,
-                          'chromosomeName':        reference.slice_accession,
-                          'chromosomeStart':       reference.slice_start,
-                          'chromosomeStop':        reference.slice_stop,
-                          'chromosomeOrientation': cast_orientation[reference.slice_orientation],
-                          'url':                   reference.download_url,
                           'created':               reference.added,
                           'cached':                cached})
 
@@ -109,21 +104,12 @@ class CacheSync(object):
             """
             Create a nice dictionary out of the CacheEntry object.
             """
-            cast_orientation = {None: None,
-                                1: 'forward',
-                                2: 'reverse'}
-
-            entry_dict =  {'name':    entry.name,
-                           'hash':    entry.hash,
-                           'created': entry.created}
-            for attribute in ('gi', 'chromosomeName', 'url', 'cached'):
+            entry_dict = {'name':    entry.name,
+                          'hash':    entry.hash,
+                          'created': entry.created}
+            for attribute in ('source', 'source_data', 'gi', 'cached'):
                 entry_dict[attribute] = entry[attribute] \
                                         if attribute in entry else None
-            for attribute in ('chromosomeStart', 'chromosomeStop'):
-                entry_dict[attribute] = int(entry[attribute]) \
-                                        if attribute in entry else None
-            entry_dict['chromosomeOrientation'] = cast_orientation[entry['chromosomeOrientation']] \
-                                                  if 'chromosomeOrientation' in entry else None
             return entry_dict
 
         return map(cache_entry_from_soap, cache.CacheEntry)
@@ -195,18 +181,13 @@ class CacheSync(object):
             if entry['gi'] and Reference.query.filter_by(geninfo_identifier=entry['gi']).count() > 0:
                 # Todo: Combine these queries.
                 continue
-            reference = Reference(entry['name'], entry['hash'],
-                                  geninfo_identifier=entry['gi'],
-                                  slice_accession=entry['chromosomeName'],
-                                  slice_start=entry['chromosomeStart'],
-                                  slice_stop=entry['chromosomeStop'],
-                                  slice_orientation=entry['chromosomeOrientation'],
-                                  download_url=entry['url'])
+            reference = Reference(entry['name'], entry['hash'], entry['source'],
+                                  source_data=entry['source_data'],
+                                  geninfo_identifier=entry['gi'])
             session.add(reference)
             session.commit()
             inserted += 1
-            if not entry['chromosomeName'] and not entry['url'] \
-                   and entry['cached']:
+            if entry['source'] == 'upload' and entry['cached']:
                 url = url_template.format(file=entry['cached'])
                 self.store_remote_file(entry['name'], url)
                 downloaded += 1

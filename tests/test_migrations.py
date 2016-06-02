@@ -55,6 +55,19 @@ def add_database_content(connection):
     # We only define tables and columns we actually need, so this is not a
     # complete mapping of the schema.
 
+    references = sql.table(
+        'references',
+        sql.column('id', sa.Integer),
+        sql.column('accession', sa.String(20)),
+        sql.column('checksum', sa.String(32)),
+        sql.column('geninfo_identifier', sa.String(13)),
+        sql.column('slice_accession', sa.String(20)),
+        sql.column('slice_start', sa.Integer),
+        sql.column('slice_stop', sa.Integer),
+        sql.column('slice_orientation', sa.Enum('forward', 'reverse', name='slice_orentation')),
+        sql.column('download_url', sa.String(255)),
+        sql.column('added', sa.DateTime))
+
     assemblies = sql.table(
         'assemblies',
         sql.column('id', sa.Integer),
@@ -179,4 +192,95 @@ def add_database_content(connection):
         transcript_protein_links.insert(),
         transcript_accession='NM_001079691',
         protein_accession=None,
+        added=datetime.now())
+
+    # Data for migration c92f30c03b62:
+    # Add source and source_data columns to references.
+    connection.execute(
+        references.insert(),
+        accession='UD_146488222017',
+        checksum='d0a72a13ac975e320f7f0ccee19e89ab',
+        geninfo_identifier=None,
+        slice_accession=None,
+        slice_start=None,
+        slice_stop=None,
+        slice_orientation=None,
+        download_url=None,
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='UD_146488248189',
+        checksum='4742c1ec7cce47fb6ef2cf0475b0bfd1',
+        geninfo_identifier=None,
+        slice_accession=None,
+        slice_start=None,
+        slice_stop=None,
+        slice_orientation=None,
+        download_url='https://barmsijs.lumc.nl/HG/mvermaat/UD_132118785483.gb',
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='UD_146488309212',
+        checksum='d57af526097b5d353792b1ef46b08fa0',
+        geninfo_identifier=None,
+        slice_accession='NC_000023.11',
+        slice_start=31117219,
+        slice_stop=33344609,
+        slice_orientation='reverse',
+        download_url=None,
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='UD_146488315868',
+        checksum='e8a906c451e4228e636c24cdc3140429',
+        geninfo_identifier=None,
+        slice_accession='NC_000003.11',
+        slice_start=3000000,
+        slice_stop=3005000,
+        slice_orientation='forward',
+        download_url=None,
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='UD_146488317444',
+        checksum='4002698fe1ae3f2960cbbe840983b330',
+        geninfo_identifier=None,
+        slice_accession='NC_000007.13',
+        slice_start=5000000,
+        slice_stop=5005000,
+        slice_orientation='reverse',
+        download_url=None,
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='AB026906.1',
+        checksum='29b003d5a71af74dc61a92d2ef5cd5d9',
+        geninfo_identifier='5295993',
+        slice_accession=None,
+        slice_start=None,
+        slice_stop=None,
+        slice_orientation=None,
+        download_url=None,
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='NG_012337.1',
+        checksum='8f3dd98b84999a2449dceb7ee6236313',
+        geninfo_identifier='254039638',
+        slice_accession=None,
+        slice_start=None,
+        slice_stop=None,
+        slice_orientation=None,
+        download_url=None,
+        added=datetime.now())
+    connection.execute(
+        references.insert(),
+        accession='LRG_9',
+        checksum='30cca9e429227628f365598eab24407e',
+        geninfo_identifier=None,
+        slice_accession=None,
+        slice_start=None,
+        slice_stop=None,
+        slice_orientation=None,
+        download_url='ftp://ftp.ebi.ac.uk/pub/databases/lrgex/SCHEMA_1_7_ARCHIVE/pending/LRG_9.xml',
         added=datetime.now())
