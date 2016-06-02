@@ -36,24 +36,11 @@ General information for Mutalyzer developers.
 .. toctree::
    :maxdepth: 1
 
-   issues
    contributing
    testing
    release
-
-
-Technical reference
--------------------
-
-Application design notes and API reference.
-
-.. toctree::
-   :maxdepth: 1
-
-   design
+   migrations
    strings
-   new-organism
-   api
 
 
 Additional notes
@@ -62,6 +49,7 @@ Additional notes
 .. toctree::
    :maxdepth: 1
 
+   new-organism
    changelog
    copyright
 
