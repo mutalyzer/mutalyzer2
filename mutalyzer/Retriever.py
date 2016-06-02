@@ -673,7 +673,7 @@ class GenBankRetriever(Retriever):
 
         handle = urllib2.urlopen(url)
         info = handle.info()
-        if info['Content-Type'] == 'text/plain':
+        if info.gettype() == 'text/plain':
             length = int(info['Content-Length'])
             if 512 < length < settings.MAX_FILE_SIZE:
                 raw_data = handle.read()
