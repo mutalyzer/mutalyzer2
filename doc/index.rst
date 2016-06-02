@@ -39,6 +39,7 @@ General information for Mutalyzer developers.
    contributing
    testing
    release
+   migrations
    strings
 
 
