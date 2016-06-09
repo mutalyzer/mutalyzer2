@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.19
 --------------
 
-Release date to be decided.
+Released on June 9th 2016.
 
 - Fix reference file loading by URL (`#383
   <https://github.com/mutalyzer/mutalyzer/pull/383>`_).
