@@ -171,7 +171,8 @@ class Reference(db.Base):
     #: - ``url``: Custom HTTP/HTTPS/FTP URL. `source_data` contains the URL.
     #: - `upload``: Custom file upload. There's no way to re-fetch this file.
     source = Column(Enum('ncbi', 'ncbi_slice', 'lrg', 'url', 'upload',
-                         name='reference_source'))
+                         name='reference_source'),
+                    nullable=False)
 
     #: Additional data needed to re-fetch the reference file. The data depends
     #: on the value of `source` and must be serialized as a string.
