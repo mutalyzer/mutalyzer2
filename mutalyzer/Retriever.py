@@ -693,10 +693,9 @@ class GenBankRetriever(Retriever):
                         session.add(reference)
                         session.commit()
                 else:
-                    if not os.path.isfile(
-                            self._name_to_file(reference.accession)):
-                        ud = (self.write(raw_data, reference.accession, 0) and
-                              reference.accession)
+                    if (os.path.isfile(self._name_to_file(reference.accession)) or
+                            self.write(raw_data, reference.accession, 0)):
+                        ud = reference.accession
 
                 # Returns the UD or None.
                 return ud
