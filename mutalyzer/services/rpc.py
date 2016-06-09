@@ -507,7 +507,7 @@ class MutalyzerService(ServiceBase):
 
         @arg build: The genome build (hg19, hg18, mm10).
         @type build: string
-        @arg accno: The identifier of a transcript.
+        @arg accno: The identifier of a transcript, with optional version.
         @type accno: string
 
         @return: The name of the associated gene.
@@ -526,14 +526,29 @@ class MutalyzerService(ServiceBase):
                         "The build argument (%s) was not a valid " \
                             "build name." % build)
 
-        mapping = TranscriptMapping.query \
-            .filter(TranscriptMapping.chromosome.has(assembly=assembly),
-                    TranscriptMapping.accession == accno.split('.')[0]) \
-            .first()
+        # Accept an optional accession version.
+        try:
+            accno, version = accno.split('.')
+            version = int(version)
+        except ValueError:
+            version = None
+
+        mapping = TranscriptMapping.query.filter(
+            TranscriptMapping.chromosome.has(assembly=assembly),
+            TranscriptMapping.accession == accno
+        )
+        if version:
+            mapping = mapping.filter_by(version=version)
+        mapping = mapping.order_by(TranscriptMapping.version.desc()).first()
 
         L.addMessage(__file__, -1, "INFO",
             "Finished processing getGeneName(%s %s)" % (build, accno))
 
+        if not mapping:
+            L.addMessage(__file__, 4, "ENOTFOUND", "ENOTFOUND %s %s %s" % (build, accno, version))
+            raise Fault("ENOTFOUND",
+                        "Transcript %s%s not found for build %s." % (
+                            accno, '.%d' % version if version else '', build))
         return mapping.gene
     #getGeneName
 
