@@ -83,7 +83,7 @@ def upgrade():
             source = 'lrg'
         elif r.slice_accession:
             source = 'ncbi_slice'
-            data = '{}:{}:{}:{}'.format(r.slice_accession, r.slice_start, r.slice_start, r.slice_orientation)
+            data = '{}:{}:{}:{}'.format(r.slice_accession, r.slice_start, r.slice_stop, r.slice_orientation)
         elif r.download_url:
             source = 'url'
             data = r.download_url
