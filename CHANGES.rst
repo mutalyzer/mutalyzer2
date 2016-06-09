@@ -9,6 +9,11 @@ Version 2.0.19
 
 Release date to be decided.
 
+- Fix reference file loading by URL (`#383
+  <https://github.com/mutalyzer/mutalyzer/pull/383>`_).
+- Consider accession version in `getGeneName` webservice method (`#390
+  <https://github.com/mutalyzer/mutalyzer/pull/390>`_).
+
 
 Version 2.0.18
 --------------
