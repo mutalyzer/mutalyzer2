@@ -4,10 +4,21 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.19
+Version 2.0.20
 --------------
 
 Release date to be decided.
+
+
+Version 2.0.19
+--------------
+
+Released on June 9th 2016.
+
+- Fix reference file loading by URL (`#383
+  <https://github.com/mutalyzer/mutalyzer/pull/383>`_).
+- Consider accession version in `getGeneName` webservice method (`#390
+  <https://github.com/mutalyzer/mutalyzer/pull/390>`_).
 
 
 Version 2.0.18
