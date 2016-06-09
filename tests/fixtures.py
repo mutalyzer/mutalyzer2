@@ -124,7 +124,8 @@ def references(request, settings, db, available_references):
         shutil.copy(path, settings.CACHE_DIR)
 
         references.append(Reference(
-            accession, entry['checksum'], geninfo_identifier=geninfo_id))
+            accession, entry['checksum'], 'upload',
+            geninfo_identifier=geninfo_id))
 
         _add_links(settings, entry.get('links', []))
 

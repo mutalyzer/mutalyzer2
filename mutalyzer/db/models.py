@@ -160,6 +160,23 @@ class Reference(db.Base):
     #: MD5 checksum of the reference file.
     checksum = Column(String(32), nullable=False, index=True, unique=True)
 
+    #: Source of the reference, needed to re-fetch the reference file. Meaning
+    #: of the allowed values:
+    #: - ``ncbi``: NCBI nuccore database.
+    #: - ``ncbi_slice``: NCBI nuccore database by slicing. `source_data` is a
+    #:   string of the form ``<accession>:<start>:<stop>:<orientation>`` with
+    #:   one-based, inclusive start and stop position (in reference
+    #:   orientation) and ``forwad`` or ``reverse`` for ``<orientation>``.
+    #: - ``lrg``: Official LRG repository.
+    #: - ``url``: Custom HTTP/HTTPS/FTP URL. `source_data` contains the URL.
+    #: - `upload``: Custom file upload. There's no way to re-fetch this file.
+    source = Column(Enum('ncbi', 'ncbi_slice', 'lrg', 'url', 'upload',
+                         name='reference_source'))
+
+    #: Additional data needed to re-fetch the reference file. The data depends
+    #: on the value of `source` and must be serialized as a string.
+    source_data = Column(String(255))
+
     #: The corresponding GI number, if available.
     geninfo_identifier = Column(String(13), index=True, unique=True)
 
@@ -185,11 +202,14 @@ class Reference(db.Base):
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, accession, checksum, geninfo_identifier=None,
-                 slice_accession=None, slice_start=None, slice_stop=None,
-                 slice_orientation=None, download_url=None):
+    def __init__(self, accession, checksum, source, source_data=None,
+                 geninfo_identifier=None, slice_accession=None,
+                 slice_start=None, slice_stop=None, slice_orientation=None,
+                 download_url=None):
         self.accession = accession
         self.checksum = checksum
+        self.source = source
+        self.source_data = source_data
         self.geninfo_identifier = geninfo_identifier
         self.slice_accession = slice_accession
         self.slice_start = slice_start
@@ -206,6 +226,8 @@ Index('reference_slice',
       Reference.slice_accession, Reference.slice_start, Reference.slice_stop,
       Reference.slice_orientation,
       unique=True)
+Index('reference_source_data',
+      Reference.source, Reference.source_data)
 
 
 class Assembly(db.Base):
