@@ -181,52 +181,22 @@ class Reference(db.Base):
     #: The corresponding GI number, if available.
     geninfo_identifier = Column(String(13), index=True, unique=True)
 
-    #: The accession number from which we took a slice, if available.
-    slice_accession = Column(String(20))
-
-    #: The start position on the accession number from which we took a slice,
-    #: if available (one-based, inclusive, in reference orientation).
-    slice_start = Column(Integer)
-
-    #: The stop position on the accession number from which we took a slice,
-    #: if available (one-based, inclusive, in reference orientation).
-    slice_stop = Column(Integer)
-
-    #: The orientation on the accession number from which we took a slice, if
-    #: available.
-    slice_orientation = Column(Enum('forward', 'reverse',
-                                    name='slice_orientation'))
-
-    #: The URL from which the reference file was downloaded, if available.
-    download_url = Column(String(255), index=True, unique=True)
-
     #: Date and time of creation.
     added = Column(DateTime)
 
     def __init__(self, accession, checksum, source, source_data=None,
-                 geninfo_identifier=None, slice_accession=None,
-                 slice_start=None, slice_stop=None, slice_orientation=None,
-                 download_url=None):
+                 geninfo_identifier=None):
         self.accession = accession
         self.checksum = checksum
         self.source = source
         self.source_data = source_data
         self.geninfo_identifier = geninfo_identifier
-        self.slice_accession = slice_accession
-        self.slice_start = slice_start
-        self.slice_stop = slice_stop
-        self.slice_orientation = slice_orientation
-        self.download_url = download_url
         self.added = datetime.now()
 
     def __repr__(self):
         return '<Reference %r>' % self.accession
 
 
-Index('reference_slice',
-      Reference.slice_accession, Reference.slice_start, Reference.slice_stop,
-      Reference.slice_orientation,
-      unique=True)
 Index('reference_source_data',
       Reference.source, Reference.source_data)
 
