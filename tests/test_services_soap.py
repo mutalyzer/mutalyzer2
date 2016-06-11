@@ -509,7 +509,6 @@ def test_runmutalyzer_reference_info_nm(api):
     assert r.sourceId == 'NM_003002.2'
     assert r.sourceAccession == 'NM_003002'
     assert r.sourceVersion == '2'
-    assert r.sourceGi == '222352156'
     assert r.molecule == 'n'
 
 
@@ -524,7 +523,6 @@ def test_runmutalyzer_reference_info_nm_version(api):
     assert r.sourceId == 'NM_003002.2'
     assert r.sourceAccession == 'NM_003002'
     assert r.sourceVersion == '2'
-    assert r.sourceGi == '222352156'
     assert r.molecule == 'n'
 
 
@@ -563,7 +561,6 @@ def test_runmutalyzer_reference_info_ng(api):
     assert r.sourceId == 'NG_012772.1'
     assert r.sourceAccession == 'NG_012772'
     assert r.sourceVersion == '1'
-    assert r.sourceGi == '256574794'
     assert r.molecule == 'g'
 
 
@@ -578,7 +575,6 @@ def test_runmutalyzer_reference_info_ng_version(api):
     assert r.sourceId == 'NG_009105.1'
     assert r.sourceAccession == 'NG_009105'
     assert r.sourceVersion == '1'
-    assert r.sourceGi == '216548283'
     assert r.molecule == 'g'
 
 
@@ -588,13 +584,9 @@ def test_runmutalyzer_reference_info_gi(api):
     Get reference info for a GI variant.
     """
     r = api('runMutalyzer', 'gi256574794:g.18964del')
-    assert r.errors == 0
-    assert r.referenceId == 'NG_012772.1'
-    assert r.sourceId == 'NG_012772.1'
-    assert r.sourceAccession == 'NG_012772'
-    assert r.sourceVersion == '1'
-    assert r.sourceGi == '256574794'
-    assert r.molecule == 'g'
+    assert r.errors == 1
+    assert len(r.messages.SoapMessage) == 1
+    assert r.messages.SoapMessage[0]['errorcode'] == 'EGINOTSUPPORTED'
 
 
 @with_references('NM_000143.3')

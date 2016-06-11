@@ -884,8 +884,6 @@ class MutalyzerService(ServiceBase):
                 source (only for genbank references).
             - sourceVersion: Version number of the reference sequence source
                 (only for genbank references).
-            - sourceGi: GI number of the reference sequence source (only for
-                genbank references).
             - molecule: Molecular type of the reference sequence.
             - original: Original sequence.
             - mutated: Mutated sequence.
@@ -929,7 +927,6 @@ class MutalyzerService(ServiceBase):
         result.sourceId = O.getIndexedOutput('source_id', 0)
         result.sourceAccession = O.getIndexedOutput('source_accession', 0)
         result.sourceVersion = O.getIndexedOutput('source_version', 0)
-        result.sourceGi = O.getIndexedOutput('source_gi', 0)
         result.molecule = O.getIndexedOutput('molecule', 0)
 
         result.original = O.getIndexedOutput("original", 0)
@@ -1420,8 +1417,8 @@ class MutalyzerService(ServiceBase):
 
         def cache_entry_to_soap(entry):
             e = CacheEntry()
-            for attr in ('name', 'source', 'source_data', 'gi', 'hash',
-                         'created', 'cached'):
+            for attr in ('name', 'source', 'source_data', 'hash', 'created',
+                         'cached'):
                 setattr(e, attr, entry[attr])
             return e
 

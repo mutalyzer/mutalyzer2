@@ -115,7 +115,6 @@ def references(request, settings, db, available_references):
             accession = entry['accession']
         except KeyError:
             accession = key
-        geninfo_id = entry.get('geninfo_id')
 
         # TODO: use pytest basepath or something?
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -123,9 +122,7 @@ def references(request, settings, db, available_references):
                             entry['filename'])
         shutil.copy(path, settings.CACHE_DIR)
 
-        references.append(Reference(
-            accession, entry['checksum'], 'upload',
-            geninfo_identifier=geninfo_id))
+        references.append(Reference(accession, entry['checksum'], 'upload'))
 
         _add_links(settings, entry.get('links', []))
 

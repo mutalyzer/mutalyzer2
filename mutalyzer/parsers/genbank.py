@@ -470,7 +470,6 @@ class GBparser():
         except ValueError:
             record.source_accession = biorecord.id
             record.source_version = '1'
-        record.source_gi = biorecord.annotations.get('gi')
         record.organism = biorecord.annotations['organism']
 
         # Todo: This will change once we support protein references

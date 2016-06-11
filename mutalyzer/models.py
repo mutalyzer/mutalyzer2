@@ -208,7 +208,6 @@ class MutalyzerOutput(ComplexModel):
     sourceId = Mandatory.Unicode
     sourceAccession = Unicode
     sourceVersion = Unicode
-    sourceGi = Unicode
     molecule = Mandatory.Unicode
 
     original = Unicode

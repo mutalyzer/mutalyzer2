@@ -1716,6 +1716,12 @@ def check_variant(description, output):
     if parsed_description.LrgAcc:
         record_id = parsed_description.LrgAcc
     elif parsed_description.RefSeqAcc:
+        if parsed_description.RefSeqAcc.isdigit():
+            # https://www.ncbi.nlm.nih.gov/news/03-02-2016-phase-out-of-GI-numbers/
+            output.addMessage(__file__, 4, 'EGINOTSUPPORTED',
+                              'GI numbers have been discontinued by the NCBI '
+                              'and are therefore not supported.')
+            return
         if parsed_description.Version:
             record_id = parsed_description.RefSeqAcc + '.' + parsed_description.Version
         else:
@@ -1759,7 +1765,6 @@ def check_variant(description, output):
     if filetype == 'GB':
         output.addOutput('source_accession', retrieved_record.source_accession)
         output.addOutput('source_version', retrieved_record.source_version)
-        output.addOutput('source_gi', retrieved_record.source_gi)
     output.addOutput('molecule', retrieved_record.molType)
 
     # Note: geneSymbol[0] is used as a filter for batch runs.

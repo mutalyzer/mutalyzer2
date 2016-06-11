@@ -178,19 +178,14 @@ class Reference(db.Base):
     #: on the value of `source` and must be serialized as a string.
     source_data = Column(String(255))
 
-    #: The corresponding GI number, if available.
-    geninfo_identifier = Column(String(13), index=True, unique=True)
-
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, accession, checksum, source, source_data=None,
-                 geninfo_identifier=None):
+    def __init__(self, accession, checksum, source, source_data=None):
         self.accession = accession
         self.checksum = checksum
         self.source = source
         self.source_data = source_data
-        self.geninfo_identifier = geninfo_identifier
         self.added = datetime.now()
 
     def __repr__(self):
