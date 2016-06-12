@@ -39,8 +39,6 @@ def main(description, verbosity=None):
         print 'Source accession number: %s' % result.sourceAccession
     if 'sourceVersion' in result:
         print 'Source version: %s' % result.sourceVersion
-    if 'sourceGi' in result:
-        print 'Source GI number: %s' % result.sourceGi
     print 'Molecule type: %s\n' % result.molecule
 
     if result.rawVariants:

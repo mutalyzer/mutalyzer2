@@ -70,7 +70,6 @@ class CacheSync(object):
             cache.append({'name':                  reference.accession,
                           'source':                reference.source,
                           'source_data':           reference.source_data,
-                          'gi':                    reference.geninfo_identifier,
                           'hash':                  reference.checksum,
                           'created':               reference.added,
                           'cached':                cached})
@@ -107,7 +106,7 @@ class CacheSync(object):
             entry_dict = {'name':    entry.name,
                           'hash':    entry.hash,
                           'created': entry.created}
-            for attribute in ('source', 'source_data', 'gi', 'cached'):
+            for attribute in ('source', 'source_data', 'cached'):
                 entry_dict[attribute] = entry[attribute] \
                                         if attribute in entry else None
             return entry_dict
@@ -176,14 +175,10 @@ class CacheSync(object):
                 pass
 
             if Reference.query.filter_by(checksum=entry['hash']).count() > 0:
-                # Todo: Combine these queries.
                 continue
-            if entry['gi'] and Reference.query.filter_by(geninfo_identifier=entry['gi']).count() > 0:
-                # Todo: Combine these queries.
-                continue
+
             reference = Reference(entry['name'], entry['hash'], entry['source'],
-                                  source_data=entry['source_data'],
-                                  geninfo_identifier=entry['gi'])
+                                  source_data=entry['source_data'])
             session.add(reference)
             session.commit()
             inserted += 1

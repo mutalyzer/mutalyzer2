@@ -50,6 +50,21 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
       `False`, `target_version` can be `None`.
     :rtype: tuple(str, int)
     """
+    # This procedure uses sequence GI numbers as returned by the Entrez
+    # webservice. The NCBI has announced phasing out the use of GIs in favor
+    # of `accession.version` combinations.
+    #
+    # https://www.ncbi.nlm.nih.gov/news/03-02-2016-phase-out-of-GI-numbers/
+    #
+    # From that page:
+    #
+    # > NCBI services that accept GI's as input will continue to be supported,
+    # > and NCBI will be adding support for accession.version identifiers to
+    # > all services that currently do not support them.
+    #
+    # At the moment (2016-06-01) only GIs are returned by the calls we use
+    # below, so we cannot move to `accession.version` here. This is fine for
+    # now, but should be reconsidered at some point.
     Entrez.email = settings.EMAIL
 
     # If we are currently strictly matching on version, we can try again if

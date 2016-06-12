@@ -129,11 +129,10 @@ class Retriever(object):
         ud = util.generate_id()
         return 'UD_' + unicode(ud)
 
-    def _update_db_md5(self, raw_data, name, gi, source):
+    def _update_db_md5(self, raw_data, name, source):
         """
         :arg str raw_data:
         :arg unicode name:
-        :arg unicode gi:
         :arg unicode source:
 
         :returns: filename
@@ -157,9 +156,7 @@ class Retriever(object):
                     {'checksum': md5sum})
                 session.commit()
         else:
-            reference = Reference(
-                name, self._calculate_hash(raw_data), source,
-                geninfo_identifier=gi)
+            reference = Reference(name, self._calculate_hash(raw_data), source)
             session.add(reference)
             session.commit()
         return self._name_to_file(name)
@@ -272,21 +269,19 @@ class GenBankRetriever(Retriever):
         If 'filename' is set and 'extract' is set to 0, then 'filename' is
         used for output.
         If 'extract' is set to 1, then the filename is constructed from the
-        id of the GenBank record. Additionally the id and GI number are
-        returned for further processing (putting them in the internal
-        database).
+        id of the GenBank record. Additionally the id is returned for further
+        processing (putting them in the internal database).
 
         :arg str raw_data: The data.
         :arg unicode filename: The intended name of the file.
-        :arg int extract: Flag that indicates whether to extract the record ID
-            and GI number:
+        :arg int extract: Flag that indicates whether to extract the record ID:
             - 0 ; Do not extract, use 'filename'
             - 1 ; Extract
 
         :returns: Depending on the value of 'extract':
-            - 0 ; ('filename', None)
-            - 1 ; (id, gi)
-        :rtype: tuple(unicode, unicode)
+            - 0 ; filename
+            - 1 ; id
+        :rtype: unicode
         """
         if raw_data.strip() == b'Nothing has been found':
             self._output.addMessage(
@@ -312,10 +307,8 @@ class GenBankRetriever(Retriever):
             return None
 
         out_filename = filename
-        gi = None
         if extract:
             out_filename = unicode(record.id)
-            gi = unicode(record.annotations['gi'])
             if out_filename != filename:
                 # Add the reference (incl version) to the reference output
                 # This differs if the original reference lacks a version
@@ -332,7 +325,7 @@ class GenBankRetriever(Retriever):
         if not self._write(raw_data, out_filename):
             return None
 
-        return out_filename, gi
+        return out_filename
 
     def fetch(self, name):
         """
@@ -405,14 +398,10 @@ class GenBankRetriever(Retriever):
                         name))
                 return None
 
-        result = self.write(raw_data, name, 1)
-        if not result:
-            return None
-        name, gi = result
-
+        name = self.write(raw_data, name, 1)
         if name:
             # Processing went okay.
-            return self._update_db_md5(raw_data, name, gi, 'ncbi')
+            return self._update_db_md5(raw_data, name, 'ncbi')
         else:
             # Parse error in the GenBank file.
             return None
@@ -738,7 +727,7 @@ class GenBankRetriever(Retriever):
                 return (self.write(raw_data, reference.accession, 0) and
                         reference.accession)
 
-    def loadrecord(self, identifier):
+    def loadrecord(self, accession):
         """
         Load a RefSeq record and return it.
 
@@ -750,27 +739,17 @@ class GenBankRetriever(Retriever):
            database.
         3. Fetched from the NCBI.
 
-        :arg unicode identifier: A RefSeq accession number or geninfo
-            identifier (GI).
+        :arg unicode accession: A RefSeq accession number.
 
         :returns: A parsed RefSeq record or `None` if no record could be found
-          for the given identifier.
+          for the given accession.
         :rtype: object
         """
-        if identifier[0].isdigit():
-            # This is a GI number (geninfo identifier).
-            reference = Reference.query \
-                .filter_by(geninfo_identifier=identifier) \
-                .first()
-        else:
-            # This is a RefSeq accession number.
-            reference = Reference.query \
-                .filter_by(accession=identifier) \
-                .first()
+        reference = Reference.query.filter_by(accession=accession).first()
 
         if reference is None:
             # We don't know it, fetch it from NCBI.
-            filename = self.fetch(identifier)
+            filename = self.fetch(accession)
 
         else:
             # We have seen it before.
@@ -813,7 +792,7 @@ class GenBankRetriever(Retriever):
         # If filename is None, we could not retrieve the record.
         if filename is None:
             # Notify batch job to skip all instance of identifier.
-            self._output.addOutput('BatchFlags', ('S1', identifier))
+            self._output.addOutput('BatchFlags', ('S1', accession))
             return None
 
         # Now we have the file, so we can parse it.

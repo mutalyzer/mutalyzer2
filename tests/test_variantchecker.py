@@ -1083,11 +1083,7 @@ def test_gi_reference_plain(output, checker):
     Test reference sequence notation with GI number.
     """
     checker('31317229:c.6del')
-    error_count, _, _ = output.Summary()
-    assert error_count == 0
-    assert output.getIndexedOutput('genomicDescription', 0) == '31317229:n.105del'
-    assert '31317229(FCER1A_v001):c.6del' \
-           in output.getOutput('descriptions')
+    assert len(output.getMessagesWithErrorCode('EGINOTSUPPORTED')) == 1
 
 
 @with_references('NM_002001.2')
@@ -1096,11 +1092,7 @@ def test_gi_reference_prefix(output, checker):
     Test reference sequence notation with GI number and prefix.
     """
     checker('GI31317229:c.6del')
-    error_count, _, _ = output.Summary()
-    assert error_count == 0
-    assert output.getIndexedOutput('genomicDescription', 0) == '31317229:n.105del'
-    assert '31317229(FCER1A_v001):c.6del' \
-           in output.getOutput('descriptions')
+    assert len(output.getMessagesWithErrorCode('EGINOTSUPPORTED')) == 1
 
 
 @with_references('NM_002001.2')
@@ -1109,11 +1101,7 @@ def test_gi_reference_prefix_colon(output, checker):
     Test reference sequence notation with GI number and prefix with colon.
     """
     checker('GI:31317229:c.6del')
-    error_count, _, _ = output.Summary()
-    assert error_count == 0
-    assert output.getIndexedOutput('genomicDescription', 0) == '31317229:n.105del'
-    assert '31317229(FCER1A_v001):c.6del' \
-           in output.getOutput('descriptions')
+    assert len(output.getMessagesWithErrorCode('EGINOTSUPPORTED')) == 1
 
 
 @with_references('NM_002001.2')
