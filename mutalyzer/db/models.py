@@ -178,6 +178,9 @@ class Reference(db.Base):
     #: on the value of `source` and must be serialized as a string.
     source_data = Column(String(255))
 
+    #: The corresponding GI number, if available.
+    geninfo_identifier = Column(String(13), index=True, unique=True)
+
     #: Date and time of creation.
     added = Column(DateTime)
 
