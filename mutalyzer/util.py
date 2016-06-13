@@ -37,6 +37,12 @@ from Bio.SeqUtils import seq3
 from extractor.describe import palinsnoop, roll
 
 
+def accession_with_version(accession, version=None):
+    if version is None:
+        return accession
+    return '%s.%i' % (accession, version)
+
+
 def reverse_complement(sequence):
     """
     Reverse complement of a sequence represented as unicode string.

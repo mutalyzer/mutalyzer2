@@ -129,18 +129,21 @@ class Retriever(object):
         ud = util.generate_id()
         return 'UD_' + unicode(ud)
 
-    def _update_db_md5(self, raw_data, name, source):
+    def _update_db_md5(self, raw_data, accession, source, version=None):
         """
-        :arg str raw_data:
-        :arg unicode name:
-        :arg unicode source:
+        :arg str raw_data: Reference file contents.
+        :arg unicode accession: Accession number, without version.
+        :arg unicode source: Source of the reference file.
+        :arg int version: Optional accession version number.
 
         :returns: filename
         :rtype: unicode
         """
-        # TODO: Documentation.
         try:
-            reference = Reference.query.filter_by(accession=name).one()
+            reference = Reference.query.filter_by(
+                accession=accession,
+                version=version
+            ).one()
             current_md5sum = reference.checksum
         except NoResultFound:
             current_md5sum = None
@@ -151,15 +154,20 @@ class Retriever(object):
                 self._output.addMessage(
                     __file__, -1, 'WHASH',
                     'Warning: Hash of {} changed from {} to {}.'.format(
-                        name, current_md5sum, md5sum))
-                Reference.query.filter_by(accession=name).update(
-                    {'checksum': md5sum})
+                        util.accession_with_version(accession, version),
+                        current_md5sum, md5sum))
+                Reference.query.filter_by(
+                    accession=accession,
+                    version=version
+                ).update({'checksum': md5sum})
                 session.commit()
         else:
-            reference = Reference(name, self._calculate_hash(raw_data), source)
+            reference = Reference(accession, self._calculate_hash(raw_data),
+                                  source, version=version)
             session.add(reference)
             session.commit()
-        return self._name_to_file(name)
+        return self._name_to_file(
+            util.accession_with_version(accession, version))
 
     def snpConvert(self, rs_id):
         """
@@ -455,6 +463,9 @@ class GenBankRetriever(Retriever):
             source='ncbi_slice',
             source_data=source_data
         ).first()
+
+        assert reference.version is None
+
         if reference and os.path.isfile(self._name_to_file(reference.accession)):
             # It's still present.
             return reference.accession
@@ -490,7 +501,8 @@ class GenBankRetriever(Retriever):
                     'Warning: Hash of {} changed from {} to {}.'.format(
                         reference.accession, current_md5sum, md5sum))
                 Reference.query.filter_by(
-                    accession=reference.accession).update({'checksum': md5sum})
+                    accession=reference.accession
+                ).update({'checksum': md5sum})
                 session.commit()
         else:
             # We haven't seen it before, so give it a name.
@@ -649,7 +661,7 @@ class GenBankRetriever(Retriever):
 
         :arg unicode url: Location of a GenBank record.
 
-        :returns: UD or None.
+        :returns: UD or accession including version number or None.
         :rtype: unicode
         """
         if not (url.startswith('http://') or url.startswith('https://') or
@@ -682,9 +694,14 @@ class GenBankRetriever(Retriever):
                         session.add(reference)
                         session.commit()
                 else:
-                    if (os.path.isfile(self._name_to_file(reference.accession)) or
+                    # We found an existing entry with the same checksum. This
+                    # could just be a regulare RefSeq which is redownloaded,
+                    # so we should also handle potential version numbers here.
+                    acc_with_version = util.accession_with_version(
+                        reference.accession, reference.version)
+                    if (os.path.isfile(self._name_to_file(acc_with_version)) or
                             self.write(raw_data, reference.accession, 0)):
-                        ud = reference.accession
+                        ud = acc_with_version
 
                 # Returns the UD or None.
                 return ud
@@ -706,7 +723,8 @@ class GenBankRetriever(Retriever):
 
         :arg str raw_data: A GenBank record.
 
-        :returns: Accession number for the uploaded file.
+        :returns: Accession number for the uploaded file, potentially
+          including version number.
         :rtype: unicode
         """
         md5sum = self._calculate_hash(raw_data)
@@ -721,13 +739,18 @@ class GenBankRetriever(Retriever):
                 session.commit()
                 return ud
         else:
-            if os.path.isfile(self._name_to_file(reference.accession)):
-                return reference.accession
+            # We found an existing entry with the same checksum. This could
+            # just be a regulare RefSeq which is reuploaded, so we should also
+            # handle potential version numbers here.
+            acc_with_version = util.accession_with_version(reference.accession,
+                                                           reference.version)
+            if os.path.isfile(self._name_to_file(acc_with_version)):
+                return acc_with_version
             else:
-                return (self.write(raw_data, reference.accession, 0) and
-                        reference.accession)
+                return (self.write(raw_data, acc_with_version, 0) and
+                        acc_with_version)
 
-    def loadrecord(self, accession):
+    def loadrecord(self, accession, version=None):
         """
         Load a RefSeq record and return it.
 
@@ -740,6 +763,7 @@ class GenBankRetriever(Retriever):
         3. Fetched from the NCBI.
 
         :arg unicode accession: A RefSeq accession number.
+        :arg int version: Accession version.
 
         :returns: A parsed RefSeq record or `None` if no record could be found
           for the given accession.
