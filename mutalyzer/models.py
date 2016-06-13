@@ -198,6 +198,18 @@ class ExonInfo(ComplexModel):
 #ExonInfo
 
 
+class LegendRecord(ComplexModel):
+    """
+    Used in MutalyzerOutput data type.
+    """
+    name = Mandatory.Unicode
+    id = Unicode
+    locusTag = Unicode
+    product = Unicode
+    linkMethod = Unicode
+#LegendRecord
+
+
 class MutalyzerOutput(ComplexModel):
     """
     Return type of SOAP method runMutalyzer.
@@ -233,6 +245,8 @@ class MutalyzerOutput(ComplexModel):
     proteinDescriptions = Array(Unicode)
 
     exons = Array(ExonInfo)
+
+    legend = Array(LegendRecord)
 
     rawVariants = Array(RawVariant)
 

@@ -6,6 +6,7 @@ Tests for the mutalyzer.services.soap module.
 from __future__ import unicode_literals
 
 import bz2
+import collections
 import datetime
 import os
 
@@ -609,6 +610,42 @@ def test_runmutalyzer_exons(api):
     assert len(r.exons.ExonInfo) == len(expected_exons)
     for exon, expected_exon in zip(r.exons.ExonInfo, expected_exons):
         assert (exon.gStart, exon.gStop, exon.cStart, exon.cStop) == expected_exon
+
+
+@with_references('NG_009105.1')
+def test_runmutalyzer_legend(api):
+    """
+    Test presence of legend in runMutalyzer output.
+    """
+    record_fieldnames = ['name', 'id', 'locusTag', 'product', 'linkMethod']
+    TestRecord = collections.namedtuple('TestRecord', record_fieldnames)
+    r1 = TestRecord(u'OPN1LW_v001', u'NM_020061.4', None,
+                    u'opsin 1 (cone pigments), long-wave-sensitive',
+                    u'protein')
+    r2 = TestRecord(u'OPN1LW_i001', u'NP_064445.1', None,
+                    u'long-wave-sensitive opsin 1', u'protein')
+    expected_records = [r1, r2]
+
+    r = api('runMutalyzer', 'NG_009105.1(OPN1LW_v001):g.=')
+
+    assert hasattr(r, 'legend'), 'runMutalyzer output has no legend.'
+    assert hasattr(r.legend, 'LegendRecord')
+    assert hasattr(r.legend.LegendRecord, '__iter__'), \
+        'Legend attribute is not iterable.'
+    assert len(r.legend.LegendRecord) == len(expected_records), \
+        'Unexpected number of records in legend.'
+
+    # Compare response and expected records (order-independent).
+    for record in expected_records:
+        found_match = False
+        for other_record in r.legend.LegendRecord:
+            if False not in [getattr(record, n) == getattr(other_record, n)
+                             for n in record_fieldnames]:
+                found_match = True
+                break
+
+        assert found_match, \
+            'Record with name "{}" not found in legend.'.format(record[0])
 
 
 @with_references('AB026906.1', 'NM_003002.2', 'AL449423.14')

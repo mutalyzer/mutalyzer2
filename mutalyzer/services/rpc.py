@@ -912,6 +912,14 @@ class MutalyzerService(ServiceBase):
                 - gStart
                 - cStop
                 - gStop
+            - legend: Array with name and information per transcript variant
+                and protein isoform. Each entry is an array with the following
+                fields:
+                - name
+                - id
+                - locusTag
+                - product
+                - linkMethod
             - messages: List of (error) messages.
         """
         O = Output(__file__)
@@ -965,6 +973,16 @@ class MutalyzerService(ServiceBase):
             raw_variants.append(r)
 
         result.rawVariants = raw_variants
+
+        result.legend = []
+        for name, id, locusTag, product, linkMethod in O.getOutput('legends'):
+            record = LegendRecord()
+            record.name = name
+            record.id = id
+            record.locusTag = locusTag
+            record.product = product
+            record.linkMethod = linkMethod
+            result.legend.append(record)
 
         result.errors, result.warnings, result.summary = O.Summary()
 
