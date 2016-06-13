@@ -156,8 +156,7 @@ class Reference(db.Base):
     #: Accession number for this reference, including the version number if
     #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
     #: ``UD_138781341344``).
-    _accession = Column('accession', String(20), nullable=False, index=True,
-                        unique=True)
+    _accession = Column('accession', String(20), nullable=False)
 
     #: Accession version (e.g., 3, 2). Not applicable for LRG or UD references.
     version = Column(Integer)
@@ -212,6 +211,9 @@ class Reference(db.Base):
             pass
 
 
+Index('reference_accession_version',
+      Reference._accession, Reference.version,
+      unique=True)
 Index('reference_source_data',
       Reference.source, Reference.source_data)
 
