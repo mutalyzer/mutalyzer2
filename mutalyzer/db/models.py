@@ -157,6 +157,9 @@ class Reference(db.Base):
     #: ``UD_138781341344``).
     accession = Column(String(20), nullable=False, index=True, unique=True)
 
+    #: Accession version (e.g., 3, 2). Not applicable for LRG or UD references.
+    version = Column(Integer)
+
     #: MD5 checksum of the reference file.
     checksum = Column(String(32), nullable=False, index=True, unique=True)
 
