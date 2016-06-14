@@ -179,16 +179,37 @@ class Reference(db.Base):
     #: on the value of `source` and must be serialized as a string.
     source_data = Column(String(255))
 
+    #: Type of reference.
+    type = Column(Enum('refseq', 'lrg', name='reference_type'), nullable=False)
+
+    #: Enclosing organelle. Used to differentiate between references requiring
+    #: ``m.`` and ``g.`` descriptions.
+    organelle = Column(Enum('nucleus', 'mitochondrion',
+                            name='reference_organelle'),
+                       nullable=False)
+
+    #: Type of molecule.
+    # Modeled after Table 1, Chapter 18, The Reference Sequence (RefSeq)
+    # Database.
+    # http://www.ncbi.nlm.nih.gov/books/NBK21091/table/ch18.T.refseq_accession_numbers_and_mole/?report=objectonly
+    molecule_type = Column(Enum('dna', 'rna', 'protein',
+                                name='reference_molecule_type'),
+                           nullable=False)
+
     #: The corresponding GI number, if available.
     geninfo_identifier = Column(String(13), index=True, unique=True)
 
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, accession, checksum, source, source_data=None):
+    def __init__(self, accession, checksum, source, type, organelle,
+                 molecule_type, source_data=None):
         self.accession = accession
         self.checksum = checksum
         self.source = source
+        self.type = type
+        self.organelle = organelle
+        self.molecule_type = molecule_type
         self.source_data = source_data
         self.added = datetime.now()
 
@@ -198,6 +219,106 @@ class Reference(db.Base):
 
 Index('reference_source_data',
       Reference.source, Reference.source_data)
+
+
+class Transcript(db.Base):
+    """
+    Mapping of a gene transcript on a reference.
+    """
+    __tablename__ = 'transcripts'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
+
+    id = Column(Integer, primary_key=True)
+    reference_id = Column(Integer,
+                          ForeignKey('references.id', ondelete='CASCADE'),
+                          nullable=False)
+
+    #: Accession number for this transcript, including the version number if
+    #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
+    #: ``UD_138781341344``).
+    accession = Column(String(20))
+
+    #: Gene symbol (e.g., ``DMD``, ``PSEN1``, ``TRNS1``).
+    gene = Column(String(30), nullable=False)
+
+    #: Transcript index in reference, per gene (e.g., 1, 2).
+    index = Column(Integer, nullable=False)
+
+    #: The orientation of the transcript on the reference.
+    orientation = Column(Enum('forward', 'reverse',
+                              name='transcript_orientation'),
+                         nullable=False)
+
+    #: The start position of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    start = Column(Integer, nullable=False)
+
+    #: The stop position of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    stop = Column(Integer, nullable=False)
+
+    #: The CDS start position of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    cds_start = Column(Integer)
+
+    #: The CDS stop position of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    cds_stop = Column(Integer)
+
+    #: The exon start positions of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    exon_starts = Column(Positions, nullable=False)
+
+    #: The exon stop positions of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    exon_stops = Column(Positions, nullable=False)
+
+    #: The :class:`Reference` this transcript is annotated on.
+    reference = relationship(
+        Reference,
+        lazy='joined',
+        innerjoin=True,
+        backref=backref('transcripts', lazy='dynamic',
+                        cascade='all, delete-orphan',
+                        passive_deletes=True))
+
+    def __init__(self, reference, gene, index, orientation, start, stop,
+                 exon_starts, exon_stops, accession=None, cds=None):
+        self.reference = reference
+        self.gene = gene
+        self.index = index
+        self.orientation = orientation
+        self.start = start
+        self.stop = stop
+        self.exon_starts = exon_starts
+        self.exon_stops = exon_stops
+        self.accession = accession
+        self.cds = cds
+
+    def __repr__(self):
+        return ('<Transcript gene=%r index=%r, accession=%r>'
+                % (self.gene, self.index, self.accession))
+
+    @property
+    def coding(self):
+        """
+        Set to `True` iff the transcript is coding.
+        """
+        return self.cds_start is not None and self.cds_stop is not None
+
+    @property
+    def cds(self):
+        """
+        Tuple of CDS start and stop positions on the chromosome, or `None` if
+        the transcript is non-coding.
+        """
+        if self.coding:
+            return self.cds_start, self.cds_stop
+        return None
+
+    @cds.setter
+    def cds(self, cds):
+        self.cds_start, self.cds_stop = cds or (None, None)
 
 
 class Assembly(db.Base):
@@ -353,14 +474,14 @@ class TranscriptMapping(db.Base):
     cds_start = Column(Integer)
 
     #: The CDS stop position of the transcript on the chromosome (one-based,
-    #: inclusive).
+    #: inclusive, in chromosomal orientation).
     cds_stop = Column(Integer)
 
     #: The exon start positions of the transcript on the chromosome
     #: (one-based, inclusive, in chromosomal orientation).
     exon_starts = Column(Positions, nullable=False)
 
-    #: The exon start positions of the transcript on the chromosome
+    #: The exon stop positions of the transcript on the chromosome
     #: (one-based, inclusive, in chromosomal orientation).
     exon_stops = Column(Positions, nullable=False)
 
@@ -374,7 +495,7 @@ class TranscriptMapping(db.Base):
     source = Column(Enum('ucsc', 'ncbi', 'ebi', 'reference', name='source'),
                     nullable=False)
 
-    #: The :class:`Assembly` this chromosome is in.
+    #: The :class:`Chromosome` this transcript is mapped to.
     chromosome = relationship(
         Chromosome,
         lazy='joined',
