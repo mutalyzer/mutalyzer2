@@ -14,10 +14,13 @@ from sqlalchemy import event, or_
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Index,
                         Integer, String, Text, TypeDecorator)
 from sqlalchemy.engine import Engine
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
+from sqlalchemy.sql import expression, func
 
 from mutalyzer import db
+from mutalyzer import util
 
 
 BATCH_JOB_TYPES = ('name-checker',
@@ -63,6 +66,26 @@ class Positions(TypeDecorator):
         if value == '':
             return []
         return [int(s) for s in value.split(',')]
+
+
+class accession_without_version(expression.FunctionElement):
+    type = String()
+    name = 'accession_without_version'
+
+
+@compiles(accession_without_version)
+def default_accession_without_version(element, compiler, **kw):
+    accession = element.clauses.clauses[0]
+    return "SPLIT_PART({}, '.', 1)".format(compiler.process(accession))
+
+
+@compiles(accession_without_version, 'sqlite')
+def sqlite_accession_without_version(element, compiler, **kw):
+    accession = element.clauses.clauses[0]
+    return ("CASE WHEN INSTR({0}, '.') > 0 "
+            "THEN SUBSTR({0}, 1, INSTR({0}, '.') - 1) "
+            "ELSE {0} "
+            "END".format(compiler.process(accession)))
 
 
 class BatchJob(db.Base):
@@ -156,8 +179,7 @@ class Reference(db.Base):
     #: Accession number for this reference, including the version number if
     #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
     #: ``UD_138781341344``).
-    _accession = Column('accession', String(20), nullable=False, index=True,
-                        unique=True)
+    _accession = Column('accession', String(20), nullable=False)
 
     #: Accession version (e.g., 3, 2). Not applicable for LRG or UD references.
     version = Column(Integer)
@@ -189,29 +211,61 @@ class Reference(db.Base):
     #: Date and time of creation.
     added = Column(DateTime)
 
-    def __init__(self, accession, checksum, source, source_data=None):
+    def __init__(self, accession, checksum, source, version=None,
+                 source_data=None):
         self.accession = accession
+        self.version = version
         self.checksum = checksum
         self.source = source
         self.source_data = source_data
         self.added = datetime.now()
 
     def __repr__(self):
-        return '<Reference %r>' % self.accession
+        return '<Reference accession=%r, version=%r, source=%r>' % (
+            self.accession, self.version, self.source)
 
     @hybrid_property
     def accession(self):
-        return self._accession
+        return self._accession.split('.')[0]
 
     @accession.setter
     def accession(self, accession):
         self._accession = accession
+
+    @accession.expression
+    def accession(cls):
+        return accession_without_version(cls._accession)
+
+    @hybrid_property
+    def name(self):
+        """
+        Complete name for this reference. Combination of `accession` and
+        `version` if applicable, just `accession` otherwise (e.g.,
+        ``AL449423.14``, ``NM_000059.3``, ``UD_138781341344``).
+        """
+        return util.accession_with_version(self.version, self.accession)
+
+    @name.setter
+    def name(self, name):
         try:
-            self.version = int(accession.split('.', 1)[1])
-        except (IndexError, ValueError):
-            pass
+            accession, version = name.split('.')
+            version = int(version)
+        except ValueError:
+            accession = name
+            version = None
+        self.accession = accession
+        self.version = version
+
+    @name.expression
+    def name(cls):
+        return func.coalesce(
+            cls.accession + '.' + expression.cast(cls.version, String),
+            cls.accession)
 
 
+Index('reference_accession_version',
+      Reference._accession, Reference.version,
+      unique=True)
 Index('reference_source_data',
       Reference.source, Reference.source_data)
 
