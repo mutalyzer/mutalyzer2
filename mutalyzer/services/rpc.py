@@ -35,6 +35,7 @@ from mutalyzer.output import Output
 from mutalyzer.grammar import Grammar
 from mutalyzer.sync import CacheSync
 from mutalyzer import announce
+from mutalyzer import ncbi
 from mutalyzer import stats
 from mutalyzer import variantchecker
 from mutalyzer.mapping import Converter
@@ -1445,13 +1446,16 @@ class MutalyzerService(ServiceBase):
 
         stats.increment_counter('snp-converter/webservice')
 
-        retriever = Retriever.Retriever(output)
-        descriptions = retriever.snpConvert(rs_id)
+        try:
+            descriptions = ncbi.rsid_to_descriptions(rs_id)
+        except ncbi.ServiceError:
+            output.addMessage(__file__, 4, 'EENTREZ',
+                              'An error occured while communicating with '
+                              'dbSNP.')
 
         output.addMessage(__file__, -1, 'INFO',
             'Finished processing getdbSNPDescription(%s)' % rs_id)
 
-        messages = output.getMessages()
         if output.getMessages():
             raise create_rpc_fault(output)
 

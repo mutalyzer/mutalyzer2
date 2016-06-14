@@ -23,8 +23,8 @@ from sqlalchemy.orm.exc import NoResultFound
 import extractor
 
 import mutalyzer
-from mutalyzer import (announce, backtranslator, File, Retriever, Scheduler,
-                       stats, util, variantchecker)
+from mutalyzer import (announce, backtranslator, File, ncbi, Retriever,
+                       Scheduler, stats, util, variantchecker)
 from mutalyzer.config import settings
 from mutalyzer.db.models import BATCH_JOB_TYPES
 from mutalyzer.db.models import Assembly, BatchJob
@@ -497,8 +497,11 @@ def snp_converter():
                       % (rs_id, request.remote_addr))
     stats.increment_counter('snp-converter/website')
 
-    retriever = Retriever.Retriever(output)
-    descriptions = retriever.snpConvert(rs_id)
+    try:
+        descriptions = ncbi.rsid_to_descriptions(rs_id)
+    except ncbi.ServiceError:
+        output.addMessage(__file__, 4, 'EENTREZ',
+                          'An error occured while communicating with dbSNP.')
 
     messages = map(util.message_info, output.getMessages())
 

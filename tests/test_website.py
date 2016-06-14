@@ -351,7 +351,7 @@ def test_snp_converter_valid(website):
     """
     Submit the SNP converter form with a valid SNP.
     """
-    # Patch Retriever.snpConvert to return rs9919552.
+    # Patch Bio.Entrez.efetch to return dbSNP record for rs9919552.
     def mock_efetch(*args, **kwargs):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             'data',
@@ -376,10 +376,9 @@ def test_snp_converter_invalid(website):
     r = website.get('/snp-converter',
                     query_string={'rs_id': 'r9919552'})
 
-    assert '1 Error' in r.data
+    assert '0 Errors' in r.data
     assert '0 Warnings' in r.data
-    assert 'Fatal' in r.data
-    assert 'This is not a valid dbSNP id' in r.data
+    assert 'NM_' not in r.data
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')
