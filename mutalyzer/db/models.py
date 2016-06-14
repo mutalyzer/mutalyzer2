@@ -14,7 +14,6 @@ from sqlalchemy import event, or_
 from sqlalchemy import (Boolean, Column, DateTime, Enum, ForeignKey, Index,
                         Integer, String, Text, TypeDecorator)
 from sqlalchemy.engine import Engine
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
 from mutalyzer import db
@@ -156,11 +155,8 @@ class Reference(db.Base):
     #: Accession number for this reference, including the version number if
     #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
     #: ``UD_138781341344``).
-    _accession = Column('accession', String(20), nullable=False, index=True,
-                        unique=True)
-
-    #: Accession version (e.g., 3, 2). Not applicable for LRG or UD references.
-    version = Column(Integer)
+    # See: https://github.com/mutalyzer/mutalyzer/issues/399
+    accession = Column(String(20), nullable=False, index=True, unique=True)
 
     #: MD5 checksum of the reference file.
     checksum = Column(String(32), nullable=False, index=True, unique=True)
@@ -198,18 +194,6 @@ class Reference(db.Base):
 
     def __repr__(self):
         return '<Reference %r>' % self.accession
-
-    @hybrid_property
-    def accession(self):
-        return self._accession
-
-    @accession.setter
-    def accession(self, accession):
-        self._accession = accession
-        try:
-            self.version = int(accession.split('.', 1)[1])
-        except (IndexError, ValueError):
-            pass
 
 
 Index('reference_source_data',
