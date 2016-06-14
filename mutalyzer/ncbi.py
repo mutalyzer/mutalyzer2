@@ -3,7 +3,7 @@ Communication with the NCBI.
 """
 
 
-from urllib2 import HTTPError
+import httplib
 
 from Bio import Entrez
 
@@ -84,12 +84,14 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     # Find source record.
     try:
         handle = Entrez.esearch(db=source_db, term=source)
-    except HTTPError:
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
         return fail_or_retry()
 
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
+        # TODO: Log error.
         return fail_or_retry()
     finally:
         handle.close()
@@ -102,12 +104,14 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     # Find link from source record to target record.
     try:
         handle = Entrez.elink(dbfrom=source_db, db=target_db, id=source_gi)
-    except HTTPError:
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
         return fail_or_retry()
 
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
+        # TODO: Log error.
         return fail_or_retry()
     finally:
         handle.close()
@@ -126,7 +130,8 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     try:
         handle = Entrez.efetch(
             db=target_db, id=target_gi, rettype='acc', retmode='text')
-    except HTTPError:
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
         return fail_or_retry()
 
     target = unicode(handle.read()).strip().split('.')
