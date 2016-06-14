@@ -27,12 +27,12 @@ from sqlalchemy.orm.exc import NoResultFound
 from mutalyzer.config import settings
 from mutalyzer.db import queries, session
 from mutalyzer.db.models import Assembly, BatchJob, BatchQueueItem
+from mutalyzer import ncbi
 from mutalyzer import stats
 from mutalyzer import variantchecker
 from mutalyzer.grammar import Grammar
 from mutalyzer.output import Output
 from mutalyzer.mapping import Converter
-from mutalyzer import Retriever           # Retriever.Retriever
 from mutalyzer import website
 
 
@@ -724,10 +724,15 @@ Mutalyzer batch scheduler""" % download_url)
         # Todo: Do something with the flags?
         skip = self.__processFlags(O, flags)
 
-        descriptions = []
-        if not skip :
-            R = Retriever.Retriever(O)
-            descriptions = R.snpConvert(cmd)
+        if skip:
+            descriptions = []
+        else:
+            try:
+                descriptions = ncbi.rsid_to_descriptions(rs_id)
+            except ncbi.ServiceError:
+                O.addMessage(__file__, 4, 'EENTREZ',
+                             'An error occured while communicating with '
+                             'dbSNP.')
 
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd

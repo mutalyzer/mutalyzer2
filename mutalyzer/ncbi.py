@@ -3,7 +3,9 @@ Communication with the NCBI.
 """
 
 
-from urllib2 import HTTPError
+import httplib
+from xml.dom import minidom
+from xml.parsers import expat
 
 from Bio import Entrez
 
@@ -22,6 +24,15 @@ class _NegativeLinkError(Exception):
 class NoLinkError(Exception):
     """
     Raised when no transcript-protein link can be found.
+    """
+    pass
+
+
+class ServiceError(Exception):
+    """
+    Raised when an error occured in communication with the NCBI Entrez
+    service. This could be a network error or application error and is likely
+    to be temporary.
     """
     pass
 
@@ -84,12 +95,14 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     # Find source record.
     try:
         handle = Entrez.esearch(db=source_db, term=source)
-    except HTTPError:
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
         return fail_or_retry()
 
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
+        # TODO: Log error.
         return fail_or_retry()
     finally:
         handle.close()
@@ -102,12 +115,14 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     # Find link from source record to target record.
     try:
         handle = Entrez.elink(dbfrom=source_db, db=target_db, id=source_gi)
-    except HTTPError:
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
         return fail_or_retry()
 
     try:
         result = Entrez.read(handle)
     except Entrez.Parser.ValidationError:
+        # TODO: Log error.
         return fail_or_retry()
     finally:
         handle.close()
@@ -126,7 +141,8 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     try:
         handle = Entrez.efetch(
             db=target_db, id=target_gi, rettype='acc', retmode='text')
-    except HTTPError:
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
         return fail_or_retry()
 
     target = unicode(handle.read()).strip().split('.')
@@ -317,3 +333,50 @@ def protein_to_transcript(protein_accession, protein_version=None,
         'protein', 'nucleotide', lambda link: link == 'protein_nuccore_mrna',
         protein_accession, source_version=protein_version,
         match_version=match_version)
+
+
+def rsid_to_descriptions(rsid):
+    """
+    Return all annotated HGVS descriptions for a given dbSNP rs#.
+
+    :arg str rsid: The rs# of the dbSNP record (e.g., `rs9919552`).
+
+    :raises ServiceError: On error in Entrez communication.
+
+    :returns: List of HGVS descriptions.
+    :rtype: list(str)
+    """
+    Entrez.email = settings.EMAIL
+
+    if not rsid.startswith('rs') or not rsid[2:].isdigit():
+        return []
+
+    try:
+        response = Entrez.efetch(db='snp', id=rsid[2:], retmode='xml')
+    except (IOError, httplib.HTTPException):
+        # TODO: Log error.
+        raise ServiceError()
+
+    try:
+        response_text = response.read()
+    except httplib.HTTPException:
+        # TODO: Log error.
+        raise ServiceError()
+
+    if response_text.strip() == b'\n':
+        # This is apparently what dbSNP returns for non-existing rs#.
+        return []
+
+    try:
+        # Parse the output.
+        doc = minidom.parseString(response_text)
+        rs = doc.getElementsByTagName('Rs')[0]
+    except expat.ExpatError:
+        # TODO: Log error.
+        raise ServiceError()
+    except IndexError:
+        # The expected root element is not present, this has also been
+        # observed as a response for non-existing rs#.
+        return []
+
+    return [hgvs.lastChild.data for hgvs in rs.getElementsByTagName('hgvs')]

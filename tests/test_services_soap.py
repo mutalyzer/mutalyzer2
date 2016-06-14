@@ -432,7 +432,7 @@ def test_getdbsnpdescriptions(api):
     Running getdbSNPDescriptions method should give us the expected HGVS
     descriptions for the given dbSNP id.
     """
-    # Patch Retriever.snpConvert to return rs9919552.
+    # Patch Bio.Entrez.efetch to return dbSNP record for rs9919552.
     def mock_efetch(*args, **kwargs):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             'data',

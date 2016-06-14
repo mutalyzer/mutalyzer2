@@ -14,17 +14,15 @@ import chardet
 import hashlib
 import io
 import os
-import time
 import urllib2
 
 from Bio import Entrez
 from Bio import SeqIO
 from Bio.Alphabet import ProteinAlphabet
 from Bio.Seq import UnknownSeq
-from httplib import HTTPException, IncompleteRead
+from httplib import HTTPException
 from sqlalchemy.orm.exc import NoResultFound
-from xml.dom import DOMException, minidom
-from xml.parsers import expat
+from xml.dom import DOMException
 
 from mutalyzer import util
 from mutalyzer.config import settings
@@ -32,10 +30,6 @@ from mutalyzer.db import session
 from mutalyzer.db.models import Reference
 from mutalyzer.parsers import genbank
 from mutalyzer.parsers import lrg
-
-
-ENTREZ_MAX_TRIES = 4
-ENTREZ_SLEEP = 1  # In seconds.
 
 
 class Retriever(object):
@@ -160,93 +154,6 @@ class Retriever(object):
             session.add(reference)
             session.commit()
         return self._name_to_file(name)
-
-    def snpConvert(self, rs_id):
-        """
-        Search for an rsId in dbSNP and return all annotated HGVS notations of
-        it.
-
-        :arg unicode rsId: The rsId of the SNP (example: 'rs9919552').
-
-        :returns: A list of HGVS notations.
-        :rtype: list(unicode)
-        """
-        # A simple input check.
-        id = rs_id[2:]
-        if rs_id[:2] != 'rs' or not id.isdigit():
-            self._output.addMessage(
-                __file__, 4, 'ESNPID', 'This is not a valid dbSNP id.')
-            return []
-
-        # Query dbSNP for the SNP. The following weird construct is to catch
-        # any glitches in our Entrez connections. We try up to ENTREZ_MAX_TRIES
-        # and only then give up.
-        # Todo: maybe also implement this for other Entrez queries?
-        for i in range(ENTREZ_MAX_TRIES - 1):
-            try:
-                response = Entrez.efetch(
-                    db='snp', id=id, rettype='flt', retmode='xml')
-                break
-            except (IOError, HTTPException):
-                time.sleep(ENTREZ_SLEEP)
-        else:
-            try:
-                response = Entrez.efetch(
-                    db='snp', id=id, rettype='flt', retmode='xml')
-            except (IOError, HTTPException) as e:
-                # Could not parse XML.
-                self._output.addMessage(
-                    __file__, 4, 'EENTREZ', 'Error connecting to dbSNP.')
-                self._output.addMessage(
-                    __file__, -1, 'INFO', 'IOError: {}'.format(unicode(e)))
-                return []
-
-        try:
-            response_text = response.read()
-        except IncompleteRead as e:
-            self._output.addMessage(
-                __file__, 4, 'EENTREZ', 'Error reading from dbSNP.')
-            self._output.addMessage(
-                __file__, -1, 'INFO', 'IncompleteRead: {}'.format(unicode(e)))
-            return []
-
-        if response_text.strip() == b'\n':
-            # This is apparently what dbSNP returns for non-existing dbSNP id
-            self._output.addMessage(
-                __file__, 4, 'EENTREZ',
-                'ID rs{} could not be found in dbSNP.'.format(id))
-            return []
-
-        try:
-            # Parse the output.
-            doc = minidom.parseString(response_text)
-            rs = doc.getElementsByTagName('Rs')[0]
-        except expat.ExpatError as e:
-            # Could not parse XML.
-            self._output.addMessage(
-                __file__, 4, 'EENTREZ',
-                'Unknown dbSNP error. Error parsing result XML.')
-            self._output.addMessage(
-                __file__, -1, 'INFO', 'ExpatError: {}'.format(unicode(e)))
-            self._output.addMessage(
-                __file__, -1, 'INFO', 'Result from dbSNP: {}'.format(
-                    unicode(response_text, 'utf-8')))
-            return []
-        except IndexError:
-            # The expected root element is not present.
-            self._output.addMessage(
-                __file__, 4, 'EENTREZ',
-                'Unknown dbSNP error. Result XML was not as expected.')
-            self._output.addMessage(
-                __file__, -1, 'INFO', 'Result from dbSNP: {}'.format(
-                    unicode(response_text, 'utf-8')))
-            return []
-
-        snps = []
-        for i in rs.getElementsByTagName('hgvs'):
-            snps.append(i.lastChild.data)
-
-        return snps
 
 
 class GenBankRetriever(Retriever):
