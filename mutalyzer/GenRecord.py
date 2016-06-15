@@ -312,6 +312,21 @@ class Record(object) :
         return None
     #findGene
 
+    def get_transcript_selector(self, accession):
+        """
+        Returns a tuple with gene name and transcript name (i.e. its
+        `v-number') for a given transcript ID.
+
+        @param accession: unicode
+        @return: tuple(unicode, unicode)
+        """
+
+        for gene in self.geneList:
+            for transcript in gene.transcriptList:
+                if transcript.transcriptID == accession:
+                    return gene.name, transcript.name
+    #getInfoByTranscriptID
+
     def listGenes(self) :
         """
         List the names of all genes found in this record.

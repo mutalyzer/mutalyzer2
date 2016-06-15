@@ -2214,3 +2214,23 @@ def test_dup_range_arg_seq_reverse(output, checker):
     assert len(e_nodna) == 0
     e_ref = output.getMessagesWithErrorCode('EREF')
     assert len(e_ref) == 0
+
+
+@with_references('NG_012337.1')
+def test_accno_as_transcript_variant(output, checker):
+    """
+    Test accession number as transcript variant identifier is accepted.
+    """
+    # Variant below should be equivalent to the already accepted
+    # version: 'NG_012337.1(TIMM8B_v001):c.12_13insGATC'
+    checker('NG_012337.1(NM_012459.2):c.12_13insGATC')
+
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.4911_4912insATCG'
+
+    # Check non-existing accession number as transcript variant identifier.
+    checker('NG_012337.1(DUMMYACCNO_9999.9):c.12_13insGATC')
+
+    e_invalidtransvar = output.getMessagesWithErrorCode('EINVALIDTRANSVAR')
+    assert len(e_invalidtransvar) == 1

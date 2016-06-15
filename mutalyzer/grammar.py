@@ -83,9 +83,19 @@ class Grammar():
     # BNF: GeneName -> ([a-Z] | [0-9] | `-')+
     GeneName = Word(unicode(alphanums) + '-', min=1)
 
-    # BNF: GeneSymbol -> `(' Name (TransVar | ProtIso)? `)'
-    GeneSymbol = Suppress('(') + Group(GeneName('GeneSymbol') + \
-                 Optional(TransVar ^ ProtIso))('Gene') + Suppress(')')
+    # BNF: GeneProductID -> GeneName (TransVar | ProtIso)
+    GeneProductID = Group(GeneName('GeneSymbol') + \
+                          Optional(TransVar ^ ProtIso))('Gene')
+
+    # BNF: AccNoStem -> ([a-Z] Number `_')+
+    AccNoStem = NotAny('LRG_') + Combine(Word(unicode(alphas) + '_') + Number)
+
+    # BNF: AccNoFull -> AccNoStem `.' Number
+    AccNoFull = AccNoStem + Suppress('.') + Number
+
+    # BNF: GeneSymbol -> `(' (GeneProductID | AccNoFull) `)'
+    GeneSymbol = Suppress('(') + (GeneProductID ^ AccNoFull('AccNoTransVar')) \
+                 + Suppress(')')
 
     # BNF: GI -> (`GI' | `GI:')? Number
     GI = Suppress(Optional('GI') ^ Optional('GI:') ^ Optional('gi') ^
