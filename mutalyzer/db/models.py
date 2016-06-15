@@ -182,19 +182,19 @@ class Reference(db.Base):
     #: Type of reference.
     type = Column(Enum('refseq', 'lrg', name='reference_type'), nullable=False)
 
+    #: Type of molecule.
+    # Modeled after Table 1, Chapter 18, The Reference Sequence (RefSeq)
+    # Database.
+    # http://www.ncbi.nlm.nih.gov/books/NBK21091/table/ch18.T.refseq_accession_numbers_and_mole/?report=objectonly
+    molecule = Column(Enum('dna', 'rna', 'protein',
+                           name='reference_molecule'),
+                      nullable=False)
+
     #: Enclosing organelle. Used to differentiate between references requiring
     #: ``m.`` and ``g.`` descriptions.
     organelle = Column(Enum('nucleus', 'mitochondrion',
                             name='reference_organelle'),
                        nullable=False)
-
-    #: Type of molecule.
-    # Modeled after Table 1, Chapter 18, The Reference Sequence (RefSeq)
-    # Database.
-    # http://www.ncbi.nlm.nih.gov/books/NBK21091/table/ch18.T.refseq_accession_numbers_and_mole/?report=objectonly
-    molecule_type = Column(Enum('dna', 'rna', 'protein',
-                                name='reference_molecule_type'),
-                           nullable=False)
 
     #: The corresponding GI number, if available.
     geninfo_identifier = Column(String(13), index=True, unique=True)
@@ -203,18 +203,19 @@ class Reference(db.Base):
     added = Column(DateTime)
 
     def __init__(self, accession, checksum, source, type, organelle,
-                 molecule_type, source_data=None):
+                 molecule, source_data=None):
         self.accession = accession
         self.checksum = checksum
         self.source = source
         self.type = type
         self.organelle = organelle
-        self.molecule_type = molecule_type
+        self.molecule = molecule
         self.source_data = source_data
         self.added = datetime.now()
 
     def __repr__(self):
-        return '<Reference %r>' % self.accession
+        return '<Reference accession=%r source=%r type=%r molecule=%r>' % (
+            self.accession, self.source, self.type, self.molecule)
 
 
 Index('reference_source_data',
@@ -233,6 +234,9 @@ class Transcript(db.Base):
                           ForeignKey('references.id', ondelete='CASCADE'),
                           nullable=False)
 
+    #: Transcript name in reference (e.g., ``SDHD_v001``, ``t2``).
+    name = Column(String(35), nullable=False)
+
     #: Accession number for this transcript, including the version number if
     #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
     #: ``UD_138781341344``).
@@ -240,9 +244,6 @@ class Transcript(db.Base):
 
     #: Gene symbol (e.g., ``DMD``, ``PSEN1``, ``TRNS1``).
     gene = Column(String(30), nullable=False)
-
-    #: Transcript index in reference, per gene (e.g., 1, 2).
-    index = Column(Integer, nullable=False)
 
     #: The orientation of the transcript on the reference.
     orientation = Column(Enum('forward', 'reverse',
@@ -256,14 +257,6 @@ class Transcript(db.Base):
     #: The stop position of the transcript on the reference (one-based,
     #: inclusive, in reference orientation).
     stop = Column(Integer, nullable=False)
-
-    #: The CDS start position of the transcript on the reference (one-based,
-    #: inclusive, in reference orientation).
-    cds_start = Column(Integer)
-
-    #: The CDS stop position of the transcript on the reference (one-based,
-    #: inclusive, in reference orientation).
-    cds_stop = Column(Integer)
 
     #: The exon start positions of the transcript on the reference (one-based,
     #: inclusive, in reference orientation).
@@ -282,43 +275,97 @@ class Transcript(db.Base):
                         cascade='all, delete-orphan',
                         passive_deletes=True))
 
-    def __init__(self, reference, gene, index, orientation, start, stop,
-                 exon_starts, exon_stops, accession=None, cds=None):
+    def __init__(self, reference, name, gene, orientation, start, stop,
+                 exon_starts, exon_stops, accession=None):
         self.reference = reference
+        self.name = name
         self.gene = gene
-        self.index = index
         self.orientation = orientation
         self.start = start
         self.stop = stop
         self.exon_starts = exon_starts
         self.exon_stops = exon_stops
         self.accession = accession
-        self.cds = cds
 
     def __repr__(self):
-        return ('<Transcript gene=%r index=%r, accession=%r>'
-                % (self.gene, self.index, self.accession))
+        return '<Transcript name=%r accession=%r gene=%r>' % (
+            self.name, self.accession, self.gene)
 
-    @property
-    def coding(self):
-        """
-        Set to `True` iff the transcript is coding.
-        """
-        return self.cds_start is not None and self.cds_stop is not None
 
-    @property
-    def cds(self):
-        """
-        Tuple of CDS start and stop positions on the chromosome, or `None` if
-        the transcript is non-coding.
-        """
-        if self.coding:
-            return self.cds_start, self.cds_stop
-        return None
+class Protein(db.Base):
+    """
+    Protein translated from one or more transcripts on a reference.
+    """
+    __tablename__ = 'transcripts'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
 
-    @cds.setter
-    def cds(self, cds):
-        self.cds_start, self.cds_stop = cds or (None, None)
+    id = Column(Integer, primary_key=True)
+
+    #: Protein name in reference (e.g., ``SDHD_i001``, ``p2``).
+    name = Column(String(35), nullable=False)
+
+    #: Accession number for this protein, including the version number if
+    #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
+    #: ``UD_138781341344``).
+    accession = Column(String(20))
+
+    def __init__(self, name, accession=None):
+        self.name = name
+        self.accession = accession
+
+    def __repr__(self):
+        return '<Protein name=%r accession=%r>' % (self.name, self.accession)
+
+
+class Translation(db.Base):
+    """
+    Translation of a transcript to a protein.
+    """
+    __tablename__ = 'translations'
+    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8'}
+
+    id = Column(Integer, primary_key=True)
+    transcript_id = Column(Integer,
+                           ForeignKey('transcripts.id', ondelete='CASCADE'),
+                           nullable=False)
+    protein_id = Column(Integer,
+                        ForeignKey('proteins.id', ondelete='CASCADE'),
+                        nullable=False)
+
+    #: The CDS start position of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    cds_start = Column(Integer)
+
+    #: The CDS stop position of the transcript on the reference (one-based,
+    #: inclusive, in reference orientation).
+    cds_stop = Column(Integer)
+
+    #: The :class:`Transcript` the protein is translated from.
+    transcript = relationship(
+        Reference,
+        lazy='joined',
+        innerjoin=True,
+        backref=backref('translations', lazy='dynamic',
+                        cascade='all, delete-orphan',
+                        passive_deletes=True))
+
+    #: The :class:`Protein` translated from the transcript.
+    protein = relationship(
+        Reference,
+        lazy='joined',
+        innerjoin=True,
+        backref=backref('translations', lazy='dynamic',
+                        cascade='all, delete-orphan',
+                        passive_deletes=True))
+
+    def __init__(self, transcript, protein, cds_start, cds_stop):
+        self.transcript = transcript
+        self.protein = protein
+        self.cds_start = cds_start
+        self.cds_stop = cds_stop
+
+    def __repr__(self):
+        return '<Translation>'
 
 
 class Assembly(db.Base):
