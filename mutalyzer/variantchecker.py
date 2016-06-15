@@ -1751,6 +1751,18 @@ def check_variant(description, output):
     if not retrieved_record:
         return
 
+    if gene_symbol == '' and transcript_id == '' and \
+        parsed_description.AccNoTransVar:
+        # Get gene symbol and transcript name by transcript accession number.
+        transcript_info = retrieved_record.get_transcript_selector(
+            '.'.join(parsed_description.AccNoTransVar))
+        if transcript_info is not None:
+            gene_symbol, transcript_id = transcript_info
+        else:
+            output.addMessage(__file__, 4, 'EINVALIDTRANSVAR',
+                'Invalid name for transcript variant identifier.')
+            return
+
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
     output.addOutput('organism', retrieved_record.organism)
