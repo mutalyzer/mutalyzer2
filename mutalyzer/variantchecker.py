@@ -1761,7 +1761,6 @@ def check_variant(description, output):
         else:
             output.addMessage(__file__, 4, 'EINVALIDTRANSVAR',
                 'Invalid name for transcript variant identifier.')
-            return
 
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
