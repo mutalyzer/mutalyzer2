@@ -7,7 +7,14 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.20
 --------------
 
-Release date to be decided.
+Released on June 22th 2016.
+
+- Accept accession number as transcript selector (`#405
+  <https://github.com/mutalyzer/mutalyzer/pull/405>`_).
+- Add legend to the output of runMutalyzer service (`#404
+  <https://github.com/mutalyzer/mutalyzer/pull/404>`_).
+- Remove support for GI numbers (`#396
+  <https://github.com/mutalyzer/mutalyzer/pull/396>`_).
 
 
 Version 2.0.19
