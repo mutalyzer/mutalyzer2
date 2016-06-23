@@ -728,7 +728,7 @@ Mutalyzer batch scheduler""" % download_url)
             descriptions = []
         else:
             try:
-                descriptions = ncbi.rsid_to_descriptions(rs_id)
+                descriptions = ncbi.rsid_to_descriptions(cmd)
             except ncbi.ServiceError:
                 O.addMessage(__file__, 4, 'EENTREZ',
                              'An error occured while communicating with '
