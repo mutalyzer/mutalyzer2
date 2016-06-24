@@ -4,10 +4,19 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.21
+Version 2.0.22
 --------------
 
 Release date to be decided.
+
+
+Version 2.0.21
+--------------
+
+Released on June 24th 2016.
+
+- Fix typo in batch SNP converter, causing all batch jobs to stall (`#409
+  <https://github.com/mutalyzer/mutalyzer/pull/409>`_).
 
 
 Version 2.0.20
