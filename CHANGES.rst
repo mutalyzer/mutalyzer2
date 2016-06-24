@@ -9,6 +9,9 @@ Version 2.0.21
 
 Release date to be decided.
 
+- Fix typo in batch SNP converter, causing all batch jobs to stall (`#409
+  <https://github.com/mutalyzer/mutalyzer/pull/409>`_).
+
 
 Version 2.0.20
 --------------
