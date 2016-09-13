@@ -1117,13 +1117,13 @@ class MutalyzerService(ServiceBase):
                 # - transcript.mRNA.positionList:  splice sites (g)
 
                 t.exons = []
-                for i in range(0, transcript.CM.numberOfExons() * 2, 2):
+                for i in range(0, transcript.CM.number_of_exons() * 2, 2):
                     exon = ExonInfo()
-                    exon.gStart = transcript.CM.getSpliceSite(i)
+                    exon.gStart = transcript.CM.get_splice_site(i)
                     exon.cStart = transcript.CM.g2c(exon.gStart)
                     exon.chromStart = GenRecordInstance.record.toChromPos(
                         exon.gStart)
-                    exon.gStop = transcript.CM.getSpliceSite(i + 1)
+                    exon.gStop = transcript.CM.get_splice_site(i + 1)
                     exon.cStop = transcript.CM.g2c(exon.gStop)
                     exon.chromStop = GenRecordInstance.record.toChromPos(
                         exon.gStop)

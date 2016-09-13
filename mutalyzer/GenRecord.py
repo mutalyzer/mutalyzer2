@@ -17,8 +17,9 @@ search for them each time.
 
 from __future__ import unicode_literals
 
+from crossmapper.crossmapper import Crossmap
+
 from mutalyzer import util
-from mutalyzer import Crossmap
 
 
 SPLICE_ALARM = 2
@@ -614,14 +615,13 @@ class GenRecord() :
                         j.transcribe = True
                         j.translate = True
                     #if
-                    j.CM = Crossmap.Crossmap(j.mRNA.positionList,
-                                             j.CDS.location, i.orientation)
+                    j.CM = Crossmap(
+                        j.mRNA.positionList, j.CDS.location, i.orientation)
                 #if
                 else :
                     j.molType = 'n'
                     if j.mRNA.positionList :
-                        j.CM = Crossmap.Crossmap(j.mRNA.positionList,
-                                                 [], i.orientation)
+                        j.CM = Crossmap(j.mRNA.positionList, [], i.orientation)
                         j.transcribe = True
                     else :
                         j.description = '?'
@@ -773,7 +773,7 @@ class GenRecord() :
                     # care in variantchecker.py.
                     if not j.current and \
                            util.over_splice_site(orientedStart, orientedStop,
-                                                 j.CM.RNA):
+                                                 j.CM.rna):
                         j.translate = False
 
                     # And check whether the variant hits CDS start.

@@ -27,3 +27,4 @@ spyne==2.12.11
 suds==0.4
 wsgiref==0.1.2
 xlrd==0.9.4
+git+https://github.com/mutalyzer/crossmapper.git

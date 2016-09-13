@@ -100,7 +100,7 @@ def _check_intronic_position(main, offset, transcript):
     @todo: Check if the offset is really in the flanking intron.
     """
     main_g = transcript.CM.x2g(main, 0)
-    sites = transcript.CM.RNA
+    sites = transcript.CM.rna
 
     if offset:
         oriented_offset = offset * transcript.CM.orientation
@@ -760,14 +760,14 @@ def _intronic_to_genomic(location, transcript):
     """
     ivs_number = int(location.IVSNumber)
 
-    if ivs_number < 1 or ivs_number > transcript.CM.numberOfIntrons():
+    if ivs_number < 1 or ivs_number > transcript.CM.number_of_introns():
         raise _InvalidIntronError(ivs_number)
 
     if location.OffSgn == '+':
-        return transcript.CM.getSpliceSite(ivs_number * 2 - 1) + \
+        return transcript.CM.get_splice_site(ivs_number * 2 - 1) + \
                transcript.CM.orientation * int(location.Offset)
     else:
-        return transcript.CM.getSpliceSite(ivs_number * 2) - \
+        return transcript.CM.get_splice_site(ivs_number * 2) - \
                transcript.CM.orientation * int(location.Offset)
 #_intronic_to_genomic
 
@@ -792,17 +792,17 @@ def _exonic_to_genomic(location, transcript) :
            flanking exons.
     """
     first_exon = int(location.EXNumberStart)
-    if first_exon < 1 or first_exon > transcript.CM.numberOfExons():
+    if first_exon < 1 or first_exon > transcript.CM.number_of_exons():
         raise _InvalidExonError(first_exon)
-    first = transcript.CM.getSpliceSite(first_exon * 2 - 2)
+    first = transcript.CM.get_splice_site(first_exon * 2 - 2)
 
     if location.EXNumberStop:
         last_exon = int(location.EXNumberStop)
-        if last_exon < 1 or last_exon > transcript.CM.numberOfExons():
+        if last_exon < 1 or last_exon > transcript.CM.number_of_exons():
             raise _InvalidExonError(last_exon)
-        last = transcript.CM.getSpliceSite(last_exon * 2 - 1)
+        last = transcript.CM.get_splice_site(last_exon * 2 - 1)
     else:
-        last = transcript.CM.getSpliceSite(first_exon * 2 - 1)
+        last = transcript.CM.get_splice_site(first_exon * 2 - 1)
 
     return first, last
 #_exonic_to_genomic
@@ -873,13 +873,13 @@ def _coding_to_genomic(first_location, last_location, transcript, output):
                                         first_location.Main)
     first_main_genomic = transcript.CM.x2g(first_main, 0)
     first_offset = _get_offset(first_location, first_main_genomic,
-                               transcript.CM.RNA, output)
+                               transcript.CM.rna, output)
 
     last_main = transcript.CM.main2int(last_location.MainSgn + \
                                        last_location.Main)
     last_main_genomic = transcript.CM.x2g(last_main, 0)
     last_offset = _get_offset(last_location, last_main_genomic,
-                              transcript.CM.RNA, output)
+                              transcript.CM.rna, output)
 
     # These raise _RawVariantError exceptions on invalid positions.
     _check_intronic_position(first_main, first_offset, transcript)
@@ -1089,7 +1089,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # If we hit a splice site, issue a warning. Later on we decide if we
     # can still process this variant in any way (e.g. if it deletes an
     # entire exon).
-    if transcript and util.over_splice_site(first, last, transcript.CM.RNA):
+    if transcript and util.over_splice_site(first, last, transcript.CM.rna):
         splice_abort = True
         output.addMessage(__file__, 2, 'WOVERSPLICE',
                           'Variant hits one or more splice sites in ' \
@@ -1104,7 +1104,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     # NM_000088.3(COL1A1_v001):c.588del
     if transcript and variant.MutationType == 'del':
         removed_sites = []
-        for acceptor, donor in util.grouper(transcript.CM.RNA):
+        for acceptor, donor in util.grouper(transcript.CM.rna):
 
             # If we have introns, we match splice sites in a fuzzy way. This
             # Means that in the case of
@@ -1141,7 +1141,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             # Todo: We might cripple the start codon, fix the translation code
             # (further down) to deal with this.
             # Todo: Bit unrelated, but find out the difference between
-            # - transcript.CM.RNA
+            # - transcript.CM.rna
             # - transcript.mRNA.positionList
             # and what we should use (likewise for CDS).
             removed_cds_sites = filter(lambda s: s in transcript.CDS.positionList,
@@ -1279,9 +1279,9 @@ def _add_static_transcript_info(transcript, output):
     output.addOutput('hasTranscriptInfo', True)
 
     # Add exon table to output.
-    for i in range(0, transcript.CM.numberOfExons() * 2, 2):
-        acceptor = transcript.CM.getSpliceSite(i)
-        donor = transcript.CM.getSpliceSite(i + 1)
+    for i in range(0, transcript.CM.number_of_exons() * 2, 2):
+        acceptor = transcript.CM.get_splice_site(i)
+        donor = transcript.CM.get_splice_site(i + 1)
         output.addOutput('exonInfo', [acceptor, donor,
                                       transcript.CM.g2c(acceptor),
                                       transcript.CM.g2c(donor)])
@@ -1296,7 +1296,7 @@ def _add_static_transcript_info(transcript, output):
     # Is this transcript coding?
     # Example of non-coding transcript variant:
     # AL449423.14(CDKN2A_v004):n.42_437del
-    output.addOutput('transcriptCoding', bool(transcript.CM.CDS))
+    output.addOutput('transcriptCoding', bool(transcript.CM.cds))
 
     # Is this transcript on the reverse strand?
     output.addOutput('transcriptReverse', transcript.CM.orientation == -1)

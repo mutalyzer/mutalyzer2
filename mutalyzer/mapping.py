@@ -19,12 +19,13 @@ from operator import attrgetter, itemgetter
 import binning
 import MySQLdb
 
+from crossmapper.crossmapper import Crossmap
+
 from mutalyzer.db import session
 from mutalyzer.db.models import Chromosome, TranscriptMapping
 from mutalyzer.grammar import Grammar
 from mutalyzer.models import SoapMessage, Mapping, Transcript
 from mutalyzer.output import Output
-from mutalyzer import Crossmap
 from mutalyzer import Retriever
 from mutalyzer import util
 
@@ -272,7 +273,7 @@ class Converter(object) :
         cds = self.mapping.cds or []
         orientation = 1 if self.mapping.orientation == 'forward' else -1
 
-        self.crossmap = Crossmap.Crossmap(mrna, cds, orientation)
+        self.crossmap = Crossmap(mrna, cds, orientation)
         return self.crossmap
     #makeCrossmap
 
@@ -297,14 +298,14 @@ class Converter(object) :
         if Type in 'cn' :
             if Loc.IVSLoc:
                 ivs_number = int(Loc.IVSLoc.IVSNumber)
-                if ivs_number < 1 or ivs_number > C.numberOfIntrons():
+                if ivs_number < 1 or ivs_number > C.number_of_introns():
                     # Todo: Error handling in this entire module is 'suboptimal'
                     raise Exception('Invalid intron')
                 if Loc.IVSLoc.OffSgn == '+':
-                    g = C.getSpliceSite(ivs_number * 2 - 1) + \
+                    g = C.get_splice_site(ivs_number * 2 - 1) + \
                         C.orientation * int(Loc.IVSLoc.Offset)
                 else:
-                    g = C.getSpliceSite(ivs_number * 2) - \
+                    g = C.get_splice_site(ivs_number * 2) - \
                         C.orientation * int(Loc.IVSLoc.Offset)
                 main, offset = C.g2x(g)
             else:
@@ -764,7 +765,7 @@ class Converter(object) :
             #    mtype = 'n'
             #else :
             #    mtype = 'c'
-            if self.crossmap.CDS:
+            if self.crossmap.cds:
                 mtype = 'c'
             else:
                 mtype = 'n'
