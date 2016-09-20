@@ -9,6 +9,9 @@ Version 2.0.22
 
 Release date to be decided.
 
+- Biopython dependency updated to version 1.68 (`#411
+  <https://github.com/mutalyzer/mutalyzer/pull/411>`_).
+
 
 Version 2.0.21
 --------------
