@@ -4,10 +4,19 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
+Version 2.0.23
+---------------
+
+Release date to be decided.
+
+
 Version 2.0.22
 --------------
 
-Release date to be decided.
+Released on September 20th 2016.
+
+- Biopython dependency updated to version 1.68 (`#411
+  <https://github.com/mutalyzer/mutalyzer/pull/411>`_).
 
 
 Version 2.0.21
