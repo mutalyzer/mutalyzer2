@@ -68,6 +68,14 @@ def test_converter(converter):
     assert 'NR_028383.1:n.-2173C>A' in coding
 
 
+def test_converter_unknown_variant(converter):
+    assert converter.c2chrom('NM_003002.2:c.?') == None
+
+
+def test_converter_no_variant(converter):
+    assert converter.c2chrom('NM_003002.2:c.=') == None
+
+
 def test_converter_non_coding(converter):
     """
     Test with variant on non-coding transcript.

@@ -333,8 +333,13 @@ class Converter(object) :
 
         if self.parseTree.SingleAlleleVarSet:
             mutations = [v.RawVar for v in self.parseTree.SingleAlleleVarSet]
-        else:
+        elif self.parseTree.RawVar:
             mutations = [self.parseTree.RawVar]
+        else:
+            self.__output.addMessage(
+                __file__, 4, 'ENOVARIANT',
+               'Variant description contains no mutation.')
+            return None
 
         mappings = []
 
