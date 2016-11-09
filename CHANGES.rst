@@ -4,10 +4,20 @@ Changelog
 This is a record of changes made between each Mutalyzer release.
 
 
-Version 2.0.23
+Version 2.0.24
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.23
+---------------
+
+Released on November 9th 2016.
+
+- Fix for internal server error in the position converter triggered by
+  non-variant description (`#333
+  <https://github.com/mutalyzer/mutalyzer/issues/333>`_).
 
 
 Version 2.0.22
