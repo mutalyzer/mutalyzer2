@@ -9,6 +9,10 @@ Version 2.0.23
 
 Release date to be decided.
 
+- Fix for internal server error in the position converter triggered by
+  non-variant description (`#333
+  <https://github.com/mutalyzer/mutalyzer/issues/333>`_).
+
 
 Version 2.0.22
 --------------
