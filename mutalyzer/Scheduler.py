@@ -724,9 +724,8 @@ Mutalyzer batch scheduler""" % download_url)
         # Todo: Do something with the flags?
         skip = self.__processFlags(O, flags)
 
-        if skip:
-            descriptions = []
-        else:
+        descriptions = []
+        if not skip:
             try:
                 descriptions = ncbi.rsid_to_descriptions(cmd)
             except ncbi.ServiceError:

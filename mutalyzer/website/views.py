@@ -497,6 +497,7 @@ def snp_converter():
                       % (rs_id, request.remote_addr))
     stats.increment_counter('snp-converter/website')
 
+    descriptions = []
     try:
         descriptions = ncbi.rsid_to_descriptions(rs_id)
     except ncbi.ServiceError:
