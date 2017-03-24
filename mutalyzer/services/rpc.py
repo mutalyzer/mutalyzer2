@@ -1464,12 +1464,7 @@ class MutalyzerService(ServiceBase):
 
         stats.increment_counter('snp-converter/webservice')
 
-        try:
-            descriptions = ncbi.rsid_to_descriptions(rs_id)
-        except ncbi.ServiceError:
-            output.addMessage(__file__, 4, 'EENTREZ',
-                              'An error occured while communicating with '
-                              'dbSNP.')
+        descriptions = ncbi.rsid_to_descriptions(rs_id, output)
 
         output.addMessage(__file__, -1, 'INFO',
             'Finished processing getdbSNPDescription(%s)' % rs_id)

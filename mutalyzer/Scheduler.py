@@ -726,12 +726,7 @@ Mutalyzer batch scheduler""" % download_url)
 
         descriptions = []
         if not skip:
-            try:
-                descriptions = ncbi.rsid_to_descriptions(cmd)
-            except ncbi.ServiceError:
-                O.addMessage(__file__, 4, 'EENTREZ',
-                             'An error occured while communicating with '
-                             'dbSNP.')
+            descriptions = ncbi.rsid_to_descriptions(cmd, O)
 
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd

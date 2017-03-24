@@ -377,7 +377,28 @@ def test_snp_converter_invalid(website):
                     query_string={'rs_id': 'r9919552'})
 
     assert '0 Errors' in r.data
-    assert '0 Warnings' in r.data
+    assert '1 Warning' in r.data
+    assert 'NM_' not in r.data
+
+
+def test_snp_converter_rs1(website):
+    """
+    Submit the SNP converter with an non existing rsid=1.
+    """
+
+    # Patch Bio.Entrez.efetch to return dbSNP record for rs9919552.
+    def mock_efetch(*args, **kwargs):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'rs1.xml.bz2')
+        return bz2.BZ2File(path)
+
+    with patch.object(Entrez, 'efetch', mock_efetch):
+        r = website.get('/snp-converter',
+                        query_string={'rs_id': 'rs1'})
+
+    assert '0 Errors' in r.data
+    assert '1 Warning' in r.data
     assert 'NM_' not in r.data
 
 
