@@ -497,11 +497,7 @@ def snp_converter():
                       % (rs_id, request.remote_addr))
     stats.increment_counter('snp-converter/website')
 
-    try:
-        descriptions = ncbi.rsid_to_descriptions(rs_id)
-    except ncbi.ServiceError:
-        output.addMessage(__file__, 4, 'EENTREZ',
-                          'An error occured while communicating with dbSNP.')
+    descriptions = ncbi.rsid_to_descriptions(rs_id, output)
 
     messages = map(util.message_info, output.getMessages())
 

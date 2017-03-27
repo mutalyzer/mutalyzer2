@@ -10,6 +10,7 @@ import os
 import io
 
 import pytest
+import httplib
 from Bio import Entrez
 from mock import patch
 
@@ -96,6 +97,52 @@ def test_snp_converter():
         return bz2.BZ2File(path)
 
     with patch.object(Entrez, 'efetch', mock_efetch):
+        _batch_job_plain_text(snps, expected, 'snp-converter')
+
+
+def test_snp_converter_rs1():
+    """
+    SNP converter batch job - check for non existing rsid.
+    """
+    snps = ['rs1']
+    expected = [['rs1',
+                 '',
+                 '(ncbi): Non existing rs1 in the DB or no root element.']]
+
+    # Patch Bio.Entrez.efetch to return dbSNP record for rs1.
+    def mock_efetch(*args, **kwargs):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'rs1.xml.bz2')
+        return bz2.BZ2File(path)
+
+    with patch.object(Entrez, 'efetch', mock_efetch):
+        _batch_job_plain_text(snps, expected, 'snp-converter')
+
+
+def test_snp_converter_rs0_io_error():
+    """
+    SNP converter batch job - check Entrez.fetch IOError exception (rsid=0).
+    """
+    snps = ['rs0']
+    expected = [['rs0',
+                 '',
+                 '(ncbi): An error occured while communicating with dbSNP.']]
+
+    with patch.object(Entrez,'efetch', side_effect=IOError()):
+        _batch_job_plain_text(snps, expected, 'snp-converter')
+
+
+def test_snp_converter_rs0_http_error():
+    """
+    SNP converter batch job - check Entrez.fetch HTTPException exception (rsid=0).
+    """
+    snps = ['rs0']
+    expected = [['rs0',
+                 '',
+                 '(ncbi): An error occured while communicating with dbSNP.']]
+
+    with patch.object(Entrez, 'efetch', side_effect=httplib.HTTPException()):
         _batch_job_plain_text(snps, expected, 'snp-converter')
 
 

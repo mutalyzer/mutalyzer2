@@ -724,15 +724,9 @@ Mutalyzer batch scheduler""" % download_url)
         # Todo: Do something with the flags?
         skip = self.__processFlags(O, flags)
 
-        if skip:
-            descriptions = []
-        else:
-            try:
-                descriptions = ncbi.rsid_to_descriptions(cmd)
-            except ncbi.ServiceError:
-                O.addMessage(__file__, 4, 'EENTREZ',
-                             'An error occured while communicating with '
-                             'dbSNP.')
+        descriptions = []
+        if not skip:
+            descriptions = ncbi.rsid_to_descriptions(cmd, O)
 
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd
