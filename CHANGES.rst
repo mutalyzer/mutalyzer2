@@ -9,6 +9,10 @@ Version 2.0.24
 
 Release date to be decided.
 
+- Fix for SNP converter crash when called with 'rs0' as parameter.
+  SNP converter displays now more warning messages. (`#419
+  <https://github.com/mutalyzer/mutalyzer/issues/419>`_).
+
 
 Version 2.0.23
 ---------------
