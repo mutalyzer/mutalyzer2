@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.24
 ---------------
 
-Release date to be decided.
+Released on April 12th 2017.
 
 - Fix for SNP converter crash when called with 'rs0' as parameter.
   SNP converter displays now more warning messages. (`#419
