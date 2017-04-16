@@ -1,0 +1,416 @@
+{
+    "allele_description": [
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "C",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "dna": true,
+            "end": 4,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "4C>T",
+            "hgvs_length": 4,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "T",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 4,
+            "sample_end_offset": 0,
+            "sample_start": 4,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 4,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "subst"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "G",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "dna": true,
+            "end": 109,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "109del",
+            "hgvs_length": 4,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "sample_end": 109,
+            "sample_end_offset": 0,
+            "sample_start": 108,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 109,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "del"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "A",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "dna": true,
+            "end": 159,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "159del",
+            "hgvs_length": 4,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "sample_end": 158,
+            "sample_end_offset": 0,
+            "sample_start": 157,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 159,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "del"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "dna": true,
+            "end": 251,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "241_251dup",
+            "hgvs_length": 6,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "ACTCTTACATG",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 260,
+            "sample_end_offset": 0,
+            "sample_start": 250,
+            "sample_start_offset": 0,
+            "shift": 13,
+            "start": 241,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "dup"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "ATGGCAGCCTTTCAGAAGAGA",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "dna": true,
+            "end": 319,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "299_319inv",
+            "hgvs_length": 6,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "TCTCTTCTGAAA",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 328,
+            "sample_end_offset": 0,
+            "sample_start": 308,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 299,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "inv"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "dna": true,
+            "end": 400,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "399_400insTGTATTATGG",
+            "hgvs_length": 7,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "TGTATTATGG",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 418,
+            "sample_end_offset": 0,
+            "sample_start": 409,
+            "sample_start_offset": 0,
+            "shift": 1,
+            "start": 399,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "ins"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "dna": true,
+            "end": 450,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "449_450ins11_33",
+            "hgvs_length": 7,
+            "inserted": [
+                {
+                    "end": 33,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 11,
+                    "type": "trans"
+                }
+            ],
+            "sample_end": 491,
+            "sample_end_offset": 0,
+            "sample_start": 469,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 449,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "ins"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "dna": true,
+            "end": 501,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "500_501ins50_70inv",
+            "hgvs_length": 7,
+            "inserted": [
+                {
+                    "end": 70,
+                    "reverse": true,
+                    "sequence": "",
+                    "start": 50,
+                    "type": "trans"
+                }
+            ],
+            "sample_end": 563,
+            "sample_end_offset": 0,
+            "sample_start": 543,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 500,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "ins"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 0,
+                    "type": "trans"
+                }
+            ],
+            "dna": true,
+            "end": 552,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "551_552ins[11_35;50_68inv;CCCCC]",
+            "hgvs_length": 9,
+            "inserted": [
+                {
+                    "end": 35,
+                    "reverse": false,
+                    "sequence": "",
+                    "start": 11,
+                    "type": "trans"
+                },
+                {
+                    "end": 68,
+                    "reverse": true,
+                    "sequence": "",
+                    "start": 50,
+                    "type": "trans"
+                },
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "CCCCC",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 663,
+            "sample_end_offset": 0,
+            "sample_start": 659,
+            "sample_start_offset": 0,
+            "shift": 1,
+            "start": 551,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "ins"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "AGTTGAAGACA",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "dna": true,
+            "end": 610,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "600_610delinsGTAGATGATAGATAGAGAGATTT",
+            "hgvs_length": 10,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "GTAGATGATAGATAGAGAGATTT",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 734,
+            "sample_end_offset": 0,
+            "sample_start": 712,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 600,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "delins"
+        },
+        {
+            "deleted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "CTATGAGTC",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "dna": true,
+            "end": 659,
+            "end_aa": "",
+            "end_offset": 0,
+            "hgvs": "651_659delinsTGGCTCCTGCCATGGAATCCGGTTTTT",
+            "hgvs_length": 10,
+            "inserted": [
+                {
+                    "end": 0,
+                    "reverse": false,
+                    "sequence": "TGGCTCCTGCCATGGAATCCGGTTTTT",
+                    "start": 0,
+                    "type": "ins"
+                }
+            ],
+            "sample_end": 801,
+            "sample_end_offset": 0,
+            "sample_start": 775,
+            "sample_start_offset": 0,
+            "shift": 0,
+            "start": 651,
+            "start_aa": "",
+            "start_offset": 0,
+            "term": 0,
+            "type": "delins"
+        }
+    ],
+    "reference_sequence": "AGTCTCCAGCATCCTCCACCTGTCTACCACCGAGCATGGGCCTATATTTGAAGCCTTAGATCTCTCCAGCACAGTAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTGCCATGGAATCCCCTACTCTACTGTGTGTAGCCTTACTGTTCTTCGCTCCAGATGGCGTGTTAGCAGTCCCTCAGAAACCTAAGGTCTCCTTGAACCCTCCATGGAATAGAATATTTAAAGGAGAGAATGTGACTCTTACATGTAATGGGAACAATTTCTTTGAAGTCAGTTCCACCAAATGGTTCCACAATGGCAGCCTTTCAGAAGAGACAAATTCAAGTTTGAATATTGTGAATGCCAAATTTGAAGACAGTGGAGAATACAAATGTCAGCACCAACAAGTTAATGAGAGTGAACCTGTGTACCTGGAAGTCTTCAGTGACTGGCTGCTCCTTCAGGCCTCTGCTGAGGTGGTGATGGAGGGCCAGCCCCTCTTCCTCAGGTGCCATGGTTGGAGGAACTGGGATGTGTACAAGGTGATCTATTATAAGGATGGTGAAGCTCTCAAGTACTGGTATGAGAACCACAACATCTCCATTACAAATGCCACAGTTGAAGACAGTGGAACCTACTACTGTACGGGCAAAGTGTGGCAGCTGGACTATGAGTCTGAGCCCCTCAACATTACTGTAATAAAAGCTCCGCGTGAGAAGTACTGGCTACAATTTTTTATCCCATTGTTGGTGGTGATTCTGTTTGCTGTGGACACAGGATTATTTATCTCAACTCAGCAGCAGGTCACATTTCTCTTGAAGATTAAGAGAACCAGGAAAGGCTTCAGACTTCTGAACCCACATCCTAAGCCAAACCCCAAAAACAACTGATATAATTACTCAAGAAATATTTGCAACATTAGTTTTTTTCCAGCATCAGCAATTGCTACTCAATTGTCAAACACAGCTTGCAATATACATAGAAACGTCTGTGCTCAAGGATTTATAGAAATGCTTCATTAAACTGAGTGAAACTGGTTAAGTGGCATGTAATAGTAAGTGCTCAATTAACATTGGTTGAATAAATGAGAGAATGAATAGATTCATTTATTAGCATTTGTAAAAGAGATGTTCAATTTCAATAAAATAAATATAAAACCATGTAACAGAATGCTTCTGAGTAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "sample_sequence": "AGTTTCCAGCATCCTCCACCTGTCTACCACCGAGCATGGGCCTATATTTGAAGCCTTAGATCTCTCCAGCACAGTAAGCACCAGGAGTCCATGAAGAAGATGGCTCCTCCATGGAATCCCCTACTCTACTGTGTGTAGCCTTACTGTTCTTCGCTCCGATGGCGTGTTAGCAGTCCCTCAGAAACCTAAGGTCTCCTTGAACCCTCCATGGAATAGAATATTTAAAGGAGAGAATGTGACTCTTACATGACTCTTACATGTAATGGGAACAATTTCTTTGAAGTCAGTTCCACCAAATGGTTCCACATCTCTTCTGAAAGGCTGCCATCAAATTCAAGTTTGAATATTGTGAATGCCAAATTTGAAGACAGTGGAGAATACAAATGTCAGCACCAACAAGTTAATGAGTGTATTATGGAGTGAACCTGTGTACCTGGAAGTCTTCAGTGACTGGCTGCTCCTTCAGGCATCCTCCACCTGTCTACCACCGACTCTGCTGAGGTGGTGATGGAGGGCCAGCCCCTCTTCCTCAGGTGCCATGGGCTGGAGAGATCTAAGGCTTCTTGGAGGAACTGGGATGTGTACAAGGTGATCTATTATAAGGATGGTGAAGCATCCTCCACCTGTCTACCACCGAGCTGGAGAGATCTAAGGCTTCCCCCCTCTCAAGTACTGGTATGAGAACCACAACATCTCCATTACAAATGCCACGTAGATGATAGATAGAGAGATTTGTGGAACCTACTACTGTACGGGCAAAGTGTGGCAGCTGGATGGCTCCTGCCATGGAATCCGGTTTTTTGAGCCCCTCAACATTACTGTAATAAAAGCTCCGCGTGAGAAGTACTGGCTACAATTTTTTATCCCATTGTTGGTGGTGATTCTGTTTGCTGTGGACACAGGATTATTTATCTCAACTCAGCAGCAGGTCACATTTCTCTTGAAGATTAAGAGAACCAGGAAAGGCTTCAGACTTCTGAACCCACATCCTAAGCCAAACCCCAAAAACAACTGATATAATTACTCAAGAAATATTTGCAACATTAGTTTTTTTCCAGCATCAGCAATTGCTACTCAATTGTCAAACACAGCTTGCAATATACATAGAAACGTCTGTGCTCAAGGATTTATAGAAATGCTTCATTAAACTGAGTGAAACTGGTTAAGTGGCATGTAATAGTAAGTGCTCAATTAACATTGGTTGAATAAATGAGAGAATGAATAGATTCATTTATTAGCATTTGTAAAAGAGATGTTCAATTTCAATAAAATAAATATAAAACCATGTAACAGAATGCTTCTGAGTAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+}

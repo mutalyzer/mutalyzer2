@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Example (example output)",
+    "date": "12 april 2014",
+    "url": "example.json",
+    "length": 1192,
+    "description": "First small example"
+  },
+  {
+    "id": 2,
+    "name": "Full example",
+    "date": "29 april 2014",
+    "url": "fullexample.json",
+    "length": 1304,
+    "description": "Example containing all different operations"
+  },
+  {
+    "id": 3,
+    "name": "Full example 2",
+    "date": "30 april 2014",
+    "url": "fullexample2.json",
+    "length": 1304,
+    "description": "Real full example with incorrect syntax"
+  },
+  {
+    "id": 4,
+    "name": "Small example",
+    "date": "30 april 2014",
+    "url": "small_example.json",
+    "length": 1304,
+    "description": "Real small example with correct syntax"
+  },
+  {
+    "id": 5,
+    "name": "Large example bs49",
+    "date": "30 april 2014",
+    "url": "bs49.json",
+    "length": 1304,
+    "description": "Large example"
+  }
+]

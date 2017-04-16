@@ -1,0 +1,512 @@
+// INCLUDES
+
+@import "footer";
+
+// VARIABLES
+
+//colours
+@white: #fff;
+@light-blue: #29abe2;
+@brand-primary: @light-blue;
+@green: rgb(122,201,67);
+@green-lighter: fade(@green,75%);
+@green-lighter-2: fade(@green,30%);
+@orange: rgb(255,147,30);
+@orange-lighter: rgb(255,242,228);
+@purple: rgb(192,109,183);
+@purple-lighter: rgb(245,238,246);
+@red: rgb(244,109,105);
+@yellow: rgb(241,196,15);
+
+//allele colors
+@subst: @purple;
+@ins: @green;
+@del: @red;
+@delins: @orange;
+@trans: @light-blue;
+@inv: @yellow;
+@dup: @light-blue;
+
+
+// MIXINS
+
+.graph-tooltip-color (@color, @fade: 80%) {
+  background-color: fade(@color, @fade);
+  border-color: @color;
+}
+
+.allele-fill (@color, @fade: 50%) {
+  fill: fade(@color, @fade);
+  stroke: @color;
+}
+  
+.list-color ( @class, @color: @light-blue ) {
+  .@{class} {
+    color: @color;
+    font-weight: bold;
+  }
+  &.active.@{class} {
+    background-color: @color;
+    border-color: @color;
+    > .@{class} {
+      color: @white;
+    }
+  }
+}
+
+
+// STYLING STATEMENTS
+
+html, body {
+  height: 100%;
+}
+
+body > div {
+  .wrapper-mixin();
+  > footer.copyright {
+    .subtle-footer()
+  }
+}
+
+h5 {
+	margin: 0;
+	padding: 0;
+}
+
+.section-play-description {
+  .btn-primary {
+    background-color: @light-blue;
+    border-color: @light-blue;
+  }
+}
+
+.section-allele-description .list-group-item {
+	&:hover {
+		cursor: pointer;
+	}
+	padding: 5px 15px;
+	
+	
+	span.text {
+		
+		text-overflow:ellipsis;
+		overflow: hidden;
+		padding-right: 10px;
+		display: block;
+	}
+}
+
+
+.mutations {
+	overflow: hidden;
+	left: 60px;
+}
+	.allele {
+		 transition: opacity 0.1s ease-in-out;
+		 opacity: 0.99;
+	}
+
+/*	svg:hover:not(.has-active) .allele:not(:hover),*/
+	svg.has-hover .allele:not(.hover) {
+		opacity: 0.5;
+	}
+	svg.has-active .allele:not(:hover):not(.active),
+	svg.has-active .allele:not(.hover):not(.active) { 
+		 opacity: .3 !important;
+	}
+
+
+	.axis path,
+	.axis line {
+		fill: none;
+		stroke: #666;
+		shape-rendering: crispEdges;
+		stroke-width: 1px !important;
+	}
+
+	.axis text {
+		font: 10px sans-serif;
+	}
+
+	.allele .shape {
+		 stroke-width: 0.75;
+		 shape-rendering: geometricPrecision;
+	}
+	
+	.allele .hover-area { fill: transparent; }
+	.allele.hover .hover-area {
+		fill: rgba(0,0,200,0.1);
+	}
+
+	.allele {
+    .placeholder {
+    	stroke: #ddd;
+    	stroke-dasharray: 4,2;
+    	stroke-width: 0.75;
+    	fill: rgba(0,0,0,0.05);
+    }
+    
+		&.subst .ins { .allele-fill(@subst) }
+    &.subst .del { }
+    &.subst .trans { }
+    
+		&.inv .ins { .allele-fill(@inv); }
+    &.inv .del {  }
+    &.inv .trans { }
+    
+		&.del .ins { }
+    &.del .del { .allele-fill(@del); }
+    &.del .trans { }
+      
+		&.delins .ins { .allele-fill(@ins); }
+    &.delins .del { .allele-fill(@del); }
+    &.delins .trans { .allele-fill(@trans); }
+
+		&.dup .ins { .allele-fill(@ins)}
+    &.dup .del { }
+    &.dup .trans { .allele-fill(@trans); }
+
+		&.ins .ins { .allele-fill(@ins); }
+    &.ins .del {}
+    &.ins .trans { .allele-fill(@trans); }
+	}
+  
+
+	.allele-info-box {
+		display: block;
+		fill: red;
+		font-size: small;
+	    max-width: 200px;
+	    padding: 3px 8px;
+	    color: #fff;
+	    text-align: center;
+	    text-decoration: none;
+	    background-color: #000;
+	    border-radius: 4px;
+
+	}
+	
+	.graph-overview {
+		position: relative;
+	}
+	
+	.graph-tooltip {
+		position: absolute;    
+		text-align: left;           
+		width: auto;
+		margin-left: -10px;                  
+/*		height: 28px;                 */
+		padding: 3px 6px;             
+		font: 12px sans-serif;        
+		background: #95A5A6;
+		border: 0px;      
+		border-radius: 8px;           
+		pointer-events: none;
+		&.subst { .graph-tooltip-color (@subst); }
+		&.inv { .graph-tooltip-color (@inv); }
+		&.del { .graph-tooltip-color (@del); }
+		&.ins { .graph-tooltip-color (@ins); }
+		&.dup { .graph-tooltip-color (@dup); }
+		&.trans { .graph-tooltip-color (@trans); }
+		&.delins { .graph-tooltip-color (@delins); }
+	}
+	
+	.graph-tooltip>strong {
+		display: block;
+	}
+	
+	
+	/* http://bl.ocks.org/mbostock/4349545 */
+	circle {
+	  -webkit-transition: fill-opacity 250ms linear;
+	}
+
+	.selecting circle {
+	  fill-opacity: .2;
+	}
+
+	.selecting circle.selected {
+	  stroke: #f00;
+	}
+
+	.resize path {
+	  fill: #666;
+	  fill-opacity: .6;
+	  stroke: #666;
+	  stroke-width: 1px;
+	  fill-opacity: .8;
+	  
+	}
+	
+	.resize {
+		
+	}
+	
+	.brush .extent {
+	  fill-opacity: .125;
+	  shape-rendering: crispEdges;
+	  stroke-width: 1px;
+	}
+
+
+
+.operator-label {
+	&.operator-substitution {
+	}
+	&.operator-invertion {
+	}
+	&.operator-deletion {
+	}
+	&.operator-insertion {
+	}
+	&.operator-duplication {
+	}
+	&.operator-deletion-insertion {
+	}
+	&.operator-transposition {
+	}
+}
+
+.section-allele-description {
+  
+  a.list-group-item {
+    .list-color (subst, @subst);
+    .list-color (ins, @ins);
+    .list-color (del, @del);
+    .list-color (delins, @delins);
+    .list-color (trans, @inv);
+    .list-color (inv, @inv);
+    .list-color (dup, @dup);
+  }
+  
+  
+}
+
+text.ruler {
+  font-size: 12px;
+  font-family: monospace;
+  fill: #1ABC9C;
+  letter-spacing: 0;
+  text-anchor: middle;
+}
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================= String
+
+
+.graph-string {
+  margin-top: 20px;
+  white-space: pre;
+  overflow-x: scroll;
+  width: 100%;
+    
+  .string-segment {
+    // float: left;
+    display: inline-block;
+    vertical-align: top;
+  	font-size: 20px;
+    height: 72px;
+  	position: relative;
+    // border: 1px solid red;
+  }
+
+  .string-segment:not(.null) {
+  	margin-left: 5px;	
+  	border-left: 1px solid #eee;
+  	padding-left: 5px;
+  	margin-right: 5px;	
+  	border-right: 1px solid #eee;
+  	padding-right: 5px;
+
+  }
+
+  .string-segment:not(.null):hover {
+  	background: #eee;
+  	border-color: transparent;
+  	border-radius: 5px;
+  }
+
+  .string-segment.trans  .piece-del   .piece-str,
+  .string-segment.del    .piece-del   .piece-str,
+  .string-segment.delins .piece-del   .piece-str { color: @del; font-weight: bold; }
+
+
+  .string-segment.delins .piece-ins   .piece-str,
+  .string-segment.ins    .piece-ins   .piece-str { color: @ins; font-weight: bold; }
+
+  .string-segment.delins .piece-trans .piece-str,
+  .string-segment.dup    .piece-ins   .piece-str,
+  .string-segment.ins    .piece-trans .piece-str { color: @trans; font-weight: bold; }
+
+
+  .string-segment.inv    .piece-ins   .piece-str { color: @inv; font-weight: bold; }
+  .string-segment.inv    .piece-del   .piece-str { color: @inv; opacity: 0.7; font-weight: normal; }
+
+  .string-segment.delins .piece-trans.inverse .piece-str,
+  .string-segment.ins    .piece-trans.inverse .piece-str { color: @inv; }
+  .string-segment.subst  .piece-del { color: @subst; font-weight: normal; opacity: 0.7; }
+  .string-segment.subst  .piece-ins { color: @subst; font-weight: bold;}
+
+  .string-segment .unmodified,
+  .string-segment .piece .piece-str
+  {
+  	font-family: 'Courier New';
+  	letter-spacing: 1px;
+  }
+
+
+  .piece {
+  	float: left;	
+  }
+
+
+
+
+  .old .piece .piece-str {
+  	border-bottom: 1px dotted #888;
+  }
+  .new .piece .piece-str {
+  	border-top: 1px dotted #888;
+  	margin-top: -1px;
+  }
+
+
+  .piece .piece-annotation {
+  	color: #aaa;
+  	font-size: 11px;
+  	text-align: center;
+  	letter-spacing: 0;
+  	font-family: sans-serif;
+  	font-weight: normal;
+  	display: block;
+  	height: 12px;
+  	margin-left: 3px; margin-right: 3px;
+  }
+  .new .piece .piece-annotation { border-top: 1px solid #888; }
+
+  .string-segment.null .annotation-top {
+  	color: #aaa;
+  	font-size: 11px;
+  	font-weight: normal;
+  /*	background: #eef;*/
+  	font-family: sans-serif;
+  	letter-spacing: 0;
+  	margin-left: 2px;
+  	margin-right: 2px;
+  	margin-top: 20px;
+  	line-height: 5px;
+  	height: 5px;
+  }
+
+  .string-segment .annotation-hgvs {
+  	color: #aaa;
+  	font-size: 11px;
+  	font-weight: normal;
+  /*	background: #eef;*/
+  	font-family: sans-serif;
+  	letter-spacing: 0;
+  	margin-left: 2px;
+  	margin-right: 2px;
+  	line-height: 12px;
+  	position: absolute;
+  	left: 1px;
+  }
+
+  .annotation-top .end {
+  	float: right;
+  }
+
+
+  .piece .piece-str {
+  	height: 23px;
+  	line-height: 23px;
+  }
+
+  .string-segment .unmodified {
+  	color: grey;
+  	height: 23px;
+  	line-height: 23px;
+  }
+
+  .string-segment .old {
+  	height: 35px;
+  }    
+}
+
+
+/************************************ string animation */
+
+#graph-string-measurement-canvas {
+  position: absolute;
+  left: -1000px;
+}
+
+.graph-string-animation {
+  font-family: 'Courier New';
+  letter-spacing: 0;
+  font-size: 30px;
+  overflow-x: scroll;
+  width: 100%;
+  
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 8px;
+  }
+
+    ::-webkit-scrollbar-track {
+      background-color: rgba(57,57,57, .6);
+      border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+      border-radius: 8px;
+      background-color: rgba(156, 156, 156, .6);
+  }
+  
+	.sample-string, .reference-string {
+    fill: #C4C4C4;		
+    font-weight: 300;
+    font-size: 15px;
+	}
+  
+	.block { 
+		font-size: 30px;
+	}
+	
+  .text { fill: #34495E; fill: grey;}
+	.subst { fill: @subst;  font-weight: bold; }
+	.ins { fill: @ins;  font-weight: bold; }
+	.del { fill: @del; font-weight: bold; }
+	.delins { fill: @delins;  font-weight: bold; }
+	.trans { fill: @trans;  font-weight: bold; }
+	.inv { fill: @inv; font-weight: bold; }
+	.dup { fill: @dup; font-weight: bold; }
+  
+	.mutation-subst { &.ins, &.del { fill: @subst;  font-weight: bold; } }
+  // .mutation-ins { fill: @ins;  font-weight: bold; }
+  // .mutation-del { fill: @del; font-weight: bold; }
+  // .mutation-delins { fill: @delins;  font-weight: bold; }
+  // .mutation-trans { fill: @trans;  font-weight: bold; }
+	.mutation-inv { &.ins, &.del { fill: @inv;  font-weight: bold; } }
+	.mutation-dup { &.trans { fill: @dup; font-weight: bold; } }
+  
+  text.ruler { font-size: 12px; font-family: monospace; fill: #aaa; letter-spacing: 0; text-anchor: middle;}
+  
+}
+
+
+
+
+
+
+
+
+
