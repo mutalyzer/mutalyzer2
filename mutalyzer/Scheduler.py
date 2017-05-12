@@ -261,7 +261,7 @@ Mutalyzer batch scheduler""" % download_url)
         try:
             BatchQueueItem.query \
                 .filter_by(batch_job_id=jobID) \
-                .filter(BatchQueueItem.item.startswith(old),
+                .filter(BatchQueueItem.item.startswith(old+':'),
                         ~BatchQueueItem.item.startswith(nselector),
                         ~BatchQueueItem.flags.contains('S2')) \
                 .update({'item': func.replace(BatchQueueItem.item, old, new),
