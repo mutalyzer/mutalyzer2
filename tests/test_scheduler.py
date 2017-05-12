@@ -289,6 +289,93 @@ def test_name_checker_altered():
         _batch_job_plain_text(variants, expected, 'name-checker')
 
 
+def test_name_checker_altered_long_entry():
+    """
+    Name checker job with altered entries but that have one longer than 190 chars.
+    """
+    variants = ['NM_000059:c.670dup',
+                'NM_000059:c.3609_3788AAGTAATATTCCAACAAGTGGTGCCATAGGAAAAAGCAC'
+                'CCTGGTTCCCTTGGACACTCCATCTCCAGCCACATCATTGGAGGCATCAGAAGGGGGACT'
+                'TCCAACCCTCAGCACCTACCCTGAATCAACAAACACACCCAGCATCCACCTCGGAGCACA'
+                'CGCTAGTTCAGAAAGTCCG',
+                'NM_000059:c.670G>T',
+                'NM_000059.3:c.670G>T']
+    expected = [['NM_000059:c.670dup',
+                 '|'.join(['(Retriever): No version number is given, '
+                           'using NM_000059.3. Please use this number to '
+                           'reduce downloading overhead.',
+                           '(Scheduler): All further occurrences of '
+                           'NM_000059 will be substituted by '
+                           'NM_000059.3']),
+                 'NM_000059',
+                 'BRCA2_v001',
+                 'c.670dup',
+                 'n.897dup',
+                 'c.670dup',
+                 'p.(Asp224Glyfs*5)',
+                 'BRCA2_v001:c.670dup',
+                 'BRCA2_v001:p.(Asp224Glyfs*5)',
+                 '',
+                 'NM_000059.3',
+                 'NP_000050.2',
+                 'NM_000059(BRCA2_v001):c.670dup',
+                 'NM_000059(BRCA2_i001):p.(Asp224Glyfs*5)',
+                 'BciVI',
+                 'BspHI,Hpy188III'],
+                ['NM_000059:c.3609_3788AAGTAATATTCCAACAAGTGGTGCCATAGGAAAAAGCAC'
+                'CCTGGTTCCCTTGGACACTCCATCTCCAGCCACATCATTGGAGGCATCAGAAGGGGGACT'
+                'TCCAACCCTCAGCACCTACCCTGAATCAACAAACACACCCAGCATCCACCTCGGAGCACA'
+                'CGCTAGTTCAGAAAGTCCG',
+                 '(Scheduler): Unaccepted input line length, check batch input file help for details'],
+                ['NM_000059.3:c.670G>T',
+                 '(Scheduler): Entry altered before execution',
+                 'NM_000059.3',
+                 'BRCA2_v001',
+                 'c.670G>T',
+                 'n.897G>T',
+                 'c.670G>T',
+                 'p.(Asp224Tyr)',
+                 'BRCA2_v001:c.670G>T',
+                 'BRCA2_v001:p.(Asp224Tyr)',
+                 '',
+                 'NM_000059.3',
+                 'NP_000050.2',
+                 'NM_000059.3(BRCA2_v001):c.670G>T',
+                 'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
+                 '',
+                 'BspHI,CviAII,FatI,Hpy188III,NlaIII'],
+                ['NM_000059.3:c.670G>T',
+                 '',
+                 'NM_000059.3',
+                 'BRCA2_v001',
+                 'c.670G>T',
+                 'n.897G>T',
+                 'c.670G>T',
+                 'p.(Asp224Tyr)',
+                 'BRCA2_v001:c.670G>T',
+                 'BRCA2_v001:p.(Asp224Tyr)',
+                 '',
+                 'NM_000059.3',
+                 'NP_000050.2',
+                 'NM_000059.3(BRCA2_v001):c.670G>T',
+                 'NM_000059.3(BRCA2_i001):p.(Asp224Tyr)',
+                 '',
+                 'BspHI,CviAII,FatI,Hpy188III,NlaIII']]
+
+    # Patch GenBankRetriever.fetch to return the contents of NM_000059.3
+    # for NM_000059.
+    def mock_efetch(*args, **kwargs):
+        if kwargs.get('id') != 'NM_000059':
+            return Entrez.efetch(*args, **kwargs)
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data',
+                            'NM_000059.3.gb.bz2')
+        return bz2.BZ2File(path)
+
+    with patch.object(Entrez, 'efetch', mock_efetch):
+        _batch_job_plain_text(variants, expected, 'name-checker')
+
+
 @with_references('NM_000059.3')
 def test_name_checker_skipped():
     """

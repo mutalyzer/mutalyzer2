@@ -195,6 +195,9 @@ Mutalyzer batch scheduler""" % download_url)
             if "S0" in flags :
                 message = "Entry could not be formatted correctly, check "\
                         "batch input file help for details"
+            elif "S2" in flags:
+                message = "Unaccepted input line length, check "\
+                        "batch input file help for details"
             elif "S9" in flags :
                 message = "Empty Line"
             else :
@@ -259,7 +262,8 @@ Mutalyzer batch scheduler""" % download_url)
             BatchQueueItem.query \
                 .filter_by(batch_job_id=jobID) \
                 .filter(BatchQueueItem.item.startswith(old),
-                        ~BatchQueueItem.item.startswith(nselector)) \
+                        ~BatchQueueItem.item.startswith(nselector),
+                        ~BatchQueueItem.flags.contains('S2')) \
                 .update({'item': func.replace(BatchQueueItem.item, old, new),
                          'flags': BatchQueueItem.flags + flag},
                             synchronize_session=False)
@@ -803,6 +807,8 @@ Mutalyzer batch scheduler""" % download_url)
                 else:
                     flag = "S9"     # Flag for empty line
                     inputl = " " #Database doesn't like an empty inputfield
+            elif len(inputl) > 190:  # Input line length not accepted
+                flag = "S2"         # Flag for unaccepted input line length
             else:
                 flag = None
             if (i + 1) % columns:
