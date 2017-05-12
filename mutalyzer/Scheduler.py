@@ -208,7 +208,7 @@ Mutalyzer batch scheduler""" % download_url)
         return False
     #__processFlags
 
-    def __alterBatchEntries(self, jobID, old, new, flag, nselector) :
+    def __alterBatchEntries(self, jobID, old, new, flag, nselector, O) :
         """
         Replace within one JobID all entries matching old with new, if they do
         not match the negative selector.
@@ -255,13 +255,20 @@ Mutalyzer batch scheduler""" % download_url)
         #              'flag': flag,
         #              'nselector': nselector}
         #session.execute(query, parameters)
-        BatchQueueItem.query \
-            .filter_by(batch_job_id=jobID) \
-            .filter(BatchQueueItem.item.startswith(old),
-                    ~BatchQueueItem.item.startswith(nselector)) \
-            .update({'item': func.replace(BatchQueueItem.item, old, new),
-                     'flags': BatchQueueItem.flags + flag},
-                    synchronize_session=False)
+        try:
+            BatchQueueItem.query \
+                .filter_by(batch_job_id=jobID) \
+                .filter(BatchQueueItem.item.startswith(old),
+                        ~BatchQueueItem.item.startswith(nselector)) \
+                .update({'item': func.replace(BatchQueueItem.item, old, new),
+                         'flags': BatchQueueItem.flags + flag},
+                            synchronize_session=False)
+        except Exception as ex:
+            message = ("An exception of type '%s' occurred in __alterBatchEntries() "
+                       "with the following arguments: %s. "
+                       "Other info: old=%s, new=%s, flag=%s, nselector=%s"
+                       % (type(ex).__name__, ex.args, old, new, flag, nselector))
+            O.addMessage(__file__, 4, "ABATCHE", message)
         session.commit()
     #__alterBatchEntries
 
@@ -340,7 +347,7 @@ Mutalyzer batch scheduler""" % download_url)
                 O.addMessage(__file__, 2, "WBSUBST",
                         "All further occurrences of %s will be substituted "
                         "by %s" % (old, new))
-                self.__alterBatchEntries(jobID, old, new, flag, nselector)
+                self.__alterBatchEntries(jobID, old, new, flag, nselector, O)
             #if
         #for
     #_updateDbFlags
