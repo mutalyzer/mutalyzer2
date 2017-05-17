@@ -7,7 +7,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.25
 ---------------
 
-Release date to be decided.
+Released on May 17th 2017.
 
 - Fix for batch processor crash when trying to alter an "item" column of the
   "batch_queue_items" database table. (`#426
