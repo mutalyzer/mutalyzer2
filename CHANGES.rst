@@ -9,6 +9,9 @@ Version 2.0.25
 
 Release date to be decided.
 
+- Fix for batch processor crash when trying to alter an "item" column of the
+  "batch_queue_items" database table. (`#426
+  <https://github.com/mutalyzer/mutalyzer/pull/426>`_).
 
 Version 2.0.24
 ---------------
