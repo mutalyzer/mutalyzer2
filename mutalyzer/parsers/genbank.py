@@ -349,20 +349,39 @@ class GBparser():
         return 1         # Everything matches, but there is little information.
     #__matchByRange
 
+    def link_via_attribute(self, t, p, attr, method_display):
+        """
+        Try to link a transcript (t) with a protein (p) via the provided
+        attribute (attr).
+
+        :param t: A transcript.
+        :param p: A protein.
+        :param attr: The attribute on which the link should pe performed.
+        :param method_display: The link method to be displayed at output.
+        :return: True if link was performed, False otherwise.
+        """
+        if self.__matchByRange(t, p) > 0 and not p.linked:
+            if getattr(t, attr) and getattr(t, attr) == getattr(p, attr):
+                t.link = p
+                t.linkMethod = method_display
+                p.linked = True
+                return True
+        return False
+
     def link(self, rnaList, cdsList):
         """
         Link mRNA loci to CDS loci (all belonging to one gene).
 
         First of all, the range of the CDS must be a subrange of that of
         the mRNA. If this is true, then we try to link both loci. The first
-        method is by looking at the locus_tag, if this fails, we try to
-        match the proteinLink tags, if this also fails, we try the
+        method is by looking at the proteinLink, if this fails, we try to
+        match the locus tags, if this also fails, we try the
         productTag.
 
         If no link could be found, but there is only one possibility left,
         the loci are linked too.
 
-        The method that was used to link the loci, is put in the linkmethod
+        The method that was used to link the loci, is put in the linkMethod
         variable of the transcript locus. The link variable of the
         transcript locus is a pointer to the CDS locus. Furthermore, the
         linked variable of the CDS locus is set to indicate that this locus
@@ -391,32 +410,20 @@ class GBparser():
         for i in rnaList :
             i.link = None
             i.linkMethod = None
+            # Try first to link via the proteinLink tag.
             for j in cdsList :
-                if self.__matchByRange(i, j) > 0 :
-                    # Try to link via the locus tag first.
-                    if i.locus_tag and i.locus_tag == j.locus_tag :
-                        i.link = j
-                        i.linkMethod = "locus"
-                        j.linked = True
-                        #print "Linked:", j.locus_tag
+                if self.link_via_attribute(i, j, 'proteinLink', 'protein'):
+                    break
+            if not i.link:
+                # Try to link next via the locus tag.
+                for j in cdsList:
+                    if self.link_via_attribute(i, j, 'locus_tag', 'locus'):
                         break
-                    #if
-                    # Try the proteinLink tag.
-                    if i.proteinLink and i.proteinLink == j.proteinLink :
-                        i.link = j
-                        i.linkMethod = "protein"
-                        j.linked = True
+            if not i.link:
+                # Try finally to link via the productTag.
+                for j in cdsList:
+                    if self.link_via_attribute(i, j, 'productTag', 'product'):
                         break
-                    #if
-                    # Try the productTag.
-                    if i.productTag and i.productTag == j.productTag :
-                        i.link = j
-                        i.linkMethod = "product"
-                        j.linked = True
-                        break
-                    #if
-                #if
-            #for
 
         # Now look if there is only one possibility left.
         # One *could* also do exhaustion per matched range...

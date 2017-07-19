@@ -12,6 +12,7 @@ import re
 import StringIO
 import urllib
 
+from datetime import datetime
 from flask import Blueprint
 from flask import (abort, jsonify, make_response, redirect, render_template,
                    request, send_from_directory, url_for)
@@ -254,8 +255,10 @@ def name_checker():
     if reference:
         if record_type == 'LRG':
             reference_filename = reference + '.xml'
-        else :
+        elif record_type == 'GB':
             reference_filename = reference + '.gb'
+        else:
+            reference_filename = None
     else:
         reference_filename = None
 
@@ -288,6 +291,7 @@ def name_checker():
 
     else:
         extracted = ''
+    print("%s: End description extractor." % datetime.now())
 
     # Todo: Generate the fancy HTML views for the proteins here instead of in
     #   `mutalyzer.variantchecker`.

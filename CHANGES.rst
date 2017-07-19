@@ -3,10 +3,21 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
-Version 2.0.26
+Version 2.0.27
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.26
+---------------
+
+Released on July 19th 2017.
+
+- Description-extractor dependency updated to version 2.35 (`#429
+  <https://github.com/mutalyzer/mutalyzer/pull/429>`_).
+- Fix for negative cCDSStop due to wrong transcript to protein link. (`#430
+  <https://github.com/mutalyzer/mutalyzer/issues/430>`_)
 
 
 Version 2.0.25

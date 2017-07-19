@@ -20,6 +20,7 @@ from suds.client import Client
 import mutalyzer
 from mutalyzer.services.soap import application
 from mutalyzer import Scheduler
+from mutalyzer import models
 
 from fixtures import with_references
 
@@ -588,6 +589,98 @@ def test_runmutalyzer_reference_info_gi(api):
     assert r.errors == 1
     assert len(r.messages.SoapMessage) == 1
     assert r.messages.SoapMessage[0]['errorcode'] == 'EGINOTSUPPORTED'
+
+
+@with_references('NG_012772.1')
+def test_runmutalyzerlight_get_variant_description_subst(api):
+    """
+    Get detailed variant description for a substitution operation.
+    """
+    r = api('runMutalyzerLight', 'NG_012772.1(NM_000059.3):c.120A>G',
+            extras=models.RequestExtras(varDetails=True))
+    assert r.errors == 0
+    assert r.varDetails.reference_file == 'NG_012772.1'
+    assert r.varDetails.start == 8650
+    assert r.varDetails.stop == 8650
+    assert r.varDetails.ref == 'A'
+    assert r.varDetails.alt == 'G'
+    assert r.varDetails.operation == 'subst'
+
+
+@with_references('NG_012772.1')
+def test_runmutalyzerlight_get_variant_description_del(api):
+    """
+    Get detailed variant description for a deletion operation.
+    """
+    r = api('runMutalyzerLight', 'NG_012772.1(NM_000059.3):c.128del',
+            extras=models.RequestExtras(varDetails=True))
+    assert r.errors == 0
+    assert r.varDetails.reference_file == 'NG_012772.1'
+    assert r.varDetails.start == 8658
+    assert r.varDetails.stop == 8658
+    assert r.varDetails.ref == 'A'
+    assert r.varDetails.alt == '.'
+    assert r.varDetails.operation == 'del'
+
+
+@with_references('NG_012772.1')
+def test_runmutalyzerlight_get_variant_description_dup(api):
+    """
+    Get detailed variant description for a duplication operation.
+    """
+    r = api('runMutalyzerLight', 'NG_012772.1(NM_000059.3):c.120_122dup',
+            extras=models.RequestExtras(varDetails=True))
+    assert r.errors == 0
+    assert r.varDetails.reference_file == 'NG_012772.1'
+    assert r.varDetails.start == 8650
+    assert r.varDetails.stop == 8652
+    assert r.varDetails.ref == '.'
+    assert r.varDetails.alt == 'ACC'
+    assert r.varDetails.operation == 'dup'
+
+
+@with_references('NG_012772.1')
+def test_runmutalyzerlight_get_variant_description_ins(api):
+    """
+    Get detailed variant description for an insertion operation.
+    """
+    r = api('runMutalyzerLight', 'NG_012772.1(NM_000059.3):c.120_121insT',
+            extras=models.RequestExtras(varDetails=True))
+    assert r.errors == 0
+    assert r.varDetails.reference_file == 'NG_012772.1'
+    assert r.varDetails.start == 8650
+    assert r.varDetails.stop == 8651
+    assert r.varDetails.ref == '.'
+    assert r.varDetails.alt == 'T'
+    assert r.varDetails.operation == 'ins'
+
+
+@with_references('NG_012772.1')
+def test_runmutalyzerlight_get_variant_description_delins(api):
+    """
+    Get detailed variant description for a delins operation.
+    """
+    r = api('runMutalyzerLight', 'NG_012772.1(NM_000059.3):c.120delinsTT',
+            extras=models.RequestExtras(varDetails=True))
+    assert r.errors == 0
+    assert r.varDetails.reference_file == 'NG_012772.1'
+    assert r.varDetails.start == 8650
+    assert r.varDetails.stop == 8650
+    assert r.varDetails.ref == 'A'
+    assert r.varDetails.alt == 'TT'
+    assert r.varDetails.operation == 'delins'
+
+
+@with_references('NG_012772.1')
+def test_runmutalyzerlight_get_variant_description_delins_no_mutation(api):
+    """
+    Get detailed variant description for a delins operation.
+    """
+    r = api('runMutalyzerLight', 'NG_012772.1(NM_000059.3):c.120delinsA',
+            extras=models.RequestExtras(varDetails=True))
+    assert r.errors == 0
+    assert r.varDetails.reference_file == 'NG_012772.1'
+    assert 'No operation (mutation) type found.' in r.varDetails.info.string
 
 
 @with_references('NM_000143.3')

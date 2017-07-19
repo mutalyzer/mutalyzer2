@@ -43,6 +43,7 @@ setup(
     packages=['mutalyzer',
               'mutalyzer.config',
               'mutalyzer.db',
+              'mutalyzer.dbgb',
               'mutalyzer.entrypoints',
               'mutalyzer.parsers',
               'mutalyzer.services',

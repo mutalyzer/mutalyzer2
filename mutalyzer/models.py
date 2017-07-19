@@ -88,6 +88,18 @@ class Transcript(ComplexModel):
 #Transcript
 
 
+class TranscriptInChromosome(ComplexModel):
+    """
+    Return type of SOAP method mapTranscriptToChromosomes.
+    """
+    __namespace__ = SOAP_NAMESPACE
+
+    transcript = Mandatory.Unicode
+    chromosome = Mandatory.Unicode
+
+# TranscriptInChromosome
+
+
 class RawVariant(ComplexModel):
     """
     Used in MutalyzerOutput data type.
@@ -210,6 +222,30 @@ class LegendRecord(ComplexModel):
 #LegendRecord
 
 
+class RequestExtras(ComplexModel):
+    """
+    Used in runMutalyzerLight
+    """
+    original = Boolean()
+    mutated = Boolean()
+    varDetails = Boolean()
+# RequestExtras
+
+
+class VarDetails(ComplexModel):
+    """
+    Used in runMutalyzerLight
+    """
+    reference_file = Unicode
+    start = Integer
+    stop = Integer
+    ref = Unicode
+    alt = Unicode
+    info = Array(Unicode)
+    operation = Unicode
+# VarDetails
+
+
 class MutalyzerOutput(ComplexModel):
     """
     Return type of SOAP method runMutalyzer.
@@ -251,6 +287,8 @@ class MutalyzerOutput(ComplexModel):
     rawVariants = Array(RawVariant)
 
     messages = Array(SoapMessage)
+
+    varDetails = VarDetails
 #MutalyzerOutput
 
 

@@ -172,14 +172,30 @@
                   development version
                 {% endif %}
               </span>
+              <br>
+              <a href="https://github.com/mutalyzer/mutalyzer/blob/master/CHANGES.rst">
+                  Changelog
+              </a>
             </p>
         </div>
         <div class="col-md-4">
-            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}</p>
+            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}
+                (<a href="https://github.com/mutalyzer/mutalyzer/wiki/HGVS-Mutalyzer-Differences">notes</a>)
+                <br>
+                <a href="{{ url_for('website.about') }}#recommended-by" name="recommended-by">
+                    Recommended by
+                </a>
+                <br>
+            </p>
         </div>
         <div class="col-md-4">
             <img src="{{ url_for('static', filename='images/LUMC_24x24.png') }}" align="middle">
-            <p>&copy; {{ copyright_years[0] }}-{{ copyright_years[1] }} <a href="http://www.lumc.nl">LUMC</a></p>
+            <p>&copy; {{ copyright_years[0] }}-{{ copyright_years[1] }} <a href="http://www.lumc.nl">LUMC</a>
+                <br>
+                <a href="https://www.gnu.org/licenses/agpl-3.0.html">
+                    Disclaimer
+                </a>
+            </p>
         </div>
     </footer>
 
