@@ -21,8 +21,8 @@ from __future__ import unicode_literals
 # [1] http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version
 # [2] http://semver.org/
 
-__version_info__ = ('2', '0', '26', 'dev')
-__date__ = '17 May 2017'
+__version_info__ = ('2', '0', '26')
+__date__ = '19 July 2017'
 
 
 __version__ = '.'.join(__version_info__)

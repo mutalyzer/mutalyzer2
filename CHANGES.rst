@@ -6,7 +6,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.26
 ---------------
 
-Release date to be decided.
+Released on July 19th 2017.
 
 - Description-extractor dependency updated to version 2.35 (`#
   <https://github.com/mutalyzer/mutalyzer/pull/429>`_).
