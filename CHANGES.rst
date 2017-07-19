@@ -8,6 +8,11 @@ Version 2.0.26
 
 Release date to be decided.
 
+- Description-extractor dependency updated to version 2.35 (`#
+  <https://github.com/mutalyzer/mutalyzer/pull/429>`_).
+- Fix for negative cCDSStop due to wrong transcript to protein link. (`#
+  <https://github.com/mutalyzer/mutalyzer/issues/430>`_)
+
 
 Version 2.0.25
 ---------------
