@@ -172,10 +172,19 @@
                   development version
                 {% endif %}
               </span>
+              <br>
+              <a href="https://github.com/mutalyzer/mutalyzer/blob/master/CHANGES.rst">
+                  Changelog
+              </a>
             </p>
         </div>
         <div class="col-md-4">
-            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}</p>
+            <p class="text-muted">HGVS nomenclature version {{ nomenclature_version }}
+                <br>
+                <a href="{{ url_for('website.about') }}#recommended-by" name="recommended-by">
+                    Recommended by
+                </a>
+            </p>
         </div>
         <div class="col-md-4">
             <img src="{{ url_for('static', filename='images/LUMC_24x24.png') }}" align="middle">
