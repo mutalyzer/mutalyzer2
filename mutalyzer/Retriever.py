@@ -772,37 +772,23 @@ class LRGRetriever(Retriever):
 
     def fetch(self, name):
         """
-        Fetch the LRG file and store in the cache directory. First try to
-        grab the file from the confirmed section, if this fails, get it
-        from the pending section.
+        Fetch the LRG file and store in the cache directory.
 
         :arg unicode name: The name of the LRG file to fetch.
 
         :returns: the full path to the file; None in case of an error.
         :rtype: unicode
         """
-        prefix = settings.LRG_PREFIX_URL
-        url = prefix + '{}.xml'.format(name)
-        pending_url = prefix + 'pending/{}.xml'.format(name)
+        url = '{}/{}.xml'.format(settings.LRG_PREFIX_URL, name)
+        filename = None
 
         try:
-            return self.downloadrecord(url, name)
-        except urllib2.URLError:
-            # Catch error: file not found.
-            pass
-
-        try:
-            # Try to get the file from the pending section.
-            filename = self.downloadrecord(pending_url, name)
-            self._output.addMessage(
-                __file__, 2, 'WPEND',
-                'Warning: LRG file {} is a pending entry.'.format(name))
-            return filename
+            filename = self.downloadrecord(url, name)
         except urllib2.URLError:
             self._output.addMessage(
                 __file__, 4, 'ERETR', 'Could not retrieve {}.'.format(name))
-            # Explicit return in case of an Error.
-            return None
+
+        return filename
 
     def downloadrecord(self, url, name=None):
         """
