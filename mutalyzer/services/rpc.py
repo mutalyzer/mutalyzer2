@@ -1464,12 +1464,7 @@ class MutalyzerService(ServiceBase):
 
         stats.increment_counter('snp-converter/webservice')
 
-        try:
-            descriptions = ncbi.rsid_to_descriptions(rs_id)
-        except ncbi.ServiceError:
-            output.addMessage(__file__, 4, 'EENTREZ',
-                              'An error occured while communicating with '
-                              'dbSNP.')
+        descriptions = ncbi.rsid_to_descriptions(rs_id, output)
 
         output.addMessage(__file__, -1, 'INFO',
             'Finished processing getdbSNPDescription(%s)' % rs_id)
@@ -1527,6 +1522,8 @@ class MutalyzerService(ServiceBase):
         # From all the transcripts for this gene, get the lowest start
         # position and highest stop position. For integrity, we group by
         # chromosome and orientation.
+        # Order by chromosome name for disambiguation, as is done in
+        # Convertor._get_mapping()
         mapping = \
             session.query(func.min(TranscriptMapping.start),
                           func.max(TranscriptMapping.stop),
@@ -1538,6 +1535,7 @@ class MutalyzerService(ServiceBase):
                    .join(TranscriptMapping.chromosome) \
                    .group_by(Chromosome.id,
                              TranscriptMapping.orientation) \
+                   .order_by(Chromosome.name.asc()) \
                    .first()
 
         if not mapping:

@@ -639,6 +639,36 @@ def hg19_transcript_mappings(db, hg19):
         transcript=1,
         cds=(207627764, 207658899),
         select_transcript=True))
+    db.session.add(TranscriptMapping(
+        hg19.chromosomes.filter_by(name='chrY').one(),
+        'refseq',
+        'NM_001145149',
+        'VAMP7',
+        'forward',
+        59213953,
+        59276439,
+        [59213953],
+        [59276439],
+        'ncbi',
+        transcript=1,
+        cds=(59213954, 59276438),
+        select_transcript=False,
+        version=2))
+    db.session.add(TranscriptMapping(
+        hg19.chromosomes.filter_by(name='chrX').one(),
+        'refseq',
+        'NM_001145149',
+        'VAMP7',
+        'forward',
+        155110947,
+        155173433,
+        [155110947],
+        [155173433],
+        'ncbi',
+        transcript=1,
+        cds=(155110948, 155173432),
+        select_transcript=False,
+        version=2))
 
     db.session.commit()
 

@@ -3,11 +3,40 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
+Version 2.0.27
+---------------
+
+Release date to be decided.
+
+
+Version 2.0.26
+---------------
+
+Released on July 19th 2017.
+
+- Description-extractor dependency updated to version 2.35 (`#429
+  <https://github.com/mutalyzer/mutalyzer/pull/429>`_).
+- Fix for negative cCDSStop due to wrong transcript to protein link. (`#430
+  <https://github.com/mutalyzer/mutalyzer/issues/430>`_)
+
+
+Version 2.0.25
+---------------
+
+Released on May 17th 2017.
+
+- Fix for batch processor crash when trying to alter an "item" column of the
+  "batch_queue_items" database table. (`#426
+  <https://github.com/mutalyzer/mutalyzer/pull/426>`_).
 
 Version 2.0.24
 ---------------
 
-Release date to be decided.
+Released on April 12th 2017.
+
+- Fix for SNP converter crash when called with 'rs0' as parameter.
+  SNP converter displays now more warning messages. (`#419
+  <https://github.com/mutalyzer/mutalyzer/issues/419>`_).
 
 
 Version 2.0.23

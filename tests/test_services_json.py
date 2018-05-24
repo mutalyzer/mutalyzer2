@@ -331,3 +331,20 @@ def test_description_extract_sample_too_long(api):
         api('descriptionExtract',
             'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH),
             'A' * (settings.EXTRACTOR_MAX_INPUT_LENGTH + 1))
+
+
+@pytest.mark.usefixtures('hg19_transcript_mappings')
+def test_transcript_order(api):
+    """
+    Test whether getGeneLocation and numberConversion have same strategy for
+    selecting a transcript mapping.
+    """
+    result_GL = api('getGeneLocation', gene='VAMP7', build='hg19')
+    result_NC = api('numberConversion', build='hg19',
+                    variant='NM_001145149.2:c.100dup', gene='VAMP7')
+
+    assert 'chromosome_accession' in result_GL
+    assert len(result_NC) == 1
+
+    acc = result_GL['chromosome_accession']
+    assert result_NC[0][:len(acc)] == acc

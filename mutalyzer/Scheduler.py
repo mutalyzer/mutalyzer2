@@ -195,6 +195,9 @@ Mutalyzer batch scheduler""" % download_url)
             if "S0" in flags :
                 message = "Entry could not be formatted correctly, check "\
                         "batch input file help for details"
+            elif "S2" in flags:
+                message = "Unaccepted input line length, check "\
+                        "batch input file help for details"
             elif "S9" in flags :
                 message = "Empty Line"
             else :
@@ -208,7 +211,7 @@ Mutalyzer batch scheduler""" % download_url)
         return False
     #__processFlags
 
-    def __alterBatchEntries(self, jobID, old, new, flag, nselector) :
+    def __alterBatchEntries(self, jobID, old, new, flag, nselector, O) :
         """
         Replace within one JobID all entries matching old with new, if they do
         not match the negative selector.
@@ -255,13 +258,21 @@ Mutalyzer batch scheduler""" % download_url)
         #              'flag': flag,
         #              'nselector': nselector}
         #session.execute(query, parameters)
-        BatchQueueItem.query \
-            .filter_by(batch_job_id=jobID) \
-            .filter(BatchQueueItem.item.startswith(old),
-                    ~BatchQueueItem.item.startswith(nselector)) \
-            .update({'item': func.replace(BatchQueueItem.item, old, new),
-                     'flags': BatchQueueItem.flags + flag},
-                    synchronize_session=False)
+        try:
+            BatchQueueItem.query \
+                .filter_by(batch_job_id=jobID) \
+                .filter(BatchQueueItem.item.startswith(old+':'),
+                        ~BatchQueueItem.item.startswith(nselector),
+                        ~BatchQueueItem.flags.contains('S2')) \
+                .update({'item': func.replace(BatchQueueItem.item, old, new),
+                         'flags': BatchQueueItem.flags + flag},
+                            synchronize_session=False)
+        except Exception as ex:
+            message = ("An exception of type '%s' occurred in __alterBatchEntries() "
+                       "with the following arguments: %s. "
+                       "Other info: old=%s, new=%s, flag=%s, nselector=%s"
+                       % (type(ex).__name__, ex.args, old, new, flag, nselector))
+            O.addMessage(__file__, 4, "ABATCHE", message)
         session.commit()
     #__alterBatchEntries
 
@@ -340,7 +351,7 @@ Mutalyzer batch scheduler""" % download_url)
                 O.addMessage(__file__, 2, "WBSUBST",
                         "All further occurrences of %s will be substituted "
                         "by %s" % (old, new))
-                self.__alterBatchEntries(jobID, old, new, flag, nselector)
+                self.__alterBatchEntries(jobID, old, new, flag, nselector, O)
             #if
         #for
     #_updateDbFlags
@@ -726,12 +737,7 @@ Mutalyzer batch scheduler""" % download_url)
 
         descriptions = []
         if not skip:
-            try:
-                descriptions = ncbi.rsid_to_descriptions(cmd)
-            except ncbi.ServiceError:
-                O.addMessage(__file__, 4, 'EENTREZ',
-                             'An error occured while communicating with '
-                             'dbSNP.')
+            descriptions = ncbi.rsid_to_descriptions(cmd, O)
 
         # Todo: Is output ok?
         outputline =  "%s\t" % cmd
@@ -801,6 +807,8 @@ Mutalyzer batch scheduler""" % download_url)
                 else:
                     flag = "S9"     # Flag for empty line
                     inputl = " " #Database doesn't like an empty inputfield
+            elif len(inputl) > 190:  # Input line length not accepted
+                flag = "S2"         # Flag for unaccepted input line length
             else:
                 flag = None
             if (i + 1) % columns:

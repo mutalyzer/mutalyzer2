@@ -335,21 +335,14 @@ def protein_to_transcript(protein_accession, protein_version=None,
         match_version=match_version)
 
 
-def rsid_to_descriptions(rsid):
+def _get_snp_from_ncbi(rsid):
     """
-    Return all annotated HGVS descriptions for a given dbSNP rs#.
+    Connects to the Entrez DB to fetch the annotated SNP records.
 
-    :arg str rsid: The rs# of the dbSNP record (e.g., `rs9919552`).
-
-    :raises ServiceError: On error in Entrez communication.
-
-    :returns: List of HGVS descriptions.
-    :rtype: list(str)
+    :param rsid: The rs# of the dbSNP record (e.g., `rs9919552`).
+    :return: response_text(str)
     """
     Entrez.email = settings.EMAIL
-
-    if not rsid.startswith('rs') or not rsid[2:].isdigit():
-        return []
 
     try:
         response = Entrez.efetch(db='snp', id=rsid[2:], retmode='xml')
@@ -363,8 +356,39 @@ def rsid_to_descriptions(rsid):
         # TODO: Log error.
         raise ServiceError()
 
+    return response_text
+
+
+def rsid_to_descriptions(rsid, output):
+    """
+    Return all annotated HGVS descriptions for a given dbSNP rs#.
+
+    :arg str rsid: The rs# of the dbSNP record (e.g., `rs9919552`).
+
+    :raises ServiceError: On error in Entrez communication.
+
+    :returns: List of HGVS descriptions.
+    :rtype: list(str)
+    """
+
+    # Some first checks. The rsid should be prefixed with 'rs'.
+    if not rsid.startswith('rs') or not rsid[2:].isdigit():
+        output.addMessage(__file__, 2, 'RSID',
+                          'Incorrect RSID input format.')
+        return []
+
+    # Get the NCBI Entrez DB response.
+    try:
+        response_text = _get_snp_from_ncbi(rsid)
+    except ServiceError:
+        output.addMessage(__file__, 4, 'EENTREZ',
+                          'An error occured while communicating with dbSNP.')
+        return []
+
     if response_text.strip() == b'\n':
         # This is apparently what dbSNP returns for non-existing rs#.
+        output.addMessage(__file__, 2, 'EENTREZ',
+                          'Non existing %s in the DB.' % rsid)
         return []
 
     try:
@@ -377,6 +401,8 @@ def rsid_to_descriptions(rsid):
     except IndexError:
         # The expected root element is not present, this has also been
         # observed as a response for non-existing rs#.
+        output.addMessage(__file__, 2, 'EENTREZ',
+                          'Non existing %s in the DB or no root element.' % rsid)
         return []
 
     return [hgvs.lastChild.data for hgvs in rs.getElementsByTagName('hgvs')]

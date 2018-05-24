@@ -371,7 +371,7 @@ class GenBankRetriever(Retriever):
             # EFetch `seq_start` and `seq_stop` are one-based, inclusive, and
             # in reference orientation.
             handle = Entrez.efetch(
-                db='nuccore', rettype='gb', retmode='text', id=accno,
+                db='nuccore', rettype='gbwithparts', retmode='text', id=accno,
                 seq_start=start, seq_stop=stop, strand=orientation)
             raw_data = handle.read()
             handle.close()
