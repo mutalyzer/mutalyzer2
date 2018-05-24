@@ -12,6 +12,7 @@ import argparse
 import signal
 import sys
 import time
+import socket
 
 from .. import db
 from .. import Scheduler
@@ -41,6 +42,7 @@ def process():
     signal.signal(signal.SIGINT, handle_exit)
 
     while True:
+
         # Process batch jobs.
         scheduler.process()
         db.session.remove()
@@ -58,6 +60,7 @@ def main():
     """
     Command line interface to the batch processor.
     """
+    socket.setdefaulttimeout(60)
     parser = argparse.ArgumentParser(
         description='Mutalyzer batch processor.',
         epilog='The process can be shutdown gracefully by sending a SIGINT '
