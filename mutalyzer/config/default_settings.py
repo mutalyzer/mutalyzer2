@@ -47,6 +47,9 @@ DATABASE_URI = 'sqlite://'
 # Default genome assembly (by name or alias).
 DEFAULT_ASSEMBLY = 'hg19'
 
+# Database for NC (dbgb) connection URI (can be any SQLAlchemy connection URI).
+DATABASE_GB_URI = 'sqlite://'
+
 # Name and location of the log file.
 LOG_FILE = '/tmp/mutalyzer.log'
 

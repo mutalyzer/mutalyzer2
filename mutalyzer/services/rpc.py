@@ -12,6 +12,7 @@ Mutalyzer RPC services.
 from __future__ import unicode_literals
 
 import binning
+from datetime import datetime
 from spyne.decorator import rpc, srpc
 from spyne.service import ServiceBase
 from spyne.model.primitive import Integer, Boolean, DateTime, Unicode
@@ -29,6 +30,7 @@ import extractor
 import mutalyzer
 from mutalyzer.config import settings
 from mutalyzer.db import session
+from mutalyzer.db import session as sessiongb
 from mutalyzer.db.models import (Assembly, Chromosome, BatchJob,
                                  BatchQueueItem, TranscriptMapping)
 from mutalyzer.output import Output
@@ -44,6 +46,7 @@ from mutalyzer import Retriever
 from mutalyzer import GenRecord
 from mutalyzer import Scheduler
 from mutalyzer.models import *
+from mutalyzer.nc_db import get_entire_nc_record
 
 
 def create_rpc_fault(output):
@@ -999,6 +1002,281 @@ class MutalyzerService(ServiceBase):
         return result
     #runMutalyzer
 
+    @srpc(Mandatory.Unicode, RequestExtras, _returns=MutalyzerOutput)
+    def runMutalyzerLight(variant, extras) :
+        """
+        Run the Mutalyzer name checker.
+
+        @arg variant: The variant description to check.
+        @type variant: string
+
+        @arg extras: Additional fields to be included in the response.
+        @type extras: RequestExtras
+
+
+        @return: Default response object contains the following fields:
+            - referenceId: Identifier of the reference sequence used.
+            - sourceId: Identifier of the reference sequence source, e.g. the
+                chromosomal accession number and version in case referenceId
+                is a  UD reference created as a chromosomal slice.
+            - sourceAccession: Accession number of the reference sequence
+                source (only for genbank references).
+            - sourceVersion: Version number of the reference sequence source
+                (only for genbank references).
+            - molecule: Molecular type of the reference sequence.
+            - errors: Number of errors.
+            - warnings: Number of warnings.
+            - summary: Summary of messages.
+            - chromDescription: Chromosomal description.
+            - genomicDescription: Genomic description.
+            - transcriptDescriptions: List of transcript descriptions.
+            - proteinDescriptions: List of protein descriptions.
+            - exons: If a transcript is selected, array of ExonInfo objects
+                for each exon in the selected transcript with fields:
+                - cStart
+                - gStart
+                - cStop
+                - gStop
+            - legend: Array with name and information per transcript variant
+                and protein isoform. Each entry is an array with the following
+                fields:
+                - name
+                - id
+                - locusTag
+                - product
+                - linkMethod
+            - messages: List of (error) messages.
+            If extras is utilized the following fields are included, according
+            to their selection:
+                - original: Original sequence.
+                - mutated: Mutated sequence.
+                - varDetails:
+                   - reference_file: reference file
+                   - ref: reference bases ('.' for insertions)
+                   - alt: alternative bases ('.' for deletions)
+                   - start: start position
+                   - stop: stop position
+                   - info: information about the conversion process failure
+        """
+        def check_param(obj, attr=None):
+            """
+            Checks whether `attr` is present in the `obj`. Added specifically
+            for the `extras` parameter.
+            :param obj: Call parameter.
+            :param attr: Attribute to search for in obj.
+            :return:
+            """
+            if not obj:
+                return False
+            if obj and not attr:
+                return True
+            if hasattr(obj, attr) and getattr(obj, attr):
+                return True
+            else:
+                return False
+
+        def get_variant_details():
+            """
+            Extracts the variant description details from the parse tree and
+            the sequence.
+
+            Currently accepts only one variant description and three mutation
+            types ('del', 'ins', and 'subst') with their corresponding
+            locations as natural numbers only ('c.10-3_10-5del' and other
+            positions such as '*3' are not accepted). Thus, it is mainly for
+            genomic references with 'g.' coordinates and no specific annotated
+            segment.
+
+            Example of accepted variant descriptions and their output terms:
+            - input: 'NC_000014.8:g.94844865G>A'
+                - output terms:
+                    - 'reference_file': 'NC_000014.8'
+                    - 'start': '94844865'
+                    - 'stop': '94844865'
+                    - 'ref': 'G'
+                    - 'alt': 'A'
+                    - 'operation': 'subst'
+            - input: 'NC_000011.9:g.47353833_47353857del'
+                - output terms:
+                    - 'reference_file': 'NC_000011.9'
+                    - 'start': '47353833'
+                    - 'stop': '47353857'
+                    - 'ref': 'AGGGAAGCCATCCAGGCTGAGAGGG'
+                    - 'alt': '.'
+                    - 'operation': 'del'
+            - input: 'NC_000008.10:g.10480387_10480388dup'
+                - output terms:
+                    - 'reference_file': 'NC_000008.10'
+                    - 'start': '10480387'
+                    - 'stop': '10480388'
+                    - 'ref': '.'
+                    - 'alt': 'GC'
+                    - 'operation': 'dup'
+            - input: 'NC_000008.10:g.10480387_10480388insA'
+                - output terms:
+                    - 'reference_file': 'NC_000008.10'
+                    - 'start': '10480388'
+                    - 'stop': '10480388'
+                    - 'ref': '.'
+                    - 'alt': 'A'
+                    - 'operation': 'ins'
+            - input: 'NC_000014.8:g.19400000delinsGT'
+                - output terms:
+                    - 'reference_file': 'NC_000014.8'
+                    - 'stop': '19400000'
+                    - 'start': '19400000'
+                    - 'ref': 'A'
+                    - 'alt': 'GT'
+                    - 'operation': 'delins'
+
+            For 'del' variants the sequence is required.
+            For 'ins' and 'subst' variants the sequence is not required with
+            the 'ref' and 'alt' terms being obtained directly from the HGVS
+            description.
+            """
+            varDetails = VarDetails()
+            varDetails.info = []
+            output = Output(__file__)
+            grammar = Grammar(output)
+            if result.genomicDescription:
+                variant_tree = grammar.parse(result.genomicDescription)
+            else:
+                varDetails.info.append("No genomic description generated.")
+                return varDetails
+
+            # Only one variant accepted for the moment
+            if variant_tree and not variant_tree.SingleAlleleVarSet:
+                # Extract the only variant
+                variant = variant_tree.RawVar
+
+                # Should be NCBI and not LRG
+                if variant_tree.RefSeqAcc and variant_tree.Version:
+                    record_id = variant_tree.RefSeqAcc + '.' + variant_tree.Version
+                    varDetails.reference_file = record_id
+                else:
+                    varDetails.info.append("Only ncbi references with accession "
+                                           "and version are accepted.")
+                    return varDetails
+
+                # Extract the variant type
+                try:
+                    mutation_type = variant.MutationType
+                except AttributeError:
+                    varDetails.info.append("No operation (mutation) type found.")
+                    return varDetails
+
+                # Extract the the positions
+                varDetails.start = varDetails.stop = variant.StartLoc.PtLoc.Main
+                if variant.EndLoc:
+                    varDetails.stop = variant.EndLoc.PtLoc.Main
+                if abs(int(varDetails.stop) - int(varDetails.start)) > 524288:
+                    varDetails.info.append("Too long (> 524288 bases) sequence change.")
+                    return varDetails
+
+                # Extract the 'ref' and 'alt' terms
+                if mutation_type == 'subst':
+                    varDetails.ref = unicode(variant.Arg1)
+                    varDetails.alt = unicode(variant.Arg2)
+                    varDetails.operation = 'subst'
+                elif mutation_type == 'del':
+                    varDetails.ref = unicode(O.getIndexedOutput("original", 0)\
+                        [int(varDetails.start)-1:int(varDetails.stop)])
+                    varDetails.alt = '.'
+                    varDetails.operation = 'del'
+                elif mutation_type == 'dup':
+                    varDetails.ref = '.'
+                    varDetails.alt = unicode(O.getIndexedOutput("original", 0)\
+                        [int(varDetails.start)-1:int(varDetails.stop)])
+                    varDetails.operation = 'dup'
+                elif mutation_type == 'ins':
+                    varDetails.ref = '.'
+                    varDetails.alt = unicode(variant.Seq.Sequence)
+                    varDetails.operation = 'ins'
+                elif mutation_type == 'delins':
+                    varDetails.ref = unicode(O.getIndexedOutput("original", 0)\
+                        [int(varDetails.start)-1:int(varDetails.stop)])
+                    varDetails.alt = unicode(variant.Seq.Sequence)
+                    varDetails.operation = 'delins'
+                else:
+                    varDetails.info.append("Conversion not performed since "
+                                           "'%s' operation is not supported."
+                                           % mutation_type)
+                    return varDetails
+            else:
+                varDetails.info.append("Conversion not performed since multiple "
+                                       "variants are present in the description.")
+                return varDetails
+
+            return varDetails
+
+        O = Output(__file__)
+        O.addMessage(__file__, -1, "INFO",
+            "Received request runMutalyzerLight(%s)" % (variant))
+
+        stats.increment_counter('name-checker/webservice')
+
+        if not check_param(extras, 'original') and not check_param(extras,'varDetails'):
+            O.addOutput('add_original_sequence_to_output', 'not')
+        if not check_param(extras, 'mutated'):
+            O.addOutput('add_mutated_sequence_to_output', 'not')
+        variantchecker.check_variant(variant, O)
+
+        result = MutalyzerOutput()
+
+        result.referenceId = O.getIndexedOutput('reference_id', 0)
+        result.sourceId = O.getIndexedOutput('source_id', 0)
+        result.sourceAccession = O.getIndexedOutput('source_accession', 0)
+        result.sourceVersion = O.getIndexedOutput('source_version', 0)
+        result.molecule = O.getIndexedOutput('molecule', 0)
+
+        if check_param(extras, 'original'):
+            result.original = O.getIndexedOutput("original", 0)
+        if check_param(extras, 'mutated'):
+            result.mutated = O.getIndexedOutput("mutated", 0)
+
+        result.chromDescription = \
+            O.getIndexedOutput("genomicChromDescription", 0)
+        result.genomicDescription = \
+            O.getIndexedOutput("genomicDescription", 0)
+
+        if check_param(extras, 'varDetails'):
+            result.varDetails = get_variant_details()
+
+        result.transcriptDescriptions = O.getOutput("descriptions")
+        result.proteinDescriptions = O.getOutput("protDescriptions")
+
+        if O.getIndexedOutput('hasTranscriptInfo', 0, False):
+            result.exons = []
+            for e in O.getOutput('exonInfo'):
+                exon = ExonInfo()
+                exon.gStart, exon.gStop, exon.cStart, exon.cStop = e
+                result.exons.append(exon)
+
+        result.legend = []
+        for name, id, locusTag, product, linkMethod in O.getOutput('legends'):
+            record = LegendRecord()
+            record.name = name
+            record.id = id
+            record.locusTag = locusTag
+            record.product = product
+            record.linkMethod = linkMethod
+            result.legend.append(record)
+
+        result.errors, result.warnings, result.summary = O.Summary()
+
+        O.addMessage(__file__, -1, "INFO",
+            "Finished processing runMutalyzerLight(%s)" % (variant))
+
+        result.messages = []
+        for message in O.getMessages():
+            soap_message = SoapMessage()
+            soap_message.errorcode = message.code
+            soap_message.message = message.description
+            result.messages.append(soap_message)
+
+        return result
+    #runMutalyzerLight
+
     @srpc(Mandatory.Unicode, Mandatory.Unicode, _returns=TranscriptNameInfo)
     def getGeneAndTranscript(genomicReference, transcriptReference) :
         """
@@ -1080,8 +1358,16 @@ class MutalyzerService(ServiceBase):
         O.addMessage(__file__, -1, "INFO",
             "Received request getTranscriptsAndInfo(%s, %s)" % (
             genomicReference, geneName))
-        retriever = Retriever.GenBankRetriever(O)
-        record = retriever.loadrecord(genomicReference)
+
+        # We try first to
+        if 'NC' in genomicReference:
+            record = get_entire_nc_record(genomicReference, geneName=geneName)
+        else:
+            record = None
+
+        if record is None:
+            retriever = Retriever.GenBankRetriever(O)
+            record = retriever.loadrecord(genomicReference)
 
         if record is None:
             raise Fault("EARG",
@@ -1563,6 +1849,71 @@ class MutalyzerService(ServiceBase):
         return result
     #getGeneLocation
 #MutalyzerService
+
+
+    @srpc(Mandatory.Unicode, _returns=Array(TranscriptInChromosome))
+    def mapTranscriptToChromosomes(transcript):
+        """
+        Searches for a transcript reference (NM) in the chromosomal database
+        and returns the chromosome accession.version numbers list. Example:
+            transcript input:
+                NM_000267.3
+            output:
+                [
+                    {
+                        "transcript": "NM_000267.3",
+                        "chromosome": "NC_000017.10"
+                    },
+                    {
+                        "transcript": "NM_000267.3",
+                        "chromosome": "NC_000017.11"
+                    }
+                ]
+
+        @arg transcript: The transcript 'accession[.version]'.
+        @type transcript: string
+
+        @return: Complex object:
+          - transcript  ; Transcription accesion.version.
+          - chromosome   ; Chromosome accesioin.version.
+        @rtype: object
+        """
+        O = Output(__file__)
+
+        O.addMessage(__file__, -1, "INFO",
+                     "Received request mapTranscriptToChromosomes(%s)" % transcript)
+
+        from mutalyzer.dbgb.models import Transcript, Reference
+
+        if '.' not in transcript:
+            acc, ver = transcript, None
+        else:
+            acc, ver = transcript.split('.')
+
+        result = []
+
+        if ver is not None:
+            transcripts = Transcript.query.\
+                filter_by(transcript_accession=acc, transcript_version=ver).all()
+        else:
+            transcripts = Transcript.query.\
+                filter_by(transcript_accession=acc).all()
+        for transcript in transcripts:
+            reference = Reference.query.\
+                filter_by(id=transcript.reference_id).first()
+            transcript_output = TranscriptInChromosome()
+            transcript_output.transcript = transcript.transcript_accession\
+                                           + '.' + transcript.transcript_version
+            transcript_output.chromosome = reference.accession\
+                                           + '.' + reference.version
+            result.append(transcript_output)
+
+        sessiongb.remove()
+
+        O.addMessage(__file__, -1, "INFO",
+                     "Finished processing mapTranscriptToChromosomes(%s)" % transcript)
+        return result
+    # mapTranscriptToChromosomes
 
 
 # Close database session at end of each call.

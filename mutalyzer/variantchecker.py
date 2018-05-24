@@ -33,7 +33,8 @@ from mutalyzer.mutator import Mutator
 from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
-
+from mutalyzer.nc_db import get_nc_record
+from datetime import datetime
 
 # Exceptions used (privately) in this module.
 class _VariantError(Exception): pass
@@ -1746,7 +1747,20 @@ def check_variant(description, output):
                     'Indexing by protein isoform is not supported.')
         retriever = Retriever.GenBankRetriever(output)
 
-    retrieved_record = retriever.loadrecord(record_id)
+    # We first check if NC retrieval works, just for speed considerations.
+    # It would have taken much more time to leave the previous flow, i.e.,
+    # try to get it from the cache, then go to NCBI, and find out that the
+    # reference file size is > 10MB.
+    if filetype == 'GB' and 'NC' in record_id:
+        retrieved_record = get_nc_record(record_id, parsed_description, output)
+    else:
+        retrieved_record = None
+
+    if retrieved_record is None:
+        retrieved_record = retriever.loadrecord(record_id)
+    else:
+        # To remove the download link text from the name checker page.
+        filetype = 'GB_NC'
 
     if not retrieved_record:
         return
@@ -1821,8 +1835,10 @@ def check_variant(description, output):
                                       transcript.proteinProduct,
                                       transcript.linkMethod])
 
-    output.addOutput('original', unicode(mutator.orig))
-    output.addOutput('mutated', unicode(mutator.mutated))
+    if not output.getOutput('add_original_sequence_to_output'):
+        output.addOutput('original', unicode(mutator.orig))
+    if not output.getOutput('add_mutated_sequence_to_output'):
+        output.addOutput('mutated', unicode(mutator.mutated))
 
     # Chromosomal region (only for GenBank human transcript references).
     # This is still quite ugly code, and should be cleaned up once we have
@@ -2029,4 +2045,5 @@ def check_variant(description, output):
                               full_protein_description))
 
     _add_batch_output(output)
+
 #check_variant

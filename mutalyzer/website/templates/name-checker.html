@@ -139,21 +139,58 @@
         {% endif %}
 
         {% if descriptions %}
-          <h4>Affected transcripts</h4>
-          {% for i in descriptions %}
-            {% if i.endswith('?') %}
-              <p><code>{{ i }}</code></p>
-            {% else %}
-              <p><code><a href="{{ url_for('.name_checker', description=i, standalone=standalone|int or None) }}">{{ i }}</a></code></p>
-            {% endif %}
-          {% endfor %}
+          {% if descriptions|length > 5 %}
+            <h4>Affected transcripts -
+              <a data-toggle="collapse" href="#collapseTranscripts" aria-expanded="true" aria-controls="collapseTranscripts">
+            {{ descriptions|length }}
+            </a>
+          </h4>
+          <div class="collapse" id="collapseTranscripts">
+            <div class="well">
+              {% for i in descriptions %}
+                {% if i.endswith('?') %}
+                  <p><code>{{ i }}</code></p>
+                {% else %}
+                  <p><code><a href="{{ url_for('.name_checker', description=i, standalone=standalone|int or None) }}">{{ i }}</a></code></p>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          {% else %}
+            <h4>Affected transcripts - {{ descriptions|length }} </h4>
+            <div class="well">
+              {% for i in descriptions %}
+                {% if i.endswith('?') %}
+                  <p><code>{{ i }}</code></p>
+                {% else %}
+                  <p><code><a href="{{ url_for('.name_checker', description=i, standalone=standalone|int or None) }}">{{ i }}</a></code></p>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
         {% endif %}
-
         {% if protDescriptions %}
-          <h4>Affected proteins</h4>
-          {% for i in protDescriptions %}
-            <p><code>{{ i }}</code></p>
-          {% endfor %}
+          {% if protDescriptions|length > 5 %}
+          <h4>Affected proteins -
+            <a data-toggle="collapse" href="#collapseProteins" aria-expanded="false" aria-controls="collapseProteins">
+            {{ protDescriptions|length }}
+            </a>
+          </h4>
+          <div class="collapse" id="collapseProteins">
+            <div class="well">
+            {% for i in protDescriptions %}
+              <p><code>{{ i }}</code></p>
+            {% endfor %}
+            </div>
+          </div>
+          {% else %}
+            <h4>Affected proteins - {{ protDescriptions|length }} </h4>
+            <div class="well">
+            {% for i in protDescriptions %}
+              <p><code>{{ i }}</code></p>
+            {% endfor %}
+            </div>
+          {% endif %}
         {% endif %}
 
         {% if transcriptInfo %}
@@ -292,23 +329,30 @@
       <div class="col-md-12">
         <hr />
         {% if legends %}
-          <h4>Legend</h4>
-          <table class="table table3">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>ID</th>
-                <th>Locus tag</th>
-                <th>Product</th>
-                <th>Link method</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for i in legends %}
-                <tr>
-                  {% for j in i %}
-                    <td>{{ j if j else '' }}</td>
-                  {% endfor %}
+          <h4>
+            <a data-toggle="collapse" href="#collapseLegend" aria-expanded="false" aria-controls="collapseLegend">
+              Legend
+            </a>
+          </h4>
+          <div class="collapse" id="collapseLegend">
+            <div class="well">
+              <table class="table table3">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Locus tag</th>
+                    <th>Product</th>
+                    <th>Link method</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for i in legends %}
+                    <tr>
+                      {% for j in i %}
+                        <td>{{ j if j else '' }}</td>
+                      {% endfor %}
+                    </tr>
                 </tr>
               {% endfor %}
             </tbody>
