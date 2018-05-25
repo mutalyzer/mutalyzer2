@@ -8,6 +8,21 @@ Version 2.0.27
 
 Release date to be decided.
 
+- Accept variant descriptions with NC files as references. (`#445
+  <https://github.com/mutalyzer/mutalyzer/pull/445>`_).
+- Removed support for pending LRG reference files. (`#444
+  <https://github.com/mutalyzer/mutalyzer/pull/444>`_).
+- Add link to wiki page with differences between Mutalyzer and HGVS. (`#443
+  <https://github.com/mutalyzer/mutalyzer/pull/443>`_).
+- Fix for batch processor crash due to NCBI server timeout. (`#442
+  <https://github.com/mutalyzer/mutalyzer/pull/442>`_).
+- Update genbank retriever parameters according to NCBI recommendations. (`#439
+  <https://github.com/mutalyzer/mutalyzer/pull/439>`_).
+- Update getGeneLocation` to use standard strategy to select mapping. (`#437
+  <https://github.com/mutalyzer/mutalyzer/pull/437>`_).
+- Add link to website changelog. (`#434
+  <https://github.com/mutalyzer/mutalyzer/pull/434>`_).
+
 
 Version 2.0.26
 ---------------
