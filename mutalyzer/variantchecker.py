@@ -1551,10 +1551,20 @@ def process_variant(mutator, description, record, output):
                     # Todo: Incorrect error message, it might also be that
                     # there are no transcripts at all (e.g. N4BP2L1 on
                     # NG_012772.1).
-                    output.addMessage(__file__, 4, "ENOTRANSCRIPT",
-                        "Multiple transcripts found for gene %s. Please " \
-                        "choose from: %s" % (gene.name,
-                            ", ".join(gene.listLoci())))
+                    transcripts_no = len(gene.listLoci())
+                    if transcripts_no == 1:
+                        message = "Transcript t%s not found. The reference " \
+                                  "sequence contains only transcript t%s." \
+                                  %(transcript_id, gene.listLoci()[0])
+                    elif transcripts_no > 1:
+                        message = "Transcript t%s not found. The reference " \
+                                  "sequence contains for gene %s the " \
+                                  "following %s transcripts: %s."\
+                                  %(transcript_id, gene.name,
+                                    len(gene.listLoci()),
+                                    ", ".join(("t%s" %c)
+                                              for c in gene.listLoci()))
+                    output.addMessage(__file__, 4, "ENOTRANSCRIPT", message)
             else:
                 # No transcript id given.
                 if len(gene.transcriptList) == 1:
