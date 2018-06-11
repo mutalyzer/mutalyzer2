@@ -3,6 +3,11 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
+Version 2.0.29
+---------------
+
+Release date to be decided.
+
 
 Version 2.0.28
 ---------------
