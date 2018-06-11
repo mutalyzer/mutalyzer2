@@ -7,10 +7,11 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.28
 ---------------
 
-Release date to be decided.
+Released on June 11th 2018.
 
 - Support for LRG XML schema version 1.9 (`#449
   <https://github.com/mutalyzer/mutalyzer/pull/449>`_).
+
 
 Version 2.0.27
 ---------------
