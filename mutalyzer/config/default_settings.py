@@ -65,8 +65,7 @@ OUTPUT_LEVEL = 1
 LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Prefix URL from where LRG files are fetched.
-#LRG_PREFIX_URL = 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/'
-LRG_PREFIX_URL = 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/SCHEMA_1_7_ARCHIVE/'
+LRG_PREFIX_URL = 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/'
 
 # Allow for this fraction of errors in batch jobs.
 BATCH_JOBS_ERROR_THRESHOLD = 0.05

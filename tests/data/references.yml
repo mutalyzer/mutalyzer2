@@ -147,8 +147,14 @@ L41870.1:
   checksum: 91b1e539a053f731f95d230a06710897
   filename: L41870.1.gb.bz2
 LRG_1:
-  checksum: 5b8f5a39fcd9e3005688eddffd482746
+  checksum: 8dc3c2fcc80b3216319d8b218e5093ab
   filename: LRG_1.xml.bz2
+LRG_24:
+  checksum: 551d043bd217004059525999a134ef3b
+  filename: LRG_24.xml.bz2
+LRG_163:
+  checksum: fd4a3161a23ba1ed23c112195f14617d
+  filename: LRG_163.xml.bz2
 MARK1:
   accession: UD_139015213982
   checksum: 0d63a8fe5beddeb793940f6ae194b985
