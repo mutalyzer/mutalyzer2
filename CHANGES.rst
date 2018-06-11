@@ -3,11 +3,19 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
+Version 2.0.29
+---------------
+
+Release date to be decided.
+
 
 Version 2.0.28
 ---------------
 
-Release date to be decided.
+Released on June 11th 2018.
+
+- Support for LRG XML schema version 1.9 (`#449
+  <https://github.com/mutalyzer/mutalyzer/pull/449>`_).
 
 
 Version 2.0.27
@@ -15,19 +23,19 @@ Version 2.0.27
 
 Released on May 25th 2018.
 
-- Accept variant descriptions with NC files as references. (`#445
+- Accept variant descriptions with NC files as references (`#445
   <https://github.com/mutalyzer/mutalyzer/pull/445>`_).
-- Removed support for pending LRG reference files. (`#444
+- Removed support for pending LRG reference files (`#444
   <https://github.com/mutalyzer/mutalyzer/pull/444>`_).
-- Add link to wiki page with differences between Mutalyzer and HGVS. (`#443
+- Add link to wiki page with differences between Mutalyzer and HGVS (`#443
   <https://github.com/mutalyzer/mutalyzer/pull/443>`_).
-- Fix for batch processor crash due to NCBI server timeout. (`#442
+- Fix for batch processor crash due to NCBI server timeout (`#442
   <https://github.com/mutalyzer/mutalyzer/pull/442>`_).
-- Update genbank retriever parameters according to NCBI recommendations. (`#439
+- Update genbank retriever parameters according to NCBI recommendations (`#439
   <https://github.com/mutalyzer/mutalyzer/pull/439>`_).
-- Update getGeneLocation` to use standard strategy to select mapping. (`#437
+- Update getGeneLocation` to use standard strategy to select mapping (`#437
   <https://github.com/mutalyzer/mutalyzer/pull/437>`_).
-- Add link to website changelog. (`#434
+- Add link to website changelog (`#434
   <https://github.com/mutalyzer/mutalyzer/pull/434>`_).
 
 
@@ -38,8 +46,8 @@ Released on July 19th 2017.
 
 - Description-extractor dependency updated to version 2.35 (`#429
   <https://github.com/mutalyzer/mutalyzer/pull/429>`_).
-- Fix for negative cCDSStop due to wrong transcript to protein link. (`#430
-  <https://github.com/mutalyzer/mutalyzer/issues/430>`_)
+- Fix for negative cCDSStop due to wrong transcript to protein link (`#430
+  <https://github.com/mutalyzer/mutalyzer/issues/430>`_).
 
 
 Version 2.0.25
@@ -48,7 +56,7 @@ Version 2.0.25
 Released on May 17th 2017.
 
 - Fix for batch processor crash when trying to alter an "item" column of the
-  "batch_queue_items" database table. (`#426
+  "batch_queue_items" database table (`#426
   <https://github.com/mutalyzer/mutalyzer/pull/426>`_).
 
 Version 2.0.24
@@ -57,7 +65,7 @@ Version 2.0.24
 Released on April 12th 2017.
 
 - Fix for SNP converter crash when called with 'rs0' as parameter.
-  SNP converter displays now more warning messages. (`#419
+  SNP converter displays now more warning messages (`#419
   <https://github.com/mutalyzer/mutalyzer/issues/419>`_).
 
 
