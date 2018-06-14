@@ -2234,3 +2234,191 @@ def test_accno_as_transcript_variant(output, checker):
 
     e_invalidtransvar = output.getMessagesWithErrorCode('EINVALIDTRANSVAR')
     assert len(e_invalidtransvar) == 1
+
+
+@with_references('NG_012337.1')
+def test_ivs_c_positioning_scheme(output, checker):
+    """
+    IVS operation with c positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):c.IVS1-2del')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.3618del'
+
+
+@with_references('NG_012337.1')
+def test_ivs_n_positioning_scheme(output, checker):
+    """
+    IVS operation with n positioning scheme.
+    """
+    checker('NG_012337.1(NM_003002.2):n.IVS1-2del')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.6009del'
+
+
+@with_references('NG_012337.1')
+def test_ivs_no_positioning_scheme(output, checker):
+    """
+    IVS operation with no positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):IVS1-2del')
+    e_notranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    e_nopositioningscheme = output.getMessagesWithErrorCode('WEST')
+    assert len(e_notranscript) == 1
+    assert len(e_nopositioningscheme) == 1
+
+
+@with_references('NG_012337.1')
+def test_ivs_g_positioning_scheme(output, checker):
+    """
+    IVS operation with g. positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):g.IVS1-2del')
+    e_notranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    assert len(e_notranscript) == 1
+
+
+@with_references('NG_012337.1')
+def test_ivs_multiple_operations(output, checker):
+    """
+    Multiple operations (HGVS allele) including IVS.
+    """
+    checker('NG_012337.1(NM_012459.2):c.[100del;IVS1-7del]')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.[4823del;3624del]'
+
+
+@with_references('NM_000143.3')
+def test_ivs_no_genomic_reference(output, checker):
+    """
+    Reference that is not genomic with IVS operation.
+    """
+    checker('NM_000143.3:c.IVS1-7del')
+    e_nointron = output.getMessagesWithErrorCode('ENOINTRON')
+    assert len(e_nointron) == 1
+
+
+@with_references('NG_012337.1')
+def test_ivs_c_positioning_scheme(output, checker):
+    """
+    IVS operation with c positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):c.IVS1-2del')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.3618del'
+
+
+@with_references('NG_012337.1')
+def test_ivs_n_positioning_scheme(output, checker):
+    """
+    IVS operation with n positioning scheme.
+    """
+    checker('NG_012337.1(NM_003002.2):n.IVS1-2del')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.6009del'
+
+
+@with_references('NG_012337.1')
+def test_ivs_no_positioning_scheme(output, checker):
+    """
+    IVS operation with no positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):IVS1-2del')
+    e_notranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    e_nopositioningscheme = output.getMessagesWithErrorCode('WEST')
+    assert len(e_notranscript) == 1
+    assert len(e_nopositioningscheme) == 1
+
+
+@with_references('NG_012337.1')
+def test_ivs_g_positioning_scheme(output, checker):
+    """
+    IVS operation with g. positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):g.IVS1-2del')
+    e_notranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    assert len(e_notranscript) == 1
+
+
+@with_references('NG_012337.1')
+def test_ivs_multiple_operations(output, checker):
+    """
+    Multiple operations (HGVS allele) including IVS.
+    """
+    checker('NG_012337.1(NM_012459.2):c.[100del;IVS1-7del]')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.[4823del;3624del]'
+
+
+@with_references('NM_000143.3')
+def test_ivs_no_genomic_reference(output, checker):
+    """
+    Reference that is not genomic with IVS operation.
+    """
+    checker('NM_000143.3:c.IVS1-7del')
+    e_nointron = output.getMessagesWithErrorCode('ENOINTRON')
+    assert len(e_nointron) == 1
+
+
+
+
+
+@with_references('NG_012337.1')
+def test_ex_c_positioning_scheme(output, checker):
+    """
+    EX operation with c positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):c.EX1-2del')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.2954_4952del'
+
+
+@with_references('NG_012337.1')
+def test_ex_n_positioning_scheme(output, checker):
+    """
+    EX operation with n positioning scheme.
+    """
+    checker('NG_012337.1(NM_003002.2):n.EX1-2del')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.5003_6129del'
+
+
+@with_references('NG_012337.1')
+def test_ex_no_positioning_scheme(output, checker):
+    """
+    EX operation with no positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):EX1-2del')
+    e_notranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    e_nopositioningscheme = output.getMessagesWithErrorCode('WEST')
+    assert len(e_notranscript) == 1
+    assert len(e_nopositioningscheme) == 1
+
+
+@with_references('NG_012337.1')
+def test_ex_g_positioning_scheme(output, checker):
+    """
+    EX operation with g. positioning scheme.
+    """
+    checker('NG_012337.1(NM_012459.2):g.EX1-2del')
+    e_notranscript = output.getMessagesWithErrorCode('ENOTRANSCRIPT')
+    assert len(e_notranscript) == 1
+
+
+@with_references('NG_012337.1')
+def test_ex_multiple_operations(output, checker):
+    """
+    Multiple operations (HGVS allele) including EX.
+    """
+    checker('NG_012337.1(NM_012459.2):c.[100del;EX1-2del]')
+    errorcount, warncount, summary = output.Summary()
+    assert errorcount == 0
+    assert output.getOutput('gDescription')[0] == u'g.[4823del;2954_4952del]'
