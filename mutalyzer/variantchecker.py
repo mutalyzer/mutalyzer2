@@ -976,6 +976,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
 
     if variant.EXLoc:
         # EX positioning.
+        if transcript is None:
+            output.addMessage(__file__, 3, 'ENOTRANSCRIPT',
+                              'Error for operation %s. Only c. or n. '
+                              'positioning schemes are allowed for EX '
+                              'locations.' % original_description)
+            raise _RawVariantError()
+
         try:
             first, last = _exonic_to_genomic(variant.EXLoc, transcript)
         except _InvalidExonError as e:
@@ -999,6 +1006,14 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
                 'position given for a non-genomic reference sequence.')
             raise _RawVariantError()
+
+        if transcript is None:
+            output.addMessage(__file__, 3, 'ENOTRANSCRIPT',
+                              'Error for operation %s. Only c. or n. '
+                              'positioning schemes are allowed for IVS '
+                              'locations.' % original_description)
+            raise _RawVariantError()
+
         try:
             first = last = _intronic_to_genomic(variant.StartLoc.IVSLoc,
                                                 transcript)
