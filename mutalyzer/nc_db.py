@@ -217,6 +217,9 @@ def _get_mutalyzer_record(reference, db_transcripts):
             'transcript_stop': transcript.transcript_stop,
             'cds_start': transcript.cds_start,
             'cds_stop': transcript.cds_stop,
+            'transcript_product': transcript.transcript_product,
+            'protein_product': transcript.protein_product,
+            'cds_stop': transcript.cds_stop,
             'exons': [],
             'exons_start': transcript.exons_start,
             'exons_stop': transcript.exons_stop,
@@ -226,10 +229,6 @@ def _get_mutalyzer_record(reference, db_transcripts):
                          transcript.protein_version,
             'linkMethod': 'ncbi'
         }
-        # if transcript.exons_start:
-        #     starts = transcript.exons_start.split(',')
-        # if transcripts.exons_stop:
-        #     stops = transcript.exons_stopts.split(',')
         starts = map(int, transcript.exons_start.split(',')) if transcript.exons_start else None
         stops = map(int, transcript.exons_stop.split(',')) if transcript.exons_stop else None
         if (starts and stops) and (len(starts) == len(stops)):
@@ -237,11 +236,6 @@ def _get_mutalyzer_record(reference, db_transcripts):
                 exon = {'start': start,
                         'stop': stop}
                 my_transcript['exons'].append(exon)
-        # if transcript.exons and isinstance(transcript.exons, list):
-        #     for exon in transcript.exons:
-        #         exon = {'start': exon.start,
-        #                 'stop': exon.stop}
-        #         my_transcript['exons'].append(exon)
         transcripts.append(my_transcript)
 
     # Generating the actual record entries in the Mutalyzer format.
@@ -283,6 +277,8 @@ def _get_mutalyzer_record(reference, db_transcripts):
 
         my_transcript.transcriptID = transcript['transcriptID']
         my_transcript.proteinID = transcript['proteinID']
+        my_transcript.transcriptProduct = transcript['transcript_product']
+        my_transcript.proteinProduct = transcript['protein_product']
         my_transcript.linkMethod = 'ncbi'
         my_transcript.transcribe = True
         my_transcript.translate = True

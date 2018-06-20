@@ -135,6 +135,12 @@ class Transcript(dbgb.Base):
     #: inclusive).
     cds_stop = Column(Integer, nullable=False, index=True)
 
+    #: The mRNA product.
+    transcript_product = Column(String)
+
+    #: The CDS product.
+    protein_product = Column(String)
+
     #: The exon start positions of the transcript on the chromosome
     #: (one-based, inclusive, in chromosomal orientation).
     exons_start = Column(String)
@@ -169,10 +175,11 @@ class Transcript(dbgb.Base):
     def __init__(self, transcript_accession, transcript_version,
                  protein_accession, protein_version, gene, gene_synonym,
                  strand, transcript_start, transcript_stop,
-                 cds_start, cds_stop, exons_start, exons_stop,
+                 cds_start, cds_stop,
+                 transcript_product, protein_product,
+                 exons_start, exons_stop,
                  locus_tag, codon_start,
-                 cds_db_xref_geneid, cds_db_xref_hgnc
-                 ):
+                 cds_db_xref_geneid, cds_db_xref_hgnc):
         self.transcript_accession = transcript_accession
         self.transcript_version = transcript_version
         self.protein_accession = protein_accession
@@ -184,6 +191,8 @@ class Transcript(dbgb.Base):
         self.transcript_stop = transcript_stop
         self.cds_start = cds_start
         self.cds_stop = cds_stop
+        self.transcript_product = transcript_product
+        self.protein_product = protein_product
         self.exons_start = exons_start
         self.exons_stop = exons_stop
         self.locus_tag = locus_tag
