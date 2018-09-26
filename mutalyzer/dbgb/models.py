@@ -172,6 +172,9 @@ class Transcript(dbgb.Base):
     #: name: 'translocase of inner mitochondrial membrane 8 homolog B'.
     cds_db_xref_hgnc = Column(String(20))
 
+    #: mRNA, misc_RNA, etc.
+    feature_type = Column(String(20))
+
     def __init__(self, transcript_accession, transcript_version,
                  protein_accession, protein_version, gene, gene_synonym,
                  strand, transcript_start, transcript_stop,
@@ -179,7 +182,8 @@ class Transcript(dbgb.Base):
                  transcript_product, protein_product,
                  exons_start, exons_stop,
                  locus_tag, codon_start,
-                 cds_db_xref_geneid, cds_db_xref_hgnc):
+                 cds_db_xref_geneid, cds_db_xref_hgnc,
+                 feature_type):
         self.transcript_accession = transcript_accession
         self.transcript_version = transcript_version
         self.protein_accession = protein_accession
@@ -199,6 +203,7 @@ class Transcript(dbgb.Base):
         self.codon_start = codon_start
         self.cds_db_xref_geneid = cds_db_xref_geneid
         self.cds_db_xref_hgnc = cds_db_xref_hgnc
+        self.feature_type = feature_type
 
     def __repr__(self):
         return ('<Transcript %s.%s gene=%s '

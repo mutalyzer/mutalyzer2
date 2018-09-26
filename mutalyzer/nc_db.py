@@ -24,7 +24,9 @@ def get_entire_nc_record(record_id, geneName=None):
         return None
 
     if geneName is not None:
-        db_transcripts = Transcript.query.filter_by(reference_id=reference.id).filter_by(gene=geneName).all()
+        db_transcripts = Transcript.query.\
+            filter_by(reference_id=reference.id).\
+            filter_by(gene=geneName).all()
     else:
         db_transcripts = _get_transcripts(reference, 1, reference.length)
 
@@ -87,7 +89,8 @@ def get_nc_record(record_id, parsed_description, output):
                                            'accession in our database. You '
                                            'can choose instead from versions: '
                                            '%s.'
-                                           % (version, accession, ", ".join(versions)))
+                                           % (version, accession,
+                                              ", ".join(versions)))
         return None
 
     if parsed_description.RefType == 'g':
@@ -121,7 +124,8 @@ def get_nc_record(record_id, parsed_description, output):
                                               ' - multiple entries.')
                 return None
             else:
-                p_s, p_e = transcript.transcript_start, transcript.transcript_stop
+                p_s = transcript.transcript_start
+                p_e = transcript.transcript_stop
         else:
             # Example: 'NC_000001.11:62825del'
             return _record_with_genes_only(reference)
@@ -152,11 +156,13 @@ def cds_position_list(mrna_position_list, cds_location):
     i = 1
     ret = [cds_location[0]]
 
-    while i <= len(mrna_position_list) - 1 and cds_location[0] > mrna_position_list[i]:
+    while i <= len(mrna_position_list) - 1 \
+            and cds_location[0] > mrna_position_list[i]:
         i += 2
 
     j = i
-    while j <= len(mrna_position_list) and cds_location[1] > mrna_position_list[j]:
+    while j <= len(mrna_position_list) \
+            and cds_location[1] > mrna_position_list[j]:
         j += 2
 
     ret.extend(mrna_position_list[i:j])
@@ -209,80 +215,97 @@ def _get_mutalyzer_record(reference, db_transcripts):
 
     # Extracting the transcripts from the DB entries.
     transcripts = []
-    for transcript in db_transcripts:
-        my_transcript = {
-            'gene': transcript.gene,
-            'strand': transcript.strand,
-            'transcript_start': transcript.transcript_start,
-            'transcript_stop': transcript.transcript_stop,
-            'cds_start': transcript.cds_start,
-            'cds_stop': transcript.cds_stop,
-            'transcript_product': transcript.transcript_product,
-            'protein_product': transcript.protein_product,
-            'cds_stop': transcript.cds_stop,
+    for db_transcript in db_transcripts:
+        transcript = {
+            'gene': db_transcript.gene,
+            'strand': db_transcript.strand,
+            'transcript_start': db_transcript.transcript_start,
+            'transcript_stop': db_transcript.transcript_stop,
+            'transcript_product': db_transcript.transcript_product,
             'exons': [],
-            'exons_start': transcript.exons_start,
-            'exons_stop': transcript.exons_stop,
-            'transcriptID': transcript.transcript_accession + '.' +
-                            transcript.transcript_version,
-            'proteinID': transcript.protein_accession + '.' +
-                         transcript.protein_version,
-            'linkMethod': 'ncbi'
+            'exons_start': db_transcript.exons_start,
+            'exons_stop': db_transcript.exons_stop,
+            'transcriptID': db_transcript.transcript_accession + '.' +
+                            db_transcript.transcript_version,
         }
-        starts = map(int, transcript.exons_start.split(',')) if transcript.exons_start else None
-        stops = map(int, transcript.exons_stop.split(',')) if transcript.exons_stop else None
+        if db_transcript.protein_accession is not None \
+                and db_transcript.protein_version is not None:
+            transcript['cds_start'] = db_transcript.cds_start
+            transcript['cds_stop'] = db_transcript.cds_stop
+            transcript['protein_product'] = db_transcript.protein_product
+            transcript['proteinID'] = '%s.%s' %\
+                                            (db_transcript.protein_accession,
+                                             db_transcript.protein_version)
+            transcript['linkMethod'] = 'ncbi'
+        starts = map(int, db_transcript.exons_start.split(',')) \
+            if db_transcript.exons_start else None
+        stops = map(int, db_transcript.exons_stop.split(',')) \
+            if db_transcript.exons_stop else None
         if (starts and stops) and (len(starts) == len(stops)):
             for start, stop in zip(starts, stops):
                 exon = {'start': start,
                         'stop': stop}
-                my_transcript['exons'].append(exon)
-        transcripts.append(my_transcript)
+                transcript['exons'].append(exon)
+        transcripts.append(transcript)
 
     # Generating the actual record entries in the Mutalyzer format.
     gene_dict = {}
-    for transcript in transcripts:
-        if transcript['gene'] in gene_dict:
-            gene = gene_dict[transcript['gene']]
+    for db_transcript in transcripts:
+        if db_transcript['gene'] in gene_dict:
+            gene = gene_dict[db_transcript['gene']]
         else:
-            gene = Gene(transcript['gene'])
+            gene = Gene(db_transcript['gene'])
 
-        if transcript['strand'] == '+':
+        if db_transcript['strand'] == '+':
             gene.orientation = 1
-        if transcript['strand'] == '-':
+        if db_transcript['strand'] == '-':
             gene.orientation = -1
 
-        my_transcript = Locus(gene.newLocusTag())
+        transcript = Locus(gene.newLocusTag())
 
-        my_transcript.mRNA = PList()
-        my_transcript.mRNA.location = [transcript['transcript_start'],
-                                       transcript['transcript_stop']]
+        transcript.mRNA = PList()
+        transcript.mRNA.location = [db_transcript['transcript_start'],
+                                       db_transcript['transcript_stop']]
 
-        my_transcript.CDS = PList()
-        my_transcript.CDS.location = [transcript['cds_start'],
-                                      transcript['cds_stop']]
-        my_transcript.exon = PList()
-        if transcript.get('exons') and isinstance(transcript.get('exons'), list):
+        transcript.transcriptID = db_transcript['transcriptID']
+        transcript.exon = PList()
+        if db_transcript.get('exons') \
+                and isinstance(db_transcript.get('exons'), list):
             exon_list = []
-            for exon in transcript['exons']:
+            for exon in db_transcript['exons']:
                 exon_list.extend([exon['start'], exon['stop']])
-            my_transcript.exon.positionList = exon_list
+            transcript.exon.positionList = exon_list
         else:
-            my_transcript.exon.positionList = my_transcript.mRNA.location
+            transcript.exon.positionList = transcript.mRNA.location
 
-        my_transcript.mRNA.positionList = my_transcript.exon.positionList
-        my_transcript.mRNA.positionList.sort()
+        transcript.mRNA.positionList = transcript.exon.positionList
+        transcript.mRNA.positionList.sort()
 
-        my_transcript.CDS.positionList = cds_position_list(my_transcript.mRNA.positionList,
-                                                           my_transcript.CDS.location)
+        if db_transcript.get('proteinID'):
+            transcript.CDS = PList()
+            transcript.CDS.location = [db_transcript['cds_start'],
+                                          db_transcript['cds_stop']]
 
-        my_transcript.transcriptID = transcript['transcriptID']
-        my_transcript.proteinID = transcript['proteinID']
-        my_transcript.transcriptProduct = transcript['transcript_product']
-        my_transcript.proteinProduct = transcript['protein_product']
-        my_transcript.linkMethod = 'ncbi'
-        my_transcript.transcribe = True
-        my_transcript.translate = True
-        gene.transcriptList.append(my_transcript)
+            transcript.CDS.positionList = cds_position_list(
+                transcript.mRNA.positionList,
+                transcript.CDS.location)
+
+            transcript.proteinID = db_transcript['proteinID']
+
+            transcript.transcriptProduct = db_transcript['transcript_product']
+            transcript.proteinProduct = db_transcript['protein_product']
+            transcript.linkMethod = 'ncbi'
+            transcript.transcribe = True
+            transcript.translate = True
+        else:
+            transcript.linkMethod = None
+            transcript.transcribe = True
+            transcript.translate = False
+            transcript.locusTag = ''
+
+        # transcript.molType = db_transcript['molType']
+
+        gene.transcriptList.append(transcript)
         gene_dict[gene.name] = gene
 
     record.geneList = list(gene_dict.values())

@@ -676,7 +676,6 @@ class GBparser():
         # Discard genes for which we haven't constructed any transcripts.
         record.geneList = [gene for gene in record.geneList
                            if gene.transcriptList]
-
         return record
     #create_record
 #GBparser
