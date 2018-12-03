@@ -24,7 +24,7 @@ redis==2.10.5
 requests==2.20.1
 simplejson==3.8.2
 sphinx-rtd-theme==0.1.9
-spyne==2.12.11
+spyne==2.12.14
 suds==0.4
 wsgiref==0.1.2
 xlrd==0.9.4
