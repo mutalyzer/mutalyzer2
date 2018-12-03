@@ -1359,9 +1359,11 @@ class MutalyzerService(ServiceBase):
             "Received request getTranscriptsAndInfo(%s, %s)" % (
             genomicReference, geneName))
 
-        # We try first to
+        nc = False
+        # We try first to find it in the NC database.
         if 'NC' in genomicReference:
             record = get_entire_nc_record(genomicReference, geneName=geneName)
+            nc = True
         else:
             record = None
 
@@ -1413,6 +1415,10 @@ class MutalyzerService(ServiceBase):
                     exon.cStop = transcript.CM.g2c(exon.gStop)
                     exon.chromStop = GenRecordInstance.record.toChromPos(
                         exon.gStop)
+                    # To make it behave similarly for UDs and NCs.
+                    if nc:
+                        exon.chromStart = exon.gStart
+                        exon.chromStop = exon.gStop
                     t.exons.append(exon)
 
                 # Beware that CM.info() gives a made-up value for trans_end,
@@ -1453,6 +1459,13 @@ class MutalyzerService(ServiceBase):
                 t.linkMethod = transcript.linkMethod
 
                 t.proteinTranscript = None
+
+                # To make it behave similarly for UDs and NCs.
+                if nc:
+                    t.chromTransEnd = t.gTransEnd
+                    t.chromTransStart = t.gTransStart
+                    t.chromCDSStart = t.gCDSStart
+                    t.chromCDSStop = t.gCDSStop
 
                 if transcript.translate:
                     p = ProteinTranscript()

@@ -135,6 +135,12 @@ class Transcript(dbgb.Base):
     #: inclusive).
     cds_stop = Column(Integer, nullable=False, index=True)
 
+    #: The mRNA product.
+    transcript_product = Column(String)
+
+    #: The CDS product.
+    protein_product = Column(String)
+
     #: The exon start positions of the transcript on the chromosome
     #: (one-based, inclusive, in chromosomal orientation).
     exons_start = Column(String)
@@ -166,13 +172,18 @@ class Transcript(dbgb.Base):
     #: name: 'translocase of inner mitochondrial membrane 8 homolog B'.
     cds_db_xref_hgnc = Column(String(20))
 
+    #: mRNA, misc_RNA, etc.
+    feature_type = Column(String(20))
+
     def __init__(self, transcript_accession, transcript_version,
                  protein_accession, protein_version, gene, gene_synonym,
                  strand, transcript_start, transcript_stop,
-                 cds_start, cds_stop, exons_start, exons_stop,
+                 cds_start, cds_stop,
+                 transcript_product, protein_product,
+                 exons_start, exons_stop,
                  locus_tag, codon_start,
-                 cds_db_xref_geneid, cds_db_xref_hgnc
-                 ):
+                 cds_db_xref_geneid, cds_db_xref_hgnc,
+                 feature_type):
         self.transcript_accession = transcript_accession
         self.transcript_version = transcript_version
         self.protein_accession = protein_accession
@@ -184,12 +195,15 @@ class Transcript(dbgb.Base):
         self.transcript_stop = transcript_stop
         self.cds_start = cds_start
         self.cds_stop = cds_stop
+        self.transcript_product = transcript_product
+        self.protein_product = protein_product
         self.exons_start = exons_start
         self.exons_stop = exons_stop
         self.locus_tag = locus_tag
         self.codon_start = codon_start
         self.cds_db_xref_geneid = cds_db_xref_geneid
         self.cds_db_xref_hgnc = cds_db_xref_hgnc
+        self.feature_type = feature_type
 
     def __repr__(self):
         return ('<Transcript %s.%s gene=%s '

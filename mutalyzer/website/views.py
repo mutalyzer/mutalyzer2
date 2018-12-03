@@ -291,7 +291,6 @@ def name_checker():
 
     else:
         extracted = ''
-    print("%s: End description extractor." % datetime.now())
 
     # Todo: Generate the fancy HTML views for the proteins here instead of in
     #   `mutalyzer.variantchecker`.
