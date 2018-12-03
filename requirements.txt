@@ -6,10 +6,10 @@ PyYAML==3.13
 SQLAlchemy==1.2.14
 Sphinx==1.3.6
 Werkzeug==0.11.4
-alembic==0.8.4
+alembic==1.0.5
 backtranslate==0.0.5
 biopython==1.72
-chardet==2.3.0
+chardet==3.0.4
 cssselect==0.9.1
 -e git+https://github.com/mutalyzer/crossmapper.git#egg=crossmapper
 description-extractor==2.3.5
