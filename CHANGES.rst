@@ -3,10 +3,27 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
-Version 2.0.29
+Version 2.0.30
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.29
+---------------
+
+Released on December 4th 2018.
+
+- Improve user feedback for incorrect specific locus (`#459
+  <https://github.com/mutalyzer/mutalyzer/pull/459>`_).
+- Improve some position converter warning (`#458
+  <https://github.com/mutalyzer/mutalyzer/pull/458>`_).
+- Update requirements (`#457
+  <https://github.com/mutalyzer/mutalyzer/pull/457>`_).
+- Make API more consistent between UDs and NCs (`#456
+  <https://github.com/mutalyzer/mutalyzer/pull/456>`_).
+- Fix internal server error on IVS variant (`#452
+  <https://github.com/mutalyzer/mutalyzer/pull/452>`_).
 
 
 Version 2.0.28
