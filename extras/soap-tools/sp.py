@@ -3,7 +3,7 @@
 # Example SOAP client for the Mutalyzer web service in Python using the
 # SOAPpy library.
 #
-# See http://www.mutalyzer.nl/2.0/webservices
+# See https://mutalyzer.nl/webservices
 #
 # Usage:
 #   python sp.py

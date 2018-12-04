@@ -1605,12 +1605,25 @@ def process_variant(mutator, description, record, output):
                     # Todo: message?
                     gene = record.record.geneList[0]
                 else:
-                    output.addMessage(__file__, 4, "EINVALIDGENE",
-                        "No gene specified. Please choose from: %s" % ", ".join(genes))
+                    if len(genes) < 10:
+                        output.addMessage(__file__, 4, "EINVALIDGENE",
+                            "No gene specified. Please choose from: %s" %
+                                          ", ".join(genes))
+                    else:
+                        output.addMessage(__file__, 4, "EINVALIDGENE",
+                            "No gene specified. Specify one of the %s genes "
+                            "that are present the reference." % len(genes))
+
             else:
-                output.addMessage(__file__, 4, "EINVALIDGENE",
-                    "Gene %s not found. Please choose from: %s" % (
-                    gene_symbol, ", ".join(genes)))
+                if len(genes) < 10:
+                    output.addMessage(__file__, 4, "EINVALIDGENE",
+                        "Gene %s not found. Please choose from: %s" % (
+                        gene_symbol, ", ".join(genes)))
+                else:
+                    output.addMessage(__file__, 4, "EINVALIDGENE",
+                        "Gene %s not found. Specify one of the %s genes that "
+                        "are present in the reference. " % (
+                        gene_symbol, len(genes)))
 
             if gene:
                 # Find transcript.
@@ -1799,7 +1812,9 @@ def check_variant(description, output):
             gene_symbol, transcript_id = transcript_info
         else:
             output.addMessage(__file__, 4, 'EINVALIDTRANSVAR',
-                'Invalid name for transcript variant identifier.')
+                '%s is not annotated on %s.' % (
+                                  '.'.join(parsed_description.AccNoTransVar),
+                                  record_id))
 
     # Add recordType to output for output formatting.
     output.addOutput('recordType', filetype)
