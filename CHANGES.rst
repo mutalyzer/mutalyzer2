@@ -6,7 +6,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.29
 ---------------
 
-Release date to be decided.
+Released on December 4th 2018.
 
 - Improve user feedback for incorrect specific locus (`#459
   <https://github.com/mutalyzer/mutalyzer/pull/459>`_).
