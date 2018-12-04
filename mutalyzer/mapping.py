@@ -666,7 +666,8 @@ class Converter(object) :
                                                     name=preco).first()
             if not chromosome:
                 self.__output.addMessage(__file__, 4, "ENOTINDB",
-                    "The accession number %s could not be found in our database (or is not a chromosome)." %
+                    "Accession number %s could not be found in our database "
+                    "or is not suitable for the requested conversion." %
                     preco)
                 return None
 
@@ -700,9 +701,11 @@ class Converter(object) :
                        accession='%s.%s' % (acc, version)).first()
         if not chromosome :
             self.__output.addMessage(__file__, 4, "ENOTINDB",
-                "The Accession number %s could not be found in our database (or is not a chromosome)." %
+                "Accession number %s could not be found in our database or is "
+                "not suitable for the requested conversion." %
                 acc)
             return None
+
         #if
 
         if self.parseTree.SingleAlleleVarSet:
