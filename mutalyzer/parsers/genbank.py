@@ -522,9 +522,9 @@ class GBparser():
                     fakeGene.CDS.location = self.__location2pos(i.location)
                 #if
 
-                if i.qualifiers.has_key("gene") :
-                    geneName = i.qualifiers["gene"][0]
-                    if i.type == "gene" :
+                if i.type == "gene":
+                    if i.qualifiers.has_key("gene") :
+                        geneName = i.qualifiers["gene"][0]
                         if not geneDict.has_key(geneName) :
                             myGene = Gene(geneName)
                             record.geneList.append(myGene)
@@ -534,12 +534,20 @@ class GBparser():
                             geneDict[geneName] = tempGene(geneName)
                         #if
                     #if
-
+                #if
+            #if
+        #for
+        for i in biorecord.features:
+            if i.qualifiers:
+                if i.qualifiers.has_key("gene") :
+                    geneName = i.qualifiers["gene"][0]
                     if i.type in ["mRNA", "misc_RNA", "ncRNA", "rRNA", "tRNA",
-                       "tmRNA"] :
-                        geneDict[geneName].rnaList.append(i)
+                       "tmRNA"]:
+                        if geneName in geneDict:
+                            geneDict[geneName].rnaList.append(i)
                     if i.type == "CDS" :
-                        geneDict[geneName].cdsList.append(i)
+                        if geneName in geneDict:
+                            geneDict[geneName].cdsList.append(i)
                     if i.type == "exon" :
                         exonLocation = self.__location2pos(i.location)
                         if exonLocation :
