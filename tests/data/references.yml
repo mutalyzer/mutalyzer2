@@ -297,3 +297,36 @@ UD_144413132067:
     - NP_001207707.1
   - - NR_109836
     - null
+UD_150167851083:
+  accession: UD_150167851083
+  checksum: a41bdc797119c4bc07b2f0f6e594590b
+  filename: UD_150167851083.gb.bz2
+  links:
+    - - NM_000463.2
+      - NP_000454.1
+    - - NM_019076.4
+      - null
+    - - XR_241241.1
+      - null
+    - - NM_019077.2
+      - null
+    - - NM_205862.1
+      - null
+    - - XR_241240.1
+      - null
+    - - NM_019078.1
+      - null
+    - - NM_007120.2
+      - null
+    - - NM_019093.2
+      - null
+    - - XR_241239.1
+      - null
+    - - NM_019075
+      - null
+    - - NM_021027
+      - null
+    - - NM_001072
+      - null
+    - - XR_241238
+      - null

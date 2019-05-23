@@ -95,7 +95,7 @@ def test_no_version(settings, references, parser):
 
 
 @with_references('UD_144413132067')
-def test_transcript_to_protein_link(settings, references, parser, links):
+def test_transcript_to_protein_link(settings, references, parser):
     """
     Checks if the transcript to protein linking was performed in the right manner.
     Added for `issue #430 <https://github.com/mutalyzer/mutalyzer/issues/430>`_.
@@ -106,8 +106,8 @@ def test_transcript_to_protein_link(settings, references, parser, links):
 
     correct_links = {
         'CDKN1A': {
-            'NM_001220777.1':'NP_001207706.1',
-            'NM_078467.2':'NP_510867.1',
+            'NM_001220777.1': 'NP_001207706.1',
+            'NM_078467.2': 'NP_510867.1',
             'NM_001291549.1': 'NP_001278478.1',
             'NM_000389.4': 'NP_000380.1',
             'NM_001220778.1': 'NP_001207707.1'
@@ -122,8 +122,34 @@ def test_transcript_to_protein_link(settings, references, parser, links):
         current_gene_links = {}
         for transcript in gene.transcriptList:
             transcriptID = transcript.transcriptID
-            proteinID =transcript.proteinID
+            proteinID = transcript.proteinID
             current_gene_links[transcriptID] = proteinID
         real_links[gene.name] = current_gene_links
 
     assert correct_links == real_links
+
+
+@with_references('UD_150167851083')
+def test_mrna_and_cds_addition_to_genes(settings, references, parser):
+    """
+    Checking if the mRNA and CDS features are correctly added to the genes.
+    Added for `issue #468 <https://github.com/mutalyzer/mutalyzer/issues/468>`_.
+    """
+    accession = references[0].accession
+    filename = os.path.join(settings.CACHE_DIR,'%s.gb.bz2' % accession)
+    record = parser.create_record(filename)
+
+    for gene in record.geneList:
+        for transcript in gene.transcriptList:
+            print transcript.transcriptID
+            print transcript.proteinID
+
+    assert [g.name for g in record.geneList] == ['UGT1A3', 'UGT1A1']
+    assert [t.transcriptID for t in record.geneList[0].transcriptList] == \
+           ['XR_241239.1']
+    assert [t.transcriptID for t in record.geneList[1].transcriptList] == \
+           ['NM_000463.2']
+    assert [t.proteinID for t in record.geneList[0].transcriptList] == \
+           [None]
+    assert [t.proteinID for t in record.geneList[1].transcriptList] == \
+           ['NP_000454.1']
