@@ -8,6 +8,12 @@ Version 2.0.30
 
 Release date to be decided.
 
+- Update requirements (`#475
+  <https://github.com/mutalyzer/mutalyzer/pull/475>`_).
+- Update documentation links (`#474
+  <https://github.com/mutalyzer/mutalyzer/pull/474>`_).
+- Fix the genbank parser to perform loci objects creation in two steps (`#468
+  <https://github.com/mutalyzer/mutalyzer/issues/468>`_).
 
 Version 2.0.29
 ---------------
