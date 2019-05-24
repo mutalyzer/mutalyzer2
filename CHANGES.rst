@@ -6,7 +6,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.30
 ---------------
 
-Release date to be decided.
+Released on May 24th 2019.
 
 - Update requirements (`#475
   <https://github.com/mutalyzer/mutalyzer/pull/475>`_).
