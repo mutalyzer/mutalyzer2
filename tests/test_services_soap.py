@@ -445,9 +445,8 @@ def test_getdbsnpdescriptions(api):
         r = api('getdbSNPDescriptions', 'rs9919552')
 
     assert 'NC_000011.9:g.111959625C>T' in r.string
-    assert 'NG_012337.2:g.7055C>T' in r.string
+    assert 'NG_012337.3:g.7055C>T' in r.string
     assert 'NM_003002.3:c.204C>T' in r.string
-    assert 'NP_002993.1:p.Ser68=' in r.string
 
 
 @pytest.mark.usefixtures('hg19_transcript_mappings')

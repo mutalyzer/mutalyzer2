@@ -364,9 +364,8 @@ def test_snp_converter_valid(website):
     assert '0 Errors' in r.data
     assert '0 Warnings' in r.data
     assert 'NC_000011.9:g.111959625C&gt;T' in r.data
-    assert 'NG_012337.2:g.7055C&gt;T' in r.data
+    assert 'NG_012337.3:g.7055C&gt;T' in r.data
     assert 'NM_003002.3:c.204C&gt;T' in r.data
-    assert 'NP_002993.1:p.Ser68=' in r.data
 
 
 def test_snp_converter_invalid(website):

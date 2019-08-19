@@ -394,7 +394,7 @@ def rsid_to_descriptions(rsid, output):
     try:
         # Parse the output.
         doc = minidom.parseString(response_text)
-        rs = doc.getElementsByTagName('Rs')[0]
+        docsum = doc.getElementsByTagName('DOCSUM')[0].childNodes[0].data
     except expat.ExpatError:
         # TODO: Log error.
         raise ServiceError()
@@ -402,7 +402,11 @@ def rsid_to_descriptions(rsid, output):
         # The expected root element is not present, this has also been
         # observed as a response for non-existing rs#.
         output.addMessage(__file__, 2, 'EENTREZ',
-                          'Non existing %s in the DB or no root element.' % rsid)
+                          'Non existing %s in the DB or no root element.'
+                          % rsid)
         return []
 
-    return [hgvs.lastChild.data for hgvs in rs.getElementsByTagName('hgvs')]
+    for part in docsum.split('|'):
+        if part.startswith('HGVS='):
+            return part.split('=')[1].split(',')
+    return []
