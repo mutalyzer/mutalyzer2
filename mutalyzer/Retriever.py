@@ -47,6 +47,8 @@ class Retriever(object):
         if not os.path.isdir(settings.CACHE_DIR):
             os.mkdir(settings.CACHE_DIR)
         Entrez.email = settings.EMAIL
+        if hasattr(settings, 'ENTREZ_API_KEY'):
+            Entrez.api_key = settings.ENTREZ_API_KEY
         self.file_type = None
 
     def _name_to_file(self, name):
