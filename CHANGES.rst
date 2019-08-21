@@ -3,10 +3,27 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
-Version 2.0.31
+Version 2.0.32
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.31
+---------------
+
+Released on August 21st 2019.
+
+- Update requirements (`#486
+  <https://github.com/mutalyzer/mutalyzer/pull/486>`_).
+- Add support for NCBI E-utilities API key (`#485
+  <https://github.com/mutalyzer/mutalyzer/pull/485>`_).
+- Update HGVS descriptions retrieval for SNP converter (`#482
+  <https://github.com/mutalyzer/mutalyzer/issues/482>`_)
+- Make file selection mandatory in the batch job web page  (`#481
+  <https://github.com/mutalyzer/mutalyzer/issues/481>`_).
+- Update Travis configuration (`#483
+  <https://github.com/mutalyzer/mutalyzer/pull/483>`_)
 
 
 Version 2.0.30
