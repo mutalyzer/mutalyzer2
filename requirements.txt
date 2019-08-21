@@ -8,7 +8,7 @@ Sphinx==1.8.5
 Werkzeug==0.15.5
 alembic==1.0.11
 backtranslate==0.0.5
-biopython==1.72
+biopython==1.74
 chardet==3.0.4
 cssselect==0.9.1
 -e git+https://github.com/mutalyzer/crossmapper.git#egg=crossmapper
