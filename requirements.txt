@@ -16,7 +16,7 @@ description-extractor==2.3.5
 interval-binning==1.0.0
 lxml==4.4.1
 mock==3.0.5
-mockredispy==2.9.0.12
+mockredispy==2.9.3
 pyparsing==2.0.5
 pytest==2.9.0
 pytz==2015.7
