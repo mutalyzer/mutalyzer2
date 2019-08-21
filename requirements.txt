@@ -19,7 +19,7 @@ mock==3.0.5
 mockredispy==2.9.3
 pyparsing==2.0.5
 pytest==4.6.5
-pytz==2015.7
+pytz==2019.2
 redis==2.10.5
 requests==2.20.1
 simplejson==3.8.2
