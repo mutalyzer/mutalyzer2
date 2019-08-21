@@ -27,4 +27,4 @@ sphinx-rtd-theme==0.4.3
 spyne==2.12.16
 suds==0.4
 wsgiref==0.1.2
-xlrd==0.9.4
+xlrd==1.2.0
