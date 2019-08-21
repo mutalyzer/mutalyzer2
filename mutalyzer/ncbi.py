@@ -77,6 +77,8 @@ def _get_link_from_ncbi(source_db, target_db, match_link_name,
     # below, so we cannot move to `accession.version` here. This is fine for
     # now, but should be reconsidered at some point.
     Entrez.email = settings.EMAIL
+    if hasattr(settings, 'ENTREZ_API_KEY'):
+        Entrez.api_key = settings.ENTREZ_API_KEY
 
     # If we are currently strictly matching on version, we can try again if
     # no result is found. Otherwise, we just report failure.
@@ -343,6 +345,8 @@ def _get_snp_from_ncbi(rsid):
     :return: response_text(str)
     """
     Entrez.email = settings.EMAIL
+    if hasattr(settings, 'ENTREZ_API_KEY'):
+        Entrez.api_key = settings.ENTREZ_API_KEY
 
     try:
         response = Entrez.efetch(db='snp', id=rsid[2:], retmode='xml')
