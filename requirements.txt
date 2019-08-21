@@ -22,7 +22,7 @@ pytest==4.6.5
 pytz==2019.2
 redis==3.3.8
 requests==2.22.0
-simplejson==3.8.2
+simplejson==3.16.0
 sphinx-rtd-theme==0.1.9
 spyne==2.12.14
 suds==0.4
