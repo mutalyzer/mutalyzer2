@@ -781,7 +781,7 @@ class LRGRetriever(Retriever):
         :returns: the full path to the file; None in case of an error.
         :rtype: unicode
         """
-        url = '{}/{}.xml'.format(settings.LRG_PREFIX_URL, name)
+        url = '{}/{}.xml'.format(settings.LRG_PREFIX_URL.rstrip('/'), name)
         filename = None
 
         try:
@@ -811,7 +811,7 @@ class LRGRetriever(Retriever):
         handle = urllib2.urlopen(url)
         info = handle.info()
 
-        if (info['Content-Type'] == 'application/xml' and
+        if (info['Content-Type'] in ['application/xml', 'text/xml'] and
                 'Content-length' in info):
             # Looks like a valid LRG file.
 
