@@ -18,7 +18,7 @@ lxml==4.4.2
 mock==3.0.5
 mockredispy==2.9.3
 pyparsing==2.0.5
-pytest==4.6.5
+pytest==4.6.7
 pytz==2019.3
 redis==3.3.11
 requests==2.22.0
