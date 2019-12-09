@@ -15,7 +15,7 @@ TESTING = False
 
 # This email address is used in contact information on the website and sent
 # with NCBI Entrez calls.
-EMAIL = 'mutalyzer@humgen.nl'
+EMAIL = 'info@mutalyzer.nl'
 
 # This email address is used as sender in batch job notifications. If `None`,
 # the value of `EMAIL` will be used.

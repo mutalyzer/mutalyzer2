@@ -9,11 +9,13 @@ Documentation
 -------------
 
 User documentation can be found on the `wiki
-<https://humgenprojects.lumc.nl/trac/mutalyzer>`_. From there, you can also
-submit bug reports and feature requests.
+<https://github.com/mutalyzer/mutalyzer/wiki>`_.
 
 Developer documentation is `hosted at Read The Docs
 <http://mutalyzer.readthedocs.org>`_.
+
+Submit your bug reports and feature requests `here
+<https://github.com/mutalyzer/mutalyzer/issues>`_.
 
 If you're interested in running your own Mutalyzer installation, please have a
 look at our `Mutalyzer Ansible role

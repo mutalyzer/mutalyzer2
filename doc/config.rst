@@ -61,7 +61,7 @@ EMAIL
   The email address used in contact information on the website and sent with
   NCBI Entrez calls.
 
-  `Default value:` ``mutalyzer@humgen.nl``
+  `Default value:` ``info@mutalyzer.nl``
 
 BATCH_NOTIFICATION_EMAIL
   The email address used as sender in batch job notifications. If set to
