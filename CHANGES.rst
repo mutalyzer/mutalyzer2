@@ -3,10 +3,25 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
-Version 2.0.32
+Version 2.0.33
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.32
+---------------
+
+Released on December 9th 2019.
+
+- Update email address and wiki link (`#498
+  <https://github.com/mutalyzer/mutalyzer/pull/498>`_).
+- Fix erroneous message for mtDNA m. coordinate system (`#497
+  <https://github.com/mutalyzer/mutalyzer/pull/497>`_).
+- Update requirements (`#496
+  <https://github.com/mutalyzer/mutalyzer/pull/496>`_).
+- Fix invalid LRG record issue (`#495
+  <https://github.com/mutalyzer/mutalyzer/pull/495>`_).
 
 
 Version 2.0.31
