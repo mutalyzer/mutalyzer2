@@ -59,13 +59,6 @@ def get_nc_record(record_id, parsed_description, output):
     if not _configuration_check(output):
         return None
 
-    if parsed_description.RefType in ['p', 'm', 'n']:
-        output.addMessage(
-            __file__, 4, 'ECHROMCOORD', 'Could not retrieve information for '
-                                        'the provided {}. coordinate system.'
-                                        .format(parsed_description.RefType))
-        return None
-
     # Get the accession
     accession, version = get_accession_version(record_id)
 
@@ -93,10 +86,13 @@ def get_nc_record(record_id, parsed_description, output):
                                               ", ".join(versions)))
         return None
 
-    if parsed_description.RefType == 'g':
-        # Example: NC_000001.11:g.111501128del
+    if parsed_description.RefType in ['g', '']:
+        # Examples:
+        # - NC_000001.11:g.111501128del
+        # - NC_000001.11:62825del
         p_s, p_e = _get_description_boundary_positions(parsed_description)
-    elif parsed_description.RefType == 'c':
+    elif parsed_description.RefType in ['c', 'n'] or \
+            parsed_description.Gene or parsed_description.AccNoTransVar:
         if parsed_description.Gene:
             # Example: 'NC_000001.11(OR4F5_v001):c.101del'
             transcripts = Transcript.query.\
@@ -127,12 +123,9 @@ def get_nc_record(record_id, parsed_description, output):
                 p_s = transcript.transcript_start
                 p_e = transcript.transcript_stop
         else:
-            # Example: 'NC_000001.11:62825del'
             return _record_with_genes_only(reference)
-            # db_transcripts = Transcript.query.\
-            #     filter_by(reference_id=reference.id).all()
     else:
-        return None
+        return _record_with_genes_only(reference)
 
     db_transcripts = _get_transcripts(reference, p_s, p_e)
 
