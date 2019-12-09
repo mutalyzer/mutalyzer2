@@ -50,13 +50,13 @@ client scripts are included in the Mutalyzer source tree::
 
     $ cd extras/soap-tools
     $ ./info.py
-    Version: 2.0.5
-    Version parts: 2, 0, 5
-    Release date: 16 Dec 2014
+    Version: 2.0.31
+    Version parts: 2, 0, 31
+    Release date: 21 August 2019
     Nomenclature version: 2.0
     Nomenclature version parts: 2, 0
     Server name: res-muta-app01
-    Contact e-mail: humgen@lumc.nl
+    Contact e-mail: info@mutalyzer.nl
     $
 
 They simply call one of the web service functions and print the result. You

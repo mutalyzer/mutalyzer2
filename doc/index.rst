@@ -8,7 +8,7 @@ installation can be found at `mutalyzer.nl <https://mutalyzer.nl>`_.
    might be interested in :ref:`deploy_ansible`.
 
 This is the developer documentation for Mutalyzer. User documentation can be
-found on the `wiki <https://humgenprojects.lumc.nl/trac/mutalyzer>`_.
+found on the `wiki <https://github.com/mutalyzer/mutalyzer/wiki>`_.
 
 
 Managing Mutalyzer

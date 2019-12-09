@@ -3,7 +3,7 @@
 Mutalyzer batch job automation.
 
 
-Copyright (c) 2015 Leiden University Medical Center <humgen@lumc.nl>
+Copyright (c) 2015 Leiden University Medical Center <info@mutalyzer.nl>
 Copyright (c) 2015 Jeroen F.J. Laros <j.f.j.laros@lumc.nl>
 
 Licensed under the MIT license, see the LICENSE file.

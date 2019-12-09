@@ -27,7 +27,7 @@ __date__ = '21 August 2019'
 
 __version__ = '.'.join(__version_info__)
 __author__ = 'Leiden University Medical Center'
-__contact__ = 'humgen@lumc.nl'
+__contact__ = 'info@mutalyzer.nl'
 __homepage__ = 'https://mutalyzer.nl'
 
 
