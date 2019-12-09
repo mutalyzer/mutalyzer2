@@ -6,7 +6,7 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.32
 ---------------
 
-Release date to be decided.
+Released on December 9th 2019.
 
 - Update email address and wiki link (`#498
   <https://github.com/mutalyzer/mutalyzer/pull/498>`_).
