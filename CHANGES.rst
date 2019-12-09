@@ -8,6 +8,15 @@ Version 2.0.32
 
 Release date to be decided.
 
+- Update email address and wiki link (`#498
+  <https://github.com/mutalyzer/mutalyzer/pull/498>`_).
+- Fix erroneous message for mtDNA m. coordinate system (`#497
+  <https://github.com/mutalyzer/mutalyzer/pull/497>`_).
+- Update requirements (`#496
+  <https://github.com/mutalyzer/mutalyzer/pull/496>`_).
+- Fix invalid LRG record issue (`#495
+  <https://github.com/mutalyzer/mutalyzer/pull/495>`_).
+
 
 Version 2.0.31
 ---------------
