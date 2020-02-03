@@ -548,16 +548,18 @@ def apply_insertion(before, after, s, mutator, record, O):
 
     if reverse_roll + forward_roll >= insertion_length:
         # Todo: Could there also be a IROLLBACK message in this case?
-        O.addMessage(__file__, 2, 'WINSDUP',
-            'Insertion of %s at position %i_%i was given, ' \
-            'however, the HGVS notation prescribes that it should be a ' \
-            'duplication of %s at position %i_%i.' % (
-            s, before, before + 1,
-            unicode(mutator.mutated[new_before + forward_roll:new_stop + forward_roll]),
-            before + forward_roll,
-            before + forward_roll + insertion_length - 1))
+        original_before = before
+        original_after = after
         after += forward_roll - 1
         before = after - insertion_length + 1
+        O.addMessage(__file__, 2, 'WINSDUP',
+                     'Insertion of {} at position {}_{} was given, however, '
+                     'the HGVS notation prescribes that it should be a '
+                     'duplication of {} at position {}_{}.'.format(
+                         s, original_before, original_after,
+                         unicode(mutator.mutated[new_before + forward_roll:
+                                                 new_stop + forward_roll]),
+                         before, after))
         record.name(before, after, 'dup', '', '',
                     (reverse_roll + forward_roll - insertion_length, 0))
         return
