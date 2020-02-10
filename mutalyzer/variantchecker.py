@@ -934,6 +934,20 @@ def process_protein_variant(mutator, variant, record, output):
     #     protein level descriptions.
 
 
+def _get_nm_in_nc_tip(mol_type, transcript_id):
+    if mol_type == 'n':
+        chromosome_ids = get_chromosome_ids(transcript_id)
+        examples = ', '.join(['{}({})'.format(
+            c_id, transcript_id) for c_id in chromosome_ids])
+        if examples:
+            return ' Tip: make use of a genomic reference sequence, ' \
+                   'e.g., {}.'.format(examples)
+        else:
+            return ' Tip: make use of a genomic reference sequence ' \
+                   'like NC_*(NM_*).'
+    return ''
+
+
 def process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
@@ -1006,9 +1020,12 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     elif variant.StartLoc.IVSLoc:
         # IVS positioning.
         if record.record.molType != 'g':
-            output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
-                'position given for a non-genomic reference sequence.')
-            raise _RawVariantError()
+            message = 'Intronic position given for a non-genomic reference ' \
+                      'sequence.'
+            if transcript:
+                message += _get_nm_in_nc_tip(record.record.molType,
+                                             transcript.transcriptID)
+            output.addMessage(__file__, 3, 'ENOINTRON', message)
 
         if transcript is None:
             output.addMessage(__file__, 3, 'ENOTRANSCRIPT',
@@ -1042,8 +1059,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
         if record.record.molType != 'g' and \
                (_is_coding_intronic(variant.StartLoc) or
                 _is_coding_intronic(variant.EndLoc)):
-            output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
-                'position given for a non-genomic reference sequence.')
+            message = 'Intronic position given for a non-genomic reference ' \
+                      'sequence.'
+            if transcript:
+                message += _get_nm_in_nc_tip(record.record.molType,
+                                             transcript.transcriptID)
+            output.addMessage(__file__, 3, 'ENOINTRON', message)
+
             raise _RawVariantError()
 
         first_location = last_location = variant.StartLoc.PtLoc
@@ -1104,32 +1126,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                     transcript.CM.g2x(position)), position)
         return 'g.{}'.format(position)
 
-    def _get_nm_in_nc_tip(mol_type, transcript_id):
-        if mol_type == 'n':
-            chromosome_ids = get_chromosome_ids(transcript_id)
-            examples = ', '.join(['{}({})'.format(
-                c_id, transcript_id) for c_id in chromosome_ids])
-            if examples:
-                return ' Tip: make use of a genomic reference sequence, ' \
-                       'e.g., {}.'.format(examples)
-            else:
-                return ' Tip: make use of a genomic reference sequence ' \
-                       'like NC_*(NM_*).'
-        return ''
-
-    if first < 1:
-        message = 'Position {} is outside of the sequence range {}.{}'.format(
+    if first < 1 or last > len(mutator.orig):
+        message = 'Position {} is outside of the sequence range {}.'.format(
             _get_original_position(first, transcript, original_reftype),
-            '[1, {}]'.format(len(mutator.orig)),
-            _get_nm_in_nc_tip(record.record.molType, transcript.transcriptID))
-        output.addMessage(__file__, 4, 'ERANGE', message)
-        raise _RawVariantError()
-
-    if last > len(mutator.orig):
-        message = 'Position {} is outside of the sequence range {}.{}'.format(
-            _get_original_position(first, transcript, original_reftype),
-            '[1, {}]'.format(len(mutator.orig)),
-            _get_nm_in_nc_tip(record.record.molType, transcript.transcriptID))
+            '[1, {}]'.format(len(mutator.orig)))
+        if transcript:
+            message += _get_nm_in_nc_tip(record.record.molType,
+                                         transcript.transcriptID)
         output.addMessage(__file__, 4, 'ERANGE', message)
         raise _RawVariantError()
 
