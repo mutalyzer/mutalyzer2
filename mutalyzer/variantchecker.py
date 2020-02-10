@@ -33,7 +33,7 @@ from mutalyzer.mutator import Mutator
 from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
-from mutalyzer.nc_db import get_nc_record
+from mutalyzer.nc_db import get_nc_record, get_chromosome_ids
 from datetime import datetime
 
 # Exceptions used (privately) in this module.
@@ -957,6 +957,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     @raise _RawVariantError: Cannot process this raw variant.
     @raise _VariantError: Cannot further process the entire variant.
     """
+    original_reftype = variant.RefType
     variant, original_description = variant.RawVar, variant[-1]
 
     # `argument` may be a number, or a subsequence of the reference.
@@ -1092,14 +1093,44 @@ def process_raw_variant(mutator, variant, record, transcript, output):
                           'the begin position.')
         raise _RawVariantError()
 
+    def _get_original_position(position, transcript, reftype):
+        # Note that this still does not provide the original location.
+        # For 'NG_012337.1(SDHD_v001):c.53-22274del' it provides 'c.-21325'
+        if transcript:
+            if reftype == 'c':
+                return 'c.{} (g.{})'.format(transcript.CM.g2c(position), position)
+            elif reftype == 'n':
+                return 'n.{} (g.{})'.format(transcript.CM.tuple2string(
+                    transcript.CM.g2x(position)), position)
+        return 'g.{}'.format(position)
+
+    def _get_nm_in_nc_tip(mol_type, transcript_id):
+        if mol_type == 'n':
+            chromosome_ids = get_chromosome_ids(transcript_id)
+            examples = ', '.join(['{}({})'.format(
+                c_id, transcript_id) for c_id in chromosome_ids])
+            if examples:
+                return ' Tip: make use of a genomic reference sequence, ' \
+                       'e.g., {}.'.format(examples)
+            else:
+                return ' Tip: make use of a genomic reference sequence ' \
+                       'like NC_*(NM_*).'
+        return ''
+
     if first < 1:
-        output.addMessage(__file__, 4, 'ERANGE', 'Position %i is out of range.' %
-                          first)
+        message = 'Position {} is outside of the sequence range {}.{}'.format(
+            _get_original_position(first, transcript, original_reftype),
+            '[1, {}]'.format(len(mutator.orig)),
+            _get_nm_in_nc_tip(record.record.molType, transcript.transcriptID))
+        output.addMessage(__file__, 4, 'ERANGE', message)
         raise _RawVariantError()
 
     if last > len(mutator.orig):
-        output.addMessage(__file__, 4, 'ERANGE', 'Position %s is out of range.' %
-                          last)
+        message = 'Position {} is outside of the sequence range {}.{}'.format(
+            _get_original_position(first, transcript, original_reftype),
+            '[1, {}]'.format(len(mutator.orig)),
+            _get_nm_in_nc_tip(record.record.molType, transcript.transcriptID))
+        output.addMessage(__file__, 4, 'ERANGE', message)
         raise _RawVariantError()
 
     splice_abort = False
