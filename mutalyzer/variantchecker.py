@@ -479,7 +479,7 @@ def apply_inversion(first, last, mutator, record, O):
 #apply_inversion
 
 
-def apply_insertion(before, after, s, mutator, record, O):
+def apply_insertion(before, after, s, mutator, record, O, original_reftype):
     """
     Do a semantic check for an insertion, do the actual insertion, and give
     it a name.
@@ -546,26 +546,35 @@ def apply_insertion(before, after, s, mutator, record, O):
                 forward_roll = donor - new_stop
                 break
 
+    transcript = record.current_transcript()
+
     if reverse_roll + forward_roll >= insertion_length:
         # Todo: Could there also be a IROLLBACK message in this case?
         original_before = before
         original_after = after
         after += forward_roll - 1
         before = after - insertion_length + 1
+        if before == after:
+            corrected_position = _get_position(before, transcript,
+                                               original_reftype)
+        else:
+            corrected_position = _get_position(before, transcript,
+                                               original_reftype), after
+        position = _get_position(original_before, transcript,
+                                 original_reftype, original_after)
         O.addMessage(__file__, 2, 'WINSDUP',
-                     'Insertion of {} at position {}_{} was given, however, '
+                     'Insertion of {} at position {} was given, however, '
                      'the HGVS notation prescribes that it should be a '
-                     'duplication of {} at position {}_{}.'.format(
-                         s, original_before, original_after,
+                     'duplication of {} at position {}.'.format(
+                         s, position,
                          unicode(mutator.mutated[new_before + forward_roll:
                                                  new_stop + forward_roll]),
-                         before, after))
+                         corrected_position))
         record.name(before, after, 'dup', '', '',
                     (reverse_roll + forward_roll - insertion_length, 0))
         return
 
     # Did we select a transcript on the reverse strand?
-    transcript = record.current_transcript()
     reverse_strand = transcript and transcript.CM.orientation == -1
 
     if forward_roll and not reverse_strand:
@@ -603,7 +612,7 @@ def apply_insertion(before, after, s, mutator, record, O):
 #apply_insertion
 
 
-def apply_delins(first, last, insert, mutator, record, output):
+def apply_delins(first, last, insert, mutator, record, output, original_reftype):
     """
     Do a semantic check for an delins, do the actual delins, and give
     it a name.
@@ -636,7 +645,7 @@ def apply_delins(first, last, insert, mutator, record, output):
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                           'is actually an insertion.')
         apply_insertion(first + lcp - 1, first + lcp, insert_trimmed, mutator,
-                        record, output)
+                        record, output, original_reftype)
         return
 
     if len(delete_trimmed) == 1 and len(insert_trimmed) == 1:
@@ -948,6 +957,24 @@ def _get_nm_in_nc_tip(mol_type, transcript_id):
     return ''
 
 
+def _get_position(p_start, transcript, reftype, p_end=None):
+    # Note that this still does not provide the original location.
+    # For 'NG_012337.1(SDHD_v001):c.53-22274del' it provides 'c.-21325'
+    if transcript:
+        if reftype == 'c':
+            if p_end:
+                return 'c.{}_{} (g.{}_{})'.format(transcript.CM.g2c(p_start),
+                                                  transcript.CM.g2c(p_end),
+                                                  p_start, p_end)
+            else:
+                return 'c.{} (g.{})'.format(transcript.CM.g2c(p_start),
+                                            p_start)
+        elif reftype == 'n':
+            return 'n.{} (g.{})'.format(transcript.CM.tuple2string(
+                transcript.CM.g2x(p_start)), p_start)
+    return 'g.{}'.format(p_start)
+
+
 def process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
@@ -1111,24 +1138,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             raise
 
     if last < first:
-        output.addMessage(__file__, 3, 'ERANGE', 'End position is smaller than ' \
-                          'the begin position.')
+        output.addMessage(__file__, 3, 'ERANGE',
+                          'End position is smaller than the begin position.')
         raise _RawVariantError()
-
-    def _get_original_position(position, transcript, reftype):
-        # Note that this still does not provide the original location.
-        # For 'NG_012337.1(SDHD_v001):c.53-22274del' it provides 'c.-21325'
-        if transcript:
-            if reftype == 'c':
-                return 'c.{} (g.{})'.format(transcript.CM.g2c(position), position)
-            elif reftype == 'n':
-                return 'n.{} (g.{})'.format(transcript.CM.tuple2string(
-                    transcript.CM.g2x(position)), position)
-        return 'g.{}'.format(position)
 
     if first < 1 or last > len(mutator.orig):
         message = 'Position {} is outside of the sequence range {}.'.format(
-            _get_original_position(first, transcript, original_reftype),
+            _get_position(first, transcript, original_reftype),
             '[1, {}]'.format(len(mutator.orig)))
         if transcript:
             message += _get_nm_in_nc_tip(record.record.molType,
@@ -1310,11 +1326,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
 
         # Insertion.
         if variant.MutationType == 'ins':
-            apply_insertion(first, last, insertion, mutator, record, output)
+            apply_insertion(first, last, insertion, mutator, record, output,
+                            original_reftype)
 
         # DelIns.
         if variant.MutationType == 'delins':
-            apply_delins(first, last, insertion, mutator, record, output)
+            apply_delins(first, last, insertion, mutator, record, output,
+                         original_reftype)
 #process_raw_variant
 
 
