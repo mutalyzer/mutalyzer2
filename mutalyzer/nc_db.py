@@ -11,6 +11,22 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from mutalyzer.config import settings
 
 
+def get_chromosome_ids(transcript_id):
+    ids = []
+    accession = transcript_id.split('.')[0]
+    version = transcript_id.split('.')[1]
+
+    references = Transcript.query. \
+        filter_by(transcript_accession=accession). \
+        filter_by(transcript_version=version).all()
+
+    for transcript in references:
+        reference = Reference.query. \
+            filter_by(id=transcript.reference_id).first()
+        ids.append('{}.{}'.format(reference.accession, reference.version))
+    return ids
+
+
 def get_entire_nc_record(record_id, geneName=None):
 
     # Get the accession

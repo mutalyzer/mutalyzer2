@@ -33,7 +33,7 @@ from mutalyzer.mutator import Mutator
 from mutalyzer.mapping import Converter
 from mutalyzer import Retriever
 from mutalyzer import GenRecord
-from mutalyzer.nc_db import get_nc_record
+from mutalyzer.nc_db import get_nc_record, get_chromosome_ids
 from datetime import datetime
 
 # Exceptions used (privately) in this module.
@@ -479,7 +479,7 @@ def apply_inversion(first, last, mutator, record, O):
 #apply_inversion
 
 
-def apply_insertion(before, after, s, mutator, record, O):
+def apply_insertion(before, after, s, mutator, record, O, original_reftype):
     """
     Do a semantic check for an insertion, do the actual insertion, and give
     it a name.
@@ -546,24 +546,35 @@ def apply_insertion(before, after, s, mutator, record, O):
                 forward_roll = donor - new_stop
                 break
 
+    transcript = record.current_transcript()
+
     if reverse_roll + forward_roll >= insertion_length:
         # Todo: Could there also be a IROLLBACK message in this case?
-        O.addMessage(__file__, 2, 'WINSDUP',
-            'Insertion of %s at position %i_%i was given, ' \
-            'however, the HGVS notation prescribes that it should be a ' \
-            'duplication of %s at position %i_%i.' % (
-            s, before, before + 1,
-            unicode(mutator.mutated[new_before + forward_roll:new_stop + forward_roll]),
-            before + forward_roll,
-            before + forward_roll + insertion_length - 1))
+        original_before = before
+        original_after = after
         after += forward_roll - 1
         before = after - insertion_length + 1
+        if before == after:
+            corrected_position = _get_position(before, transcript,
+                                               original_reftype)
+        else:
+            corrected_position = _get_position(before, transcript,
+                                               original_reftype), after
+        position = _get_position(original_before, transcript,
+                                 original_reftype, original_after)
+        O.addMessage(__file__, 2, 'WINSDUP',
+                     'Insertion of {} at position {} was given, however, '
+                     'the HGVS notation prescribes that it should be a '
+                     'duplication of {} at position {}.'.format(
+                         s, position,
+                         unicode(mutator.mutated[new_before + forward_roll:
+                                                 new_stop + forward_roll]),
+                         corrected_position))
         record.name(before, after, 'dup', '', '',
                     (reverse_roll + forward_roll - insertion_length, 0))
         return
 
     # Did we select a transcript on the reverse strand?
-    transcript = record.current_transcript()
     reverse_strand = transcript and transcript.CM.orientation == -1
 
     if forward_roll and not reverse_strand:
@@ -601,7 +612,7 @@ def apply_insertion(before, after, s, mutator, record, O):
 #apply_insertion
 
 
-def apply_delins(first, last, insert, mutator, record, output):
+def apply_delins(first, last, insert, mutator, record, output, original_reftype):
     """
     Do a semantic check for an delins, do the actual delins, and give
     it a name.
@@ -634,7 +645,7 @@ def apply_delins(first, last, insert, mutator, record, output):
         output.addMessage(__file__, 2, 'WWRONGTYPE', 'The given DelIns ' \
                           'is actually an insertion.')
         apply_insertion(first + lcp - 1, first + lcp, insert_trimmed, mutator,
-                        record, output)
+                        record, output, original_reftype)
         return
 
     if len(delete_trimmed) == 1 and len(insert_trimmed) == 1:
@@ -932,6 +943,38 @@ def process_protein_variant(mutator, variant, record, output):
     #     protein level descriptions.
 
 
+def _get_nm_in_nc_tip(mol_type, transcript_id):
+    if mol_type == 'n':
+        chromosome_ids = get_chromosome_ids(transcript_id)
+        examples = ', '.join(['{}({})'.format(
+            c_id, transcript_id) for c_id in chromosome_ids])
+        if examples:
+            return ' Tip: make use of a genomic reference sequence, ' \
+                   'e.g., {}.'.format(examples)
+        else:
+            return ' Tip: make use of a genomic reference sequence ' \
+                   'like NC_*(NM_*).'
+    return ''
+
+
+def _get_position(p_start, transcript, reftype, p_end=None):
+    # Note that this still does not provide the original location.
+    # For 'NG_012337.1(SDHD_v001):c.53-22274del' it provides 'c.-21325'
+    if transcript:
+        if reftype == 'c':
+            if p_end:
+                return 'c.{}_{} (g.{}_{})'.format(transcript.CM.g2c(p_start),
+                                                  transcript.CM.g2c(p_end),
+                                                  p_start, p_end)
+            else:
+                return 'c.{} (g.{})'.format(transcript.CM.g2c(p_start),
+                                            p_start)
+        elif reftype == 'n':
+            return 'n.{} (g.{})'.format(transcript.CM.tuple2string(
+                transcript.CM.g2x(p_start)), p_start)
+    return 'g.{}'.format(p_start)
+
+
 def process_raw_variant(mutator, variant, record, transcript, output):
     """
     Process a raw variant.
@@ -955,6 +998,7 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     @raise _RawVariantError: Cannot process this raw variant.
     @raise _VariantError: Cannot further process the entire variant.
     """
+    original_reftype = variant.RefType
     variant, original_description = variant.RawVar, variant[-1]
 
     # `argument` may be a number, or a subsequence of the reference.
@@ -1003,9 +1047,12 @@ def process_raw_variant(mutator, variant, record, transcript, output):
     elif variant.StartLoc.IVSLoc:
         # IVS positioning.
         if record.record.molType != 'g':
-            output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
-                'position given for a non-genomic reference sequence.')
-            raise _RawVariantError()
+            message = 'Intronic position given for a non-genomic reference ' \
+                      'sequence.'
+            if transcript:
+                message += _get_nm_in_nc_tip(record.record.molType,
+                                             transcript.transcriptID)
+            output.addMessage(__file__, 3, 'ENOINTRON', message)
 
         if transcript is None:
             output.addMessage(__file__, 3, 'ENOTRANSCRIPT',
@@ -1039,8 +1086,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
         if record.record.molType != 'g' and \
                (_is_coding_intronic(variant.StartLoc) or
                 _is_coding_intronic(variant.EndLoc)):
-            output.addMessage(__file__, 3, 'ENOINTRON', 'Intronic ' \
-                'position given for a non-genomic reference sequence.')
+            message = 'Intronic position given for a non-genomic reference ' \
+                      'sequence.'
+            if transcript:
+                message += _get_nm_in_nc_tip(record.record.molType,
+                                             transcript.transcriptID)
+            output.addMessage(__file__, 3, 'ENOINTRON', message)
+
             raise _RawVariantError()
 
         first_location = last_location = variant.StartLoc.PtLoc
@@ -1086,18 +1138,18 @@ def process_raw_variant(mutator, variant, record, transcript, output):
             raise
 
     if last < first:
-        output.addMessage(__file__, 3, 'ERANGE', 'End position is smaller than ' \
-                          'the begin position.')
+        output.addMessage(__file__, 3, 'ERANGE',
+                          'End position is smaller than the begin position.')
         raise _RawVariantError()
 
-    if first < 1:
-        output.addMessage(__file__, 4, 'ERANGE', 'Position %i is out of range.' %
-                          first)
-        raise _RawVariantError()
-
-    if last > len(mutator.orig):
-        output.addMessage(__file__, 4, 'ERANGE', 'Position %s is out of range.' %
-                          last)
+    if first < 1 or last > len(mutator.orig):
+        message = 'Position {} is outside of the sequence range {}.'.format(
+            _get_position(first, transcript, original_reftype),
+            '[1, {}]'.format(len(mutator.orig)))
+        if transcript:
+            message += _get_nm_in_nc_tip(record.record.molType,
+                                         transcript.transcriptID)
+        output.addMessage(__file__, 4, 'ERANGE', message)
         raise _RawVariantError()
 
     splice_abort = False
@@ -1274,11 +1326,13 @@ def process_raw_variant(mutator, variant, record, transcript, output):
 
         # Insertion.
         if variant.MutationType == 'ins':
-            apply_insertion(first, last, insertion, mutator, record, output)
+            apply_insertion(first, last, insertion, mutator, record, output,
+                            original_reftype)
 
         # DelIns.
         if variant.MutationType == 'delins':
-            apply_delins(first, last, insertion, mutator, record, output)
+            apply_delins(first, last, insertion, mutator, record, output,
+                         original_reftype)
 #process_raw_variant
 
 
