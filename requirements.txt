@@ -11,7 +11,7 @@ backtranslate==0.0.5
 biopython==1.75
 chardet==3.0.4
 cssselect==1.1.0
--e git+https://github.com/mutalyzer/crossmapper.git#egg=crossmapper
+-e git+https://github.com/mutalyzer/crossmapper-legacy.git#egg=crossmapper
 description-extractor==2.3.5
 interval-binning==1.0.0
 lxml==4.4.2
