@@ -8,6 +8,13 @@ Version 2.0.33
 
 Release date to be decided.
 
+- Update links (`#514
+  <https://github.com/mutalyzer/mutalyzer/pull/514>`_).
+- Improve warning messages (`#513
+  <https://github.com/mutalyzer/mutalyzer/pull/513>`_).
+- Add legacy crossmapper module (`#508
+  <https://github.com/mutalyzer/mutalyzer/pull/508>`_).
+
 
 Version 2.0.32
 ---------------
