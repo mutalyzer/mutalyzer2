@@ -3,10 +3,23 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
-Version 2.0.33
+Version 2.0.34
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.33
+---------------
+
+Released on November 24th 2020.
+
+- Update links (`#514
+  <https://github.com/mutalyzer/mutalyzer/pull/514>`_).
+- Improve warning messages (`#513
+  <https://github.com/mutalyzer/mutalyzer/pull/513>`_).
+- Add legacy crossmapper module (`#508
+  <https://github.com/mutalyzer/mutalyzer/pull/508>`_).
 
 
 Version 2.0.32
