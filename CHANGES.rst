@@ -3,10 +3,19 @@ Changelog
 
 This is a record of changes made between each Mutalyzer release.
 
-Version 2.0.34
+Version 2.0.35
 ---------------
 
 Release date to be decided.
+
+
+Version 2.0.34
+---------------
+
+Released on March 15th 2021.
+
+- Update article link and point towards the new release website (`#518
+  <https://github.com/mutalyzer/mutalyzer/pull/518>`_).
 
 
 Version 2.0.33
