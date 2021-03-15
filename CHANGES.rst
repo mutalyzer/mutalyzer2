@@ -8,6 +8,9 @@ Version 2.0.34
 
 Release date to be decided.
 
+- Update article link and point towards the new release website (`#518
+  <https://github.com/mutalyzer/mutalyzer/pull/518>`_).
+
 
 Version 2.0.33
 ---------------
