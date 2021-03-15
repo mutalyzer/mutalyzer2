@@ -93,11 +93,13 @@
             <li class="dropdown {% if id == active_page %} active{% endif %}">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">External links <span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.genenames.org/guidelines.html">Human Gene Nomenclature</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}">
+                    <a href="http://www.genenames.org/guidelines.html" target="_blank">Human Gene Nomenclature</a></li>
                 <li class="menu{% if id == active_page %} active{% endif
-                %}"><a href="https://varnomen.hgvs.org/">HGVS Sequence
+                %}"><a href="https://varnomen.hgvs.org/" target="_blank">HGVS Sequence
                 Variant Nomenclature</a></li>
-                <li class="menu{% if id == active_page %} active{% endif %}"><a href="http://www.lovd.nl/">LOVD</a></li>
+                <li class="menu{% if id == active_page %} active{% endif %}">
+                    <a href="http://www.lovd.nl/" target="_blank">LOVD</a></li>
               </ul>
             </li>
 
@@ -106,16 +108,16 @@
                 <ul class="dropdown-menu">
 
                     <li>
-                        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Documentation">Documentation</a>
+                        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Documentation" target="_blank">Documentation</a>
                     </li>
                     <li>
-                        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Mutalyzer-FAQ">FAQ</a>
+                        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Mutalyzer-FAQ" target="_blank">FAQ</a>
                     </li>
                     <li>
-                        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Mutalyzer-Exercise">Exercise</a>
+                        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Mutalyzer-Exercise" target="_blank">Exercise</a>
                     </li>
                     <li>
-                        <a href="https://groups.google.com/forum/#!forum/mutalyzer">Mailing list</a>
+                        <a href="https://groups.google.com/forum/#!forum/mutalyzer" target="_blank">Mailing list</a>
                     </li>
                 </ul>
             </li>
@@ -127,7 +129,7 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
             <li>
-                <a class="navbar-brand" href="https://github.com/mutalyzer/mutalyzer"><img
+                <a class="navbar-brand" href="https://github.com/mutalyzer/mutalyzer" target="_blank"><img
                   src="{{ url_for('static', filename='images/github_logo.png') }}" title="Mutalyzer on GitHub"></a>
             </li>
         </ul>
@@ -149,6 +151,16 @@
                     <p><strong>Announcement:</strong> {% if announcement.url %}<a href="{{ announcement.url }}">{% endif %}{{ announcement.body }}{% if announcement.url %}</a>{% endif %}</p>
                 </div>
                 {% endif %}
+
+                <div id="new-version"
+                     class="alert alert-info block"
+                     style="background-color: #d9edf7; padding-top:20px; padding-bottom:20px;">
+                    <p>
+                        <strong>Check out the</strong>
+                        <a href="https://v3.mutalyzer.nl/">Mutalyzer 3 Alpha</a>
+                        <strong>release!</strong>
+                    </p>
+                </div>
 
                 <!-- Main content -->
                 <div class="block block-shadow">
