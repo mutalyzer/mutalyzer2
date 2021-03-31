@@ -14,7 +14,7 @@ cssselect==1.1.0
 -e git+https://github.com/mutalyzer/crossmapper-legacy.git#egg=crossmapper
 description-extractor==2.3.5
 interval-binning==1.0.0
-lxml==4.6.2
+lxml==4.6.3
 mock==3.0.5
 mockredispy==2.9.3
 pyparsing==2.0.5
