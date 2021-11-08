@@ -10,7 +10,7 @@ reports, bug fixes, unit tests, documentation updates, or anything els you may
 come up with.
 
 Development of Mutalyzer happens on GitHub:
-https://github.com/mutalyzer/mutalyzer
+https://github.com/mutalyzer/mutalyzer2
 
 
 Coding style

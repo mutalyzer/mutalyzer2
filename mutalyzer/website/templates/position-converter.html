@@ -42,7 +42,7 @@ normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Chec
   </div>
   <div class="form-group button-group">
     <input type="submit" class="btn btn-primary" value="Convert variant description">
-    <a href="https://github.com/mutalyzer/mutalyzer/wiki/Position-Converter" target="new" class="btn btn-default pull-right">Help</a>
+    <a href="https://github.com/mutalyzer/mutalyzer2/wiki/Position-Converter" target="new" class="btn btn-default pull-right">Help</a>
   </div>
 </form>
 
@@ -53,11 +53,11 @@ normalize it to HGVS. Use the <a href="{{ url_for('.name_checker') }}">Name Chec
       <p class="alert alert-danger" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>
       <p class="alert alert-info">
         Please note that Mutalyzer does not cover the entire HGVS nomenclature. You can find more information
-        <a href="https://github.com/mutalyzer/mutalyzer/wiki/HGVS-Mutalyzer-Differences">here</a>.
+        <a href="https://github.com/mutalyzer/mutalyzer2/wiki/HGVS-Mutalyzer-Differences">here</a>.
       </p>
       <p class="alert alert-info">
         Additional information on the Position Converter is available
-        <a href="https://github.com/mutalyzer/mutalyzer/wiki/Position-Converter">here</a>.
+        <a href="https://github.com/mutalyzer/mutalyzer2/wiki/Position-Converter">here</a>.
       </p>
     {% elif m.class == "warning" %}
       <p class="alert alert-warning" title="{{ m.level }} (origin: {{ m.origin }})">{{ m.description }}</p>

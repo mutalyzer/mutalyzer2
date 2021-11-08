@@ -15,7 +15,7 @@ Version 2.0.34
 Released on March 15th 2021.
 
 - Update article link and point towards the new release website (`#518
-  <https://github.com/mutalyzer/mutalyzer/pull/518>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/518>`_).
 
 
 Version 2.0.33
@@ -24,11 +24,11 @@ Version 2.0.33
 Released on November 24th 2020.
 
 - Update links (`#514
-  <https://github.com/mutalyzer/mutalyzer/pull/514>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/514>`_).
 - Improve warning messages (`#513
-  <https://github.com/mutalyzer/mutalyzer/pull/513>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/513>`_).
 - Add legacy crossmapper module (`#508
-  <https://github.com/mutalyzer/mutalyzer/pull/508>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/508>`_).
 
 
 Version 2.0.32
@@ -37,13 +37,13 @@ Version 2.0.32
 Released on December 9th 2019.
 
 - Update email address and wiki link (`#498
-  <https://github.com/mutalyzer/mutalyzer/pull/498>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/498>`_).
 - Fix erroneous message for mtDNA m. coordinate system (`#497
-  <https://github.com/mutalyzer/mutalyzer/pull/497>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/497>`_).
 - Update requirements (`#496
-  <https://github.com/mutalyzer/mutalyzer/pull/496>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/496>`_).
 - Fix invalid LRG record issue (`#495
-  <https://github.com/mutalyzer/mutalyzer/pull/495>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/495>`_).
 
 
 Version 2.0.31
@@ -52,15 +52,15 @@ Version 2.0.31
 Released on August 21st 2019.
 
 - Update requirements (`#486
-  <https://github.com/mutalyzer/mutalyzer/pull/486>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/486>`_).
 - Add support for NCBI E-utilities API key (`#485
-  <https://github.com/mutalyzer/mutalyzer/pull/485>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/485>`_).
 - Update HGVS descriptions retrieval for SNP converter (`#482
-  <https://github.com/mutalyzer/mutalyzer/issues/482>`_)
+  <https://github.com/mutalyzer/mutalyzer2/issues/482>`_)
 - Make file selection mandatory in the batch job web page  (`#481
-  <https://github.com/mutalyzer/mutalyzer/issues/481>`_).
+  <https://github.com/mutalyzer/mutalyzer2/issues/481>`_).
 - Update Travis configuration (`#483
-  <https://github.com/mutalyzer/mutalyzer/pull/483>`_)
+  <https://github.com/mutalyzer/mutalyzer2/pull/483>`_)
 
 
 Version 2.0.30
@@ -69,11 +69,11 @@ Version 2.0.30
 Released on May 24th 2019.
 
 - Update requirements (`#475
-  <https://github.com/mutalyzer/mutalyzer/pull/475>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/475>`_).
 - Update documentation links (`#474
-  <https://github.com/mutalyzer/mutalyzer/pull/474>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/474>`_).
 - Fix the genbank parser to perform loci objects creation in two steps (`#468
-  <https://github.com/mutalyzer/mutalyzer/issues/468>`_).
+  <https://github.com/mutalyzer/mutalyzer2/issues/468>`_).
 
 
 Version 2.0.29
@@ -82,15 +82,15 @@ Version 2.0.29
 Released on December 4th 2018.
 
 - Improve user feedback for incorrect specific locus (`#459
-  <https://github.com/mutalyzer/mutalyzer/pull/459>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/459>`_).
 - Improve some position converter warning (`#458
-  <https://github.com/mutalyzer/mutalyzer/pull/458>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/458>`_).
 - Update requirements (`#457
-  <https://github.com/mutalyzer/mutalyzer/pull/457>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/457>`_).
 - Make API more consistent between UDs and NCs (`#456
-  <https://github.com/mutalyzer/mutalyzer/pull/456>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/456>`_).
 - Fix internal server error on IVS variant (`#452
-  <https://github.com/mutalyzer/mutalyzer/pull/452>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/452>`_).
 
 
 Version 2.0.28
@@ -99,7 +99,7 @@ Version 2.0.28
 Released on June 11th 2018.
 
 - Support for LRG XML schema version 1.9 (`#449
-  <https://github.com/mutalyzer/mutalyzer/pull/449>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/449>`_).
 
 
 Version 2.0.27
@@ -108,19 +108,19 @@ Version 2.0.27
 Released on May 25th 2018.
 
 - Accept variant descriptions with NC files as references (`#445
-  <https://github.com/mutalyzer/mutalyzer/pull/445>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/445>`_).
 - Removed support for pending LRG reference files (`#444
-  <https://github.com/mutalyzer/mutalyzer/pull/444>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/444>`_).
 - Add link to wiki page with differences between Mutalyzer and HGVS (`#443
-  <https://github.com/mutalyzer/mutalyzer/pull/443>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/443>`_).
 - Fix for batch processor crash due to NCBI server timeout (`#442
-  <https://github.com/mutalyzer/mutalyzer/pull/442>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/442>`_).
 - Update genbank retriever parameters according to NCBI recommendations (`#439
-  <https://github.com/mutalyzer/mutalyzer/pull/439>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/439>`_).
 - Update getGeneLocation` to use standard strategy to select mapping (`#437
-  <https://github.com/mutalyzer/mutalyzer/pull/437>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/437>`_).
 - Add link to website changelog (`#434
-  <https://github.com/mutalyzer/mutalyzer/pull/434>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/434>`_).
 
 
 Version 2.0.26
@@ -129,9 +129,9 @@ Version 2.0.26
 Released on July 19th 2017.
 
 - Description-extractor dependency updated to version 2.35 (`#429
-  <https://github.com/mutalyzer/mutalyzer/pull/429>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/429>`_).
 - Fix for negative cCDSStop due to wrong transcript to protein link (`#430
-  <https://github.com/mutalyzer/mutalyzer/issues/430>`_).
+  <https://github.com/mutalyzer/mutalyzer2/issues/430>`_).
 
 
 Version 2.0.25
@@ -141,7 +141,7 @@ Released on May 17th 2017.
 
 - Fix for batch processor crash when trying to alter an "item" column of the
   "batch_queue_items" database table (`#426
-  <https://github.com/mutalyzer/mutalyzer/pull/426>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/426>`_).
 
 Version 2.0.24
 ---------------
@@ -150,7 +150,7 @@ Released on April 12th 2017.
 
 - Fix for SNP converter crash when called with 'rs0' as parameter.
   SNP converter displays now more warning messages (`#419
-  <https://github.com/mutalyzer/mutalyzer/issues/419>`_).
+  <https://github.com/mutalyzer/mutalyzer2/issues/419>`_).
 
 
 Version 2.0.23
@@ -160,7 +160,7 @@ Released on November 9th 2016.
 
 - Fix for internal server error in the position converter triggered by
   non-variant description (`#333
-  <https://github.com/mutalyzer/mutalyzer/issues/333>`_).
+  <https://github.com/mutalyzer/mutalyzer2/issues/333>`_).
 
 
 Version 2.0.22
@@ -169,7 +169,7 @@ Version 2.0.22
 Released on September 20th 2016.
 
 - Biopython dependency updated to version 1.68 (`#411
-  <https://github.com/mutalyzer/mutalyzer/pull/411>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/411>`_).
 
 
 Version 2.0.21
@@ -178,7 +178,7 @@ Version 2.0.21
 Released on June 24th 2016.
 
 - Fix typo in batch SNP converter, causing all batch jobs to stall (`#409
-  <https://github.com/mutalyzer/mutalyzer/pull/409>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/409>`_).
 
 
 Version 2.0.20
@@ -187,11 +187,11 @@ Version 2.0.20
 Released on June 22th 2016.
 
 - Accept accession number as transcript selector (`#405
-  <https://github.com/mutalyzer/mutalyzer/pull/405>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/405>`_).
 - Add legend to the output of runMutalyzer service (`#404
-  <https://github.com/mutalyzer/mutalyzer/pull/404>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/404>`_).
 - Remove support for GI numbers (`#396
-  <https://github.com/mutalyzer/mutalyzer/pull/396>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/396>`_).
 
 
 Version 2.0.19
@@ -200,9 +200,9 @@ Version 2.0.19
 Released on June 9th 2016.
 
 - Fix reference file loading by URL (`#383
-  <https://github.com/mutalyzer/mutalyzer/pull/383>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/383>`_).
 - Consider accession version in `getGeneName` webservice method (`#390
-  <https://github.com/mutalyzer/mutalyzer/pull/390>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/390>`_).
 
 
 Version 2.0.18
@@ -211,13 +211,13 @@ Version 2.0.18
 Released on May 23rd 2016.
 
 - Fixed installation on CentOS 6 (`#358
-  <https://github.com/mutalyzer/mutalyzer/pull/358>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/358>`_).
 - Auto focus primary form input on page load (`#363
-  <https://github.com/mutalyzer/mutalyzer/pull/363>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/363>`_).
 - Check optional argument for ``dup`` (`#369
-  <https://github.com/mutalyzer/mutalyzer/pull/369>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/369>`_).
 - Fixes for chromosome slicing by gene symbol (`#371
-  <https://github.com/mutalyzer/mutalyzer/pull/371>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/371>`_).
 
 
 Version 2.0.17
@@ -226,12 +226,12 @@ Version 2.0.17
 Released on March 24th 2016.
 
 - Position converter now checks for selection of gene/transcript (`#346
-  <https://github.com/mutalyzer/mutalyzer/pull/346>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/346>`_).
 - Update about page and link to `new mailing list
   <https://groups.google.com/forum/#!forum/mutalyzer>`_ (`#353
-  <https://github.com/mutalyzer/mutalyzer/pull/353>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/353>`_).
 - Batch jobs processor is more robust on errors (`#356
-  <https://github.com/mutalyzer/mutalyzer/pull/356>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/356>`_).
 
 
 Version 2.0.16
@@ -240,12 +240,12 @@ Version 2.0.16
 Released on February 25th 2016.
 
 - Fixed transcript naming in mapping webservices (`#147
-  <https://github.com/mutalyzer/mutalyzer/pull/147>`_). See below for
+  <https://github.com/mutalyzer/mutalyzer2/pull/147>`_). See below for
   :ref:`details <changelog_2016_details>`.
 - Support LRG transcripts in the position converter (`#147
-  <https://github.com/mutalyzer/mutalyzer/pull/147>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/147>`_).
 - Don't report ``ext*?`` when variant RNA has stop codon (`#146
-  <https://github.com/mutalyzer/mutalyzer/pull/146>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/146>`_).
 
 .. _changelog_2016_details:
 
@@ -274,14 +274,14 @@ Version 2.0.15
 Released on January 6th 2016.
 
 - Speedup NCBI mapview file import (`#124
-  <https://github.com/mutalyzer/mutalyzer/pull/124>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/124>`_).
 - Parse genbank file without VERSION field (`#126
-  <https://github.com/mutalyzer/mutalyzer/pull/126>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/126>`_).
 - Fix issue where some transcripts would not show in the legend (`#136
-  <https://github.com/mutalyzer/mutalyzer/pull/136>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/136>`_).
 - Don't discard complete gene from GenBank file when it has incomplete but
   also complete features annotated (`#138
-  <https://github.com/mutalyzer/mutalyzer/pull/138>`_)
+  <https://github.com/mutalyzer/mutalyzer2/pull/138>`_)
 
 
 Version 2.0.14
@@ -290,24 +290,24 @@ Version 2.0.14
 Released on November 9th 2015.
 
 - E-mail address is now optional in batch job website interface (`#119
-  <https://github.com/mutalyzer/mutalyzer/pull/119>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/119>`_).
 - Use Mailcheck in the batch jobs form (`#107
-  <https://github.com/mutalyzer/mutalyzer/pull/107>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/107>`_).
 - Optional email for batch jobs from webservices (`#104
-  <https://github.com/mutalyzer/mutalyzer/pull/104>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/104>`_).
 - Process batch jobs grouped by email address (`#101
-  <https://github.com/mutalyzer/mutalyzer/pull/101>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/101>`_).
 - Use interval binning scheme on transcript mappings (`#100
-  <https://github.com/mutalyzer/mutalyzer/pull/100>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/100>`_).
 - Back translator interface (`#74
-  <https://github.com/mutalyzer/mutalyzer/pull/74>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/74>`_).
 - Transcript-protein links are now cached in Redis (`#94
-  <https://github.com/mutalyzer/mutalyzer/pull/94>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/94>`_).
 - Added `Ter` as a valid amino acid in the HGVS grammar (`#90
-  <https://github.com/mutalyzer/mutalyzer/pull/90>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/90>`_).
 - Refactoring of unit tests (`#88
-  <https://github.com/mutalyzer/mutalyzer/pull/88>`_, `#89
-  <https://github.com/mutalyzer/mutalyzer/pull/89>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/88>`_, `#89
+  <https://github.com/mutalyzer/mutalyzer2/pull/89>`_).
 
 
 Version 2.0.13
@@ -316,7 +316,7 @@ Version 2.0.13
 Released on October 1st 2015.
 
 - Fix query bug in update transcript-protein links (`#85
-  <https://github.com/mutalyzer/mutalyzer/pull/85>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/85>`_).
 
 
 Version 2.0.12
@@ -325,17 +325,17 @@ Version 2.0.12
 Released on September 30th 2015.
 
 - Fix off-by-one in slicing chromosome by gene name (`#79
-  <https://github.com/mutalyzer/mutalyzer/pull/79>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/79>`_).
 - Document scheme used for all positions and ranges (`#79
-  <https://github.com/mutalyzer/mutalyzer/pull/79>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/79>`_).
 - Show diff for variant protein from non-reference start codon (`#78
-  <https://github.com/mutalyzer/mutalyzer/pull/78>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/78>`_).
 - Visualise protein change, also with alternative start (`#72
-  <https://github.com/mutalyzer/mutalyzer/pull/72>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/72>`_).
 - Translate alternative start to M, also in variant (`#72
-  <https://github.com/mutalyzer/mutalyzer/pull/72>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/72>`_).
 - Added Baker's yeast (SacCer_Apr2011/sacCer3) assembly (`#73
-  <https://github.com/mutalyzer/mutalyzer/pull/73>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/73>`_).
 
 
 Version 2.0.11
@@ -344,7 +344,7 @@ Version 2.0.11
 Released on August 6th 2015.
 
 - Fix bug in recognizing ``p.(=)`` (was reported as ``p.?``) (`#65
-  <https://github.com/mutalyzer/mutalyzer/pull/65>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/65>`_).
 
 
 Version 2.0.10
@@ -354,13 +354,13 @@ Released on July 21st 2015.
 
 - Don't crash the position converter on transcript mappings containing no
   exons (`#63
-  <https://github.com/mutalyzer/mutalyzer/pull/63>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/63>`_).
 - Use the notation for an uncertain stop codon, e.g., ``p.(Gln730Profs*?)``
   instead of ``p.(Gln730Profs*96)`` when a variant results in a frame shift or
   extension and we don't see a new stop codon in the RNA (`#57
-  <https://github.com/mutalyzer/mutalyzer/pull/57>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/57>`_).
 - Added Dog (Broad CanFam3.1/canFam3) assembly for position converter (`#56
-  <https://github.com/mutalyzer/mutalyzer/pull/56>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/56>`_).
 
 
 Version 2.0.9
@@ -372,7 +372,7 @@ Released on July 9th 2015.
   <https://github.com/LUMC/mutalyzer/pull/52>`_, `#53
   <https://github.com/LUMC/mutalyzer/pull/53>`_).
 - Usability improvements in reading DNA for description extractor (`#54
-  <https://github.com/mutalyzer/mutalyzer/pull/54>`_).
+  <https://github.com/mutalyzer/mutalyzer2/pull/54>`_).
 
 
 Version 2.0.8
