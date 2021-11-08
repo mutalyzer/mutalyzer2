@@ -6,6 +6,8 @@ This is a record of changes made between each Mutalyzer release.
 Version 2.0.35
 ---------------
 
+Released on November 8th 2021.
+
 - Rename repository links (`#526
   <https://github.com/mutalyzer/mutalyzer2/pull/526>`_).
 
