@@ -9,17 +9,17 @@ Documentation
 -------------
 
 User documentation can be found on the `wiki
-<https://github.com/mutalyzer/mutalyzer/wiki>`_.
+<https://github.com/mutalyzer/mutalyzer2/wiki>`_.
 
 Developer documentation is `hosted at Read The Docs
-<http://mutalyzer.readthedocs.org>`_.
+<http://mutalyzer2.readthedocs.org>`_.
 
 Submit your bug reports and feature requests `here
-<https://github.com/mutalyzer/mutalyzer/issues>`_.
+<https://github.com/mutalyzer/mutalyzer2/issues>`_.
 
 If you're interested in running your own Mutalyzer installation, please have a
 look at our `Mutalyzer Ansible role
-<https://github.com/mutalyzer/ansible-role-mutalyzer>`_ for a completely
+<https://github.com/mutalyzer/mutalyzer2-ansible-role>`_ for a completely
 automated deployment.
 
 
@@ -31,7 +31,7 @@ reports, bug fixes, unit tests, documentation updates, or anything els you may
 come up with.
 
 Please refer to the documentation for `more information on contributions
-<http://mutalyzer.readthedocs.org/en/latest/contributing.html>`_.
+<http://mutalyzer2.readthedocs.org/en/latest/contributing.html>`_.
 
 
 Copyright

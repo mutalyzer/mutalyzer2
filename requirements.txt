@@ -1,5 +1,5 @@
 -e git+https://github.com/mutalyzer/magic-python.git@centos6-fix#egg=Magic_file_extensions
-Flask==1.1.2
+Flask==1.1.4
 Jinja2==2.11.3
 MySQL-python==1.2.5
 PyYAML==5.4.1
@@ -14,15 +14,15 @@ cssselect==1.1.0
 -e git+https://github.com/mutalyzer/crossmapper-legacy.git#egg=crossmapper
 description-extractor==2.3.5
 interval-binning==1.0.0
-lxml==4.6.2
+lxml==4.6.4
 mock==3.0.5
 mockredispy==2.9.3
 pyparsing==2.0.5
 pytest==4.6.11
-pytz==2021.1
+pytz==2021.3
 redis==3.5.3
-requests==2.25.1
-simplejson==3.17.2
+requests==2.26.0
+simplejson==3.17.5
 sphinx-rtd-theme==0.5.1
 spyne==2.13.16
 suds==0.4

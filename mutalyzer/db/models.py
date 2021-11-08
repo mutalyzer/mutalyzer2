@@ -155,7 +155,7 @@ class Reference(db.Base):
     #: Accession number for this reference, including the version number if
     #: applicable (e.g., ``AL449423.14``, ``NM_000059.3``,
     #: ``UD_138781341344``).
-    # See: https://github.com/mutalyzer/mutalyzer/issues/399
+    # See: https://github.com/mutalyzer/mutalyzer2/issues/399
     accession = Column(String(20), nullable=False, index=True, unique=True)
 
     #: MD5 checksum of the reference file.

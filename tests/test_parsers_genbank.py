@@ -98,7 +98,7 @@ def test_no_version(settings, references, parser):
 def test_transcript_to_protein_link(settings, references, parser):
     """
     Checks if the transcript to protein linking was performed in the right manner.
-    Added for `issue #430 <https://github.com/mutalyzer/mutalyzer/issues/430>`_.
+    Added for `issue #430 <https://github.com/mutalyzer/mutalyzer2/issues/430>`_.
     """
     accession = references[0].accession
     filename = os.path.join(settings.CACHE_DIR,'%s.gb.bz2' % accession)
@@ -133,7 +133,7 @@ def test_transcript_to_protein_link(settings, references, parser):
 def test_mrna_and_cds_addition_to_genes(settings, references, parser):
     """
     Checking if the mRNA and CDS features are correctly added to the genes.
-    Added for `issue #468 <https://github.com/mutalyzer/mutalyzer/issues/468>`_.
+    Added for `issue #468 <https://github.com/mutalyzer/mutalyzer2/issues/468>`_.
     """
     accession = references[0].accession
     filename = os.path.join(settings.CACHE_DIR,'%s.gb.bz2' % accession)

@@ -38,7 +38,7 @@ Similarly, ``--redis-uri`` (only one allowed) specifies a Redis server to use
 for testing. If unspecified, a mock Redis server is used.
 
 Tests are `run automatically on Travis CI
-<https://travis-ci.org/mutalyzer/mutalyzer>`_ with SQLite, PostgreSQL, and
+<https://travis-ci.org/mutalyzer/mutalyzer2>`_ with SQLite, PostgreSQL, and
 MySQL, for each pull request and push on GitHub.
 
 

@@ -166,7 +166,7 @@ error-prone. Several systems exist to automate this, such as `Puppet`_,
 `Chef`_, and `Ansible`_.
 
 An automated `deployment of Mutalyzer with Ansible
-<https://github.com/mutalyzer/ansible-role-mutalyzer>`_ is available on
+<https://github.com/mutalyzer/mutalyzer2-ansible-role>`_ is available on
 GitHub. This includes installation of the website, SOAP and HTTP/RPC+JSON
 webservices, and the batch processor, similar to the setup described above.
 
