@@ -19,7 +19,7 @@ Submit your bug reports and feature requests `here
 
 If you're interested in running your own Mutalyzer installation, please have a
 look at our `Mutalyzer Ansible role
-<https://github.com/mutalyzer/ansible-role-mutalyzer>`_ for a completely
+<https://github.com/mutalyzer/mutalyzer2-ansible-role>`_ for a completely
 automated deployment.
 
 
