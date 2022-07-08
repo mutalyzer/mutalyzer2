@@ -25,6 +25,6 @@ requests==2.26.0
 simplejson==3.17.5
 sphinx-rtd-theme==0.5.1
 spyne==2.13.16
-suds==0.4
+suds==1.0.0
 wsgiref==0.1.2
 xlrd==1.2.0
